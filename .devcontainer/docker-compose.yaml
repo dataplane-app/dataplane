@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:14
+    ports:
+      - 5435:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "Hello123!"
+      POSTGRES_DB: "dataplane"
+    volumes:
+      - ../pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 60s
+      retries: 5
+    restart: always
+  
+  mainapp:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: tail -f /dev/null
+    ports:
+      - 9000:9000
+    volumes:
+      - ../:/appdev
+    environment:
+      env: "local"
+      basepath: "/dataplane"
+      pg_host: postgres
+      pg_user: postgres
+      pg_pwd: "Hello123!"
+      debug: "true"
+      dbdebug: "true"
