@@ -1,0 +1,7 @@
+type Pipelines {
+	name: String!
+}
+
+extend type Query {
+  getPipelines: [Pipelines]
+}

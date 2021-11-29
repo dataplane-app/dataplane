@@ -11,6 +11,7 @@ To run follow these steps
 4. Click on "Reopen in Container" 
 5. To work outside of the container, click on the green section again and select "Reopen Folder Locally"
 
+
 # License
 
 The project is released under the Source Available License - Business Source License 1.1 (BSL). We chose this license because we didn't want cloud providers to offer this project as a data platform service. If you would like to offer Dataplane as a service, we would likely want to be involved in your venture so come speak to us first. For the 99.999% of you who are using the software for your own personal or business needs, you can use the software freely where these restrictions will not apply. 
