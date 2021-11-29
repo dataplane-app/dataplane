@@ -8,4 +8,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/vektah/gqlparser/v2 v2.2.0
 	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
+	gorm.io/datatypes v1.0.3 // indirect
+	gorm.io/driver/postgres v1.2.3 // indirect
+	gorm.io/gorm v1.22.3 // indirect
 )
