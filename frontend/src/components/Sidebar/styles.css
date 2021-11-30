@@ -1,0 +1,49 @@
+.active::after{
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    top: 0;
+    background: rgba(189, 189, 189, 0.84);
+    width: 4px;
+}
+.active::before {
+    content: '';
+    height: 100%;
+    position: absolute;
+    background: rgba(196, 196, 196, 0.15);
+    border-radius: 42px;
+    right: 0;
+    left: -38px;
+    z-index: -1;
+    width: 120%;
+}
+
+.non-active:hover::before {
+    content: '';
+    height: 100%;
+    position: absolute;
+    background: rgba(196, 196, 196, 0.15);
+    border-radius: 42px;
+    right: 0;
+    left: -38px;
+    z-index: -1;
+    width: 120%;
+}
+
+.non-active:hover::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    top: 0;
+    background: rgba(189, 189, 189, 0.84);
+    width: 4px;
+}
+
+.menu-icons{
+    font-weight: 900;
+    font-size: 17px;
+    line-height: 20px;
+    color: #0073C6;
+}
