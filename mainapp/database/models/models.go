@@ -17,8 +17,8 @@ func (Pipelines) TableName() string {
 type Pipelines struct {
 	Name      string         `gorm:"PRIMARY_KEY;type:varchar(10);" json:"name"`
 	Trigger   string         `json:"trigger"`
-	NextRun   string         `json:"nextrun"`
-	LastRun   string         `json:"lastrun"`
+	NextRun   datatypes.Date `json:"nextrun"`
+	LastRun   datatypes.Date `json:"lastrun"`
 	TotalRuns int            `json:"totalruns"`
 	Status    string         `json:"status"`
 	IsOnline  bool           `json:"isonline"`
