@@ -19,9 +19,9 @@ type Pipelines struct {
 	Trigger   string         `json:"trigger"`
 	NextRun   string         `json:"nextrun"`
 	LastRun   string         `json:"lastrun"`
-	TotalRuns string         `json:"totalruns"`
+	TotalRuns int            `json:"totalruns"`
 	Status    string         `json:"status"`
-	IsOnline  string         `json:"isonline"`
+	IsOnline  bool           `json:"isonline"`
 	MyDate    datatypes.Date `json:"my_date"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt *time.Time     `json:"updated_at"`
