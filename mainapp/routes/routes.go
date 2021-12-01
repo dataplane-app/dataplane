@@ -4,6 +4,7 @@ import (
 	"dataplane/database"
 	"dataplane/graphql/generated"
 	"dataplane/graphql/resolvers"
+	"dataplane/logging"
 	"log"
 	"net/http"
 	"os"
@@ -18,6 +19,7 @@ func Setup() *fiber.App {
 	// Fiber instance
 
 	// ------- ERROR LOG CONNECT ------
+	logging.PrintSecretsRedact("Hello123!", "Squirell")
 
 	app := fiber.New()
 

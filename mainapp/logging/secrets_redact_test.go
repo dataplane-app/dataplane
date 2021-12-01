@@ -9,10 +9,10 @@ import (
 )
 
 /*
-Run Super secret squirrel test
+Run Super secret squirrel function test
 go test -timeout 30s -v -run ^TestSecretsRedact$ dataplane/logging
 */
-func TestSecretsRedact(t *testing.T) {
+func TestSecretsRedactFunction(t *testing.T) {
 
 	// Create some secrets
 	os.Setenv("secret.super", "squirrel")
@@ -26,6 +26,6 @@ func TestSecretsRedact(t *testing.T) {
 
 	log.Println("Test removal: ", redacted)
 
-	assert.Equalf(t, "The grey \033[32m** Secret:secret.super **\033[0m is plentiful in wooded districts.", redacted, "Secret redaction failed.")
+	assert.Equalf(t, "The grey \033[32m** Secret **\033[0m is plentiful in wooded districts.", redacted, "Secret redaction failed.")
 
 }

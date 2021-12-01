@@ -1,6 +1,7 @@
 package database
 
 import (
+	"dataplane/logging"
 	"fmt"
 	"log"
 	"os"
@@ -19,7 +20,7 @@ func DBConnect() {
 	var err error
 	DBConn, err = DB()
 	if err != nil {
-		log.Println(err.Error())
+		logging.PrintSecretsRedact(err.Error())
 		log.Fatal("Failed to connect to database")
 	}
 	//DBConn.Config.PrepareStmt = true
@@ -69,7 +70,7 @@ func DB() (*gorm.DB, error) {
 		if err == nil {
 			break
 		} else {
-			log.Printf("db: connection failure: %v, try number. %d, retry in 5 seconds", err, i+1)
+			log.Printf("db: connection failure: %v, try number. %d, retry in 5 seconds", logging.Secrets.Replace(err.Error()), i+1)
 			time.Sleep(time.Second * 5)
 		}
 	}

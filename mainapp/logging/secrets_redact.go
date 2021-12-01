@@ -1,6 +1,8 @@
 package logging
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"strings"
 )
@@ -13,7 +15,13 @@ var Reset = "\033[0m"
 func PrintSecretsRedact(logmessages ...interface{}) {
 
 	// 	Secrets.Replace(logmessages...)
-	// log.Println()
+	var printString string
+	for _, n := range logmessages {
+		printString = printString + fmt.Sprintf("%s ", n)
+
+	}
+
+	log.Println(Secrets.Replace(printString))
 }
 
 /* Load the secrets for redaction on startup */
@@ -23,7 +31,7 @@ func MapSecrets() {
 		pair := strings.SplitN(e, "=", 2)
 		if strings.Contains(pair[0], "secret") {
 			SecretsArray = append(SecretsArray, pair[1])
-			SecretsArray = append(SecretsArray, Green+"** Secret:"+pair[0]+" **"+Reset)
+			SecretsArray = append(SecretsArray, Green+"** Secret **"+Reset)
 		}
 
 	}
