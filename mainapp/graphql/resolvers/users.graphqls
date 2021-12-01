@@ -1,5 +1,5 @@
 input AddUsersInput {
-	user_name:  String!
+	username:  String!
 	first_name: String!    
 	last_name:  String!     
 	email:     String!     
@@ -9,7 +9,7 @@ input AddUsersInput {
 
 type User {
 	user_id:   String! 
-	user_name:  String!
+	username:  String!
 	first_name: String!    
 	last_name:  String!     
 	email:     String!     

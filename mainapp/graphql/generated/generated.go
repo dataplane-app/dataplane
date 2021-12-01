@@ -181,7 +181,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.UserID(childComplexity), true
 
-	case "User.user_name":
+	case "User.username":
 		if e.complexity.User.Username == nil {
 			break
 		}
@@ -274,7 +274,7 @@ extend type Query {
   getPipelines: [Pipelines]
 }`, BuiltIn: false},
 	{Name: "graphql/resolvers/users.graphqls", Input: `input AddUsersInput {
-	user_name:  String!
+	username:  String!
 	first_name: String!    
 	last_name:  String!     
 	email:     String!     
@@ -284,7 +284,7 @@ extend type Query {
 
 type User {
 	user_id:   String! 
-	user_name:  String!
+	username:  String!
 	first_name: String!    
 	last_name:  String!     
 	email:     String!     
@@ -687,7 +687,7 @@ func (ec *executionContext) _User_user_id(ctx context.Context, field graphql.Col
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _User_user_name(ctx context.Context, field graphql.CollectedField, obj *models.Users) (ret graphql.Marshaler) {
+func (ec *executionContext) _User_username(ctx context.Context, field graphql.CollectedField, obj *models.Users) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2028,11 +2028,11 @@ func (ec *executionContext) unmarshalInputAddUsersInput(ctx context.Context, obj
 
 	for k, v := range asMap {
 		switch k {
-		case "user_name":
+		case "username":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user_name"))
-			it.UserName, err = ec.unmarshalNString2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+			it.Username, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2251,8 +2251,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "user_name":
-			out.Values[i] = ec._User_user_name(ctx, field, obj)
+		case "username":
+			out.Values[i] = ec._User_username(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

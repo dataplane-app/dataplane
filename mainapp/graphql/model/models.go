@@ -3,7 +3,7 @@
 package model
 
 type AddUsersInput struct {
-	UserName  string `json:"user_name"`
+	Username  string `json:"username"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
