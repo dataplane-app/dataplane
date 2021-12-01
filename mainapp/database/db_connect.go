@@ -1,7 +1,5 @@
 package database
 
-package gotimescaledb
-
 import (
 	"fmt"
 	"log"

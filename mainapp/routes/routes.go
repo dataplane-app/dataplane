@@ -1,7 +1,9 @@
 package routes
 
 import (
+	"dataplane/database"
 	"log"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -15,11 +17,11 @@ func Setup() *fiber.App {
 	app := fiber.New()
 
 	// ------- DATABASE CONNECT ------
-	// database.Connect()
-	// log.Println("Running on:", config.GConf.ENV)
+	database.DBConnect()
+	log.Println("Running on: ", os.Getenv("env"))
 
 	// ------- RUN MIGRATIONS ------
-	// database.Migrate()
+	database.Migrate()
 
 	log.Println("Migrations complete")
 

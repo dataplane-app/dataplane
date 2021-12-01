@@ -40,6 +40,12 @@ type Pipelines struct {
 	// Active               bool       `gorm:"type:boolean;" json:"active,omitempty"`
 }
 
+func (Workers) IsEntity() {}
+
+func (Workers) TableName() string {
+	return "workers"
+}
+
 type Workers struct {
 	Name        string         `gorm:"PRIMARY_KEY;type:varchar(10);" json:"name"`
 	CPU         int            `json:"cpu"`
@@ -49,4 +55,83 @@ type Workers struct {
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   *time.Time     `json:"updated_at"`
 	DeletedAt   *time.Time     `json:"deleted_at,omitempty"`
+}
+
+func (Users) IsEntity() {}
+
+func (Users) TableName() string {
+	return "users"
+}
+
+type Users struct {
+	UserID    string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"user_id"`
+	Username  string     `gorm:"type:varchar(100);index:idx_username,unique;" json:"username"`
+	FirstName string     `json:"first_name"`
+	LastName  string     `json:"last_name"`
+	Email     string     `json:"email"`
+	Password  string     `json:"password"`
+	Timezone  string     `json:"timezone"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+}
+
+func (Permissions) IsEntity() {}
+
+func (Permissions) TableName() string {
+	return "permissions"
+}
+
+type Permissions struct {
+	UserID                 string `gorm:"PRIMARY_KEY;type:varchar(48);" json:"user_id"`
+	Platform               string `json:"platform"`
+	EnvironmentPermissions string `json:"environment_permissions"`
+	SpecificPermissions    string `json:"specific_permissions"`
+	AccessGroups           string `json:"access_groups"`
+
+	// Username  string     `gorm:"type:varchar(100);index:idx_username,unique;" json:"username"`
+
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+}
+
+func (Environment) IsEntity() {}
+
+func (Environment) TableName() string {
+	return "environment"
+}
+
+type Environment struct {
+	UserID                 string `gorm:"PRIMARY_KEY;type:varchar(48);" json:"user_id"`
+	Platform               string `json:"platform"`
+	EnvironmentPermissions string `json:"environment_permissions"`
+	SpecificPermissions    string `json:"specific_permissions"`
+	AccessGroups           string `json:"access_groups"`
+
+	// Username  string     `gorm:"type:varchar(100);index:idx_username,unique;" json:"username"`
+
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+}
+
+func (UserToEnvironment) IsEntity() {}
+
+func (UserToEnvironment) TableName() string {
+	return "userToEnvironment"
+}
+
+type UserToEnvironment struct {
+	UserID                 string `gorm:"PRIMARY_KEY;type:varchar(48);" json:"user_id"`
+	Platform               string `json:"platform"`
+	EnvironmentPermissions string `json:"environment_permissions"`
+	SpecificPermissions    string `json:"specific_permissions"`
+	AccessGroups           string `json:"access_groups"`
+
+	// Username  string     `gorm:"type:varchar(100);index:idx_username,unique;" json:"username"`
+
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }

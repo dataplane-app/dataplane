@@ -29,8 +29,11 @@ services:
     environment:
       env: "local"
       basepath: "/dataplane"
-      pg_host: postgres
-      pg_user: postgres
-      pg_pwd: "Hello123!"
+      secret.db_host: postgres
+      secret.db_user: postgres
+      secret.db_pwd: "Hello123!"
+      secret.db_ssl: "disable"
+      secret.db_port: "5432"
+      secret.db_database: "dataplane"
       debug: "true"
       dbdebug: "true"
