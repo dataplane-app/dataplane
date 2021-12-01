@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	// "gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
@@ -26,11 +27,21 @@ func Migrate() {
 		os.Getenv("secret.db_ssl"),
 	)
 
+	var l logger.LogLevel
+	dbDebug, _ := strconv.ParseBool(os.Getenv("dbdebug"))
+	if dbDebug {
+		l = logger.Info
+		log.Println("DB logging: Info")
+	} else {
+		l = logger.Silent
+		log.Println("DB logging: Silent")
+	}
+
 	dbConn, err := gorm.Open(postgres.Open(connectURL), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true, // use singular table name, table for `User` would be `user` with this option enabled
 		},
-		Logger: logger.Default.LogMode(logger.Error),
+		Logger: logger.Default.LogMode(l),
 	})
 	if err != nil {
 		panic(err)

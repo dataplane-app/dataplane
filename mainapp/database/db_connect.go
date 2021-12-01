@@ -46,19 +46,36 @@ func DB() (*gorm.DB, error) {
 		log.Println("DB logging: Info")
 	} else {
 		l = logger.Silent
+		log.Println("DB logging: Silent")
 	}
 
-	dbConn, err := gorm.Open(postgres.New(postgres.Config{
-		DSN: connectURL,
-	}), &gorm.Config{
-		SkipDefaultTransaction: true,
-		NamingStrategy: schema.NamingStrategy{
-			SingularTable: true, // use singular table name, table for `User` would be `user` with this option enabled
-		},
-		Logger: logger.Default.LogMode(l),
-	})
+	const maxRetiresAllowed int = 50000
+
+	var dbConn *gorm.DB
+	var err error
+
+	for i := 0; i < maxRetiresAllowed; i++ {
+		dbConn, err = gorm.Open(postgres.New(postgres.Config{
+			DSN: connectURL,
+		}), &gorm.Config{
+			SkipDefaultTransaction: true,
+			NamingStrategy: schema.NamingStrategy{
+				SingularTable: true, // use singular table name, table for `User` would be `user` with this option enabled
+			},
+			Logger: logger.Default.LogMode(l),
+		})
+
+		// if err is nil i.e. we connected sucessfully
+		if err == nil {
+			break
+		} else {
+			log.Printf("db: connection failure: %v, try number. %d, retry in 5 seconds", err, i+1)
+			time.Sleep(time.Second * 5)
+		}
+	}
 
 	if err != nil {
+		log.Println("db: failed to connect")
 		return nil, err
 	}
 
@@ -76,4 +93,7 @@ func DB() (*gorm.DB, error) {
 	log.Println("db: connected")
 
 	return dbConn, nil
+
+	// return nil, errors.New("Failed to connect to database")
+
 }

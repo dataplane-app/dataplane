@@ -27,15 +27,18 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *model.AddUsers
 	}
 	log.Print(userData)
 
-	err := database.DBConn.Create(userData).Error
+	err := database.DBConn.Create(&userData).Error
+	// database.DBConn.Create()
 
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
+
 	log.Println("db finished...")
 
-	return &models.Users{UserID: userData.UserID}, nil
+	return &models.Users{
+		UserID: userData.UserID}, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

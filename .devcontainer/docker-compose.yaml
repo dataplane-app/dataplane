@@ -2,7 +2,7 @@ version: '3'
 
 services:
   postgres:
-    image: postgres:14
+    image: postgres:14.1-alpine3.15
     ports:
       - 5435:5432
     environment:
