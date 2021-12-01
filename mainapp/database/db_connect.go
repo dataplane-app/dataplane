@@ -13,7 +13,20 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-func DBConnect() (*gorm.DB, error) {
+var DBConn *gorm.DB
+
+func DBConnect() {
+	var err error
+	DBConn, err = DB()
+	if err != nil {
+		log.Println(err.Error())
+		log.Fatal("Failed to connect to database")
+	}
+	//DBConn.Config.PrepareStmt = true
+}
+
+func DB() (*gorm.DB, error) {
+
 	// dialect, connectionURL := postgresConnectionURL(config)
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",

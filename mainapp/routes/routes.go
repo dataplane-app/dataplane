@@ -2,11 +2,16 @@ package routes
 
 import (
 	"dataplane/database"
+	"dataplane/graphql/generated"
+	"dataplane/graphql/resolvers"
 	"log"
+	"net/http"
 	"os"
 
+	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/valyala/fasthttp/fasthttpadaptor"
 )
 
 func Setup() *fiber.App {
@@ -40,7 +45,7 @@ func Setup() *fiber.App {
 	// Body:${body}
 
 	// ------- GRAPHQL------
-	// app.Post("/graphql", GraphqlHandler())
+	app.Post("/graphql", GraphqlHandler())
 
 	app.Get("healthz", func(c *fiber.Ctx) error {
 		return c.SendString("Hello 👋!")
@@ -49,18 +54,18 @@ func Setup() *fiber.App {
 	return app
 }
 
-// func GraphqlHandler() fiber.Handler {
-// 	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers.Resolver{}}))
+func GraphqlHandler() fiber.Handler {
+	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers.Resolver{}}))
 
-// 	return httpHandler(h)
-// }
+	return httpHandler(h)
+}
 
 // // httpHandler wraps net/http handler to fiber handler
-// func httpHandler(h http.Handler) fiber.Handler {
-// 	return func(c *fiber.Ctx) error {
-// 		c.Locals("fiberCtx", c)
-// 		handler := fasthttpadaptor.NewFastHTTPHandler(h)
-// 		handler(c.Context())
-// 		return nil
-// 	}
-// }
+func httpHandler(h http.Handler) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		c.Locals("fiberCtx", c)
+		handler := fasthttpadaptor.NewFastHTTPHandler(h)
+		handler(c.Context())
+		return nil
+	}
+}

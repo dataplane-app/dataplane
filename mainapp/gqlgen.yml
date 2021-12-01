@@ -18,12 +18,9 @@ model:
   package: model
 
 models:
-#  Orgs:
-#    model: gush/database/models.Orgs
-  # Projects:
-  #   model: gush/database/models.Projects
-  # JSONMap:
-  #   model: gush/database/models.JSONMap
+ User:
+   model: dataplane/database/models.Users
+
 
 resolver:
   layout: follow-schema
