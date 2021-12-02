@@ -5,10 +5,14 @@ package resolvers
 
 import (
 	"context"
+	passwordExcrypt "dataplane/auth"
+	validators "dataplane/auth"
 	"dataplane/database"
 	"dataplane/database/models"
 	"dataplane/graphql/generated"
 	"dataplane/graphql/model"
+	"encoding/json"
+	"errors"
 	"log"
 
 	"github.com/google/uuid"
@@ -16,11 +20,28 @@ import (
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input *model.AddUsersInput) (*models.Users, error) {
 	log.Print("hello")
+
+	// u := new(models.Users)
+
+	// if err := ctx.BodyParser(u); err != nil {
+	// 	return c.JSON(fiber.Map{
+	// 		"error": true,
+	// 		"input": "Please review your input",
+	// 	})
+	// }
+
+	// validate if the email, username and password are in correct format
+	e := validators.ValidateRegister(input)
+	if e.Err {
+		finalJson, _ := json.Marshal(e)
+		return nil, errors.New("validation failed" + string(finalJson))
+	}
+
 	userData := models.Users{
 		UserID:    uuid.New().String(),
 		FirstName: input.FirstName,
 		LastName:  input.LastName,
-		Password:  input.Password,
+		Password:  passwordExcrypt.Encrypt(input.Password),
 		Email:     input.Email,
 		Timezone:  input.Timezone,
 		Username:  input.Username,
