@@ -3,6 +3,7 @@ import Navbar from "../Navbar";
 import Sidebar from "../Sidebar";
 
 import Pipelines from "../../pages/Pipelines";
+import Teams from "../../pages/Teams";
 
 const Layout = () => (
     <Router>
@@ -13,6 +14,7 @@ const Layout = () => (
                 <div className="flex-1 overflow-y-auto p-7">
                     <Routes>
                         <Route exact path="/pipelines" element={<Pipelines />}/>
+                        <Route exact path="/teams" element={<Teams />}/>
                     </Routes>
                 </div>
             </div>
