@@ -1,0 +1,12 @@
+.dropdown-children{
+    position: absolute;
+    top: 100%;
+    left: -1px;
+    right: -1px;
+    background-color: #fff;
+    border-radius:0 0 15px 15px;
+    border: 1px solid #D3D3D3;
+    border-top: none;
+    padding: 12px 16px;
+    z-index: 2;
+}
