@@ -5,61 +5,59 @@ package resolvers
 
 import (
 	"context"
-	passwordExcrypt "dataplane/auth"
-	validators "dataplane/auth"
+	"dataplane/auth"
 	"dataplane/database"
 	"dataplane/database/models"
 	"dataplane/graphql/generated"
 	"dataplane/graphql/model"
+	"dataplane/logging"
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
+	"os"
 
 	"github.com/google/uuid"
 )
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input *model.AddUsersInput) (*models.Users, error) {
-	log.Print("hello")
-
-	// u := new(models.Users)
-
-	// if err := ctx.BodyParser(u); err != nil {
-	// 	return c.JSON(fiber.Map{
-	// 		"error": true,
-	// 		"input": "Please review your input",
-	// 	})
-	// }
-
 	// validate if the email, username and password are in correct format
-	e := validators.ValidateRegister(input)
+	e := auth.ValidateRegister(input)
 	if e.Err {
 		finalJson, _ := json.Marshal(e)
 		return nil, errors.New("validation failed" + string(finalJson))
+	}
+
+	password, err := auth.Encrypt(input.Password)
+
+	if err != nil {
+		return nil, errors.New("Password hash failed.")
 	}
 
 	userData := models.Users{
 		UserID:    uuid.New().String(),
 		FirstName: input.FirstName,
 		LastName:  input.LastName,
-		Password:  passwordExcrypt.Encrypt(input.Password),
+		Password:  password,
 		Email:     input.Email,
 		Timezone:  input.Timezone,
 		Username:  input.Username,
 	}
-	log.Print(userData)
 
-	err := database.DBConn.Create(&userData).Error
-	// database.DBConn.Create()
+	err = database.DBConn.Create(&userData).Error
 
 	if err != nil {
-		log.Println(err)
-		return nil, err
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Register database error.")
 	}
-
-	log.Println("db finished...")
 
 	return &models.Users{
 		UserID: userData.UserID}, nil
+}
+
+func (r *queryResolver) LoginUser(ctx context.Context, username string, password string) (*model.Authtoken, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 // Mutation returns generated.MutationResolver implementation.

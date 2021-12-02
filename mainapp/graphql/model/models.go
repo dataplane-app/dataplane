@@ -11,6 +11,10 @@ type AddUsersInput struct {
 	Timezone  string `json:"timezone"`
 }
 
+type Authtoken struct {
+	AccessToken string `json:"access_token"`
+}
+
 type Environments struct {
 	Name string `json:"name"`
 }

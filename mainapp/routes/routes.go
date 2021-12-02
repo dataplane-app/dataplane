@@ -49,7 +49,7 @@ func Setup() *fiber.App {
 	// ------- GRAPHQL------
 	app.Post("/graphql", GraphqlHandler())
 
-	app.Get("healthz", func(c *fiber.Ctx) error {
+	app.Get("/healthz", func(c *fiber.Ctx) error {
 		return c.SendString("Hello 👋!")
 	})
 
