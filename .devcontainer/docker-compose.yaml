@@ -24,6 +24,7 @@ services:
     command: tail -f /dev/null
     ports:
       - 9000:9000
+      - 3000:3000
     volumes:
       - ../:/appdev
     environment:
