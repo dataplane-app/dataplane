@@ -27,18 +27,6 @@ type Pipelines struct {
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt *time.Time     `json:"updated_at"`
 	DeletedAt *time.Time     `json:"deleted_at,omitempty"`
-	// CountryName          string     `gorm:"type:varchar(255);" json:"country_name"`
-	// Currency             string     `gorm:"type:varchar(64);" json:"currency"`
-	// WorkerPricePerc      float64    `json:"worker_price_perc"`
-	// ClientPriceFixed     float64    `json:"client_price_fixed"`
-	// WorkerInstantPayPerc float64    `json:"worker_instant_perc"`
-	// InstantPayoutAvail   bool       `json:"instant_payout_avail"`
-	// PaymentProvider      string     `json:"payment_provider"`
-	// PPFeePerc            float64    `json:"pp_fee_perc"`
-	// PPFeeFixed           float64    `json:"pp_fee_fixed"`
-	// PPFeePayoutPerc      float64    `json:"pp_fee_payout_perc"`
-	// PaymentMethod        string     `json:"payment_method"`
-	// Active               bool       `gorm:"type:boolean;" json:"active,omitempty"`
 }
 
 func (Workers) IsEntity() {}
@@ -140,7 +128,7 @@ type UserToEnvironment struct {
 func (Claims) IsEntity() {}
 
 func (Claims) TableName() string {
-	return "claims"
+	return "auth_refreshtokens"
 }
 
 // Claims represent the structure of the JWT token

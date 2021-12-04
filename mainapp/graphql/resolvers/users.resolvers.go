@@ -13,10 +13,10 @@ import (
 	"dataplane/logging"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input *model.AddUsersInput) (*models.Users, error) {
@@ -57,7 +57,40 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *model.AddUsers
 }
 
 func (r *queryResolver) LoginUser(ctx context.Context, username string, password string) (*model.Authtoken, error) {
-	panic(fmt.Errorf("not implemented"))
+	// check if a user exists
+	u := new(models.Users)
+	if res := database.DBConn.Where(
+		&models.Users{Username: username},
+	).First(&u); res.RowsAffected <= 0 {
+		return nil, errors.New("invalid Credentials")
+	}
+
+	// Comparing the password with the hash
+	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
+		return nil, errors.New("invalid Credentials")
+	}
+
+	accessToken, refreshToken := auth.GenerateTokens(u.UserID)
+	// accessCookie, refreshCookie := auth.GetAuthCookies(accessToken, refreshToken)
+
+	return &model.Authtoken{accessToken, refreshToken}, nil
+}
+
+func (r *queryResolver) RefreshToken(ctx context.Context, username string, refreshToken string) (*model.Authtoken, error) {
+
+	// To Do: Add validation
+
+	// check if a user exists
+	u := new(models.Users)
+	if res := database.DBConn.Where(
+		&models.Users{Username: username},
+	).First(&u); res.RowsAffected <= 0 {
+		return nil, errors.New("invalid Credentials")
+	}
+
+	accessToken, refreshToken := auth.GenerateTokens(u.UserID)
+
+	return &model.Authtoken{accessToken, refreshToken}, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

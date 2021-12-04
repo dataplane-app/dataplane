@@ -44,7 +44,8 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Authtoken struct {
-		AccessToken func(childComplexity int) int
+		AccessToken  func(childComplexity int) int
+		RefreshToken func(childComplexity int) int
 	}
 
 	Environments struct {
@@ -64,6 +65,7 @@ type ComplexityRoot struct {
 		GetPipelines    func(childComplexity int) int
 		GetWorkers      func(childComplexity int) int
 		LoginUser       func(childComplexity int, username string, password string) int
+		RefreshToken    func(childComplexity int, username string, refreshToken string) int
 	}
 
 	User struct {
@@ -87,6 +89,7 @@ type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*model.Environments, error)
 	GetPipelines(ctx context.Context) ([]*model.Pipelines, error)
 	LoginUser(ctx context.Context, username string, password string) (*model.Authtoken, error)
+	RefreshToken(ctx context.Context, username string, refreshToken string) (*model.Authtoken, error)
 	GetWorkers(ctx context.Context) ([]*model.Workers, error)
 }
 
@@ -111,6 +114,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Authtoken.AccessToken(childComplexity), true
+
+	case "Authtoken.refresh_token":
+		if e.complexity.Authtoken.RefreshToken == nil {
+			break
+		}
+
+		return e.complexity.Authtoken.RefreshToken(childComplexity), true
 
 	case "Environments.name":
 		if e.complexity.Environments.Name == nil {
@@ -170,6 +180,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.LoginUser(childComplexity, args["username"].(string), args["password"].(string)), true
+
+	case "Query.refreshToken":
+		if e.complexity.Query.RefreshToken == nil {
+			break
+		}
+
+		args, err := ec.field_Query_refreshToken_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.RefreshToken(childComplexity, args["username"].(string), args["refresh_token"].(string)), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -318,6 +340,7 @@ type User {
 
 type Authtoken {
 	access_token: String!
+	refresh_token: String!
 }
 
 type Mutation {
@@ -327,7 +350,10 @@ type Mutation {
 extend type Query{
 	loginUser(username: String!, password: String!): Authtoken
 }
-`, BuiltIn: false},
+
+extend type Query{
+	refreshToken(username: String!, refresh_token: String!): Authtoken
+}`, BuiltIn: false},
 	{Name: "graphql/resolvers/workers.graphqls", Input: `type Workers {
 	name: String!
 }
@@ -396,6 +422,30 @@ func (ec *executionContext) field_Query_loginUser_args(ctx context.Context, rawA
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_refreshToken_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["username"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["username"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["refresh_token"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("refresh_token"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["refresh_token"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -453,6 +503,41 @@ func (ec *executionContext) _Authtoken_access_token(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.AccessToken, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Authtoken_refresh_token(ctx context.Context, field graphql.CollectedField, obj *model.Authtoken) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Authtoken",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RefreshToken, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -668,6 +753,45 @@ func (ec *executionContext) _Query_loginUser(ctx context.Context, field graphql.
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().LoginUser(rctx, args["username"].(string), args["password"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Authtoken)
+	fc.Result = res
+	return ec.marshalOAuthtoken2ᚖdataplaneᚋgraphqlᚋmodelᚐAuthtoken(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_refreshToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_refreshToken_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().RefreshToken(rctx, args["username"].(string), args["refresh_token"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2238,6 +2362,11 @@ func (ec *executionContext) _Authtoken(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "refresh_token":
+			out.Values[i] = ec._Authtoken_refresh_token(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2377,6 +2506,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_loginUser(ctx, field)
+				return res
+			})
+		case "refreshToken":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_refreshToken(ctx, field)
 				return res
 			})
 		case "getWorkers":

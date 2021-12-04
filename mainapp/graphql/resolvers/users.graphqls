@@ -18,6 +18,7 @@ type User {
 
 type Authtoken {
 	access_token: String!
+	refresh_token: String!
 }
 
 type Mutation {
@@ -26,4 +27,8 @@ type Mutation {
 
 extend type Query{
 	loginUser(username: String!, password: String!): Authtoken
+}
+
+extend type Query{
+	refreshToken(username: String!, refresh_token: String!): Authtoken
 }

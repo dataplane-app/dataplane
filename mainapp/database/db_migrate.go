@@ -50,6 +50,7 @@ func Migrate() {
 	err1 := dbConn.AutoMigrate(
 		&models.Pipelines{},
 		&models.Users{},
+		&models.Claims{},
 	)
 	if err1 != nil {
 		panic(err1)
