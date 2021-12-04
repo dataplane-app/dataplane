@@ -5,6 +5,8 @@ RUN go get -v golang.org/x/tools/gopls
 RUN go get -u github.com/ramya-rao-a/go-outline
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 RUN go install honnef.co/go/tools/cmd/staticcheck@latest
+RUN go get github.com/99designs/gqlgen/internal/imports@v0.14.0
+RUN go get github.com/99designs/gqlgen/cmd@v0.14.0
 
 RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
 RUN apt-get install -y nodejs && node -v

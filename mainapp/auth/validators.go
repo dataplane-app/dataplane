@@ -20,7 +20,6 @@ func IsEmpty(str string) (bool, string) {
 // ValidateRegister func validates the body of user for registration
 func ValidateRegister(u *model.AddUsersInput) *models.UserErrors {
 	e := &models.UserErrors{}
-	e.Err, e.Username = IsEmpty(u.Username)
 
 	if !valid.IsEmail(u.Email) {
 		e.Err, e.Email = true, "Must be a valid email"

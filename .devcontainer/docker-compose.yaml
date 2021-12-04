@@ -36,6 +36,7 @@ services:
       secret.db_ssl: "disable"
       secret.db_port: "5432"
       secret.db_database: "dataplane"
+      secret.jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
       database: "timescaledb"
       debug: "true"
       dbdebug: "false"

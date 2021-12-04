@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"strings"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -40,7 +41,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *model.AddUsers
 		Password:  password,
 		Email:     input.Email,
 		Timezone:  input.Timezone,
-		Username:  input.Username,
+		Username:  input.Email,
 	}
 
 	err = database.DBConn.Create(&userData).Error
@@ -49,25 +50,34 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *model.AddUsers
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
+		if strings.Contains(err.Error(), "duplicate key") {
+			return nil, errors.New("User already exists.")
+		}
 		return nil, errors.New("Register database error.")
 	}
 
 	return &models.Users{
-		UserID: userData.UserID}, nil
+		UserID:    userData.UserID,
+		FirstName: userData.FirstName,
+		LastName:  userData.LastName,
+		Email:     userData.Email,
+		Timezone:  userData.Timezone,
+	}, nil
 }
 
 func (r *queryResolver) LoginUser(ctx context.Context, username string, password string) (*model.Authtoken, error) {
+
 	// check if a user exists
 	u := new(models.Users)
 	if res := database.DBConn.Where(
 		&models.Users{Username: username},
 	).First(&u); res.RowsAffected <= 0 {
-		return nil, errors.New("invalid Credentials")
+		return nil, errors.New("Incorrect password")
 	}
 
 	// Comparing the password with the hash
 	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
-		return nil, errors.New("invalid Credentials")
+		return nil, errors.New("Incorrect password")
 	}
 
 	accessToken, refreshToken := auth.GenerateTokens(u.UserID)
@@ -77,7 +87,6 @@ func (r *queryResolver) LoginUser(ctx context.Context, username string, password
 }
 
 func (r *queryResolver) RefreshToken(ctx context.Context, username string, refreshToken string) (*model.Authtoken, error) {
-
 	// To Do: Add validation
 
 	// check if a user exists

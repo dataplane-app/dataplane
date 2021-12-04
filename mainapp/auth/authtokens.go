@@ -3,6 +3,7 @@ package auth
 import (
 	db "dataplane/database"
 	"dataplane/database/models"
+	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -10,7 +11,7 @@ import (
 )
 
 // var jwtKey = []byte(os.Getenv("PRIV_KEY"))
-var jwtKey = []byte("234234")
+var jwtKey = []byte(os.Getenv("secret.jwt_secret"))
 
 // GenerateTokens returns the access and refresh tokens
 func GenerateTokens(uuid string) (string, string) {
@@ -26,7 +27,8 @@ func GenerateAccessClaims(uuid string) (*models.Claims, string) {
 	t := time.Now()
 	claim := &models.Claims{
 		StandardClaims: jwt.StandardClaims{
-			Issuer:    uuid,
+			Issuer: "dataplane.app",
+			// access token valid for
 			ExpiresAt: t.Add(15 * time.Minute).Unix(),
 			Subject:   "access_token",
 			IssuedAt:  t.Unix(),
