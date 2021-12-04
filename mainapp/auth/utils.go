@@ -50,7 +50,7 @@ func GenerateRefreshClaims(cl *models.Claims) string {
 		},
 	}).Find(&models.Claims{})
 
-	// checking the number of refresh tokens stored.
+	// checking the number of refresh tokens stored. !!!NOT working!!!
 	// If the number is higher than 3, remove all the refresh tokens and leave only new one.
 	if result.RowsAffected > 3 {
 		db.DBConn.Where(&models.Claims{
@@ -62,7 +62,7 @@ func GenerateRefreshClaims(cl *models.Claims) string {
 	refreshClaim := &models.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    cl.Issuer,
-			ExpiresAt: t.Add(30 * 24 * time.Hour).Unix(),
+			ExpiresAt: t.Add(7 * 24 * time.Hour).Unix(),
 			Subject:   "refresh_token",
 			IssuedAt:  t.Unix(),
 		},

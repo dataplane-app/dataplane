@@ -16,6 +16,19 @@ type User {
 	timezone:  String!     
 }
 
+type Authtoken {
+	access_token: String!
+	refresh_token: String!
+}
+
 type Mutation {
   createUser(input: AddUsersInput): User
+}
+
+extend type Query{
+	loginUser(username: String!, password: String!): Authtoken
+}
+
+extend type Query{
+	refreshToken(username: String!, refresh_token: String!): Authtoken
 }

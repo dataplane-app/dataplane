@@ -51,6 +51,7 @@ func Migrate() {
 		&models.Pipelines{},
 		&models.Users{},
 		&models.LogsPlatform{},
+
 	)
 	if err1 != nil {
 		panic(err1)

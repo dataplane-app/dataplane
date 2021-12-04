@@ -3,7 +3,6 @@ package auth
 import (
 	"dataplane/database/models"
 	"dataplane/graphql/model"
-	"log"
 	"regexp"
 
 	valid "github.com/asaskevich/govalidator"
@@ -23,8 +22,6 @@ func ValidateRegister(u *model.AddUsersInput) *models.UserErrors {
 	e := &models.UserErrors{}
 	e.Err, e.Username = IsEmpty(u.Username)
 
-	log.Println("email check... ", valid.IsEmail(u.Email))
-
 	if !valid.IsEmail(u.Email) {
 		e.Err, e.Email = true, "Must be a valid email"
 	}
@@ -33,6 +30,6 @@ func ValidateRegister(u *model.AddUsersInput) *models.UserErrors {
 	if !(len(u.Password) >= 8 && valid.HasLowerCase(u.Password) && valid.HasUpperCase(u.Password) && re.MatchString(u.Password)) {
 		e.Err, e.Password = true, "Length of password should be atleast 8 and it must be a combination of uppercase letters, lowercase letters and numbers"
 	}
-	log.Println("!! validation complete", e)
+
 	return e
 }
