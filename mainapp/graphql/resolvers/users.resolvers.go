@@ -66,7 +66,6 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *model.AddUsers
 }
 
 func (r *queryResolver) LoginUser(ctx context.Context, username string, password string) (*model.Authtoken, error) {
-
 	// check if a user exists
 	u := new(models.Users)
 	if res := database.DBConn.Where(
