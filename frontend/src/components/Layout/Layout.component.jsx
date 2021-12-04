@@ -6,7 +6,7 @@ import Pipelines from "../../pages/Pipelines";
 import Teams from "../../pages/Teams";
 
 const Layout = () => (
-    <Router basename="/dashboard">
+    <Router basename="/webapp">
         <div className="h-screen max-h-screen max-w-screen overflow-hidden">
             <Navbar />
             <div className="h-full flex spacing-nav">

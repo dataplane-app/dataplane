@@ -24,7 +24,6 @@ func Setup() *fiber.App {
 	app := fiber.New()
 
 	// ------- DATABASE CONNECT ------
-
 	database.DBConnect()
 	log.Println("🏃 Running on: ", os.Getenv("env"))
 	logme.PlatformLogger(models.LogsPlatform{
@@ -47,9 +46,9 @@ func Setup() *fiber.App {
 
 	//recover from panic
 	app.Use(recover.New())
-	app.Use(Timer())
 
 	// add timer field to response header
+	app.Use(Timer())
 
 	if os.Getenv("debug") == "true" {
 		app.Use(logger.New(
@@ -64,11 +63,8 @@ func Setup() *fiber.App {
 	}
 
 	// --------FRONTEND ----
-	app.Static("/dashboard", "frontbuild")
-	// other routes just return `public/index.html`, angular will handle them
-	// app.Get("/dashboard", func(c *fiber.Ctx) error {
-	// 	return c.SendFile("./frontbuild/index.html")
-	// })
+	app.Static("/webapp", "./frontbuild")
+	app.Static("/webapp/*", "frontbuild/index.html")
 
 	// ------- GRAPHQL------
 	app.Post("/graphql", GraphqlHandler())
@@ -109,11 +105,9 @@ func Timer() fiber.Handler {
 		err := c.Next()
 		// stop timer
 		stop := time.Now()
-		// Do something with response
 		ms := float32(stop.Sub(start)) / float32(time.Millisecond)
-		// record total time spent
 		c.Append("Server-Timing", fmt.Sprintf("Dataplane;dur=%f", ms))
-		// return stack error if exist
+
 		return err
 	}
 }
