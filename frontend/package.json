@@ -1,5 +1,6 @@
 {
   "name": "frontend",
+  "homepage": "./dashboard",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -19,7 +20,7 @@
   },
   "scripts": {
     "start": "craco start",
-    "build": "craco build",
+    "build": "BUILD_PATH=../mainapp/frontbuild craco build",
     "test": "craco test",
     "eject": "react-scripts eject"
   },

@@ -63,6 +63,13 @@ func Setup() *fiber.App {
 		// Query:${query}
 	}
 
+	// --------FRONTEND ----
+	app.Static("/dashboard", "frontbuild")
+	// other routes just return `public/index.html`, angular will handle them
+	// app.Get("/dashboard", func(c *fiber.Ctx) error {
+	// 	return c.SendFile("./frontbuild/index.html")
+	// })
+
 	// ------- GRAPHQL------
 	app.Post("/graphql", GraphqlHandler())
 
