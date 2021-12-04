@@ -2,47 +2,60 @@ package routes
 
 import (
 	"dataplane/database"
+	"dataplane/database/models"
 	"dataplane/graphql/generated"
 	"dataplane/graphql/resolvers"
+	"dataplane/logme"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/valyala/fasthttp/fasthttpadaptor"
 )
 
 func Setup() *fiber.App {
-	// Fiber instance
-
-	// ------- ERROR LOG CONNECT ------
 
 	app := fiber.New()
 
 	// ------- DATABASE CONNECT ------
 	database.DBConnect()
-	log.Println("Running on: ", os.Getenv("env"))
+	log.Println("🏃 Running on: ", os.Getenv("env"))
+	logme.PlatformLogger(models.LogsPlatform{
+		Environment: "d_platform",
+		Category:    "platform",
+		LogType:     "info", //can be error, info or debug
+		Log:         "🌟 Database connected",
+	})
 
 	// ------- RUN MIGRATIONS ------
 	database.Migrate()
-
-	log.Println("Migrations complete")
+	logme.PlatformLogger(models.LogsPlatform{
+		Environment: "d_platform",
+		Category:    "platform",
+		LogType:     "info", //can be error, info or debug
+		Log:         "📦 Database migrated",
+	})
 
 	//recover from panic
 	app.Use(recover.New())
 
 	// add timer field to response header
 
-	// if config.GConf.DPDebug == "debug" {
-	// 	app.Use(logger.New(
-	// 		logger.Config{
-	// 			Format: "Latency: ${latency} Time:${time} Method:${method} Status: ${status} Path:${path} Host:${host} UA:${ua} Header:${header} Query:${query} \n",
-	// 		}))
-	// }
-
-	// Body:${body}
+	if os.Getenv("debug") == "true" {
+		app.Use(logger.New(
+			logger.Config{
+				Format: "✨ Latency: ${latency} Time:${time} Status: ${status} Path:${path} \n",
+			}))
+		// Method:${method} -- bug in fiber, waiting for pull request
+		// UA:${ua}
+		// Host:${host}
+		// Header:${header}
+		// Query:${query}
+	}
 
 	// ------- GRAPHQL------
 	app.Post("/graphql", GraphqlHandler())

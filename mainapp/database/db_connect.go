@@ -44,10 +44,10 @@ func DB() (*gorm.DB, error) {
 	dbDebug, _ := strconv.ParseBool(os.Getenv("dbdebug"))
 	if dbDebug {
 		l = logger.Info
-		log.Println("DB logging: Info")
+		log.Println("ℹ️ DB logging: Info")
 	} else {
 		l = logger.Silent
-		log.Println("DB logging: Silent")
+		log.Println("🤫 DB logging: Silent")
 	}
 
 	const maxRetiresAllowed int = 50000
@@ -70,7 +70,7 @@ func DB() (*gorm.DB, error) {
 		if err == nil {
 			break
 		} else {
-			log.Printf("db: connection failure: %v, try number. %d, retry in 5 seconds", logging.Secrets.Replace(err.Error()), i+1)
+			log.Printf("😩 db: connection failure: %v, try number. %d, retry in 5 seconds", logging.Secrets.Replace(err.Error()), i+1)
 			time.Sleep(time.Second * 5)
 		}
 	}
@@ -91,7 +91,7 @@ func DB() (*gorm.DB, error) {
 	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
 	sqlDB.SetConnMaxLifetime(time.Minute * 5)
 
-	log.Println("db: connected")
+	log.Println("🌟 Database connected")
 
 	return dbConn, nil
 

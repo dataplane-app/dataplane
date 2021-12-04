@@ -31,10 +31,10 @@ func Migrate() {
 	dbDebug, _ := strconv.ParseBool(os.Getenv("dbdebug"))
 	if dbDebug {
 		l = logger.Info
-		log.Println("DB logging: Info")
+		// log.Println("DB logging: Info")
 	} else {
 		l = logger.Silent
-		log.Println("DB logging: Silent")
+		// log.Println("DB logging: Silent")
 	}
 
 	dbConn, err := gorm.Open(postgres.Open(connectURL), &gorm.Config{
@@ -50,6 +50,7 @@ func Migrate() {
 	err1 := dbConn.AutoMigrate(
 		&models.Pipelines{},
 		&models.Users{},
+		&models.LogsPlatform{},
 	)
 	if err1 != nil {
 		panic(err1)
@@ -67,12 +68,12 @@ func Migrate() {
 	// }).Create(&dataingest.CountryPrices)
 	// log.Println("country default pricing loaded")
 
-	// hypertable := "SELECT create_hypertable('logs_billing', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
+	hypertable := "SELECT create_hypertable('logs_platform', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
 
-	// if hypertable != "" {
-	// 	if err := dbConn.Model(&gushbilling.LogsBilling{}).Exec(hypertable).Error; err != nil {
-	// 		panic(err)
-	// 	}
-	// }
-	log.Println("Database migrated")
+	if hypertable != "" && os.Getenv("database") == "timescaledb" {
+		if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
+			panic(err)
+		}
+	}
+	log.Println("📦 Database migrated")
 }
