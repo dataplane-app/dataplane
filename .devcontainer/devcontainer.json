@@ -37,7 +37,9 @@
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"golang.Go",
-		"graphql.vscode-graphql"
+		"graphql.vscode-graphql",
+		"ms-azuretools.vscode-docker",
+		"bierner.markdown-preview-github-styles"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -46,9 +48,13 @@
 	// Use 'portsAttributes' to set default properties for specific forwarded ports. More info: https://code.visualstudio.com/docs/remote/devcontainerjson-reference.
 	"portsAttributes": {
 		"9000": {
-			"label": "Hello Remote World",
+			"label": "Go mainapp",
 			"onAutoForward": "notify"
-		}
+		},
+		"3000": {
+			"label": "React frontend",
+			"onAutoForward": "notify"
+		},
 	},
 
 	// Use 'otherPortsAttributes' to configure any ports that aren't configured using 'portsAttributes'.

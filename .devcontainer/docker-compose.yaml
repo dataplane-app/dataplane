@@ -2,7 +2,7 @@ version: '3'
 
 services:
   postgres:
-    image: postgres:14.1-alpine3.15
+    image: timescale/timescaledb:2.5.1-pg14
     ports:
       - 5435:5432
     environment:
@@ -24,6 +24,7 @@ services:
     command: tail -f /dev/null
     ports:
       - 9000:9000
+      - 3000:3000
     volumes:
       - ../:/appdev
     environment:
@@ -35,5 +36,6 @@ services:
       secret.db_ssl: "disable"
       secret.db_port: "5432"
       secret.db_database: "dataplane"
+      database: "timescaledb"
       debug: "true"
-      dbdebug: "true"
+      dbdebug: "false"
