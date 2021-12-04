@@ -6,9 +6,11 @@ import (
 	"dataplane/graphql/generated"
 	"dataplane/graphql/resolvers"
 	"dataplane/logme"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/gofiber/fiber/v2"
@@ -22,6 +24,7 @@ func Setup() *fiber.App {
 	app := fiber.New()
 
 	// ------- DATABASE CONNECT ------
+
 	database.DBConnect()
 	log.Println("🏃 Running on: ", os.Getenv("env"))
 	logme.PlatformLogger(models.LogsPlatform{
@@ -30,6 +33,8 @@ func Setup() *fiber.App {
 		LogType:     "info", //can be error, info or debug
 		Log:         "🌟 Database connected",
 	})
+
+	start := time.Now()
 
 	// ------- RUN MIGRATIONS ------
 	database.Migrate()
@@ -42,6 +47,7 @@ func Setup() *fiber.App {
 
 	//recover from panic
 	app.Use(recover.New())
+	app.Use(Timer())
 
 	// add timer field to response header
 
@@ -64,21 +70,43 @@ func Setup() *fiber.App {
 		return c.SendString("Hello 👋!")
 	})
 
+	stop := time.Now()
+	// Do something with response
+	log.Println("🐆 Start time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
+
 	return app
 }
 
+/* GraphQL Handlers */
 func GraphqlHandler() fiber.Handler {
 	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers.Resolver{}}))
 
 	return httpHandler(h)
 }
 
-// // httpHandler wraps net/http handler to fiber handler
 func httpHandler(h http.Handler) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		c.Locals("fiberCtx", c)
 		handler := fasthttpadaptor.NewFastHTTPHandler(h)
 		handler(c.Context())
 		return nil
+	}
+}
+
+/* Add timer to header */
+func Timer() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// start timer
+		start := time.Now()
+		// next routes
+		err := c.Next()
+		// stop timer
+		stop := time.Now()
+		// Do something with response
+		ms := float32(stop.Sub(start)) / float32(time.Millisecond)
+		// record total time spent
+		c.Append("Server-Timing", fmt.Sprintf("Dataplane;dur=%f", ms))
+		// return stack error if exist
+		return err
 	}
 }
