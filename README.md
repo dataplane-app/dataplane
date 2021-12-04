@@ -1,7 +1,7 @@
 # <span style="color:#FF5722">Dataplane</span>
 Dataplane is the super fast, cloud native, scalable, secure and easy to use data platform for data-driven businesses. 
 
-# == 🚧🧱👷‍♀️🧰🦺🏗 Under construction 🔨🔧🗜👷‍♂️🚜🪚 ==
+# 🚧🧱👷‍♀️🧰🦺🏗 Under construction 🔨🔧🗜👷‍♂️🚜🪚
 
 # Web UI
 Once running, visit the dashboard at http://localhost:9000/webapp/
