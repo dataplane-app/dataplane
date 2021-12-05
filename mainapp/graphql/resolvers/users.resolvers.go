@@ -85,6 +85,18 @@ func (r *queryResolver) LoginUser(ctx context.Context, username string, password
 	return &model.Authtoken{accessToken, refreshToken}, nil
 }
 
+func (r *queryResolver) LogoutUser(ctx context.Context, userID string) (*model.Response, error) {
+	u := models.AuthRefreshTokens{}
+
+	if res := database.DBConn.Where(
+		&models.AuthRefreshTokens{UserID: userID},
+	).Delete(&u); res.RowsAffected <= 0 {
+		return nil, errors.New("Invalid credentials")
+	}
+
+	return &model.Response{"User logged out"}, nil
+}
+
 func (r *queryResolver) RefreshToken(ctx context.Context, username string, refreshToken string) (*model.Authtoken, error) {
 	// To Do: Add validation
 

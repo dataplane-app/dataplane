@@ -23,6 +23,10 @@ type Pipelines struct {
 	Name string `json:"name"`
 }
 
+type Response struct {
+	Msg string `json:"msg"`
+}
+
 type Workers struct {
 	Name string `json:"name"`
 }

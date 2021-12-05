@@ -19,12 +19,20 @@ type Authtoken {
 	refresh_token: String!
 }
 
+type Response {
+	msg: String!
+}
+
 type Mutation {
   createUser(input: AddUsersInput): User
 }
 
 extend type Query{
 	loginUser(username: String!, password: String!): Authtoken
+}
+
+extend type Query{
+	logoutUser(user_id: String!) : Response
 }
 
 extend type Query{
