@@ -1,31 +1,25 @@
 # Where are all the schema files located? globs are supported eg  src/**/*.graphqls
 schema:
-  - graphql/resolvers/*.graphqls
+  - resolvers/*.graphqls
 
 # Where should the generated server code go?
 exec:
-  filename: graphql/generated/generated.go
-  package: generated
-
-# Enable Apollo federation support
-# federation:
-#   filename: graphql/generated/federation.go
-#   package: generated
+  filename: generated.go
+  package: publicgraphql
 
 # Where should any generated models go?
 model:
-  filename: graphql/model/models.go
-  package: model
+  filename: models.go
+  package: publicgraphql
 
 models:
  User:
    model: dataplane/database/models.Users
 
-
 resolver:
   layout: follow-schema
-  dir: graphql/resolvers
-  package: resolvers
+  dir: ./resolvers
+  package: publicresolvers
   filename_template: "{name}.resolvers.go"
 
 autobind: []

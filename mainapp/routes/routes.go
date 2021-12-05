@@ -4,8 +4,6 @@ import (
 	"dataplane/auth"
 	"dataplane/database"
 	"dataplane/database/models"
-	"dataplane/graphql/generated"
-	"dataplane/graphql/resolvers"
 	"dataplane/logme"
 	"fmt"
 	"log"
@@ -13,12 +11,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/valyala/fasthttp/fasthttpadaptor"
 )
 
 func Setup() *fiber.App {
@@ -73,16 +69,14 @@ func Setup() *fiber.App {
 	app.Static("/webapp/*", "frontbuild/index.html")
 
 	// ------- GRAPHQL------
-	app.Post("/graphql", GraphqlHandler())
+	app.Post("/public/graphql", PublicGraphqlHandler())
+	app.Post("/private/graphql", auth.TokenAuthMiddle(), PrivateGraphqlHandler())
 
 	// ------ Auth ------
 	app.Post("/refreshtoken", func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
-
 		body := c.Body()
-
 		refreshToken := jsoniter.Get(body, "refresh_token").ToString()
-
 		newRefreshToken, err := auth.RenewAccessToken(refreshToken)
 		if err != nil {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
@@ -99,23 +93,9 @@ func Setup() *fiber.App {
 	// Do something with response
 	log.Println("🐆 Start time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
 
+	log.Println("🌍 Visit dashboard at:", "http://localhost:9000/webapp/")
+
 	return app
-}
-
-/* GraphQL Handlers */
-func GraphqlHandler() fiber.Handler {
-	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers.Resolver{}}))
-
-	return httpHandler(h)
-}
-
-func httpHandler(h http.Handler) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		c.Locals("fiberCtx", c)
-		handler := fasthttpadaptor.NewFastHTTPHandler(h)
-		handler(c.Context())
-		return nil
-	}
 }
 
 /* Add timer to header */

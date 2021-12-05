@@ -127,9 +127,8 @@ func GenerateRefreshToken(userID string, businessID string) string {
 func RenewAccessToken(refreshToken string) (string, error) {
 
 	// validate the refresh token
-	tokenpayload := []byte(refreshToken)
 	token, err := jwt2.Parse(
-		tokenpayload,
+		[]byte(refreshToken),
 		jwt2.WithValidate(true),
 		jwt2.WithVerify(jwa.HS256, []byte(jwtKey)))
 
@@ -151,11 +150,11 @@ func RenewAccessToken(refreshToken string) (string, error) {
 }
 
 /* Validate access token */
-func ValidateAccessToken(refreshToken string) (bool, *Claims) {
+func ValidateAccessToken(accessToken string) (bool, *Claims) {
 
 	// validate the refresh token
 	token, err := jwt2.Parse(
-		[]byte(refreshToken),
+		[]byte(accessToken),
 		jwt2.WithValidate(true),
 		jwt2.WithVerify(jwa.HS256, []byte(jwtKey)))
 
@@ -180,62 +179,3 @@ func ValidateAccessToken(refreshToken string) (bool, *Claims) {
 		UserType:           customclaims["user_type"].(string), //admin or user
 	}
 }
-
-// SecureAuth returns a middleware which secures all the private routes
-// func SecureAuth() func(*fiber.Ctx) error {
-// 	return func(c *fiber.Ctx) error {
-// 		accessToken := c.Cookies("access_token")
-// 		claims := new(models.Claims)
-
-// 		token, err := jwt.ParseWithClaims(accessToken, claims,
-// 			func(token *jwt.Token) (interface{}, error) {
-// 				return jwtKey, nil
-// 			})
-
-// 		if token.Valid {
-// 			if claims.ExpiresAt < time.Now().Unix() {
-// 				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-// 					"error":   true,
-// 					"general": "Token Expired",
-// 				})
-// 			}
-// 		} else if ve, ok := err.(*jwt.ValidationError); ok {
-// 			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
-// 				// this is not even a token, we should delete the cookies here
-// 				c.ClearCookie("access_token", "refresh_token")
-// 				return c.SendStatus(fiber.StatusForbidden)
-// 			} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
-// 				// Token is either expired or not active yet
-// 				return c.SendStatus(fiber.StatusUnauthorized)
-// 			} else {
-// 				// cannot handle this token
-// 				c.ClearCookie("access_token", "refresh_token")
-// 				return c.SendStatus(fiber.StatusForbidden)
-// 			}
-// 		}
-
-// 		c.Locals("id", claims.Issuer)
-// 		return c.Next()
-// 	}
-// }
-
-// GetAuthCookies sends two cookies of type access_token and refresh_token
-// func GetAuthCookies(accessToken, refreshToken string) (*fiber.Cookie, *fiber.Cookie) {
-// 	accessCookie := &fiber.Cookie{
-// 		Name:     "access_token",
-// 		Value:    accessToken,
-// 		Expires:  time.Now().Add(24 * time.Hour),
-// 		HTTPOnly: true,
-// 		Secure:   true,
-// 	}
-
-// 	refreshCookie := &fiber.Cookie{
-// 		Name:     "refresh_token",
-// 		Value:    refreshToken,
-// 		Expires:  time.Now().Add(10 * 24 * time.Hour),
-// 		HTTPOnly: true,
-// 		Secure:   true,
-// 	}
-
-// 	return accessCookie, refreshCookie
-// }

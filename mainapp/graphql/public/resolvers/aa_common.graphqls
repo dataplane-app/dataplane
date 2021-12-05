@@ -1,0 +1,7 @@
+type Environments{
+	name: String!
+}
+
+type Query {
+    getEnvironments: [Environments]
+}

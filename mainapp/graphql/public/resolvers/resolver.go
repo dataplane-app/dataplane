@@ -1,4 +1,4 @@
-package resolvers
+package publicresolvers
 
 // This file will not be regenerated automatically.
 //

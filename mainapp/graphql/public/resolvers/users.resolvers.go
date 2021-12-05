@@ -1,4 +1,4 @@
-package resolvers
+package publicresolvers
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -8,10 +8,8 @@ import (
 	"dataplane/auth"
 	"dataplane/database"
 	"dataplane/database/models"
-	"dataplane/graphql/generated"
-	"dataplane/graphql/model"
+	publicgraphql "dataplane/graphql/public"
 	"dataplane/logging"
-	"encoding/json"
 	"errors"
 	"os"
 	"strings"
@@ -20,13 +18,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (r *mutationResolver) CreateUser(ctx context.Context, input *model.AddUsersInput) (*models.Users, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, input *publicgraphql.AddUsersInput) (*models.Users, error) {
 	// validate if the email, username and password are in correct format
-	e := auth.ValidateRegister(input)
-	if e.Err {
-		finalJson, _ := json.Marshal(e)
-		return nil, errors.New("validation failed" + string(finalJson))
-	}
+	// e := auth.ValidateRegister(input)
+	// if e.Err {
+	// 	finalJson, _ := json.Marshal(e)
+	// 	return nil, errors.New("validation failed" + string(finalJson))
+	// }
 
 	password, err := auth.Encrypt(input.Password)
 
@@ -65,7 +63,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *model.AddUsers
 	}, nil
 }
 
-func (r *queryResolver) LoginUser(ctx context.Context, username string, password string) (*model.Authtoken, error) {
+func (r *queryResolver) LoginUser(ctx context.Context, username string, password string) (*publicgraphql.Authtoken, error) {
 	// check if a user exists
 	u := models.Users{}
 	if res := database.DBConn.Where(
@@ -82,10 +80,10 @@ func (r *queryResolver) LoginUser(ctx context.Context, username string, password
 	accessToken, refreshToken := auth.GenerateTokens(u.UserID, u.Username, u.UserType, "businessid")
 	// accessCookie, refreshCookie := auth.GetAuthCookies(accessToken, refreshToken)
 
-	return &model.Authtoken{accessToken, refreshToken}, nil
+	return &publicgraphql.Authtoken{accessToken, refreshToken}, nil
 }
 
-func (r *queryResolver) RefreshToken(ctx context.Context, username string, refreshToken string) (*model.Authtoken, error) {
+func (r *queryResolver) RefreshToken(ctx context.Context, username string, refreshToken string) (*publicgraphql.Authtoken, error) {
 	// To Do: Add validation
 
 	// check if a user exists
@@ -98,10 +96,10 @@ func (r *queryResolver) RefreshToken(ctx context.Context, username string, refre
 
 	accessToken, refreshToken := auth.GenerateTokens(u.UserID, u.Username, u.UserType, "businessid")
 
-	return &model.Authtoken{accessToken, refreshToken}, nil
+	return &publicgraphql.Authtoken{accessToken, refreshToken}, nil
 }
 
-// Mutation returns generated.MutationResolver implementation.
-func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
+// Mutation returns publicgraphql.MutationResolver implementation.
+func (r *Resolver) Mutation() publicgraphql.MutationResolver { return &mutationResolver{r} }
 
 type mutationResolver struct{ *Resolver }
