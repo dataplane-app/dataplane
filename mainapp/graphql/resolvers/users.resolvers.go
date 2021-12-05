@@ -67,19 +67,19 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *model.AddUsers
 
 func (r *queryResolver) LoginUser(ctx context.Context, username string, password string) (*model.Authtoken, error) {
 	// check if a user exists
-	u := new(models.Users)
+	u := models.Users{}
 	if res := database.DBConn.Where(
 		&models.Users{Username: username},
 	).First(&u); res.RowsAffected <= 0 {
-		return nil, errors.New("Incorrect password")
+		return nil, errors.New("Invalid credentials")
 	}
 
 	// Comparing the password with the hash
 	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
-		return nil, errors.New("Incorrect password")
+		return nil, errors.New("Invalid credentials")
 	}
 
-	accessToken, refreshToken := auth.GenerateTokens(u.UserID)
+	accessToken, refreshToken := auth.GenerateTokens(u.UserID, u.Username, u.UserType, "businessid")
 	// accessCookie, refreshCookie := auth.GetAuthCookies(accessToken, refreshToken)
 
 	return &model.Authtoken{accessToken, refreshToken}, nil
@@ -89,14 +89,14 @@ func (r *queryResolver) RefreshToken(ctx context.Context, username string, refre
 	// To Do: Add validation
 
 	// check if a user exists
-	u := new(models.Users)
+	u := models.Users{}
 	if res := database.DBConn.Where(
 		&models.Users{Username: username},
 	).First(&u); res.RowsAffected <= 0 {
 		return nil, errors.New("invalid Credentials")
 	}
 
-	accessToken, refreshToken := auth.GenerateTokens(u.UserID)
+	accessToken, refreshToken := auth.GenerateTokens(u.UserID, u.Username, u.UserType, "businessid")
 
 	return &model.Authtoken{accessToken, refreshToken}, nil
 }

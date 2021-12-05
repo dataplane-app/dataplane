@@ -44,6 +44,18 @@ func Setup() *fiber.App {
 		Log:         "📦 Database migrated",
 	})
 
+	// ----- Remove stale tokens ------
+	log.Println("💾 Removing stale data")
+	err := database.DBConn.Delete(&models.AuthRefreshTokens{}, "expiry < ?", time.Now()).Error
+	if err != nil {
+		logme.PlatformLogger(models.LogsPlatform{
+			Environment: "d_platform",
+			Category:    "platform",
+			LogType:     "error", //can be error, info or debug
+			Log:         err.Error(),
+		})
+	}
+
 	//recover from panic
 	app.Use(recover.New())
 

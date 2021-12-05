@@ -11,7 +11,7 @@ func Encrypt(rawPassword string) (string, error) {
 	password := []byte(rawPassword)
 	hashedPassword, err := bcrypt.GenerateFromPassword(
 		password,
-		bcrypt.DefaultCost,
+		14, //bcrypt.DefaultCost=10
 	)
 
 	if err != nil {

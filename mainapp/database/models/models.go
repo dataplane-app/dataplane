@@ -5,7 +5,6 @@ package models
 import (
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"gorm.io/datatypes"
 )
 
@@ -106,28 +105,10 @@ type UserToEnvironment struct {
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
-func (Claims) IsEntity() {}
+// func (Claims) IsEntity() {}
 
-func (Claims) TableName() string {
-	return "auth_refreshtokens"
-}
+// func (Claims) TableName() string {
+// 	return "auth_refreshtokens"
+// }
 
 // Claims represent the structure of the JWT token
-type Claims struct {
-	jwt.StandardClaims
-	ID uint `gorm:"primaryKey"`
-}
-
-func (UserErrors) IsEntity() {}
-
-func (UserErrors) TableName() string {
-	return "userErrors"
-}
-
-// UserErrors represent the error format for user routes
-type UserErrors struct {
-	Err      bool   `json:"error"`
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}

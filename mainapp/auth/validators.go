@@ -1,12 +1,19 @@
 package auth
 
 import (
-	"dataplane/database/models"
 	"dataplane/graphql/model"
 	"regexp"
 
 	valid "github.com/asaskevich/govalidator"
 )
+
+// UserErrors represent the error format for user routes
+type UserErrors struct {
+	Err      bool   `json:"error"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
 
 // IsEmpty checks if a string is empty
 func IsEmpty(str string) (bool, string) {
@@ -18,8 +25,8 @@ func IsEmpty(str string) (bool, string) {
 }
 
 // ValidateRegister func validates the body of user for registration
-func ValidateRegister(u *model.AddUsersInput) *models.UserErrors {
-	e := &models.UserErrors{}
+func ValidateRegister(u *model.AddUsersInput) *UserErrors {
+	e := &UserErrors{}
 
 	if !valid.IsEmail(u.Email) {
 		e.Err, e.Email = true, "Must be a valid email"
