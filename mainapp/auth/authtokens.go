@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"dataplane/database"
 	"dataplane/database/models"
 	"dataplane/logme"
 	"os"
@@ -24,14 +25,14 @@ type Claims struct {
 
 // GenerateTokens returns the access and refresh tokens
 func GenerateTokens(userID string, username string, usertype string, businessID string) (string, string) {
-	_, accessToken := GenerateAccessClaims(userID, username, usertype, businessID)
-	refreshToken := accessToken
+	accessToken := GenerateAccessClaims(userID, username, usertype, businessID)
+	refreshToken := GenerateRefreshToken(userID, businessID)
 
 	return accessToken, refreshToken
 }
 
 // GenerateAccessClaims returns a claim and a acess_token string
-func GenerateAccessClaims(userID string, username string, usertype string, businessID string) (*Claims, string) {
+func GenerateAccessClaims(userID string, username string, usertype string, businessID string) string {
 
 	t := time.Now()
 
@@ -62,46 +63,62 @@ func GenerateAccessClaims(userID string, username string, usertype string, busin
 		panic(err)
 	}
 
-	return claim, tokenString
+	return tokenString
 }
 
 // GenerateRefreshClaims returns refresh_token
-// func GenerateRefreshClaims(cl *models.Claims) string {
-// 	result := db.DBConn.Where(&models.Claims{
-// 		StandardClaims: jwt.StandardClaims{
-// 			Issuer: cl.Issuer,
-// 		},
-// 	}).Find(&models.Claims{})
+func GenerateRefreshToken(userID string, businessID string) string {
 
-// 	// checking the number of refresh tokens stored. !!!NOT working!!!
-// 	// If the number is higher than 3, remove all the refresh tokens and leave only new one.
-// 	if result.RowsAffected > 3 {
-// 		db.DBConn.Where(&models.Claims{
-// 			StandardClaims: jwt.StandardClaims{Issuer: cl.Issuer},
-// 		}).Delete(&models.Claims{})
-// 	}
+	// remove stale refresh tokens
+	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expiry < ? and user_id =?", time.Now(), userID)
 
-// 	t := time.Now()
-// 	refreshClaim := &models.Claims{
-// 		StandardClaims: jwt.StandardClaims{
-// 			Issuer:    cl.Issuer,
-// 			ExpiresAt: t.Add(7 * 24 * time.Hour).Unix(),
-// 			Subject:   "refresh_token",
-// 			IssuedAt:  t.Unix(),
-// 		},
-// 	}
+	t := time.Now()
+	expires := t.Add(14 * 24 * time.Hour)
 
-// 	// create a claim on DB
-// 	db.DBConn.Create(&refreshClaim)
+	refreshclaims := &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expires), // access token valid for 2 weeks
+			IssuedAt:  jwt.NewNumericDate(t),
+			NotBefore: jwt.NewNumericDate(t),
+			Issuer:    "dataplane.app",
+			Subject:   userID,
+			ID:        uuid2.New().String(),
+			Audience:  []string{businessID}, //business
+		},
+	}
 
-// 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaim)
-// 	refreshTokenString, err := refreshToken.SignedString(jwtKey)
-// 	if err != nil {
-// 		panic(err)
-// 	}
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshclaims)
 
-// 	return refreshTokenString
-// }
+	refreshTokenString, err := refreshToken.SignedString(jwtKey)
+	if err != nil {
+		logme.PlatformLogger(models.LogsPlatform{
+			Environment: "d_platform",
+			Category:    "platform",
+			LogType:     "error", //can be error, info or debug
+			Log:         err.Error(),
+		})
+		panic(err)
+	}
+
+	// 	// create a claim on DB
+	err = database.DBConn.Create(&models.AuthRefreshTokens{
+		UserID:       userID,
+		RefreshToken: refreshTokenString,
+		Expires:      expires,
+	}).Error
+
+	if err != nil {
+		logme.PlatformLogger(models.LogsPlatform{
+			Environment: "d_platform",
+			Category:    "platform",
+			LogType:     "error", //can be error, info or debug
+			Log:         err.Error(),
+		})
+		panic(err)
+	}
+
+	return refreshTokenString
+}
 
 // SecureAuth returns a middleware which secures all the private routes
 // func SecureAuth() func(*fiber.Ctx) error {
