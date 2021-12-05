@@ -4,6 +4,7 @@ import (
 	"dataplane/auth"
 	"dataplane/database"
 	"dataplane/database/models"
+	"dataplane/logging"
 	"dataplane/logme"
 	"fmt"
 	"log"
@@ -44,7 +45,7 @@ func Setup() *fiber.App {
 
 	// ----- Remove stale tokens ------
 	log.Println("💾 Removing stale data")
-	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expiry < ?", time.Now())
+	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expires < ?", time.Now())
 
 	//recover from panic
 	app.Use(recover.New())
@@ -73,20 +74,24 @@ func Setup() *fiber.App {
 	app.Post("/private/graphql", auth.TokenAuthMiddle(), PrivateGraphqlHandler())
 
 	// ------ Auth ------
+	/* Exchange a refresh token for a new access token */
 	app.Post("/refreshtoken", func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
 		body := c.Body()
 		refreshToken := jsoniter.Get(body, "refresh_token").ToString()
 		newRefreshToken, err := auth.RenewAccessToken(refreshToken)
 		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err.Error())
+			}
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
 		}
-		return c.Status(http.StatusOK).JSON(fiber.Map{"refresh_token": newRefreshToken})
+		return c.Status(http.StatusOK).JSON(fiber.Map{"access_token": newRefreshToken})
 	})
 
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {
-		return c.SendString("Hello 👋!")
+		return c.SendString("Hello 👋! Healthy 🍏")
 	})
 
 	stop := time.Now()

@@ -24,9 +24,13 @@ services:
     command: tail -f /dev/null
     ports:
       - 9000:9000
-      - 3000:3000
     volumes:
       - ../:/appdev
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:9000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     environment:
       env: "local"
       basepath: "/dataplane"
@@ -38,6 +42,8 @@ services:
       secret.db_database: "dataplane"
       secret.jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
       database: "timescaledb"
-      mode: "development"
       debug: "true"
       dbdebug: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy

@@ -138,7 +138,7 @@ func RenewAccessToken(refreshToken string) (string, error) {
 
 	// retrieve refresh token
 	refreshDB := models.AuthRefreshTokens{}
-	err = database.DBConn.Where("expiry < ? and user_id =? and refresh_token=?", time.Now(), token.Subject(), refreshDB).Find(&refreshDB).Error
+	err = database.DBConn.Select("user_id", "refresh_token").Where("expires > ? and user_id =? and refresh_token=?", time.Now(), token.Subject(), refreshToken).Find(&refreshDB).Error
 
 	// https://gorm.io/docs/error_handling.html#ErrRecordNotFound
 	// Error or record not found
@@ -146,7 +146,15 @@ func RenewAccessToken(refreshToken string) (string, error) {
 		return "", err
 	}
 
-	return "", nil
+	user := models.Users{}
+	err = database.DBConn.Select("user_id", "username", "user_type").Where("user_id =?", token.Subject()).Find(&user).Error
+	if err != nil {
+		return "", err
+	}
+
+	accessToken := GenerateAccessClaims(user.UserID, user.Username, user.UserType, "businessid")
+
+	return accessToken, nil
 }
 
 /* Validate access token */
