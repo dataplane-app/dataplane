@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Pipeline
+metadata:
+  name: clean-logs
+  labels:
+    pipeline: hello
+spec:
+  description: "A flow to clean out logs"
+  schedule: "*/30 * * * *"
+  schedule_text: "Every 30 minutes"
+  start_datetime: "2021-11-25T08:00"
+  steps:
+    - name: 
+      worker_node: 
+      

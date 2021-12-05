@@ -1,0 +1,29 @@
+input AddUsersInput {
+	first_name: String!    
+	last_name:  String!     
+	email:     String!     
+	password:  String!     
+	timezone:  String!     
+}
+
+type User {
+	user_id:   String! 
+	first_name: String!    
+	last_name:  String!     
+	email:     String!     
+	timezone:  String!     
+}
+
+type Authtoken {
+	access_token: String!
+	refresh_token: String!
+}
+
+type Mutation {
+  createUser(input: AddUsersInput): User
+}
+
+type Query{
+	loginUser(username: String!, password: String!): Authtoken
+	# logoutUser(user_id: String!) : String --> moved to private route, need to be logged in
+}

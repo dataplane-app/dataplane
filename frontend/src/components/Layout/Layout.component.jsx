@@ -1,19 +1,25 @@
-import { Outlet } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "../Navbar";
 import Sidebar from "../Sidebar";
 
-const Layout = () => {
-    return(
-        <div className="h-screen max-h-screen max-w-screen overflow-hidden dark:bg-darkPrimary">
+import Pipelines from "../../pages/Pipelines";
+import Teams from "../../pages/Teams";
+
+const Layout = () => (
+    <Router basename="/webapp">
+        <div className="h-screen max-h-screen max-w-screen overflow-hidden">
             <Navbar />
             <div className="h-full flex spacing-nav">
                 <Sidebar />
                 <div className="flex-1 overflow-y-auto p-7">
-                    <Outlet />
+                    <Routes>
+                        <Route exact path="/pipelines" element={<Pipelines />}/>
+                        <Route exact path="/teams" element={<Teams />}/>
+                    </Routes>
                 </div>
             </div>
         </div>
-    )
-};
+    </Router>
+);
 
 export default Layout;
