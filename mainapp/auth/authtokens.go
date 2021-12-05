@@ -4,11 +4,14 @@ import (
 	"dataplane/database"
 	"dataplane/database/models"
 	"dataplane/logme"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	uuid2 "github.com/google/uuid"
+	"github.com/lestrrat-go/jwx/jwa"
+	jwt2 "github.com/lestrrat-go/jwx/jwt"
 )
 
 var jwtKey = []byte(os.Getenv("secret.jwt_secret"))
@@ -118,6 +121,33 @@ func GenerateRefreshToken(userID string, businessID string) string {
 	}
 
 	return refreshTokenString
+}
+
+/* Exchange new access token for valid refresh token */
+func RenewAccessToken(refreshToken string) (string, error) {
+
+	// validate the refresh token
+	tokenpayload := []byte(refreshToken)
+	token, err := jwt2.Parse(
+		tokenpayload,
+		jwt2.WithValidate(true),
+		jwt2.WithVerify(jwa.HS256, []byte(jwtKey)))
+
+	if err != nil {
+		return "", fmt.Errorf("token error: %v", err)
+	}
+
+	// retrieve refresh token
+	refreshDB := models.AuthRefreshTokens{}
+	err = database.DBConn.Where("expiry < ? and user_id =? and refresh_token=?", time.Now(), token.Subject(), refreshDB).Find(&refreshDB).Error
+
+	// https://gorm.io/docs/error_handling.html#ErrRecordNotFound
+	// Error or record not found
+	if err != nil {
+		return "", err
+	}
+
+	return "", nil
 }
 
 // SecureAuth returns a middleware which secures all the private routes

@@ -9,6 +9,8 @@ require (
 	github.com/gofiber/fiber/v2 v2.22.0
 	github.com/golang-jwt/jwt/v4 v4.2.0 // indirect
 	github.com/google/uuid v1.3.0
+	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/lestrrat-go/jwx v1.2.12 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/valyala/fasthttp v1.31.0
 	github.com/vektah/gqlparser/v2 v2.2.0

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"dataplane/auth"
 	"dataplane/database"
 	"dataplane/database/models"
 	"dataplane/graphql/generated"
@@ -16,6 +17,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp/fasthttpadaptor"
 )
 
@@ -73,6 +75,22 @@ func Setup() *fiber.App {
 	// ------- GRAPHQL------
 	app.Post("/graphql", GraphqlHandler())
 
+	// ------ Auth ------
+	app.Post("/refreshtoken", func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
+
+		body := c.Body()
+
+		refreshToken := jsoniter.Get(body, "new_password").ToString()
+
+		newRefreshToken, err := auth.RenewAccessToken(refreshToken)
+		if err != nil {
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
+		}
+		return c.Status(http.StatusOK).JSON(fiber.Map{"refresh_token": newRefreshToken})
+	})
+
+	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {
 		return c.SendString("Hello 👋!")
 	})
