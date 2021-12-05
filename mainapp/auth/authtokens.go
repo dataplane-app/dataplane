@@ -150,6 +150,37 @@ func RenewAccessToken(refreshToken string) (string, error) {
 	return "", nil
 }
 
+/* Validate access token */
+func ValidateAccessToken(refreshToken string) (bool, *Claims) {
+
+	// validate the refresh token
+	token, err := jwt2.Parse(
+		[]byte(refreshToken),
+		jwt2.WithValidate(true),
+		jwt2.WithVerify(jwa.HS256, []byte(jwtKey)))
+
+	if err != nil {
+		return false, nil
+	}
+
+	customclaims := token.PrivateClaims()
+
+	return true, &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(token.Expiration()), // access token valid for 5 minutes
+			IssuedAt:  jwt.NewNumericDate(token.IssuedAt()),
+			NotBefore: jwt.NewNumericDate(token.NotBefore()),
+			Issuer:    token.Issuer(),
+			Subject:   token.Subject(),
+			ID:        token.JwtID(),
+			Audience:  token.Audience(), //business
+		},
+		AuthenticationType: customclaims["authenticationType"].(string),
+		PreferredUsername:  customclaims["preferred_username"].(string),
+		UserType:           customclaims["user_type"].(string), //admin or user
+	}
+}
+
 // SecureAuth returns a middleware which secures all the private routes
 // func SecureAuth() func(*fiber.Ctx) error {
 // 	return func(c *fiber.Ctx) error {

@@ -81,7 +81,7 @@ func Setup() *fiber.App {
 
 		body := c.Body()
 
-		refreshToken := jsoniter.Get(body, "new_password").ToString()
+		refreshToken := jsoniter.Get(body, "refresh_token").ToString()
 
 		newRefreshToken, err := auth.RenewAccessToken(refreshToken)
 		if err != nil {
