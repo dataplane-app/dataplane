@@ -26,8 +26,8 @@ func TokenAuthMiddle() func(*fiber.Ctx) error {
 		}
 
 		// --- Pass through context
-		c.Locals("user", claims.Subject)
-		c.Locals("user_type", claims.UserType)
+		c.Locals("currentUser", claims.Subject)
+		c.Locals("currentUserType", claims.UserType)
 
 		return c.Next()
 	}

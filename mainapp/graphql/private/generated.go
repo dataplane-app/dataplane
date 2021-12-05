@@ -52,6 +52,7 @@ type ComplexityRoot struct {
 		GetEnvironments func(childComplexity int) int
 		GetPipelines    func(childComplexity int) int
 		GetWorkers      func(childComplexity int) int
+		LogoutUser      func(childComplexity int) int
 	}
 
 	Workers struct {
@@ -62,6 +63,7 @@ type ComplexityRoot struct {
 type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*Environments, error)
 	GetPipelines(ctx context.Context) ([]*Pipelines, error)
+	LogoutUser(ctx context.Context) (*string, error)
 	GetWorkers(ctx context.Context) ([]*Workers, error)
 }
 
@@ -114,6 +116,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetWorkers(childComplexity), true
+
+	case "Query.logoutUser":
+		if e.complexity.Query.LogoutUser == nil {
+			break
+		}
+
+		return e.complexity.Query.LogoutUser(childComplexity), true
 
 	case "Workers.name":
 		if e.complexity.Workers.Name == nil {
@@ -185,6 +194,9 @@ type Query {
 
 extend type Query {
   getPipelines: [Pipelines]
+}`, BuiltIn: false},
+	{Name: "resolvers/users.graphqls", Input: `extend type Query{
+	logoutUser: String
 }`, BuiltIn: false},
 	{Name: "resolvers/workers.graphqls", Input: `type Workers {
 	name: String!
@@ -385,6 +397,38 @@ func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graph
 	res := resTmp.([]*Pipelines)
 	fc.Result = res
 	return ec.marshalOPipelines2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐPipelines(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_logoutUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().LogoutUser(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getWorkers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1744,6 +1788,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getPipelines(ctx, field)
+				return res
+			})
+		case "logoutUser":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_logoutUser(ctx, field)
 				return res
 			})
 		case "getWorkers":

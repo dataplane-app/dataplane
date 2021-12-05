@@ -14,7 +14,3 @@ type Authtoken struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
-
-type Environments struct {
-	Name string `json:"name"`
-}

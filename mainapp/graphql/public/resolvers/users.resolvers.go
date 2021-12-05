@@ -83,23 +83,11 @@ func (r *queryResolver) LoginUser(ctx context.Context, username string, password
 	return &publicgraphql.Authtoken{accessToken, refreshToken}, nil
 }
 
-func (r *queryResolver) RefreshToken(ctx context.Context, username string, refreshToken string) (*publicgraphql.Authtoken, error) {
-	// To Do: Add validation
-
-	// check if a user exists
-	u := models.Users{}
-	if res := database.DBConn.Where(
-		&models.Users{Username: username},
-	).First(&u); res.RowsAffected <= 0 {
-		return nil, errors.New("invalid Credentials")
-	}
-
-	accessToken, refreshToken := auth.GenerateTokens(u.UserID, u.Username, u.UserType, "businessid")
-
-	return &publicgraphql.Authtoken{accessToken, refreshToken}, nil
-}
-
 // Mutation returns publicgraphql.MutationResolver implementation.
 func (r *Resolver) Mutation() publicgraphql.MutationResolver { return &mutationResolver{r} }
 
+// Query returns publicgraphql.QueryResolver implementation.
+func (r *Resolver) Query() publicgraphql.QueryResolver { return &queryResolver{r} }
+
 type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }
