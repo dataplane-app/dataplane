@@ -3,42 +3,7 @@ import Pills from "../components/Pills";
 import Search from "../components/Search";
 import { useTable, useGlobalFilter } from "react-table";
 import { useEffect } from 'react';
-
-// function Table({ columns, data }) {
-//     // Render the UI for your table
-//     return (
-//         <table {...getTableProps()} className="w-full mt-8">
-//             <thead>
-//                 {headerGroups.map((headerGroup) => (
-//                     <tr {...headerGroup.getHeaderGroupProps()} className="grid grid-cols-teams">
-//                         {headerGroup.headers.map((column) => (
-//                             <th {...column.getHeaderProps()}>
-//                                 {column.render("Header")}
-//                             </th>
-//                         ))}
-//                     </tr>
-//                 ))}
-//             </thead>
-//             <tbody {...getTableBodyProps()} className="flex flex-col">
-//                 {rows.map((row, i) => {
-//                     prepareRow(row);
-//                     return (
-//                         <tr {...row.getRowProps()} className="grid grid-cols-teams border border-gray rounded-md py-4 mt-3">
-//                             {row.cells.map((cell) => {
-//                                 console.log(cell.column)
-//                                 return (
-//                                     <td {...cell.getCellProps()} className="text-center">
-//                                         {cell.render("Cell")}
-//                                     </td>
-//                                 );
-//                             })}
-//                         </tr>
-//                     );
-//                 })}
-//             </tbody>
-//         </table>
-//     );
-// }
+import Button from '../components/Button';
 
 const Teams = () => {
     const columns = useMemo(
@@ -91,13 +56,18 @@ const Teams = () => {
 
     return (
         <div className="teams">
-            <h2 className="font-bold text-22">Teams</h2>
+            <h2 className="font-bold text-22 dark:text-white">Teams</h2>
 
-            <div className="mt-10 lg:w-4/5">
-                <div className="flex items-center justify-start">
-                    <Pills amount={2} text="Members" color="orange" />
-                    <div className="inline-block w-60">
-                        <Search placeholder="Find members" value={globalFilter} onChange={setGlobalFilter} />
+            <div className="mt-8 lg:w-4/5">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <Pills amount={2} text="Members" color="orange" />
+                        <div className="inline-block w-60">
+                            <Search placeholder="Find members" value={globalFilter} onChange={setGlobalFilter} />
+                        </div>
+                    </div>
+                    <div className="flex">
+                        <Button text="Add" classes="w-40"/>
                     </div>
                 </div>
 
@@ -106,7 +76,7 @@ const Teams = () => {
                         {headerGroups.map((headerGroup) => (
                             <tr {...headerGroup.getHeaderGroupProps()} className="grid grid-cols-teams">
                                 {headerGroup.headers.map((column) => (
-                                    <th {...column.getHeaderProps()}>
+                                    <th {...column.getHeaderProps()} className="dark:text-white">
                                         {column.render("Header")}
                                     </th>
                                 ))}
@@ -139,8 +109,8 @@ const Teams = () => {
 const CustomMember = ({ row }) => {
     return (
         <div>
-            <h4 className="text-blue font-black text-lg">{row.value.name}</h4>
-            <h5 className="text-xs" >{row.value.occupation}</h5>
+            <h4 className="text-blue font-black text-lg ">{row.value.name}</h4>
+            <h5 className="text-xs dark:text-white" >{row.value.occupation}</h5>
         </div>
     )
 }
@@ -148,7 +118,7 @@ const CustomMember = ({ row }) => {
 const CustomEmail = ({ row }) => {
     return (
         <div>
-            <h4 className="text-sm mb-2">{row.value.email}</h4>
+            <h4 className="text-sm mb-2 dark:text-white">{row.value.email}</h4>
             <Pills text={row.value.role} color="orange" className="text-sm" />
         </div>
     )

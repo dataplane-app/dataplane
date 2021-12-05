@@ -8,11 +8,11 @@ const Pipelines = () => {
     return (
         <div className="pipelines">
             <div className="flex items-center justify-between">
-                <h2 className="font-bold text-22">Pipelines</h2>
+                <h2 className="font-bold text-22 dark:text-white">Pipelines</h2>
                 <FontAwesomeIcon icon={faEllipsisV} className="cursor-pointer text-halfBlack text-22"/>
             </div>
 
-            <div className="mt-10 flex flex-col lg:flex-row items-center justify-start lg:w-4/5">
+            <div className="mt-8 flex flex-col lg:flex-row items-center justify-start lg:w-4/5">
                 <div className="flex items-center self-stretch lg:self-center">
                     <Pills amount={2} text="Pipelines" color="orange" />
                     <Pills amount={2} text="Succeeded" color="green" />
@@ -23,10 +23,10 @@ const Pipelines = () => {
                 <div className="flex-1 flex items-center self-stretch lg:self-center mt-3 lg:mt-0">
                     <Search placeholder="Find a pipeline" classes="ml-0 lg:ml-3" />
 
-                    <div className="border border-gray ml-4 p-3 rounded-lg flex items-center cursor-pointer hover:bg-gray-100 flex-1">
-                        <FontAwesomeIcon icon={faChartBar} className="text-halfBlack text-xs"/>
-                        <p className="flex-1 mx-2 text-xs">Last 48 Hours</p>
-                        <FontAwesomeIcon icon={faCaretDown} className="text-halfBlack text-base"/>
+                    <div className="border border-gray dark:border-darkGray ml-4 p-3 rounded-lg flex items-center cursor-pointer hover:bg-gray-100 flex-1">
+                        <FontAwesomeIcon icon={faChartBar} className="text-halfBlack dark:text-white text-xs"/>
+                        <p className="flex-1 mx-2 text-xs dark:text-white">Last 48 Hours</p>
+                        <FontAwesomeIcon icon={faCaretDown} className="text-halfBlack dark:text-white text-base"/>
                     </div>
                 </div>
 
