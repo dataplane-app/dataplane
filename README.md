@@ -1,3 +1,5 @@
+![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests&style=for-the-badge)
+
 # <span style="color:#FF5722">Dataplane</span>
 Dataplane is the super fast, cloud native, scalable, secure and easy to use data platform for data-driven businesses. 
 
