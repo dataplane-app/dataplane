@@ -3,6 +3,8 @@ package tests
 import (
 	tests "dataplane/Tests"
 	"dataplane/auth"
+	"dataplane/database"
+	"dataplane/database/models"
 	"dataplane/routes"
 	"log"
 	"net/http"
@@ -15,15 +17,18 @@ import (
 )
 
 /*
-go test -p 1 -v -count=1 -run TestUserAuth dataplane/Tests/users
-* Create user
+go test -p 1 -v -count=1 -run TestAdminSetup dataplane/Tests/users
+* Create admin user and platform
 * Login
 * Validate token
 * Exchange refresh token for access token
 * Logout
 */
-func TestUserAuth(t *testing.T) {
+func TestAdminSetup(t *testing.T) {
 	app := routes.Setup()
+
+	// Delete platform for testing first time user
+	database.DBConn.Where("1 = 1").Delete(&models.Platform{})
 
 	graphQLUrl := "http://localhost:9000/public/graphql"
 
@@ -32,20 +37,38 @@ func TestUserAuth(t *testing.T) {
 
 	//--------- Create user ------------
 	createUser := `mutation {
-			createUser(input: {
-			first_name: "` + faker.FirstName() + `",
-			last_name: "` + faker.LastName() + `",
-			email: "` + testUser + `",
-			job_title: "",
-			password: "` + testPassword + `",
-			timezone: " ` + faker.Timezone() + ` ",
-			}) {
-			user_id
-			first_name
-			last_name
-			email
-			timezone
-			}
+				createAdmin(
+					input: {
+						PlatformInput: { 
+							business_name: "` + faker.DomainName() + `",,
+							timezone: " ` + faker.Timezone() + ` ",
+							complete: true }
+						AddUsersInput: {
+							first_name: "` + faker.FirstName() + `",
+							last_name: "` + faker.LastName() + `",
+							email: "` + testUser + `",
+							job_title: "` + faker.Name() + `",
+							password: "` + testPassword + `",
+							timezone: " ` + faker.Timezone() + ` ",
+						}
+					}
+				) {
+					Platform {
+						id
+						business_name
+						timezone
+						complete
+					}
+					User {
+						user_id
+						user_type
+						first_name
+						last_name
+						email
+						job_title
+						timezone
+					}
+				}
 			}`
 
 	createUserResponse, httpResponse := tests.GraphQLRequestPublic(createUser, "{}", graphQLUrl, t, app)
