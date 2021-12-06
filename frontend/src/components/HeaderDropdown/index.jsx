@@ -17,11 +17,11 @@ const HeaderDropdown = ({ user, title, subtitle, children }) => {
     return(
         <div
             onClick={() => children && setIsDropdownOpen(!isDropdownOpen)}
-            className={`relative z-10 border ${isDropdownOpen ? 'rounded-t-2xl' : 'rounded-2xl'} border-gray py-3 px-4 flex items-center mr-4 cursor-pointer hover:bg-gray-100`}>
+            className={`relative z-10 border ${isDropdownOpen ? 'rounded-t-2xl' : 'rounded-2xl'} border-gray py-3 px-4 flex items-center mr-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700`}>
             <div className={`h-9 w-9 rounded-lg p-2 ${user ? 'bg-orange' : 'bg-blue'} flex items-center justify-center font-bold text-white text-2xl`}>{user ? user[0].toUpperCase() : 'P'}</div>
             <div className="mx-4">
-                {title && <h4 className="font-bold text-base">{title}</h4>}
-                {subtitle && <h5 className="text-xs -mt-1">{subtitle}</h5>}
+                {title && <h4 className="font-bold text-base dark:text-white">{title}</h4>}
+                {subtitle && <h5 className="text-xs -mt-1 dark:text-white">{subtitle}</h5>}
             </div>
             <FontAwesomeIcon icon={faCaretDown} className="text-grayish text-2xl"/>
 
