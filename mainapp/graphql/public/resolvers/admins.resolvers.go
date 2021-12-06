@@ -27,6 +27,13 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 		return nil, errors.New("Password hash failed.")
 	}
 
+	platformData := &publicgraphql.Platform{
+		ID:           uuid.New().String(),
+		BusinessName: input.PlatformInput.BusinessName,
+		Timezone:     input.PlatformInput.Timezone,
+		Complete:     input.PlatformInput.Complete,
+	}
+
 	userData := &models.Users{
 		UserID:    uuid.New().String(),
 		FirstName: input.AddUsersInput.FirstName,
@@ -38,12 +45,20 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 		Username:  input.AddUsersInput.Email,
 	}
 
-	platformData := &publicgraphql.Platform{
-		BusinessName: input.PlatformInput.BusinessName,
-		Timezone:     input.PlatformInput.Timezone,
-		Complete:     input.PlatformInput.Complete,
+	// Platform information gets sent to DB
+	err = database.DBConn.Create(&platformData).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		if strings.Contains(err.Error(), "duplicate key") {
+			return nil, errors.New("User already exists.")
+		}
+		return nil, errors.New("Register database error.")
 	}
 
+	// Admin information gets sent to DB
 	err = database.DBConn.Create(&userData).Error
 
 	if err != nil {
