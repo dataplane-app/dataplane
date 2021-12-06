@@ -65,7 +65,7 @@ jobs:
         env: 
           env: "tests"
           basepath: "/dataplane"
-          secret.db_host: postgres
+          secret.db_host: localhost
           secret.db_user: postgres
           secret.db_pwd: "Hello123!"
           secret.db_ssl: "disable"
