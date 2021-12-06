@@ -11,7 +11,6 @@ import (
 	publicgraphql "dataplane/graphql/public"
 	"dataplane/logging"
 	"errors"
-	"log"
 	"os"
 	"strings"
 
@@ -19,7 +18,11 @@ import (
 )
 
 func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql.AddAdminsInput) (*publicgraphql.Admin, error) {
-	log.Println("CreateAdmin....")
+
+	u := models.Platform{}
+	if res := database.DBConn.First(&u); res.RowsAffected >= 1 {
+		return nil, errors.New("Platform already setup.")
+	}
 
 	password, err := auth.Encrypt(input.AddUsersInput.Password)
 
@@ -27,7 +30,7 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 		return nil, errors.New("Password hash failed.")
 	}
 
-	platformData := &publicgraphql.Platform{
+	platformData := &models.Platform{
 		ID:           uuid.New().String(),
 		BusinessName: input.PlatformInput.BusinessName,
 		Timezone:     input.PlatformInput.Timezone,

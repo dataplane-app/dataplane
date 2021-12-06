@@ -38,6 +38,8 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *publicgraphql.
 		LastName:  input.LastName,
 		Password:  password,
 		Email:     input.Email,
+		Status:    "active",
+		Active:    true,
 		Timezone:  input.Timezone,
 		Username:  input.Email,
 	}

@@ -507,9 +507,9 @@ func (ec *executionContext) _Admin_Platform(ctx context.Context, field graphql.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*Platform)
+	res := resTmp.(*models.Platform)
 	fc.Result = res
-	return ec.marshalOPlatform2ᚖdataplaneᚋgraphqlᚋpublicᚐPlatform(ctx, field.Selections, res)
+	return ec.marshalOPlatform2ᚖdataplaneᚋdatabaseᚋmodelsᚐPlatform(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Admin_User(ctx context.Context, field graphql.CollectedField, obj *Admin) (ret graphql.Marshaler) {
@@ -692,7 +692,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Platform_id(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
+func (ec *executionContext) _Platform_id(ctx context.Context, field graphql.CollectedField, obj *models.Platform) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -727,7 +727,7 @@ func (ec *executionContext) _Platform_id(ctx context.Context, field graphql.Coll
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Platform_business_name(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
+func (ec *executionContext) _Platform_business_name(ctx context.Context, field graphql.CollectedField, obj *models.Platform) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -762,7 +762,7 @@ func (ec *executionContext) _Platform_business_name(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Platform_timezone(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
+func (ec *executionContext) _Platform_timezone(ctx context.Context, field graphql.CollectedField, obj *models.Platform) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -797,7 +797,7 @@ func (ec *executionContext) _Platform_timezone(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Platform_complete(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
+func (ec *executionContext) _Platform_complete(ctx context.Context, field graphql.CollectedField, obj *models.Platform) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2540,7 +2540,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 var platformImplementors = []string{"Platform"}
 
-func (ec *executionContext) _Platform(ctx context.Context, sel ast.SelectionSet, obj *Platform) graphql.Marshaler {
+func (ec *executionContext) _Platform(ctx context.Context, sel ast.SelectionSet, obj *models.Platform) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, platformImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3269,7 +3269,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return graphql.MarshalBoolean(*v)
 }
 
-func (ec *executionContext) marshalOPlatform2ᚖdataplaneᚋgraphqlᚋpublicᚐPlatform(ctx context.Context, sel ast.SelectionSet, v *Platform) graphql.Marshaler {
+func (ec *executionContext) marshalOPlatform2ᚖdataplaneᚋdatabaseᚋmodelsᚐPlatform(ctx context.Context, sel ast.SelectionSet, v *models.Platform) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

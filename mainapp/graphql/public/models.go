@@ -21,20 +21,13 @@ type AddUsersInput struct {
 }
 
 type Admin struct {
-	Platform *Platform     `json:"Platform"`
-	User     *models.Users `json:"User"`
+	Platform *models.Platform `json:"Platform"`
+	User     *models.Users    `json:"User"`
 }
 
 type Authtoken struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
-}
-
-type Platform struct {
-	ID           string `json:"id"`
-	BusinessName string `json:"business_name"`
-	Timezone     string `json:"timezone"`
-	Complete     bool   `json:"complete"`
 }
 
 type PlatformInput struct {

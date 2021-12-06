@@ -16,6 +16,9 @@ models:
  User:
    model: dataplane/database/models.Users
 
+ Platform:
+   model: dataplane/database/models.Platform
+
 resolver:
   layout: follow-schema
   dir: ./resolvers
