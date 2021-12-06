@@ -28,6 +28,9 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          # Opens tcp port 6379 on the host and service container
+          - 5432:5432
 
     steps:
       - name: Install Go
@@ -73,4 +76,4 @@ jobs:
           mode: "development"
           debug: "true"
           dbdebug: "false"
-        run: cd mainapp && go test -count=1 -timeout=5s ./... -v
+        run: cd mainapp && go test -count=1 -timeout=15s ./... -v
