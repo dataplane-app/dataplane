@@ -18,24 +18,30 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql.AddUsersInput) (*models.Users, error) {
+func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql.AddAdminsInput) (*publicgraphql.Admin, error) {
 	log.Println("CreateAdmin....")
 
-	password, err := auth.Encrypt(input.Password)
+	password, err := auth.Encrypt(input.AddUsersInput.Password)
 
 	if err != nil {
 		return nil, errors.New("Password hash failed.")
 	}
 
-	userData := models.Users{
+	userData := &models.Users{
 		UserID:    uuid.New().String(),
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
+		FirstName: input.AddUsersInput.FirstName,
+		LastName:  input.AddUsersInput.LastName,
 		Password:  password,
-		Email:     input.Email,
-		JobTitle:  input.JobTitle,
-		Timezone:  input.Timezone,
-		Username:  input.Email,
+		Email:     input.AddUsersInput.Email,
+		JobTitle:  input.AddUsersInput.JobTitle,
+		Timezone:  input.AddUsersInput.Timezone,
+		Username:  input.AddUsersInput.Email,
+	}
+
+	platformData := &publicgraphql.Platform{
+		BusinessName: input.PlatformInput.BusinessName,
+		Timezone:     input.PlatformInput.Timezone,
+		Complete:     input.PlatformInput.Complete,
 	}
 
 	err = database.DBConn.Create(&userData).Error
@@ -50,14 +56,7 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 		return nil, errors.New("Register database error.")
 	}
 
-	return &models.Users{
-		UserID:    userData.UserID,
-		FirstName: userData.FirstName,
-		LastName:  userData.LastName,
-		Email:     userData.Email,
-		JobTitle:  userData.JobTitle,
-		Timezone:  userData.Timezone,
-	}, nil
+	return &publicgraphql.Admin{platformData, userData}, nil
 
 }
 

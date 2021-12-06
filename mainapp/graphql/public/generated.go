@@ -42,14 +42,26 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Admin struct {
+		Platform func(childComplexity int) int
+		User     func(childComplexity int) int
+	}
+
 	Authtoken struct {
 		AccessToken  func(childComplexity int) int
 		RefreshToken func(childComplexity int) int
 	}
 
 	Mutation struct {
-		CreateAdmin func(childComplexity int, input *AddUsersInput) int
+		CreateAdmin func(childComplexity int, input *AddAdminsInput) int
 		CreateUser  func(childComplexity int, input *AddUsersInput) int
+	}
+
+	Platform struct {
+		BusinessName func(childComplexity int) int
+		Complete     func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Timezone     func(childComplexity int) int
 	}
 
 	Query struct {
@@ -67,7 +79,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateAdmin(ctx context.Context, input *AddUsersInput) (*models.Users, error)
+	CreateAdmin(ctx context.Context, input *AddAdminsInput) (*Admin, error)
 	CreateUser(ctx context.Context, input *AddUsersInput) (*models.Users, error)
 }
 type QueryResolver interface {
@@ -88,6 +100,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Admin.Platform":
+		if e.complexity.Admin.Platform == nil {
+			break
+		}
+
+		return e.complexity.Admin.Platform(childComplexity), true
+
+	case "Admin.User":
+		if e.complexity.Admin.User == nil {
+			break
+		}
+
+		return e.complexity.Admin.User(childComplexity), true
 
 	case "Authtoken.access_token":
 		if e.complexity.Authtoken.AccessToken == nil {
@@ -113,7 +139,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateAdmin(childComplexity, args["input"].(*AddUsersInput)), true
+		return e.complexity.Mutation.CreateAdmin(childComplexity, args["input"].(*AddAdminsInput)), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -126,6 +152,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(*AddUsersInput)), true
+
+	case "Platform.business_name":
+		if e.complexity.Platform.BusinessName == nil {
+			break
+		}
+
+		return e.complexity.Platform.BusinessName(childComplexity), true
+
+	case "Platform.complete":
+		if e.complexity.Platform.Complete == nil {
+			break
+		}
+
+		return e.complexity.Platform.Complete(childComplexity), true
+
+	case "Platform.id":
+		if e.complexity.Platform.ID == nil {
+			break
+		}
+
+		return e.complexity.Platform.ID(childComplexity), true
+
+	case "Platform.timezone":
+		if e.complexity.Platform.Timezone == nil {
+			break
+		}
+
+		return e.complexity.Platform.Timezone(childComplexity), true
 
 	case "Query.loginUser":
 		if e.complexity.Query.LoginUser == nil {
@@ -245,9 +299,33 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "resolvers/admins.graphqls", Input: `type Mutation {
-  createAdmin(input: AddUsersInput): User
-}`, BuiltIn: false},
+	{Name: "resolvers/admins.graphqls", Input: `input PlatformInput {
+	business_name: String!    
+	timezone:      String!     
+	complete:      Boolean!     
+}
+
+type Platform {
+	id:            String! 
+	business_name: String!    
+	timezone:      String!     
+	complete:      Boolean!    
+}
+
+input AddAdminsInput {
+	PlatformInput: PlatformInput
+	AddUsersInput: AddUsersInput   
+}
+
+type Admin {
+	Platform: Platform
+	User: User
+}
+
+type Mutation {
+  createAdmin(input: AddAdminsInput): Admin
+}
+`, BuiltIn: false},
 	{Name: "resolvers/users.graphqls", Input: `input AddUsersInput {
 	first_name: String!    
 	last_name:  String!     
@@ -289,10 +367,10 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_createAdmin_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *AddUsersInput
+	var arg0 *AddAdminsInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddUsersInput2ᚖdataplaneᚋgraphqlᚋpublicᚐAddUsersInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAddAdminsInput2ᚖdataplaneᚋgraphqlᚋpublicᚐAddAdminsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -393,6 +471,70 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _Admin_Platform(ctx context.Context, field graphql.CollectedField, obj *Admin) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Admin",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Platform, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*Platform)
+	fc.Result = res
+	return ec.marshalOPlatform2ᚖdataplaneᚋgraphqlᚋpublicᚐPlatform(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Admin_User(ctx context.Context, field graphql.CollectedField, obj *Admin) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Admin",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.User, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Users)
+	fc.Result = res
+	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Authtoken_access_token(ctx context.Context, field graphql.CollectedField, obj *Authtoken) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -488,7 +630,7 @@ func (ec *executionContext) _Mutation_createAdmin(ctx context.Context, field gra
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateAdmin(rctx, args["input"].(*AddUsersInput))
+		return ec.resolvers.Mutation().CreateAdmin(rctx, args["input"].(*AddAdminsInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -497,9 +639,9 @@ func (ec *executionContext) _Mutation_createAdmin(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.Users)
+	res := resTmp.(*Admin)
 	fc.Result = res
-	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOAdmin2ᚖdataplaneᚋgraphqlᚋpublicᚐAdmin(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -539,6 +681,146 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	res := resTmp.(*models.Users)
 	fc.Result = res
 	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Platform_id(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Platform",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Platform_business_name(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Platform",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BusinessName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Platform_timezone(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Platform",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timezone, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Platform_complete(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Platform",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Complete, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_loginUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1983,6 +2265,37 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputAddAdminsInput(ctx context.Context, obj interface{}) (AddAdminsInput, error) {
+	var it AddAdminsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "PlatformInput":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("PlatformInput"))
+			it.PlatformInput, err = ec.unmarshalOPlatformInput2ᚖdataplaneᚋgraphqlᚋpublicᚐPlatformInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "AddUsersInput":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("AddUsersInput"))
+			it.AddUsersInput, err = ec.unmarshalOAddUsersInput2ᚖdataplaneᚋgraphqlᚋpublicᚐAddUsersInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAddUsersInput(ctx context.Context, obj interface{}) (AddUsersInput, error) {
 	var it AddUsersInput
 	asMap := map[string]interface{}{}
@@ -2046,6 +2359,45 @@ func (ec *executionContext) unmarshalInputAddUsersInput(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputPlatformInput(ctx context.Context, obj interface{}) (PlatformInput, error) {
+	var it PlatformInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "business_name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("business_name"))
+			it.BusinessName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "timezone":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
+			it.Timezone, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "complete":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("complete"))
+			it.Complete, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -2053,6 +2405,32 @@ func (ec *executionContext) unmarshalInputAddUsersInput(ctx context.Context, obj
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var adminImplementors = []string{"Admin"}
+
+func (ec *executionContext) _Admin(ctx context.Context, sel ast.SelectionSet, obj *Admin) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, adminImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Admin")
+		case "Platform":
+			out.Values[i] = ec._Admin_Platform(ctx, field, obj)
+		case "User":
+			out.Values[i] = ec._Admin_User(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
 
 var authtokenImplementors = []string{"Authtoken"}
 
@@ -2105,6 +2483,48 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_createAdmin(ctx, field)
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var platformImplementors = []string{"Platform"}
+
+func (ec *executionContext) _Platform(ctx context.Context, sel ast.SelectionSet, obj *Platform) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, platformImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Platform")
+		case "id":
+			out.Values[i] = ec._Platform_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "business_name":
+			out.Values[i] = ec._Platform_business_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "timezone":
+			out.Values[i] = ec._Platform_timezone(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "complete":
+			out.Values[i] = ec._Platform_complete(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2746,12 +3166,27 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) unmarshalOAddAdminsInput2ᚖdataplaneᚋgraphqlᚋpublicᚐAddAdminsInput(ctx context.Context, v interface{}) (*AddAdminsInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAddAdminsInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOAddUsersInput2ᚖdataplaneᚋgraphqlᚋpublicᚐAddUsersInput(ctx context.Context, v interface{}) (*AddUsersInput, error) {
 	if v == nil {
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputAddUsersInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAdmin2ᚖdataplaneᚋgraphqlᚋpublicᚐAdmin(ctx context.Context, sel ast.SelectionSet, v *Admin) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Admin(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOAuthtoken2ᚖdataplaneᚋgraphqlᚋpublicᚐAuthtoken(ctx context.Context, sel ast.SelectionSet, v *Authtoken) graphql.Marshaler {
@@ -2783,6 +3218,21 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return graphql.MarshalBoolean(*v)
+}
+
+func (ec *executionContext) marshalOPlatform2ᚖdataplaneᚋgraphqlᚋpublicᚐPlatform(ctx context.Context, sel ast.SelectionSet, v *Platform) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Platform(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOPlatformInput2ᚖdataplaneᚋgraphqlᚋpublicᚐPlatformInput(ctx context.Context, v interface{}) (*PlatformInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPlatformInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

@@ -1,4 +1,26 @@
-type Mutation {
-  createAdmin(input: AddUsersInput): User
+input PlatformInput {
+	business_name: String!    
+	timezone:      String!     
+	complete:      Boolean!     
 }
 
+type Platform {
+	id:            String! 
+	business_name: String!    
+	timezone:      String!     
+	complete:      Boolean!    
+}
+
+input AddAdminsInput {
+	PlatformInput: PlatformInput
+	AddUsersInput: AddUsersInput   
+}
+
+type Admin {
+	Platform: Platform
+	User: User
+}
+
+type Mutation {
+  createAdmin(input: AddAdminsInput): Admin
+}
