@@ -36,9 +36,12 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 
 	userData := &models.Users{
 		UserID:    uuid.New().String(),
+		UserType:  "admin",
 		FirstName: input.AddUsersInput.FirstName,
 		LastName:  input.AddUsersInput.LastName,
 		Password:  password,
+		Status:    "active",
+		Active:    true,
 		Email:     input.AddUsersInput.Email,
 		JobTitle:  input.AddUsersInput.JobTitle,
 		Timezone:  input.AddUsersInput.Timezone,
@@ -72,7 +75,6 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 	}
 
 	return &publicgraphql.Admin{platformData, userData}, nil
-
 }
 
 // Mutation returns publicgraphql.MutationResolver implementation.

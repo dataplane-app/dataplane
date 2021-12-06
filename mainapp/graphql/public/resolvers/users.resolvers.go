@@ -67,7 +67,7 @@ func (r *queryResolver) LoginUser(ctx context.Context, username string, password
 	// check if a user exists
 	u := models.Users{}
 	if res := database.DBConn.Where(
-		&models.Users{Username: username},
+		&models.Users{Username: username, Active: true},
 	).First(&u); res.RowsAffected <= 0 {
 		return nil, errors.New("Invalid credentials")
 	}

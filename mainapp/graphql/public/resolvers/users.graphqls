@@ -9,6 +9,7 @@ input AddUsersInput {
 
 type User {
 	user_id:   String! 
+	user_type: String!
 	first_name: String!    
 	last_name:  String!     
 	email:     String!     
