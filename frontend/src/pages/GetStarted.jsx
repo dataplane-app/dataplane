@@ -7,8 +7,8 @@ const GetStarted = () => {
     const [isNext, setIsNext] = useState(false);
 
     return (
-        <div className="get-started h-screen overflow-x-hidden dark:bg-darkSecondary">
-            <div className="relative top-0 left-0 right-0 border-b border-gray dark:border-darkNav w-full dark:bg-darkPrimary">
+        <div className="get-started h-screen overflow-x-hidden dark:bg-darkPrimary">
+            <div className="relative top-0 left-0 right-0 border-b border-gray dark:border-darkNav w-full dark:bg-darkSecondary">
                 <h1 className="text-orange font-bold text-title py-6 ml-3">
                     Dataplane
                 </h1>

@@ -8,14 +8,14 @@ const Congratulations = () => {
 
     return(
         <div className="congratulation h-screen overflow-y-hidden relative">
-            <div className="absolute top-0 left-0 right-0 border-b border-gray dark:border-darkNav w-full dark:bg-darkPrimary">
+            <div className="absolute top-0 left-0 right-0 border-b z-2 border-gray dark:border-darkNav w-full dark:bg-darkSecondary">
                 <h1 className="text-orange font-bold text-title py-6 ml-3">
                     Dataplane
                 </h1>
             </div>
 
             <div className="h-full flex items-center justify-center">
-                <div className="h-full absolute -bottom-24 z-1">
+                <div className="h-full absolute -bottom-24 z-10">
                     <Lottie
                         options={{
                             animationData: Confetti,

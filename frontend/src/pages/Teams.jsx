@@ -1,11 +1,16 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEllipsisV } from '@fortawesome/free-solid-svg-icons'
 import { useMemo } from 'react';
 import Pills from "../components/Pills";
 import Search from "../components/Search";
 import { useTable, useGlobalFilter } from "react-table";
 import { useEffect } from 'react';
 import Button from '../components/Button';
+import { useNavigate } from 'react-router-dom';
 
 const Teams = () => {
+    let navigate = useNavigate();
+
     const columns = useMemo(
         () => [
             {
@@ -23,19 +28,22 @@ const Teams = () => {
             {
                 Header: "Role",
                 accessor: "role",
-                Cell: row => <Pills text={row.value} color="green" />
+                Cell: row => <p className="text-xs dark:text-white">{row.value}</p>
             },
             {
                 Header: "Permissions",
-                accessor: "permissions"
+                accessor: "permissions",
+                Cell: row => <p className="text-xs dark:text-white">{row.value}</p>
             },
             {
                 Header: "Status",
-                accessor: "status"
+                accessor: "status",
+                Cell: row => <Pills color="green" text={row.value} size="small" />
             },
             {
                 Header: "Manage",
-                accessor: "manage"
+                accessor: "manage",
+                Cell: row => <FontAwesomeIcon icon={faEllipsisV} onClick={() => navigate(`/teams/${row.value.id}`)} className="cursor-pointer text-halfBlack dark:text-white text-22"/>
             },
         ],
         []
@@ -56,12 +64,12 @@ const Teams = () => {
 
     return (
         <div className="teams">
-            <h2 className="font-bold text-22 dark:text-white">Teams</h2>
+            <h2 className="font-bold text-22 dark:text-white">Team</h2>
 
             <div className="mt-8 lg:w-4/5">
                 <div className="flex items-center justify-between">
                     <div>
-                        <Pills amount={2} text="Members" color="orange" />
+                        <Pills amount={2} text="Members" color="orange" margin="4" />
                         <div className="inline-block w-60">
                             <Search placeholder="Find members" value={globalFilter} onChange={setGlobalFilter} />
                         </div>
@@ -74,7 +82,7 @@ const Teams = () => {
                 <table {...getTableProps()} className="w-full mt-8">
                     <thead>
                         {headerGroups.map((headerGroup) => (
-                            <tr {...headerGroup.getHeaderGroupProps()} className="grid grid-cols-teams">
+                            <tr {...headerGroup.getHeaderGroupProps()} className="grid grid-cols-teams justify-start">
                                 {headerGroup.headers.map((column) => (
                                     <th {...column.getHeaderProps()} className="dark:text-white">
                                         {column.render("Header")}
@@ -99,7 +107,7 @@ const Teams = () => {
                             );
                         })}
                     </tbody>
-                    </table >
+                    </table>
             </div>
 
         </div>
@@ -117,9 +125,9 @@ const CustomMember = ({ row }) => {
 
 const CustomEmail = ({ row }) => {
     return (
-        <div>
+        <div className="flex items-center justify-start flex-col">
             <h4 className="text-sm mb-2 dark:text-white">{row.value.email}</h4>
-            <Pills text={row.value.role} color="orange" className="text-sm" />
+                <Pills text={row.value.role} color="orange" size="small" />
         </div>
     )
 }
@@ -137,8 +145,10 @@ const data = [
         },
         role: "Admin",
         permissions: "Admin",
-        status: "active",
-        manage: ""
+        status: "Active",
+        manage: {
+            id: 1
+        }
     },
     {
         id: 2,
@@ -152,8 +162,10 @@ const data = [
         },
         role: "Admin",
         permissions: "Admin",
-        status: "active",
-        manage: ""
+        status: "Active",
+        manage: {
+            id: 2
+        }
     },
 ]
 

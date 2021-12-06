@@ -14,10 +14,10 @@ const Pipelines = () => {
 
             <div className="mt-8 flex flex-col lg:flex-row items-center justify-start lg:w-4/5">
                 <div className="flex items-center self-stretch lg:self-center">
-                    <Pills amount={2} text="Pipelines" color="orange" />
-                    <Pills amount={2} text="Succeeded" color="green" />
-                    <Pills amount={2} text="Failed" color="red" />
-                    <Pills amount={2} text="Workers online" color="purple" />
+                    <Pills amount={2} text="Pipelines" color="orange" margin="4" />
+                    <Pills amount={2} text="Succeeded" color="green" margin="4"/>
+                    <Pills amount={2} text="Failed" color="red" margin="4" />
+                    <Pills amount={2} text="Workers online" color="purple"/>
                 </div>
 
                 <div className="flex-1 flex items-center self-stretch lg:self-center mt-3 lg:mt-0">

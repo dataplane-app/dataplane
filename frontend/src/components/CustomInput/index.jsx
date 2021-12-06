@@ -13,7 +13,7 @@ const CustomInput = ({ label, required, ...props }) => {
             />
             <label 
                 htmlFor="customInput" 
-                className="outline rounded-md absolute top-0 px-4 py-3 text-grayInput dark:text-white bg-white dark:bg-darkSecondary z-1 duration-300 origin-0 text-sm"
+                className="outline rounded-md absolute top-0 px-4 py-3 text-grayInput dark:text-white bg-white dark:bg-darkPrimary z-1 duration-300 origin-0 text-sm"
             >
                 {label}{required && <span className="text-red text-xs ml-2">*</span>}
             </label>
