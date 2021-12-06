@@ -73,4 +73,4 @@ jobs:
           mode: "development"
           debug: "true"
           dbdebug: "false"
-        run: cd mainapp && go test ./... -v
+        run: cd mainapp && go test -count=1 -timeout=5s ./... -v
