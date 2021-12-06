@@ -1,0 +1,15 @@
+input:checked ~ .dot {
+    transform: translateX(269%);
+    background-color: transparent;
+}
+
+.toggleText{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-95%, -50%);
+}
+
+.textDark{
+    transform: translate(-50%, -50%);
+}
