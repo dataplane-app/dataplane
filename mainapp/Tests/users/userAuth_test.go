@@ -1,60 +1,26 @@
 package tests
 
 import (
-	"bytes"
+	tests "dataplane/Tests"
+	"dataplane/auth"
 	"dataplane/routes"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/bxcodec/faker/v3"
-	"github.com/gofiber/fiber/v2"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/assert"
 )
 
-func GraphQLrequest(reqQuery string, reqVariables string, url string, t *testing.T, app *fiber.App) (responseBody []byte, res *http.Response) {
-
-	data := `{
-		"query": "%s",
-		"variables": %s
-	}`
-	query := reqQuery
-	query = strings.ReplaceAll(query, "\n", `\n`)
-	query = strings.ReplaceAll(query, "\t", `\t`)
-	query = strings.ReplaceAll(query, "\"", `\"`)
-
-	variables := reqVariables
-	data = fmt.Sprintf(data, query, variables)
-
-	log.Println("Payload:", data)
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(data)))
-	if err != nil {
-		t.Error(err)
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-
-	res, err = app.Test(req, -1)
-	if err != nil {
-		t.Error(err)
-	}
-
-	defer res.Body.Close()
-
-	responseBody, err = ioutil.ReadAll(res.Body)
-	if err != nil {
-		t.Error(err)
-	}
-
-	return responseBody, res
-}
-
 /*
 go test -p 1 -v -count=1 -run TestUserAuth dataplane/Tests/users
+* Create user
+* Login
+* Validate token
+* Exchange refresh token for access token
+* Logout
 */
 func TestUserAuth(t *testing.T) {
 	app := routes.Setup()
@@ -81,7 +47,7 @@ func TestUserAuth(t *testing.T) {
 			}
 			}`
 
-	createUserResponse, httpResponse := GraphQLrequest(createUser, "{}", graphQLUrl, t, app)
+	createUserResponse, httpResponse := tests.GraphQLRequestPublic(createUser, "{}", graphQLUrl, t, app)
 
 	log.Println(string(createUserResponse))
 
@@ -103,7 +69,7 @@ func TestUserAuth(t *testing.T) {
 		}
 	  }`
 
-	loginUserResponse, httpLoginResponse := GraphQLrequest(loginUser, "{}", graphQLUrl, t, app)
+	loginUserResponse, httpLoginResponse := tests.GraphQLRequestPublic(loginUser, "{}", graphQLUrl, t, app)
 
 	log.Println(string(loginUserResponse))
 
@@ -114,35 +80,39 @@ func TestUserAuth(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpLoginResponse.StatusCode, "Login user 200 status code")
 
 	// --------- Validate token --------------
+	accessToken := jsoniter.Get(loginUserResponse, "data", "loginUser", "access_token").ToString()
+	refreshToken := jsoniter.Get(loginUserResponse, "data", "loginUser", "refresh_token").ToString()
+	validatetoken, _ := auth.ValidateAccessToken(accessToken)
+	assert.Equalf(t, true, validatetoken, "Access token validation")
 
 	//--------- Exchange refresh token for access token ------------
+	// log.Println(refreshToken)
+
+	reqQuery := `
+	{
+		"refresh_token": "` + refreshToken + `"
+	}
+	`
+
+	url := "http://localhost:9000/refreshtoken"
+	exchangeUserResponse, httpExchangeResponse := tests.RestRequestPublic(reqQuery, "POST", url, t, app)
+
+	// log.Println(string(exchangeUserResponse))
+	// log.Println(httpExchangeResponse)
+	assert.Equalf(t, http.StatusOK, httpExchangeResponse.StatusCode, "Exchange token 200 status code")
+	accessTokenExchange := jsoniter.Get(exchangeUserResponse, "access_token").ToString()
+
+	// log.Println("Exchanged token: ", accessTokenExchange)
+	validatetokenExchange, _ := auth.ValidateAccessToken(accessTokenExchange)
+	assert.Equalf(t, true, validatetokenExchange, "Exchange access token validation")
 
 	//--------- Logout ------------
-
-	//--------- Send GraphQL request ------------
-
-	// body, err := ioutil.ReadAll(res.Body)
-	// if err != nil {
-	// 	t.Error(err)
-	// }
-
-	// log.Println("Actual response", string(body))
-
-	// //--------- Get the Expected Response ------------
-	// b, err = ioutil.ReadFile("./output.json")
-	// if err != nil {
-	// 	t.Error(err)
-	// }
-
-	//--------- Update dynamic columns ------------
-	// id := jsoniter.Get(body, "data", "createWorkerBooking", "id").ToString()
-	// //orgID := jsoniter.Get(body, "data", "insertProject", "org_id").ToString()
-	// expectedOutput, _ := sjson.Set(string(b), "data.createWorkerBooking.id", id)
-	// // expectedOutput, _ = sjson.Set(expectedOutput, "data.insertProject.updated_at", jsoniter.Get(body, "data", "insertProject", "updated_at").ToString())
-	// // expectedOutput, _ = sjson.Set(expectedOutput, "data.insertProject.id", jsoniter.Get(body, "data", "insertProject", "id").ToString())
-
-	// log.Println("Expected response: ", expectedOutput)
-
-	// assert.JSONEqf(t, expectedOutput, string(body), "Actual to expected output")
+	logoutUser := `{
+		logoutUser
+	  }`
+	graphQLPrivateUrl := "http://localhost:9000/private/graphql"
+	logoutUserResponse, httpLogoutResponse := tests.GraphQLRequestPrivate(logoutUser, accessTokenExchange, "{}", graphQLPrivateUrl, t, app)
+	assert.Equalf(t, http.StatusOK, httpLogoutResponse.StatusCode, "Logout 200 status code")
+	assert.Equalf(t, "Logged out", jsoniter.Get(logoutUserResponse, "data", "logoutUser").ToString(), "Logout correct response")
 
 }
