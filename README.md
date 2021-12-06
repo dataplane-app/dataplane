@@ -1,5 +1,4 @@
 ![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests&style=for-the-badge)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdataplane-app%2Fdataplane.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdataplane-app%2Fdataplane?ref=badge_shield)
 
 # <span style="color:#FF5722">Dataplane</span>
 Dataplane is the super fast, cloud native, scalable, secure and easy to use data platform for data-driven businesses. 
@@ -26,7 +25,4 @@ The project published in this git repo is released under the Source Available Li
 
 Thanks to Vectorized (https://vectorized.io/blog/open-source/), CockroachDB and Mariadb for researching and developing the Business Source License. We share the same views to strike a balance between making software open to the community while being protected from unfair practices that aim to commercially benefit without giving back to the community. 
 
-Licenses for dependencies used in this project can be found in the licenses folder. 
-
-
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdataplane-app%2Fdataplane.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdataplane-app%2Fdataplane?ref=badge_large)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdataplane-app%2Fdataplane.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdataplane-app%2Fdataplane?ref=badge_shield)
