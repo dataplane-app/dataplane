@@ -1,0 +1,11 @@
+
+{
+getPaymentCountries{
+country_code
+currency
+country_name
+},
+getTrades {
+trade
+}
+}

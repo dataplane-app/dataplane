@@ -1,15 +1,11 @@
 package main
 
 import (
-	"dataplane/logging"
 	"dataplane/routes"
 	"log"
 )
 
 func main() {
-
-	// Load secrets
-	logging.MapSecrets()
 
 	app := routes.Setup()
 
