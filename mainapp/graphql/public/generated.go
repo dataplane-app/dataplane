@@ -48,7 +48,8 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateUser func(childComplexity int, input *AddUsersInput) int
+		CreateAdmin func(childComplexity int, input *AddUsersInput) int
+		CreateUser  func(childComplexity int, input *AddUsersInput) int
 	}
 
 	Query struct {
@@ -58,6 +59,7 @@ type ComplexityRoot struct {
 	User struct {
 		Email     func(childComplexity int) int
 		FirstName func(childComplexity int) int
+		JobTitle  func(childComplexity int) int
 		LastName  func(childComplexity int) int
 		Timezone  func(childComplexity int) int
 		UserID    func(childComplexity int) int
@@ -65,6 +67,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
+	CreateAdmin(ctx context.Context, input *AddUsersInput) (*models.Users, error)
 	CreateUser(ctx context.Context, input *AddUsersInput) (*models.Users, error)
 }
 type QueryResolver interface {
@@ -99,6 +102,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Authtoken.RefreshToken(childComplexity), true
+
+	case "Mutation.createAdmin":
+		if e.complexity.Mutation.CreateAdmin == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createAdmin_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateAdmin(childComplexity, args["input"].(*AddUsersInput)), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -137,6 +152,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.FirstName(childComplexity), true
+
+	case "User.job_title":
+		if e.complexity.User.JobTitle == nil {
+			break
+		}
+
+		return e.complexity.User.JobTitle(childComplexity), true
 
 	case "User.last_name":
 		if e.complexity.User.LastName == nil {
@@ -223,10 +245,14 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
+	{Name: "resolvers/admins.graphqls", Input: `type Mutation {
+  createAdmin(input: AddUsersInput): User
+}`, BuiltIn: false},
 	{Name: "resolvers/users.graphqls", Input: `input AddUsersInput {
 	first_name: String!    
 	last_name:  String!     
 	email:     String!     
+	job_title: String!
 	password:  String!     
 	timezone:  String!     
 }
@@ -236,6 +262,7 @@ type User {
 	first_name: String!    
 	last_name:  String!     
 	email:     String!     
+	job_title: String!
 	timezone:  String!     
 }
 
@@ -244,7 +271,7 @@ type Authtoken {
 	refresh_token: String!
 }
 
-type Mutation {
+extend type Mutation {
   createUser(input: AddUsersInput): User
 }
 
@@ -258,6 +285,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_createAdmin_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *AddUsersInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOAddUsersInput2ᚖdataplaneᚋgraphqlᚋpublicᚐAddUsersInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -419,6 +461,45 @@ func (ec *executionContext) _Authtoken_refresh_token(ctx context.Context, field 
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createAdmin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createAdmin_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateAdmin(rctx, args["input"].(*AddUsersInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Users)
+	fc.Result = res
+	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -694,6 +775,41 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Email, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_job_title(ctx context.Context, field graphql.CollectedField, obj *models.Users) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.JobTitle, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1900,6 +2016,14 @@ func (ec *executionContext) unmarshalInputAddUsersInput(ctx context.Context, obj
 			if err != nil {
 				return it, err
 			}
+		case "job_title":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("job_title"))
+			it.JobTitle, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "password":
 			var err error
 
@@ -1977,6 +2101,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "createAdmin":
+			out.Values[i] = ec._Mutation_createAdmin(ctx, field)
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
 		default:
@@ -2059,6 +2185,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "email":
 			out.Values[i] = ec._User_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "job_title":
+			out.Values[i] = ec._User_job_title(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

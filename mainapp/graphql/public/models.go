@@ -6,6 +6,7 @@ type AddUsersInput struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
+	JobTitle  string `json:"job_title"`
 	Password  string `json:"password"`
 	Timezone  string `json:"timezone"`
 }

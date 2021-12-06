@@ -83,11 +83,7 @@ func (r *queryResolver) LoginUser(ctx context.Context, username string, password
 	return &publicgraphql.Authtoken{accessToken, refreshToken}, nil
 }
 
-// Mutation returns publicgraphql.MutationResolver implementation.
-func (r *Resolver) Mutation() publicgraphql.MutationResolver { return &mutationResolver{r} }
-
 // Query returns publicgraphql.QueryResolver implementation.
 func (r *Resolver) Query() publicgraphql.QueryResolver { return &queryResolver{r} }
 
-type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

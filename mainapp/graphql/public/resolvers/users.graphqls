@@ -2,6 +2,7 @@ input AddUsersInput {
 	first_name: String!    
 	last_name:  String!     
 	email:     String!     
+	job_title: String!
 	password:  String!     
 	timezone:  String!     
 }
@@ -11,6 +12,7 @@ type User {
 	first_name: String!    
 	last_name:  String!     
 	email:     String!     
+	job_title: String!
 	timezone:  String!     
 }
 
@@ -19,7 +21,7 @@ type Authtoken {
 	refresh_token: String!
 }
 
-type Mutation {
+extend type Mutation {
   createUser(input: AddUsersInput): User
 }
 
