@@ -1,0 +1,56 @@
+name: CI-main-dataplane
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: timescale/timescaledb:2.5.1-pg14
+        # Provide the password for postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: "Hello123!"
+          POSTGRES_DB: "dataplane"
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16.3
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run Test Cases
+        env: 
+          env: "tests"
+          basepath: "/dataplane"
+          secret.db_host: postgres
+          secret.db_user: postgres
+          secret.db_pwd: "Hello123!"
+          secret.db_ssl: "disable"
+          secret.db_port: "5432"
+          secret.db_database: "dataplane"
+          secret.jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+          database: "timescaledb"
+          mode: "development"
+          debug: "true"
+          dbdebug: "false"
+        run: cd mainapp && go test ./... -v
