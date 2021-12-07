@@ -81,6 +81,26 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 		return nil, errors.New("Register database error.")
 	}
 
+	// Environments get added
+	envDevelopment := &models.Environment{
+		ID:     uuid.New().String(),
+		Name:   "development",
+		Active: true,
+	}
+	envProduction := &models.Environment{
+		ID:     uuid.New().String(),
+		Name:   "production",
+		Active: true,
+	}
+	err = database.DBConn.Create(&envDevelopment).Create(&envProduction).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Register database error.")
+	}
+
 	return &publicgraphql.Admin{platformData, userData}, nil
 }
 
