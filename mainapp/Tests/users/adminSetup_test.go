@@ -72,6 +72,10 @@ func TestAdminSetup(t *testing.T) {
 						job_title
 						timezone
 					}
+					Auth{
+						access_token
+						refresh_token
+				}
 				}
 			}`
 
