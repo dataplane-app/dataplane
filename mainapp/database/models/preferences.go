@@ -10,7 +10,7 @@ func (Preferences) TableName() string {
 
 type Preferences struct {
 	UserID     string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"user_id"`
-	Preference string     `json:"preference"`
+	Preference string     `gorm:"PRIMARY_KEY;" json:"preference"`
 	Value      string     `json:"value"`
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  *time.Time `json:"updated_at"`

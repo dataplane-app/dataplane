@@ -82,17 +82,17 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 	}
 
 	// Environments get added
-	envDevelopment := &models.Environment{
-		ID:     uuid.New().String(),
-		Name:   "development",
-		Active: true,
+	environment := &[]models.Environment{
+		{ID: uuid.New().String(),
+			Name:   "Development",
+			Active: true}, {
+			ID:     uuid.New().String(),
+			Name:   "Production",
+			Active: true,
+		},
 	}
-	envProduction := &models.Environment{
-		ID:     uuid.New().String(),
-		Name:   "production",
-		Active: true,
-	}
-	err = database.DBConn.Create(&envDevelopment).Create(&envProduction).Error
+
+	err = database.DBConn.Create(&environment).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -104,8 +104,8 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 	// Preferences get added
 	preferences := &models.Preferences{
 		UserID:     userData.UserID,
-		Preference: "dark_mode",
-		Value:      "off",
+		Preference: "theme",
+		Value:      "light_mode",
 	}
 
 	err = database.DBConn.Create(&preferences).Error
