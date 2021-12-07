@@ -101,6 +101,22 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 		return nil, errors.New("Register database error.")
 	}
 
+	// Preferences get added
+	preferences := &models.Preferences{
+		UserID:     userData.UserID,
+		Preference: "dark_mode",
+		Value:      "off",
+	}
+
+	err = database.DBConn.Create(&preferences).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Register database error.")
+	}
+
 	return &publicgraphql.Admin{platformData, userData}, nil
 }
 
