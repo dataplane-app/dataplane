@@ -19,6 +19,10 @@ import (
 
 func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql.AddAdminsInput) (*publicgraphql.Admin, error) {
 
+	if os.Getenv("mode") != "development" {
+		return nil, errors.New("Not in development mode.")
+	}
+
 	u := models.Platform{}
 	if res := database.DBConn.First(&u); res.RowsAffected >= 1 {
 		return nil, errors.New("Platform already setup.")
