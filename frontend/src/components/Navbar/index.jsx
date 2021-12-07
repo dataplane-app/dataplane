@@ -1,24 +1,26 @@
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
 import HeaderDropdown from "../HeaderDropdown";
+import Typography from '@mui/material/Typography';
 
 const Navbar = () => {
     return(
-        <div className="absolute top-0 left-0 right-0 border-b border-divider dark:border-darkNav w-full dark:bg-darkSecondary">
-            <div className="flex items-center justify-between">
-                <h1 className="text-orange font-bold text-title py-6 ml-3">Dataplane</h1>
+        <Box position="absolute" width="100%" sx={{ top: 0, left: 0, right: 0, border: 1, borderColor: "divider" }}>
+            <Grid container alignItems="center" justifyContent="space-between">
+                <Typography component="h1" variant="h1" color="primary" fontWeight={900} style={{ padding: "1.5rem 0 1.5rem .75rem" }}>Dataplane</Typography>
+                <Box display="flex" alignItem="center" mr={8}>
+                    <Box mr={24}>
+                        <Typography sx={{ fontSize: 24 }}>22:47</Typography>
+                        <Typography variant="h3" fontWeight={400} mt={-1}>Europe/London</Typography>
+                    </Box>
 
-                <div className="flex items-center mr-2">
-                    <div className="mr-6">
-                        <p className="text-2xl dark:text-white">22:47</p>
-                        <p className="text-17 -mt-1 dark:text-white">Europe/London</p>
-                    </div>
-
-                    <HeaderDropdown title="Production" subtitle="Enviroment" />
+                    {/* <HeaderDropdown title="Production" subtitle="Enviroment" />
                     <HeaderDropdown title="Saul Frank" user="Saul" subtitle="Data Engineer">
                         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Culpa reprehenderit id quisquam assumenda.</p>
-                    </HeaderDropdown>
-                </div>
-            </div>
-        </div>
+                    </HeaderDropdown> */}
+                </Box>
+            </Grid>
+        </Box>
     )
 }
 

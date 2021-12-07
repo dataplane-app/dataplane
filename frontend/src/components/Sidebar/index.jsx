@@ -2,52 +2,51 @@ import './styles.css'
 import { Link, useLocation } from "react-router-dom";
 import checkActivePage from "../../utils/checkActivePage";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faKey, faCog, faUsers, faGraduationCap, faBullhorn, faAlignCenter, faConciergeBell } from '@fortawesome/free-solid-svg-icons'
-import { useDarkMode } from '../../hooks/useDarkMode';
+import { faKey, faCog, faUsers, faGraduationCap, faBullhorn, faAlignCenter, faConciergeBell, faCodeBranch } from '@fortawesome/free-solid-svg-icons'
 import ThemeToggle from '../ThemeToggle';
+import { Box, Grid, Typography } from '@mui/material';
 
 const Sidebar = () => {
     const location = useLocation();
-    const [isDark] = useDarkMode();
 
     return(
-        <div className="w-48 border-r border-divider dark:border-darkDivider relative">
-            <ul className="p-0 my-4 ml-0 mr-2">
+        <Box width={190} position="relative" sx={{ borderRight: 1, borderColor: "divider" }}>
+            <Box component="ul" mt={2} mb={2} mr={2} p={0} sx={{ listStyle: 'none' }} >
                 {
                     MENU_ITEMS_TOP.map(menu => (
-                        <li key={menu.id} className={`my-1 relative ${checkActivePage(location.pathname, `/${menu.url}`)}`}>
-                            <Link to={`/${menu.url}`} className="block py-3 mx-5 relative">
-                                <div className="flex items-center">
+                        <Box component="li" key={menu.id} mt={1} mb={1} position="relative" className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
+                            <Link to={`/${menu.url}`} className="menu-link">
+                                <Grid container alignItems="center">
                                     {menu.icon}
-                                    <h2 className={`ml-3 dark:text-white text-base`}>{menu.name}</h2>
-                                </div>
+                                    <Typography component="h2" variant="h3" color="text.primary" fontWeight={400} ml={2}>{menu.name}</Typography>
+                                </Grid>
                             </Link>
-                        </li>
+                        </Box>
                     ))
                 }
-            </ul>
+            </Box>
 
-            <div className="border-b border-divider dark:border-darkDivider my-8"></div>
+            <Box mt={6} mb={6} sx={{ borderTop: 1, borderColor: 'divider'}}></Box>
 
-            <ul className="p-0 my-4 ml-0 mr-2">
+            <Box component="ul" mt={2} mb={2} mr={2} p={0} sx={{ listStyle: 'none' }}>
                 {
                     MENU_ITEMS_BOTTOM.map(menu => (
-                        <li key={menu.id} className={`my-1 relative ${isDark && 'activeDark'} ${checkActivePage(location.pathname, `/${menu.url}`)}`}>
-                            <Link to={`/${menu.url}`} className="block py-3 mx-5 relative">
-                                <div className="flex items-center">
+                        <Box component="li" key={menu.id} mt={1} mb={1} position="relative" className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
+                            <Link to={`/${menu.url}`} className="menu-link">
+                                <Grid container alignItems="center">
                                     {menu.icon}
-                                    <h2 className={`ml-3 dark:text-white text-base`}>{menu.name}</h2>
-                                </div>
+                                    <Typography component="h2" variant="h3" color="text.primary" fontWeight={400} ml={2}>{menu.name}</Typography>
+                                </Grid>
                             </Link>
-                        </li>
+                        </Box>
                     ))
                 }
-            </ul>
+            </Box>
 
-            <div className="absolute bottom-10 flex items-center justify-center left-0 right-0">
+            <Grid container position="absolute" bottom={100} alignItems="center" justifyContent="space-between" left={0} right={0}>
                 <ThemeToggle />
-            </div>
-        </div>
+            </Grid>
+        </Box>
     )
 };
 
@@ -55,7 +54,7 @@ const MENU_ITEMS_TOP = [
     {
         id: 1,
         name: "Pipelines",
-        icon: <FontAwesomeIcon className="menu-icons" icon={faKey} />,
+        icon: <FontAwesomeIcon className="menu-icons" icon={faCodeBranch} />,
         url: "",
     },
     {

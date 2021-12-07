@@ -1,18 +1,19 @@
+import Box from '@mui/material/Box';
 import { Outlet } from "react-router-dom";
 import Navbar from "../Navbar";
 import Sidebar from "../Sidebar";
 
 const Layout = () => {
     return(
-        <div className="h-screen max-h-screen max-w-screen overflow-hidden dark:bg-darkPrimary">
+        <Box height="100vh" width="100vw" sx={{ overflow: 'hidden' }} className="spacing-nav">
             <Navbar />
-            <div className="h-full flex spacing-nav">
+            <Box height="100%" sx={{ display: 'flex' }}>
                 <Sidebar />
-                <div className="flex-1 overflow-y-auto p-7">
+                <Box flex={1} padding={4} >
                     <Outlet />
-                </div>
-            </div>
-        </div>
+                </Box>
+            </Box>
+        </Box>
     )
 };
 

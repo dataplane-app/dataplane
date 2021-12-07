@@ -45,3 +45,15 @@
     line-height: 20px;
     color: #0073C6;
 }
+
+.menu-link{
+    display: block;
+    padding: 0.75rem 0;
+    margin: 0 1.25rem;
+    position: relative;
+    text-decoration: none;
+}
+
+.spacing-nav{
+    padding-top: 82px;
+}
