@@ -14,9 +14,12 @@ type Users struct {
 	FirstName string     `json:"first_name"`
 	LastName  string     `json:"last_name"`
 	Email     string     `json:"email"`
+	JobTitle  string     `json:"job_title"`
 	Password  string     `json:"password"`
 	Timezone  string     `json:"timezone"`
 	UserType  string     `json:"user_type"`
+	Status    string     `json:"status"` // Can only be active, inactive, register
+	Active    bool       `json:"active"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`

@@ -22,6 +22,9 @@ func Setup() *fiber.App {
 
 	app := fiber.New()
 
+	// ------- LOAD secrets ------
+	logging.MapSecrets()
+
 	// ------- DATABASE CONNECT ------
 	database.DBConnect()
 	log.Println("🏃 Running on: ", os.Getenv("env"))

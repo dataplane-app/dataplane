@@ -73,7 +73,7 @@ func GenerateAccessClaims(userID string, username string, usertype string, busin
 func GenerateRefreshToken(userID string, businessID string) string {
 
 	// remove stale refresh tokens
-	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expiry < ? and user_id =?", time.Now(), userID)
+	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expires < ? and user_id =?", time.Now(), userID)
 
 	t := time.Now()
 	expires := t.Add(14 * 24 * time.Hour)
