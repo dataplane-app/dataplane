@@ -19,6 +19,10 @@ import (
 
 func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql.AddAdminsInput) (*publicgraphql.Admin, error) {
 
+	if os.Getenv("mode") != "development" {
+		return nil, errors.New("Not in development mode.")
+	}
+
 	u := models.Platform{}
 	if res := database.DBConn.First(&u); res.RowsAffected >= 1 {
 		return nil, errors.New("Platform already setup.")
@@ -73,6 +77,42 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 		}
 		if strings.Contains(err.Error(), "duplicate key") {
 			return nil, errors.New("User already exists.")
+		}
+		return nil, errors.New("Register database error.")
+	}
+
+	// Environments get added
+	environment := &[]models.Environment{
+		{ID: uuid.New().String(),
+			Name:   "Development",
+			Active: true}, {
+			ID:     uuid.New().String(),
+			Name:   "Production",
+			Active: true,
+		},
+	}
+
+	err = database.DBConn.Create(&environment).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Register database error.")
+	}
+
+	// Preferences get added
+	preferences := &models.Preferences{
+		UserID:     userData.UserID,
+		Preference: "theme",
+		Value:      "light_mode",
+	}
+
+	err = database.DBConn.Create(&preferences).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Register database error.")
 	}

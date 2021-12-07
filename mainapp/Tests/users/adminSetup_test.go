@@ -32,8 +32,12 @@ func TestAdminSetup(t *testing.T) {
 
 	graphQLUrl := "http://localhost:9000/public/graphql"
 
-	testUser := faker.Email()
-	testPassword := faker.Password()
+	testUser := tests.AdminUser
+	testPassword := tests.AdminPassword
+	// Remove admin user
+	database.DBConn.Where("username = ?", testUser).Delete(&models.Users{})
+	// Remove environments
+	database.DBConn.Where("1 = 1").Delete(&models.Environment{})
 
 	//--------- Create user ------------
 	createUser := `mutation {
