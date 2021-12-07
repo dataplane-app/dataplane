@@ -41,7 +41,7 @@ func TestAdminSetup(t *testing.T) {
 
 	//--------- Create user ------------
 	createUser := `mutation {
-				createAdmin(
+				setupPlatform(
 					input: {
 						PlatformInput: { 
 							business_name: "` + faker.DomainName() + `",,

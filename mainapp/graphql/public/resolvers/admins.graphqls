@@ -28,8 +28,9 @@ input AddAdminsInput {
 type Admin {
 	Platform: Platform
 	User: User
+	Auth: Authtoken
 }
 
 type Mutation {
-  createAdmin(input: AddAdminsInput): Admin
+  setupPlatform(input: AddAdminsInput): Admin
 }

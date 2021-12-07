@@ -23,6 +23,7 @@ type AddUsersInput struct {
 type Admin struct {
 	Platform *models.Platform `json:"Platform"`
 	User     *models.Users    `json:"User"`
+	Auth     *Authtoken       `json:"Auth"`
 }
 
 type Authtoken struct {

@@ -17,7 +17,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql.AddAdminsInput) (*publicgraphql.Admin, error) {
+func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraphql.AddAdminsInput) (*publicgraphql.Admin, error) {
 	if os.Getenv("mode") != "development" {
 		return nil, errors.New("Not in development mode.")
 	}
@@ -116,7 +116,17 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 		return nil, errors.New("Register database error.")
 	}
 
-	return &publicgraphql.Admin{platformData, userData}, nil
+	// pass back authentication
+	accessToken, refreshToken := auth.GenerateTokens(userData.UserID, userData.Username, userData.UserType, "businessID")
+
+	return &publicgraphql.Admin{
+		platformData,
+		userData,
+		&publicgraphql.Authtoken{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		},
+	}, nil
 }
 
 // Mutation returns publicgraphql.MutationResolver implementation.

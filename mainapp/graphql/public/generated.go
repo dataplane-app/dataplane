@@ -43,6 +43,7 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Admin struct {
+		Auth     func(childComplexity int) int
 		Platform func(childComplexity int) int
 		User     func(childComplexity int) int
 	}
@@ -53,7 +54,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateAdmin func(childComplexity int, input *AddAdminsInput) int
+		SetupPlatform func(childComplexity int, input *AddAdminsInput) int
 	}
 
 	Platform struct {
@@ -79,7 +80,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateAdmin(ctx context.Context, input *AddAdminsInput) (*Admin, error)
+	SetupPlatform(ctx context.Context, input *AddAdminsInput) (*Admin, error)
 }
 type QueryResolver interface {
 	LoginUser(ctx context.Context, username string, password string) (*Authtoken, error)
@@ -99,6 +100,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Admin.Auth":
+		if e.complexity.Admin.Auth == nil {
+			break
+		}
+
+		return e.complexity.Admin.Auth(childComplexity), true
 
 	case "Admin.Platform":
 		if e.complexity.Admin.Platform == nil {
@@ -128,17 +136,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Authtoken.RefreshToken(childComplexity), true
 
-	case "Mutation.createAdmin":
-		if e.complexity.Mutation.CreateAdmin == nil {
+	case "Mutation.setupPlatform":
+		if e.complexity.Mutation.SetupPlatform == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createAdmin_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_setupPlatform_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateAdmin(childComplexity, args["input"].(*AddAdminsInput)), true
+		return e.complexity.Mutation.SetupPlatform(childComplexity, args["input"].(*AddAdminsInput)), true
 
 	case "Platform.business_name":
 		if e.complexity.Platform.BusinessName == nil {
@@ -323,10 +331,11 @@ input AddAdminsInput {
 type Admin {
 	Platform: Platform
 	User: User
+	Auth: Authtoken
 }
 
 type Mutation {
-  createAdmin(input: AddAdminsInput): Admin
+  setupPlatform(input: AddAdminsInput): Admin
 }
 `, BuiltIn: false},
 	{Name: "resolvers/users.graphqls", Input: `type User {
@@ -355,7 +364,7 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_createAdmin_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_setupPlatform_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *AddAdminsInput
@@ -511,6 +520,38 @@ func (ec *executionContext) _Admin_User(ctx context.Context, field graphql.Colle
 	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Admin_Auth(ctx context.Context, field graphql.CollectedField, obj *Admin) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Admin",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Auth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*Authtoken)
+	fc.Result = res
+	return ec.marshalOAuthtoken2ᚖdataplaneᚋgraphqlᚋpublicᚐAuthtoken(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Authtoken_access_token(ctx context.Context, field graphql.CollectedField, obj *Authtoken) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -581,7 +622,7 @@ func (ec *executionContext) _Authtoken_refresh_token(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_createAdmin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_setupPlatform(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -598,7 +639,7 @@ func (ec *executionContext) _Mutation_createAdmin(ctx context.Context, field gra
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_createAdmin_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_setupPlatform_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -606,7 +647,7 @@ func (ec *executionContext) _Mutation_createAdmin(ctx context.Context, field gra
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateAdmin(rctx, args["input"].(*AddAdminsInput))
+		return ec.resolvers.Mutation().SetupPlatform(rctx, args["input"].(*AddAdminsInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2393,6 +2434,8 @@ func (ec *executionContext) _Admin(ctx context.Context, sel ast.SelectionSet, ob
 			out.Values[i] = ec._Admin_Platform(ctx, field, obj)
 		case "User":
 			out.Values[i] = ec._Admin_User(ctx, field, obj)
+		case "Auth":
+			out.Values[i] = ec._Admin_Auth(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2451,8 +2494,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "createAdmin":
-			out.Values[i] = ec._Mutation_createAdmin(ctx, field)
+		case "setupPlatform":
+			out.Values[i] = ec._Mutation_setupPlatform(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
