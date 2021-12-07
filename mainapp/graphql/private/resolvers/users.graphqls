@@ -1,4 +1,27 @@
+type User {
+	user_id:   String! 
+	user_type: String!
+	first_name: String!    
+	last_name:  String!     
+	email:     String!     
+	job_title: String!
+	timezone:  String!     
+}
+
+input AddUsersInput {
+	first_name: String!    
+	last_name:  String!     
+	email:     String!     
+	job_title: String!
+	password:  String!     
+	timezone:  String!     
+}
+
 # Logout uses access token derived from the refresh token. This removes all refresh tokens belonging to that user on logout.
 extend type Query{
 	logoutUser: String
+}
+
+extend type Mutation {
+  createUser(input: AddUsersInput): User
 }

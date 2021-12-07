@@ -54,7 +54,6 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateAdmin func(childComplexity int, input *AddAdminsInput) int
-		CreateUser  func(childComplexity int, input *AddUsersInput) int
 	}
 
 	Platform struct {
@@ -81,7 +80,6 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateAdmin(ctx context.Context, input *AddAdminsInput) (*Admin, error)
-	CreateUser(ctx context.Context, input *AddUsersInput) (*models.Users, error)
 }
 type QueryResolver interface {
 	LoginUser(ctx context.Context, username string, password string) (*Authtoken, error)
@@ -141,18 +139,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateAdmin(childComplexity, args["input"].(*AddAdminsInput)), true
-
-	case "Mutation.createUser":
-		if e.complexity.Mutation.CreateUser == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createUser_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(*AddUsersInput)), true
 
 	case "Platform.business_name":
 		if e.complexity.Platform.BusinessName == nil {
@@ -307,7 +293,16 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "resolvers/admins.graphqls", Input: `input PlatformInput {
+	{Name: "resolvers/admins.graphqls", Input: `input AddUsersInput {
+	first_name: String!    
+	last_name:  String!     
+	email:     String!     
+	job_title: String!
+	password:  String!     
+	timezone:  String!     
+}
+
+input PlatformInput {
 	business_name: String!    
 	timezone:      String!     
 	complete:      Boolean!     
@@ -334,16 +329,7 @@ type Mutation {
   createAdmin(input: AddAdminsInput): Admin
 }
 `, BuiltIn: false},
-	{Name: "resolvers/users.graphqls", Input: `input AddUsersInput {
-	first_name: String!    
-	last_name:  String!     
-	email:     String!     
-	job_title: String!
-	password:  String!     
-	timezone:  String!     
-}
-
-type User {
+	{Name: "resolvers/users.graphqls", Input: `type User {
 	user_id:   String! 
 	user_type: String!
 	first_name: String!    
@@ -356,10 +342,6 @@ type User {
 type Authtoken {
 	access_token: String!
 	refresh_token: String!
-}
-
-extend type Mutation {
-  createUser(input: AddUsersInput): User
 }
 
 type Query{
@@ -380,21 +362,6 @@ func (ec *executionContext) field_Mutation_createAdmin_args(ctx context.Context,
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOAddAdminsInput2ᚖdataplaneᚋgraphqlᚋpublicᚐAddAdminsInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *AddUsersInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddUsersInput2ᚖdataplaneᚋgraphqlᚋpublicᚐAddUsersInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -651,45 +618,6 @@ func (ec *executionContext) _Mutation_createAdmin(ctx context.Context, field gra
 	res := resTmp.(*Admin)
 	fc.Result = res
 	return ec.marshalOAdmin2ᚖdataplaneᚋgraphqlᚋpublicᚐAdmin(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_createUser_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateUser(rctx, args["input"].(*AddUsersInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*models.Users)
-	fc.Result = res
-	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Platform_id(ctx context.Context, field graphql.CollectedField, obj *models.Platform) (ret graphql.Marshaler) {
@@ -2525,8 +2453,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = graphql.MarshalString("Mutation")
 		case "createAdmin":
 			out.Values[i] = ec._Mutation_createAdmin(ctx, field)
-		case "createUser":
-			out.Values[i] = ec._Mutation_createUser(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

@@ -18,7 +18,6 @@ import (
 )
 
 func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql.AddAdminsInput) (*publicgraphql.Admin, error) {
-
 	if os.Getenv("mode") != "development" {
 		return nil, errors.New("Not in development mode.")
 	}

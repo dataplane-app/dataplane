@@ -12,9 +12,9 @@ model:
   filename: models.go
   package: privategraphql
 
-# models:
-#  User:
-#    model: dataplane/database/models.Users
+models:
+ User:
+   model: dataplane/database/models.Users
 
 resolver:
   layout: follow-schema

@@ -25,7 +25,26 @@ go test -p 1 -v -count=1 -run TestUserAuth dataplane/Tests/users
 func TestUserAuth(t *testing.T) {
 	app := routes.Setup()
 
-	graphQLUrl := "http://localhost:9000/public/graphql"
+	graphQLPublicUrl := "http://localhost:9000/public/graphql"
+
+	//--------- Login ------------
+
+	loginAdminUser := `{
+			loginUser(
+			  username: "` + tests.AdminUser + `",  
+			  password: "` + tests.AdminPassword + `",
+			) {
+			  access_token
+			  refresh_token
+			}
+		  }`
+
+	loginAdminUserResponse, _ := tests.GraphQLRequestPublic(loginAdminUser, "{}", graphQLPublicUrl, t, app)
+
+	// Get access token
+	accessTokenAdmin := jsoniter.Get(loginAdminUserResponse, "data", "loginUser", "access_token").ToString()
+
+	graphQLUrl := "http://localhost:9000/private/graphql"
 
 	testUser := faker.Email()
 	testPassword := faker.Password()
@@ -48,7 +67,7 @@ func TestUserAuth(t *testing.T) {
 			}
 			}`
 
-	createUserResponse, httpResponse := tests.GraphQLRequestPublic(createUser, "{}", graphQLUrl, t, app)
+	createUserResponse, httpResponse := tests.GraphQLRequestPrivate(createUser, accessTokenAdmin, "{}", graphQLUrl, t, app)
 
 	log.Println(string(createUserResponse))
 
@@ -70,7 +89,7 @@ func TestUserAuth(t *testing.T) {
 		}
 	  }`
 
-	loginUserResponse, httpLoginResponse := tests.GraphQLRequestPublic(loginUser, "{}", graphQLUrl, t, app)
+	loginUserResponse, httpLoginResponse := tests.GraphQLRequestPublic(loginUser, "{}", graphQLPublicUrl, t, app)
 
 	log.Println(string(loginUserResponse))
 
