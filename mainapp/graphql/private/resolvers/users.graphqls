@@ -17,6 +17,10 @@ input AddUsersInput {
 	timezone:  String!     
 }
 
+input ChangePasswordInput {
+	password: String!    
+}
+
 # Logout uses access token derived from the refresh token. This removes all refresh tokens belonging to that user on logout.
 extend type Query{
 	logoutUser: String
@@ -24,4 +28,8 @@ extend type Query{
 
 extend type Mutation {
   createUser(input: AddUsersInput): User
+}
+
+extend type Mutation {
+  updateChangePassword(input: ChangePasswordInput): String
 }

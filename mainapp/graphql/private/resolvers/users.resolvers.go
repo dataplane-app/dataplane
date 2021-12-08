@@ -64,6 +64,30 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql
 	}, nil
 }
 
+func (r *mutationResolver) UpdateChangePassword(ctx context.Context, input *privategraphql.ChangePasswordInput) (*string, error) {
+	userID := ctx.Value("currentUser").(string)
+
+	password, err := auth.Encrypt(input.Password)
+
+	if err != nil {
+		return nil, errors.New("Password hash failed.")
+	}
+
+	err = database.DBConn.Where("user_id = ?", userID).Updates(models.Users{
+		Password: password,
+	}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("database error.")
+	}
+
+	response := "success"
+	return &response, nil
+}
+
 func (r *queryResolver) LogoutUser(ctx context.Context) (*string, error) {
 	userID := ctx.Value("currentUser").(string)
 

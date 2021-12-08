@@ -24,6 +24,10 @@ type AddUsersInput struct {
 	Timezone  string `json:"timezone"`
 }
 
+type ChangePasswordInput struct {
+	Password string `json:"password"`
+}
+
 type Pipelines struct {
 	Name string `json:"name"`
 }
