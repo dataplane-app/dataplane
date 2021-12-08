@@ -69,8 +69,3 @@ func (r *queryResolver) Me(ctx context.Context) (*models.Users, error) {
 		Timezone:  u.Timezone,
 	}, nil
 }
-
-// Mutation returns privategraphql.MutationResolver implementation.
-func (r *Resolver) Mutation() privategraphql.MutationResolver { return &mutationResolver{r} }
-
-type mutationResolver struct{ *Resolver }

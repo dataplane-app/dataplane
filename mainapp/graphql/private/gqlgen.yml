@@ -15,6 +15,8 @@ model:
 models:
  User:
    model: dataplane/database/models.Users
+ Environments:
+   model: dataplane/database/models.Environment
 
 resolver:
   layout: follow-schema
