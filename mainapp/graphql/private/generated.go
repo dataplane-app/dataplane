@@ -48,6 +48,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateUser func(childComplexity int, input *AddUsersInput) int
+		UpdateMe   func(childComplexity int, input *AddUpdateMeInput) int
 	}
 
 	Pipelines struct {
@@ -78,6 +79,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
+	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	CreateUser(ctx context.Context, input *AddUsersInput) (*models.Users, error)
 }
 type QueryResolver interface {
@@ -121,6 +123,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(*AddUsersInput)), true
+
+	case "Mutation.updateMe":
+		if e.complexity.Mutation.UpdateMe == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateMe_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateMe(childComplexity, args["input"].(*AddUpdateMeInput)), true
 
 	case "Pipelines.name":
 		if e.complexity.Pipelines.Name == nil {
@@ -301,23 +315,25 @@ type Query {
 # 	timezone:  String!     
 # }
 
-# input AddUsersInput {
-# 	first_name: String!    
-# 	last_name:  String!     
-# 	email:     String!     
-# 	job_title: String!
-# 	password:  String!     
-# 	timezone:  String!     
-# }
+input AddUpdateMeInput {
+	first_name: String!    
+	last_name:  String!     
+	email:     String!     
+	job_title: String!
+	timezone:  String!     
+}
 
-# Logout uses access token derived from the refresh token. This removes all refresh tokens belonging to that user on logout.
+
+
+# me uses userID derived from the access token.
 extend type Query{
 	me: User
 }
 
-# extend type Mutation {
-#   createUser(input: AddUsersInput): User
-# }`, BuiltIn: false},
+extend type Mutation {
+  updateMe(input: AddUpdateMeInput): User
+}
+`, BuiltIn: false},
 	{Name: "resolvers/pipelines.graphqls", Input: `type Pipelines {
 	name: String!
 }
@@ -373,6 +389,21 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOAddUsersInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddUsersInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateMe_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *AddUpdateMeInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOAddUpdateMeInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddUpdateMeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -467,6 +498,45 @@ func (ec *executionContext) _Environments_name(ctx context.Context, field graphq
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateMe(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateMe_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateMe(rctx, args["input"].(*AddUpdateMeInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Users)
+	fc.Result = res
+	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2176,6 +2246,61 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputAddUpdateMeInput(ctx context.Context, obj interface{}) (AddUpdateMeInput, error) {
+	var it AddUpdateMeInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "first_name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first_name"))
+			it.FirstName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "last_name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("last_name"))
+			it.LastName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "job_title":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("job_title"))
+			it.JobTitle, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "timezone":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
+			it.Timezone, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAddUsersInput(ctx context.Context, obj interface{}) (AddUsersInput, error) {
 	var it AddUsersInput
 	asMap := map[string]interface{}{}
@@ -2289,6 +2414,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "updateMe":
+			out.Values[i] = ec._Mutation_updateMe(ctx, field)
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
 		default:
@@ -3033,6 +3160,14 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalOAddUpdateMeInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddUpdateMeInput(ctx context.Context, v interface{}) (*AddUpdateMeInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAddUpdateMeInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOAddUsersInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddUsersInput(ctx context.Context, v interface{}) (*AddUsersInput, error) {

@@ -78,8 +78,3 @@ func (r *queryResolver) LogoutUser(ctx context.Context) (*string, error) {
 	response := "Logged out"
 	return &response, nil
 }
-
-// Mutation returns privategraphql.MutationResolver implementation.
-func (r *Resolver) Mutation() privategraphql.MutationResolver { return &mutationResolver{r} }
-
-type mutationResolver struct{ *Resolver }

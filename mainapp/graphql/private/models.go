@@ -2,6 +2,14 @@
 
 package privategraphql
 
+type AddUpdateMeInput struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	JobTitle  string `json:"job_title"`
+	Timezone  string `json:"timezone"`
+}
+
 type AddUsersInput struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`

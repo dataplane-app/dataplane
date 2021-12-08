@@ -7,10 +7,43 @@ import (
 	"context"
 	"dataplane/database"
 	"dataplane/database/models"
+	privategraphql "dataplane/graphql/private"
 	"dataplane/logging"
 	"errors"
 	"os"
 )
+
+func (r *mutationResolver) UpdateMe(ctx context.Context, input *privategraphql.AddUpdateMeInput) (*models.Users, error) {
+	// Retrieve userID from access token
+	userID := ctx.Value("currentUser").(string)
+
+	u := models.Users{}
+
+	err := database.DBConn.Where("user_id = ?", userID).Updates(models.Users{
+		Username:  input.Email,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		Email:     input.Email,
+		JobTitle:  input.JobTitle,
+		Timezone:  input.Timezone,
+	}).First(&u).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("updateMe database error.")
+	}
+
+	return &models.Users{
+		UserID:    u.UserID,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+		Email:     u.Email,
+		JobTitle:  u.JobTitle,
+		Timezone:  u.Timezone,
+	}, nil
+}
 
 func (r *queryResolver) Me(ctx context.Context) (*models.Users, error) {
 	// Retrieve userID from access token
@@ -36,3 +69,8 @@ func (r *queryResolver) Me(ctx context.Context) (*models.Users, error) {
 		Timezone:  u.Timezone,
 	}, nil
 }
+
+// Mutation returns privategraphql.MutationResolver implementation.
+func (r *Resolver) Mutation() privategraphql.MutationResolver { return &mutationResolver{r} }
+
+type mutationResolver struct{ *Resolver }

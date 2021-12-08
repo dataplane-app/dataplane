@@ -1,4 +1,16 @@
+input AddUpdateMeInput {
+	first_name: String!    
+	last_name:  String!     
+	email:     String!     
+	job_title: String!
+	timezone:  String!     
+}
+
 # me uses userID derived from the access token.
 extend type Query{
 	me: User
+}
+
+extend type Mutation {
+  updateMe(input: AddUpdateMeInput): User
 }
