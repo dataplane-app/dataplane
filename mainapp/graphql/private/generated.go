@@ -59,6 +59,7 @@ type ComplexityRoot struct {
 		GetPipelines    func(childComplexity int) int
 		GetWorkers      func(childComplexity int) int
 		LogoutUser      func(childComplexity int) int
+		Me              func(childComplexity int) int
 	}
 
 	User struct {
@@ -81,6 +82,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*Environments, error)
+	Me(ctx context.Context) (*models.Users, error)
 	GetPipelines(ctx context.Context) ([]*Pipelines, error)
 	LogoutUser(ctx context.Context) (*string, error)
 	GetWorkers(ctx context.Context) ([]*Workers, error)
@@ -154,6 +156,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.LogoutUser(childComplexity), true
+
+	case "Query.me":
+		if e.complexity.Query.Me == nil {
+			break
+		}
+
+		return e.complexity.Query.Me(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -282,6 +291,33 @@ var sources = []*ast.Source{
 type Query {
     getEnvironments: [Environments]
 }`, BuiltIn: false},
+	{Name: "resolvers/me.graphqls", Input: `# type User {
+# 	user_id:   String! 
+# 	user_type: String!
+# 	first_name: String!    
+# 	last_name:  String!     
+# 	email:     String!     
+# 	job_title: String!
+# 	timezone:  String!     
+# }
+
+# input AddUsersInput {
+# 	first_name: String!    
+# 	last_name:  String!     
+# 	email:     String!     
+# 	job_title: String!
+# 	password:  String!     
+# 	timezone:  String!     
+# }
+
+# Logout uses access token derived from the refresh token. This removes all refresh tokens belonging to that user on logout.
+extend type Query{
+	me: User
+}
+
+# extend type Mutation {
+#   createUser(input: AddUsersInput): User
+# }`, BuiltIn: false},
 	{Name: "resolvers/pipelines.graphqls", Input: `type Pipelines {
 	name: String!
 }
@@ -537,6 +573,38 @@ func (ec *executionContext) _Query_getEnvironments(ctx context.Context, field gr
 	res := resTmp.([]*Environments)
 	fc.Result = res
 	return ec.marshalOEnvironments2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐEnvironments(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Me(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Users)
+	fc.Result = res
+	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2285,6 +2353,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getEnvironments(ctx, field)
+				return res
+			})
+		case "me":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_me(ctx, field)
 				return res
 			})
 		case "getPipelines":

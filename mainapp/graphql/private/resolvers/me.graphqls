@@ -1,0 +1,4 @@
+# me uses userID derived from the access token.
+extend type Query{
+	me: User
+}
