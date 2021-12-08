@@ -134,4 +134,33 @@ func TestMe(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpMeResponse.StatusCode, "Create user 200 status code")
 
+	// ------------ UpdateMe ---------------------
+	updateMe := `mutation {
+		updateMe(
+			input: {
+				first_name: "` + faker.FirstName() + `",
+				last_name: "` + faker.LastName() + `",
+				email: "admin@email.com",
+				job_title: "Manager"
+				timezone: " ` + faker.Timezone() + ` ",
+			}
+		) {
+			user_id
+			first_name
+			last_name
+			email
+			job_title
+			timezone
+		}
+	}`
+	updatemeResponse, httpUpdateMeResponse := tests.GraphQLRequestPrivate(updateMe, accessToken, "{}", graphQLUrlPrivate, t, app)
+
+	log.Println(string(updatemeResponse))
+
+	if strings.Contains(string(updatemeResponse), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpUpdateMeResponse.StatusCode, "updateMe 200 status code")
+
 }

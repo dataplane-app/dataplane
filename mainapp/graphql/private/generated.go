@@ -305,25 +305,13 @@ var sources = []*ast.Source{
 type Query {
     getEnvironments: [Environments]
 }`, BuiltIn: false},
-	{Name: "resolvers/me.graphqls", Input: `# type User {
-# 	user_id:   String! 
-# 	user_type: String!
-# 	first_name: String!    
-# 	last_name:  String!     
-# 	email:     String!     
-# 	job_title: String!
-# 	timezone:  String!     
-# }
-
-input AddUpdateMeInput {
+	{Name: "resolvers/me.graphqls", Input: `input AddUpdateMeInput {
 	first_name: String!    
 	last_name:  String!     
 	email:     String!     
 	job_title: String!
 	timezone:  String!     
 }
-
-
 
 # me uses userID derived from the access token.
 extend type Query{
