@@ -19,9 +19,8 @@ import (
 go test -p 1 -v -count=1 -run TestMe dataplane/Tests/users
 * Create admin user and platform
 * Login
-* Validate token
-* Exchange refresh token for access token
-* Logout
+* Get me data
+* Update me data
 */
 func TestMe(t *testing.T) {
 	app := routes.Setup()
