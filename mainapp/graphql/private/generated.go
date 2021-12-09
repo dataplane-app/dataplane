@@ -59,11 +59,12 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetEnvironments func(childComplexity int) int
-		GetPipelines    func(childComplexity int) int
-		GetWorkers      func(childComplexity int) int
-		LogoutUser      func(childComplexity int) int
-		Me              func(childComplexity int) int
+		GetEnvironments      func(childComplexity int) int
+		GetPipelines         func(childComplexity int) int
+		GetWorkers           func(childComplexity int) int
+		LogoutUser           func(childComplexity int) int
+		Me                   func(childComplexity int) int
+		UpdateDeactivateUser func(childComplexity int) int
 	}
 
 	User struct {
@@ -93,6 +94,7 @@ type QueryResolver interface {
 	Me(ctx context.Context) (*models.Users, error)
 	GetPipelines(ctx context.Context) ([]*Pipelines, error)
 	LogoutUser(ctx context.Context) (*string, error)
+	UpdateDeactivateUser(ctx context.Context) (*string, error)
 	GetWorkers(ctx context.Context) ([]*Workers, error)
 }
 
@@ -219,6 +221,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Me(childComplexity), true
+
+	case "Query.updateDeactivateUser":
+		if e.complexity.Query.UpdateDeactivateUser == nil {
+			break
+		}
+
+		return e.complexity.Query.UpdateDeactivateUser(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -415,6 +424,10 @@ input ChangePasswordInput {
 # Logout uses access token derived from the refresh token. This removes all refresh tokens belonging to that user on logout.
 extend type Query{
 	logoutUser: String
+}
+
+extend type Query{
+	updateDeactivateUser: String
 }
 
 extend type Mutation {
@@ -946,6 +959,38 @@ func (ec *executionContext) _Query_logoutUser(ctx context.Context, field graphql
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().LogoutUser(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_updateDeactivateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().UpdateDeactivateUser(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2822,6 +2867,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_logoutUser(ctx, field)
+				return res
+			})
+		case "updateDeactivateUser":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_updateDeactivateUser(ctx, field)
 				return res
 			})
 		case "getWorkers":

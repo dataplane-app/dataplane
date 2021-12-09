@@ -26,6 +26,10 @@ extend type Query{
 	logoutUser: String
 }
 
+extend type Query{
+	updateDeactivateUser: String
+}
+
 extend type Mutation {
   createUser(input: AddUsersInput): User
 }

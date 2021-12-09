@@ -102,3 +102,21 @@ func (r *queryResolver) LogoutUser(ctx context.Context) (*string, error) {
 	response := "Logged out"
 	return &response, nil
 }
+
+func (r *queryResolver) UpdateDeactivateUser(ctx context.Context) (*string, error) {
+	userID := ctx.Value("currentUser").(string)
+
+	err := database.DBConn.Where(&models.Users{UserID: userID}).Select("status", "active").
+		Updates(models.Users{Status: "inactive", Active: false}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("UpdateDeactivateUser database error.")
+	}
+
+	response := "User deactivated"
+	return &response, nil
+
+}
