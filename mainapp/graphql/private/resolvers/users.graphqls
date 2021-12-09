@@ -21,21 +21,17 @@ input ChangePasswordInput {
 	password: String!    
 }
 
-input DeleteUserInput {
-	user_id: String!    
-}
-
 # Logout uses access token derived from the refresh token. This removes all refresh tokens belonging to that user on logout.
 extend type Query{
 	logoutUser: String
 }
 
 extend type Mutation{
-	updateDeactivateUser(userid: String! ): String
+  updateDeactivateUser(userid: String! ): String
 }
 
 extend type Mutation {
-  updateDeleteUser(input: DeleteUserInput): String
+  updateDeleteUser(userid: String!): String
 }
 
 extend type Mutation {

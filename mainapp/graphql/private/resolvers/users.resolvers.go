@@ -29,7 +29,24 @@ func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid stri
 		&models.AuthRefreshTokens{UserID: userid},
 	).Delete(&t)
 
-	err := database.DBConn.Where(&models.Users{UserID: userid}).Select("status", "active").
+	// Check if user alredy inactive
+	u := models.Users{}
+
+	err := database.DBConn.Where("user_id = ?", userid).First(&u).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive me database error.")
+	}
+
+	if u.Active == false {
+		return nil, errors.New("User is already inactive.")
+	}
+
+	// Deactivate user
+	err = database.DBConn.Where(&models.Users{UserID: userid}).Select("status", "active").
 		Updates(models.Users{Status: "inactive", Active: false}).Error
 
 	if err != nil {
@@ -43,21 +60,21 @@ func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid stri
 	return &response, nil
 }
 
-func (r *mutationResolver) UpdateDeleteUser(ctx context.Context, input *privategraphql.DeleteUserInput) (*string, error) {
+func (r *mutationResolver) UpdateDeleteUser(ctx context.Context, userid string) (*string, error) {
 	currentUserID := ctx.Value("currentUser").(string)
 
-	if currentUserID == input.UserID {
+	if currentUserID == userid {
 		return nil, errors.New("User to be deleted cannot be the same as logged in user.")
 	}
 	t := models.AuthRefreshTokens{}
 
 	database.DBConn.Where(
-		&models.AuthRefreshTokens{UserID: input.UserID},
+		&models.AuthRefreshTokens{UserID: userid},
 	).Delete(&t)
 
 	u := models.Users{}
 
-	err := database.DBConn.Where(&models.Users{UserID: input.UserID}).Delete(&u).Error
+	err := database.DBConn.Where(&models.Users{UserID: userid}).Delete(&u).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
