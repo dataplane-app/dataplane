@@ -139,7 +139,7 @@ func TestMe(t *testing.T) {
 			input: {
 				first_name: "` + faker.FirstName() + `",
 				last_name: "` + faker.LastName() + `",
-				email: "admin@email.com",
+				email: "` + tests.AdminUser + `",
 				job_title: "Manager"
 				timezone: " ` + faker.Timezone() + ` ",
 			}
