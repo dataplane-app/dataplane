@@ -19,12 +19,12 @@ func Migrate() {
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		os.Getenv("secret.db_user"),
-		os.Getenv("secret.db_pwd"),
-		os.Getenv("secret.db_host"),
-		os.Getenv("secret.db_port"),
-		os.Getenv("secret.db_database"),
-		os.Getenv("secret.db_ssl"),
+		os.Getenv("secret_db_user"),
+		os.Getenv("secret_db_pwd"),
+		os.Getenv("secret_db_host"),
+		os.Getenv("secret_db_port"),
+		os.Getenv("secret_db_database"),
+		os.Getenv("secret_db_ssl"),
 	)
 
 	var l logger.LogLevel

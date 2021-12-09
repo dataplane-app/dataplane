@@ -2,6 +2,19 @@
 
 package privategraphql
 
+type AddEnvironmentInput struct {
+	Name   string `json:"name"`
+	Active bool   `json:"active"`
+}
+
+type AddUpdateMeInput struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	JobTitle  string `json:"job_title"`
+	Timezone  string `json:"timezone"`
+}
+
 type AddUsersInput struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
@@ -11,11 +24,16 @@ type AddUsersInput struct {
 	Timezone  string `json:"timezone"`
 }
 
-type Environments struct {
-	Name string `json:"name"`
+type ChangePasswordInput struct {
+	Password string `json:"password"`
 }
 
 type Pipelines struct {
+	Name string `json:"name"`
+}
+
+type RenameEnvironment struct {
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 

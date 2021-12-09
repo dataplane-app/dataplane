@@ -23,7 +23,7 @@ func TestPlatformLoggerFunction(t *testing.T) {
 		Environment: "test_environment",
 		Category:    "test_category",
 		LogType:     "error", //can be error, info or debug
-		Log:         os.Getenv("secret.db_host") + " - Test log",
+		Log:         os.Getenv("secret_db_host") + " - Test log",
 	})
 
 	assert.Equalf(t, true, success, "Platform log.")

@@ -1,0 +1,25 @@
+type Environments{
+	name: String!
+}
+
+input RenameEnvironment{
+    id: String!
+	name: String!
+}
+
+type Query {
+    getEnvironments: [Environments]
+}
+
+input AddEnvironmentInput {
+	name: String!    
+	active:  Boolean!     
+}
+
+extend type Mutation {
+  renameEnvironment(input: RenameEnvironment): Environments
+}
+
+extend type Mutation {
+  addEnvironment(input: AddEnvironmentInput): String
+}

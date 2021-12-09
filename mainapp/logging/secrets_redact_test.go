@@ -15,7 +15,7 @@ go test -timeout 30s -v -run ^TestSecretsRedact$ dataplane/logging
 func TestSecretsRedactFunction(t *testing.T) {
 
 	// Create some secrets
-	os.Setenv("secret.super", "squirrel")
+	os.Setenv("secret_super", "squirrel")
 
 	logmessage := "The grey squirrel is plentiful in wooded districts."
 
