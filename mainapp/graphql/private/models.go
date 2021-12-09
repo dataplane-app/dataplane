@@ -28,6 +28,10 @@ type ChangePasswordInput struct {
 	Password string `json:"password"`
 }
 
+type DeleteUserInput struct {
+	UserID string `json:"user_id"`
+}
+
 type Pipelines struct {
 	Name string `json:"name"`
 }

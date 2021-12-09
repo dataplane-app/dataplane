@@ -17,6 +17,59 @@ import (
 	"github.com/google/uuid"
 )
 
+func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid string) (*string, error) {
+	currentUserID := ctx.Value("currentUser").(string)
+
+	if currentUserID == userid {
+		return nil, errors.New("User to be deactivated cannot be the same as logged in user.")
+	}
+	t := models.AuthRefreshTokens{}
+	// We need to remove any access to deactivated user.
+	database.DBConn.Where(
+		&models.AuthRefreshTokens{UserID: userid},
+	).Delete(&t)
+
+	err := database.DBConn.Where(&models.Users{UserID: userid}).Select("status", "active").
+		Updates(models.Users{Status: "inactive", Active: false}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("DeactivateUser database error.")
+	}
+
+	response := "User deactivated"
+	return &response, nil
+}
+
+func (r *mutationResolver) UpdateDeleteUser(ctx context.Context, input *privategraphql.DeleteUserInput) (*string, error) {
+	currentUserID := ctx.Value("currentUser").(string)
+
+	if currentUserID == input.UserID {
+		return nil, errors.New("User to be deleted cannot be the same as logged in user.")
+	}
+	t := models.AuthRefreshTokens{}
+
+	database.DBConn.Where(
+		&models.AuthRefreshTokens{UserID: input.UserID},
+	).Delete(&t)
+
+	u := models.Users{}
+
+	err := database.DBConn.Where(&models.Users{UserID: input.UserID}).Delete(&u).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("DeleteUser database error.")
+	}
+
+	response := "User deleted"
+	return &response, nil
+}
+
 func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql.AddUsersInput) (*models.Users, error) {
 	// validate if the email, username and password are in correct format
 	// e := auth.ValidateRegister(input)
@@ -100,40 +153,5 @@ func (r *queryResolver) LogoutUser(ctx context.Context) (*string, error) {
 	}
 
 	response := "Logged out"
-	return &response, nil
-}
-
-func (r *queryResolver) UpdateDeactivateUser(ctx context.Context) (*string, error) {
-	userID := ctx.Value("currentUser").(string)
-
-	err := database.DBConn.Where(&models.Users{UserID: userID}).Select("status", "active").
-		Updates(models.Users{Status: "inactive", Active: false}).Error
-
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return nil, errors.New("UpdateDeactivateUser database error.")
-	}
-
-	response := "User deactivated"
-	return &response, nil
-}
-
-func (r *queryResolver) UpdateDeleteUser(ctx context.Context) (*string, error) {
-	userID := ctx.Value("currentUser").(string)
-
-	u := models.Users{}
-
-	err := database.DBConn.Where(&models.Users{UserID: userID}).Delete(&u).Error
-
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return nil, errors.New("DeleteUser database error.")
-	}
-
-	response := "User deleted"
 	return &response, nil
 }

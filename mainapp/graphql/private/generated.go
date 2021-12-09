@@ -51,6 +51,8 @@ type ComplexityRoot struct {
 		CreateUser           func(childComplexity int, input *AddUsersInput) int
 		RenameEnvironment    func(childComplexity int, input *RenameEnvironment) int
 		UpdateChangePassword func(childComplexity int, input *ChangePasswordInput) int
+		UpdateDeactivateUser func(childComplexity int, userid string) int
+		UpdateDeleteUser     func(childComplexity int, input *DeleteUserInput) int
 		UpdateMe             func(childComplexity int, input *AddUpdateMeInput) int
 	}
 
@@ -59,13 +61,11 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetEnvironments      func(childComplexity int) int
-		GetPipelines         func(childComplexity int) int
-		GetWorkers           func(childComplexity int) int
-		LogoutUser           func(childComplexity int) int
-		Me                   func(childComplexity int) int
-		UpdateDeactivateUser func(childComplexity int) int
-		UpdateDeleteUser     func(childComplexity int) int
+		GetEnvironments func(childComplexity int) int
+		GetPipelines    func(childComplexity int) int
+		GetWorkers      func(childComplexity int) int
+		LogoutUser      func(childComplexity int) int
+		Me              func(childComplexity int) int
 	}
 
 	User struct {
@@ -87,6 +87,8 @@ type MutationResolver interface {
 	RenameEnvironment(ctx context.Context, input *RenameEnvironment) (*models.Environment, error)
 	AddEnvironment(ctx context.Context, input *AddEnvironmentInput) (*string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
+	UpdateDeactivateUser(ctx context.Context, userid string) (*string, error)
+	UpdateDeleteUser(ctx context.Context, input *DeleteUserInput) (*string, error)
 	CreateUser(ctx context.Context, input *AddUsersInput) (*models.Users, error)
 	UpdateChangePassword(ctx context.Context, input *ChangePasswordInput) (*string, error)
 }
@@ -95,8 +97,6 @@ type QueryResolver interface {
 	Me(ctx context.Context) (*models.Users, error)
 	GetPipelines(ctx context.Context) ([]*Pipelines, error)
 	LogoutUser(ctx context.Context) (*string, error)
-	UpdateDeactivateUser(ctx context.Context) (*string, error)
-	UpdateDeleteUser(ctx context.Context) (*string, error)
 	GetWorkers(ctx context.Context) ([]*Workers, error)
 }
 
@@ -170,6 +170,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateChangePassword(childComplexity, args["input"].(*ChangePasswordInput)), true
 
+	case "Mutation.updateDeactivateUser":
+		if e.complexity.Mutation.UpdateDeactivateUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateDeactivateUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateDeactivateUser(childComplexity, args["userid"].(string)), true
+
+	case "Mutation.updateDeleteUser":
+		if e.complexity.Mutation.UpdateDeleteUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateDeleteUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateDeleteUser(childComplexity, args["input"].(*DeleteUserInput)), true
+
 	case "Mutation.updateMe":
 		if e.complexity.Mutation.UpdateMe == nil {
 			break
@@ -223,20 +247,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Me(childComplexity), true
-
-	case "Query.updateDeactivateUser":
-		if e.complexity.Query.UpdateDeactivateUser == nil {
-			break
-		}
-
-		return e.complexity.Query.UpdateDeactivateUser(childComplexity), true
-
-	case "Query.updateDeleteUser":
-		if e.complexity.Query.UpdateDeleteUser == nil {
-			break
-		}
-
-		return e.complexity.Query.UpdateDeleteUser(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -430,17 +440,21 @@ input ChangePasswordInput {
 	password: String!    
 }
 
+input DeleteUserInput {
+	user_id: String!    
+}
+
 # Logout uses access token derived from the refresh token. This removes all refresh tokens belonging to that user on logout.
 extend type Query{
 	logoutUser: String
 }
 
-extend type Query{
-	updateDeactivateUser: String
+extend type Mutation{
+	updateDeactivateUser(userid: String! ): String
 }
 
-extend type Query{
-	updateDeleteUser: String
+extend type Mutation {
+  updateDeleteUser(input: DeleteUserInput): String
 }
 
 extend type Mutation {
@@ -516,6 +530,36 @@ func (ec *executionContext) field_Mutation_updateChangePassword_args(ctx context
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOChangePasswordInput2ᚖdataplaneᚋgraphqlᚋprivateᚐChangePasswordInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateDeactivateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["userid"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userid"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userid"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateDeleteUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *DeleteUserInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalODeleteUserInput2ᚖdataplaneᚋgraphqlᚋprivateᚐDeleteUserInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -742,6 +786,84 @@ func (ec *executionContext) _Mutation_updateMe(ctx context.Context, field graphq
 	res := resTmp.(*models.Users)
 	fc.Result = res
 	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateDeactivateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateDeactivateUser_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateDeactivateUser(rctx, args["userid"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateDeleteUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateDeleteUser_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateDeleteUser(rctx, args["input"].(*DeleteUserInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -972,70 +1094,6 @@ func (ec *executionContext) _Query_logoutUser(ctx context.Context, field graphql
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().LogoutUser(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_updateDeactivateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().UpdateDeactivateUser(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_updateDeleteUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().UpdateDeleteUser(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2726,6 +2784,29 @@ func (ec *executionContext) unmarshalInputChangePasswordInput(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputDeleteUserInput(ctx context.Context, obj interface{}) (DeleteUserInput, error) {
+	var it DeleteUserInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "user_id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user_id"))
+			it.UserID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputRenameEnvironment(ctx context.Context, obj interface{}) (RenameEnvironment, error) {
 	var it RenameEnvironment
 	asMap := map[string]interface{}{}
@@ -2813,6 +2894,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_addEnvironment(ctx, field)
 		case "updateMe":
 			out.Values[i] = ec._Mutation_updateMe(ctx, field)
+		case "updateDeactivateUser":
+			out.Values[i] = ec._Mutation_updateDeactivateUser(ctx, field)
+		case "updateDeleteUser":
+			out.Values[i] = ec._Mutation_updateDeleteUser(ctx, field)
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
 		case "updateChangePassword":
@@ -2912,28 +2997,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_logoutUser(ctx, field)
-				return res
-			})
-		case "updateDeactivateUser":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_updateDeactivateUser(ctx, field)
-				return res
-			})
-		case "updateDeleteUser":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_updateDeleteUser(ctx, field)
 				return res
 			})
 		case "getWorkers":
@@ -3636,6 +3699,14 @@ func (ec *executionContext) unmarshalOChangePasswordInput2ᚖdataplaneᚋgraphql
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputChangePasswordInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalODeleteUserInput2ᚖdataplaneᚋgraphqlᚋprivateᚐDeleteUserInput(ctx context.Context, v interface{}) (*DeleteUserInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputDeleteUserInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
