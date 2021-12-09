@@ -14,7 +14,7 @@ import (
 	jwt2 "github.com/lestrrat-go/jwx/jwt"
 )
 
-var jwtKey = []byte(os.Getenv("secret.jwt_secret"))
+var jwtKey = []byte(os.Getenv("secret_jwt_secret"))
 
 type Claims struct {
 	// Standard claims
