@@ -45,26 +45,6 @@ type Workers struct {
 	DeletedAt   *time.Time     `json:"deleted_at,omitempty"`
 }
 
-func (Permissions) IsEntity() {}
-
-func (Permissions) TableName() string {
-	return "permissions"
-}
-
-type Permissions struct {
-	UserID                 string `gorm:"PRIMARY_KEY;type:varchar(48);" json:"user_id"`
-	Platform               string `json:"platform"`
-	EnvironmentPermissions string `json:"environment_permissions"`
-	SpecificPermissions    string `json:"specific_permissions"`
-	AccessGroups           string `json:"access_groups"`
-
-	// Username  string     `gorm:"type:varchar(100);index:idx_username,unique;" json:"username"`
-
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-}
-
 func (UserToEnvironment) IsEntity() {}
 
 func (UserToEnvironment) TableName() string {

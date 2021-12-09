@@ -55,6 +55,7 @@ func Migrate() {
 		&models.Environment{},
 		&models.Platform{},
 		&models.Preferences{},
+		&models.Permissions{},
 	)
 	if err1 != nil {
 		panic(err1)

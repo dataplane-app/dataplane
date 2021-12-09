@@ -1,0 +1,9 @@
+type AvailablePermissions {
+    Code:  String!
+	Level: String!
+    Label: String!
+}
+
+extend type Query {
+  availablePermissions: [AvailablePermissions]
+}
