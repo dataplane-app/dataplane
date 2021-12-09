@@ -30,6 +30,10 @@ extend type Query{
 	updateDeactivateUser: String
 }
 
+extend type Query{
+	updateDeleteUser: String
+}
+
 extend type Mutation {
   createUser(input: AddUsersInput): User
 }

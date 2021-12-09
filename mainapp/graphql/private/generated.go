@@ -65,6 +65,7 @@ type ComplexityRoot struct {
 		LogoutUser           func(childComplexity int) int
 		Me                   func(childComplexity int) int
 		UpdateDeactivateUser func(childComplexity int) int
+		UpdateDeleteUser     func(childComplexity int) int
 	}
 
 	User struct {
@@ -95,6 +96,7 @@ type QueryResolver interface {
 	GetPipelines(ctx context.Context) ([]*Pipelines, error)
 	LogoutUser(ctx context.Context) (*string, error)
 	UpdateDeactivateUser(ctx context.Context) (*string, error)
+	UpdateDeleteUser(ctx context.Context) (*string, error)
 	GetWorkers(ctx context.Context) ([]*Workers, error)
 }
 
@@ -228,6 +230,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.UpdateDeactivateUser(childComplexity), true
+
+	case "Query.updateDeleteUser":
+		if e.complexity.Query.UpdateDeleteUser == nil {
+			break
+		}
+
+		return e.complexity.Query.UpdateDeleteUser(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -428,6 +437,10 @@ extend type Query{
 
 extend type Query{
 	updateDeactivateUser: String
+}
+
+extend type Query{
+	updateDeleteUser: String
 }
 
 extend type Mutation {
@@ -991,6 +1004,38 @@ func (ec *executionContext) _Query_updateDeactivateUser(ctx context.Context, fie
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().UpdateDeactivateUser(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_updateDeleteUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().UpdateDeleteUser(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2878,6 +2923,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_updateDeactivateUser(ctx, field)
+				return res
+			})
+		case "updateDeleteUser":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_updateDeleteUser(ctx, field)
 				return res
 			})
 		case "getWorkers":

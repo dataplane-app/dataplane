@@ -118,5 +118,22 @@ func (r *queryResolver) UpdateDeactivateUser(ctx context.Context) (*string, erro
 
 	response := "User deactivated"
 	return &response, nil
+}
 
+func (r *queryResolver) UpdateDeleteUser(ctx context.Context) (*string, error) {
+	userID := ctx.Value("currentUser").(string)
+
+	u := models.Users{}
+
+	err := database.DBConn.Where(&models.Users{UserID: userID}).Delete(&u).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("DeleteUser database error.")
+	}
+
+	response := "User deleted"
+	return &response, nil
 }
