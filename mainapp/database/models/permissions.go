@@ -34,6 +34,9 @@ var ResourceType = []*ResourceTypeStruct{
 	{Code: "specific_pipeline", Level: "specific", Label: "Pipeline - ${{pipeline_name}}"},
 }
 
+/* Access: what type of access does the user have to the resource - read, write */
+var AccessTypes = []string{"read", "write"}
+
 func (Permissions) IsEntity() {}
 
 func (Permissions) TableName() string {
@@ -48,8 +51,10 @@ type Permissions struct {
 	SubjectID string `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"subject_id" validate:"required"`
 
 	// To which resource
-	Resource    string    `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"resource" validate:"required"`
-	ResourceID  string    `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"resource_id" validate:"required"`
+	Resource   string `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"resource" validate:"required"`
+	ResourceID string `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"resource_id" validate:"required"`
+
+	// Type of access - read or write
 	Access      string    `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"access" validate:"required"`
 	Active      bool      `json:"active" validate:"required"`
 	Environment string    `json:"environment"`
