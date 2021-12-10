@@ -9,7 +9,7 @@ Check
 3. has right access to resource & resource id
 */
 // ------- USER CHECK
-func EnvironmentAdminCheck(subjectID string, resourceID string, c chan CheckResult) (Checkstruct, error) {
+func PlatformAdminCheck(subjectID string, resourceID string, c chan CheckResult) (Checkstruct, error) {
 
 	//start := time.Now()
 	rid := Checkstruct{}

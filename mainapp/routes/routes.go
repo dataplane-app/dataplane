@@ -28,17 +28,17 @@ func Setup() *fiber.App {
 	// ------- DATABASE CONNECT ------
 	database.DBConnect()
 	log.Println("🏃 Running on: ", os.Getenv("env"))
+
+	start := time.Now()
+
+	// ------- RUN MIGRATIONS ------
+	database.Migrate()
 	logme.PlatformLogger(models.LogsPlatform{
 		Environment: "d_platform",
 		Category:    "platform",
 		LogType:     "info", //can be error, info or debug
 		Log:         "🌟 Database connected",
 	})
-
-	start := time.Now()
-
-	// ------- RUN MIGRATIONS ------
-	database.Migrate()
 	logme.PlatformLogger(models.LogsPlatform{
 		Environment: "d_platform",
 		Category:    "platform",

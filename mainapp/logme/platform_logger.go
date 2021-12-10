@@ -20,6 +20,7 @@ func PlatformLogger(input models.LogsPlatform) bool {
 
 	/* Remove secrets */
 	input.Log = logging.Secrets.Replace(input.Log)
+	input.ErrorMsg = logging.Secrets.Replace(input.ErrorMsg)
 
 	/* Write to database */
 	err := database.DBConn.Create(&input).Error

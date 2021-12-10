@@ -16,6 +16,7 @@ type LogsPlatform struct {
 	Category    string    `json:"category"`
 	Log         string    `json:"log"`
 	LogType     string    `json:"log_type"` //info, error, debug
+	ErrorMsg    string    `json:"error_message"`
 }
 
 func (LogsWeb) IsEntity() {}
