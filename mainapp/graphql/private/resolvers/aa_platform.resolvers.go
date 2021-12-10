@@ -37,7 +37,7 @@ func (r *mutationResolver) RenameEnvironment(ctx context.Context, input *private
 	}, nil
 }
 
-func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategraphql.AddEnvironmentInput) (*string, error) {
+func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategraphql.AddEnvironmentInput) (*models.Environment, error) {
 	e := models.Environment{
 		ID:     uuid.New().String(),
 		Name:   input.Name,
@@ -56,8 +56,10 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 		return nil, errors.New("AddEnvironment database error.")
 	}
 
-	response := "success"
-	return &response, nil
+	return &models.Environment{
+		ID:   e.ID,
+		Name: e.Name,
+	}, nil
 }
 
 func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environment, error) {

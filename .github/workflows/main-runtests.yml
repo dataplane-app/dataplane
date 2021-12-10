@@ -76,4 +76,4 @@ jobs:
           mode: "development"
           debug: "true"
           dbdebug: "false"
-        run: cd mainapp && go test -count=1 -timeout=15s ./... -v -p 1
+        run: cd mainapp && time go run Tests/mainTest.go

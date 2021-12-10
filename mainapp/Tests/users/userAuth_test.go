@@ -1,9 +1,8 @@
-package tests
+package usertests
 
 import (
-	tests "dataplane/Tests"
+	"dataplane/Tests/testutils"
 	"dataplane/auth"
-	"dataplane/routes"
 	"log"
 	"net/http"
 	"strings"
@@ -23,7 +22,6 @@ go test -p 1 -v -count=1 -run TestUserAuth dataplane/Tests/users
 * Logout
 */
 func TestUserAuth(t *testing.T) {
-	app := routes.Setup()
 
 	graphQLPublicUrl := "http://localhost:9000/public/graphql"
 
@@ -31,15 +29,15 @@ func TestUserAuth(t *testing.T) {
 
 	loginAdminUser := `{
 			loginUser(
-			  username: "` + tests.AdminUser + `",  
-			  password: "` + tests.AdminPassword + `",
+			  username: "` + testutils.AdminUser + `",  
+			  password: "` + testutils.AdminPassword + `",
 			) {
 			  access_token
 			  refresh_token
 			}
 		  }`
 
-	loginAdminUserResponse, _ := tests.GraphQLRequestPublic(loginAdminUser, "{}", graphQLPublicUrl, t, app)
+	loginAdminUserResponse, _ := testutils.GraphQLRequestPublic(loginAdminUser, "{}", graphQLPublicUrl, t)
 
 	// Get access token
 	accessTokenAdmin := jsoniter.Get(loginAdminUserResponse, "data", "loginUser", "access_token").ToString()
@@ -67,7 +65,7 @@ func TestUserAuth(t *testing.T) {
 			}
 			}`
 
-	createUserResponse, httpResponse := tests.GraphQLRequestPrivate(createUser, accessTokenAdmin, "{}", graphQLUrl, t, app)
+	createUserResponse, httpResponse := testutils.GraphQLRequestPrivate(createUser, accessTokenAdmin, "{}", graphQLUrl, t)
 
 	log.Println(string(createUserResponse))
 
@@ -89,7 +87,7 @@ func TestUserAuth(t *testing.T) {
 		}
 	  }`
 
-	loginUserResponse, httpLoginResponse := tests.GraphQLRequestPublic(loginUser, "{}", graphQLPublicUrl, t, app)
+	loginUserResponse, httpLoginResponse := testutils.GraphQLRequestPublic(loginUser, "{}", graphQLPublicUrl, t)
 
 	log.Println(string(loginUserResponse))
 
@@ -115,7 +113,7 @@ func TestUserAuth(t *testing.T) {
 	`
 
 	url := "http://localhost:9000/refreshtoken"
-	exchangeUserResponse, httpExchangeResponse := tests.RestRequestPublic(reqQuery, "POST", url, t, app)
+	exchangeUserResponse, httpExchangeResponse := testutils.RestRequestPublic(reqQuery, "POST", url, t)
 
 	// log.Println(string(exchangeUserResponse))
 	// log.Println(httpExchangeResponse)
@@ -131,7 +129,7 @@ func TestUserAuth(t *testing.T) {
 		logoutUser
 	  }`
 	graphQLPrivateUrl := "http://localhost:9000/private/graphql"
-	logoutUserResponse, httpLogoutResponse := tests.GraphQLRequestPrivate(logoutUser, accessTokenExchange, "{}", graphQLPrivateUrl, t, app)
+	logoutUserResponse, httpLogoutResponse := testutils.GraphQLRequestPrivate(logoutUser, accessTokenExchange, "{}", graphQLPrivateUrl, t)
 	assert.Equalf(t, http.StatusOK, httpLogoutResponse.StatusCode, "Logout 200 status code")
 	assert.Equalf(t, "Logged out", jsoniter.Get(logoutUserResponse, "data", "logoutUser").ToString(), "Logout correct response")
 

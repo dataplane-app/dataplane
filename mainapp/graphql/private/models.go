@@ -3,8 +3,7 @@
 package privategraphql
 
 type AddEnvironmentInput struct {
-	Name   string `json:"name"`
-	Active bool   `json:"active"`
+	Name string `json:"name"`
 }
 
 type AddUpdateMeInput struct {

@@ -1,10 +1,7 @@
-package tests
+package usertests
 
 import (
-	tests "dataplane/Tests"
-	"dataplane/database"
-	"dataplane/database/models"
-	"dataplane/routes"
+	"dataplane/Tests/testutils"
 	"log"
 	"net/http"
 	"strings"
@@ -16,6 +13,7 @@ import (
 )
 
 /*
+For individual tests - in separate window run: go run server.go
 go test -p 1 -v -count=1 -run TestDeactivateDeleteUser dataplane/Tests/users
 * Create admin user and platform
 * Login
@@ -24,70 +22,13 @@ go test -p 1 -v -count=1 -run TestDeactivateDeleteUser dataplane/Tests/users
 * Delete user
 */
 func TestDeactivateDeleteUser(t *testing.T) {
-	app := routes.Setup()
 
 	// Delete platform for testing first time user
-	database.DBConn.Where("1 = 1").Delete(&models.Platform{})
-
 	graphQLUrl := "http://localhost:9000/public/graphql"
 	graphQLUrlPrivate := "http://localhost:9000/private/graphql"
 
-	testUser := tests.AdminUser
-	testPassword := tests.AdminPassword
-	// Remove admin user
-	database.DBConn.Where("username = ?", testUser).Delete(&models.Users{})
-	// Remove environments
-	database.DBConn.Where("1 = 1").Delete(&models.Environment{})
-
-	//--------- Create admin user ------------
-	createAdminUser := `mutation {
-				setupPlatform(
-					input: {
-						PlatformInput: { 
-							business_name: "` + faker.DomainName() + `",,
-							timezone: " ` + faker.Timezone() + ` ",
-							complete: true }
-						AddUsersInput: {
-							first_name: "` + faker.FirstName() + `",
-							last_name: "` + faker.LastName() + `",
-							email: "` + testUser + `",
-							job_title: "` + faker.Name() + `",
-							password: "` + testPassword + `",
-							timezone: " ` + faker.Timezone() + ` ",
-						}
-					}
-				) {
-					Platform {
-						id
-						business_name
-						timezone
-						complete
-					}
-					User {
-						user_id
-						user_type
-						first_name
-						last_name
-						email
-						job_title
-						timezone
-					}
-					Auth{
-						access_token
-						refresh_token
-				}
-				}
-			}`
-
-	createAdminResponse, httpResponse := tests.GraphQLRequestPublic(createAdminUser, "{}", graphQLUrl, t, app)
-
-	log.Println(string(createAdminResponse))
-
-	if strings.Contains(string(createAdminResponse), `"errors":`) {
-		t.Errorf("Error in graphql response")
-	}
-
-	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create admin 200 status code")
+	testUser := testutils.AdminUser
+	testPassword := testutils.AdminPassword
 
 	//--------- Login ------------
 
@@ -101,7 +42,7 @@ func TestDeactivateDeleteUser(t *testing.T) {
 		}
 	  }`
 
-	loginAdminResponse, httpLoginResponse := tests.GraphQLRequestPublic(loginUser, "{}", graphQLUrl, t, app)
+	loginAdminResponse, httpLoginResponse := testutils.GraphQLRequestPublic(loginUser, "{}", graphQLUrl, t)
 
 	log.Println(string(loginAdminResponse))
 
@@ -117,11 +58,11 @@ func TestDeactivateDeleteUser(t *testing.T) {
 	//--------- Create user ------------
 	createUser := `mutation {
 				createUser(input: {
-				first_name: "` + tests.TestUser + `",
+				first_name: "` + testutils.TestUser + `",
 				last_name: "TestUserLastName",
-				email: "` + tests.TestUser + `",
+				email: "` + testutils.TestUser + `",
 				job_title: "",
-				password: "` + tests.AdminPassword + `",
+				password: "` + testutils.AdminPassword + `",
 				timezone: " ` + faker.Timezone() + ` ",
 				}) {
 				user_id
@@ -132,7 +73,7 @@ func TestDeactivateDeleteUser(t *testing.T) {
 				}
 				}`
 
-	createUserResponse, httpResponse := tests.GraphQLRequestPrivate(createUser, accessTokenAdmin, "{}", graphQLUrlPrivate, t, app)
+	createUserResponse, httpResponse := testutils.GraphQLRequestPrivate(createUser, accessTokenAdmin, "{}", graphQLUrlPrivate, t)
 
 	log.Println(string(createUserResponse))
 	testUserID := jsoniter.Get(createUserResponse, "data", "createUser", "user_id").ToString()
@@ -150,7 +91,7 @@ func TestDeactivateDeleteUser(t *testing.T) {
 		) 
 	}`
 
-	response, httpResponse := tests.GraphQLRequestPrivate(deactivateUser, accessTokenAdmin, "{}", graphQLUrlPrivate, t, app)
+	response, httpResponse := testutils.GraphQLRequestPrivate(deactivateUser, accessTokenAdmin, "{}", graphQLUrlPrivate, t)
 
 	log.Println(string(response))
 
@@ -167,7 +108,7 @@ func TestDeactivateDeleteUser(t *testing.T) {
 			) 
 		}`
 
-	delResponse, httpResponse := tests.GraphQLRequestPrivate(deleteUser, accessTokenAdmin, "{}", graphQLUrlPrivate, t, app)
+	delResponse, httpResponse := testutils.GraphQLRequestPrivate(deleteUser, accessTokenAdmin, "{}", graphQLUrlPrivate, t)
 
 	log.Println(string(delResponse))
 

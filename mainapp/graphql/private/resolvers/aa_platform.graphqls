@@ -1,4 +1,5 @@
 type Environments{
+  id: String!
 	name: String!
 }
 
@@ -13,7 +14,6 @@ type Query {
 
 input AddEnvironmentInput {
 	name: String!    
-	active:  Boolean!     
 }
 
 extend type Mutation {
@@ -21,5 +21,5 @@ extend type Mutation {
 }
 
 extend type Mutation {
-  addEnvironment(input: AddEnvironmentInput): String
+  addEnvironment(input: AddEnvironmentInput): Environments
 }

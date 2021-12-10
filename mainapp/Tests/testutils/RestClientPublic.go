@@ -1,4 +1,4 @@
-package tests
+package testutils
 
 import (
 	"bytes"
@@ -6,12 +6,11 @@ import (
 	"log"
 	"net/http"
 	"testing"
-
-	"github.com/gofiber/fiber/v2"
 )
 
-func RestRequestPublic(reqQuery string, method string, url string, t *testing.T, app *fiber.App) (responseBody []byte, res *http.Response) {
+func RestRequestPublic(reqQuery string, method string, url string, t *testing.T) (responseBody []byte, res *http.Response) {
 
+	client := &http.Client{}
 	query := reqQuery
 	// query = strings.ReplaceAll(query, "\n", `\n`)
 	// query = strings.ReplaceAll(query, "\t", `\t`)
@@ -26,7 +25,7 @@ func RestRequestPublic(reqQuery string, method string, url string, t *testing.T,
 
 	req.Header.Add("Content-Type", "application/json")
 
-	res, err = app.Test(req, -1)
+	res, err = client.Do(req)
 	if err != nil {
 		t.Error(err)
 	}

@@ -1,23 +1,20 @@
-package tests
+package usertests
 
 import (
-	tests "dataplane/Tests"
+	"dataplane/Tests/testutils"
 	"dataplane/database"
-	"dataplane/database/models"
-	"dataplane/logging"
-	"dataplane/routes"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 
-	"github.com/bxcodec/faker/v3"
 	jsoniter "github.com/json-iterator/go"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/stretchr/testify/assert"
 )
 
 /*
+For individual tests - in separate window run: go run server.go
 go test -p 1 -v -count=1 -run TestEnvironment dataplane/Tests/users
 * Create admin user and platform
 * Login
@@ -26,70 +23,14 @@ go test -p 1 -v -count=1 -run TestEnvironment dataplane/Tests/users
 * Rename environment
 */
 func TestEnvironment(t *testing.T) {
-	app := routes.Setup()
 
-	// Delete platform for testing first time user
-	database.DBConn.Where("1 = 1").Delete(&models.Platform{})
+	database.DBConnect()
 
 	graphQLUrl := "http://localhost:9000/public/graphql"
 	graphQLUrlPrivate := "http://localhost:9000/private/graphql"
 
-	testUser := tests.AdminUser
-	testPassword := tests.AdminPassword
-	// Remove admin user
-	database.DBConn.Where("username = ?", testUser).Delete(&models.Users{})
-	// Remove environments
-	database.DBConn.Where("1 = 1").Delete(&models.Environment{})
-
-	//--------- Create user ------------
-	createUser := `mutation {
-				setupPlatform(
-					input: {
-						PlatformInput: { 
-							business_name: "` + faker.DomainName() + `",,
-							timezone: " ` + faker.Timezone() + ` ",
-							complete: true }
-						AddUsersInput: {
-							first_name: "` + faker.FirstName() + `",
-							last_name: "` + faker.LastName() + `",
-							email: "` + testUser + `",
-							job_title: "` + faker.Name() + `",
-							password: "` + testPassword + `",
-							timezone: " ` + faker.Timezone() + ` ",
-						}
-					}
-				) {
-					Platform {
-						id
-						business_name
-						timezone
-						complete
-					}
-					User {
-						user_id
-						user_type
-						first_name
-						last_name
-						email
-						job_title
-						timezone
-					}
-					Auth{
-						access_token
-						refresh_token
-				}
-				}
-			}`
-
-	createUserResponse, httpResponse := tests.GraphQLRequestPublic(createUser, "{}", graphQLUrl, t, app)
-
-	log.Println(string(createUserResponse))
-
-	if strings.Contains(string(createUserResponse), `"errors":`) {
-		t.Errorf("Error in graphql response")
-	}
-
-	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create user 200 status code")
+	testUser := testutils.AdminUser
+	testPassword := testutils.AdminPassword
 
 	//--------- Login ------------
 
@@ -103,7 +44,7 @@ func TestEnvironment(t *testing.T) {
 		}
 	  }`
 
-	loginUserResponse, httpLoginResponse := tests.GraphQLRequestPublic(loginUser, "{}", graphQLUrl, t, app)
+	loginUserResponse, httpLoginResponse := testutils.GraphQLRequestPublic(loginUser, "{}", graphQLUrl, t)
 
 	log.Println(string(loginUserResponse))
 
@@ -121,7 +62,7 @@ func TestEnvironment(t *testing.T) {
 	}`
 
 	accessToken := jsoniter.Get(loginUserResponse, "data", "loginUser", "access_token").ToString()
-	response, httpResponse := tests.GraphQLRequestPrivate(getEnvironment, accessToken, "{}", graphQLUrlPrivate, t, app)
+	response, httpResponse := testutils.GraphQLRequestPrivate(getEnvironment, accessToken, "{}", graphQLUrlPrivate, t)
 
 	log.Println(string(response))
 
@@ -132,15 +73,18 @@ func TestEnvironment(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
 
 	// -------- Add environment  -------------
+	randomid1, _ := gonanoid.New()
 	addEnvironment := `mutation {
 		addEnvironment(
 			input: {
-				name: "Staging_test_1",  
-				active: true,
+				name: "Staging_add` + randomid1 + `",
 			}
-		) 
+		) {
+			id
+			name
+		}
 	}`
-	addEnvResponse, httpResponse := tests.GraphQLRequestPrivate(addEnvironment, accessToken, "{}", graphQLUrlPrivate, t, app)
+	addEnvResponse, httpResponse := testutils.GraphQLRequestPrivate(addEnvironment, accessToken, "{}", graphQLUrlPrivate, t)
 
 	log.Println(string(addEnvResponse))
 
@@ -150,28 +94,22 @@ func TestEnvironment(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add Environment 200 status code")
 
-	// -------- Rename environment  -------------
-	// Retreiving id of previously added environment "Staging_test_1"
-	e := models.Environment{}
-	err := database.DBConn.Where("name = ?", "Staging_test_1").First(&e).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		log.Print("Failed to retrieve Staging_test environment model.")
-	}
+	environmenteditID := jsoniter.Get(addEnvResponse, "data", "addEnvironment", "id").ToString()
 
+	// -------- Rename environment  -------------
+
+	randomid2, _ := gonanoid.New()
 	renameEnvironment := `mutation {
 			renameEnvironment(
 				input: {
-					id: "` + e.ID + `",
-					name: "` + tests.TestEnvironment + `",  
+					id: "` + environmenteditID + `",
+					name: "` + testutils.TestEnvironment + randomid2 + `",  
 				}
 			) {
 				name
 			}
 		}`
-	editEnvResponse, httpResponse := tests.GraphQLRequestPrivate(renameEnvironment, accessToken, "{}", graphQLUrlPrivate, t, app)
+	editEnvResponse, httpResponse := testutils.GraphQLRequestPrivate(renameEnvironment, accessToken, "{}", graphQLUrlPrivate, t)
 
 	log.Println(string(editEnvResponse))
 

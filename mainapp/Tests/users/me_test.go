@@ -1,10 +1,9 @@
-package tests
+package usertests
 
 import (
-	tests "dataplane/Tests"
+	"dataplane/Tests/testutils"
 	"dataplane/database"
 	"dataplane/database/models"
-	"dataplane/routes"
 	"log"
 	"net/http"
 	"strings"
@@ -23,7 +22,6 @@ go test -p 1 -v -count=1 -run TestMe dataplane/Tests/users
 * Update me data
 */
 func TestMe(t *testing.T) {
-	app := routes.Setup()
 
 	// Delete platform for testing first time user
 	database.DBConn.Where("1 = 1").Delete(&models.Platform{})
@@ -31,62 +29,8 @@ func TestMe(t *testing.T) {
 	graphQLUrl := "http://localhost:9000/public/graphql"
 	graphQLUrlPrivate := "http://localhost:9000/private/graphql"
 
-	testUser := tests.AdminUser
-	testPassword := tests.AdminPassword
-	// Remove admin user
-	database.DBConn.Where("username = ?", testUser).Delete(&models.Users{})
-	// Remove environments
-	database.DBConn.Where("1 = 1").Delete(&models.Environment{})
-
-	//--------- Create user ------------
-	createUser := `mutation {
-				setupPlatform(
-					input: {
-						PlatformInput: { 
-							business_name: "` + faker.DomainName() + `",,
-							timezone: " ` + faker.Timezone() + ` ",
-							complete: true }
-						AddUsersInput: {
-							first_name: "` + faker.FirstName() + `",
-							last_name: "` + faker.LastName() + `",
-							email: "` + testUser + `",
-							job_title: "` + faker.Name() + `",
-							password: "` + testPassword + `",
-							timezone: " ` + faker.Timezone() + ` ",
-						}
-					}
-				) {
-					Platform {
-						id
-						business_name
-						timezone
-						complete
-					}
-					User {
-						user_id
-						user_type
-						first_name
-						last_name
-						email
-						job_title
-						timezone
-					}
-					Auth{
-						access_token
-						refresh_token
-				}
-				}
-			}`
-
-	createUserResponse, httpResponse := tests.GraphQLRequestPublic(createUser, "{}", graphQLUrl, t, app)
-
-	log.Println(string(createUserResponse))
-
-	if strings.Contains(string(createUserResponse), `"errors":`) {
-		t.Errorf("Error in graphql response")
-	}
-
-	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create user 200 status code")
+	testUser := testutils.AdminUser
+	testPassword := testutils.AdminPassword
 
 	//--------- Login ------------
 
@@ -100,7 +44,7 @@ func TestMe(t *testing.T) {
 		}
 	  }`
 
-	loginUserResponse, httpLoginResponse := tests.GraphQLRequestPublic(loginUser, "{}", graphQLUrl, t, app)
+	loginUserResponse, httpLoginResponse := testutils.GraphQLRequestPublic(loginUser, "{}", graphQLUrl, t)
 
 	log.Println(string(loginUserResponse))
 
@@ -123,7 +67,7 @@ func TestMe(t *testing.T) {
 		}`
 
 	accessToken := jsoniter.Get(loginUserResponse, "data", "loginUser", "access_token").ToString()
-	meResponse, httpMeResponse := tests.GraphQLRequestPrivate(me, accessToken, "{}", graphQLUrlPrivate, t, app)
+	meResponse, httpMeResponse := testutils.GraphQLRequestPrivate(me, accessToken, "{}", graphQLUrlPrivate, t)
 
 	log.Println(string(meResponse))
 
@@ -139,7 +83,7 @@ func TestMe(t *testing.T) {
 			input: {
 				first_name: "` + faker.FirstName() + `",
 				last_name: "` + faker.LastName() + `",
-				email: "` + tests.AdminUser + `",
+				email: "` + testutils.AdminUser + `",
 				job_title: "Manager"
 				timezone: " ` + faker.Timezone() + ` ",
 			}
@@ -152,7 +96,7 @@ func TestMe(t *testing.T) {
 			timezone
 		}
 	}`
-	updatemeResponse, httpUpdateMeResponse := tests.GraphQLRequestPrivate(updateMe, accessToken, "{}", graphQLUrlPrivate, t, app)
+	updatemeResponse, httpUpdateMeResponse := testutils.GraphQLRequestPrivate(updateMe, accessToken, "{}", graphQLUrlPrivate, t)
 
 	log.Println(string(updatemeResponse))
 

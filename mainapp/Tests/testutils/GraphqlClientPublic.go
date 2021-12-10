@@ -1,4 +1,4 @@
-package tests
+package testutils
 
 import (
 	"bytes"
@@ -8,12 +8,11 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-
-	"github.com/gofiber/fiber/v2"
 )
 
-func GraphQLRequestPrivate(reqQuery string, token string, reqVariables string, url string, t *testing.T, app *fiber.App) (responseBody []byte, res *http.Response) {
+func GraphQLRequestPublic(reqQuery string, reqVariables string, url string, t *testing.T) (responseBody []byte, res *http.Response) {
 
+	client := &http.Client{}
 	data := `{
 		"query": "%s",
 		"variables": %s
@@ -34,9 +33,9 @@ func GraphQLRequestPrivate(reqQuery string, token string, reqVariables string, u
 	}
 
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer "+token)
 
-	res, err = app.Test(req, -1)
+	// res, err = app.Test(req, -1)
+	res, err = client.Do(req)
 	if err != nil {
 		t.Error(err)
 	}
