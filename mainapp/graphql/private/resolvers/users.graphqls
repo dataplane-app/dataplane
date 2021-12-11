@@ -39,7 +39,7 @@ extend type Mutation {
 	"""
 	Creating a user and attaching to an environment.
 	+ **Route**: Private
-	+ **Permission**: based on user ID
+	+ **Permission**: admin_platform, admin_environment (of env), 
 	"""
   createUser(input: AddUsersInput): User
 }

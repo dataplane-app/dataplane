@@ -18,7 +18,16 @@
         "docker-compose.yaml"
     ],
     "service": "mainapp",
+	// "runArgs": [
+	// 	"--mount", "type=volume,target=/appdev/frontend/node_modules"
+	// 	],
     "workspaceFolder": "/appdev",
+	// "mounts": [
+	// 	"type=volume,target=/appdev/frontend/node_modules"
+	//   ],
+	  "mounts": [
+        "source=node_modules,target=/appdev/frontend/node_modules,type=volume"
+    ],
 	// "runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined" ],
 
 // rather use docker-compose for environment variables - easier to find/read
@@ -52,11 +61,7 @@
 		"9000": {
 			"label": "Go mainapp",
 			"onAutoForward": "notify"
-		},
-		"3000": {
-			"label": "React frontend",
-			"onAutoForward": "notify"
-		},
+		}
 	},
 
 	// Use 'otherPortsAttributes' to configure any ports that aren't configured using 'portsAttributes'.
