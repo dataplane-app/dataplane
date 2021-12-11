@@ -15,6 +15,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -53,6 +54,13 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 		JobTitle:  input.AddUsersInput.JobTitle,
 		Timezone:  input.AddUsersInput.Timezone,
 		Username:  input.AddUsersInput.Email,
+	}
+
+	/* Input validation */
+	validate := validator.New()
+	err = validate.Struct(userData)
+	if err != nil {
+		return nil, err
 	}
 
 	// Platform information gets sent to DB

@@ -431,10 +431,20 @@ input AddEnvironmentInput {
 }
 
 extend type Mutation {
+	"""
+	Rename the environment.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, platform_environment
+	"""  
   renameEnvironment(input: RenameEnvironment): Environments
 }
 
 extend type Mutation {
+	"""
+	Add a new environment.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, platform_environment
+	"""  
   addEnvironment(input: AddEnvironmentInput): Environments
 }`, BuiltIn: false},
 	{Name: "resolvers/me.graphqls", Input: `input AddUpdateMeInput {
@@ -458,10 +468,8 @@ extend type Query{
 extend type Mutation {
 	"""
 	Updates the current user logged in.
-
-	Route: Private
-
-	Permission: based on user ID
+	+ **Route**: Private
+	+ **Permission**: based on user ID
 	"""
   updateMe(input: AddUpdateMeInput): User
 }
@@ -493,12 +501,13 @@ extend type Query {
 }
 
 input AddUsersInput {
-	first_name: String!    
-	last_name:  String!     
-	email:     String!     
-	job_title: String!
-	password:  String!     
-	timezone:  String!     
+	first_name: String!  
+	last_name:  String!   
+	email:     String!   
+	job_title: String! 
+	password:  String!   
+	timezone:  String! 
+	environment: String!
 }
 
 input ChangePasswordInput {
@@ -519,6 +528,11 @@ extend type Mutation {
 }
 
 extend type Mutation {
+	"""
+	Creating a user and attaching to an environment.
+	+ **Route**: Private
+	+ **Permission**: based on user ID
+	"""
   createUser(input: AddUsersInput): User
 }
 
@@ -2977,6 +2991,14 @@ func (ec *executionContext) unmarshalInputAddUsersInput(ctx context.Context, obj
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
 			it.Timezone, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "environment":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environment"))
+			it.Environment, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}

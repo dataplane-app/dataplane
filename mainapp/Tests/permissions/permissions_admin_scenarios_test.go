@@ -13,11 +13,6 @@ type Scenarios struct {
 	models.Permissions
 }
 
-type UserTestDataPerms struct {
-	Username    string
-	Permissions []string
-}
-
 /* 	"platform_admin",
 "platform_environment",
 "platform_users",
@@ -35,18 +30,18 @@ go test -p 1 -v -count=1 -run TestPermissionsScenarios dataplane/Tests/permissio
 func TestPermissionsScenarios(t *testing.T) {
 
 	// log.Println(PositiveScenariosData)
-	var UserData = map[string]UserTestDataPerms{}
 
-	UserData["environment"] = UserTestDataPerms{
-		Username:    "environment@email.com",
-		Permissions: []string{"admin_platform", "platform_environment"},
-	}
-
-	var PositiveScenariosData = []Scenarios{
+	var NegativeScenariosData = []Scenarios{
 		{Title: "I can add an environment", Outcome: true, User: "environment@email.com"},
 		{Title: "I can add or remove a user", Outcome: true},
 	}
 
-	log.Println(PositiveScenariosData)
+	log.Println(NegativeScenariosData)
+
+	// Test positive permissions
+	// for i, v := range UserData {
+	// 	PositiveScenariosData
+
+	// }
 
 }

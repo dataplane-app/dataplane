@@ -14,6 +14,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -95,6 +96,10 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql
 	// 	return nil, errors.New("validation failed" + string(finalJson))
 	// }
 
+	/* Input validation */
+	// validate = validator.New()
+	// err := validate.Validate(a)
+
 	password, err := auth.Encrypt(input.Password)
 
 	if err != nil {
@@ -111,6 +116,13 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql
 		Active:    true,
 		Timezone:  input.Timezone,
 		Username:  input.Email,
+	}
+
+	/* Input validation */
+	validate := validator.New()
+	err = validate.Struct(userData)
+	if err != nil {
+		return nil, err
 	}
 
 	err = database.DBConn.Create(&userData).Error

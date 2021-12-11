@@ -9,12 +9,13 @@ type User {
 }
 
 input AddUsersInput {
-	first_name: String!    
-	last_name:  String!     
-	email:     String!     
-	job_title: String!
-	password:  String!     
-	timezone:  String!     
+	first_name: String!  
+	last_name:  String!   
+	email:     String!   
+	job_title: String! 
+	password:  String!   
+	timezone:  String! 
+	environment: String!
 }
 
 input ChangePasswordInput {
@@ -35,6 +36,11 @@ extend type Mutation {
 }
 
 extend type Mutation {
+	"""
+	Creating a user and attaching to an environment.
+	+ **Route**: Private
+	+ **Permission**: based on user ID
+	"""
   createUser(input: AddUsersInput): User
 }
 

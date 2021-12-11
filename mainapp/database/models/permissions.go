@@ -24,9 +24,11 @@ type ResourceTypeStruct struct {
 var ResourceType = []*ResourceTypeStruct{
 	{Code: "admin_platform", Level: "platform", Label: "Admin"},
 	{Code: "platform_environment", Level: "platform", Label: "Manage environments"},
-	{Code: "platform_users", Level: "platform", Label: "Manage users"},
 	{Code: "platform_permissions", Level: "platform", Label: "Manage permissions"},
 	{Code: "admin_environment", Level: "environment", Label: "Admin"},
+
+	// To add an admin user - you will need admin rights
+	{Code: "environment_users", Level: "environment", Label: "Manage users"},
 	{Code: "environment_all_pipelines", Level: "environment", Label: "View all pipelines"},
 	{Code: "environment_secrets", Level: "environment", Label: "Manage secrets"},
 	{Code: "environment_edit_workers", Level: "environment", Label: "Manage workers"},
@@ -58,6 +60,7 @@ type Permissions struct {
 	Access      string    `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"access" validate:"required"`
 	Active      bool      `json:"active" validate:"required"`
 	Environment string    `json:"environment"`
+	Test        string    `json:"test"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }

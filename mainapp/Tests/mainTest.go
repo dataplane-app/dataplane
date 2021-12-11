@@ -2,6 +2,7 @@ package main
 
 import (
 	"dataplane/Tests/testutils"
+	"dataplane/auth"
 	"dataplane/database"
 	"dataplane/database/models"
 	"dataplane/routes"
@@ -13,6 +14,9 @@ import (
 	"testing"
 
 	"github.com/bxcodec/faker/v3"
+	"github.com/google/uuid"
+	jsoniter "github.com/json-iterator/go"
+	"gorm.io/gorm/clause"
 )
 
 /*
@@ -24,25 +28,11 @@ response: {"r": "OK", "msg": "Permission created", "count": 1}
 func MockingBird() string {
 
 	// create a listener with the desired port.
-	// log.Fatal()
 	testutils.App = routes.Setup()
 	err := testutils.App.Listen("0.0.0.0:9000")
-	// testutils.App.Listener()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// router.POST(route, ResponseMockVar(response, responsecode))
-	// ts := httptest.NewUnstartedServer(adaptor.FiberApp(testutils.App))
-
-	// NewUnstartedServer creates a listener. Close that listener and replace
-	// with the one we created.
-	// ts.Listener.Close()
-	// ts.Listener = l
-
-	// defer ts.Close()
-
-	// log.Println("Mockingbird server started:", domain, route)
 
 	return "hello"
 
@@ -122,7 +112,8 @@ func main() {
 
 	createUserResponse, httpResponse := testutils.GraphQLRequestPublic(createUser, "{}", graphQLUrl, t)
 
-	// log.Println(string(createUserResponse), httpResponse.StatusCode)
+	log.Println(string(createUserResponse), httpResponse.StatusCode)
+	// os.Exit(0)
 
 	if strings.Contains(string(createUserResponse), `"errors":`) {
 		log.Println(string(createUserResponse))
@@ -132,6 +123,61 @@ func main() {
 	if http.StatusOK != httpResponse.StatusCode {
 		log.Println("Error in graphql response", httpResponse.StatusCode, http.StatusOK)
 		panic("Error in graphql response")
+	}
+
+	testutils.TestPlatformID = jsoniter.Get(createUserResponse, "data", "setupPlatform", "Platform", "id").ToString()
+
+	// Create users
+	for i, v := range testutils.UserData {
+
+		password, _ := auth.Encrypt(v.Password)
+
+		userData := models.Users{
+			UserID:   i,
+			Password: password,
+			Email:    v.Username,
+			Status:   "active",
+			Active:   true,
+			Username: v.Username,
+		}
+
+		err := database.DBConn.Clauses(clause.OnConflict{
+			UpdateAll: true,
+		}).Create(&userData).Error
+		if err != nil {
+			t.Errorf("Failed to create permission users")
+		}
+
+		// Remove tests permissions
+		database.DBConn.Where("test = 't'").Delete(&models.Permissions{})
+
+		// Add in permissions
+		for n, x := range v.Permissions {
+
+			switch perms := x.Resource; perms {
+			case "admin_platform":
+				v.Permissions[n].ResourceID = testutils.TestPlatformID
+				v.Permissions[n].Environment = "d_platform"
+			case "platform_environment":
+				v.Permissions[n].ResourceID = testutils.TestPlatformID
+				v.Permissions[n].Environment = "d_platform"
+			default:
+
+			}
+
+			v.Permissions[n].ID = uuid.NewString()
+			v.Permissions[n].Active = true
+			v.Permissions[n].Subject = "user"
+			v.Permissions[n].SubjectID = i
+			v.Permissions[n].Test = "t"
+
+			err := database.DBConn.Create(&v.Permissions[n]).Error
+			if err != nil {
+				t.Errorf("Failed to create permission users")
+			}
+
+		}
+
 	}
 
 	// assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create user 200 status code")

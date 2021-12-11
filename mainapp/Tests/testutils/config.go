@@ -7,4 +7,5 @@ var AdminPassword string = "Hello123!"
 var DbInstance string
 var TestEnvironment string = "Staging_test"
 var TestUser string = "TestUserName"
+var TestPlatformID string
 var App *fiber.App
