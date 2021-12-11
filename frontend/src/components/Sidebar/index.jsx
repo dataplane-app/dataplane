@@ -1,53 +1,50 @@
 import './styles.css'
-import { Link, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import checkActivePage from "../../utils/checkActivePage";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faKey, faCog, faUsers, faGraduationCap, faBullhorn, faAlignCenter, faConciergeBell } from '@fortawesome/free-solid-svg-icons'
-import { useDarkMode } from '../../hooks/useDarkMode';
+import { faKey, faCog, faUsers, faGraduationCap, faBullhorn, faAlignCenter, faConciergeBell, faCodeBranch } from '@fortawesome/free-solid-svg-icons'
 import ThemeToggle from '../ThemeToggle';
+import List from '@mui/material/List';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import CustomSwitch from '../CustomSwitch';
+import { Box } from '@mui/material';
 
 const Sidebar = () => {
     const location = useLocation();
-    const [isDark] = useDarkMode();
+    const navigate = useNavigate();
 
     return(
-        <div className="w-48 border-r border-divider dark:border-darkDivider relative">
-            <ul className="p-0 my-4 ml-0 mr-2">
-                {
-                    MENU_ITEMS_TOP.map(menu => (
-                        <li key={menu.id} className={`my-1 relative ${checkActivePage(location.pathname, `/${menu.url}`)}`}>
-                            <Link to={`/${menu.url}`} className="block py-3 mx-5 relative">
-                                <div className="flex items-center">
-                                    {menu.icon}
-                                    <h2 className={`ml-3 dark:text-white text-base`}>{menu.name}</h2>
-                                </div>
-                            </Link>
-                        </li>
-                    ))
-                }
-            </ul>
+        <>
+            <List sx={{ mt: 4, mb: 2, mr: 2, p: 0 }}>
+                {MENU_ITEMS_TOP.map((menu) => (
+                    <ListItem button key={menu.id} mt={1} mb={1} sx={{ "&:hover": { backgroundColor: "transparent" } }} position="relative" onClick={() => navigate(`/${menu.url}`)} className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
+                        <ListItemIcon sx={{ minWidth: "43px" }}>
+                        {menu.icon}
+                        </ListItemIcon>
+                        <ListItemText primary={menu.name} />
+                    </ListItem>
+                ))}
+          </List>
+          <Divider sx={{ mb: 3, mt: 3 }} />
+          <List sx={{ mt: 4, mb: 2, mr: 2, p: 0 }}>
+                {MENU_ITEMS_BOTTOM.map((menu) => (
+                    <ListItem button key={menu.id} mt={1} mb={1} position="relative" onClick={() => navigate(`/${menu.url}`)} className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
+                        <ListItemIcon sx={{ minWidth: "43px" }}>
+                        {menu.icon}
+                        </ListItemIcon>
+                        <ListItemText primary={menu.name} />
+                    </ListItem>
+                ))}
+          </List>
 
-            <div className="border-b border-divider dark:border-darkDivider my-8"></div>
-
-            <ul className="p-0 my-4 ml-0 mr-2">
-                {
-                    MENU_ITEMS_BOTTOM.map(menu => (
-                        <li key={menu.id} className={`my-1 relative ${isDark && 'activeDark'} ${checkActivePage(location.pathname, `/${menu.url}`)}`}>
-                            <Link to={`/${menu.url}`} className="block py-3 mx-5 relative">
-                                <div className="flex items-center">
-                                    {menu.icon}
-                                    <h2 className={`ml-3 dark:text-white text-base`}>{menu.name}</h2>
-                                </div>
-                            </Link>
-                        </li>
-                    ))
-                }
-            </ul>
-
-            <div className="absolute bottom-10 flex items-center justify-center left-0 right-0">
-                <ThemeToggle />
-            </div>
-        </div>
+          <Box display="flex" alignItems="center" justifyContent="center" mt={5}>
+            <CustomSwitch />
+          </Box>
+        </>
     )
 };
 
@@ -55,7 +52,7 @@ const MENU_ITEMS_TOP = [
     {
         id: 1,
         name: "Pipelines",
-        icon: <FontAwesomeIcon className="menu-icons" icon={faKey} />,
+        icon: <FontAwesomeIcon className="menu-icons" icon={faCodeBranch} />,
         url: "",
     },
     {
@@ -72,7 +69,7 @@ const MENU_ITEMS_TOP = [
     },
     {
         id: 4,
-        name: "Teams",
+        name: "Team",
         icon: <FontAwesomeIcon className="menu-icons" icon={faUsers} />,
         url: "teams",
     },

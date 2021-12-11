@@ -1,10 +1,8 @@
+import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer } from '@mui/material';
 import { useState } from "react";
-import Pills from "../components/Pills";
-import CustomInput from "../components/CustomInput";
 import Search from "../components/Search";
-import Button from "../components/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
 import {
     belongToAcessGroupsItems,
     belongToEnvironmentItems,
@@ -12,223 +10,230 @@ import {
     expecificPermissionsItems,
     platformItems,
 } from "../utils/teamsMockData";
+import CustomChip from '../components/CustomChip';
+import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
+import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
+import {useNavigate} from "react-router-dom";
+
+const drawerWidth = 507;
+const drawerStyles = {
+    width: drawerWidth,
+    flexShrink: 0,
+    zIndex: 9999,
+    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box'},
+}
 
 const TeamDetail = () => {
     const [isActive] = useState(true);
     const [isAdmin] = useState(true);
+    let navigate = useNavigate();
+
+    // Sidebar states
+    const [isOpenChangePassword, setIsOpenPassword] = useState(false);
+    const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
 
     return (
-        <div className="team_details xl:w-10/12">
-            <div className="flex items-center">
-                <h2 className="font-bold text-22 dark:text-white">
+        <>
+        <Box className="page" width="83%">
+            <Grid container alignItems="center">
+                <Typography component="h2" variant="h2" color="text.primary">
                     Team {" > "} Saul Frank
-                </h2>
-                <div className="ml-8">
-                    {isActive && <Pills text="Active" color="green" margin="2" size="small" />}
-                    {isAdmin && (
-                        <Pills text="Admin" color="orange" size="small" />
-                    )}
-                </div>
-            </div>
+                </Typography>
 
-            <div className="mt-10 flex items-start justify-between">
-                <div className="flex-3">
-                    <h3 className="font-black text-17 dark:text-white">
+                <Grid item ml={4}>
+                    {isActive ? <CustomChip label="Active" customColor="green" margin={1} /> : <CustomChip label="Inactive" customColor="red" margin={1} />}
+                    {isAdmin && <CustomChip label="Admin" customColor="orange"/>}
+                </Grid>
+            </Grid>
+
+            <Grid container mt={5} alignItems="flex-start" justifyContent="space-between">
+                <Grid item sx={{ flex: 1 }}>
+                    <Typography component="h3" variant="h3" color="text.primary">
                         Details
-                    </h3>
-                    <div className="mt-3">
-                        <CustomInput value="" label="First name" />
-                        <CustomInput value="" label="Last name" />
-                        <CustomInput value="" label="Email" />
-                        <CustomInput value="" label="Job title" />
-                        <CustomInput value="" label="Timezone" />
+                    </Typography>
 
-                        <div className="mt-4">
-                            <Button text="Save" />
-                        </div>
+                    <Box mt={2} display="grid" flexDirection="row">
+                        <TextField
+                            label="First name"
+                            id="first_name"
+                            size="small"
+                            required
+                            sx={{ mb: ".45rem" }}
+                        />
 
-                        <div className="border-b border-divider dark:border-darkDivider my-8"></div>
+                        <TextField
+                            label="Last name"
+                            id="last_name"
+                            size="small"
+                            required
+                            sx={{ margin: ".45rem 0" }}
+                        />
 
-                        <div>
-                            <h3 className="font-black text-17 dark:text-white">
-                                Control
-                            </h3>
+                        <TextField
+                            label="Email"
+                            type="email"
+                            id="email"
+                            size="small"
+                            required
+                            sx={{ margin: ".45rem 0" }}
+                        />
 
-                            <div className="mt-3">
-                                <Button text="Change password" variant="border" size="small" />
-                                <div className="my-4">
-                                    <Button text="Deactivate user" variant="border" size="small" />
-                                </div>
-                                <Button text="Delete user" variant="border" size="small" />
-                            </div>
+                        <TextField
+                            label="Job title"
+                            id="job_title"
+                            size="small"
+                            required
+                            sx={{ margin: ".45rem 0" }}
+                        />
 
-                            <div className="mt-4">
-                                <p className="text-red text-xs w-64">Warning: this action can’t be undone. It is usually better to deactivate a user. </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                        <TextField
+                            label="Timezone"
+                            id="timezone"
+                            select
+                            size="small"
+                            required
+                            sx={{ fontSize: ".75rem", display: "flex", mt: ".45rem" }}
+                        />
 
-                <div className="flex-3 mx-10 2xl:mx-0">
-                    <h3 className="font-black text-17 dark:text-white">
-                        Permissions
-                    </h3>
-                    <div className="mt-3 flex items-center">
-                        <div className="flex-1">
-                            <Search
-                                placeholder="Find platform permissions"
-                                onChange={() => {}}
-                                classes="ml-0"
-                            />
-                        </div>
-                        <div className="flex-none">
-                            <Button text="Add" classes="ml-3" />
-                        </div>
-                    </div>
+                        <Button variant="contained" color="primary" sx={{ width: "100%", mt: "1rem" }}>Save</Button>
+                    </Box>
 
-                    <div className="mt-6">
-                        <h3 className="font-black text-17 dark:text-white">
-                            Platform
-                        </h3>
+                    <Box sx={{ margin: "2.45rem 0", borderTop: 1, borderColor: "divider" }}></Box>
 
-                        <div className="mt-4">
-                            {platformItems.map((plat) => (
-                                <div
-                                    className="flex cursor-pointer items-center my-3"
-                                    key={plat.id}
-                                >
-                                    <FontAwesomeIcon
-                                        icon={faTrashAlt}
-                                        className="text-red text-17 mr-2"
-                                    />
-                                    <p className="text-sm dark:text-white">{plat.name}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <Box>
+                        <Typography component="h3" variant="h3" color="text.primary">
+                            Control
+                        </Typography>
 
-                    <div className="mt-9">
-                        <h3 className="font-black text-17 dark:text-white">
-                            Environment permissions
-                        </h3>
-                        <h4 className="mt-1 text-sm">
-                            Environment: Production
-                        </h4>
+                        <Button onClick={() => setIsOpenPassword(true)} size="small" variant="outlined" color="error" sx={{ fontWeight: "700", width: "100%", mt: ".78rem", fontSize: ".81rem", border: 2, "&:hover": { border: 2 } }}>Change password</Button>
+                        <Button size="small" variant="outlined" color={isActive ? "error" : "success"} sx={{ fontWeight: "700", width: "100%", mt: ".78rem", fontSize: ".81rem", border: 2, "&:hover": { border: 2 }}}>{isActive ? "Deactivate" : "Activate"} user</Button>
+                        <Button onClick={() => setIsOpenDeleteUser(true)} size="small" variant="outlined" color="error" sx={{ fontWeight: "700", width: "100%", mt: ".78rem", fontSize: ".81rem", border: 2, "&:hover": { border: 2 }}}>Delete user</Button>
 
-                        <div className="mt-7">
-                            {environmentPermissions.map((env) => (
-                                <div
-                                    className="flex cursor-pointer items-center my-3"
-                                    key={env.id}
-                                >
-                                    <FontAwesomeIcon
-                                        icon={faTrashAlt}
-                                        className="text-red text-17 mr-2"
-                                    />
-                                    <p className="text-sm dark:text-white">{env.name}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                        <Typography color="rgba(248, 0, 0, 1)" lineHeight="15.23px" sx={{ mt: ".56rem" }} variant="subtitle2">
+                            Warning: this action can’t be undone. It is usually better to deactivate a user. 
+                        </Typography>
+                    </Box>
 
-                    <div className="mt-16">
-                        <h3 className="font-black text-17 dark:text-white">
-                            Specific permissions
-                        </h3>
-                        <h4 className="mt-1 text-sm">
-                            Environment: Production
-                        </h4>
+                </Grid>
+                <Grid item sx={{ flex: 2.2, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
+                    <Box>
+                        <Typography component="h3" variant="h3" color="text.primary">
+                            Permissions
+                        </Typography>
 
-                        <div className="mt-4">
-                            {expecificPermissionsItems.map((perm) => (
-                                <div
-                                    className="flex cursor-pointer items-center my-3"
-                                    key={perm.id}
-                                >
-                                    <FontAwesomeIcon
-                                        icon={faTrashAlt}
-                                        className="text-red text-17 mr-2"
-                                    />
-                                    <p className="text-sm dark:text-white">{perm.name}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                        <Grid mt={2} display="flex" alignItems="center">
+                            <Search placeholder="Find platform permissions" />
+                            <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }} >Add</Button>
+                        </Grid>
 
-                <div className="flex-3">
-                    <h3 className="font-black text-17 dark:text-white">
+                        <Box mt={4}>
+                            <Typography component="h3" variant="h3" color="text.primary">
+                                Platform
+                            </Typography>
+                        </Box>
+
+                        <Box mt={2}>
+                            {
+                                platformItems.map(plat => (
+                                    <Grid display="flex" alignItems="center" key={plat.id} mt={1.5} mb={1.5}>
+                                        <Box component={FontAwesomeIcon} sx={{ fontSize: "17px",mr: "7px", color: "rgba(248, 0, 0, 1)" }} icon={faTrashAlt} />
+                                        <Typography variant="subtitle2" lineHeight="15.23px">{plat.name}</Typography>
+                                    </Grid>
+                                ))
+                            }
+                        </Box>
+                        <Box mt="2.31rem">
+                            <Typography component="h3" variant="h3" color="text.primary">
+                                Environment permissions
+                            </Typography>
+                            <Typography variant="subtitle2" mt=".20rem">Environment: Production</Typography>
+
+                            <Box mt={2}>
+                                {
+                                    environmentPermissions.map(env => (
+                                        <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
+                                            <Box component={FontAwesomeIcon} sx={{ fontSize: "17px",mr: "7px", color: "rgba(248, 0, 0, 1)" }} icon={faTrashAlt} />
+                                            <Typography variant="subtitle2" lineHeight="15.23px">{env.name}</Typography>
+                                        </Grid>
+                                    ))
+                                }
+                            </Box>
+                        </Box>
+
+                        <Box mt="3.5rem">
+                            <Typography component="h3" variant="h3" color="text.primary">
+                                Specific permissions
+                            </Typography>
+                            <Typography variant="subtitle2" mt=".20rem">Environment: Production</Typography>
+
+                            <Box mt={2}>
+                                {
+                                    expecificPermissionsItems.map(exp => (
+                                        <Grid display="flex" alignItems="center" key={exp.id} mt={1.5} mb={1.5}>
+                                            <Box component={FontAwesomeIcon} sx={{ fontSize: "17px",mr: "7px", color: "rgba(248, 0, 0, 1)" }} icon={faTrashAlt} />
+                                            <Typography variant="subtitle2" lineHeight="15.23px">{exp.name}</Typography>
+                                        </Grid>
+                                    ))
+                                }
+                            </Box>
+                        </Box>
+                    </Box>
+
+                </Grid>
+                <Grid item sx={{ flex: 1 }}>
+                    <Typography component="h3" variant="h3" color="text.primary">
                         Belongs to environments
-                    </h3>
+                    </Typography>
 
-                    <div className="mt-3 flex items-center">
-                        <div className="flex-1">
-                            <Search
-                                placeholder="Find access groups"
-                                onChange={() => {}}
-                                classes="ml-0"
-                            />
-                        </div>
-                        <div className="flex-none">
-                            <Button text="Add" classes="ml-3" />
-                        </div>
-                    </div>
+                    <Grid mt={2} display="flex" alignItems="center">
+                        <Search placeholder="Find access groups" />
+                        <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }} >Add</Button>
+                    </Grid>
 
-                    <div className="mt-5">
-                        {belongToEnvironmentItems.map((perm) => (
-                            <div
-                                className="flex cursor-pointer items-center my-3"
-                                key={perm.id}
-                            >
-                                <FontAwesomeIcon
-                                    icon={faTrashAlt}
-                                    className="text-red text-17 mr-2"
-                                />
-                                <p className="text-sm font-black text-blue">
-                                    {perm.name}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
+                    <Box mt="1.31rem">
+                        {
+                            belongToEnvironmentItems.map(env => (
+                                <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
+                                    <Box component={FontAwesomeIcon} sx={{ fontSize: "17px",mr: "7px", color: "rgba(248, 0, 0, 1)" }} icon={faTrashAlt} />
+                                    <Typography variant="subtitle2" lineHeight="15.23px" color="primary" fontWeight="900">{env.name}</Typography>
+                                </Grid>
+                            ))
+                        }
+                    </Box>
 
-                    <div className="mt-10">
-                        <h3 className="font-black text-17 dark:text-white">
+                    <Box mt="2.31rem">
+                        <Typography component="h3" variant="h3" color="text.primary">
                             Belongs to access groups
-                        </h3>
+                        </Typography>
 
-                        <div className="mt-3 flex items-center">
-                            <div className="flex-1">
-                                <Search
-                                    placeholder="Find access groups"
-                                    onChange={() => {}}
-                                    classes="ml-0"
-                                />
-                            </div>
-                            <div className="flex-none">
-                                <Button text="Add" classes="ml-3" />
-                            </div>
-                        </div>
+                        <Grid mt={2} display="flex" alignItems="center">
+                            <Search placeholder="Find access groups" />
+                            <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }} >Add</Button>
+                        </Grid>
 
-                        <div className="mt-5">
-                        {belongToAcessGroupsItems.map((perm) => (
-                            <div
-                                className="flex cursor-pointer items-center my-3"
-                                key={perm.id}
-                            >
-                                <FontAwesomeIcon
-                                    icon={faTrashAlt}
-                                    className="text-red text-17 mr-2"
-                                />
-                                <p className="text-sm font-black text-blue">
-                                    {perm.name}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        <Box mt="1.31rem">
+                            {
+                                belongToAcessGroupsItems.map(env => (
+                                    <Grid sx={{ cursor: "pointer", pt: 1.5, pb: 1.5 ,borderRadius: 2 ,"&:hover": { background: "rgba(196, 196, 196, 0.15)"} }} display="flex" alignItems="center" key={env.id} onClick={() => navigate(`/teams/access/${env.name}`)}>
+                                        <Box component={FontAwesomeIcon} sx={{ fontSize: "17px",mr: "7px", color: "rgba(248, 0, 0, 1)" }} icon={faTrashAlt} />
+                                        <Typography variant="subtitle2" lineHeight="15.23px" color="primary" fontWeight="900">{env.name}</Typography>
+                                    </Grid>
+                                ))
+                            }
+                        </Box>
+                    </Box>
+                </Grid>
+            </Grid>
+        </Box>
+
+        <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)} sx={drawerStyles}>
+            <ChangePasswordDrawer />
+        </Drawer>
+
+        <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
+            <DeleteUserDrawer user="Saul Frank" handleClose={() => setIsOpenDeleteUser(false)}/>
+        </Drawer>
+        </>
     );
 };
 

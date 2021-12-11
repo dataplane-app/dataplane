@@ -23,7 +23,7 @@
     height: 100%;
     position: absolute;
     background: rgba(196, 196, 196, 0.15);
-    border-radius: 42px;
+    border-radius: 42px!important;
     right: 0;
     left: -38px;
     width: 120%;
@@ -44,4 +44,14 @@
     font-size: 17px;
     line-height: 20px;
     color: #0073C6;
+}
+
+.menu-link{
+    display: block;
+    position: relative;
+    text-decoration: none;
+}
+
+.spacing-nav{
+    padding-top: 82px;
 }
