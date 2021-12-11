@@ -6,16 +6,35 @@ package privateresolvers
 import (
 	"context"
 	"dataplane/database"
+	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
 	"dataplane/logging"
 	"errors"
-	"fmt"
 	"log"
 	"os"
+
+	"gorm.io/gorm/clause"
 )
 
 func (r *mutationResolver) UpdatePreferences(ctx context.Context, input *privategraphql.AddPreferencesInput) (*string, error) {
-	panic(fmt.Errorf("not implemented"))
+	// Retrieve userID from access token
+	userID := ctx.Value("currentUser").(string)
+
+	p := &models.Preferences{Preference: input.Preference, Value: input.Value, UserID: userID}
+
+	err := database.DBConn.
+		Clauses(clause.OnConflict{UpdateAll: true}).
+		Create(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Get preferences database error.")
+	}
+
+	response := "Preference updated"
+	return &response, nil
 }
 
 func (r *queryResolver) GetAllPreferences(ctx context.Context) ([]*privategraphql.Preferences, error) {
@@ -24,7 +43,7 @@ func (r *queryResolver) GetAllPreferences(ctx context.Context) ([]*privategraphq
 	log.Println(userID)
 	p := []*privategraphql.Preferences{}
 
-	err := database.DBConn.Where("user_id <> ?", userID).Find(&p).Error
+	err := database.DBConn.Where("user_id = ?", userID).Find(&p).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -39,7 +58,7 @@ func (r *queryResolver) GetAllPreferences(ctx context.Context) ([]*privategraphq
 func (r *queryResolver) GetOnePreference(ctx context.Context, preference string) (*privategraphql.Preferences, error) {
 	// Retrieve userID from access token
 	userID := ctx.Value("currentUser").(string)
-	log.Println(userID)
+
 	p := &privategraphql.Preferences{}
 
 	err := database.DBConn.Where("user_id = ? AND preference = ?", userID, preference).First(&p).Error
