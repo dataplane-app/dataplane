@@ -1,3 +1,12 @@
+input AddUsersInput {
+	first_name: String!    
+	last_name:  String!     
+	email:     String!     
+	job_title: String!
+	password:  String!     
+	timezone:  String!     
+}
+
 input PlatformInput {
 	business_name: String!    
 	timezone:      String!     
@@ -19,8 +28,9 @@ input AddAdminsInput {
 type Admin {
 	Platform: Platform
 	User: User
+	Auth: Authtoken
 }
 
 type Mutation {
-  createAdmin(input: AddAdminsInput): Admin
+  setupPlatform(input: AddAdminsInput): Admin
 }

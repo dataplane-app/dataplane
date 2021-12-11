@@ -65,15 +65,15 @@ jobs:
         env: 
           env: "tests"
           basepath: "/dataplane"
-          secret.db_host: localhost
-          secret.db_user: postgres
-          secret.db_pwd: "Hello123!"
-          secret.db_ssl: "disable"
-          secret.db_port: "5432"
-          secret.db_database: "dataplane"
-          secret.jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+          secret_db_host: localhost
+          secret_db_user: postgres
+          secret_db_pwd: "Hello123!"
+          secret_db_ssl: "disable"
+          secret_db_port: "5432"
+          secret_db_database: "dataplane"
+          secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
           database: "timescaledb"
           mode: "development"
           debug: "true"
           dbdebug: "false"
-        run: cd mainapp && go test -count=1 -timeout=15s ./... -v
+        run: cd mainapp && time go run Tests/mainTest.go

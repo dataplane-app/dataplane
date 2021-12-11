@@ -1,12 +1,3 @@
-input AddUsersInput {
-	first_name: String!    
-	last_name:  String!     
-	email:     String!     
-	job_title: String!
-	password:  String!     
-	timezone:  String!     
-}
-
 type User {
 	user_id:   String! 
 	user_type: String!
@@ -20,10 +11,6 @@ type User {
 type Authtoken {
 	access_token: String!
 	refresh_token: String!
-}
-
-extend type Mutation {
-  createUser(input: AddUsersInput): User
 }
 
 type Query{

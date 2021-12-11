@@ -12,11 +12,11 @@ services:
     volumes:
       - ../pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 60s
       retries: 5
     restart: always
-  
+
   mainapp:
     build:
       context: .
@@ -27,20 +27,26 @@ services:
     volumes:
       - ../:/appdev
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:9000/healthz"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "--fail",
+          "http://localhost:9000/healthz"
+        ]
       interval: 30s
       timeout: 10s
       retries: 5
     environment:
       env: "local"
       basepath: "/dataplane"
-      secret.db_host: postgres
-      secret.db_user: postgres
-      secret.db_pwd: "Hello123!"
-      secret.db_ssl: "disable"
-      secret.db_port: "5432"
-      secret.db_database: "dataplane"
-      secret.jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+      secret_db_host: postgres
+      secret_db_user: postgres
+      secret_db_pwd: "Hello123!"
+      secret_db_ssl: "disable"
+      secret_db_port: "5432"
+      secret_db_database: "dataplane"
+      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
       database: "timescaledb"
       debug: "true"
       dbdebug: "false"

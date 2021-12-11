@@ -17,7 +17,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql.AddAdminsInput) (*publicgraphql.Admin, error) {
+func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraphql.AddAdminsInput) (*publicgraphql.Admin, error) {
+	if os.Getenv("mode") != "development" {
+		return nil, errors.New("Not in development mode.")
+	}
 
 	u := models.Platform{}
 	if res := database.DBConn.First(&u); res.RowsAffected >= 1 {
@@ -77,7 +80,53 @@ func (r *mutationResolver) CreateAdmin(ctx context.Context, input *publicgraphql
 		return nil, errors.New("Register database error.")
 	}
 
-	return &publicgraphql.Admin{platformData, userData}, nil
+	// Environments get added
+	environment := &[]models.Environment{
+		{ID: uuid.New().String(),
+			Name:   "Development",
+			Active: true}, {
+			ID:     uuid.New().String(),
+			Name:   "Production",
+			Active: true,
+		},
+	}
+
+	err = database.DBConn.Create(&environment).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Register database error.")
+	}
+
+	// Preferences get added
+	preferences := &models.Preferences{
+		UserID:     userData.UserID,
+		Preference: "theme",
+		Value:      "light_mode",
+	}
+
+	err = database.DBConn.Create(&preferences).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Register database error.")
+	}
+
+	// pass back authentication
+	accessToken, refreshToken := auth.GenerateTokens(userData.UserID, userData.Username, userData.UserType, "businessID")
+
+	return &publicgraphql.Admin{
+		platformData,
+		userData,
+		&publicgraphql.Authtoken{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		},
+	}, nil
 }
 
 // Mutation returns publicgraphql.MutationResolver implementation.

@@ -24,5 +24,3 @@ To run follow these steps
 The project published in this git repo is released under the Source Available License - Business Source License 1.1 (BSL). The license was chosen to discourage cloud providers offering this project as a data platform service. If you would like to offer Dataplane as a service, we are open to the conversation, come speak to us. For the rest of you (99.999%) who are using the software for your own personal or business needs, you can use the software freely where these restrictions will not apply. 
 
 Thanks to Vectorized (https://vectorized.io/blog/open-source/), CockroachDB and Mariadb for researching and developing the Business Source License. We share the same views to strike a balance between making software open to the community while being protected from unfair practices that aim to commercially benefit without giving back to the community. 
-
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdataplane-app%2Fdataplane.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdataplane-app%2Fdataplane?ref=badge_shield)
