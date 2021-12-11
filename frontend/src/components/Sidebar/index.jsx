@@ -1,52 +1,50 @@
 import './styles.css'
-import { Link, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import checkActivePage from "../../utils/checkActivePage";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faKey, faCog, faUsers, faGraduationCap, faBullhorn, faAlignCenter, faConciergeBell, faCodeBranch } from '@fortawesome/free-solid-svg-icons'
 import ThemeToggle from '../ThemeToggle';
-import { Box, Grid, Typography } from '@mui/material';
+import List from '@mui/material/List';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import CustomSwitch from '../CustomSwitch';
+import { Box } from '@mui/material';
 
 const Sidebar = () => {
     const location = useLocation();
+    const navigate = useNavigate();
 
     return(
-        <Box width={190} position="relative" sx={{ borderRight: 1, borderColor: "divider" }}>
-            <Box component="ul" mt={2} mb={2} mr={2} p={0} sx={{ listStyle: 'none' }} >
-                {
-                    MENU_ITEMS_TOP.map(menu => (
-                        <Box component="li" key={menu.id} mt={1} mb={1} position="relative" className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
-                            <Link to={`/${menu.url}`} className="menu-link">
-                                <Grid container alignItems="center">
-                                    {menu.icon}
-                                    <Typography component="h2" variant="h3" color="text.primary" fontWeight={400} ml={2}>{menu.name}</Typography>
-                                </Grid>
-                            </Link>
-                        </Box>
-                    ))
-                }
-            </Box>
+        <>
+            <List sx={{ mt: 4, mb: 2, mr: 2, p: 0 }}>
+                {MENU_ITEMS_TOP.map((menu) => (
+                    <ListItem button key={menu.id} mt={1} mb={1} sx={{ "&:hover": { backgroundColor: "transparent" } }} position="relative" onClick={() => navigate(`/${menu.url}`)} className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
+                        <ListItemIcon sx={{ minWidth: "43px" }}>
+                        {menu.icon}
+                        </ListItemIcon>
+                        <ListItemText primary={menu.name} />
+                    </ListItem>
+                ))}
+          </List>
+          <Divider sx={{ mb: 3, mt: 3 }} />
+          <List sx={{ mt: 4, mb: 2, mr: 2, p: 0 }}>
+                {MENU_ITEMS_BOTTOM.map((menu) => (
+                    <ListItem button key={menu.id} mt={1} mb={1} position="relative" onClick={() => navigate(`/${menu.url}`)} className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
+                        <ListItemIcon sx={{ minWidth: "43px" }}>
+                        {menu.icon}
+                        </ListItemIcon>
+                        <ListItemText primary={menu.name} />
+                    </ListItem>
+                ))}
+          </List>
 
-            <Box mt={6} mb={6} sx={{ borderTop: 1, borderColor: 'divider'}}></Box>
-
-            <Box component="ul" mt={2} mb={2} mr={2} p={0} sx={{ listStyle: 'none' }}>
-                {
-                    MENU_ITEMS_BOTTOM.map(menu => (
-                        <Box component="li" key={menu.id} mt={1} mb={1} position="relative" className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
-                            <Link to={`/${menu.url}`} className="menu-link">
-                                <Grid container alignItems="center">
-                                    {menu.icon}
-                                    <Typography component="h2" variant="h3" color="text.primary" fontWeight={400} ml={2}>{menu.name}</Typography>
-                                </Grid>
-                            </Link>
-                        </Box>
-                    ))
-                }
-            </Box>
-
-            <Grid container position="absolute" bottom={100} alignItems="center" justifyContent="space-between" left={0} right={0}>
-                <ThemeToggle />
-            </Grid>
-        </Box>
+          <Box display="flex" alignItems="center" justifyContent="center" mt={5}>
+            <CustomSwitch />
+          </Box>
+        </>
     )
 };
 
@@ -71,7 +69,7 @@ const MENU_ITEMS_TOP = [
     },
     {
         id: 4,
-        name: "Teams",
+        name: "Team",
         icon: <FontAwesomeIcon className="menu-icons" icon={faUsers} />,
         url: "teams",
     },

@@ -1,39 +1,86 @@
-import { createTheme, responsiveFontSizes } from "@mui/material/styles";
-import { deepPurple, amber } from "@mui/material/colors";
-
-const orange = "#FF5722";
-const orangeLight = "rgba(255, 87, 34, 0.16)"
-const blue = "#0073C6";
-const green = "#2E6707";
-const greenLight = "rgba(114, 184, 66, 0.24)"
-const red = "#2E6707";
-const redLight = "rgba(248, 0, 0, 0.09)";
-
-let customTheme = createTheme({
-    type: "light",
-    pallete: {
+const createCustomTheme = (mode) => ({
+    palette: {
+        mode,
         primary: {
-            main: deepPurple,
-            light: orangeLight,
+            main: "#0073C6",
         },
-        secondary: {
-            main: blue,
+        purple: {
+            main: "#7B61FF",
+            contrastText: "#7B61FF"
         },
-        danger: {
-            main: red,
-            light: redLight
+        cyan: {
+            main: "rgba(101, 190, 255, 1)"
+        }, 
+        ...(mode === "light") ? 
+        {
+            success: {
+                main: "#497B27",
+                light: "#72B8423D",
+            },
+            secondary: {
+                main: "#FF5722",
+                light: "rgba(255, 87, 34, 0.16)",
+            },
+            purpleLight: {
+                main: "rgba(123, 97, 255, 0.12)",
+            },
+            redLight: {
+                main: "rgba(248, 0, 0, 0.09)",
+            },
+            divider: "rgba(199, 195, 195, 1)",
+            background: {
+                main: "#fff",
+                secondary: "#fff",
+                hoverMain: "rgba(244, 244, 244, 1)",
+                hoverSecondary: "rgba(9, 30, 58, .40)",
+            },
+            text: {
+                primary: '#000',
+                secondary: "#222"
+            },
+        } : 
+        {
+            success: {
+                main: "#497B27",
+                light: "rgba(73, 123, 39, 0.31)",
+            },
+            secondary: {
+                main: "#FF5722",
+                light: "rgba(255, 87, 34, 0.2)",
+            },
+            purpleLight: {
+                main: "rgba(123, 97, 255, 0.31)",
+            },
+            redLight: {
+                main: "rgba(248, 0, 0, 0.25)",
+            },
+            divider: "rgba(38, 67, 105, 1)",
+            background: {
+                main: "rgba(14, 25, 40, 1)",
+                secondary: "rgba(9, 30, 58, 1)",
+                hoverMain: "rgba(14, 25, 40, .30)",
+                hoverSecondary: "rgba(9, 30, 58, .40)",
+            },
+            text: {
+                primary: '#fff',
+                secondary: "#222"
+            },
         },
-        success: {
-            main: green,
-            light: greenLight
-        },  
-        background: {
-            paper: "#fff",
-            default: "#fff"
-        },
-        divider: "rgba(199, 195, 195, 1)",
+    },
+    breakpoints: {
+        values: {
+          xxs: 0, // small phone
+          xs: 300, // phone
+          sm: 600, // tablets
+          md: 900, // small laptop
+          lg: 1100, // desktop
+          xl: 1300 // large screens
+        }
     },
     typography: {
+        fontFamily: [
+            'Inter',
+        ],
         h1: {
             fontWeight: 700,
             fontSize: '1.75rem'
@@ -52,9 +99,18 @@ let customTheme = createTheme({
         subtitle2: {
             fontSize: '.8125rem'
         }
-    }
+    },
+    components: {
+        MuiInputLabel: {
+        styleOverrides: {
+          root: {
+            fontSize: 13,
+            color: mode === "light" ? "rgba(0, 0, 0, 0.42)" : "#fff",
+            top: 3
+          },
+        },
+      },
+    },
 })
 
-customTheme = responsiveFontSizes(customTheme);
-
-export default customTheme;
+export default createCustomTheme;

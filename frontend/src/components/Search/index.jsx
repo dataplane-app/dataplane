@@ -9,15 +9,7 @@ const Search = ({ onChange, value, placeholder, classes }) => {
             type="search"
             id="outlined-start-adornment"
             size="small"
-            InputProps={{
-                startAdornment: (
-                    <InputAdornment position="start">
-                        <FontAwesomeIcon
-                            icon={faSearch}
-                        />
-                    </InputAdornment>
-                ),
-            }}
+            sx={{ width: "100%" }}
         />
     );
 };

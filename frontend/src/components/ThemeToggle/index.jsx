@@ -1,24 +1,26 @@
+import { Grid, Box, Typography } from "@mui/material";
 import { useDarkMode } from "../../hooks/useDarkMode";
 import './styles.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMoon, faCog } from '@fortawesome/free-solid-svg-icons'
+import { faMoon } from '@fortawesome/free-solid-svg-icons'
+import { faSun } from '@fortawesome/free-regular-svg-icons'
 
 const ThemeToggle = () => {
     const [isDark, setIsDark] = useDarkMode();
-
+ 
     return (
-        <div className="flex items-center justify-center">
-            <label htmlFor="toggleTheme" className="flex items-center cursor-pointer">
-                <div className="relative">
-                    <input type="checkbox" id="toggleTheme" checked={!isDark} className="sr-only" onChange={() => setIsDark(!isDark)} />
-                    <div className="block border border-divider dark:border-darkDivider w-24 h-8 rounded-full"></div>
-                    <p className={`toggleText font-bold text-sm dark:text-white ${isDark && 'textDark'}`}>{isDark ? 'Dark' : 'Light'}</p>
-                    <div className="dot absolute left-1 top-1 border border-divider dark:border-darkDivider dark:bg-darkPrimary w-6 h-6 rounded-full transition flex items-center justify-center">
-                        <FontAwesomeIcon icon={isDark ? faMoon : faCog} className="text-yellow-400 dark:text-darkIcons"/>
-                    </div>
-                </div>
-            </label>
-        </div>
+        <Grid container alignItems="center" justifyContent="center" width="94px">
+            <Box component="label" display="flex" alignItems="center" sx={{ cursor: "pointer" }}>
+                <Box position="relative">
+                    <input type="checkbox" id="toggleTheme" checked={!isDark} className="inputSr" onChange={() => setIsDark(!isDark)} />
+                    <Box className="toggle_block"></Box>
+                    <Typography variant="subtitle2" fontWeight="700" color="text.primary" className="toggleText">{isDark ? 'Dark' : 'Light'}</Typography>
+                    <Box className="toggle_dot" sx={{ background: "background.default" }}>
+                        <FontAwesomeIcon icon={isDark ? faMoon : faSun} className="text-yellow-400 dark:text-darkIcons"/>
+                    </Box>
+                </Box>
+            </Box>
+        </Grid>
     )
 };
 

@@ -1,4 +1,4 @@
-import { Box, Grid, Typography, Chip, Avatar, IconButton, Button } from '@mui/material';
+import { Box, Grid, Typography, IconButton, Chip ,Button } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEllipsisV } from '@fortawesome/free-solid-svg-icons'
 import { useMemo } from 'react';
@@ -6,6 +6,7 @@ import Search from "../components/Search";
 import { useTable, useGlobalFilter } from "react-table";
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CustomChip from '../components/CustomChip';
 
 const Teams = () => {
     let navigate = useNavigate();
@@ -15,8 +16,6 @@ const Teams = () => {
             {
                 Header: "Member",
                 accessor: "member",
-                // sortable: true,
-                // maxWidth: '600px',
                 Cell: row => <CustomMember row={row} />,
             },
             {
@@ -37,7 +36,7 @@ const Teams = () => {
             {
                 Header: "Status",
                 accessor: "status",
-                Cell: row => <Chip label={row.value} color="primary" size="small" />
+                Cell: row => <Chip label={row.value} color="success" size="small" />
             },
             {
                 Header: "Manage",
@@ -64,15 +63,15 @@ const Teams = () => {
     }, [globalFilter])
 
     return (
-        <Box className="team">
+        <Box className="page">
             <Typography component="h2" variant="h2" color="text.primary">
                 Team
             </Typography>
 
-            <Box mt={4} width="80%">
+            <Box mt={4} sx={{ width: { lg: "80%" } }}>
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: "center" }}>
-                        <Chip color="primary" avatar={<Avatar>2</Avatar>} label="Members" sx={{ mr: 2 }} />
+                        <CustomChip amount={2} label="Members" margin={2} customColor="orange" />
                     </Grid>
 
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: "center", flex: 1 }}>
@@ -80,17 +79,17 @@ const Teams = () => {
                     </Grid>
 
                     <Grid display="flex">
-                        <Button variant="contained" color="secondary" width="3.81rem" >Add</Button>
+                        <Button variant="contained" color="primary" width="3.81rem" >Add</Button>
                     </Grid>
                 </Grid>
             </Box>
 
-            <Box component="table" mt={4} width="80%" {...getTableProps()}>
+            <Box component="table" mt={4} sx={{ width: { lg: "80%" } }} {...getTableProps()}>
                 <thead>
                     {headerGroups.map((headerGroup) => (
                         <Box component="tr" display="grid" gridTemplateColumns="repeat(6, 1fr)" justifyContent="flex-start" {...headerGroup.getHeaderGroupProps()}>
                             {headerGroup.headers.map((column) => (
-                                <Box component="td" color="text.primary" fontWeight="900" fontSize="1.0625rem" textAlign="center" {...column.getHeaderProps()}>
+                                <Box component="td" color="text.primary" fontWeight="600" fontSize="15px" textAlign="center" {...column.getHeaderProps()}>
                                     {column.render("Header")}
                                 </Box>
                             ))}
@@ -101,10 +100,10 @@ const Teams = () => {
                     {rows.map((row, i) => {
                         prepareRow(row);
                         return (
-                            <Box component="tr" {...row.getRowProps()} display="grid" gridTemplateColumns="repeat(6, 1fr)" alignItems="center" borderRadius="5px" mt={2} sx={{ border: 1, borderColor: "divider", padding: "15px 0", cursor: "pointer", "&:hover": { background: "rgba(244, 244, 244, 1)" } }}>
+                            <Box component="tr" {...row.getRowProps()} display="grid" gridTemplateColumns="repeat(6, 1fr)" alignItems="center" borderRadius="5px" backgroundColor="background.secondary" mt={2} sx={{ border: 1, borderColor: "divider", padding: "15px 0", cursor: "pointer", "&:hover": { background: "background.hoverSecondary" } }}>
                                 {row.cells.map((cell) => {
                                     return (
-                                        <Box component="td" {...cell.getCellProps()} textAlign="center">
+                                        <Box component="td" {...cell.getCellProps()} textAlign="center" >
                                             {cell.render("Cell")}
                                         </Box>
                                     );
@@ -121,7 +120,7 @@ const Teams = () => {
 const CustomMember = ({ row }) => {
     return (
         <Grid container direction="column" alignItems="center" justifyContent="flex-start">
-            <Typography component="h4" variant="h3" color="secondary" className="text-blue font-black text-lg ">{row.value.name}</Typography>
+            <Typography component="h4" variant="h3" color="primary" className="text-blue font-black text-lg ">{row.value.name}</Typography>
             <Typography component="h5" variant="subtitle1" >{row.value.occupation}</Typography>
         </Grid>
     )
@@ -129,9 +128,9 @@ const CustomMember = ({ row }) => {
 
 const CustomEmail = ({ row }) => {
     return (
-        <Grid container direction="column" alignItems="center">
-            <Typography component="h4" variant="subtitle1" color="text.primary">{row.value.email}</Typography>
-            <Chip label={row.value.role} color="primary" size="small" />
+        <Grid container direction="column" alignItems="flex-start" ml={2}>
+            <Typography component="h4" variant="subtitle1" color="text.primary" mb={.7}>{row.value.email}</Typography>
+            <CustomChip label={row.value.role} customColor="orange" size="small" />
         </Grid>
     )
 }

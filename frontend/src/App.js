@@ -1,33 +1,51 @@
-import { CssBaseline } from "@mui/material";
-import { BrowserRouter , Routes, Route } from "react-router-dom";
+import React from "react";
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Box } from "@mui/system";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout/Layout.component";
-import Congratulations from "./pages/Congratulations";
-import customTheme from "./theme";
-import { ThemeProvider } from '@mui/material/styles'
+import createCustomTheme from "./theme";
 
+import Congratulations from "./pages/Congratulations";
 import GetStarted from "./pages/GetStarted";
 import Pipelines from './pages/Pipelines';
 import TeamDetail from "./pages/TeamDetail";
+import TeamGroup from "./pages/TeamGroup";
 import Teams from './pages/Teams';
 
+
+export const ColorModeContext = React.createContext({ toggleColorMode: () => {} });
+
 function App() {
+    const [mode, setMode] = React.useState('light');
+    const colorModeToggle = React.useMemo(() => ({
+        toggleColorMode: () => {
+            setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+        },
+    }),
+    [],
+    );
+
+    const theme = React.useMemo(() => createTheme(createCustomTheme(mode)), [mode]);
+
     return (
-        <ThemeProvider theme={customTheme}>
-            <CssBaseline />
-            <div className="app">
-                <BrowserRouter basename="/webapp">
-                    <Routes>
-                        <Route path="congratulations" element={<Congratulations />} />
-                        <Route path="get-started" element={<GetStarted />} />
-                        <Route path="/" element={<Layout />}>
-                            <Route index element={<Pipelines />}/>
-                            <Route path="teams" element={<Teams />} />
-                            <Route path="teams/:teamId" element={<TeamDetail />} />
-                        </Route>
-                    </Routes>
-                </BrowserRouter>
-            </div>
-        </ThemeProvider>
+        <ColorModeContext.Provider value={colorModeToggle}>
+                <ThemeProvider theme={theme}>
+                    <Box className="app" backgroundColor="background.main" >
+                        <BrowserRouter basename="/webapp">
+                            <Routes>
+                                <Route path="congratulations" element={<Congratulations />} />
+                                <Route path="get-started" element={<GetStarted />} />
+                                <Route path="/" element={<Layout />}>
+                                    <Route index element={<Pipelines />}/>
+                                    <Route path="teams" element={<Teams />} />
+                                    <Route path="teams/:teamId" element={<TeamDetail />} />
+                                    <Route path="teams/access/:accessId" element={<TeamGroup />} />
+                                </Route>
+                            </Routes>
+                        </BrowserRouter>
+                    </Box>
+                </ThemeProvider>
+        </ColorModeContext.Provider>
     );
 }
 

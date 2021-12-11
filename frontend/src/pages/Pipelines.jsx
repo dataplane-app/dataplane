@@ -2,10 +2,12 @@ import { Box, Grid, Typography, Chip, Avatar, TextField, InputAdornment, MenuIte
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEllipsisV, faChartBar } from '@fortawesome/free-solid-svg-icons'
 import Search from '../components/Search';
+import CustomChip from '../components/CustomChip';
+import PipelineTable from '../components/TableContent/PipelineTable';
 
 const Pipelines = () => {
     return (
-        <Box className="pipeline">
+        <Box className="page">
             <Grid container alignItems="center" justifyContent="space-between">
                 <Typography component="h2" variant="h2" color="text.primary">
                     Pipelines
@@ -13,37 +15,34 @@ const Pipelines = () => {
                 <FontAwesomeIcon icon={faEllipsisV} />
             </Grid>
 
-            <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start" width="75%">
+            <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start" sx={{ width: { xl: "85%" } }}>
                 <Grid item display="flex" alignItems="center" sx={{ alignSelf: "center" }}>
-                    <Chip color="primary" avatar={<Avatar>2</Avatar>} label="Pipelines" sx={{ mr: 1 }} />
-                    <Chip color="success" avatar={<Avatar>2</Avatar>} label="Succeeded" sx={{ mr: 1 }} />
-                    <Chip color="error" avatar={<Avatar>2</Avatar>} label="Failed" sx={{ mr: 1 }} />
-                    <Chip color="secondary" avatar={<Avatar>2</Avatar>} label="Workers online" sx={{ mr: 2 }}/>
+                    <CustomChip amount={2} label="Pipelines" margin={1} customColor="orange" />
+                    <CustomChip amount={2} label="Succeeded" margin={1} customColor="green" />
+                    <CustomChip amount={2} label="Failed" margin={1} customColor="red" />
+                    <CustomChip amount={2} label="Workers online" margin={2} customColor="purple" />
+
                 </Grid>
 
                 <Grid item display="flex" alignItems="center" sx={{ alignSelf: "center", flex: 1 }}>
-                    <Search placeholder="Find a pipeline" />
+                    <Box flex={1.2} width="100%" flexGrow={1.2}>
+                        <Search placeholder="Find a pipeline" />
+                    </Box>
                     <TextField 
-                        select
                         label="Last 48 hours"
-                        value={null}
+                        id="last"
+                        select
                         size="small"
-                        sx={{ ml: 2 }}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <FontAwesomeIcon
-                                        icon={faChartBar}
-                                    />
-                                </InputAdornment>
-                            ),
-                        }}
+                        required
+                        sx={{ ml: 2, flex: 1 }}
                     >
                         <MenuItem value="24">
                             Last 24 hours
                         </MenuItem>
                     </TextField>
                 </Grid>
+
+                <PipelineTable />
             </Grid>
         </Box>
     )
