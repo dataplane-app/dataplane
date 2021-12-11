@@ -4,6 +4,8 @@ import Loader from '../../assets/animations/spinner.json'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate } from 'react-router-dom'
+import { Box } from '@mui/system';
+import { Grid, Typography } from '@mui/material';
 
 const SetupLoader = () => {
     let navigate = useNavigate();
@@ -23,7 +25,7 @@ const SetupLoader = () => {
     
         const isCreatingAdmin = window.setTimeout(() => {
             setIsCreatingAdmin(false);
-        }, 3000);
+        }, 3000); 
 
         const goToCongrats = window.setTimeout(() => {
             navigate('/congratulations')
@@ -38,60 +40,67 @@ const SetupLoader = () => {
     }, []);
 
     return(
-        <div className="mt-9">
-            <div className="flex items-center">
-                <div className="w-11">
-                    {
-                        isSettingProfile ?
-                        <Lottie
-                                options={{
-                                    animationData: Loader,
-                                    autoplay: true,
-                                }}
-                                loop
-                                className='text-3xl'
-                            /> : <FontAwesomeIcon className="text-green text-4xl" icon={faCheckCircle} />
-                    }
-                </div>
-                <p className="ml-5 text-lg dark:text-white">Setting business profile</p>
-            </div>
+        <>
+        <Box mt="1.5rem">
+            <Grid container alignItems="center">
+                <Box sx={{ width: "2.75rem" }}>
+                {
+                    isSettingProfile ?
+                    <Box
+                        component={Lottie}
+                        options={{
+                            animationData: Loader,
+                            autoplay: true,
+                        }}
+                        loop
+                        fontSize="1.875rem"
+                        /> : <Box component={FontAwesomeIcon} sx={{ fontSize: "2rem", color: "#70AD46" }} icon={faCheckCircle} />
+                }
+                </Box>
+                <Typography sx={{ ml: 2 }} color="text.primary">Setting business profile</Typography>
+            </Grid>
+        </Box>
 
-            <div className="flex items-center mt-4">
-                <div className="w-11">
-                    {
-                        isCreatingEnv ?
-                        <Lottie
-                                options={{
-                                    animationData: Loader,
-                                    autoplay: true,
-                                }}
-                                loop
-                                isClickToPauseDisabled={true}
-                                height={44}
-                            /> : <FontAwesomeIcon className="text-green w-full text-4xl" icon={faCheckCircle} />
-                    }
-                </div>
-                <p className="ml-5 text-lg dark:text-white">Creating environments</p>
-            </div>
+        <Box mt="1.5rem">
+            <Grid container alignItems="center">
+                <Box sx={{ width: "2.75rem" }}>
+                {
+                    isCreatingEnv ?
+                    <Box
+                        component={Lottie}
+                        options={{
+                            animationData: Loader,
+                            autoplay: true,
+                        }}
+                        loop
+                        fontSize="1.875rem"
+                        /> : <Box component={FontAwesomeIcon} sx={{ fontSize: "2rem", color: "#70AD46", mr: 2 }} icon={faCheckCircle} />
+                }
+                </Box>
+                <Typography sx={{ ml: 2 }} color="text.primary" >Creating environments</Typography>
+            </Grid>
+        </Box>
 
-            <div className="flex items-center mt-4">
-                <div className="w-11">
-                    {
-                        isCreatingAdmin ?
-                        <Lottie
-                                options={{
-                                    animationData: Loader,
-                                    autoplay: true,
-                                }}
-                                loop
-                                isClickToPauseDisabled={true}
-                                height={44}
-                            /> : <FontAwesomeIcon className="text-green w-full text-4xl" icon={faCheckCircle} />
-                    }
-                </div>
-                <p className="ml-5 text-lg dark:text-white">Creating admin user</p>
-            </div>
-        </div>
+        <Box mt="1.5rem">
+            <Grid container alignItems="center">
+                <Box sx={{ width: "2.75rem" }}>
+                {
+                    isCreatingAdmin ?
+                    <Box
+                        component={Lottie}
+                        options={{
+                            animationData: Loader,
+                            autoplay: true,
+                        }}
+                        loop
+                        fontSize="1.7rem"
+                        /> : <Box component={FontAwesomeIcon} sx={{ fontSize: "2rem", color: "#70AD46" }} icon={faCheckCircle} />
+                }
+                </Box>
+                <Typography sx={{ ml: 2 }} color="text.primary" >Creating admin user</Typography>
+            </Grid>
+        </Box>
+        </>
     )
 }
 

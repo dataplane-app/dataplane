@@ -1,5 +1,5 @@
+import { TextField, Typography, Box, Grid, Button } from "@mui/material";
 import { useState } from "react";
-import Button from "../Button";
 import CustomInput from "../CustomInput";
 import ThemeToggle from "../ThemeToggle";
 
@@ -8,69 +8,77 @@ const GetStartedForm = ({ setIsNext }) => {
 
     return (
         <>
-            <div className="my-9 md:w-11/12">
-                <h3 className="dark:text-white text-22 font-bold">Business</h3>
-                <CustomInput
+            <Box sx={{ mt: 3, mb: 3 }} display="block">
+                <Typography component="h3" variant="h2" color="text.primary">Bussiness</Typography>
+                <TextField
                     label="Bussiness name"
+                    id="bussiness_name"
+                    size="small"
                     required
-                    value={bussinessName}
-                    onChange={() => {}}
+                    sx={{ mt: 2, mb: 2, fontSize: ".75rem", display: "flex" }}
                 />
-                <CustomInput
+
+                <TextField
                     label="Timezone"
+                    id="timezone"
+                    select
+                    size="small"
                     required
-                    value=""
-                    onChange={() => {}}
+                    sx={{ fontSize: ".75rem", display: "flex" }}
                 />
-            </div>
+            </Box>
 
-            <div className="my-9 md:w-11/12">
-                <h3 className="dark:text-white text-22 font-bold">
-                    Admin user
-                </h3>
-                <CustomInput
+            <Box sx={{ mt: 3, mb: 3 }} display="block">
+                <Typography component="h3" variant="h2" color="text.primary">Admin user</Typography>
+                <TextField
                     label="First name"
+                    id="first_name"
+                    size="small"
                     required
-                    value=""
-                    onChange={() => {}}
+                    sx={{ mt: 2, mb: 2, fontSize: ".75rem", display: "flex" }}
                 />
-                <CustomInput
+                <TextField
                     label="Last name"
+                    id="last_name"
+                    size="small"
                     required
-                    value=""
-                    onChange={() => {}}
+                    sx={{ mb: 2, fontSize: ".75rem", display: "flex" }}
                 />
-                <CustomInput
+                <TextField
                     label="Email"
+                    id="email"
+                    type="email"
+                    size="small"
                     required
-                    value=""
-                    onChange={() => {}}
+                    sx={{ mb: 2,fontSize: ".75rem", display: "flex" }}
                 />
-                <CustomInput
+                <TextField
                     label="Job title"
+                    id="job_title"
+                    size="small"
                     required
-                    value=""
-                    onChange={() => {}}
+                    sx={{ mb: 2, fontSize: ".75rem", display: "flex" }}
                 />
-                <CustomInput
+                <TextField
                     label="Password"
+                    id="password"
                     type="password"
+                    size="small"
                     required
-                    value=""
-                    onChange={() => {}}
+                    sx={{ fontSize: ".75rem", display: "flex" }}
                 />
-            </div>
+            </Box>
 
-            <div className="mt-4 mb-9 flex items-center justify-start md:w-11/12">
+            <Grid container alignItems="center" justifyContent="center">
                 <ThemeToggle />
-                <p className="ml-6 text-sm dark:text-white">
-                    Mode <span className="block">preference</span>{" "}
-                </p>
-            </div>
+                <Typography ml="1.5rem" variant="subtitle1" color="text.primary">
+                    Mode preference
+                </Typography>
+            </Grid>
 
-            <div className="md:w-11/12">
-                <Button text="Next" onClick={() => setIsNext(true)} />
-            </div>
+            <Box sx={{ mt: "37px" }}>
+                <Button variant="contained" color="primary" sx={{ width: "100%" }}>Next</Button>
+            </Box>
         </>
     );
 };

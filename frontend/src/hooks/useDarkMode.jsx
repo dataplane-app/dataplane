@@ -44,7 +44,9 @@ export function useDarkMode() {
         undefined
     );
 
+    
     const enabled = isEnabled === undefined ? prefersDarkMode : isEnabled;
+    console.log("THEME DARK: ", enabled)
 
     useEffect(() => {
         if (window === undefined) return;
