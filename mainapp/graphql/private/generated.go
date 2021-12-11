@@ -61,16 +61,23 @@ type ComplexityRoot struct {
 		UpdateDeactivateUser func(childComplexity int, userid string) int
 		UpdateDeleteUser     func(childComplexity int, userid string) int
 		UpdateMe             func(childComplexity int, input *AddUpdateMeInput) int
+		UpdatePreferences    func(childComplexity int, input *AddPreferencesInput) int
 	}
 
 	Pipelines struct {
 		Name func(childComplexity int) int
 	}
 
+	Preferences struct {
+		Preference func(childComplexity int) int
+		Value      func(childComplexity int) int
+	}
+
 	Query struct {
 		AvailablePermissions func(childComplexity int) int
 		GetEnvironments      func(childComplexity int) int
 		GetPipelines         func(childComplexity int) int
+		GetPreferences       func(childComplexity int) int
 		GetWorkers           func(childComplexity int) int
 		LogoutUser           func(childComplexity int) int
 		Me                   func(childComplexity int) int
@@ -95,6 +102,7 @@ type MutationResolver interface {
 	RenameEnvironment(ctx context.Context, input *RenameEnvironment) (*models.Environment, error)
 	AddEnvironment(ctx context.Context, input *AddEnvironmentInput) (*models.Environment, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
+	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	UpdateDeactivateUser(ctx context.Context, userid string) (*string, error)
 	UpdateDeleteUser(ctx context.Context, userid string) (*string, error)
 	CreateUser(ctx context.Context, input *AddUsersInput) (*models.Users, error)
@@ -105,6 +113,7 @@ type QueryResolver interface {
 	Me(ctx context.Context) (*models.Users, error)
 	AvailablePermissions(ctx context.Context) ([]*models.ResourceTypeStruct, error)
 	GetPipelines(ctx context.Context) ([]*Pipelines, error)
+	GetPreferences(ctx context.Context) ([]*Preferences, error)
 	LogoutUser(ctx context.Context) (*string, error)
 	GetWorkers(ctx context.Context) ([]*Workers, error)
 }
@@ -243,12 +252,38 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateMe(childComplexity, args["input"].(*AddUpdateMeInput)), true
 
+	case "Mutation.updatePreferences":
+		if e.complexity.Mutation.UpdatePreferences == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updatePreferences_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdatePreferences(childComplexity, args["input"].(*AddPreferencesInput)), true
+
 	case "Pipelines.name":
 		if e.complexity.Pipelines.Name == nil {
 			break
 		}
 
 		return e.complexity.Pipelines.Name(childComplexity), true
+
+	case "Preferences.preference":
+		if e.complexity.Preferences.Preference == nil {
+			break
+		}
+
+		return e.complexity.Preferences.Preference(childComplexity), true
+
+	case "Preferences.value":
+		if e.complexity.Preferences.Value == nil {
+			break
+		}
+
+		return e.complexity.Preferences.Value(childComplexity), true
 
 	case "Query.availablePermissions":
 		if e.complexity.Query.AvailablePermissions == nil {
@@ -270,6 +305,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetPipelines(childComplexity), true
+
+	case "Query.getPreferences":
+		if e.complexity.Query.GetPreferences == nil {
+			break
+		}
+
+		return e.complexity.Query.GetPreferences(childComplexity), true
 
 	case "Query.getWorkers":
 		if e.complexity.Query.GetWorkers == nil {
@@ -470,6 +512,27 @@ extend type Query {
 extend type Query {
   getPipelines: [Pipelines]
 }`, BuiltIn: false},
+	{Name: "resolvers/preferences.graphqls", Input: `input AddPreferencesInput {
+  preference: String!
+  value: String!
+}
+
+type Preferences {
+  preference: String!
+  value: String!
+}
+
+extend type Mutation {
+  updatePreferences(input: AddPreferencesInput): String
+}
+
+extend type Query{
+	getPreferences: [Preferences]
+}
+
+# extend type Mutation {
+#   getPreferences(userid: String!): Preferences
+# }`, BuiltIn: false},
 	{Name: "resolvers/users.graphqls", Input: `type User {
 	user_id:   String! 
 	user_type: String!
@@ -624,6 +687,21 @@ func (ec *executionContext) field_Mutation_updateMe_args(ctx context.Context, ra
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOAddUpdateMeInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddUpdateMeInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updatePreferences_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *AddPreferencesInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOAddPreferencesInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddPreferencesInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -977,6 +1055,45 @@ func (ec *executionContext) _Mutation_updateMe(ctx context.Context, field graphq
 	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_updatePreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updatePreferences_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdatePreferences(rctx, args["input"].(*AddPreferencesInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_updateDeactivateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1168,6 +1285,76 @@ func (ec *executionContext) _Pipelines_name(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Preferences_preference(ctx context.Context, field graphql.CollectedField, obj *Preferences) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Preferences",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Preference, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Preferences_value(ctx context.Context, field graphql.CollectedField, obj *Preferences) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Preferences",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_getEnvironments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1294,6 +1481,38 @@ func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graph
 	res := resTmp.([]*Pipelines)
 	fc.Result = res
 	return ec.marshalOPipelines2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐPipelines(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getPreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetPreferences(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*Preferences)
+	fc.Result = res
+	return ec.marshalOPreferences2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐPreferences(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_logoutUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2856,6 +3075,37 @@ func (ec *executionContext) unmarshalInputAddEnvironmentInput(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAddPreferencesInput(ctx context.Context, obj interface{}) (AddPreferencesInput, error) {
+	var it AddPreferencesInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "preference":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("preference"))
+			it.Preference, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			it.Value, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAddUpdateMeInput(ctx context.Context, obj interface{}) (AddUpdateMeInput, error) {
 	var it AddUpdateMeInput
 	asMap := map[string]interface{}{}
@@ -3126,6 +3376,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_addEnvironment(ctx, field)
 		case "updateMe":
 			out.Values[i] = ec._Mutation_updateMe(ctx, field)
+		case "updatePreferences":
+			out.Values[i] = ec._Mutation_updatePreferences(ctx, field)
 		case "updateDeactivateUser":
 			out.Values[i] = ec._Mutation_updateDeactivateUser(ctx, field)
 		case "updateDeleteUser":
@@ -3158,6 +3410,38 @@ func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = graphql.MarshalString("Pipelines")
 		case "name":
 			out.Values[i] = ec._Pipelines_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var preferencesImplementors = []string{"Preferences"}
+
+func (ec *executionContext) _Preferences(ctx context.Context, sel ast.SelectionSet, obj *Preferences) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, preferencesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Preferences")
+		case "preference":
+			out.Values[i] = ec._Preferences_preference(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "value":
+			out.Values[i] = ec._Preferences_value(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3229,6 +3513,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getPipelines(ctx, field)
+				return res
+			})
+		case "getPreferences":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getPreferences(ctx, field)
 				return res
 			})
 		case "logoutUser":
@@ -3897,6 +4192,14 @@ func (ec *executionContext) unmarshalOAddEnvironmentInput2ᚖdataplaneᚋgraphql
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalOAddPreferencesInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddPreferencesInput(ctx context.Context, v interface{}) (*AddPreferencesInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAddPreferencesInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOAddUpdateMeInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddUpdateMeInput(ctx context.Context, v interface{}) (*AddUpdateMeInput, error) {
 	if v == nil {
 		return nil, nil
@@ -4087,6 +4390,54 @@ func (ec *executionContext) marshalOPipelines2ᚖdataplaneᚋgraphqlᚋprivate�
 		return graphql.Null
 	}
 	return ec._Pipelines(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOPreferences2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐPreferences(ctx context.Context, sel ast.SelectionSet, v []*Preferences) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOPreferences2ᚖdataplaneᚋgraphqlᚋprivateᚐPreferences(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOPreferences2ᚖdataplaneᚋgraphqlᚋprivateᚐPreferences(ctx context.Context, sel ast.SelectionSet, v *Preferences) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Preferences(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalORenameEnvironment2ᚖdataplaneᚋgraphqlᚋprivateᚐRenameEnvironment(ctx context.Context, v interface{}) (*RenameEnvironment, error) {

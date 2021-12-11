@@ -6,6 +6,11 @@ type AddEnvironmentInput struct {
 	Name string `json:"name"`
 }
 
+type AddPreferencesInput struct {
+	Preference string `json:"preference"`
+	Value      string `json:"value"`
+}
+
 type AddUpdateMeInput struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
@@ -29,6 +34,11 @@ type ChangePasswordInput struct {
 
 type Pipelines struct {
 	Name string `json:"name"`
+}
+
+type Preferences struct {
+	Preference string `json:"preference"`
+	Value      string `json:"value"`
 }
 
 type RenameEnvironment struct {

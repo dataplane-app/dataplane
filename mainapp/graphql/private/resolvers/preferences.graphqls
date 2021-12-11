@@ -1,0 +1,17 @@
+input AddPreferencesInput {
+  preference: String!
+  value: String!
+}
+
+type Preferences {
+  preference: String!
+  value: String!
+}
+
+extend type Query{
+	getPreferences: [Preferences]
+}
+
+extend type Mutation {
+  updatePreferences(input: AddPreferencesInput): String
+}
