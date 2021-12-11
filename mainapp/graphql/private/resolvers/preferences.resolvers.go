@@ -18,13 +18,31 @@ func (r *mutationResolver) UpdatePreferences(ctx context.Context, input *private
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) GetPreferences(ctx context.Context) ([]*privategraphql.Preferences, error) {
+func (r *queryResolver) GetAllPreferences(ctx context.Context) ([]*privategraphql.Preferences, error) {
 	// Retrieve userID from access token
 	userID := ctx.Value("currentUser").(string)
 	log.Println(userID)
 	p := []*privategraphql.Preferences{}
 
 	err := database.DBConn.Where("user_id <> ?", userID).Find(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Get preferences database error.")
+	}
+
+	return p, nil
+}
+
+func (r *queryResolver) GetOnePreference(ctx context.Context, preference string) (*privategraphql.Preferences, error) {
+	// Retrieve userID from access token
+	userID := ctx.Value("currentUser").(string)
+	log.Println(userID)
+	p := &privategraphql.Preferences{}
+
+	err := database.DBConn.Where("user_id = ? AND preference = ?", userID, preference).First(&p).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {

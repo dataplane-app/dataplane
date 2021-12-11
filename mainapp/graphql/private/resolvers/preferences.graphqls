@@ -9,7 +9,11 @@ type Preferences {
 }
 
 extend type Query{
-	getPreferences: [Preferences]
+	getAllPreferences: [Preferences]
+}
+
+extend type Query{
+	getOnePreference(preference: String!): Preferences
 }
 
 extend type Mutation {

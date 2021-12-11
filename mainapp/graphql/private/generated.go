@@ -75,9 +75,10 @@ type ComplexityRoot struct {
 
 	Query struct {
 		AvailablePermissions func(childComplexity int) int
+		GetAllPreferences    func(childComplexity int) int
 		GetEnvironments      func(childComplexity int) int
+		GetOnePreference     func(childComplexity int, preference string) int
 		GetPipelines         func(childComplexity int) int
-		GetPreferences       func(childComplexity int) int
 		GetWorkers           func(childComplexity int) int
 		LogoutUser           func(childComplexity int) int
 		Me                   func(childComplexity int) int
@@ -113,7 +114,8 @@ type QueryResolver interface {
 	Me(ctx context.Context) (*models.Users, error)
 	AvailablePermissions(ctx context.Context) ([]*models.ResourceTypeStruct, error)
 	GetPipelines(ctx context.Context) ([]*Pipelines, error)
-	GetPreferences(ctx context.Context) ([]*Preferences, error)
+	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
+	GetOnePreference(ctx context.Context, preference string) (*Preferences, error)
 	LogoutUser(ctx context.Context) (*string, error)
 	GetWorkers(ctx context.Context) ([]*Workers, error)
 }
@@ -292,6 +294,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.AvailablePermissions(childComplexity), true
 
+	case "Query.getAllPreferences":
+		if e.complexity.Query.GetAllPreferences == nil {
+			break
+		}
+
+		return e.complexity.Query.GetAllPreferences(childComplexity), true
+
 	case "Query.getEnvironments":
 		if e.complexity.Query.GetEnvironments == nil {
 			break
@@ -299,19 +308,24 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetEnvironments(childComplexity), true
 
+	case "Query.getOnePreference":
+		if e.complexity.Query.GetOnePreference == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getOnePreference_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetOnePreference(childComplexity, args["preference"].(string)), true
+
 	case "Query.getPipelines":
 		if e.complexity.Query.GetPipelines == nil {
 			break
 		}
 
 		return e.complexity.Query.GetPipelines(childComplexity), true
-
-	case "Query.getPreferences":
-		if e.complexity.Query.GetPreferences == nil {
-			break
-		}
-
-		return e.complexity.Query.GetPreferences(childComplexity), true
 
 	case "Query.getWorkers":
 		if e.complexity.Query.GetWorkers == nil {
@@ -522,17 +536,17 @@ type Preferences {
   value: String!
 }
 
-extend type Mutation {
-  updatePreferences(input: AddPreferencesInput): String
+extend type Query{
+	getAllPreferences: [Preferences]
 }
 
 extend type Query{
-	getPreferences: [Preferences]
+	getOnePreference(preference: String!): Preferences
 }
 
-# extend type Mutation {
-#   getPreferences(userid: String!): Preferences
-# }`, BuiltIn: false},
+extend type Mutation {
+  updatePreferences(input: AddPreferencesInput): String
+}`, BuiltIn: false},
 	{Name: "resolvers/users.graphqls", Input: `type User {
 	user_id:   String! 
 	user_type: String!
@@ -722,6 +736,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getOnePreference_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["preference"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("preference"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["preference"] = arg0
 	return args, nil
 }
 
@@ -1483,7 +1512,7 @@ func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graph
 	return ec.marshalOPipelines2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐPipelines(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_getPreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_getAllPreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1501,7 +1530,7 @@ func (ec *executionContext) _Query_getPreferences(ctx context.Context, field gra
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetPreferences(rctx)
+		return ec.resolvers.Query().GetAllPreferences(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1513,6 +1542,45 @@ func (ec *executionContext) _Query_getPreferences(ctx context.Context, field gra
 	res := resTmp.([]*Preferences)
 	fc.Result = res
 	return ec.marshalOPreferences2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐPreferences(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getOnePreference(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getOnePreference_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetOnePreference(rctx, args["preference"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*Preferences)
+	fc.Result = res
+	return ec.marshalOPreferences2ᚖdataplaneᚋgraphqlᚋprivateᚐPreferences(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_logoutUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3515,7 +3583,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_getPipelines(ctx, field)
 				return res
 			})
-		case "getPreferences":
+		case "getAllPreferences":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -3523,7 +3591,18 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_getPreferences(ctx, field)
+				res = ec._Query_getAllPreferences(ctx, field)
+				return res
+			})
+		case "getOnePreference":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getOnePreference(ctx, field)
 				return res
 			})
 		case "logoutUser":
