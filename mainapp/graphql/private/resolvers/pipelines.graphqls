@@ -1,7 +1,34 @@
 type Pipelines {
 	name: String!
+  trigger: String!
+  next_run: Int #should be datatypes.Date
+  last_run: Int #should be datatypes.Date
+  total_runs: Int
+  status: String
+  is_online: Boolean
+  my_date: Int #should be datatypes.Date
+}
+
+input AddPipelinesInput {
+	name: String!
+  trigger: String!
+  next_run: Int #should be datatypes.Date
+  last_run: Int #should be datatypes.Date
+  total_runs: Int
+  status: String
+  is_online: Boolean
+  my_date: Int #should be datatypes.Date
 }
 
 extend type Query {
   getPipelines: [Pipelines]
+}
+
+extend type Mutation {
+  """
+  Adds a pipeline.
+  + **Route**: Private
+  + **Permission**: based on user ID
+  """
+  addPipeline(input: AddPipelinesInput): String
 }
