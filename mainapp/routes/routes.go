@@ -12,6 +12,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -76,6 +78,11 @@ func Setup() *fiber.App {
 	app.Post("/public/graphql", PublicGraphqlHandler())
 	app.Post("/private/graphql", auth.TokenAuthMiddle(), PrivateGraphqlHandler())
 
+	// WARNING: This is insecure and only for documentation, do not enable in production
+	if os.Getenv("graphqldocs") == "true" {
+		app.Post("/private/graphqldocs", PrivateGraphqlHandler())
+		app.Use("/graphqldocs", adaptor.HTTPHandlerFunc(playgroundHandler()))
+	}
 	// ------ Auth ------
 	/* Exchange a refresh token for a new access token */
 	app.Post("/refreshtoken", func(c *fiber.Ctx) error {
@@ -104,6 +111,15 @@ func Setup() *fiber.App {
 	log.Println("🌍 Visit dashboard at:", "http://localhost:9000/webapp/")
 
 	return app
+}
+
+//Defining the Playground handler
+func playgroundHandler() func(w http.ResponseWriter, r *http.Request) {
+	query_url := "/private/graphqldocs"
+	h := playground.Handler("GraphQL", query_url)
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.ServeHTTP(w, r)
+	}
 }
 
 /* Add timer to header */

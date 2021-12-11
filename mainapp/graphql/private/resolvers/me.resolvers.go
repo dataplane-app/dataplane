@@ -17,6 +17,8 @@ func (r *mutationResolver) UpdateMe(ctx context.Context, input *privategraphql.A
 	// Retrieve userID from access token
 	userID := ctx.Value("currentUser").(string)
 
+	// Permissions - as logged in user
+
 	u := models.Users{}
 
 	err := database.DBConn.Where("user_id = ?", userID).Updates(models.Users{
@@ -50,6 +52,8 @@ func (r *queryResolver) Me(ctx context.Context) (*models.Users, error) {
 	userID := ctx.Value("currentUser").(string)
 
 	u := models.Users{}
+
+	// Permissions - as logged in user
 
 	err := database.DBConn.Where("user_id = ?", userID).First(&u).Error
 

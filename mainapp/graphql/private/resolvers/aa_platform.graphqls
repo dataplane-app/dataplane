@@ -17,9 +17,19 @@ input AddEnvironmentInput {
 }
 
 extend type Mutation {
+	"""
+	Rename the environment.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, platform_environment
+	"""  
   renameEnvironment(input: RenameEnvironment): Environments
 }
 
 extend type Mutation {
+	"""
+	Add a new environment.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, platform_environment
+	"""  
   addEnvironment(input: AddEnvironmentInput): Environments
 }

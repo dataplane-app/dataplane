@@ -447,10 +447,22 @@ extend type Mutation {
 
 # me uses userID derived from the access token.
 extend type Query{
+	"""
+	Retrieves the current user logged in.
+	+ **Route**: Private
+	+ **Permission**: based on user ID
+	"""
 	me: User
 }
 
 extend type Mutation {
+	"""
+	Updates the current user logged in.
+
+	Route: Private
+
+	Permission: based on user ID
+	"""
   updateMe(input: AddUpdateMeInput): User
 }
 `, BuiltIn: false},

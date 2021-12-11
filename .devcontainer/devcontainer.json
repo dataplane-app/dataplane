@@ -23,7 +23,9 @@
 
 // rather use docker-compose for environment variables - easier to find/read
     "containerEnv":{
-        "env": "local"
+        "env": "local",
+		// This is insecure - do not enable in production
+		"graphqldocs": "true"
     },
 
 	// Set *default* container specific settings.json values on container create.
