@@ -56,37 +56,16 @@ func TestAccessGroups(t *testing.T) {
 	if testutils.TestEnvironmentID == "" {
 		envID = "test-environment-id"
 	}
-	// -------- Grant permissions to user  -------------
-
-	mutation := `mutation {
-		updatePermissionToUser(
-					environmentID: "` + envID + `",
-					resource: "specific_worker",
-					resourceID: "test-` + uuid.NewString() + ` ",
-					user_id: "` + uuid.NewString() + ` ",
-					access: "write",
-				)
-			}`
-
-	response, httpResponse := testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
-
-	log.Println(string(response))
-
-	if strings.Contains(string(response), `"errors":`) {
-		t.Errorf("Error in graphql response")
-	}
-
-	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
 
 	// -------- Create Access Group  -------------
-	mutation = `mutation {
+	mutation := `mutation {
 		createAccessGroup(
 			environmentID: "` + envID + `",
-			name: " access-group-` + uuid.NewString() + ` ",
+			name: "access-group-` + uuid.NewString() + `",
 		)
 	}`
 
-	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+	response, httpResponse := testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 	accessgroup := jsoniter.Get(response, "data", "createAccessGroup").ToString()
 
 	log.Println(string(response))
@@ -103,7 +82,7 @@ func TestAccessGroups(t *testing.T) {
 				environmentID: "` + envID + `",
 				resource: "specific_pipeline",
 				resourceID: "test-` + uuid.NewString() + ` ",
-				access_group_id: "` + accessgroup + ` ",
+				access_group_id: "` + accessgroup + `",
 				access: "write",
 			)
 		}`
@@ -119,13 +98,48 @@ func TestAccessGroups(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
 
 	// -------- Attach user to Access Group  -------------
+	usertoadd := "test-" + uuid.NewString()
 	mutation = `mutation {
 		updateUserToAccessGroup(
 					environmentID: "` + envID + `",
-					user_id: "test-` + uuid.NewString() + ` ",
-					access_group_id: "` + accessgroup + ` ",
+					user_id: "` + usertoadd + `",
+					access_group_id: "` + accessgroup + `",
 				)
 			}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+
+	// -------- Remove user from access group -------
+	mutation = `mutation {
+		removeUserFromAccessGroup(
+			environmentID: "` + envID + `",
+			user_id: "` + usertoadd + `",
+			access_group_id: "` + accessgroup + `",
+		)
+	}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+	// -------- Delete Access Group  -------------
+	mutation = `mutation {
+			deleteAccessGroup(
+				environmentID: "` + envID + `",
+				access_group_id: "` + accessgroup + `",
+			)
+		}`
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 

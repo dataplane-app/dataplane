@@ -19,6 +19,8 @@ models:
    model: dataplane/database/models.ResourceTypeStruct
  Environments:
    model: dataplane/database/models.Environment
+ Permissions:
+   model: dataplane/database/models.Permissions
 
 resolver:
   layout: follow-schema
