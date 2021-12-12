@@ -41,12 +41,12 @@ func MultiplePermissionChecks(
 		}
 
 		// If platform admin
-		if outcomes[i].Perm.Subject == "admin_platform" {
+		if outcomes[i].Perm.Resource == "admin_platform" {
 			Admin = "yes"
 		}
 
 		// if Environment admin
-		if outcomes[i].Perm.Subject == "admin_environment" {
+		if outcomes[i].Perm.Resource == "admin_environment" {
 			EnvAdmin = "yes"
 		}
 

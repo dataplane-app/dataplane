@@ -22,22 +22,29 @@ type ResourceTypeStruct struct {
 }
 
 var ResourceType = []*ResourceTypeStruct{
+
+	// Platform level
 	{Code: "admin_platform", Level: "platform", Label: "Admin"},
 	{Code: "platform_environment", Level: "platform", Label: "Manage environments"},
-	{Code: "platform_permissions", Level: "platform", Label: "Manage permissions"},
-	{Code: "admin_environment", Level: "environment", Label: "Admin"},
 
+	// Environment level
+	{Code: "admin_environment", Level: "environment", Label: "Admin"},
 	// To add an admin user - you will need admin rights
 	{Code: "environment_users", Level: "environment", Label: "Manage users"},
+	{Code: "environment_permissions", Level: "environment", Label: "Manage permissions"},
 	{Code: "environment_all_pipelines", Level: "environment", Label: "View all pipelines"},
 	{Code: "environment_secrets", Level: "environment", Label: "Manage secrets"},
 	{Code: "environment_edit_workers", Level: "environment", Label: "Manage workers"},
+
+	// Specific level
 	{Code: "specific_worker", Level: "specific", Label: "Worker - ${{worker_name}}"},
 	{Code: "specific_pipeline", Level: "specific", Label: "Pipeline - ${{pipeline_name}}"},
 }
 
 /* Access: what type of access does the user have to the resource - read, write */
 var AccessTypes = []string{"read", "write"}
+
+// -------------- Permissions
 
 func (Permissions) IsEntity() {}
 
@@ -65,6 +72,8 @@ type Permissions struct {
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
+// -------------- Access groups
+
 func (PermissionsAccessGroups) IsEntity() {}
 
 func (PermissionsAccessGroups) TableName() string {
@@ -72,14 +81,44 @@ func (PermissionsAccessGroups) TableName() string {
 }
 
 type PermissionsAccessGroups struct {
-	ID string `gorm:"PRIMARY_KEY;type:varchar(64);" json:"id" validate:"required"`
+	AccessGroupID string `gorm:"PRIMARY_KEY;type:varchar(64);" json:"access_group_id" validate:"required"`
 
 	// Who requires access - user, server, access_group
-	Name          string    `gorm:"index:idx_permissions,unique;type:varchar(255);" json:"name" validate:"required"`
-	SubjectID     string    `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"subject_id" validate:"required"`
+	Name          string    `gorm:"index:idx_ag,unique;type:varchar(255);" json:"name" validate:"required"`
 	Active        bool      `json:"active" validate:"required"`
 	EnvironmentID string    `json:"environment_id"`
-	Test          string    `json:"test"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+// -------------- The mapping of access groups to permissions
+func (PermissionsAccessGPerms) IsEntity() {}
+
+func (PermissionsAccessGPerms) TableName() string {
+	return "permissions_accessg_perms"
+}
+
+type PermissionsAccessGPerms struct {
+	AccessGroupID string    `gorm:"PRIMARY_KEY;type:varchar(64);" json:"access_group_id" validate:"required"`
+	PermissionID  string    `gorm:"PRIMARY_KEY;type:varchar(64);" json:"permission_id" validate:"required"`
+	Active        bool      `json:"active" validate:"required"`
+	EnvironmentID string    `json:"environment_id"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+// -------------- The mapping of access groups to users
+func (PermissionsAccessGUsers) IsEntity() {}
+
+func (PermissionsAccessGUsers) TableName() string {
+	return "permissions_accessg_users"
+}
+
+type PermissionsAccessGUsers struct {
+	AccessGroupID string    `gorm:"PRIMARY_KEY;type:varchar(64);" json:"access_group_id" validate:"required"`
+	UserID        string    `gorm:"PRIMARY_KEY;type:varchar(64);" json:"user_id" validate:"required"`
+	Active        bool      `json:"active" validate:"required"`
+	EnvironmentID string    `json:"environment_id"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }

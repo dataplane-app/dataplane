@@ -5,5 +5,32 @@ type AvailablePermissions {
 }
 
 extend type Query {
+  	"""
+	Retrieve available permissions.
+	+ **Route**: Private
+	+ **Permissions**: none needed
+	"""  
   availablePermissions: [AvailablePermissions]
+}
+
+extend type Mutation {
+  	"""
+	Create Access Group.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, admin_environment, environment_permissions
+	"""  
+  createAccessGroup(environmentID: String!, name: String!): String!
+  	"""
+	Attach Permission to Access Group.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, admin_environment, environment_permissions
+	"""  
+  updatePermissionToAccessGroup(environmentID: String!, permission_id: String!, access_group_id: String!): String!
+  
+    	"""
+	Attach User to Access Group.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, admin_environment, environment_permissions
+	"""  
+  updateUserToAccessGroup(environmentID: String!, user_id: String!, access_group_id: String!): String!
 }

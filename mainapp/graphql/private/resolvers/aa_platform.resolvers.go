@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/auth_permissions"
+	"dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -117,10 +117,14 @@ func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environm
 
 	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
 
+	if os.Getenv("debug") == "true" {
+		logging.PrintSecretsRedact("Permissions admin: ", admin, adminEnv)
+	}
+
 	e := []*models.Environment{}
 	if admin == "yes" || adminEnv == "yes" {
 
-		err := database.DBConn.Find(&e).Error
+		err := database.DBConn.Where("platform_id=?", platformID).Find(&e).Error
 
 		if err != nil {
 			if os.Getenv("debug") == "true" {
@@ -129,6 +133,26 @@ func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environm
 			return nil, errors.New("Retrive me database error.")
 		}
 	} else {
+
+		database.DBConn.Raw(
+			`select 
+			environment.id, 
+			environment.name, 
+			environment.platform_id
+			from 
+			environment inner join environment_user 
+			on environment.id = environment_user.environment_id
+			where 
+			environment.active=true and
+			environment_user.user_id=? and
+			environment.platform_id=?
+
+	`,
+			currentUser,
+			platformID,
+		).Scan(
+			&e,
+		)
 
 	}
 

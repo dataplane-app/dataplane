@@ -24,6 +24,13 @@ var UserData = map[string]*UserTestDataPerms{
 			{Resource: "platform_environment", Access: "write", Active: true},
 		},
 	},
+	"development_env_user": {
+		Username:      "user@development.com",
+		Password:      "development123!",
+		Environment:   "Development",
+		EnvironmentID: "",
+		Permissions:   []models.Permissions{},
+	},
 	"changeuserpassword": {
 		Username:      "changeuserpassword@email.com",
 		Password:      "changepassword123!",
