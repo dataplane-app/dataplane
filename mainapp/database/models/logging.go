@@ -11,12 +11,12 @@ func (LogsPlatform) TableName() string {
 }
 
 type LogsPlatform struct {
-	CreatedAt   time.Time `json:"created_at"`
-	Environment string    `json:"environment"`
-	Category    string    `json:"category"`
-	Log         string    `json:"log"`
-	LogType     string    `json:"log_type"` //info, error, debug
-	ErrorMsg    string    `json:"error_message"`
+	CreatedAt     time.Time `json:"created_at"`
+	EnvironmentID string    `json:"environment_id"`
+	Category      string    `json:"category"`
+	Log           string    `json:"log"`
+	LogType       string    `json:"log_type"` //info, error, debug
+	ErrorMsg      string    `json:"error_message"`
 }
 
 func (LogsWeb) IsEntity() {}
@@ -26,13 +26,13 @@ func (LogsWeb) TableName() string {
 }
 
 type LogsWeb struct {
-	CreatedAt   time.Time `json:"created_at"`
-	Environment string    `json:"environment"`
-	Category    string    `json:"category"`
-	Log         string    `json:"log"`
-	LogType     string    `json:"log_type"`   //info, error, debug
-	WebStatus   string    `json:"web_status"` //200, 500, 400
-	Latency     string    `json:"latency"`
-	Method      string    `json:"method"`
-	Path        string    `json:"path"`
+	CreatedAt     time.Time `json:"created_at"`
+	EnvironmentID string    `json:"environment_id"`
+	Category      string    `json:"category"`
+	Log           string    `json:"log"`
+	LogType       string    `json:"log_type"`   //info, error, debug
+	WebStatus     string    `json:"web_status"` //200, 500, 400
+	Latency       string    `json:"latency"`
+	Method        string    `json:"method"`
+	Path          string    `json:"path"`
 }

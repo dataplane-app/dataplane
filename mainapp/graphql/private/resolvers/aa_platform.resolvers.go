@@ -18,7 +18,6 @@ import (
 )
 
 func (r *mutationResolver) RenameEnvironment(ctx context.Context, input *privategraphql.RenameEnvironment) (*models.Environment, error) {
-
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -26,49 +25,26 @@ func (r *mutationResolver) RenameEnvironment(ctx context.Context, input *private
 		return nil, errors.New("Error - reserved environment name.")
 	}
 
-	// Permissions: admin_platform, platform_environment
-	c := make(chan permissions.CheckResult)
-	resourceTypes := []string{
-		"admin_platform",
-		"platform_environment",
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 	}
 
-	for _, resourceType := range resourceTypes {
-		// fmt.Println("key: ", k, " - ", url)
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
-		go permissions.PermissionAdminLevel(
-			"user",
-			currentUser,
-			resourceType,
-			platformID, "write", c)
-	}
-
-	// get the results back
-	outcomes := make([]permissions.CheckResult, len(resourceTypes))
-
-	permOuctome := "denied"
-	for i, _ := range outcomes {
-		outcomes[i] = <-c
-		// fmt.Println("key: ", i, " - ", outcomes[i])
-		if os.Getenv("debug") == "debug" {
-			logging.PrintSecretsRedact("Perms: ", outcomes[i].Perm.Subject, outcomes[i].Result)
-		}
-		if outcomes[i].Result == "grant" {
-			permOuctome = "grant"
-			break
-		}
-
-	}
-
-	if permOuctome == "denied" {
+	if permOutcome == "denied" {
 		return nil, errors.New("Requires permissions.")
 	}
+
+	// ----- Database actions
 
 	e := models.Environment{}
 
 	err := database.DBConn.Where("id = ?", input.ID).Updates(models.Environment{
-		ID:   input.ID,
-		Name: input.Name,
+		ID:         input.ID,
+		Name:       input.Name,
+		PlatformID: database.PlatformID,
 	}).First(&e).Error
 
 	if err != nil {
@@ -85,7 +61,6 @@ func (r *mutationResolver) RenameEnvironment(ctx context.Context, input *private
 }
 
 func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategraphql.AddEnvironmentInput) (*models.Environment, error) {
-
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -93,48 +68,23 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 		return nil, errors.New("Error - reserved environment name.")
 	}
 
-	// Permissions: admin_platform, platform_environment
-	c := make(chan permissions.CheckResult)
-	resourceTypes := []string{
-		"admin_platform",
-		"platform_environment",
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 	}
 
-	for _, resourceType := range resourceTypes {
-		// fmt.Println("key: ", k, " - ", url)
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
-		go permissions.PermissionAdminLevel(
-			"user",
-			currentUser,
-			resourceType,
-			platformID, "write", c)
-	}
-
-	// get the results back
-	outcomes := make([]permissions.CheckResult, len(resourceTypes))
-
-	permOuctome := "denied"
-	for i, _ := range outcomes {
-		outcomes[i] = <-c
-		// fmt.Println("key: ", i, " - ", outcomes[i])
-		if os.Getenv("debug") == "debug" {
-			logging.PrintSecretsRedact("Perms: ", outcomes[i].Perm.Subject, outcomes[i].Result)
-		}
-		if outcomes[i].Result == "grant" {
-			permOuctome = "grant"
-			break
-		}
-
-	}
-
-	if permOuctome == "denied" {
+	if permOutcome == "denied" {
 		return nil, errors.New("Requires permissions.")
 	}
 
 	e := models.Environment{
-		ID:     uuid.New().String(),
-		Name:   input.Name,
-		Active: true,
+		ID:         uuid.New().String(),
+		Name:       input.Name,
+		PlatformID: database.PlatformID,
+		Active:     true,
 	}
 
 	err := database.DBConn.Create(&e).Error
@@ -156,15 +106,30 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 }
 
 func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environment, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+	}
+
+	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
+
 	e := []*models.Environment{}
+	if admin == "yes" || adminEnv == "yes" {
 
-	err := database.DBConn.Find(&e).Error
+		err := database.DBConn.Find(&e).Error
 
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return nil, errors.New("Retrive me database error.")
 		}
-		return nil, errors.New("Retrive me database error.")
+	} else {
+
 	}
 
 	return e, nil

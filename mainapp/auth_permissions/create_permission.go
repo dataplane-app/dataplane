@@ -67,14 +67,14 @@ func CreatePermission(
 
 	// map data
 	response = models.Permissions{
-		ID:          uuid.NewString(),
-		Subject:     subject,
-		SubjectID:   subjectID,
-		Resource:    resource,
-		ResourceID:  resourceID,
-		Access:      access,
-		Environment: environment,
-		Active:      true,
+		ID:            uuid.NewString(),
+		Subject:       subject,
+		SubjectID:     subjectID,
+		Resource:      resource,
+		ResourceID:    resourceID,
+		Access:        access,
+		EnvironmentID: environment,
+		Active:        true,
 	}
 
 	// create permisssion

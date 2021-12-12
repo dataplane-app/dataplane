@@ -53,6 +53,7 @@ func Migrate() {
 		&models.LogsPlatform{},
 		&models.AuthRefreshTokens{},
 		&models.Environment{},
+		&models.EnvironmentUser{},
 		&models.Platform{},
 		&models.Preferences{},
 		&models.Permissions{},

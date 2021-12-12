@@ -26,7 +26,7 @@ func PlatformLogger(input models.LogsPlatform) bool {
 	err := database.DBConn.Create(&input).Error
 	if err != nil {
 		logging.PrintSecretsRedact(err)
-		logging.PrintSecretsRedact(input.LogType, input.Environment, input.Log)
+		logging.PrintSecretsRedact(input.LogType, input.EnvironmentID, input.Log)
 		return false
 	}
 	return true

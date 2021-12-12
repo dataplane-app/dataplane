@@ -7,6 +7,7 @@ require (
 	github.com/bxcodec/faker/v3 v3.6.0
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
+	github.com/go-playground/validator/v10 v10.9.0
 	github.com/gofiber/adaptor/v2 v2.1.15
 	github.com/gofiber/fiber/v2 v2.23.0
 	github.com/golang-jwt/jwt/v4 v4.2.0
@@ -35,7 +36,6 @@ require (
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/goccy/go-json v0.7.10 // indirect
 	github.com/gofiber/utils v0.1.2 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
@@ -52,7 +52,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
-	github.com/kr/pretty v0.3.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lestrrat-go/backoff/v2 v2.0.8 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.0 // indirect
@@ -66,7 +65,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect

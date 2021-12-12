@@ -18,10 +18,7 @@ go test -p 1 -v -count=1 -run TestChangePassword dataplane/Tests/users
 * Login
 * Change password
 */
-func TestChangePassword(t *testing.T) {
-
-	// // Delete platform for testing first time user
-	// database.DBConn.Where("1 = 1").Delete(&models.Platform{})
+func TestChangeUserPassword(t *testing.T) {
 
 	graphQLUrl := "http://localhost:9000/public/graphql"
 	graphQLUrlPrivate := "http://localhost:9000/private/graphql"
@@ -55,7 +52,9 @@ func TestChangePassword(t *testing.T) {
 	changePassword := `mutation {
 		updateChangePassword(
 			input: {
-				password: "Hello123!"
+				password: "Hello123!",
+				user_id: " ` + testutils.UserData["changeuserpassword"].Username + `",
+				environmentID: " ` + testutils.UserData["changeuserpassword"].EnvironmentID + ` "
 			}
 		)
 	}`

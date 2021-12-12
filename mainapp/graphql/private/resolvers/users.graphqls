@@ -15,11 +15,13 @@ input AddUsersInput {
 	job_title: String! 
 	password:  String!   
 	timezone:  String! 
-	environment: String!
+	environmentID: String!
 }
 
 input ChangePasswordInput {
 	password: String!    
+	environmentID: String!
+	user_id: String!
 }
 
 # Logout uses access token derived from the refresh token. This removes all refresh tokens belonging to that user on logout.
@@ -27,23 +29,35 @@ extend type Query{
 	logoutUser: String
 }
 
-extend type Mutation{
-  updateDeactivateUser(userid: String! ): String
-}
-
-extend type Mutation {
-  updateDeleteUser(userid: String!): String
-}
-
 extend type Mutation {
 	"""
 	Creating a user and attaching to an environment.
 	+ **Route**: Private
-	+ **Permission**: admin_platform, admin_environment (of env), 
+	+ **Permission**: admin_platform (write), admin_environment (of env)(write), environment_users (write)
 	"""
-  createUser(input: AddUsersInput): User
-}
-
-extend type Mutation {
-  updateChangePassword(input: ChangePasswordInput): String
+  	createUser(input: AddUsersInput): User
+	"""
+	Change password on behalf of user.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment (of env), environment_users
+	"""
+	updateChangePassword(input: ChangePasswordInput): String
+	"""
+	Deactivate user.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment (of env), environment_users
+	"""
+	updateDeactivateUser(userid: String!, environmentID: String!): String
+	"""
+	Delete user.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment (of env), environment_users
+	"""
+	updateDeleteUser(userid: String!, environmentID: String!): String
+	"""
+	Change my password.
+	+ **Route**: Private
+	+ **Permission**: logged in user
+	"""
+	updateChangeMyPassword(password: String!): String
 }

@@ -1,12 +1,12 @@
 package permissions
 
 type Checkstruct struct {
-	Access      string `json:"access"`
-	Subject     string `json:"subject"`
-	SubjectID   string `json:"subject_id"`
-	Environment string `json:"environment"`
-	Resource    string `json:"resource"`
-	ResourceID  string `json:"resource_id"`
+	Access        string `json:"access"`
+	Subject       string `json:"subject"`
+	SubjectID     string `json:"subject_id"`
+	EnvironmentID string `json:"environment_id"`
+	Resource      string `json:"resource"`
+	ResourceID    string `json:"resource_id"`
 }
 
 type CheckResult struct {

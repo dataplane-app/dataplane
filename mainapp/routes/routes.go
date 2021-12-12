@@ -36,16 +36,16 @@ func Setup() *fiber.App {
 	// ------- RUN MIGRATIONS ------
 	database.Migrate()
 	logme.PlatformLogger(models.LogsPlatform{
-		Environment: "d_platform",
-		Category:    "platform",
-		LogType:     "info", //can be error, info or debug
-		Log:         "🌟 Database connected",
+		EnvironmentID: "d_platform",
+		Category:      "platform",
+		LogType:       "info", //can be error, info or debug
+		Log:           "🌟 Database connected",
 	})
 	logme.PlatformLogger(models.LogsPlatform{
-		Environment: "d_platform",
-		Category:    "platform",
-		LogType:     "info", //can be error, info or debug
-		Log:         "📦 Database migrated",
+		EnvironmentID: "d_platform",
+		Category:      "platform",
+		LogType:       "info", //can be error, info or debug
+		Log:           "📦 Database migrated",
 	})
 
 	// ----- Load platformID ------

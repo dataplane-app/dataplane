@@ -27,7 +27,7 @@ services:
     command: tail -f /dev/null
     ports:
       - 9000:9000
-      - 3000:3000
+      # - 3000:3000
     volumes:
       - node_modules:/appdev/frontend/node_modules
       - ../:/appdev

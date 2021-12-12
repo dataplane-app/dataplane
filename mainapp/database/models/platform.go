@@ -2,21 +2,6 @@ package models
 
 import "time"
 
-func (Environment) IsEntity() {}
-
-func (Environment) TableName() string {
-	return "environment"
-}
-
-type Environment struct {
-	ID        string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"id"`
-	Name      string     `gorm:"index:idx_env_name,unique;" json:"name"`
-	Active    bool       `json:"active"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-}
-
 func (Platform) IsEntity() {}
 
 func (Platform) TableName() string {
@@ -31,4 +16,35 @@ type Platform struct {
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    *time.Time `json:"updated_at"`
 	DeletedAt    *time.Time `json:"deleted_at,omitempty"`
+}
+
+func (Environment) IsEntity() {}
+
+func (Environment) TableName() string {
+	return "environment"
+}
+
+type Environment struct {
+	ID         string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"id"`
+	Name       string     `gorm:"index:idx_env_name,unique;" json:"name"`
+	PlatformID string     `json:"platform_id"`
+	Active     bool       `json:"active"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  *time.Time `json:"updated_at"`
+	DeletedAt  *time.Time `json:"deleted_at,omitempty"`
+}
+
+func (EnvironmentUser) IsEntity() {}
+
+func (EnvironmentUser) TableName() string {
+	return "environment_user"
+}
+
+type EnvironmentUser struct {
+	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"environment_id"`
+	UserID        string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"user_id"`
+	Active        bool       `json:"active"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     *time.Time `json:"updated_at"`
+	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
 }

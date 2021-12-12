@@ -16,9 +16,8 @@ func PermissionAdminLevel(
 	resourceType string,
 	resourceID string,
 	acccess string,
+	environment string,
 	c chan CheckResult) (string, error) {
-
-	currentEnv := "d_platform"
 
 	//start := time.Now()
 	rid := Checkstruct{}
@@ -30,7 +29,8 @@ func PermissionAdminLevel(
 		subject,
 		subject_id,
 		resource,
-		resource_id
+		resource_id,
+		environment_id
 		from 
 		permissions p
 		where 
@@ -39,7 +39,7 @@ func PermissionAdminLevel(
 		p.resource = ? and
 		p.resource_id = ?
 		and p.access= ?
-		and p.environment = ?
+		and p.environment_id = ?
 		and p.active = true limit 1
 `,
 		subjectType,
@@ -47,7 +47,7 @@ func PermissionAdminLevel(
 		resourceType,
 		resourceID,
 		acccess,
-		currentEnv,
+		environment,
 	).Scan(
 		&rid,
 	)

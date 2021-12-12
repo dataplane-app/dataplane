@@ -23,11 +23,11 @@ func TestPlatformLoggerFunction(t *testing.T) {
 	logging.MapSecrets()
 	err := errors.New("Something is wrong - " + os.Getenv("secret_db_host"))
 	success := PlatformLogger(models.LogsPlatform{
-		Environment: "test_environment",
-		Category:    "test_category",
-		LogType:     "error", //can be error, info or debug
-		Log:         os.Getenv("secret_db_host") + " - Test log",
-		ErrorMsg:    err.Error(),
+		EnvironmentID: "test_environment",
+		Category:      "test_category",
+		LogType:       "error", //can be error, info or debug
+		Log:           os.Getenv("secret_db_host") + " - Test log",
+		ErrorMsg:      err.Error(),
 	})
 
 	assert.Equalf(t, true, success, "Platform log.")

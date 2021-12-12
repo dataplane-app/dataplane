@@ -57,10 +57,29 @@ type Permissions struct {
 	ResourceID string `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"resource_id" validate:"required"`
 
 	// Type of access - read or write
-	Access      string    `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"access" validate:"required"`
-	Active      bool      `json:"active" validate:"required"`
-	Environment string    `json:"environment"`
-	Test        string    `json:"test"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	Access        string    `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"access" validate:"required"`
+	Active        bool      `json:"active" validate:"required"`
+	EnvironmentID string    `json:"environment_id"`
+	Test          string    `json:"test"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+func (PermissionsAccessGroups) IsEntity() {}
+
+func (PermissionsAccessGroups) TableName() string {
+	return "permissions_access_groups"
+}
+
+type PermissionsAccessGroups struct {
+	ID string `gorm:"PRIMARY_KEY;type:varchar(64);" json:"id" validate:"required"`
+
+	// Who requires access - user, server, access_group
+	Name          string    `gorm:"index:idx_permissions,unique;type:varchar(255);" json:"name" validate:"required"`
+	SubjectID     string    `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"subject_id" validate:"required"`
+	Active        bool      `json:"active" validate:"required"`
+	EnvironmentID string    `json:"environment_id"`
+	Test          string    `json:"test"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }

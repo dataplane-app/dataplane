@@ -60,10 +60,10 @@ func GenerateAccessClaims(userID string, username string, usertype string) strin
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
 		logme.PlatformLogger(models.LogsPlatform{
-			Environment: "d_platform",
-			Category:    "platform",
-			LogType:     "error", //can be error, info or debug
-			Log:         err.Error(),
+			EnvironmentID: "d_platform",
+			Category:      "platform",
+			LogType:       "error", //can be error, info or debug
+			Log:           err.Error(),
 		})
 		panic(err)
 	}
@@ -97,10 +97,10 @@ func GenerateRefreshToken(userID string) string {
 	refreshTokenString, err := refreshToken.SignedString(jwtKey)
 	if err != nil {
 		logme.PlatformLogger(models.LogsPlatform{
-			Environment: "d_platform",
-			Category:    "platform",
-			LogType:     "error", //can be error, info or debug
-			Log:         err.Error(),
+			EnvironmentID: "d_platform",
+			Category:      "platform",
+			LogType:       "error", //can be error, info or debug
+			Log:           err.Error(),
 		})
 		panic(err)
 	}
@@ -114,10 +114,10 @@ func GenerateRefreshToken(userID string) string {
 
 	if err != nil {
 		logme.PlatformLogger(models.LogsPlatform{
-			Environment: "d_platform",
-			Category:    "platform",
-			LogType:     "error", //can be error, info or debug
-			Log:         err.Error(),
+			EnvironmentID: "d_platform",
+			Category:      "platform",
+			LogType:       "error", //can be error, info or debug
+			Log:           err.Error(),
 		})
 		panic(err)
 	}

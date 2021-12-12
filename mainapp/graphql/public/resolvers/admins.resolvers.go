@@ -109,11 +109,13 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	// Environments get added
 	environment := &[]models.Environment{
 		{ID: uuid.New().String(),
-			Name:   "Development",
-			Active: true}, {
-			ID:     uuid.New().String(),
-			Name:   "Production",
-			Active: true,
+			Name:       "Development",
+			PlatformID: database.PlatformID,
+			Active:     true}, {
+			ID:         uuid.New().String(),
+			Name:       "Production",
+			PlatformID: database.PlatformID,
+			Active:     true,
 		},
 	}
 

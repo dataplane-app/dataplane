@@ -113,7 +113,6 @@ func main() {
 	createUserResponse, httpResponse := testutils.GraphQLRequestPublic(createUser, "{}", graphQLUrl, t)
 
 	log.Println(string(createUserResponse), httpResponse.StatusCode)
-	// os.Exit(0)
 
 	if strings.Contains(string(createUserResponse), `"errors":`) {
 		log.Println(string(createUserResponse))
@@ -127,9 +126,29 @@ func main() {
 
 	testutils.TestPlatformID = jsoniter.Get(createUserResponse, "data", "setupPlatform", "Platform", "id").ToString()
 
+	// Get environments
+	Environments := []models.Environment{}
+	var EnvironmentsMap = make(map[string]string)
+
+	err := database.DBConn.Find(&Environments).Error
+	if err != nil {
+		panic("Failed to load environments")
+	}
+	for _, a := range Environments {
+		EnvironmentsMap[a.Name] = a.ID
+	}
+
+	// overall environment
+	testutils.TestEnvironmentID = EnvironmentsMap["Development"]
+
+	log.Println("Remove test permissions:")
+	// Remove tests permissions
+	database.DBConn.Where("test = 't'").Delete(&models.Permissions{})
+
 	// Create users
 	for i, v := range testutils.UserData {
 
+		log.Println("Create user:", v.Username)
 		password, _ := auth.Encrypt(v.Password)
 
 		userData := models.Users{
@@ -148,19 +167,35 @@ func main() {
 			t.Errorf("Failed to create permission users")
 		}
 
-		// Remove tests permissions
-		database.DBConn.Where("test = 't'").Delete(&models.Permissions{})
+		log.Println("Map environment:", v.Username)
+		environmendID := EnvironmentsMap[v.Environment]
+		// Map to environments
+		err = database.DBConn.Clauses(clause.OnConflict{
+			UpdateAll: true,
+		}).Create(&models.EnvironmentUser{
+			UserID:        userData.UserID,
+			EnvironmentID: environmendID,
+			Active:        true,
+		}).Error
+		if err != nil {
+			t.Errorf("Failed to map environments to user")
+		}
 
+		// Map back to user
+		testutils.UserData[i].EnvironmentID = environmendID
+		log.Println("After environment map: ", testutils.UserData[i])
+
+		log.Println("Create test permissions:", v.Username)
 		// Add in permissions
 		for n, x := range v.Permissions {
 
 			switch perms := x.Resource; perms {
 			case "admin_platform":
 				v.Permissions[n].ResourceID = testutils.TestPlatformID
-				v.Permissions[n].Environment = "d_platform"
+				v.Permissions[n].EnvironmentID = "d_platform"
 			case "platform_environment":
 				v.Permissions[n].ResourceID = testutils.TestPlatformID
-				v.Permissions[n].Environment = "d_platform"
+				v.Permissions[n].EnvironmentID = "d_platform"
 			default:
 
 			}
