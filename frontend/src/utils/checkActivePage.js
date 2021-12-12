@@ -3,7 +3,7 @@ const checkActivePage = (currentURL, menuItemToCheck) => {
         return 'active';
     }
 
-    // return menuItemToCheck !== "/" && currentURL.substring(1).includes(menuItemToCheck) ? 'active' : 'non-active'
+    return menuItemToCheck !== "/" && currentURL.includes(menuItemToCheck) ? 'active' : 'non-active'
     return currentURL === menuItemToCheck ? 'active' : 'non-active'
 }
 

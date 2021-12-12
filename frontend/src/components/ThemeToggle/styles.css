@@ -3,6 +3,30 @@ input:checked ~ .dot {
     background-color: transparent;
 }
 
+.toggle_block{
+    display: block;
+    border: 1px solid rgba(199, 195, 195, 1);
+    width: 94px;
+    height: 34px;
+    border-radius: 20px;
+}
+
+.toggle_dot{
+    position: absolute;
+    left: .25rem;
+    top: .25rem;
+    border: 1px solid rgba(199, 195, 195, 1);
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
 .toggleText{
     position: absolute;
     top: 50%;
@@ -12,4 +36,16 @@ input:checked ~ .dot {
 
 .textDark{
     transform: translate(-50%, -50%);
+}
+
+.inputSr{
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
 }

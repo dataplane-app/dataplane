@@ -1,3 +1,4 @@
+import { Box, Container ,Grid, Typography, Chip, Avatar, IconButton, Button } from '@mui/material';
 import { useState } from "react";
 import DataplaneDetail from "../assets/images/detail.png";
 import GetStartedForm from "../components/GetStartedForm";
@@ -7,35 +8,29 @@ const GetStarted = () => {
     const [isNext, setIsNext] = useState(false);
 
     return (
-        <div className="get-started h-screen overflow-x-hidden dark:bg-darkPrimary">
-            <div className="relative top-0 left-0 right-0 border-b border-gray dark:border-darkNav w-full dark:bg-darkSecondary">
-                <h1 className="text-orange font-bold text-title py-6 ml-3">
-                    Dataplane
-                </h1>
-            </div>
+        <Box className="get-started" height="100vh" sx={{ overflowX: "hidden" }}>
+            <Box position="relative" width="100%" sx={{ top: 0, left: 0, right: 0, border: 1, borderColor: "divider" }}>
+                <Typography component="h1" variant="h1" color="primary" fontWeight={900} style={{ padding: "1.5rem 0 1.5rem .75rem" }}>Dataplane</Typography>
+            </Box>
 
-            <div className="container mt-24 mb-28">
-                <div className="w-full flex items-start justify-center">
-                    <div className="flex flex-col items-center lg:flex-row lg:items-start justify-center lg:justify-between">
-                        <div className="flex-1">
-                            <h2 className="font-bold text-3xl dark:text-white">
-                                First time setup
-                            </h2>
+            <Container sx={{ mt: 4, mb: 6 }}>
+                <Grid container alignItems="flex-start" justifyContent="center">
+                    <Grid item>
+                        <Typography component="h2" fontWeight="700" fontSize="1.93rem" color="text.primary">First time setup</Typography>
 
-                            {isNext ? <SetupLoader /> : <GetStartedForm setIsNext={setIsNext} />}
-                        </div>
+                        {isNext ? <SetupLoader /> : <GetStartedForm setIsNext={setIsNext} />}
+                    </Grid>
 
-                        <div className="flex-2">
-                            <img
-                                src={DataplaneDetail}
-                                alt="DataPlane"
-                                className="ml-4 md:ml-12 hidden transform scale-110 lg:block"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    <Grid item>
+                        <img
+                            src={DataplaneDetail}
+                            alt="DataPlane"
+                            className="ml-4 md:ml-12 hidden transform scale-110 lg:block"
+                        /> 
+                    </Grid>
+                </Grid>
+            </Container>
+        </Box>
     );
 };
 
