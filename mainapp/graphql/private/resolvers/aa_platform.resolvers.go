@@ -17,49 +17,6 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *mutationResolver) RenameEnvironment(ctx context.Context, input *privategraphql.RenameEnvironment) (*models.Environment, error) {
-	currentUser := ctx.Value("currentUser").(string)
-	platformID := ctx.Value("platformID").(string)
-
-	if input.Name == "d_platform" {
-		return nil, errors.New("Error - reserved environment name.")
-	}
-
-	// ----- Permissions
-	perms := []models.Permissions{
-		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-	}
-
-	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
-
-	if permOutcome == "denied" {
-		return nil, errors.New("Requires permissions.")
-	}
-
-	// ----- Database actions
-
-	e := models.Environment{}
-
-	err := database.DBConn.Where("id = ?", input.ID).Updates(models.Environment{
-		ID:         input.ID,
-		Name:       input.Name,
-		PlatformID: database.PlatformID,
-	}).First(&e).Error
-
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return nil, errors.New("Rename environment database error.")
-	}
-
-	return &models.Environment{
-		ID:   e.ID,
-		Name: e.Name,
-	}, nil
-}
-
 func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategraphql.AddEnvironmentInput) (*models.Environment, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -97,6 +54,49 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 			return nil, errors.New("Environment already exists.")
 		}
 		return nil, errors.New("AddEnvironment database error.")
+	}
+
+	return &models.Environment{
+		ID:   e.ID,
+		Name: e.Name,
+	}, nil
+}
+
+func (r *mutationResolver) RenameEnvironment(ctx context.Context, input *privategraphql.RenameEnvironment) (*models.Environment, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	if input.Name == "d_platform" {
+		return nil, errors.New("Error - reserved environment name.")
+	}
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	// ----- Database actions
+
+	e := models.Environment{}
+
+	err := database.DBConn.Where("id = ?", input.ID).Updates(models.Environment{
+		ID:         input.ID,
+		Name:       input.Name,
+		PlatformID: database.PlatformID,
+	}).First(&e).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Rename environment database error.")
 	}
 
 	return &models.Environment{

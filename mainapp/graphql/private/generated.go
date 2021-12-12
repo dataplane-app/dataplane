@@ -64,6 +64,7 @@ type ComplexityRoot struct {
 		UpdateDeleteUser              func(childComplexity int, userid string, environmentID string) int
 		UpdateMe                      func(childComplexity int, input *AddUpdateMeInput) int
 		UpdatePermissionToAccessGroup func(childComplexity int, environmentID string, resource string, resourceID string, access string, accessGroupID string) int
+		UpdatePermissionToUser        func(childComplexity int, environmentID string, resource string, resourceID string, access string, userID string) int
 		UpdatePreferences             func(childComplexity int, input *AddPreferencesInput) int
 		UpdateUserToAccessGroup       func(childComplexity int, environmentID string, userID string, accessGroupID string) int
 	}
@@ -104,11 +105,12 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	RenameEnvironment(ctx context.Context, input *RenameEnvironment) (*models.Environment, error)
 	AddEnvironment(ctx context.Context, input *AddEnvironmentInput) (*models.Environment, error)
+	RenameEnvironment(ctx context.Context, input *RenameEnvironment) (*models.Environment, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	CreateAccessGroup(ctx context.Context, environmentID string, name string) (string, error)
 	UpdatePermissionToAccessGroup(ctx context.Context, environmentID string, resource string, resourceID string, access string, accessGroupID string) (string, error)
+	UpdatePermissionToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string) (string, error)
 	UpdateUserToAccessGroup(ctx context.Context, environmentID string, userID string, accessGroupID string) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	CreateUser(ctx context.Context, input *AddUsersInput) (*models.Users, error)
@@ -297,6 +299,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdatePermissionToAccessGroup(childComplexity, args["environmentID"].(string), args["resource"].(string), args["resourceID"].(string), args["access"].(string), args["access_group_id"].(string)), true
+
+	case "Mutation.updatePermissionToUser":
+		if e.complexity.Mutation.UpdatePermissionToUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updatePermissionToUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdatePermissionToUser(childComplexity, args["environmentID"].(string), args["resource"].(string), args["resourceID"].(string), args["access"].(string), args["user_id"].(string)), true
 
 	case "Mutation.updatePreferences":
 		if e.complexity.Mutation.UpdatePreferences == nil {
@@ -534,21 +548,19 @@ input RenameEnvironment{
 	name: String!
 }
 
-type Query {
-    getEnvironments: [Environments]
-}
+
 
 input AddEnvironmentInput {
 	name: String!    
 }
 
-extend type Mutation {
+type Query {
 	"""
-	Rename the environment.
+	Get environments
 	+ **Route**: Private
-	+ **Permissions**: admin_platform, platform_environment
+	+ **Permissions**: linked to environment_user table
 	"""  
-  renameEnvironment(input: RenameEnvironment): Environments
+    getEnvironments: [Environments]
 }
 
 extend type Mutation {
@@ -558,6 +570,12 @@ extend type Mutation {
 	+ **Permissions**: admin_platform, platform_environment
 	"""  
   addEnvironment(input: AddEnvironmentInput): Environments
+	"""
+	Rename the environment.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, platform_environment
+	"""  
+  renameEnvironment(input: RenameEnvironment): Environments
 }`, BuiltIn: false},
 	{Name: "resolvers/me.graphqls", Input: `input AddUpdateMeInput {
 	first_name: String!    
@@ -615,6 +633,13 @@ extend type Mutation {
 	"""  
   updatePermissionToAccessGroup(environmentID: String!, resource: String!, resourceID: String!, access: String!, access_group_id: String!): String!
   
+    	"""
+	Attach User to Permission.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, admin_environment, environment_permissions
+	"""  
+  updatePermissionToUser(environmentID: String!, resource: String!, resourceID: String!, access: String!, user_id: String!): String!
+
     	"""
 	Attach User to Access Group.
 	+ **Route**: Private
@@ -696,6 +721,11 @@ input ChangePasswordInput {
 
 # Logout uses access token derived from the refresh token. This removes all refresh tokens belonging to that user on logout.
 extend type Query{
+	"""
+	Logout current user.
+	+ **Route**: Private
+	+ **Permission**: based on user ID
+	"""
 	logoutUser: String
 }
 
@@ -955,6 +985,57 @@ func (ec *executionContext) field_Mutation_updatePermissionToAccessGroup_args(ct
 		}
 	}
 	args["access_group_id"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updatePermissionToUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["resource"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resource"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["resource"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["resourceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["resourceID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["access"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("access"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["access"] = arg3
+	var arg4 string
+	if tmp, ok := rawArgs["user_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user_id"))
+		arg4, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["user_id"] = arg4
 	return args, nil
 }
 
@@ -1249,45 +1330,6 @@ func (ec *executionContext) _Environments_name(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_renameEnvironment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_renameEnvironment_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RenameEnvironment(rctx, args["input"].(*RenameEnvironment))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*models.Environment)
-	fc.Result = res
-	return ec.marshalOEnvironments2ᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Mutation_addEnvironment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1314,6 +1356,45 @@ func (ec *executionContext) _Mutation_addEnvironment(ctx context.Context, field 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().AddEnvironment(rctx, args["input"].(*AddEnvironmentInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Environment)
+	fc.Result = res
+	return ec.marshalOEnvironments2ᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_renameEnvironment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_renameEnvironment_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RenameEnvironment(rctx, args["input"].(*RenameEnvironment))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1434,6 +1515,48 @@ func (ec *executionContext) _Mutation_updatePermissionToAccessGroup(ctx context.
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().UpdatePermissionToAccessGroup(rctx, args["environmentID"].(string), args["resource"].(string), args["resourceID"].(string), args["access"].(string), args["access_group_id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updatePermissionToUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updatePermissionToUser_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdatePermissionToUser(rctx, args["environmentID"].(string), args["resource"].(string), args["resourceID"].(string), args["access"].(string), args["user_id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3909,10 +4032,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "renameEnvironment":
-			out.Values[i] = ec._Mutation_renameEnvironment(ctx, field)
 		case "addEnvironment":
 			out.Values[i] = ec._Mutation_addEnvironment(ctx, field)
+		case "renameEnvironment":
+			out.Values[i] = ec._Mutation_renameEnvironment(ctx, field)
 		case "updateMe":
 			out.Values[i] = ec._Mutation_updateMe(ctx, field)
 		case "createAccessGroup":
@@ -3922,6 +4045,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "updatePermissionToAccessGroup":
 			out.Values[i] = ec._Mutation_updatePermissionToAccessGroup(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updatePermissionToUser":
+			out.Values[i] = ec._Mutation_updatePermissionToUser(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

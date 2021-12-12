@@ -56,15 +56,37 @@ func TestAccessGroups(t *testing.T) {
 	if testutils.TestEnvironmentID == "" {
 		envID = "test-environment-id"
 	}
-	// -------- Create Access Group  -------------
+	// -------- Grant permissions to user  -------------
+
 	mutation := `mutation {
+		updatePermissionToUser(
+					environmentID: "` + envID + `",
+					resource: "specific_worker",
+					resourceID: "test-` + uuid.NewString() + ` ",
+					user_id: "` + uuid.NewString() + ` ",
+					access: "write",
+				)
+			}`
+
+	response, httpResponse := testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+
+	// -------- Create Access Group  -------------
+	mutation = `mutation {
 		createAccessGroup(
 			environmentID: "` + envID + `",
 			name: " access-group-` + uuid.NewString() + ` ",
 		)
 	}`
 
-	response, httpResponse := testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 	accessgroup := jsoniter.Get(response, "data", "createAccessGroup").ToString()
 
 	log.Println(string(response))
