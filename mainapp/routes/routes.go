@@ -48,6 +48,12 @@ func Setup() *fiber.App {
 		Log:         "📦 Database migrated",
 	})
 
+	// ----- Load platformID ------
+	u := models.Platform{}
+	database.DBConn.First(&u)
+	database.PlatformID = u.ID
+	log.Println("🎯 Platform ID: ", database.PlatformID)
+
 	// ----- Remove stale tokens ------
 	log.Println("💾 Removing stale data")
 	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expires < ?", time.Now())

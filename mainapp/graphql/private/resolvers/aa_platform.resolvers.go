@@ -5,6 +5,7 @@ package privateresolvers
 
 import (
 	"context"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -17,6 +18,52 @@ import (
 )
 
 func (r *mutationResolver) RenameEnvironment(ctx context.Context, input *privategraphql.RenameEnvironment) (*models.Environment, error) {
+
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	if input.Name == "d_platform" {
+		return nil, errors.New("Error - reserved environment name.")
+	}
+
+	// Permissions: admin_platform, platform_environment
+	c := make(chan permissions.CheckResult)
+	resourceTypes := []string{
+		"admin_platform",
+		"platform_environment",
+	}
+
+	for _, resourceType := range resourceTypes {
+		// fmt.Println("key: ", k, " - ", url)
+
+		go permissions.PermissionAdminLevel(
+			"user",
+			currentUser,
+			resourceType,
+			platformID, "write", c)
+	}
+
+	// get the results back
+	outcomes := make([]permissions.CheckResult, len(resourceTypes))
+
+	permOuctome := "denied"
+	for i, _ := range outcomes {
+		outcomes[i] = <-c
+		// fmt.Println("key: ", i, " - ", outcomes[i])
+		if os.Getenv("debug") == "debug" {
+			logging.PrintSecretsRedact("Perms: ", outcomes[i].Perm.Subject, outcomes[i].Result)
+		}
+		if outcomes[i].Result == "grant" {
+			permOuctome = "grant"
+			break
+		}
+
+	}
+
+	if permOuctome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
 	e := models.Environment{}
 
 	err := database.DBConn.Where("id = ?", input.ID).Updates(models.Environment{
@@ -38,6 +85,52 @@ func (r *mutationResolver) RenameEnvironment(ctx context.Context, input *private
 }
 
 func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategraphql.AddEnvironmentInput) (*models.Environment, error) {
+
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	if input.Name == "d_platform" {
+		return nil, errors.New("Error - reserved environment name.")
+	}
+
+	// Permissions: admin_platform, platform_environment
+	c := make(chan permissions.CheckResult)
+	resourceTypes := []string{
+		"admin_platform",
+		"platform_environment",
+	}
+
+	for _, resourceType := range resourceTypes {
+		// fmt.Println("key: ", k, " - ", url)
+
+		go permissions.PermissionAdminLevel(
+			"user",
+			currentUser,
+			resourceType,
+			platformID, "write", c)
+	}
+
+	// get the results back
+	outcomes := make([]permissions.CheckResult, len(resourceTypes))
+
+	permOuctome := "denied"
+	for i, _ := range outcomes {
+		outcomes[i] = <-c
+		// fmt.Println("key: ", i, " - ", outcomes[i])
+		if os.Getenv("debug") == "debug" {
+			logging.PrintSecretsRedact("Perms: ", outcomes[i].Perm.Subject, outcomes[i].Result)
+		}
+		if outcomes[i].Result == "grant" {
+			permOuctome = "grant"
+			break
+		}
+
+	}
+
+	if permOuctome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
 	e := models.Environment{
 		ID:     uuid.New().String(),
 		Name:   input.Name,

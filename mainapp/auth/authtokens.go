@@ -24,18 +24,19 @@ type Claims struct {
 	AuthenticationType string `json:"authenticationType"`
 	PreferredUsername  string `json:"preferred_username"`
 	UserType           string `json:"user_type"` //admin or user
+	PlatformID         string `json:"platform_id"`
 }
 
 // GenerateTokens returns the access and refresh tokens
-func GenerateTokens(userID string, username string, usertype string, businessID string) (string, string) {
-	accessToken := GenerateAccessClaims(userID, username, usertype, businessID)
-	refreshToken := GenerateRefreshToken(userID, businessID)
+func GenerateTokens(userID string, username string, usertype string) (string, string) {
+	accessToken := GenerateAccessClaims(userID, username, usertype)
+	refreshToken := GenerateRefreshToken(userID)
 
 	return accessToken, refreshToken
 }
 
 // GenerateAccessClaims returns a claim and a acess_token string
-func GenerateAccessClaims(userID string, username string, usertype string, businessID string) string {
+func GenerateAccessClaims(userID string, username string, usertype string) string {
 
 	t := time.Now()
 
@@ -47,11 +48,12 @@ func GenerateAccessClaims(userID string, username string, usertype string, busin
 			Issuer:    "dataplane.app",
 			Subject:   userID,
 			ID:        uuid2.New().String(),
-			Audience:  []string{businessID}, //business
+			Audience:  []string{"dataplane"}, //business
 		},
 		AuthenticationType: "PASSWORD",
 		PreferredUsername:  username,
 		UserType:           usertype, //admin or user
+		PlatformID:         database.PlatformID,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
@@ -70,7 +72,7 @@ func GenerateAccessClaims(userID string, username string, usertype string, busin
 }
 
 // GenerateRefreshClaims returns refresh_token
-func GenerateRefreshToken(userID string, businessID string) string {
+func GenerateRefreshToken(userID string) string {
 
 	// remove stale refresh tokens
 	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expires < ? and user_id =?", time.Now(), userID)
@@ -86,7 +88,7 @@ func GenerateRefreshToken(userID string, businessID string) string {
 			Issuer:    "dataplane.app",
 			Subject:   userID,
 			ID:        uuid2.New().String(),
-			Audience:  []string{businessID}, //business
+			Audience:  []string{"dataplane"}, //business
 		},
 	}
 
@@ -152,7 +154,7 @@ func RenewAccessToken(refreshToken string) (string, error) {
 		return "", err
 	}
 
-	accessToken := GenerateAccessClaims(user.UserID, user.Username, user.UserType, "businessid")
+	accessToken := GenerateAccessClaims(user.UserID, user.Username, user.UserType)
 
 	return accessToken, nil
 }
@@ -185,5 +187,6 @@ func ValidateAccessToken(accessToken string) (bool, *Claims) {
 		AuthenticationType: customclaims["authenticationType"].(string),
 		PreferredUsername:  customclaims["preferred_username"].(string),
 		UserType:           customclaims["user_type"].(string), //admin or user
+		PlatformID:         customclaims["platform_id"].(string),
 	}
 }

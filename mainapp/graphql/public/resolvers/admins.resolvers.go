@@ -76,6 +76,8 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 		return nil, errors.New("Register database error.")
 	}
 
+	database.PlatformID = platformData.ID
+
 	// Admin information gets sent to DB
 	err = database.DBConn.Create(&userData).Error
 
@@ -96,7 +98,7 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 		"admin_platform",
 		platformData.ID,
 		"write",
-		"d_platdform",
+		"d_platform",
 		true,
 	)
 	if err != nil {
@@ -141,7 +143,7 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	}
 
 	// pass back authentication
-	accessToken, refreshToken := auth.GenerateTokens(userData.UserID, userData.Username, userData.UserType, "businessID")
+	accessToken, refreshToken := auth.GenerateTokens(userData.UserID, userData.Username, userData.UserType)
 
 	return &publicgraphql.Admin{
 		platformData,
