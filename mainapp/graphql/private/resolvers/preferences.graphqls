@@ -1,0 +1,39 @@
+input AddPreferencesInput {
+  preference: String!
+  value: String!
+}
+
+type Preferences {
+  preference: String!
+  value: String!
+}
+
+# getAllPreferences uses userID derived from the access token.
+extend type Query{
+    """
+    Retrieves current user's all preferences.
+    + **Route**: Private
+    + **Permission**: based on user ID
+    """
+	getAllPreferences: [Preferences]
+}
+
+# getOnePreference uses userID derived from the access token.
+extend type Query{
+    """
+    Retrieves current user's queried preference.
+    + **Route**: Private
+    + **Permission**: based on user ID
+    """
+	getOnePreference(preference: String!): Preferences
+}
+
+# updatePreferences uses userID derived from the access token.
+extend type Mutation {
+    """
+    Upserts current user's preference with provided input.
+    + **Route**: Private
+    + **Permission**: based on user ID
+    """
+  updatePreferences(input: AddPreferencesInput): String
+}
