@@ -10,7 +10,7 @@ type permOutcome struct {
 /*
 No need to check permissions if creating an org - permissions are specific to org and down
 */
-func PermissionAdminLevel(
+func PermissionSingleCheck(
 	subjectType string,
 	subjectID string,
 	resourceType string,
@@ -24,13 +24,14 @@ func PermissionAdminLevel(
 	permresult := "denied"
 
 	result := database.DBConn.Raw(
-		`select 
-		access,
-		subject,
-		subject_id,
-		resource,
-		resource_id,
-		environment_id
+		`
+		(select 
+		p.access,
+		p.subject,
+		p.subject_id,
+		p.resource,
+		p.resource_id,
+		p.environment_id
 		from 
 		permissions p
 		where 
@@ -40,10 +41,38 @@ func PermissionAdminLevel(
 		p.resource_id = ?
 		and p.access= ?
 		and p.environment_id = ?
-		and p.active = true limit 1
+		and p.active = true
+		)
+		union
+		(
+		select
+		p.access,
+		p.subject,
+		p.subject_id,
+		p.resource,
+		p.resource_id,
+		p.environment_id
+		from 
+		permissions p, permissions_accessg_users agu
+		where 
+		p.subject = 'access_group' and 
+		p.subject_id = agu.user_id and
+		p.resource = ? and
+		p.resource_id = ?
+		and p.access= ?
+		and p.environment_id = ?
+		and p.active = true
+		)
 `,
+		//direct
 		subjectType,
 		subjectID,
+		resourceType,
+		resourceID,
+		acccess,
+		environment,
+
+		// access group
 		resourceType,
 		resourceID,
 		acccess,

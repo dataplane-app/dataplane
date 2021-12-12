@@ -58,7 +58,6 @@ func Migrate() {
 		&models.Preferences{},
 		&models.Permissions{},
 		&models.PermissionsAccessGroups{},
-		&models.PermissionsAccessGPerms{},
 		&models.PermissionsAccessGUsers{},
 	)
 	if err1 != nil {

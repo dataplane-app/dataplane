@@ -50,7 +50,7 @@ func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID 
 	return e.AccessGroupID, nil
 }
 
-func (r *mutationResolver) UpdatePermissionToAccessGroup(ctx context.Context, environmentID string, permissionID string, accessGroupID string) (string, error) {
+func (r *mutationResolver) UpdatePermissionToAccessGroup(ctx context.Context, environmentID string, resource string, resourceID string, access string, accessGroupID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -67,22 +67,24 @@ func (r *mutationResolver) UpdatePermissionToAccessGroup(ctx context.Context, en
 		return "", errors.New("Requires permissions.")
 	}
 
-	e := models.PermissionsAccessGPerms{
-		AccessGroupID: accessGroupID,
-		PermissionID:  permissionID,
-		EnvironmentID: environmentID,
-		Active:        true,
-	}
+	perm, err := permissions.CreatePermission(
+		"access_group",
+		accessGroupID,
+		resource,
+		resourceID,
+		access,
+		environmentID,
+		false,
+	)
 
-	err := database.DBConn.Create(&e).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return "", errors.New("Add access group database error.")
+		return "", errors.New("Add access group permission database error.")
 	}
 
-	return "success", nil
+	return perm.ID, nil
 }
 
 func (r *mutationResolver) UpdateUserToAccessGroup(ctx context.Context, environmentID string, userID string, accessGroupID string) (string, error) {

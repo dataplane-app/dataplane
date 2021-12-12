@@ -91,22 +91,6 @@ type PermissionsAccessGroups struct {
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
-// -------------- The mapping of access groups to permissions
-func (PermissionsAccessGPerms) IsEntity() {}
-
-func (PermissionsAccessGPerms) TableName() string {
-	return "permissions_accessg_perms"
-}
-
-type PermissionsAccessGPerms struct {
-	AccessGroupID string    `gorm:"PRIMARY_KEY;type:varchar(64);" json:"access_group_id" validate:"required"`
-	PermissionID  string    `gorm:"PRIMARY_KEY;type:varchar(64);" json:"permission_id" validate:"required"`
-	Active        bool      `json:"active" validate:"required"`
-	EnvironmentID string    `json:"environment_id"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-}
-
 // -------------- The mapping of access groups to users
 func (PermissionsAccessGUsers) IsEntity() {}
 

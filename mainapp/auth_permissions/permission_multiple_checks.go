@@ -15,7 +15,7 @@ func MultiplePermissionChecks(
 	for _, singlePerm := range multiPermissions {
 		// fmt.Println("key: ", k, " - ", url)
 
-		go PermissionAdminLevel(
+		go PermissionSingleCheck(
 			singlePerm.Subject,
 			singlePerm.SubjectID,
 			singlePerm.Resource,

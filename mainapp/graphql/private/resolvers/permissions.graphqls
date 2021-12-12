@@ -25,7 +25,7 @@ extend type Mutation {
 	+ **Route**: Private
 	+ **Permissions**: admin_platform, admin_environment, environment_permissions
 	"""  
-  updatePermissionToAccessGroup(environmentID: String!, permission_id: String!, access_group_id: String!): String!
+  updatePermissionToAccessGroup(environmentID: String!, resource: String!, resourceID: String!, access: String!, access_group_id: String!): String!
   
     	"""
 	Attach User to Access Group.
