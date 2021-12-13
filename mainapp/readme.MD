@@ -18,3 +18,9 @@ cd mainapp/graphql/private
 
 go run github.com/99designs/gqlgen generate
 ```
+
+# Front end notes
+Use node 14
+```
+npm install -g n
+```

@@ -12,6 +12,7 @@ import Pipelines from './pages/Pipelines';
 import TeamDetail from "./pages/TeamDetail";
 import TeamGroup from "./pages/TeamGroup";
 import Teams from './pages/Teams';
+import { UserAuth, PrivateRoute } from "./Auth/UserAuth";
 
 
 export const ColorModeContext = React.createContext({ toggleColorMode: () => {} });
@@ -33,6 +34,11 @@ function App() {
                 <ThemeProvider theme={theme}>
                     <Box className="app" backgroundColor="background.main" >
                         <BrowserRouter basename="/webapp">
+                        <UserAuth
+                            refreshTokenUrl={process.env.REACT_APP_refreshTokenUrl}
+                            loginUrl="/webapp/login"
+                            LogincallbackUrl={process.env.REACT_APP_LogincallbackUrl} //front end callback url
+                            logoutUrl={process.env.REACT_APP_logoutUrl}>
                             <Routes>
                                 <Route path="congratulations" element={<Congratulations />} />
                                 <Route path="get-started" element={<GetStarted />} />
@@ -44,6 +50,7 @@ function App() {
                                     <Route path="teams/access/:accessId" element={<TeamGroup />} />
                                 </Route>
                             </Routes>
+                            </UserAuth>
                         </BrowserRouter>
                     </Box>
                 </ThemeProvider>
