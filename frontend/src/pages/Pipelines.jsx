@@ -26,7 +26,7 @@ const Pipelines = () => {
 
                 <Grid item display="flex" alignItems="center" sx={{ alignSelf: "center", flex: 1 }}>
                     <Box flex={1.2} width="100%" flexGrow={1.2}>
-                        <Search placeholder="Find a pipeline" />
+                        <Search placeholder="Find a pipeline" width='100%'/>
                     </Box>
                     <TextField 
                         label="Last 48 hours"
