@@ -6,17 +6,6 @@ type AddEnvironmentInput struct {
 	Name string `json:"name"`
 }
 
-type AddPipelinesInput struct {
-	Name      string  `json:"name"`
-	Trigger   string  `json:"trigger"`
-	NextRun   *int    `json:"next_run"`
-	LastRun   *int    `json:"last_run"`
-	TotalRuns *int    `json:"total_runs"`
-	Status    *string `json:"status"`
-	IsOnline  *bool   `json:"is_online"`
-	MyDate    *int    `json:"my_date"`
-}
-
 type AddPreferencesInput struct {
 	Preference string `json:"preference"`
 	Value      string `json:"value"`
@@ -44,14 +33,7 @@ type ChangePasswordInput struct {
 }
 
 type Pipelines struct {
-	Name      string  `json:"name"`
-	Trigger   string  `json:"trigger"`
-	NextRun   *int    `json:"next_run"`
-	LastRun   *int    `json:"last_run"`
-	TotalRuns *int    `json:"total_runs"`
-	Status    *string `json:"status"`
-	IsOnline  *bool   `json:"is_online"`
-	MyDate    *int    `json:"my_date"`
+	Name string `json:"name"`
 }
 
 type Preferences struct {
