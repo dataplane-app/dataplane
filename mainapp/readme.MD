@@ -20,7 +20,9 @@ go run github.com/99designs/gqlgen generate
 ```
 
 # Front end notes
-Use node 14
+Use node 16 outside the container
 ```
 npm install -g n
+sudo n install 16.8.0
+n 16.8.0
 ```
