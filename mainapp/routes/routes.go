@@ -15,6 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	jsoniter "github.com/json-iterator/go"
@@ -75,6 +76,12 @@ func Setup() *fiber.App {
 		// Header:${header}
 		// Query:${query}
 	}
+
+	// CORS
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+	}))
 
 	// --------FRONTEND ----
 	app.Static("/webapp", "./frontbuild")
