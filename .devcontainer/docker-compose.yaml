@@ -1,5 +1,8 @@
 version: '3'
 
+volumes:
+  node_modules:
+
 services:
   postgres:
     image: timescale/timescaledb:2.5.1-pg14
@@ -24,8 +27,9 @@ services:
     command: tail -f /dev/null
     ports:
       - 9000:9000
-      - 3000:3000
+      # - 3000:3000
     volumes:
+      - node_modules:/appdev/frontend/node_modules
       - ../:/appdev
     environment:
       env: "local"

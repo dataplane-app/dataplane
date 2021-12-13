@@ -60,10 +60,11 @@ func TestDeactivateDeleteUser(t *testing.T) {
 				createUser(input: {
 				first_name: "` + testutils.TestUser + `",
 				last_name: "TestUserLastName",
-				email: "` + testutils.TestUser + `",
+				email: "` + faker.Email() + `",
 				job_title: "",
-				password: "` + testutils.AdminPassword + `",
+				password: "` + faker.Password() + `",
 				timezone: " ` + faker.Timezone() + ` ",
+				environmentID: " ` + testutils.TestEnvironmentID + ` "
 				}) {
 				user_id
 				first_name
@@ -87,7 +88,8 @@ func TestDeactivateDeleteUser(t *testing.T) {
 	// --------- Deactivate User --------------
 	deactivateUser := `mutation {
 		updateDeactivateUser(
-			userid: "` + testUserID + `"
+			userid: "` + testUserID + `",
+			environmentID: " ` + testutils.TestEnvironmentID + ` "
 		) 
 	}`
 
@@ -104,7 +106,8 @@ func TestDeactivateDeleteUser(t *testing.T) {
 	// --------- Delete User --------------
 	deleteUser := `mutation {
 			updateDeleteUser(
-				userid: "` + testUserID + `"
+				userid: "` + testUserID + `",
+				environmentID: " ` + testutils.TestEnvironmentID + ` "
 			) 
 		}`
 

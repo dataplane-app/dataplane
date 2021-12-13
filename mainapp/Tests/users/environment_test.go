@@ -29,8 +29,8 @@ func TestEnvironment(t *testing.T) {
 	graphQLUrl := "http://localhost:9000/public/graphql"
 	graphQLUrlPrivate := "http://localhost:9000/private/graphql"
 
-	testUser := testutils.AdminUser
-	testPassword := testutils.AdminPassword
+	testUser := testutils.UserData["environment"].Username
+	testPassword := testutils.UserData["environment"].Password
 
 	//--------- Login ------------
 

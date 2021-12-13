@@ -7,9 +7,6 @@ const createCustomTheme = (mode) => ({
         purple: {
             main: "#7B61FF",
             contrastText: "#7B61FF"
-        },
-        cyan: {
-            main: "rgba(101, 190, 255, 1)"
         }, 
         ...(mode === "light") ? 
         {
@@ -38,6 +35,9 @@ const createCustomTheme = (mode) => ({
                 primary: '#000',
                 secondary: "#222"
             },
+            cyan: {
+                main: "#0073C6"
+            },
         } : 
         {
             success: {
@@ -65,6 +65,9 @@ const createCustomTheme = (mode) => ({
                 primary: '#fff',
                 secondary: "#222"
             },
+            cyan: {
+                main: "rgba(101, 190, 255, 1)"
+            },
         },
     },
     breakpoints: {
@@ -78,6 +81,9 @@ const createCustomTheme = (mode) => ({
         }
     },
     typography: {
+        button: {
+            textTransform: 'none'
+        },
         fontFamily: [
             'Inter',
         ],
@@ -102,13 +108,19 @@ const createCustomTheme = (mode) => ({
     },
     components: {
         MuiInputLabel: {
-        styleOverrides: {
-          root: {
-            fontSize: 13,
-            color: mode === "light" ? "rgba(0, 0, 0, 0.42)" : "#fff",
-            top: 3
-          },
-        },
+            styleOverrides: {
+                root: {
+                    fontSize: 13,
+                    color: mode === "light" ? "rgba(0, 0, 0, 0.42)" : "#fff",
+                    top: 3
+                },
+                asterisk: {
+                    color: "#db3131",
+                    "&$error": {
+                      color: "#db3131"
+                    }
+                  }         
+            },
       },
     },
 })

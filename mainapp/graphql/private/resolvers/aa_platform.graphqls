@@ -8,18 +8,32 @@ input RenameEnvironment{
 	name: String!
 }
 
-type Query {
-    getEnvironments: [Environments]
-}
+
 
 input AddEnvironmentInput {
 	name: String!    
 }
 
-extend type Mutation {
-  renameEnvironment(input: RenameEnvironment): Environments
+type Query {
+	"""
+	Get environments
+	+ **Route**: Private
+	+ **Permissions**: linked to environment_user table
+	"""  
+    getEnvironments: [Environments]
 }
 
 extend type Mutation {
+	"""
+	Add a new environment.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, platform_environment
+	"""  
   addEnvironment(input: AddEnvironmentInput): Environments
+	"""
+	Rename the environment.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, platform_environment
+	"""  
+  renameEnvironment(input: RenameEnvironment): Environments
 }

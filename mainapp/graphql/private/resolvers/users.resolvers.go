@@ -6,6 +6,7 @@ package privateresolvers
 import (
 	"context"
 	"dataplane/auth"
+	"dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -14,13 +15,129 @@ import (
 	"os"
 	"strings"
 
+	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
-func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid string) (*string, error) {
-	currentUserID := ctx.Value("currentUser").(string)
+func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql.AddUsersInput) (*models.Users, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
 
-	if currentUserID == userid {
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: input.EnvironmentID, Access: "write", EnvironmentID: input.EnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_users", ResourceID: input.EnvironmentID, Access: "write", EnvironmentID: input.EnvironmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	password, err := auth.Encrypt(input.Password)
+
+	if err != nil {
+		return nil, errors.New("Password hash failed.")
+	}
+
+	userData := models.Users{
+		UserID:    uuid.New().String(),
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		Password:  password,
+		Email:     input.Email,
+		Status:    "active",
+		Active:    true,
+		Timezone:  input.Timezone,
+		Username:  input.Email,
+	}
+
+	/* Input validation */
+	validate := validator.New()
+	err = validate.Struct(userData)
+	if err != nil {
+		return nil, err
+	}
+
+	err = database.DBConn.Create(&userData).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		if strings.Contains(err.Error(), "duplicate key") {
+			return nil, errors.New("User already exists.")
+		}
+		return nil, errors.New("Register database error.")
+	}
+
+	return &models.Users{
+		UserID:    userData.UserID,
+		FirstName: userData.FirstName,
+		LastName:  userData.LastName,
+		Email:     userData.Email,
+		Timezone:  userData.Timezone,
+	}, nil
+}
+
+func (r *mutationResolver) UpdateChangePassword(ctx context.Context, input *privategraphql.ChangePasswordInput) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: input.EnvironmentID, Access: "write", EnvironmentID: input.EnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_users", ResourceID: input.EnvironmentID, Access: "write", EnvironmentID: input.EnvironmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	password, err := auth.Encrypt(input.Password)
+
+	if err != nil {
+		return nil, errors.New("Password hash failed.")
+	}
+
+	err = database.DBConn.Where("user_id = ?", input.UserID).Updates(models.Users{
+		Password: password,
+	}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("database error.")
+	}
+
+	response := "success"
+	return &response, nil
+}
+
+func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid string, environmentID string) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_users", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	if currentUser == userid {
 		return nil, errors.New("User to be deactivated cannot be the same as logged in user.")
 	}
 	t := models.AuthRefreshTokens{}
@@ -60,10 +177,24 @@ func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid stri
 	return &response, nil
 }
 
-func (r *mutationResolver) UpdateDeleteUser(ctx context.Context, userid string) (*string, error) {
-	currentUserID := ctx.Value("currentUser").(string)
+func (r *mutationResolver) UpdateDeleteUser(ctx context.Context, userid string, environmentID string) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
 
-	if currentUserID == userid {
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_users", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	if currentUser == userid {
 		return nil, errors.New("User to be deleted cannot be the same as logged in user.")
 	}
 	t := models.AuthRefreshTokens{}
@@ -87,64 +218,19 @@ func (r *mutationResolver) UpdateDeleteUser(ctx context.Context, userid string) 
 	return &response, nil
 }
 
-func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql.AddUsersInput) (*models.Users, error) {
-	// validate if the email, username and password are in correct format
-	// e := auth.ValidateRegister(input)
-	// if e.Err {
-	// 	finalJson, _ := json.Marshal(e)
-	// 	return nil, errors.New("validation failed" + string(finalJson))
-	// }
+func (r *mutationResolver) UpdateChangeMyPassword(ctx context.Context, password string) (*string, error) {
+	// Permission: logged in user
 
-	password, err := auth.Encrypt(input.Password)
-
-	if err != nil {
-		return nil, errors.New("Password hash failed.")
-	}
-
-	userData := models.Users{
-		UserID:    uuid.New().String(),
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
-		Password:  password,
-		Email:     input.Email,
-		Status:    "active",
-		Active:    true,
-		Timezone:  input.Timezone,
-		Username:  input.Email,
-	}
-
-	err = database.DBConn.Create(&userData).Error
-
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		if strings.Contains(err.Error(), "duplicate key") {
-			return nil, errors.New("User already exists.")
-		}
-		return nil, errors.New("Register database error.")
-	}
-
-	return &models.Users{
-		UserID:    userData.UserID,
-		FirstName: userData.FirstName,
-		LastName:  userData.LastName,
-		Email:     userData.Email,
-		Timezone:  userData.Timezone,
-	}, nil
-}
-
-func (r *mutationResolver) UpdateChangePassword(ctx context.Context, input *privategraphql.ChangePasswordInput) (*string, error) {
 	userID := ctx.Value("currentUser").(string)
 
-	password, err := auth.Encrypt(input.Password)
+	passwordhashed, err := auth.Encrypt(password)
 
 	if err != nil {
 		return nil, errors.New("Password hash failed.")
 	}
 
 	err = database.DBConn.Where("user_id = ?", userID).Updates(models.Users{
-		Password: password,
+		Password: passwordhashed,
 	}).Error
 
 	if err != nil {
@@ -159,6 +245,8 @@ func (r *mutationResolver) UpdateChangePassword(ctx context.Context, input *priv
 }
 
 func (r *queryResolver) LogoutUser(ctx context.Context) (*string, error) {
+	// Permission: logged in user
+
 	userID := ctx.Value("currentUser").(string)
 
 	u := models.AuthRefreshTokens{}

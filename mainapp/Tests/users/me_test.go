@@ -2,8 +2,6 @@ package usertests
 
 import (
 	"dataplane/Tests/testutils"
-	"dataplane/database"
-	"dataplane/database/models"
 	"log"
 	"net/http"
 	"strings"
@@ -22,9 +20,6 @@ go test -p 1 -v -count=1 -run TestMe dataplane/Tests/users
 * Update me data
 */
 func TestMe(t *testing.T) {
-
-	// Delete platform for testing first time user
-	database.DBConn.Where("1 = 1").Delete(&models.Platform{})
 
 	graphQLUrl := "http://localhost:9000/public/graphql"
 	graphQLUrlPrivate := "http://localhost:9000/private/graphql"

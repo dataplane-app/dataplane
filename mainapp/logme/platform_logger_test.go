@@ -4,6 +4,7 @@ import (
 	"dataplane/database"
 	"dataplane/database/models"
 	"dataplane/logging"
+	"errors"
 	"os"
 	"testing"
 
@@ -18,12 +19,15 @@ go test -timeout 30s -count=1 -v -run ^TestPlatformLoggerFunction$ dataplane/log
 func TestPlatformLoggerFunction(t *testing.T) {
 
 	database.DBConnect()
+	database.Migrate()
 	logging.MapSecrets()
+	err := errors.New("Something is wrong - " + os.Getenv("secret_db_host"))
 	success := PlatformLogger(models.LogsPlatform{
-		Environment: "test_environment",
-		Category:    "test_category",
-		LogType:     "error", //can be error, info or debug
-		Log:         os.Getenv("secret_db_host") + " - Test log",
+		EnvironmentID: "test_environment",
+		Category:      "test_category",
+		LogType:       "error", //can be error, info or debug
+		Log:           os.Getenv("secret_db_host") + " - Test log",
+		ErrorMsg:      err.Error(),
 	})
 
 	assert.Equalf(t, true, success, "Platform log.")

@@ -6,6 +6,7 @@ package publicresolvers
 import (
 	"context"
 	"dataplane/auth"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	publicgraphql "dataplane/graphql/public"
@@ -14,6 +15,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -54,6 +56,13 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 		Username:  input.AddUsersInput.Email,
 	}
 
+	/* Input validation */
+	validate := validator.New()
+	err = validate.Struct(userData)
+	if err != nil {
+		return nil, err
+	}
+
 	// Platform information gets sent to DB
 	err = database.DBConn.Create(&platformData).Error
 
@@ -66,6 +75,8 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 		}
 		return nil, errors.New("Register database error.")
 	}
+
+	database.PlatformID = platformData.ID
 
 	// Admin information gets sent to DB
 	err = database.DBConn.Create(&userData).Error
@@ -80,14 +91,31 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 		return nil, errors.New("Register database error.")
 	}
 
+	// Add permissions for admin
+	_, err = permissions.CreatePermission(
+		"user",
+		userData.UserID,
+		"admin_platform",
+		platformData.ID,
+		"write",
+		"d_platform",
+		true,
+	)
+	if err != nil {
+		logging.PrintSecretsRedact(err)
+		errors.New("Failed to create admin permissions.")
+	}
+
 	// Environments get added
 	environment := &[]models.Environment{
 		{ID: uuid.New().String(),
-			Name:   "Development",
-			Active: true}, {
-			ID:     uuid.New().String(),
-			Name:   "Production",
-			Active: true,
+			Name:       "Development",
+			PlatformID: database.PlatformID,
+			Active:     true}, {
+			ID:         uuid.New().String(),
+			Name:       "Production",
+			PlatformID: database.PlatformID,
+			Active:     true,
 		},
 	}
 
@@ -117,7 +145,7 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	}
 
 	// pass back authentication
-	accessToken, refreshToken := auth.GenerateTokens(userData.UserID, userData.Username, userData.UserType, "businessID")
+	accessToken, refreshToken := auth.GenerateTokens(userData.UserID, userData.Username, userData.UserType)
 
 	return &publicgraphql.Admin{
 		platformData,

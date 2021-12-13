@@ -2,6 +2,7 @@ package main
 
 import (
 	"dataplane/Tests/testutils"
+	"dataplane/auth"
 	"dataplane/database"
 	"dataplane/database/models"
 	"dataplane/routes"
@@ -13,6 +14,9 @@ import (
 	"testing"
 
 	"github.com/bxcodec/faker/v3"
+	"github.com/google/uuid"
+	jsoniter "github.com/json-iterator/go"
+	"gorm.io/gorm/clause"
 )
 
 /*
@@ -24,25 +28,11 @@ response: {"r": "OK", "msg": "Permission created", "count": 1}
 func MockingBird() string {
 
 	// create a listener with the desired port.
-	// log.Fatal()
 	testutils.App = routes.Setup()
 	err := testutils.App.Listen("0.0.0.0:9000")
-	// testutils.App.Listener()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// router.POST(route, ResponseMockVar(response, responsecode))
-	// ts := httptest.NewUnstartedServer(adaptor.FiberApp(testutils.App))
-
-	// NewUnstartedServer creates a listener. Close that listener and replace
-	// with the one we created.
-	// ts.Listener.Close()
-	// ts.Listener = l
-
-	// defer ts.Close()
-
-	// log.Println("Mockingbird server started:", domain, route)
 
 	return "hello"
 
@@ -122,7 +112,7 @@ func main() {
 
 	createUserResponse, httpResponse := testutils.GraphQLRequestPublic(createUser, "{}", graphQLUrl, t)
 
-	// log.Println(string(createUserResponse), httpResponse.StatusCode)
+	log.Println(string(createUserResponse), httpResponse.StatusCode)
 
 	if strings.Contains(string(createUserResponse), `"errors":`) {
 		log.Println(string(createUserResponse))
@@ -132,6 +122,97 @@ func main() {
 	if http.StatusOK != httpResponse.StatusCode {
 		log.Println("Error in graphql response", httpResponse.StatusCode, http.StatusOK)
 		panic("Error in graphql response")
+	}
+
+	testutils.TestPlatformID = jsoniter.Get(createUserResponse, "data", "setupPlatform", "Platform", "id").ToString()
+
+	// Get environments
+	Environments := []models.Environment{}
+	var EnvironmentsMap = make(map[string]string)
+
+	err := database.DBConn.Find(&Environments).Error
+	if err != nil {
+		panic("Failed to load environments")
+	}
+	for _, a := range Environments {
+		EnvironmentsMap[a.Name] = a.ID
+	}
+
+	// overall environment
+	testutils.TestEnvironmentID = EnvironmentsMap["Development"]
+
+	log.Println("Remove test permissions:")
+	// Remove tests permissions
+	database.DBConn.Where("test = 't'").Delete(&models.Permissions{})
+
+	// Create users
+	for i, v := range testutils.UserData {
+
+		log.Println("Create user:", v.Username)
+		password, _ := auth.Encrypt(v.Password)
+
+		userData := models.Users{
+			UserID:   i,
+			Password: password,
+			Email:    v.Username,
+			Status:   "active",
+			Active:   true,
+			Username: v.Username,
+		}
+
+		err := database.DBConn.Clauses(clause.OnConflict{
+			UpdateAll: true,
+		}).Create(&userData).Error
+		if err != nil {
+			t.Errorf("Failed to create permission users")
+		}
+
+		log.Println("Map environment:", v.Username)
+		environmendID := EnvironmentsMap[v.Environment]
+		// Map to environments
+		err = database.DBConn.Clauses(clause.OnConflict{
+			UpdateAll: true,
+		}).Create(&models.EnvironmentUser{
+			UserID:        userData.UserID,
+			EnvironmentID: environmendID,
+			Active:        true,
+		}).Error
+		if err != nil {
+			t.Errorf("Failed to map environments to user")
+		}
+
+		// Map back to user
+		testutils.UserData[i].EnvironmentID = environmendID
+		log.Println("After environment map: ", testutils.UserData[i])
+
+		log.Println("Create test permissions:", v.Username)
+		// Add in permissions
+		for n, x := range v.Permissions {
+
+			switch perms := x.Resource; perms {
+			case "admin_platform":
+				v.Permissions[n].ResourceID = testutils.TestPlatformID
+				v.Permissions[n].EnvironmentID = "d_platform"
+			case "platform_environment":
+				v.Permissions[n].ResourceID = testutils.TestPlatformID
+				v.Permissions[n].EnvironmentID = "d_platform"
+			default:
+
+			}
+
+			v.Permissions[n].ID = uuid.NewString()
+			v.Permissions[n].Active = true
+			v.Permissions[n].Subject = "user"
+			v.Permissions[n].SubjectID = i
+			v.Permissions[n].Test = "t"
+
+			err := database.DBConn.Create(&v.Permissions[n]).Error
+			if err != nil {
+				t.Errorf("Failed to create permission users")
+			}
+
+		}
+
 	}
 
 	// assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create user 200 status code")

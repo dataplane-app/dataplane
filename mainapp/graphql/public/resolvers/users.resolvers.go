@@ -28,7 +28,7 @@ func (r *queryResolver) LoginUser(ctx context.Context, username string, password
 		return nil, errors.New("Invalid credentials")
 	}
 
-	accessToken, refreshToken := auth.GenerateTokens(u.UserID, u.Username, u.UserType, "businessid")
+	accessToken, refreshToken := auth.GenerateTokens(u.UserID, u.Username, u.UserType)
 	// accessCookie, refreshCookie := auth.GetAuthCookies(accessToken, refreshToken)
 
 	return &publicgraphql.Authtoken{accessToken, refreshToken}, nil
