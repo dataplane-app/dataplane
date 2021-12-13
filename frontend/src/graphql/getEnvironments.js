@@ -1,6 +1,6 @@
 import { gql, GraphQLClient } from "graphql-request";
 
-const graphlqlEndpoint = "http://localhost:9000/private/graphql"
+const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE
 
 const GetEnvironments = gql`
     query getEnvironments(){

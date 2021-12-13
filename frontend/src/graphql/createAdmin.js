@@ -1,6 +1,6 @@
 import { gql, GraphQLClient } from "graphql-request";
 
-const graphlqlEndpoint = "http://localhost:9000/public/graphql"
+const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PUBLIC
 
 const CreateAdminUser = gql`
     mutation createAdminUser($platform: PlatformInput!, $users: AddUsersInput!){
