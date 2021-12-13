@@ -24,8 +24,10 @@ const LoginForm = ({ handleNext }) => {
 
     let response = await loginUser(allData);
 
-    // Navigate to main page on success
+    //On success,
+    //Store refresh_token to local storage and navigate to main page
     if (response){
+      localStorage.setItem("refresh_token", response.refresh_token);      
       navigate('/')
     }
   }

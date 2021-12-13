@@ -2,6 +2,7 @@ import "./styles.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
+import { useGetEnvironments } from '../../graphql/getEnvironments';
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Avatar from "@mui/material/Avatar";
@@ -16,6 +17,7 @@ import Tooltip from "@mui/material/Tooltip";
 const EnviromentDropdown = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [selectedEnviroment, setSelectedEnviroment] = React.useState(1);
+  const [environments, setEnvironments] = React.useState(null);
 
   const open = Boolean(anchorEl);
 
@@ -26,6 +28,19 @@ const EnviromentDropdown = () => {
     setAnchorEl(null);
   };
 
+  // Retrieve environments on load
+  const getEnvironments = useGetEnvironments();
+  React.useEffect(() => {
+    const fetchData = async () => {
+      let response = await getEnvironments();
+      console.log(response)
+      if (response){
+        setEnvironments(response)
+      }
+    }
+    fetchData()
+  }, []);
+  
   return (
     <>
       <Grid
