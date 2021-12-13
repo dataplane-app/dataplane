@@ -7,6 +7,7 @@ import createCustomTheme from "./theme";
 
 import Congratulations from "./pages/Congratulations";
 import GetStarted from "./pages/GetStarted";
+import LoginUser from "./pages/Login";
 import Pipelines from './pages/Pipelines';
 import TeamDetail from "./pages/TeamDetail";
 import TeamGroup from "./pages/TeamGroup";
@@ -35,6 +36,7 @@ function App() {
                             <Routes>
                                 <Route path="congratulations" element={<Congratulations />} />
                                 <Route path="get-started" element={<GetStarted />} />
+                                <Route path="login" element={<LoginUser />} />
                                 <Route path="/" element={<Layout />}>
                                     <Route index element={<Pipelines />}/>
                                     <Route path="teams" element={<Teams />} />

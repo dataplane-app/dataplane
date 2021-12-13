@@ -2,6 +2,7 @@ import "./styles.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
+import { useGetEnvironments } from '../../graphql/getEnvironments';
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Avatar from "@mui/material/Avatar";
@@ -15,7 +16,8 @@ import Tooltip from "@mui/material/Tooltip";
 
 const EnviromentDropdown = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [selectedEnviroment, setSelectedEnviroment] = React.useState(1);
+  const [selectedEnviroment, setSelectedEnviroment] = React.useState();
+  const [environments, setEnvironments] = React.useState(null);
 
   const open = Boolean(anchorEl);
 
@@ -26,6 +28,19 @@ const EnviromentDropdown = () => {
     setAnchorEl(null);
   };
 
+  // Retrieve environments on load
+  const getEnvironments = useGetEnvironments();
+  React.useEffect(() => {
+    const fetchData = async () => {
+      let response = await getEnvironments();
+      console.log(response)
+      if (response){
+        setEnvironments(response)
+      }
+    }
+    fetchData()
+  }, []);
+  
   return (
     <>
       <Grid
@@ -48,15 +63,16 @@ const EnviromentDropdown = () => {
           fontSize="1.5rem"
           fontWeight={700}
         >
-          {ENVIROMENT_LIST.filter(
+          {environments && selectedEnviroment ? environments.filter(
             (env) => env.id === selectedEnviroment
-          )[0].title[0].toUpperCase()}
+          )[0].name[0].toUpperCase() : ""}
+          {environments ? console.log(environments): null}
         </Box>
         <Box ml="1rem" mr="1rem">
           <Typography fontSize={16} fontWeight={700} color="text.primary">
             {
-              ENVIROMENT_LIST.filter((env) => env.id === selectedEnviroment)[0]
-                .title
+              environments && selectedEnviroment ? environments.filter((env) => env.id === selectedEnviroment)[0]
+                .name : null
             }
           </Typography>
           <Typography variant="subtitle1" color="text.primary" marginTop={-0.7}>
@@ -104,7 +120,7 @@ const EnviromentDropdown = () => {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        {ENVIROMENT_LIST.filter(
+        {environments ? environments.filter(
           (filterId) => filterId.id !== selectedEnviroment
         ).map((env) => (
           <MenuItem key={env.id} onClick={() => setSelectedEnviroment(env.id)}>
@@ -122,11 +138,11 @@ const EnviromentDropdown = () => {
               fontSize="1.5rem"
               fontWeight={700}
             >
-              {env.title[0].toUpperCase()}
+              {env.name[0].toUpperCase()}
             </Box>{" "}
             <Box ml="1rem" mr="1rem">
               <Typography fontSize={16} fontWeight={700} color="text.primary">
-                {env.title}
+                {env.name}
               </Typography>
               <Typography
                 variant="subtitle1"
@@ -137,21 +153,11 @@ const EnviromentDropdown = () => {
               </Typography>
             </Box>
           </MenuItem>
-        ))}
+        )) : null}
       </Menu>
     </>
   );
 };
 
-const ENVIROMENT_LIST = [
-  {
-    id: 1,
-    title: "Production",
-  },
-  {
-    id: 2,
-    title: "Local",
-  },
-];
 
 export default EnviromentDropdown;
