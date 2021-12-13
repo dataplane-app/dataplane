@@ -102,7 +102,7 @@ type ComplexityRoot struct {
 		LogoutUser           func(childComplexity int) int
 		Me                   func(childComplexity int) int
 		MyPermissions        func(childComplexity int) int
-		UserPermissions      func(childComplexity int, userID string) int
+		UserPermissions      func(childComplexity int, userID string, environmentID string) int
 	}
 
 	User struct {
@@ -143,7 +143,7 @@ type QueryResolver interface {
 	Me(ctx context.Context) (*models.Users, error)
 	AvailablePermissions(ctx context.Context) ([]*models.ResourceTypeStruct, error)
 	MyPermissions(ctx context.Context) ([]*models.Permissions, error)
-	UserPermissions(ctx context.Context, userID string) ([]*models.Permissions, error)
+	UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.Permissions, error)
 	GetPipelines(ctx context.Context) ([]*Pipelines, error)
 	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
 	GetOnePreference(ctx context.Context, preference string) (*Preferences, error)
@@ -548,7 +548,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.UserPermissions(childComplexity, args["userID"].(string)), true
+		return e.complexity.Query.UserPermissions(childComplexity, args["userID"].(string), args["environmentID"].(string)), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -771,7 +771,7 @@ extend type Query {
 	+ **Route**: Private
 	+ **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
 	"""  
-  userPermissions(userID: String!): [Permissions]
+  userPermissions(userID: String!, environmentID: String!): [Permissions]
 }
 
 extend type Mutation {
@@ -1396,6 +1396,15 @@ func (ec *executionContext) field_Query_userPermissions_args(ctx context.Context
 		}
 	}
 	args["userID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
 	return args, nil
 }
 
@@ -2795,7 +2804,7 @@ func (ec *executionContext) _Query_userPermissions(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().UserPermissions(rctx, args["userID"].(string))
+		return ec.resolvers.Query().UserPermissions(rctx, args["userID"].(string), args["environmentID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

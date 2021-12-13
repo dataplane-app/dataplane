@@ -57,6 +57,7 @@ func PermissionSingleCheck(
 		where 
 		p.subject = 'access_group' and 
 		p.subject_id = agu.user_id and
+		p.subject_id = ? and
 		p.resource = ? and
 		p.resource_id = ?
 		and p.access= ?
@@ -73,6 +74,7 @@ func PermissionSingleCheck(
 		environment,
 
 		// access group
+		subjectID,
 		resourceType,
 		resourceID,
 		acccess,

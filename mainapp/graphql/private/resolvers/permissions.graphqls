@@ -33,7 +33,7 @@ extend type Query {
 	+ **Route**: Private
 	+ **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
 	"""  
-  userPermissions(userID: String!): [Permissions]
+  userPermissions(userID: String!, environmentID: String!): [Permissions]
 }
 
 extend type Mutation {

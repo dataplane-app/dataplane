@@ -79,6 +79,54 @@ func TestPermissions(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
 
+	// -------- Get my permissions  -------------
+	query := `{
+		myPermissions{
+		ID
+		Subject
+		SubjectID
+		Resource
+		ResourceID
+		Access
+		Active
+		EnvironmentID
+		}
+	}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+
+	// -------- Get user permissions  -------------
+	query = `{
+		userPermissions(userID: "` + usertoaddperm + `", environmentID: "` + envID + `"){
+			ID
+			Subject
+			SubjectID
+			Resource
+			ResourceID
+			Access
+			Active
+			EnvironmentID
+			}
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+
 	// -------- Revoke permissions from user  -------------
 	mutation = `mutation {
 			deletePermissionToUser(

@@ -10,10 +10,10 @@ import (
 	"dataplane/database/models"
 	"dataplane/logging"
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID string, name string) (string, error) {
@@ -278,9 +278,125 @@ func (r *queryResolver) AvailablePermissions(ctx context.Context) ([]*models.Res
 }
 
 func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permissions, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser := ctx.Value("currentUser").(string)
+
+	var Permissions []*models.Permissions
+
+	err := database.DBConn.Raw(
+		`
+		(select 
+		p.id,
+		p.access,
+		p.subject,
+		p.subject_id,
+		p.resource,
+		p.resource_id,
+		p.environment_id
+		from 
+		permissions p
+		where 
+		p.subject = 'user' and 
+		p.subject_id = ? and
+		p.active = true
+		)
+		union
+		(
+		select
+		p.id,
+		p.access,
+		p.subject,
+		p.subject_id,
+		p.resource,
+		p.resource_id,
+		p.environment_id
+		from 
+		permissions p, permissions_accessg_users agu
+		where 
+		p.subject = 'access_group' and 
+		p.subject_id = agu.user_id and
+		p.subject_id = ? and
+		p.active = true
+		)
+`,
+		//direct
+		currentUser,
+		currentUser,
+	).Scan(
+		&Permissions,
+	).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Error retrieving permissions")
+	}
+
+	return Permissions, nil
 }
 
-func (r *queryResolver) UserPermissions(ctx context.Context, userID string) ([]*models.Permissions, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.Permissions, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_permissions", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_users", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_users", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	var Permissions []*models.Permissions
+
+	err := database.DBConn.Raw(
+		`
+		(select 
+		p.id,
+		p.access,
+		p.subject,
+		p.subject_id,
+		p.resource,
+		p.resource_id,
+		p.environment_id
+		from 
+		permissions p
+		where 
+		p.subject = 'user' and 
+		p.subject_id = ? and
+		p.active = true
+		)
+		union
+		(
+		select
+		p.id,
+		p.access,
+		p.subject,
+		p.subject_id,
+		p.resource,
+		p.resource_id,
+		p.environment_id
+		from 
+		permissions p, permissions_accessg_users agu
+		where 
+		p.subject = 'access_group' and 
+		p.subject_id = agu.user_id and
+		p.subject_id = ? and
+		p.active = true
+		)
+`,
+		//direct
+		userID,
+		userID,
+	).Scan(
+		&Permissions,
+	).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Error retrieving permissions")
+	}
+
+	return Permissions, nil
 }
