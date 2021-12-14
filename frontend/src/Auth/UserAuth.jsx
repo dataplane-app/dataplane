@@ -4,9 +4,10 @@ import IdleTimer from 'react-idle-timer'
 import { createState, useState as useHookState } from '@hookstate/core'
 import ConsoleLogHelper from '../Helper/logger'
 import axios from 'axios'
-import { Route, Routes, BrowserRouter, useLocation } from 'react-router-dom'
+import { Route, Routes, BrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { LoginCallback } from './LoginCallBack'
 import decode from 'jwt-decode'
+import Layout from '../components/Layout/Layout.component'
 
 // LOGIC silent replacement of tokens:
 /*
@@ -171,14 +172,10 @@ export const UserAuth = ({
         debounce={250}
         timeout={1000} //every 1 seconds
       />
-      <BrowserRouter>
+      <BrowserRouter basename="/webapp">
         <Routes>
-          <Route path={LogincallbackUrl} exact>
-            <LoginCallback Authstate={Authstate} />
-          </Route>
-          <Route>
-            {children}
-          </Route>
+          <Route path={LogincallbackUrl} exact element={<LoginCallback Authstate={Authstate} />}/>
+            <Route>{children}</Route>
         </Routes>
       </BrowserRouter>
     </React.Fragment>
@@ -214,13 +211,7 @@ const PrivateRouteChecker =({children}) => {
 // PrivateRoute just wraps the normal Route Component and ensure user is logged in if we gets to this route
 export const PrivateRoute = ({ children, ...rest }) => {
   return (
-    <Route
-      {...rest}
-    >
-      <PrivateRouteChecker>
-        {children}
-      </PrivateRouteChecker>
-    </Route>
+    <Route {...rest} element={<PrivateRouteChecker>{children}</PrivateRouteChecker>} />
   );
 }
 

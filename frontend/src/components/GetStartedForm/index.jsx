@@ -5,6 +5,7 @@ import ThemeToggle from "../ThemeToggle";
 import CustomSwitch from "../CustomSwitch"
 import { useForm } from "react-hook-form";
 import { useCreateAdmin } from "../../graphql/createAdmin";
+import PasswordField from "../PasswordField";
 
 const GetStartedForm = ({ handleNext }) => {
     const createAdmin = useCreateAdmin();
@@ -85,7 +86,7 @@ const GetStartedForm = ({ handleNext }) => {
                     sx={{ mb: 2, fontSize: ".75rem", display: "flex" }}
                     {...register("job_title", { required: true })}
                 />
-                <TextField
+                <PasswordField 
                     label="Password"
                     id="password"
                     type="password"
