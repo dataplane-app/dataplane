@@ -59,6 +59,7 @@ func Migrate() {
 		&models.Permissions{},
 		&models.PermissionsAccessGroups{},
 		&models.PermissionsAccessGUsers{},
+		&models.Pipelines{},
 	)
 	if err1 != nil {
 		panic(err1)

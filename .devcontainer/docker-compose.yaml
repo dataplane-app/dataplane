@@ -44,14 +44,15 @@ services:
       - ../:/appdev
     environment:
       env: "local"
+      dataplane_pipelines_folder: "/appdev/pipelines/"
       basepath: "/dataplane"
-      "secret_db_host": postgres
-      "secret_db_user": postgres
-      "secret_db_pwd": "Hello123!"
-      "secret_db_ssl": "disable"
-      "secret_db_port": "5432"
-      "secret_db_database": "dataplane"
-      "secret_jwt_secret": "117943e8-9d43-49ac-aa4d-9c64004c8992"
+      secret_db_host: postgres
+      secret_db_user: postgres
+      secret_db_pwd: "Hello123!"
+      secret_db_ssl: "disable"
+      secret_db_port: "5432"
+      secret_db_database: "dataplane"
+      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
       database: "timescaledb"
       mode: "development"
       debug: "true"
