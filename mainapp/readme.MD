@@ -26,3 +26,11 @@ npm install -g n
 sudo n install 16.8.0
 n 16.8.0
 ```
+
+# Recurring schedules
+Based on RRule - playground: https://jakubroztocil.github.io/rrule/
+Examples: 
+```
+Every 30 seconds only perform 4:
+FREQ=SECONDLY;INTERVAL=30;COUNT=4
+```
