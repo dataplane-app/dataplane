@@ -24,8 +24,7 @@ export const useLoginUser = () => {
         console.log("FROM FILE", res);
         return res?.loginUser;
       } catch (error) {
-        console.log("GraphQl request error:", JSON.parse(JSON.stringify(error)).response);
-        return JSON.parse(JSON.stringify(error)).response.error;
+        return error
       }
     };
   };

@@ -1,8 +1,10 @@
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Box } from "@mui/system";
 import React from "react";
-import { Route } from "react-router-dom";
-import { UserAuth } from "./Auth/UserAuth";
+import { Route, Switch } from "react-router-dom";
+import { UserAuth , PrivateRoute } from "./Auth/UserAuth";
+import createCustomTheme from "./theme";
+
 import Layout from "./components/Layout/Layout.component";
 import Congratulations from "./pages/Congratulations";
 import GetStarted from "./pages/GetStarted";
@@ -11,7 +13,6 @@ import Pipelines from './pages/Pipelines';
 import TeamDetail from "./pages/TeamDetail";
 import TeamGroup from "./pages/TeamGroup";
 import Teams from './pages/Teams';
-import createCustomTheme from "./theme";
 
 
 
@@ -36,17 +37,34 @@ function App() {
                     <UserAuth
                         refreshTokenUrl={process.env.REACT_APP_refreshTokenUrl}
                         loginUrl="/webapp/login"
-                        LogincallbackUrl={process.env.REACT_APP_LogincallbackUrl}
-                        logoutUrl={process.env.REACT_APP_logoutUrl}>
-                            <Route path="congratulations" element={<Congratulations />} />
-                            <Route path="get-started" element={<GetStarted />} />
-                            <Route path="login" element={<LoginUser />} />
-                            <Route path="/" element={<Layout />}>
-                                <Route index element={<Pipelines />}/>
-                                <Route path="teams" element={<Teams />} />
-                                <Route path="teams/:teamId" element={<TeamDetail />} />
-                                <Route path="teams/access/:accessId" element={<TeamGroup />} />
+                        LogincallbackUrl={process.env.REACT_APP_logoutUrl}
+                        logoutUrl={process.env.REACT_APP_logoutUrl}
+                    >
+                            <Route exact path="/congratulations">
+                                <Congratulations />
                             </Route>
+                            <Route exact path="/get-started">
+                                <GetStarted />
+                            </Route>
+                            <Route exact path="/login">
+                                <LoginUser />
+                            </Route>
+                            <Layout>
+                                <Switch>
+                                    <PrivateRoute exact path="/">
+                                        <Pipelines />
+                                    </PrivateRoute>
+                                    <PrivateRoute exact path="/teams">
+                                        <Teams />
+                                    </PrivateRoute>
+                                    <PrivateRoute exact path="/teams/:teamId">
+                                        <TeamDetail />
+                                    </PrivateRoute>
+                                    <PrivateRoute exact path="/teams/access/:accessId">
+                                        <TeamGroup />
+                                    </PrivateRoute>
+                                </Switch>
+                            </Layout>
                         </UserAuth>
                 </Box>
             </ThemeProvider>
