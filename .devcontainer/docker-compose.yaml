@@ -44,7 +44,7 @@ services:
       - ../:/appdev
     environment:
       env: "local"
-      dataplane_pipelines_folder: "/appdev/pipelines/"
+      dataplane_code_folder: "/appdev/code-files/"
       basepath: "/dataplane"
       secret_db_host: postgres
       secret_db_user: postgres

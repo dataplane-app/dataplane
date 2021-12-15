@@ -5,13 +5,15 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/auth_permissions"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
 	"dataplane/logging"
 	"errors"
+	"log"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/google/uuid"
@@ -37,6 +39,8 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 		return nil, errors.New("Requires permissions.")
 	}
 
+	// ----- Create the code files directory
+
 	e := models.Environment{
 		ID:         uuid.New().String(),
 		Name:       input.Name,
@@ -55,6 +59,17 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 		}
 		return nil, errors.New("AddEnvironment database error.")
 	}
+
+	log.Println("Create  directory:", os.Getenv("dataplane_code_folder")+e.Name)
+	cmd := exec.Command("mkdir", "-p", os.Getenv("dataplane_code_folder")+e.Name)
+	// cmd.Env = os.Environ()
+
+	// cmd.Stdout = os.Stdout
+	// cmd.Stderr = os.Stderr
+
+	// log.Println(cmd.CombinedOutput())
+
+	log.Println(cmd.Stdout)
 
 	return &models.Environment{
 		ID:   e.ID,

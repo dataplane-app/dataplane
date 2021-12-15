@@ -60,6 +60,7 @@ func Migrate() {
 		&models.PermissionsAccessGroups{},
 		&models.PermissionsAccessGUsers{},
 		&models.Pipelines{},
+		&models.PipelinesHistory{},
 	)
 	if err1 != nil {
 		panic(err1)

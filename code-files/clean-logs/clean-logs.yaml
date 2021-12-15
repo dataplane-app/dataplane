@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+apiVersion: dataplane/v1
 kind: Pipeline
 metadata:
   name: clean-logs

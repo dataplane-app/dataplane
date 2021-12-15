@@ -6,6 +6,7 @@ type PipelineYAML struct {
 	Metadata   struct {
 		Name        string   `yaml:"name" json:"name"`
 		Version     string   `yaml:"version" json:"version"`
+		SHA256      string   `yaml:"sha256" json:"sha256"`
 		Description string   `yaml:"description" json:"description"`
 		Tags        []string `yaml:"tags" json:"tags"`
 	} `yaml:"metadata" json:"metadata"`

@@ -291,7 +291,8 @@ func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permission
 		p.subject_id,
 		p.resource,
 		p.resource_id,
-		p.environment_id
+		p.environment_id,
+		p.active
 		from 
 		permissions p
 		where 
@@ -308,7 +309,8 @@ func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permission
 		p.subject_id,
 		p.resource,
 		p.resource_id,
-		p.environment_id
+		p.environment_id,
+		p.active
 		from 
 		permissions p, permissions_accessg_users agu
 		where 
@@ -361,7 +363,8 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		p.subject_id,
 		p.resource,
 		p.resource_id,
-		p.environment_id
+		p.environment_id,
+		p.active
 		from 
 		permissions p
 		where 
@@ -378,7 +381,8 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		p.subject_id,
 		p.resource,
 		p.resource_id,
-		p.environment_id
+		p.environment_id,
+		p.active
 		from 
 		permissions p, permissions_accessg_users agu
 		where 
