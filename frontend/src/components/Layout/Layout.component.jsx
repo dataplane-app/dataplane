@@ -5,13 +5,12 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Drawer from '@mui/material/Drawer';
 import Toolbar from '@mui/material/Toolbar';
 import * as React from 'react';
-import { Outlet } from "react-router-dom";
 import Navbar from "../Navbar";
 import Sidebar from "../Sidebar";
 
 const drawerWidth = 190;
 
-const Layout = () => {
+const Layout = ({ children }) => {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
@@ -35,7 +34,7 @@ const Layout = () => {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 4 }} background="background.main">
         <Toolbar />
-        <Outlet />
+        {children}
       </Box>
     </Box>
   );

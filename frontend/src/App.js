@@ -1,7 +1,11 @@
 import React from "react";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Box } from "@mui/system";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import React from "react";
+import { Route, Switch } from "react-router-dom";
+import { UserAuth , PrivateRoute } from "./Auth/UserAuth";
+import createCustomTheme from "./theme";
+
 import Layout from "./components/Layout/Layout.component";
 import createCustomTheme from "./theme";
 
@@ -12,7 +16,6 @@ import Pipelines from './pages/Pipelines';
 import TeamDetail from "./pages/TeamDetail";
 import TeamGroup from "./pages/TeamGroup";
 import Teams from './pages/Teams';
-import { UserAuth, PrivateRoute } from "./Auth/UserAuth";
 
 
 export const ColorModeContext = React.createContext({ toggleColorMode: () => {} });
@@ -31,29 +34,42 @@ function App() {
 
     return (
         <ColorModeContext.Provider value={colorModeToggle}>
-                <ThemeProvider theme={theme}>
-                    <Box className="app" backgroundColor="background.main" >
-                        <BrowserRouter basename="/webapp">
-                        <UserAuth
-                            refreshTokenUrl={process.env.REACT_APP_refreshTokenUrl}
-                            loginUrl="/webapp/login"
-                            LogincallbackUrl={process.env.REACT_APP_LogincallbackUrl} //front end callback url
-                            logoutUrl={process.env.REACT_APP_logoutUrl}>
-                            <Routes>
-                                <Route path="congratulations" element={<Congratulations />} />
-                                <Route path="get-started" element={<GetStarted />} />
-                                <Route path="login" element={<LoginUser />} />
-                                <Route path="/" element={<Layout />}>
-                                    <Route index element={<Pipelines />}/>
-                                    <Route path="teams" element={<Teams />} />
-                                    <Route path="teams/:teamId" element={<TeamDetail />} />
-                                    <Route path="teams/access/:accessId" element={<TeamGroup />} />
-                                </Route>
-                            </Routes>
-                            </UserAuth>
-                        </BrowserRouter>
-                    </Box>
-                </ThemeProvider>
+            <ThemeProvider theme={theme}>
+                <Box className="app" backgroundColor="background.main" >
+                    <UserAuth
+                        refreshTokenUrl={process.env.REACT_APP_refreshTokenUrl}
+                        loginUrl="/webapp/login"
+                        LogincallbackUrl={process.env.REACT_APP_logoutUrl}
+                        logoutUrl={process.env.REACT_APP_logoutUrl}
+                    >
+                            <Route exact path="/congratulations">
+                                <Congratulations />
+                            </Route>
+                            <Route exact path="/get-started">
+                                <GetStarted />
+                            </Route>
+                            <Route exact path="/login">
+                                <LoginUser />
+                            </Route>
+                            <Layout>
+                                <Switch>
+                                    <PrivateRoute exact path="/">
+                                        <Pipelines />
+                                    </PrivateRoute>
+                                    <PrivateRoute exact path="/teams">
+                                        <Teams />
+                                    </PrivateRoute>
+                                    <PrivateRoute exact path="/teams/:teamId">
+                                        <TeamDetail />
+                                    </PrivateRoute>
+                                    <PrivateRoute exact path="/teams/access/:accessId">
+                                        <TeamGroup />
+                                    </PrivateRoute>
+                                </Switch>
+                            </Layout>
+                        </UserAuth>
+                </Box>
+            </ThemeProvider>
         </ColorModeContext.Provider>
     );
 }

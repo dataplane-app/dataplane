@@ -4,7 +4,7 @@ import IdleTimer from 'react-idle-timer'
 import { createState, useState as useHookState } from '@hookstate/core'
 import ConsoleLogHelper from '../Helper/logger'
 import axios from 'axios'
-import { Route, Routes, BrowserRouter, useLocation } from 'react-router-dom'
+import { Route, Switch, BrowserRouter } from 'react-router-dom'
 import { LoginCallback } from './LoginCallBack'
 import decode from 'jwt-decode'
 
@@ -171,15 +171,15 @@ export const UserAuth = ({
         debounce={250}
         timeout={1000} //every 1 seconds
       />
-      <BrowserRouter>
-        <Routes>
+      <BrowserRouter basename="/webapp">
+        <Switch>
           <Route path={LogincallbackUrl} exact>
             <LoginCallback Authstate={Authstate} />
           </Route>
           <Route>
             {children}
           </Route>
-        </Routes>
+        </Switch>
       </BrowserRouter>
     </React.Fragment>
   )
@@ -187,9 +187,11 @@ export const UserAuth = ({
 
 // This is a wrapper component to set the authState privateRoute flag
 const PrivateRouteChecker =({children}) => {
+  ConsoleLogHelper("AUTH: ", children)
   ConsoleLogHelper("on private route")
   let auth = useGlobalAuthState();
   const refreshCount = useHookState(refreshCountState)
+
 
   useEffect(() => {
   }, [auth.privateRoute.get(), auth.authToken.get()])
@@ -213,10 +215,9 @@ const PrivateRouteChecker =({children}) => {
 
 // PrivateRoute just wraps the normal Route Component and ensure user is logged in if we gets to this route
 export const PrivateRoute = ({ children, ...rest }) => {
+  ConsoleLogHelper("PRIVATE ROUTE" ,children)
   return (
-    <Route
-      {...rest}
-    >
+    <Route {...rest}>
       <PrivateRouteChecker>
         {children}
       </PrivateRouteChecker>

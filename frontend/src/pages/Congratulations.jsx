@@ -2,11 +2,11 @@
 import { Box, Grid, Button} from "@mui/material";
 import Lottie from "react-lottie";
 import Confetti from '../assets/animations/confetti.json';
-import { useNavigate } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 import { Typography } from "@mui/material";
 
 const Congratulations = () => {
-    let navigate = useNavigate();
+    let history = useHistory();
 
     return(
         <Box className="congratulation" height="100vh" position="relative" sx={{ overflowY: "hidden" }}>
@@ -34,7 +34,7 @@ const Congratulations = () => {
                     <Typography mt="1.25rem" color="purple.main" textAlign="center" fontSize="1.125rem">Ready to build data pipelines!</Typography>
 
                     <Box zIndex="10" position="relative" sx={{ margin: "15.18rem auto 0", width: { md: "387.66px" } }}>
-                        <Button variant="contained" size="large" color="primary" sx={{ width: "100%" }} onClick={() => navigate('/')} >Let’s get started</Button>
+                        <Button variant="contained" size="large" color="primary" sx={{ width: "100%" }} onClick={() => history.push('/')} >Let’s get started</Button>
                     </Box>
                 </div>
 

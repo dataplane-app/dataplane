@@ -1,10 +1,10 @@
 import { TextField, Box, Button } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useLoginUser } from '../../graphql/loginUser';
-import {useNavigate} from 'react-router-dom';
+import {useHistory} from 'react-router-dom';
 
 const LoginForm = ({ handleNext }) => {
-  let navigate = useNavigate();
+  let history = useHistory();
 
   const loginUser = useLoginUser();
   const {
@@ -28,7 +28,7 @@ const LoginForm = ({ handleNext }) => {
     //Store refresh_token to local storage and navigate to main page
     if (response){
       localStorage.setItem("refresh_token", response.refresh_token);      
-      navigate('/')
+      history.push('/')
     }
   }
 

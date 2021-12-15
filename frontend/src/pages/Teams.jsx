@@ -5,11 +5,11 @@ import { useMemo } from 'react';
 import Search from "../components/Search";
 import { useTable, useGlobalFilter } from "react-table";
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import CustomChip from '../components/CustomChip';
 
 const Teams = () => {
-    let navigate = useNavigate();
+    let history = useHistory();
 
     const columns = useMemo(
         () => [
@@ -42,7 +42,7 @@ const Teams = () => {
                 Header: "Manage",
                 accessor: "manage",
                 Cell: row => <IconButton>
-                    <Box component={FontAwesomeIcon} fontSize={20} icon={faEllipsisV} onClick={() => navigate(`/teams/${row.value.id}`)}/>
+                    <Box component={FontAwesomeIcon} fontSize={20} icon={faEllipsisV} onClick={() => history.push(`/teams/${row.value.id}`)}/>
                 </IconButton>
             },
         ],

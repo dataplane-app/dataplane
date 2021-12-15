@@ -3,12 +3,12 @@ import Lottie from "react-lottie";
 import Loader from '../../assets/animations/spinner.json'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons'
-import { useNavigate } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import { Box } from '@mui/system';
 import { Grid, Typography } from '@mui/material';
 
 const SetupLoader = () => {
-    let navigate = useNavigate();
+    let history = useHistory();
 
     const [isSettingProfile, setIsSettingProfile] = useState(true);
     const [isCreatingEnv, setIsCreatingEnv] = useState(true);
@@ -28,7 +28,7 @@ const SetupLoader = () => {
         }, 3000); 
 
         const goToCongrats = window.setTimeout(() => {
-            navigate('/congratulations')
+            history.push('/congratulations')
         }, 3300)
     
         return () => {
