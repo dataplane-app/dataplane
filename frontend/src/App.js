@@ -1,10 +1,8 @@
 import React from "react";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Box } from "@mui/system";
-import React from "react";
 import { Route, Switch } from "react-router-dom";
 import { UserAuth , PrivateRoute } from "./Auth/UserAuth";
-import createCustomTheme from "./theme";
 
 import Layout from "./components/Layout/Layout.component";
 import createCustomTheme from "./theme";
