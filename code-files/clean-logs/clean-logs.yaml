@@ -11,7 +11,7 @@ metadata:
 spec:
   active: true
   schedule: "*/30 * * * *"
-  schedule_type: "crontab"
+  schedule_type: "crontab" #crontab, rrule, trigger
   # start_datetime: "2021-11-25T08:00"
   # steps:
   #   - name: 

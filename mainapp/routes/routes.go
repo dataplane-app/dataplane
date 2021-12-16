@@ -6,6 +6,7 @@ import (
 	"dataplane/database/models"
 	"dataplane/logging"
 	"dataplane/logme"
+	"dataplane/scheduler"
 	"fmt"
 	"log"
 	"net/http"
@@ -58,6 +59,9 @@ func Setup() *fiber.App {
 	// ----- Remove stale tokens ------
 	log.Println("💾 Removing stale data")
 	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expires < ?", time.Now())
+
+	// Start the scheduler
+	scheduler.SchedulerStart()
 
 	//recover from panic
 	app.Use(recover.New())
