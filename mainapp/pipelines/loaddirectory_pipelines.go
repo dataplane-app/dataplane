@@ -125,14 +125,16 @@ func LoadSingleYAML(path string, c chan PipelinesOutcomes) (result string, err e
 	var filejson datatypes.JSON
 	filejson.UnmarshalJSON(res2B)
 	dbPipeline := models.Pipelines{
-		PipelineID:  uuid.NewString(),
-		Name:        pipeline.Metadata.Name,
-		Version:     pipeline.Metadata.Version,
-		YAMLHash:    pipeline.Metadata.SHA256,
-		Description: pipeline.Metadata.Description,
-		Active:      pipeline.Spec.Active,
-		FileJSON:    filejson,
-		Current:     "current",
+		PipelineID:   uuid.NewString(),
+		Name:         pipeline.Metadata.Name,
+		Version:      pipeline.Metadata.Version,
+		YAMLHash:     pipeline.Metadata.SHA256,
+		Description:  pipeline.Metadata.Description,
+		Active:       pipeline.Spec.Active,
+		FileJSON:     filejson,
+		Current:      "current",
+		Schedule:     pipeline.Spec.Schedule,
+		ScheduleType: pipeline.Spec.ScheduleType,
 	}
 
 	err = database.DBConn.Exec("update pipelines set current='history', active=false, online=false where name =? and version <> ? and current = 'current'", pipeline.Metadata.Name, pipeline.Metadata.Version).Error
