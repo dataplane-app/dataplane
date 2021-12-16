@@ -85,7 +85,6 @@ export const UserAuth = ({
   refreshTokenUrl,
   logoutUrl,
   LogincallbackUrl,
-  headersSend,
   baseName
 }) => {
   const Authstate = useHookState(globalAuthState)
@@ -129,16 +128,18 @@ export const UserAuth = ({
 
       Authstate.loadstate.set('loading')
 
+      const refreshToken = localStorage.getItem("refresh_token")
+
       axios
         .post(
           refreshTokenUrl,
           {},
-          { "headers":headersSend, withCredentials: true }
+          { "headers": { 'Authorization': `Bearer ${refreshToken}` } , withCredentials: true }
           // {withCredentials: true}
         )
         .then((resp) => {
           ConsoleLogHelper('AccessToken Refreshed', resp.data)
-          Authstate.authToken.set(resp.data.AccessToken)
+          Authstate.authToken.set(resp.data.access_token)
           Authstate.loadstate.set('authenticated')
           return 'OK'
         })
