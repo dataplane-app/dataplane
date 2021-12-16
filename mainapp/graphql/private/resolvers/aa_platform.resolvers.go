@@ -60,8 +60,8 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 		return nil, errors.New("AddEnvironment database error.")
 	}
 
-	log.Println("Create  directory:", os.Getenv("dataplane_code_folder")+e.Name)
-	cmd := exec.Command("mkdir", "-p", os.Getenv("dataplane_code_folder")+e.Name)
+	log.Println("Create  directory:", os.Getenv("dataplane_code_folder")+e.ID)
+	cmd := exec.Command("mkdir", "-p", os.Getenv("dataplane_code_folder")+e.ID)
 	// cmd.Env = os.Environ()
 
 	// cmd.Stdout = os.Stdout

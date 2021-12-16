@@ -20,19 +20,20 @@ type Pipelines struct {
 	Description string         `json:"description"`
 	Active      bool           `json:"active"`
 	Online      bool           `json:"online"`
+	Current     string         `json:"current"` //current history
 	FileJSON    datatypes.JSON `json:"file_json"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   *time.Time     `json:"updated_at"`
 	DeletedAt   *time.Time     `json:"deleted_at,omitempty"`
 }
 
-func (PipelinesHistory) IsEntity() {}
+func (PipelinesArchive) IsEntity() {}
 
-func (PipelinesHistory) TableName() string {
-	return "pipelines_history"
+func (PipelinesArchive) TableName() string {
+	return "pipelines_archive"
 }
 
-type PipelinesHistory struct {
+type PipelinesArchive struct {
 	PipelineID  string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"pipeline_id"`
 	Name        string         `gorm:"type:varchar(255);index:idx_pipelines_history,unique;" json:"name"`
 	Version     string         `gorm:"type:varchar(125);index:idx_pipelines_history,unique;" json:"version"`
@@ -40,6 +41,7 @@ type PipelinesHistory struct {
 	Description string         `json:"description"`
 	Active      bool           `json:"active"`
 	Online      bool           `json:"online"`
+	Current     string         `json:"current"`
 	FileJSON    datatypes.JSON `json:"file_json"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   *time.Time     `json:"updated_at"`

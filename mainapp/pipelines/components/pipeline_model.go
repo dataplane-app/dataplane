@@ -11,6 +11,7 @@ type PipelineYAML struct {
 		Tags        []string `yaml:"tags" json:"tags"`
 	} `yaml:"metadata" json:"metadata"`
 	Spec struct {
+		Active       bool   `yaml:"active" json:"active"`
 		Schedule     string `yaml:"schedule" json:"schedule"`
 		ScheduleType string `yaml:"schedule_type" json:"schedule_type"`
 	} `yaml:"spec" json:"spec"`

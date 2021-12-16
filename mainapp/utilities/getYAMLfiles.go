@@ -11,6 +11,10 @@ func GetYAMLPaths(path string) (paths []string, err error) {
 	err = filepath.WalkDir(path, func(p string, info os.DirEntry,
 		err error) error {
 
+		if err != nil {
+			panic("File error:" + err.Error())
+		}
+
 		// If YAML perform checks, then apply
 		if strings.HasSuffix(info.Name(), ".yaml") || strings.HasSuffix(info.Name(), ".yml") {
 			paths = append(paths, p)
