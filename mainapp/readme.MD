@@ -46,7 +46,7 @@ if an error occurs do the following in Github desktop
 
 If main is affected both remote and local do the following
 ```shell
-# The first will reset the local branch to previous commit
+# The first will reset the local branch to previous commit. You can get the commit hash on Github Desktop if you click on the hash, there a button to copy
  git reset --hard <commit-hash>
  # The second will overwrite the remote with this new reset
  git push -f origin main
