@@ -35,10 +35,9 @@ function App() {
             <ThemeProvider theme={theme}>
                 <Box className="app" backgroundColor="background.main" >
                     <UserAuth
-                        refreshTokenUrl={process.env.REACT_APP_refreshTokenUrl}
+                        refreshTokenUrl="/refreshtoken"
                         loginUrl="/webapp/login"
-                        LogincallbackUrl={process.env.REACT_APP_logoutUrl}
-                        logoutUrl={process.env.REACT_APP_logoutUrl}
+                        logoutUrl="/webapp/logout"
                     >
                             <Route exact path="/congratulations">
                                 <Congratulations />
