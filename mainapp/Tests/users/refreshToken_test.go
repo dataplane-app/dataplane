@@ -13,26 +13,22 @@ import (
 )
 
 /*
-For individual tests - in separate window run: go run server.go
-go test -p 1 -v -count=1 -run TestAdminSetup dataplane/Tests/users
-* Create admin user and platform
+go test -p 1 -v -count=1 -run TestRefreshToken dataplane/Tests/users
 * Login
-* Validate token
-* Exchange refresh token for access token
-* Logout
+* Refresh token
 */
-func TestAdminSetup(t *testing.T) {
+func TestRefreshToken(t *testing.T) {
+
+	graphQLUrl := "http://localhost:9000/public/graphql"
 
 	testUser := testutils.AdminUser
 	testPassword := testutils.AdminPassword
-
-	graphQLUrl := "http://localhost:9000/public/graphql"
 
 	//--------- Login ------------
 
 	loginUser := `{
 		loginUser(
-		  username: "` + testUser + `",  
+		  username: "` + testUser + `",
 		  password: "` + testPassword + `",
 		) {
 		  access_token
@@ -50,20 +46,10 @@ func TestAdminSetup(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpLoginResponse.StatusCode, "Login user 200 status code")
 
-	// --------- Validate token --------------
-	accessToken := jsoniter.Get(loginUserResponse, "data", "loginUser", "access_token").ToString()
+	// -------------- Me ---------------------
+	reqQuery := `{}`
+
 	refreshToken := jsoniter.Get(loginUserResponse, "data", "loginUser", "refresh_token").ToString()
-	validatetoken, _ := auth.ValidateAccessToken(accessToken)
-	assert.Equalf(t, true, validatetoken, "Access token validation")
-
-	//--------- Exchange refresh token for access token ------------
-	// log.Println(refreshToken)
-
-	reqQuery := `
-	{
-		"refresh_token": "` + refreshToken + `"
-	}
-	`
 
 	url := "http://localhost:9000/refreshtoken"
 	exchangeUserResponse, httpExchangeResponse := testutils.RestRequestPrivate(reqQuery, refreshToken, "POST", url, t)
@@ -76,14 +62,5 @@ func TestAdminSetup(t *testing.T) {
 	// log.Println("Exchanged token: ", accessTokenExchange)
 	validatetokenExchange, _ := auth.ValidateAccessToken(accessTokenExchange)
 	assert.Equalf(t, true, validatetokenExchange, "Exchange access token validation")
-
-	//--------- Logout ------------
-	logoutUser := `{
-		logoutUser
-	  }`
-	graphQLPrivateUrl := "http://localhost:9000/private/graphql"
-	logoutUserResponse, httpLogoutResponse := testutils.GraphQLRequestPrivate(logoutUser, accessTokenExchange, "{}", graphQLPrivateUrl, t)
-	assert.Equalf(t, http.StatusOK, httpLogoutResponse.StatusCode, "Logout 200 status code")
-	assert.Equalf(t, "Logged out", jsoniter.Get(logoutUserResponse, "data", "logoutUser").ToString(), "Logout correct response")
 
 }
