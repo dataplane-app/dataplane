@@ -24,7 +24,7 @@ import (
 func main() {
 	database.DBConnect()
 	logging.MapSecrets()
-	LoadAllYAML(os.Getenv("dataplane_pipelines_folder"))
+	LoadAllYAML(os.Getenv("dataplane_code_folder"))
 }
 
 type PipelinesOutcomes struct {
