@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useHistory } from 'react-router-dom'
 import qs from 'qs'
 import ConsoleLogHelper from '../Helper/logger'
+import Login from '../pages/Login'
 
 /*
 This handles redirection when the user logs in. The access token is returned from the authentication provider.
@@ -9,7 +10,7 @@ This handles redirection when the user logs in. The access token is returned fro
 
 export const LoginCallback = ({Authstate}) => {
   const location = useLocation()
-  const navigate = useNavigate()
+  const history = useHistory()
 
   useEffect(() => {
 
@@ -36,13 +37,13 @@ export const LoginCallback = ({Authstate}) => {
       return
     }
     ConsoleLogHelper("Callback redirection", `Redirecting to ${redirectLocation}`)
-
+    
     // remove redirection in local storage and then redirect
     localStorage.setItem('redirectLocation', '')
     // window.location.href = redirectLocation
 
-    navigate.push(redirectLocation)
+    history.push(redirectLocation)
   }, [])
 
-  return <div>Login Callback</div>
+  return <Login />
 }

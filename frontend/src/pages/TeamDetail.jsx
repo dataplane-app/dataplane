@@ -13,7 +13,7 @@ import {
 import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
-import {useNavigate} from "react-router-dom";
+import {useHistory} from "react-router-dom";
 
 const drawerWidth = 507;
 const drawerStyles = {
@@ -26,7 +26,7 @@ const drawerStyles = {
 const TeamDetail = () => {
     const [isActive] = useState(true);
     const [isAdmin] = useState(true);
-    let navigate = useNavigate();
+    let history = useHistory();
 
     // Sidebar states
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
@@ -214,7 +214,7 @@ const TeamDetail = () => {
                         <Box mt="1.31rem">
                             {
                                 belongToAcessGroupsItems.map(env => (
-                                    <Grid sx={{ cursor: "pointer", pt: 1.5, pb: 1.5 ,borderRadius: 2 ,"&:hover": { background: "rgba(196, 196, 196, 0.15)"} }} display="flex" alignItems="center" key={env.id} onClick={() => navigate(`/teams/access/${env.name}`)}>
+                                    <Grid sx={{ cursor: "pointer", pt: 1.5, pb: 1.5 ,borderRadius: 2 ,"&:hover": { background: "rgba(196, 196, 196, 0.15)"} }} display="flex" alignItems="center" key={env.id} onClick={() => history.push(`/teams/access/${env.name}`)}>
                                         <Box component={FontAwesomeIcon} sx={{ fontSize: "17px",mr: "7px", color: "rgba(248, 0, 0, 1)" }} icon={faTrashAlt} />
                                         <Typography variant="subtitle2" lineHeight="15.23px" color="primary" fontWeight="900">{env.name}</Typography>
                                     </Grid>
