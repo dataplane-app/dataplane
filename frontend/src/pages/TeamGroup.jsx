@@ -18,7 +18,7 @@ const TeamGroup = () => {
     const [isAdmin] = useState(true);
 
     return (
-        <Box className="team_details" width="83%">
+        <Box className="page" width="83%">
             <Grid container alignItems="center">
                 <Typography component="h2" variant="h2" color="text.primary">
                     Team {">"} Access group {">"} Data engineering team
