@@ -51,3 +51,13 @@ If main is affected both remote and local do the following
  # The second will overwrite the remote with this new reset
  git push -f origin main
 ```
+
+# Pipeline notes
+- Version and name need to be unique
+- By default all files and folders in code-files will be versioned and synced
+- Start date and time is part of rrule
+- Map steps in pipeline to worker groups - this should create a mapping of which folders/versions to move to worker nodes
+- Pipeline checks
+    - The pipeline is formed correctly
+    - Steps found in pipeline are also in steps
+    - The graph is acyclical

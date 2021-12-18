@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -19,7 +20,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	jsoniter "github.com/json-iterator/go"
 )
 
 func Setup() *fiber.App {
@@ -104,8 +104,13 @@ func Setup() *fiber.App {
 	/* Exchange a refresh token for a new access token */
 	app.Post("/refreshtoken", func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
-		body := c.Body()
-		refreshToken := jsoniter.Get(body, "refresh_token").ToString()
+		// body := c.Body()
+		authHeader := strings.Split(string(c.Request().Header.Peek("Authorization")), "Bearer ")
+		if len(authHeader) != 2 {
+			errstring := "Malformed token"
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"r": "error", "msg": errstring, "active": false})
+		}
+		refreshToken := authHeader[1]
 		newRefreshToken, err := auth.RenewAccessToken(refreshToken)
 		if err != nil {
 			if os.Getenv("debug") == "true" {

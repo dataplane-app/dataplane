@@ -17,7 +17,7 @@ import Tooltip from "@mui/material/Tooltip";
 const EnviromentDropdown = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [selectedEnviroment, setSelectedEnviroment] = React.useState();
-  const [environments, setEnvironments] = React.useState(null);
+  const [environments, setEnvironments] = React.useState([]);
 
   const open = Boolean(anchorEl);
 
@@ -29,17 +29,7 @@ const EnviromentDropdown = () => {
   };
 
   // Retrieve environments on load
-  const getEnvironments = useGetEnvironments();
-  React.useEffect(() => {
-    const fetchData = async () => {
-      let response = await getEnvironments();
-      console.log(response)
-      if (response){
-        setEnvironments(response)
-      }
-    }
-    fetchData()
-  }, []);
+  
   
   return (
     <>

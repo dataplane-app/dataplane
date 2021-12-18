@@ -12,8 +12,57 @@ spec:
   active: true
   schedule: "FREQ=WEEKLY;INTERVAL=1;BYDAY=FR;BYHOUR=15;"
   schedule_type: "schedule" #crontab, rrule, trigger
-  # start_datetime: "2021-11-25T08:00"
-  # steps:
-  #   - name: 
-  #     worker_node: 
+  # By default all files and folders in code-files will be versioned and synced
+  FileSync:
+   - /appdev/code-files/dependencies:/appdev/code-files/dependencies
+  # start_datetime: "2021-11-25T08:00" <-- now part of rrule
+
+  # Map the worker groups for a given pipeline to sync files
+  steps:
+    - name: "Trigger"
+      Description: "Scheduled from Dataplane"
+      type: "trigger"
+
+    - name: "PRE"
+      Description: "Run PRE step"
+      type: "run"
+      worker_group: "compute1"
+      command: echo 'PRE'
+
+    - name: "Step 1"
+      Description: "Run step 1"
+      type: "run"
+      worker_group: "compute1"
+      command: echo 'step 1'
+
+    - name: "Step 2"
+      Description: "Run step 2"
+      type: "run"
+      worker_group: "compute1"
+      command: echo 'step 2'
+
+    - name: "Step 3"
+      Description: "Run step 3"
+      type: "run"
+      worker_group: "compute1"
+      command: echo 'step 3'
+
+    - name: "Step 4"
+      Description: "Run step 4"
+      type: "run"
+      worker_group: "compute1"
+      command: echo 'step 4'
+
+    - name: "Step 5"
+      Description: "Run step 5"
+      type: "run"
+      worker_group: "compute1"
+      command: echo 'step 5'
+
+    - name: "Complete"
+      Description: "Data pipeline completed."
+      type: "checkpoint"
+  
+  Journey: "Trigger >> PRE >> ['Step 1', 'Step 2' >> 'Step 3', 'Step 4' >> 'Step 5'] >> 'Complete'"
+
       

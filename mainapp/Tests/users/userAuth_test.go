@@ -109,12 +109,11 @@ func TestUserAuth(t *testing.T) {
 
 	reqQuery := `
 	{
-		"refresh_token": "` + refreshToken + `"
 	}
 	`
 
 	url := "http://localhost:9000/refreshtoken"
-	exchangeUserResponse, httpExchangeResponse := testutils.RestRequestPublic(reqQuery, "POST", url, t)
+	exchangeUserResponse, httpExchangeResponse := testutils.RestRequestPrivate(reqQuery, refreshToken, "POST", url, t)
 
 	// log.Println(string(exchangeUserResponse))
 	// log.Println(httpExchangeResponse)
