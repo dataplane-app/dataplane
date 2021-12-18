@@ -4,13 +4,13 @@ metadata:
   name: clean-logs
   description: "A flow to clean out logs"
   # Version needs to be unique
-  version: v0.0.6
+  version: v0.0.7
   tags:
     - hello
     - hashtag
 spec:
   active: true
-  schedule: "FREQ=WEEKLY;INTERVAL=1;WKST=FR;BYHOUR=15"
+  schedule: "FREQ=WEEKLY;INTERVAL=1;BYDAY=FR;BYHOUR=15;"
   schedule_type: "schedule" #crontab, rrule, trigger
   # start_datetime: "2021-11-25T08:00"
   # steps:
