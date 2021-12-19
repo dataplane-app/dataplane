@@ -3,13 +3,26 @@ package utilities
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 )
 
+type Config struct {
+	IncludeYear bool
+}
+
+// ConfigDefault is the default config
+var configDefault = Config{
+	IncludeYear: false,
+}
+
 // Takes rrule string returns cron string
 // RRULE:FREQ=MONTHLY;INTERVAL=1;BYDAY=MO   =>   0 0 0 ? * 1 *
-func Rtoc(rule string) (string, error) {
+func Rtoc(rule string, config Config) (string, error) {
+
+	configDefault = config
+	log.Println("ConfigDefault: ", configDefault)
 
 	var C_DAYS_OF_WEEK_RRULE = []string{"MO", "TU", "WE", "TH", "FR", "SA", "SU"}
 	var C_DAYS_WEEKDAYS_RRULE = []string{"MO", "TU", "WE", "TH", "FR"}
@@ -42,7 +55,7 @@ func Rtoc(rule string) (string, error) {
 	var dayOfMonth string = "?"
 	var month string = "*"
 	var dayOfWeek string = "?"
-	// var year string = "*"
+	var year string = "*"
 	var FREQ string = ""
 	var INTERVAL int = -1
 	var BYMONTHDAY int = -1
@@ -188,7 +201,7 @@ func Rtoc(rule string) (string, error) {
 		}
 
 		// Every day of the week
-		if sameStringSlice(C_DAYS_OF_WEEK_RRULE, arrByDayRRule) {
+		if matchSlicesWithoutOrder(C_DAYS_OF_WEEK_RRULE, arrByDayRRule) {
 			// String to satisfy this condition => "FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,TU,WE,TH,FR,SA,SU"
 			dayOfWeek = "*" // all days of week
 
@@ -223,12 +236,12 @@ func Rtoc(rule string) (string, error) {
 		} else {
 			if BYSETPOS == -1 {
 				// Check if every day of the week is selected
-				if sameStringSlice(C_DAYS_OF_WEEK_RRULE, arrByDayRRule) {
+				if matchSlicesWithoutOrder(C_DAYS_OF_WEEK_RRULE, arrByDayRRule) {
 					// String to satisfy this condition => "FREQ=YEARLY;INTERVAL=1;BYDAY=MO,TU,WE,TH,FR,SA,SU;BYMONTH=1;BYSETPOS=-1"
 					dayOfMonth = "L"
 
 					// Check if only weekdays is selected
-				} else if sameStringSlice(C_DAYS_WEEKDAYS_RRULE, arrByDayRRule) {
+				} else if matchSlicesWithoutOrder(C_DAYS_WEEKDAYS_RRULE, arrByDayRRule) {
 					// String to satisfy this condition => "FREQ=YEARLY;INTERVAL=1;BYDAY=MO,TU,WE,TH,FR;BYMONTH=1;BYSETPOS=-1"
 					dayOfMonth = "LW"
 				} else {
@@ -236,7 +249,7 @@ func Rtoc(rule string) (string, error) {
 					return "", errors.New("last weekends and just last specific days of Month are not supported")
 				}
 			} else {
-				if sameStringSlice(C_DAYS_WEEKDAYS_RRULE, arrByDayRRule) && BYSETPOS == 1 {
+				if matchSlicesWithoutOrder(C_DAYS_WEEKDAYS_RRULE, arrByDayRRule) && BYSETPOS == 1 {
 					// String to satisfy this condition => "FREQ=YEARLY;INTERVAL=1;BYDAY=MO,TU,WE,TH,FR;BYMONTH=1;BYSETPOS=1"
 					dayOfMonth = fmt.Sprint(BYSETPOS) + "W"
 				} else if len(arrByDayRRule) == 1 {
@@ -261,7 +274,10 @@ func Rtoc(rule string) (string, error) {
 		" " + dayOfMonth +
 		" " + month +
 		" " + dayOfWeek
-	// " " + year
+
+	if configDefault.IncludeYear {
+		result = result + " " + year
+	}
 
 	return result, nil
 }
@@ -282,9 +298,9 @@ func IndexOf(haystack []string, needle string) int {
 }
 
 // Check for equality in 2 slices without order [https://stackoverflow.com/a/36000696]
-// [a, b, a] == [a, a, b] ==> True
-// [a, b, a] == [a, b, b] ==> False
-func sameStringSlice(x, y []string) bool {
+//  [a, b, a] == [a, a, b] ==> True
+//  [a, b, a] == [a, b, b] ==> False
+func matchSlicesWithoutOrder(x, y []string) bool {
 	if len(x) != len(y) {
 		return false
 	}

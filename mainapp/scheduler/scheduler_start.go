@@ -48,7 +48,7 @@ func SchedulerStart() error {
 
 	} else {
 		log.Println("Rrule: ", u.Schedule)
-		cron, err := utilities.Rtoc(u.Schedule)
+		cron, err := utilities.Rtoc(u.Schedule, utilities.Config{IncludeYear: false})
 		if err != nil {
 			log.Println(err)
 		}
