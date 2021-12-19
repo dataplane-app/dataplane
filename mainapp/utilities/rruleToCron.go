@@ -298,8 +298,8 @@ func IndexOf(haystack []string, needle string) int {
 }
 
 // Check for equality in 2 slices without order [https://stackoverflow.com/a/36000696]
-//  [a, b, a] == [a, a, b] ==> True
-//  [a, b, a] == [a, b, b] ==> False
+//  [a, b, a] == [a, a, b] ==> true
+//  [a, b, a] == [a, b, b] ==> false
 func matchSlicesWithoutOrder(x, y []string) bool {
 	if len(x) != len(y) {
 		return false
