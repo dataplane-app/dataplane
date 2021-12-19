@@ -35,8 +35,6 @@ func SchedulerStart() error {
 		strings.Contains(schedule, "MINUTELY") ||
 		strings.Contains(schedule, "HOURLY") {
 
-		log.Println("Gocron string: ", schedule)
-
 		gocronString, err := rruleToGocron(schedule)
 		if err != nil {
 			if os.Getenv("debug") == "true" {
@@ -44,6 +42,8 @@ func SchedulerStart() error {
 			}
 			return err
 		}
+		fmt.Println("Rrule: ", schedule)
+		fmt.Println("Gocron string: ", gocronString)
 
 		// Set the job
 		_, err = s.Every(gocronString).Tag("Frequent Jobs").Do(func() {
@@ -78,8 +78,6 @@ func SchedulerStart() error {
 		// Occasional Jobs
 		// For time units longer than hour. Consumes cron strings; 0 0 1 ? * 1
 	} else {
-		log.Println("Rrule: ", schedule)
-
 		cronString, err := utilities.Rtoc(schedule, utilities.Config{IncludeYear: false})
 		if err != nil {
 			if os.Getenv("debug") == "true" {
@@ -87,6 +85,8 @@ func SchedulerStart() error {
 			}
 			return err
 		}
+		fmt.Println("Rrule: ", schedule)
+		fmt.Println("Cron string: ", cronString)
 
 		// Set the job
 		_, err = s.CronWithSeconds(cronString).Tag("Occasional Jobs").Do(func() {
@@ -119,7 +119,7 @@ func SchedulerStart() error {
 		fmt.Println("Main: The next run: ", t)
 	}
 
-	fmt.Println("Main: Number of jobs scheduled:", s.Jobs())
+	fmt.Println("Main: Number of jobs scheduled:", len(s.Jobs()))
 	fmt.Println("Main: Running:", s.IsRunning())
 
 	return nil

@@ -3,7 +3,6 @@ package utilities
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -22,7 +21,6 @@ var configDefault = Config{
 func Rtoc(rule string, config Config) (string, error) {
 
 	configDefault = config
-	log.Println("ConfigDefault: ", configDefault)
 
 	var C_DAYS_OF_WEEK_RRULE = []string{"MO", "TU", "WE", "TH", "FR", "SA", "SU"}
 	var C_DAYS_WEEKDAYS_RRULE = []string{"MO", "TU", "WE", "TH", "FR"}
