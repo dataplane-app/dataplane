@@ -1,19 +1,20 @@
 package pipelines
 
 import (
+	"dataplane/database"
 	"dataplane/scheduler"
-	"log"
 	"testing"
 )
 
 /*
 For individual tests - in separate window run: go run server.go
-go test -p 1 -v -count=1 -run TestSchedulerStart dataplane/Tests/users
+go test -p 1 -v -count=1 -run TestSchedulerStart dataplane/Tests/pipelines
 * Test scheduler
 */
-func TestSchedulerStart(tttt *testing.T) {
+func TestSchedulerStart(t *testing.T) {
 
-	err := scheduler.SchedulerStart()
-	log.Println(err)
+	database.DBConnect()
+
+	scheduler.SchedulerStart()
 
 }
