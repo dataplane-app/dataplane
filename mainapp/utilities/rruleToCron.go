@@ -18,7 +18,7 @@ var configDefault = Config{
 }
 
 // Takes rrule string returns cron string
-// RRULE:FREQ=MONTHLY;INTERVAL=1;BYDAY=MO   =>   0 0 0 ? * 1 *
+//  "RRULE:FREQ=MONTHLY;INTERVAL=1;BYDAY=MO" => "0 0 0 ? * 1 *"
 func Rtoc(rule string, config Config) (string, error) {
 
 	configDefault = config
