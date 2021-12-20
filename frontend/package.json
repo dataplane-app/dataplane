@@ -33,8 +33,8 @@
     "web-vitals": "^1.0.1"
   },
   "scripts": {
-    "start": "env-cmd -f ./src/enviroment/.env.local react-scripts start --watch-poll",
-    "build": "env-cmd -f ./src/enviroment/.env.build BUILD_PATH=../mainapp/frontbuild react-scripts build",
+    "start": "env-cmd -f ./src/enviroment/env.development react-scripts start --watch-poll",
+    "build": "env-cmd -f ./src/enviroment/env.build BUILD_PATH=../mainapp/frontbuild react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
