@@ -1,8 +1,6 @@
 package pipelines
 
 import (
-	"dataplane/database"
-	"dataplane/scheduler"
 	"testing"
 )
 
@@ -13,8 +11,8 @@ go test -p 1 -v -count=1 -run TestSchedulerStart dataplane/Tests/pipelines
 */
 func TestSchedulerStart(t *testing.T) {
 
-	database.DBConnect()
+	// database.DBConnect()
 
-	scheduler.SchedulerStart()
+	// scheduler.SchedulerStart()
 
 }
