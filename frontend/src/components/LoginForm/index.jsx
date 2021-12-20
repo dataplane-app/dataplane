@@ -28,7 +28,7 @@ const LoginForm = ({ handleNext }) => {
     //Store refresh_token to local storage and navigate to main page
     if (response){
       localStorage.setItem("refresh_token", response.refresh_token);      
-      history.push('/')
+      history.push(`loginCallback?accesstoken=${response.access_token}&refreshtoken=${response.refresh_token}`)
     }
   }
 

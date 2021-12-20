@@ -26,28 +26,30 @@ function App() {
         },
     }),
     [],
-    );
+    );  
 
     const theme = React.useMemo(() => createTheme(createCustomTheme(mode)), [mode]);
 
     return (
         <ColorModeContext.Provider value={colorModeToggle}>
             <ThemeProvider theme={theme}>
-                <Box className="app" backgroundColor="background.main" >
+                <Box className="app" backgroundColor="background.main">
                     <UserAuth
                         refreshTokenUrl="/refreshtoken"
+                        LogincallbackUrl="/loginCallback"
                         loginUrl="/webapp/login"
                         logoutUrl="/webapp/logout"
                     >
-                            <Route exact path="/congratulations">
-                                <Congratulations />
-                            </Route>
-                            <Route exact path="/get-started">
-                                <GetStarted />
-                            </Route>
-                            <Route exact path="/login">
-                                <LoginUser />
-                            </Route>
+                        <Route exact path="/congratulations">
+                            <Congratulations />
+                        </Route>
+                        <Route exact path="/get-started">
+                            <GetStarted />
+                        </Route>
+                        <Route exact path="/login">
+                            <LoginUser />
+                        </Route>
+                        <Route exact path={["/", "/teams", "/teams/:teamId", "/teams/access/:accessId"]}>
                             <Layout>
                                 <Switch>
                                     <PrivateRoute exact path="/">
@@ -64,7 +66,8 @@ function App() {
                                     </PrivateRoute>
                                 </Switch>
                             </Layout>
-                        </UserAuth>
+                        </Route>
+                    </UserAuth>
                 </Box>
             </ThemeProvider>
         </ColorModeContext.Provider>
