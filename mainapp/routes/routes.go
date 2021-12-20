@@ -6,7 +6,6 @@ import (
 	"dataplane/database/models"
 	"dataplane/logging"
 	"dataplane/logme"
-	"dataplane/scheduler"
 	"fmt"
 	"log"
 	"net/http"
@@ -61,7 +60,7 @@ func Setup() *fiber.App {
 	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expires < ?", time.Now())
 
 	// Start the scheduler
-	scheduler.SchedulerStart()
+	// scheduler.SchedulerStart()
 
 	//recover from panic
 	app.Use(recover.New())
@@ -83,7 +82,9 @@ func Setup() *fiber.App {
 
 	// CORS
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
+		AllowOrigins:     "*",
+		AllowCredentials: true,
+		// AllowHeaders: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 	}))
 
