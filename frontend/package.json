@@ -17,6 +17,7 @@
     "@testing-library/user-event": "^12.1.10",
     "axios": "^0.24.0",
     "countries-and-timezones": "^3.3.0",
+    "env-cmd": "^10.1.0",
     "graphql": "^16.1.0",
     "graphql-request": "^3.7.0",
     "jwt-decode": "^3.1.2",
@@ -33,7 +34,7 @@
   },
   "scripts": {
     "start": "env-cmd -f ./src/enviroment/.env.local react-scripts start --watch-poll",
-    "build": "BUILD_PATH=../mainapp/frontbuild react-scripts build",
+    "build": "env-cmd -f ./src/enviroment/.env.build BUILD_PATH=../mainapp/frontbuild react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
