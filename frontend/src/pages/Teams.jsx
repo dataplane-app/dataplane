@@ -1,4 +1,5 @@
-import { Box, Grid, Typography, IconButton, Chip ,Button } from '@mui/material';
+import { useState } from "react";
+import { Box, Grid, Typography, IconButton, Chip ,Button, Drawer } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEllipsisV } from '@fortawesome/free-solid-svg-icons'
 import { useMemo } from 'react';
@@ -7,25 +8,52 @@ import { useTable, useGlobalFilter } from "react-table";
 import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import CustomChip from '../components/CustomChip';
+import { useGetUsers } from '../graphql/getUsers';
+import { useSnackbar } from 'notistack';
+import AddUserDrawer from '../components/DrawerContent/AddUserDrawer';
+
+const drawerWidth = 507;
+const drawerStyles = {
+width: drawerWidth,
+flexShrink: 0,
+zIndex: 9999,
+[`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', background:'#F7FBFD'},
+}
 
 const Teams = () => {
     let history = useHistory();
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Users state
+    const [data, setData] = useState([])
+
+    // Sidebar states
+    const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
+
+    // Get users on load
+    const getUsers = useGetUsers();
+    useEffect(() => {
+        (async function(){
+            let users = await getUsers();
+            !users.errors ? setData(users) : enqueueSnackbar("Unable to retrieve users", { variant: "error" });
+        })()
+    }, [])
 
     const columns = useMemo(
         () => [
             {
                 Header: "Member",
-                accessor: "member",
+                accessor: row => [row.first_name, row.last_name, row.job_title],
                 Cell: row => <CustomMember row={row} />,
             },
             {
                 Header: "Email",
-                accessor: "email",
+                accessor: row => [row.email, row.job_title],
                 Cell: row => <CustomEmail row={row} />,
             },
             {
                 Header: "Role",
-                accessor: "role",
+                // accessor: "job_title",
                 Cell: row => <Typography variant="subtitle2" color="text.primary">{row.value}</Typography>
             },
             {
@@ -40,10 +68,10 @@ const Teams = () => {
             },
             {
                 Header: "Manage",
-                accessor: "manage",
-                Cell: row => <IconButton>
-                    <Box component={FontAwesomeIcon} fontSize={20} icon={faEllipsisV} onClick={() => history.push(`/teams/${row.value.id}`)}/>
-                </IconButton>
+                accessor: "user_id",
+                Cell: row => <IconButton onClick={() => history.push(`/teams/${row.value}`)}>
+                    <Box component={FontAwesomeIcon} fontSize={20} icon={faEllipsisV} />
+                    </IconButton>
             },
         ],
         []
@@ -71,15 +99,15 @@ const Teams = () => {
             <Box mt={4} sx={{ width: { lg: "80%" } }}>
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: "center" }}>
-                        <CustomChip amount={2} label="Members" margin={2} customColor="orange" />
+                        <CustomChip amount={data.length} label="Members" margin={2} customColor="orange" />
                     </Grid>
 
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: "center", flex: 1 }}>
-                        <Search placeholder="Find members" />
+                        <Search placeholder="Find members" setGlobalFilter={setGlobalFilter}/>
                     </Grid>
 
                     <Grid display="flex">
-                        <Button variant="contained" color="primary" width="3.81rem" >Add</Button>
+                        <Button onClick={() => setIsOpenDeleteUser(true)} variant="contained" color="primary" width="3.81rem" >Add</Button>
                     </Grid>
                 </Grid>
             </Box>
@@ -113,63 +141,36 @@ const Teams = () => {
                     })}
                 </Box>
             </Box>
+
+            <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
+                <AddUserDrawer user="Saul Frank" handleClose={() => setIsOpenDeleteUser(false)}/>
+            </Drawer>
         </Box>
     );
 };
 
 const CustomMember = ({ row }) => {
+    const [first_name, last_name, job_title] = row.value
+
     return (
         <Grid container direction="column" alignItems="center" justifyContent="flex-start">
-            <Typography component="h4" variant="h3" color="primary" className="text-blue font-black text-lg ">{row.value.name}</Typography>
-            <Typography component="h5" variant="subtitle1" >{row.value.occupation}</Typography>
+            <Typography component="h4" variant="h3" color="primary" className="text-blue font-black text-lg ">{first_name} {last_name}</Typography>
+            <Typography component="h5" variant="subtitle1" >{job_title}</Typography>
         </Grid>
     )
 }
 
 const CustomEmail = ({ row }) => {
+    const [email, job_title] = row.value
+
     return (
         <Grid container direction="column" alignItems="flex-start" ml={2}>
-            <Typography component="h4" variant="subtitle1" color="text.primary" mb={.7}>{row.value.email}</Typography>
-            <CustomChip label={row.value.role} customColor="orange" size="small" />
+            <Typography component="h4" variant="subtitle1" color="text.primary" mb={.7}>{email}</Typography>
+            <CustomChip label={job_title} customColor="orange" size="small" />
         </Grid>
     )
 }
 
-const data = [
-    {
-        id: 1,
-        member: {
-            name: "Saul Frank",
-            occupation: "Data Engineer"
-        },
-        email: {
-            email: "saulfrank@email.com",
-            role: "Admin"
-        },
-        role: "Admin",
-        permissions: "Admin",
-        status: "Active",
-        manage: {
-            id: 1
-        }
-    },
-    {
-        id: 2,
-        member: {
-            name: "Nicolas Marqui",
-            occupation: "Software Engineer"
-        },
-        email: {
-            email: "saulfrank@email.com",
-            role: "Admin"
-        },
-        role: "Admin",
-        permissions: "Admin",
-        status: "Active",
-        manage: {
-            id: 2
-        }
-    },
-]
 
 export default Teams;
+
