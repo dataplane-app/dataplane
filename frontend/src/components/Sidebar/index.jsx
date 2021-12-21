@@ -1,17 +1,15 @@
-import './styles.css'
-import { useLocation, useHistory } from "react-router-dom";
-import checkActivePage from "../../utils/checkActivePage";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faKey, faCog, faUsers, faGraduationCap, faBullhorn, faAlignCenter, faConciergeBell, faCodeBranch } from '@fortawesome/free-solid-svg-icons'
-import ThemeToggle from '../ThemeToggle';
-import List from '@mui/material/List';
-import Typography from '@mui/material/Typography';
+import './styles.css';
+import { faAlignCenter, faBullhorn, faCodeBranch, faCog, faConciergeBell, faGraduationCap, faKey, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box } from '@mui/material';
 import Divider from '@mui/material/Divider';
+import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import { useHistory, useLocation } from "react-router-dom";
+import checkActivePage from "../../utils/checkActivePage";
 import CustomSwitch from '../CustomSwitch';
-import { Box } from '@mui/material';
 
 const Sidebar = () => {
     const location = useLocation();

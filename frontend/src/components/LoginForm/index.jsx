@@ -2,9 +2,11 @@ import { TextField, Box, Button } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useLoginUser } from '../../graphql/loginUser';
 import {useHistory} from 'react-router-dom';
+import { useSnackbar } from 'notistack';
 
 const LoginForm = ({ handleNext }) => {
   let history = useHistory();
+  const { enqueueSnackbar } = useSnackbar();
 
   const loginUser = useLoginUser();
   const {
@@ -24,11 +26,13 @@ const LoginForm = ({ handleNext }) => {
 
     let response = await loginUser(allData);
 
-    //On success,
-    //Store refresh_token to local storage and navigate to main page
-    if (response){
+    if(response && response?.access_token){
       localStorage.setItem("refresh_token", response.refresh_token);      
-      history.push('/')
+      history.push(`loginCallback?accesstoken=${response.access_token}&refreshtoken=${response.refresh_token}`)
+    }else{
+      response.errors.map(err => {
+        enqueueSnackbar(err.message, { variant: "error" });
+      })
     }
   }
 

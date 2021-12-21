@@ -21,10 +21,9 @@ export const useLoginUser = () => {
     return async (input) => {
       try {
         const res = await client.request(LoginUser, input);
-        console.log("FROM FILE", res);
         return res?.loginUser;
       } catch (error) {
-        return error
+        return JSON.parse(JSON.stringify(error, undefined, 2)).response
       }
     };
   };

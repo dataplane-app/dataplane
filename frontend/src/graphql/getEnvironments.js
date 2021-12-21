@@ -1,4 +1,5 @@
 import { gql, GraphQLClient } from "graphql-request";
+import { useGlobalAuthState } from "../Auth/UserAuth";
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE
 
@@ -11,22 +12,24 @@ const GetEnvironments = gql`
     }
 `;
 
-const jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkYXRhcGxhbmUuYXBwIiwic3ViIjoiZDhjMDAxZjYtMmRlZi00YzdmLWIwMWMtYWI3YmUzYWJjZTM1IiwiYXVkIjpbImRhdGFwbGFuZSJdLCJleHAiOjE2Mzk0MjE1NTcsIm5iZiI6MTYzOTQyMTI1NywiaWF0IjoxNjM5NDIxMjU3LCJqdGkiOiIwZWJiYWVhNy0zOGE0LTQ0OWUtYjVjOC0xNmUwYzNjN2NkM2QiLCJhdXRoZW50aWNhdGlvblR5cGUiOiJQQVNTV09SRCIsInByZWZlcnJlZF91c2VybmFtZSI6ImFkbWluQGVtYWlsLmNvbSIsInVzZXJfdHlwZSI6ImFkbWluIiwicGxhdGZvcm1faWQiOiIyZWVlNTdmNi0xZmUyLTQ3ZTEtOGNjZS04NmFmNWRhNjEwNmUifQ.rrld2qRYiWbb444qo9JTS0gdL-d8OOF8zGy2EnMKUY4"
-export const useGetEnvironments = () => {    
-    const client = new GraphQLClient(graphlqlEndpoint, { 
-      headers: {
-        Authorization: "Bearer " + jwt
-      }
+export const useGetEnvironments = () => { 
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
+
+    const headers = {
+      Authorization: "Bearer " + jwt,
+    };
+  
+    const client = new GraphQLClient(graphlqlEndpoint, {
+      headers,
     });
   
-    return async (input) => {
+    return async () => {
       try {
-        const res = await client.request(GetEnvironments, input);
-        console.log("FROM FILE", res);
+        const res = await client.request(GetEnvironments);
         return res?.getEnvironments;
       } catch (error) {
-        console.log("GraphQl request error:", JSON.parse(JSON.stringify(error)).response);
-        return JSON.parse(JSON.stringify(error)).response.error;
+        return JSON.parse(JSON.stringify(error, undefined, 2)).response
       }
     };
   };

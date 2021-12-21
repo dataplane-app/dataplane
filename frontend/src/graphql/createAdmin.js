@@ -44,9 +44,7 @@ export const useCreateAdmin = () => {
         console.log("FROM FILE", res);
         return res?.setupPlatform;
       } catch (error) {
-        console.log("GraphQl request error:", JSON.parse(JSON.stringify(error)).response);
-        return JSON.parse(JSON.stringify(error)).response.error;
+        return JSON.parse(JSON.stringify(error, undefined, 2)).response
       }
-      // return null;
     };
   };

@@ -42,7 +42,7 @@ func GenerateAccessClaims(userID string, username string, usertype string) strin
 
 	claim := &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(t.Add(5 * time.Minute)), // access token valid for 5 minutes
+			ExpiresAt: jwt.NewNumericDate(t.Add(60 * time.Second)), // access token valid for 5 minutes
 			IssuedAt:  jwt.NewNumericDate(t),
 			NotBefore: jwt.NewNumericDate(t),
 			Issuer:    "dataplane.app",

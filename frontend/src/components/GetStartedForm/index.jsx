@@ -1,13 +1,12 @@
-import { TextField, Typography, Box, Grid, Button } from "@mui/material";
-import { useState } from "react";
-import CustomInput from "../CustomInput";
-import ThemeToggle from "../ThemeToggle";
-import CustomSwitch from "../CustomSwitch"
+import { Box, Button, Grid, TextField, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { useCreateAdmin } from "../../graphql/createAdmin";
+import CustomSwitch from "../CustomSwitch";
+import { useSnackbar } from 'notistack';
 
 const GetStartedForm = ({ handleNext }) => {
     const createAdmin = useCreateAdmin();
+    const { enqueueSnackbar } = useSnackbar();
     const { register, handleSubmit, watch, formState: { errors } } = useForm();
     
     async function onSubmit(data){
@@ -30,7 +29,13 @@ const GetStartedForm = ({ handleNext }) => {
         }
 
         let response = await createAdmin(allData)
-        console.log("RESPONSE", response)
+        if(response && response.platform){
+            handleNext();
+        }else{
+            response.errors.map(err => {
+                enqueueSnackbar(err.message, { variant: "error" });
+            })
+        }
     }
 
     return (

@@ -7,6 +7,7 @@ import axios from 'axios'
 import { Route, Switch, BrowserRouter } from 'react-router-dom'
 import { LoginCallback } from './LoginCallBack'
 import decode from 'jwt-decode'
+import removeBaseName from '../utils/removeBaseName'
 
 // LOGIC silent replacement of tokens:
 /*
@@ -132,9 +133,9 @@ export const UserAuth = ({
 
       axios
         .post(
-          refreshTokenUrl,
+          `${process.env.REACT_APP_DATAPLANE_ENDPOINT}${refreshTokenUrl}`,
           {},
-          { "headers": { 'Authorization': `Bearer ${refreshToken}` } , withCredentials: true }
+          { headers: { 'Authorization': `Bearer ${refreshToken}` } , withCredentials: true }
           // {withCredentials: true}
         )
         .then((resp) => {
@@ -150,7 +151,7 @@ export const UserAuth = ({
           // first set local storage:
           //  by redirecting this will flush out the existing in memory token
           // only use path name for redirection otherwise token will get removed from memory
-          localStorage.setItem('redirectLocation', window.location.pathname )
+          localStorage.setItem('redirectLocation', window.location.pathname === "/webapp" ? "/" : removeBaseName(window.location.pathname) )
           window.location.href = loginUrl
 
           return 'fail'
@@ -188,7 +189,6 @@ export const UserAuth = ({
 
 // This is a wrapper component to set the authState privateRoute flag
 const PrivateRouteChecker =({children}) => {
-  ConsoleLogHelper("AUTH: ", children)
   ConsoleLogHelper("on private route")
   let auth = useGlobalAuthState();
   const refreshCount = useHookState(refreshCountState)
@@ -216,7 +216,6 @@ const PrivateRouteChecker =({children}) => {
 
 // PrivateRoute just wraps the normal Route Component and ensure user is logged in if we gets to this route
 export const PrivateRoute = ({ children, ...rest }) => {
-  ConsoleLogHelper("PRIVATE ROUTE" ,children)
   return (
     <Route {...rest}>
       <PrivateRouteChecker>
@@ -225,4 +224,3 @@ export const PrivateRoute = ({ children, ...rest }) => {
     </Route>
   );
 }
-
