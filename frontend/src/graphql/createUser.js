@@ -12,7 +12,6 @@ const CreateUser = gql`
 	    last_name
 	    email
 	    timezone
-        environmentID
      }
  }
 `;
