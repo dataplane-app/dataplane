@@ -6,7 +6,7 @@ package privateresolvers
 import (
 	"context"
 	"dataplane/auth"
-	"dataplane/auth_permissions"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -259,4 +259,17 @@ func (r *queryResolver) LogoutUser(ctx context.Context) (*string, error) {
 
 	response := "Logged out"
 	return &response, nil
+}
+
+func (r *queryResolver) GetUsers(ctx context.Context) ([]*models.Users, error) {
+	e := []*models.Users{}
+
+	err := database.DBConn.Find(&e).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive users database error.")
+	}
+	return e, nil
 }
