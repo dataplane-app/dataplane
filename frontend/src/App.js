@@ -1,7 +1,7 @@
 import React from "react";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Box, Button } from "@mui/material";
-import { Route, Switch } from "react-router-dom";
+import { Route } from "react-router-dom";
 import { UserAuth , PrivateRoute } from "./Auth/UserAuth";
 import { SnackbarProvider } from 'notistack';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -69,24 +69,22 @@ function App() {
                             <Route exact path="/login">
                                 <LoginUser />
                             </Route>
-                            <Route exact path={["/", "/teams", "/teams/:teamId", "/teams/access/:accessId"]}>
+                            <PrivateRoute exact path={["/", "/teams", "/teams/:teamId", "/teams/access/:accessId"]}>
                                 <Layout>
-                                    <Switch>
-                                        <PrivateRoute exact path="/">
-                                            <Pipelines />
-                                        </PrivateRoute>
-                                        <PrivateRoute exact path="/teams">
-                                            <Teams />
-                                        </PrivateRoute>
-                                        <PrivateRoute exact path="/teams/:teamId">
-                                            <TeamDetail />
-                                        </PrivateRoute>
-                                        <PrivateRoute exact path="/teams/access/:accessId">
-                                            <TeamGroup />
-                                        </PrivateRoute>
-                                    </Switch>
+                                    <Route exact path="/">
+                                        <Pipelines />
+                                    </Route>
+                                    <Route exact path="/teams">
+                                        <Teams />
+                                    </Route>
+                                    <Route exact path="/teams/:teamId">
+                                        <TeamDetail />
+                                    </Route>
+                                    <Route exact path="/teams/access/:accessId">
+                                        <TeamGroup />
+                                    </Route>
                                 </Layout>
-                            </Route>
+                            </PrivateRoute>
                         </UserAuth>
                     </Box>
                 </SnackbarProvider>
