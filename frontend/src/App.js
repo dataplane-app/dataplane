@@ -46,6 +46,10 @@ function App() {
                 <SnackbarProvider
                     hideIconVariant={true}
                     ref={notistackRef}
+                    anchorOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                    }}
                     action={(key) => (
                       <Button onClick={onClickDismiss(key)} sx={{ display: "flex", justifyContent: "flex-end" }}>
                         <Box component={FontAwesomeIcon} color="white" icon={faTimesCircle}  />
