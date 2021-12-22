@@ -8,7 +8,7 @@ import { useGetEnvironments } from '../../graphql/getEnvironments';
 const EnviromentDropdown = () => {
   const getEnvironments = useGetEnvironments()
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [selectedEnviroment, setSelectedEnviroment] = React.useState("2a7f91a9-fdb3-49bd-9c8c-a2ca51738180");
+  const [selectedEnviroment, setSelectedEnviroment] = React.useState("");
   const [environments, setEnvironments] = React.useState([]);
 
   const open = Boolean(anchorEl);
