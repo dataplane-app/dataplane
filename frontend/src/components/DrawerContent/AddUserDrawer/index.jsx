@@ -4,6 +4,8 @@ import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { useForm } from "react-hook-form";
 import { useCreateUser } from "../../../graphql/createUser";
 import { useSnackbar } from 'notistack';
+import ct from "countries-and-timezones";
+import Autocomplete from '@mui/material/Autocomplete';
 
 const AddUserDrawer = ({ handleClose }) => {
     const createUser = useCreateUser();
@@ -18,7 +20,7 @@ const AddUserDrawer = ({ handleClose }) => {
 				email: data.email,
 				job_title: data.job_title,
 				password: data.password,
-				timezone: "GMT+3",
+				timezone: data.timezone,
                 environmentID: "10"
             }
         }
@@ -99,12 +101,13 @@ const AddUserDrawer = ({ handleClose }) => {
                     sx={{ mt: 2, fontSize: ".75rem", display: "flex", background: "white"  }}
                     {...register("job_title")}
                 />
-                <TextField
-                    label="Timezone"
-                    id="timezone"
-                    size="small"
-                    sx={{ mt: 2, fontSize: ".75rem", display: "flex", background: "white" }}
-                    {...register("timezone")}
+
+                <Autocomplete
+                      disablePortal
+                      id="combo-box-demo"
+                      freeSolo
+                      options={Object.keys(ct.getAllTimezones())}
+                      renderInput={(params) => <TextField {...params} label="Timezone" id="timezone" size="small" sx={{ mt: 2, fontSize: ".75rem", display: "flex", background: "white" }} {...register("timezone")} />}
                 />
 
                 <Grid mt={4} display="flex" alignItems="center">
