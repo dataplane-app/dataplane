@@ -13,16 +13,11 @@ import { useHistory } from 'react-router-dom'
 
 
 
-const UserDropdown = () => {
+const UserDropdown = ({me}) => {
   const logoutUser = useLogoutUser()
   const history = useHistory()
 
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [userInfo] = React.useState({
-    id: 1,
-    name: 'Saul Frank',
-    occupation: "Data enginner"
-  })
 
   const open = Boolean(anchorEl);
 
@@ -63,14 +58,14 @@ const UserDropdown = () => {
           fontSize="1.5rem"
           fontWeight={700}
         >
-          {userInfo.name[0].toUpperCase()}
+          {me.first_name ? me.first_name[0].toUpperCase() : ""}
         </Box>
         <Box ml="1rem" mr="1rem">
           <Typography fontSize={16} fontWeight={700} color="text.primary">
-            {userInfo.name}
+            {me?.first_name + " " + me?.last_name }
           </Typography>
           <Typography variant="subtitle1" color="text.primary" marginTop={-0.7}>
-            {userInfo.name}
+            {me?.job_title}
           </Typography>
         </Box>
         <Box
