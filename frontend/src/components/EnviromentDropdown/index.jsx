@@ -54,7 +54,7 @@ const EnviromentDropdown = () => {
   async function onSelectEnvironment(env){
     const input = {input:{preference: "environment", value: env.id} }
     const updateEnvironmentsResponse = await updatePreferences(input);
-    if (updateEnvironmentsResponse === "Preference updated"){
+    if (!updateEnvironmentsResponse.errors){
       setSelectedEnviroment(env.id)
     } else {
       console.log('Unable to update environment')

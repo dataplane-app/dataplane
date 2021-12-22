@@ -8,8 +8,15 @@ import Typography from "@mui/material/Typography";
 import * as React from "react";
 import "./styles.css";
 import Avatar from '@mui/material/Avatar';
+import { useLogoutUser } from '../../graphql/logoutUser';
+import { useHistory } from 'react-router-dom'
+
+
 
 const UserDropdown = () => {
+  const logoutUser = useLogoutUser()
+  const history = useHistory()
+
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [userInfo] = React.useState({
     id: 1,
@@ -25,6 +32,14 @@ const UserDropdown = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  const handleLogout = async() => {
+    const response = await logoutUser();
+    
+    if (!response.errors) {
+      localStorage.removeItem("refresh_token")
+      history.push("/login")
+    }
+  }
 
   return (
     <>
@@ -100,10 +115,10 @@ const UserDropdown = () => {
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
         <MenuItem>
-          <Avatar /> Profile
-        </MenuItem>
-        <MenuItem>
           <Avatar /> My account
+        </MenuItem>
+        <MenuItem style={{margin:'auto'}} onClick={handleLogout}>
+        <Avatar children='' sx={{background: 'transparent'}} /> Logout
         </MenuItem>
       </Menu>
     </>
