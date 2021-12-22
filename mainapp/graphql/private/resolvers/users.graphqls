@@ -33,9 +33,6 @@ extend type Query{
 	+ **Permission**: based on user ID
 	"""
 	logoutUser: String
-}
-
-extend type Query{
 	"""
 	Get users.
 	+ **Route**: Private
