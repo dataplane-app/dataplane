@@ -19,7 +19,7 @@ const Sidebar = () => {
         <>
             <List sx={{ mt: 4, mb: 2, mr: 2, p: 0 }}>
                 {MENU_ITEMS_TOP.map((menu) => (
-                    <ListItem button key={menu.id} mt={1} mb={1} sx={{ "&:hover": { backgroundColor: "transparent" } }} position="relative" onClick={() => history.push(`/${menu.url}`)} className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
+                    <ListItem button key={menu.id} mt={1} mb={1} sx={{ "&:hover": { backgroundColor: "transparent" }, "& .MuiTouchRipple-root": { borderRadius: "42px" } }} position="relative" onClick={() => history.push(`/${menu.url}`)} className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
                         <ListItemIcon sx={{ minWidth: "43px" }}>
                         {menu.icon}
                         </ListItemIcon>
@@ -30,7 +30,7 @@ const Sidebar = () => {
           <Divider sx={{ mb: 3, mt: 3 }} />
           <List sx={{ mt: 4, mb: 2, mr: 2, p: 0 }}>
                 {MENU_ITEMS_BOTTOM.map((menu) => (
-                    <ListItem button key={menu.id} mt={1} mb={1} position="relative" onClick={() => history.push(`/${menu.url}`)} className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
+                    <ListItem button key={menu.id} mt={1} mb={1} sx={{ "&:hover": { backgroundColor: "transparent" }, "& .MuiTouchRipple-root": { borderRadius: "42px" }  }}  position="relative" onClick={() => history.push(`/${menu.url}`)} className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
                         <ListItemIcon sx={{ minWidth: "43px" }}>
                         {menu.icon}
                         </ListItemIcon>

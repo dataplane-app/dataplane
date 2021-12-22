@@ -1,22 +1,14 @@
-import "./styles.css";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
+import "./styles.css";
+import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Box, Grid, Menu, MenuItem, Typography, Tooltip } from "@mui/material";
 import { useGetEnvironments } from '../../graphql/getEnvironments';
-import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
-import Avatar from "@mui/material/Avatar";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import Divider from "@mui/material/Divider";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
-import Tooltip from "@mui/material/Tooltip";
 
 const EnviromentDropdown = () => {
+  const getEnvironments = useGetEnvironments()
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [selectedEnviroment, setSelectedEnviroment] = React.useState();
+  const [selectedEnviroment, setSelectedEnviroment] = React.useState("2a7f91a9-fdb3-49bd-9c8c-a2ca51738180");
   const [environments, setEnvironments] = React.useState([]);
 
   const open = Boolean(anchorEl);
@@ -29,6 +21,22 @@ const EnviromentDropdown = () => {
   };
 
   // Retrieve environments on load
+  React.useEffect(() => {
+    let active = true;
+
+    (async () => {
+      const getEnvironmentsResponse = await getEnvironments();
+
+      if(active && getEnvironmentsResponse){
+        console.log(getEnvironmentsResponse)
+        setEnvironments(getEnvironmentsResponse)
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [])
   
   
   return (
@@ -53,16 +61,14 @@ const EnviromentDropdown = () => {
           fontSize="1.5rem"
           fontWeight={700}
         >
-          {environments && selectedEnviroment ? environments.filter(
+          {environments && environments.length > 0 && selectedEnviroment ? environments.filter(
             (env) => env.id === selectedEnviroment
-          )[0].name[0].toUpperCase() : ""}
-          {environments ? console.log(environments): null}
+          )[0].name[0].toUpperCase() : "-"}
         </Box>
         <Box ml="1rem" mr="1rem">
-          <Typography fontSize={16} fontWeight={700} color="text.primary">
+          <Typography fontSize={16} fontWeight={700} color="text.primary" noWrap maxWidth={194}>
             {
-              environments && selectedEnviroment ? environments.filter((env) => env.id === selectedEnviroment)[0]
-                .name : null
+              environments && environments.length > 0 && selectedEnviroment ? environments.filter((env) => env.id === selectedEnviroment)[0].name : "-"
             }
           </Typography>
           <Typography variant="subtitle1" color="text.primary" marginTop={-0.7}>
@@ -81,6 +87,7 @@ const EnviromentDropdown = () => {
         open={open}
         onClose={handleClose}
         onClick={handleClose}
+        disableAutoFocusItem
         PaperProps={{
           elevation: 0,
           sx: {
@@ -110,39 +117,41 @@ const EnviromentDropdown = () => {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        {environments ? environments.filter(
+        {environments && environments.length > 0 ? environments.filter(
           (filterId) => filterId.id !== selectedEnviroment
         ).map((env) => (
-          <MenuItem key={env.id} onClick={() => setSelectedEnviroment(env.id)}>
-            <Box
-              display="flex"
-              backgroundColor="primary.main"
-              alignItems="center"
-              padding={2}
-              mr={1}
-              borderRadius=".5rem"
-              justifyContent="center"
-              color="white"
-              width="2.25rem"
-              height="2.25rem"
-              fontSize="1.5rem"
-              fontWeight={700}
-            >
-              {env.name[0].toUpperCase()}
-            </Box>{" "}
-            <Box ml="1rem" mr="1rem">
-              <Typography fontSize={16} fontWeight={700} color="text.primary">
-                {env.name}
-              </Typography>
-              <Typography
-                variant="subtitle1"
-                color="text.primary"
-                marginTop={-0.7}
+          <Tooltip title={env.name} key={env.id} placement="left">
+              <MenuItem onClick={() => setSelectedEnviroment(env.id)}>
+              <Box
+                display="flex"
+                backgroundColor="primary.main"
+                alignItems="center"
+                padding={2}
+                mr={1}
+                borderRadius=".5rem"
+                justifyContent="center"
+                color="white"
+                width="2.25rem"
+                height="2.25rem"
+                fontSize="1.5rem"
+                fontWeight={700}
               >
-                Enviroment
-              </Typography>
-            </Box>
-          </MenuItem>
+                {env.name[0].toUpperCase()}
+              </Box>{" "}
+              <Box ml="1rem" mr="1rem">
+                <Typography fontSize={16} fontWeight={700} color="text.primary" noWrap maxWidth={150}>
+                  {env.name}
+                </Typography>
+                <Typography
+                  variant="subtitle1"
+                  color="text.primary"
+                  marginTop={-0.7}
+                >
+                  Enviroment
+                </Typography>
+              </Box>
+            </MenuItem>
+          </Tooltip>
         )) : null}
       </Menu>
     </>
