@@ -3,20 +3,13 @@ import { useGlobalAuthState } from "../Auth/UserAuth";
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE
 
-const CreateUser = gql`
- mutation createUser($input: AddUsersInput!){
-     createUser(input: $input)
-        {
-           user_id
-           first_name
-	         last_name
-	         email
-	         timezone
-        }
- }
+const UpdatePreferences = gql`
+    mutation updatePreferences($input: AddPreferencesInput!){
+      updatePreferences(input: $input)
+    }
 `;
 
-export const useCreateUser = () => {   
+export const useUpdatePreferences = () => { 
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -30,10 +23,10 @@ export const useCreateUser = () => {
   
     return async (input) => {
       try {
-        const res = await client.request(CreateUser, input);
-        return res?.createUser;
+        const res = await client.request(UpdatePreferences, input);
+        return res?.updatePreferences;
       } catch (error) {
         return JSON.parse(JSON.stringify(error, undefined, 2)).response
       }
     };
-}
+  };

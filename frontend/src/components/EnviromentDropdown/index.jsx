@@ -4,9 +4,13 @@ import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Grid, Menu, MenuItem, Typography, Tooltip } from "@mui/material";
 import { useGetEnvironments } from '../../graphql/getEnvironments';
+import { useUpdatePreferences } from '../../graphql/updatePreferences';
+import { useGetOnePreference } from '../../graphql/getOnePreference';
 
 const EnviromentDropdown = () => {
   const getEnvironments = useGetEnvironments()
+  const updatePreferences = useUpdatePreferences()
+  const getOnePreference = useGetOnePreference()
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [selectedEnviroment, setSelectedEnviroment] = React.useState("");
   const [environments, setEnvironments] = React.useState([]);
@@ -26,10 +30,18 @@ const EnviromentDropdown = () => {
 
     (async () => {
       const getEnvironmentsResponse = await getEnvironments();
+      const getOnePreferenceResponse = await getOnePreference({preference: "environment"})
 
       if(active && getEnvironmentsResponse){
-        console.log(getEnvironmentsResponse)
         setEnvironments(getEnvironmentsResponse)
+
+        // Environment is set if user has a preference in DB
+        if (getOnePreferenceResponse.value) {
+          setSelectedEnviroment(getOnePreferenceResponse.value)
+        } else {
+          // Else, defaults to first environment in DB
+          setSelectedEnviroment(getEnvironmentsResponse[0].id)
+        }
       }
     })();
 
@@ -37,8 +49,18 @@ const EnviromentDropdown = () => {
       active = false;
     };
   }, [])
-  
-  
+
+  // Set environment on select
+  async function onSelectEnvironment(env){
+    const input = {input:{preference: "environment", value: env.id} }
+    const updateEnvironmentsResponse = await updatePreferences(input);
+    if (updateEnvironmentsResponse === "Preference updated"){
+      setSelectedEnviroment(env.id)
+    } else {
+      console.log('Unable to update environment')
+    }
+  }
+    
   return (
     <>
       <Grid
@@ -121,7 +143,7 @@ const EnviromentDropdown = () => {
           (filterId) => filterId.id !== selectedEnviroment
         ).map((env) => (
           <Tooltip title={env.name} key={env.id} placement="left">
-              <MenuItem onClick={() => setSelectedEnviroment(env.id)}>
+              <MenuItem onClick={() => onSelectEnvironment(env)}>
               <Box
                 display="flex"
                 backgroundColor="primary.main"
