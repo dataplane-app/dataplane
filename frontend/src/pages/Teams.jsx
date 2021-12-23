@@ -44,34 +44,17 @@ const Teams = () => {
             {
                 Header: "Member",
                 accessor: row => [row.first_name, row.last_name, row.job_title],
-                Cell: row => <CustomMember row={row} />,
+                Cell: row => <CustomMember row={row} onClick={() => history.push(`/teams/${row.value}`)}/>,
             },
             {
                 Header: "Email",
-                accessor: row => [row.email, row.job_title],
+                accessor: "email",
                 Cell: row => <CustomEmail row={row} />,
-            },
-            {
-                Header: "Role",
-                // accessor: "job_title",
-                Cell: row => <Typography variant="subtitle2" color="text.primary">{row.value}</Typography>
-            },
-            {
-                Header: "Permissions",
-                accessor: "permissions",
-                Cell: row => <Typography variant="subtitle2" color="text.primary">{row.value}</Typography>
             },
             {
                 Header: "Status",
                 accessor: "status",
                 Cell: row => <Chip label={row.value} color="success" size="small" />
-            },
-            {
-                Header: "Manage",
-                accessor: "user_id",
-                Cell: row => <IconButton onClick={() => history.push(`/teams/${row.value}`)}>
-                    <Box component={FontAwesomeIcon} fontSize={20} icon={faEllipsisV} />
-                    </IconButton>
             },
         ],
         []
@@ -115,9 +98,9 @@ const Teams = () => {
             <Box component="table" mt={4} sx={{ width: { lg: "80%" } }} {...getTableProps()}>
                 <thead>
                     {headerGroups.map((headerGroup) => (
-                        <Box component="tr" display="grid" gridTemplateColumns="repeat(6, 1fr)" justifyContent="flex-start" {...headerGroup.getHeaderGroupProps()}>
+                        <Box component="tr" display="grid" gridTemplateColumns="repeat(3, 1fr)" justifyContent="flex-start" {...headerGroup.getHeaderGroupProps()}>
                             {headerGroup.headers.map((column) => (
-                                <Box component="td" color="text.primary" fontWeight="600" fontSize="15px" textAlign="center" {...column.getHeaderProps()}>
+                                <Box component="td" color="text.primary" fontWeight="600" fontSize="15px" textAlign="left" {...column.getHeaderProps()}>
                                     {column.render("Header")}
                                 </Box>
                             ))}
@@ -128,10 +111,10 @@ const Teams = () => {
                     {rows.map((row, i) => {
                         prepareRow(row);
                         return (
-                            <Box component="tr" {...row.getRowProps()} display="grid" gridTemplateColumns="repeat(6, 1fr)" alignItems="center" borderRadius="5px" backgroundColor="background.secondary" mt={2} sx={{ border: 1, borderColor: "divider", padding: "15px 0", cursor: "pointer", "&:hover": { background: "background.hoverSecondary" } }}>
+                            <Box component="tr" {...row.getRowProps()} display="grid" gridTemplateColumns="repeat(3, 1fr)" alignItems="start" borderRadius="5px" backgroundColor="background.secondary" mt={2} sx={{ border: 1, borderColor: "divider", padding: "15px 0", cursor: "pointer", "&:hover": { background: "background.hoverSecondary" } }}>
                                 {row.cells.map((cell) => {
                                     return (
-                                        <Box component="td" {...cell.getCellProps()} textAlign="center" >
+                                        <Box component="td" {...cell.getCellProps()} textAlign="left" >
                                             {cell.render("Cell")}
                                         </Box>
                                     );
@@ -149,11 +132,11 @@ const Teams = () => {
     );
 };
 
-const CustomMember = ({ row }) => {
+const CustomMember = ({ row, onClick }) => {
     const [first_name, last_name, job_title] = row.value
 
     return (
-        <Grid container direction="column" alignItems="center" justifyContent="flex-start">
+        <Grid container direction="column" alignItems="center" justifyContent="flex-start" onClick={onClick}>
             <Typography component="h4" variant="h3" color="primary" className="text-blue font-black text-lg ">{first_name} {last_name}</Typography>
             <Typography component="h5" variant="subtitle1" >{job_title}</Typography>
         </Grid>
@@ -161,12 +144,9 @@ const CustomMember = ({ row }) => {
 }
 
 const CustomEmail = ({ row }) => {
-    const [email, job_title] = row.value
-
     return (
-        <Grid container direction="column" alignItems="flex-start" ml={2}>
-            <Typography component="h4" variant="subtitle1" color="text.primary" mb={.7}>{email}</Typography>
-            <CustomChip label={job_title} customColor="orange" size="small" />
+        <Grid container direction="column" alignItems="flex-start">
+            <Typography component="h4" variant="subtitle1" color="text.primary" mb={.7}>{row.value}</Typography>
         </Grid>
     )
 }
