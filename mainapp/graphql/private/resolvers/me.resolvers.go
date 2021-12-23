@@ -71,5 +71,7 @@ func (r *queryResolver) Me(ctx context.Context) (*models.Users, error) {
 		Email:     u.Email,
 		JobTitle:  u.JobTitle,
 		Timezone:  u.Timezone,
+		Status:    u.Status,
+		UserType:  u.UserType,
 	}, nil
 }

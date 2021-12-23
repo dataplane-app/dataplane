@@ -5,6 +5,8 @@ import { useSwitch } from '@mui/base/SwitchUnstyled';
 import { ColorModeContext } from "../../App"
 import { useTheme } from '@mui/material/styles';
 import Switch from '@mui/material/Switch';
+import { useGetOnePreference } from '../../graphql/getOnePreference';
+import { useUpdatePreferences } from '../../graphql/updatePreferences';
 
 const MaterialUISwitch = styled(Switch)(({ theme }) => ({
   width: 62,
@@ -54,8 +56,38 @@ const MaterialUISwitch = styled(Switch)(({ theme }) => ({
 }));
 
 export default function CustomSwitch(props) {
+  const getOnePreference = useGetOnePreference()
+  const updatePreferences = useUpdatePreferences()
+
   const theme = useTheme();
   const colorMode = React.useContext(ColorModeContext);
+
+  // Retrieve color mode on load
+  React.useEffect(() => {
+    (async () => {
+      const colorModeResponse = await getOnePreference({preference: "theme"})
+
+      // If color mode in DB doesn't match current color mode, toggle.
+      if(!colorModeResponse.errors){
+        if (colorModeResponse.value !== theme.palette.mode) {
+          colorMode.toggleColorMode()
+        }
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Toggle color mode on change
+  React.useEffect(() => {
+    (async () => {
+      const input = {input:{preference: "theme", value: theme.palette.mode} }
+      const updateEnvironmentsResponse = await updatePreferences(input);
+      if (updateEnvironmentsResponse.errors){
+        console.log('Unable to update color theme')
+      } 
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme.palette.mode])
 
   return (
     <MaterialUISwitch {...props} checked={theme.palette.mode === 'dark'} onChange={colorMode.toggleColorMode} />

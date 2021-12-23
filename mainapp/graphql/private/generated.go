@@ -98,6 +98,7 @@ type ComplexityRoot struct {
 		GetEnvironments      func(childComplexity int) int
 		GetOnePreference     func(childComplexity int, preference string) int
 		GetPipelines         func(childComplexity int) int
+		GetUsers             func(childComplexity int) int
 		GetWorkers           func(childComplexity int) int
 		LogoutUser           func(childComplexity int) int
 		Me                   func(childComplexity int) int
@@ -110,6 +111,7 @@ type ComplexityRoot struct {
 		FirstName func(childComplexity int) int
 		JobTitle  func(childComplexity int) int
 		LastName  func(childComplexity int) int
+		Status    func(childComplexity int) int
 		Timezone  func(childComplexity int) int
 		UserID    func(childComplexity int) int
 		UserType  func(childComplexity int) int
@@ -148,6 +150,7 @@ type QueryResolver interface {
 	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
 	GetOnePreference(ctx context.Context, preference string) (*Preferences, error)
 	LogoutUser(ctx context.Context) (*string, error)
+	GetUsers(ctx context.Context) ([]*models.Users, error)
 	GetWorkers(ctx context.Context) ([]*Workers, error)
 }
 
@@ -510,6 +513,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetPipelines(childComplexity), true
 
+	case "Query.getUsers":
+		if e.complexity.Query.GetUsers == nil {
+			break
+		}
+
+		return e.complexity.Query.GetUsers(childComplexity), true
+
 	case "Query.getWorkers":
 		if e.complexity.Query.GetWorkers == nil {
 			break
@@ -577,6 +587,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.LastName(childComplexity), true
+
+	case "User.status":
+		if e.complexity.User.Status == nil {
+			break
+		}
+
+		return e.complexity.User.Status(childComplexity), true
 
 	case "User.timezone":
 		if e.complexity.User.Timezone == nil {
@@ -877,7 +894,8 @@ extend type Mutation {
 	last_name:  String!     
 	email:     String!     
 	job_title: String!
-	timezone:  String!     
+	timezone:  String!    
+	status: String! 
 }
 
 input AddUsersInput {
@@ -904,6 +922,15 @@ extend type Query{
 	+ **Permission**: based on user ID
 	"""
 	logoutUser: String
+}
+
+extend type Query{
+	"""
+	Get users.
+	+ **Route**: Private
+	+ **Permission**: based on user ID
+	"""
+	getUsers: [User]
 }
 
 extend type Mutation {
@@ -2953,6 +2980,38 @@ func (ec *executionContext) _Query_logoutUser(ctx context.Context, field graphql
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_getUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetUsers(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Users)
+	fc.Result = res
+	return ec.marshalOUser2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_getWorkers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3285,6 +3344,41 @@ func (ec *executionContext) _User_timezone(ctx context.Context, field graphql.Co
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Timezone, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_status(ctx context.Context, field graphql.CollectedField, obj *models.Users) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5099,6 +5193,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_logoutUser(ctx, field)
 				return res
 			})
+		case "getUsers":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getUsers(ctx, field)
+				return res
+			})
 		case "getWorkers":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -5168,6 +5273,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "timezone":
 			out.Values[i] = ec._User_timezone(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "status":
+			out.Values[i] = ec._User_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -6080,6 +6190,47 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return graphql.MarshalString(*v)
+}
+
+func (ec *executionContext) marshalOUser2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx context.Context, sel ast.SelectionSet, v []*models.Users) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
 }
 
 func (ec *executionContext) marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx context.Context, sel ast.SelectionSet, v *models.Users) graphql.Marshaler {
