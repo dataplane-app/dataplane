@@ -105,7 +105,6 @@ const AddUserDrawer = ({ handleClose }) => {
                 <Autocomplete
                       disablePortal
                       id="combo-box-demo"
-                      freeSolo
                       options={Object.keys(ct.getAllTimezones())}
                       renderInput={(params) => <TextField {...params} label="Timezone" id="timezone" size="small" sx={{ mt: 2, fontSize: ".75rem", display: "flex", background: "white" }} {...register("timezone")} />}
                 />
