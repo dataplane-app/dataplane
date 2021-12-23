@@ -5,7 +5,8 @@ type User {
 	last_name:  String!     
 	email:     String!     
 	job_title: String!
-	timezone:  String!     
+	timezone:  String!    
+	status: String! 
 }
 
 input AddUsersInput {
@@ -32,6 +33,12 @@ extend type Query{
 	+ **Permission**: based on user ID
 	"""
 	logoutUser: String
+	"""
+	Get users.
+	+ **Route**: Private
+	+ **Permission**: based on user ID
+	"""
+	getUsers: [User]
 }
 
 extend type Mutation {
