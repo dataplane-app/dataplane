@@ -11,6 +11,8 @@ const Me = gql`{
         email
         job_title
         timezone
+        status
+        user_type
     }
 }
 `;

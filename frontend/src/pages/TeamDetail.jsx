@@ -1,5 +1,5 @@
 import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer } from '@mui/material';
-import { useState } from "react";
+import { useEffect,useState } from "react";
 import Search from "../components/Search";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
@@ -14,6 +14,7 @@ import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import {useHistory} from "react-router-dom";
+import { useMe } from '../graphql/me';
 
 const drawerWidth = 507;
 const drawerStyles = {
@@ -24,20 +25,45 @@ const drawerStyles = {
 }
 
 const TeamDetail = () => {
-    const [isActive] = useState(true);
-    const [isAdmin] = useState(true);
     let history = useHistory();
+    const meGraphQL = useMe()
+
+    // meData states
+    const [me, setMe] = useState({})
+    const [isActive, setIsActive] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     // Sidebar states
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
+
+    // Retrieve me on load
+    useEffect(() => {
+        (async () => {
+          const me = await meGraphQL();
+          if(!meGraphQL.errors){
+            setMe(me)
+            
+            // Check if user is active
+            if (me.status !== 'active'){
+                setIsActive(false)
+            }
+
+            // Check if user is admin
+            if (me.user_type === 'admin'){
+                setIsAdmin(true)
+            }
+          }
+        })();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [])
 
     return (
         <>
         <Box className="page" width="83%">
             <Grid container alignItems="center">
                 <Typography component="h2" variant="h2" color="text.primary">
-                    Team {" > "} Saul Frank
+                    Team {" > "} {me.first_name} {me.last_name}
                 </Typography>
 
                 <Grid item ml={4}>
