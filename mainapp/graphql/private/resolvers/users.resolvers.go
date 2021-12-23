@@ -261,8 +261,20 @@ func (r *queryResolver) LogoutUser(ctx context.Context) (*string, error) {
 	return &response, nil
 }
 
-func (r *queryResolver) GetUsers(ctx context.Context) ([]*models.Users, error) {
+func (r *queryResolver) GetUser(ctx context.Context, userID string) (*models.Users, error) {
+	e := models.Users{}
 
+	err := database.DBConn.Where("user_id = ?", userID).First(&e).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive user database error.")
+	}
+	return &e, nil
+}
+
+func (r *queryResolver) GetUsers(ctx context.Context) ([]*models.Users, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
