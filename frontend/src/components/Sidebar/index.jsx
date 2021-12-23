@@ -9,7 +9,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { useHistory, useLocation } from "react-router-dom";
 import checkActivePage from "../../utils/checkActivePage";
-import CustomSwitch from '../CustomSwitch';
+import ThemeToggle from '../ThemeToggle';
 
 const Sidebar = () => {
     const location = useLocation();
@@ -39,8 +39,8 @@ const Sidebar = () => {
                 ))}
           </List>
 
-          <Box display="flex" alignItems="center" justifyContent="center" mt={5}>
-            <CustomSwitch />
+          <Box display="flex" alignItems="center" justifyContent="center" position="absolute" bottom={40} right={0} left={0} >
+            <ThemeToggle />
           </Box>
         </>
     )
