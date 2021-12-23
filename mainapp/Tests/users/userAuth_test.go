@@ -53,7 +53,7 @@ func TestUserAuth(t *testing.T) {
 			first_name: "` + faker.FirstName() + `",
 			last_name: "` + faker.LastName() + `",
 			email: "` + testUser + `",
-			job_title: "",
+			job_title: " ` + faker.Word() + `",
 			password: "` + testPassword + `",
 			timezone: " ` + faker.Timezone() + ` ",
 			environmentID: " ` + testutils.TestEnvironmentID + ` "

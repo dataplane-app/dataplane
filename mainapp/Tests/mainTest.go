@@ -152,12 +152,15 @@ func main() {
 		password, _ := auth.Encrypt(v.Password)
 
 		userData := models.Users{
-			UserID:   i,
-			Password: password,
-			Email:    v.Username,
-			Status:   "active",
-			Active:   true,
-			Username: v.Username,
+			UserID:    i,
+			FirstName: faker.FirstName(),
+			LastName:  faker.LastName(),
+			JobTitle:  faker.Word(),
+			Password:  password,
+			Email:     v.Username,
+			Status:    "active",
+			Active:    true,
+			Username:  v.Username,
 		}
 
 		err := database.DBConn.Clauses(clause.OnConflict{
