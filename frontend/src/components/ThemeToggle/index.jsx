@@ -37,7 +37,7 @@ const DarkToggle = styled(Switch)(({ theme }) => ({
         left: '50%',
         transform: theme.palette.mode !== 'dark' ? 'translate(-83%, -45%)' : 'translate(-18%, -45%)',
         fontSize: 15,
-        fontWeight: 900,
+        fontWeight: 700,
       },
     },
     '& .MuiSwitch-thumb': {
