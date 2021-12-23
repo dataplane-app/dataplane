@@ -122,7 +122,7 @@ const TeamDetail = () => {
                         </Typography>
 
                         <Grid mt={2} display="flex" alignItems="center">
-                            <Search placeholder="Find platform permissions" />
+                            <Search placeholder="Find platform permissions" onChange={()=> null} />
                             <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }} >Add</Button>
                         </Grid>
 
@@ -186,7 +186,7 @@ const TeamDetail = () => {
                     </Typography>
 
                     <Grid mt={2} display="flex" alignItems="center">
-                        <Search placeholder="Find access groups" />
+                        <Search placeholder="Find access groups" onChange={()=> null}/>
                         <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }} >Add</Button>
                     </Grid>
 
@@ -207,7 +207,7 @@ const TeamDetail = () => {
                         </Typography>
 
                         <Grid mt={2} display="flex" alignItems="center">
-                            <Search placeholder="Find access groups" />
+                            <Search placeholder="Find access groups" onChange={()=> null} />
                             <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }} >Add</Button>
                         </Grid>
 

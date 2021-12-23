@@ -86,7 +86,7 @@ const Teams = () => {
                     </Grid>
 
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: "center", flex: 1 }}>
-                        <Search placeholder="Find members" setGlobalFilter={setGlobalFilter}/>
+                        <Search placeholder="Find members" onChange={setGlobalFilter}/>
                     </Grid>
 
                     <Grid display="flex">
