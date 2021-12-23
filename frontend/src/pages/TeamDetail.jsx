@@ -1,4 +1,4 @@
-import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer } from '@mui/material';
+import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer, Autocomplete } from '@mui/material';
 import { useEffect,useState } from "react";
 import Search from "../components/Search";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -15,6 +15,7 @@ import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDraw
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import {useHistory} from "react-router-dom";
 import { useMe } from '../graphql/me';
+import ct from "countries-and-timezones";
 
 const drawerWidth = 507;
 const drawerStyles = {
@@ -112,13 +113,14 @@ const TeamDetail = () => {
                             sx={{ margin: ".45rem 0" }}
                         />
 
-                        <TextField
-                            label="Timezone"
-                            id="timezone"
-                            select
-                            size="small"
-                            required
-                            sx={{ fontSize: ".75rem", display: "flex", mt: ".45rem" }}
+                        <Autocomplete
+                            disablePortal
+                            id="combo-box-demo"
+                            freeSolo
+                            options={Object.keys(ct.getAllTimezones())}
+                            renderInput={(params) => <TextField {...params} label="Timezone" required id="timezone" size="small" sx={{ mt: 2, fontSize: ".75rem", display: "flex", background: "white" }} 
+                            // {...register("timezone")} 
+                            />}
                         />
 
                         <Button variant="contained" color="primary" sx={{ width: "100%", mt: "1rem" }}>Save</Button>
