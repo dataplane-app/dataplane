@@ -37,13 +37,9 @@
     "start": "env-cmd -f ./src/enviroment/env.development react-scripts start --watch-poll",
     "build": "env-cmd -f ./src/enviroment/env.build BUILD_PATH=../mainapp/frontbuild react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "eject": "react-scripts eject",
+    "lint": "eslint -c .eslintrc.js --ext .js,.jsx .",
+    "lint:fix": "npm run lint -- --fix"
   },
   "browserslist": {
     "production": [
