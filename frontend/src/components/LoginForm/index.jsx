@@ -12,7 +12,6 @@ const LoginForm = ({ handleNext }) => {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm();
 
@@ -26,12 +25,16 @@ const LoginForm = ({ handleNext }) => {
 
     let response = await loginUser(allData);
 
+    if(!response){
+      return enqueueSnackbar("An error has occured", { variant: "error" });
+    }
+
     if(response && response?.access_token){
       localStorage.setItem("refresh_token", response.refresh_token);      
       history.push(`loginCallback?accesstoken=${response.access_token}&refreshtoken=${response.refresh_token}`)
     }else{
       response.errors.map(err => {
-        enqueueSnackbar(err.message, { variant: "error" });
+        return enqueueSnackbar(err.message, { variant: "error" });
       })
     }
   }
