@@ -27,14 +27,6 @@ const UserDropdown = ({me}) => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const handleLogout = async() => {
-    const response = await logoutUser();
-    
-    if (!response.errors) {
-      localStorage.removeItem("refresh_token")
-      history.push("/login")
-    }
-  }
 
   return (
     <>
@@ -109,11 +101,11 @@ const UserDropdown = ({me}) => {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <MenuItem>
-          <Avatar /> My account
+        <MenuItem onClick={() => history.push(`/members/${me.user_id}`)}>
+          My account
         </MenuItem>
-        <MenuItem style={{margin:'auto'}} onClick={handleLogout}>
-        <Avatar children='' sx={{background: 'transparent'}} /> Logout
+        <MenuItem style={{margin:'auto'}} onClick={() => history.push(`/logout`)}>
+           Logout
         </MenuItem>
       </Menu>
     </>

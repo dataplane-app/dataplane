@@ -15,6 +15,7 @@ import GetStarted from "./pages/GetStarted";
 import LoginUser from "./pages/Login";
 import Pipelines from './pages/Pipelines';
 import TeamDetail from "./pages/TeamDetail";
+import MemberDetail from "./pages/MemberDetail";
 import TeamGroup from "./pages/TeamGroup";
 import Teams from './pages/Teams';
 
@@ -74,7 +75,7 @@ function App() {
                             <Route exact path="/login">
                                 <LoginUser />
                             </Route>
-                            <PrivateRoute exact path={["/", "/teams", "/teams/:teamId", "/teams/access/:accessId"]}>
+                            <PrivateRoute exact path={["/", "/teams", "/teams/:teamId", "/members/:memberId", "/teams/access/:accessId"]}>
                                 <Layout>
                                     <Route exact path="/">
                                         <Pipelines />
@@ -87,6 +88,9 @@ function App() {
                                     </Route>
                                     <Route exact path="/teams/access/:accessId">
                                         <TeamGroup />
+                                    </Route>
+                                    <Route exact path="/members/:memberId">
+                                        <MemberDetail />
                                     </Route>
                                 </Layout>
                             </PrivateRoute>
