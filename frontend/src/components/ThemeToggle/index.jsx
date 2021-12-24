@@ -13,6 +13,9 @@ const DarkToggle = styled(Switch)(({ theme }) => ({
     height: 40,
     '& .MuiSwitch-switchBase': {
       transform: 'translateX(2px)',
+      "&:hover": {
+        background: "none"
+      },
       '&.Mui-checked': {
           '& .MuiSwitch-thumb': {
             transform: 'translateX(29px)',
@@ -41,6 +44,9 @@ const DarkToggle = styled(Switch)(({ theme }) => ({
         fontSize: 15,
         fontWeight: 700,
       },
+    },
+    '& .MuiTouchRipple-root': {
+      display: "none"
     },
     '& .MuiSwitch-thumb': {
       boxShadow: 'none',
@@ -106,7 +112,8 @@ const ThemeToggle = (props) => {
   }, [theme.palette.mode])
 
   return (
-    <DarkToggle {...props} 
+    <DarkToggle {...props}
+      disableTouchRipple={true}
         checked={theme.palette.mode !== 'dark'} 
         onChange={colorMode.toggleColorMode} 
         sx={{ padding: 0, 
@@ -114,7 +121,7 @@ const ThemeToggle = (props) => {
             border: `1px solid ${theme.palette.mode === 'dark' ? "#315A90" : "#C7C3C3"}`,
             backgroundColor: theme.palette.mode === 'dark' ? "rgba(14, 25, 40, 1)" : "#fff",
             "&:hover": {
-              backgroundColor: theme.palette.mode === 'dark' ? "transparent" : "#ebebeb",
+              backgroundColor: theme.palette.mode === 'dark' ? "#091e3a!important" : "#ebebeb",
             }
         }} 
     />
