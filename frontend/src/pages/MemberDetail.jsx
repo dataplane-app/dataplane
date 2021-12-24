@@ -14,7 +14,6 @@ import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import {useHistory, useParams} from "react-router-dom";
-import { useMe } from '../graphql/me';
 import { useGetUser } from '../graphql/getUser'
 import ct from "countries-and-timezones";
 
@@ -28,12 +27,11 @@ const drawerStyles = {
 
 const MemberDetail = () => {
     let history = useHistory();
-    const meGraphQL = useMe()
     const getUser = useGetUser()
 
     const { memberId } = useParams();
 
-    // meData states
+    // Member states
     const [user, setUser] = useState({})
     const [isActive, setIsActive] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
