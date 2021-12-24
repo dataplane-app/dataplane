@@ -56,6 +56,7 @@ function App() {
                       </Button>
                     )}
                     autoHideDuration={60000}
+                    style={{ marginTop: 80 }}
                 >
                     <Box className="app" backgroundColor="background.main">
                         <UserAuth
