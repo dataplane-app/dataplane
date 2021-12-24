@@ -19,7 +19,6 @@ export const LoginCallback = ({Authstate}) => {
         ignoreQueryPrefix: true
       })
       var access = queryString.accesstoken
-      var refresh = queryString.refreshtoken
 
       ConsoleLogHelper("Setting auth token: ", access)
 
@@ -27,7 +26,7 @@ export const LoginCallback = ({Authstate}) => {
 
 
     // Redirection url is set in local storage before oauth redirect
-    const redirectLocation = localStorage.getItem('redirectLocation') || ''
+    const redirectLocation = localStorage.getItem('redirectLocation') || '/'
 
     ConsoleLogHelper("Callback redirection", redirectLocation)
 
@@ -43,6 +42,7 @@ export const LoginCallback = ({Authstate}) => {
     // window.location.href = redirectLocation
 
     history.push(redirectLocation)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return <Login />
