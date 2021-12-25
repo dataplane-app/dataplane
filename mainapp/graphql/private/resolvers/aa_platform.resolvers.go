@@ -5,12 +5,13 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/auth_permissions"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
 	"dataplane/logging"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -120,6 +121,10 @@ func (r *mutationResolver) RenameEnvironment(ctx context.Context, input *private
 	}, nil
 }
 
+func (r *mutationResolver) UpdatePlatform(ctx context.Context) (*privategraphql.Platform, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environment, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -172,6 +177,21 @@ func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environm
 	}
 
 	return e, nil
+}
+
+func (r *queryResolver) GetPlatform(ctx context.Context) (*privategraphql.Platform, error) {
+	p := privategraphql.Platform{}
+
+	err := database.DBConn.First(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrieve platform database error.")
+	}
+
+	return &p, nil
 }
 
 // Mutation returns privategraphql.MutationResolver implementation.

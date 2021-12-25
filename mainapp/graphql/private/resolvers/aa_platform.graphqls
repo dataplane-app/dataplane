@@ -1,6 +1,13 @@
 type Environments{
-  id: String!
+    id: String!
 	name: String!
+}
+
+type Platform{
+	id: String!
+	business_name: String!
+	timezone: String!
+	complete: Boolean!
 }
 
 input RenameEnvironment{
@@ -8,6 +15,12 @@ input RenameEnvironment{
 	name: String!
 }
 
+input updatePlatformInput{
+	id: String!
+	business_name: String!
+	timezone: String!
+	complete: Boolean!
+}
 
 
 input AddEnvironmentInput {
@@ -21,6 +34,12 @@ type Query {
 	+ **Permissions**: linked to environment_user table
 	"""  
     getEnvironments: [Environments]
+	"""
+	Get platform information user logged in belongs.
+	+ **Route**: Private
+	+ **Permissions**: logged in
+	"""  
+    getPlatform: Platform
 }
 
 extend type Mutation {
@@ -29,11 +48,17 @@ extend type Mutation {
 	+ **Route**: Private
 	+ **Permissions**: admin_platform, platform_environment
 	"""  
-  addEnvironment(input: AddEnvironmentInput): Environments
+    addEnvironment(input: AddEnvironmentInput): Environments
 	"""
 	Rename the environment.
 	+ **Route**: Private
 	+ **Permissions**: admin_platform, platform_environment
 	"""  
-  renameEnvironment(input: RenameEnvironment): Environments
+    renameEnvironment(input: RenameEnvironment): Environments
+  	"""
+	Set platform information.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform
+	"""  
+    updatePlatform: Platform
 }
