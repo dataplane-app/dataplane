@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/auth_permissions"
+	"dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm/clause"
 )
 
 func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategraphql.AddEnvironmentInput) (*models.Environment, error) {
@@ -135,8 +136,6 @@ func (r *mutationResolver) UpdatePlatform(ctx context.Context, input *privategra
 		return nil, errors.New("Requires permissions.")
 	}
 
-	// ----- Database actions
-
 	err := database.DBConn.Updates(models.Platform{
 		ID:           input.ID,
 		BusinessName: input.BusinessName,
@@ -153,6 +152,73 @@ func (r *mutationResolver) UpdatePlatform(ctx context.Context, input *privategra
 
 	response := "Platform updated"
 	return &response, nil
+}
+
+func (r *mutationResolver) AddUserToEnvironment(ctx context.Context, userID string, environmentID string) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_add_user", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	e := models.EnvironmentUser{
+		EnvironmentID: environmentID,
+		UserID:        userID,
+	}
+
+	err := database.DBConn.Clauses(clause.OnConflict{DoNothing: true}).Create(&e).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Add user to environment error.")
+	}
+
+	rtn := "success"
+
+	return &rtn, nil
+}
+
+func (r *mutationResolver) RemoveUserFromEnvironment(ctx context.Context, userID string, environmentID string) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_remove_user", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	err := database.DBConn.Where("environment_id=? and user_id=?", environmentID, userID).Delete(&models.EnvironmentUser{}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Remove user from environment error.")
+	}
+
+	rtn := "success"
+
+	return &rtn, nil
 }
 
 func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environment, error) {

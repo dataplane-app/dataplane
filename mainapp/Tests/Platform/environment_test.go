@@ -1,4 +1,4 @@
-package usertests
+package admintests
 
 import (
 	"dataplane/Tests/testutils"
@@ -15,7 +15,7 @@ import (
 
 /*
 For individual tests - in separate window run: go run server.go
-go test -p 1 -v -count=1 -run TestEnvironment dataplane/Tests/users
+go test -p 1 -v -count=1 -run TestEnvironment dataplane/Tests/Platform
 * Create admin user and platform
 * Login
 * Get environments
