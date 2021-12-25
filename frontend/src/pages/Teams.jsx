@@ -54,7 +54,7 @@ const Teams = () => {
             {
                 Header: "Status",
                 accessor: "status",
-                Cell: row => <Chip label={row.value} color="success" size="small" />
+                Cell: row => row.value === "active" ? <CustomChip label="Active" customColor="green"/> : <CustomChip label="Inactive" customColor="red" />
             },
         ],
         []
@@ -79,26 +79,26 @@ const Teams = () => {
                 Team
             </Typography>
 
-            <Box mt={4} sx={{ width: { lg: "80%" } }}>
-                <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
+            <Box mt={4}>
+                <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start" maxWidth="570px">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: "center" }}>
                         <CustomChip amount={rows.length} label="Members" margin={2} customColor="orange" />
                     </Grid>
 
-                    <Grid item display="flex" alignItems="center" sx={{ alignSelf: "center", flex: 1 }}>
+                    <Grid item display="flex" alignItems="center" sx={{ alignSelf: "center" }}>
                         <Search placeholder="Find members" onChange={setGlobalFilter}/>
                     </Grid>
 
-                    <Grid display="flex">
+                    <Grid display="flex" sx={{ marginLeft: "auto", marginRight: "-10px" }}>
                         <Button onClick={() => setIsOpenDeleteUser(true)} variant="contained" color="primary" width="3.81rem" >Add</Button>
                     </Grid>
                 </Grid>
             </Box>
 
-            <Box component="table" mt={4} sx={{ width: { lg: "80%" } }} {...getTableProps()}>
+            <Box component="table" mt={4} sx={{ minWidth: 'fit-content', maxWidth: "570px"  }} {...getTableProps()}>
                 <thead>
                     {headerGroups.map((headerGroup) => (
-                        <Box component="tr" display="grid" sx={{"*:first-child":{ml:'22px'}}} gridTemplateColumns="repeat(3, 1fr)" justifyContent="flex-start" {...headerGroup.getHeaderGroupProps()}>
+                        <Box component="tr" display="grid" sx={{"*:first-child":{ml:'22px'}, "*:last-child":{textAlign: 'center'}}} gridTemplateColumns="repeat(3, 1fr)" justifyContent="flex-start" {...headerGroup.getHeaderGroupProps()}>
                             {headerGroup.headers.map((column) => (
                                 <Box component="td" color="text.primary" fontWeight="600" fontSize="15px" textAlign="left" {...column.getHeaderProps()}>
                                     {column.render("Header")}
@@ -111,7 +111,7 @@ const Teams = () => {
                     {rows.map((row, i) => {
                         prepareRow(row);
                         return (
-                            <Box component="tr" {...row.getRowProps()} display="grid" gridTemplateColumns="repeat(3, 1fr)" alignItems="start" borderRadius="5px" backgroundColor="background.secondary" mt={2} sx={{ border: 1, borderColor: "divider", padding: "15px 0", cursor: "pointer", "&:hover": { background: "background.hoverSecondary" } }}>
+                            <Box component="tr" {...row.getRowProps()} display="grid" gridTemplateColumns="repeat(3, 1fr)" alignItems="start" borderRadius="5px" backgroundColor="background.secondary" mt={2} sx={{ border: 1, borderColor: "divider", padding: "15px 0", cursor: "pointer", "&:hover": { background: "background.hoverSecondary"}, "td:last-child":{textAlign:'center'} }}>
                                 {row.cells.map((cell) => {
                                     return (
                                         <Box component="td" {...cell.getCellProps()} textAlign="left" >
