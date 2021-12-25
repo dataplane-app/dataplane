@@ -20,19 +20,17 @@ type AddUpdateMeInput struct {
 }
 
 type AddUsersInput struct {
-	FirstName     string `json:"first_name"`
-	LastName      string `json:"last_name"`
-	Email         string `json:"email"`
-	JobTitle      string `json:"job_title"`
-	Password      string `json:"password"`
-	Timezone      string `json:"timezone"`
-	EnvironmentID string `json:"environmentID"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	JobTitle  string `json:"job_title"`
+	Password  string `json:"password"`
+	Timezone  string `json:"timezone"`
 }
 
 type ChangePasswordInput struct {
-	Password      string `json:"password"`
-	EnvironmentID string `json:"environmentID"`
-	UserID        string `json:"user_id"`
+	Password string `json:"password"`
+	UserID   string `json:"user_id"`
 }
 
 type Pipelines struct {

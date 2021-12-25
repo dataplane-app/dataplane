@@ -16,12 +16,10 @@ input AddUsersInput {
 	job_title: String! 
 	password:  String!   
 	timezone:  String! 
-	environmentID: String!
 }
 
 input ChangePasswordInput {
-	password: String!    
-	environmentID: String!
+	password: String! 
 	user_id: String!
 }
 
@@ -51,27 +49,27 @@ extend type Mutation {
 	"""
 	Creating a user and attaching to an environment.
 	+ **Route**: Private
-	+ **Permission**: admin_platform (write), admin_environment (of env)(write), environment_users (write)
+	+ **Permission**: admin_platform (write), platform_manage_users (write)
 	"""
   	createUser(input: AddUsersInput): User
 	"""
 	Change password on behalf of user.
 	+ **Route**: Private
-	+ **Permission**: admin_platform, admin_environment (of env), environment_users
+	+ **Permission**: admin_platform, platform_manage_users
 	"""
 	updateChangePassword(input: ChangePasswordInput): String
 	"""
 	Deactivate user.
 	+ **Route**: Private
-	+ **Permission**: admin_platform, admin_environment (of env), environment_users
+	+ **Permission**: admin_platform, platform_manage_users
 	"""
-	updateDeactivateUser(userid: String!, environmentID: String!): String
+	updateDeactivateUser(userid: String!): String
 	"""
 	Delete user.
 	+ **Route**: Private
-	+ **Permission**: admin_platform, admin_environment (of env), environment_users
+	+ **Permission**: admin_platform, platform_manage_users
 	"""
-	updateDeleteUser(userid: String!, environmentID: String!): String
+	updateDeleteUser(userid: String!): String
 	"""
 	Change my password.
 	+ **Route**: Private
