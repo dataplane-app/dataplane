@@ -98,7 +98,7 @@ const Teams = () => {
             <Box component="table" mt={4} sx={{ width: { lg: "80%" } }} {...getTableProps()}>
                 <thead>
                     {headerGroups.map((headerGroup) => (
-                        <Box component="tr" display="grid" gridTemplateColumns="repeat(3, 1fr)" justifyContent="flex-start" {...headerGroup.getHeaderGroupProps()}>
+                        <Box component="tr" display="grid" sx={{"*:first-child":{ml:'22px'}}} gridTemplateColumns="repeat(3, 1fr)" justifyContent="flex-start" {...headerGroup.getHeaderGroupProps()}>
                             {headerGroup.headers.map((column) => (
                                 <Box component="td" color="text.primary" fontWeight="600" fontSize="15px" textAlign="left" {...column.getHeaderProps()}>
                                     {column.render("Header")}
@@ -136,7 +136,7 @@ const CustomMember = ({ row, onClick }) => {
     const [first_name, last_name, job_title] = row.value
 
     return (
-        <Grid container direction="column" alignItems="center" justifyContent="flex-start" onClick={onClick}>
+        <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start" onClick={onClick}>
             <Typography component="h4" variant="h3" color="primary" className="text-blue font-black text-lg ">{first_name} {last_name}</Typography>
             <Typography component="h5" variant="subtitle1" >{job_title}</Typography>
         </Grid>
