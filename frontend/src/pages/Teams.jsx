@@ -44,7 +44,7 @@ const Teams = () => {
             {
                 Header: "Member",
                 accessor: row => [row.first_name, row.last_name, row.job_title],
-                Cell: row => <CustomMember row={row} onClick={() => history.push(`/members/${row.row.original.user_id}`)}/>,
+                Cell: row => <CustomMember row={row} onClick={() => history.push(`/teams/${row.row.original.user_id}`)}/>,
             },
             {
                 Header: "Email",

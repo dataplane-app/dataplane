@@ -101,7 +101,7 @@ const UserDropdown = ({me}) => {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <MenuItem onClick={() => history.push(`/members/${me.user_id}`)}>
+        <MenuItem onClick={() => history.push(`/myaccount/${me.user_id}`)}>
           My account
         </MenuItem>
         <MenuItem style={{margin:'auto'}} onClick={() => history.push(`/logout`)}>

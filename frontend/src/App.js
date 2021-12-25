@@ -75,7 +75,7 @@ function App() {
                             <Route exact path="/login">
                                 <LoginUser />
                             </Route>
-                            <PrivateRoute exact path={["/", "/teams", "/teams/:teamId", "/members/:memberId", "/teams/access/:accessId"]}>
+                            <PrivateRoute exact path={["/", "/teams", "/teams/:teamId", "/myaccount/:memberId", "/teams/access/:accessId"]}>
                                 <Layout>
                                     <Route exact path="/">
                                         <Pipelines />
@@ -89,7 +89,7 @@ function App() {
                                     <Route exact path="/teams/access/:accessId">
                                         <TeamGroup />
                                     </Route>
-                                    <Route exact path="/members/:memberId">
+                                    <Route exact path="/myaccount/:memberId">
                                         <MemberDetail />
                                     </Route>
                                 </Layout>
