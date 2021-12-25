@@ -11,6 +11,7 @@ const CreateUser = gql`
            first_name
 	         last_name
 	         email
+           job_title
 	         timezone
         }
  }

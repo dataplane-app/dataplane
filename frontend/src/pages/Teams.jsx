@@ -33,11 +33,14 @@ const Teams = () => {
     // Get users on load
     const getUsers = useGetUsers();
     useEffect(() => {
-        (async function(){
+        retrieveUsers()
+    }, [])
+
+    // Get users
+    const retrieveUsers = async () => {
             let users = await getUsers();
             !users.errors ? setData(users) : enqueueSnackbar("Unable to retrieve users", { variant: "error" });
-        })()
-    }, [])
+    }
 
     const columns = useMemo(
         () => [
@@ -126,7 +129,7 @@ const Teams = () => {
             </Box>
 
             <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
-                <AddUserDrawer user="Saul Frank" handleClose={() => setIsOpenDeleteUser(false)}/>
+                <AddUserDrawer user="Saul Frank" handleClose={() => {setIsOpenDeleteUser(false); retrieveUsers()}}/>
             </Drawer>
         </Box>
     );

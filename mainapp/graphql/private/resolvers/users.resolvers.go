@@ -50,6 +50,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql
 		Email:     input.Email,
 		Status:    "active",
 		Active:    true,
+		JobTitle:  input.JobTitle,
 		Timezone:  input.Timezone,
 		Username:  input.Email,
 	}
@@ -78,6 +79,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql
 		FirstName: userData.FirstName,
 		LastName:  userData.LastName,
 		Email:     userData.Email,
+		JobTitle:  userData.JobTitle,
 		Timezone:  userData.Timezone,
 	}, nil
 }
