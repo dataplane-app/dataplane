@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/auth_permissions"
+	"dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -119,6 +119,39 @@ func (r *mutationResolver) RenameEnvironment(ctx context.Context, input *private
 		ID:   e.ID,
 		Name: e.Name,
 	}, nil
+}
+
+func (r *mutationResolver) UpdatePlatform(ctx context.Context, input *privategraphql.UpdatePlatformInput) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	err := database.DBConn.Updates(models.Platform{
+		ID:           input.ID,
+		BusinessName: input.BusinessName,
+		Timezone:     input.Timezone,
+		Complete:     input.Complete,
+	}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("update platform database error")
+	}
+
+	response := "Platform updated"
+	return &response, nil
 }
 
 func (r *mutationResolver) AddUserToEnvironment(ctx context.Context, userID string, environmentID string) (*string, error) {
@@ -240,6 +273,21 @@ func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environm
 	}
 
 	return e, nil
+}
+
+func (r *queryResolver) GetPlatform(ctx context.Context) (*privategraphql.Platform, error) {
+	p := privategraphql.Platform{}
+
+	err := database.DBConn.First(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrieve platform database error.")
+	}
+
+	return &p, nil
 }
 
 // Mutation returns privategraphql.MutationResolver implementation.

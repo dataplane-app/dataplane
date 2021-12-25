@@ -49,8 +49,17 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql
 		Email:     input.Email,
 		Status:    "active",
 		Active:    true,
+		JobTitle:  input.JobTitle,
 		Timezone:  input.Timezone,
 		Username:  input.Email,
+	}
+
+	// If no timezone provided use the org timezone
+	if input.Timezone == "" {
+		u := models.Platform{}
+		database.DBConn.First(&u)
+		userData.Timezone = u.Timezone
+
 	}
 
 	/* Input validation */
@@ -77,6 +86,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql
 		FirstName: userData.FirstName,
 		LastName:  userData.LastName,
 		Email:     userData.Email,
+		JobTitle:  userData.JobTitle,
 		Timezone:  userData.Timezone,
 	}, nil
 }

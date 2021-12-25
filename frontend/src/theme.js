@@ -123,6 +123,9 @@ const createCustomTheme = (mode) => ({
             },
       },
     },
+    zIndex:{
+        snackbar: 9999
+    }
 })
 
 export default createCustomTheme;

@@ -37,6 +37,13 @@ type Pipelines struct {
 	Name string `json:"name"`
 }
 
+type Platform struct {
+	ID           string `json:"id"`
+	BusinessName string `json:"business_name"`
+	Timezone     string `json:"timezone"`
+	Complete     bool   `json:"complete"`
+}
+
 type Preferences struct {
 	Preference string `json:"preference"`
 	Value      string `json:"value"`
@@ -49,4 +56,11 @@ type RenameEnvironment struct {
 
 type Workers struct {
 	Name string `json:"name"`
+}
+
+type UpdatePlatformInput struct {
+	ID           string `json:"id"`
+	BusinessName string `json:"business_name"`
+	Timezone     string `json:"timezone"`
+	Complete     bool   `json:"complete"`
 }

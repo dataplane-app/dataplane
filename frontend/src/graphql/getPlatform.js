@@ -3,21 +3,18 @@ import { useGlobalAuthState } from "../Auth/UserAuth";
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE
 
-const CreateUser = gql`
- mutation createUser($input: AddUsersInput!){
-     createUser(input: $input)
-        {
-           user_id
-           first_name
-	         last_name
-	         email
-           job_title
-	         timezone
+const GetPlatform = gql`
+    query getPlatform(){
+      getPlatform{
+                id
+                business_name
+                timezone
+                complete
         }
- }
+    }
 `;
 
-export const useCreateUser = () => {   
+export const useGetPlatform = () => { 
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -29,12 +26,12 @@ export const useCreateUser = () => {
       headers,
     });
   
-    return async (input) => {
+    return async () => {
       try {
-        const res = await client.request(CreateUser, input);
-        return res?.createUser;
+        const res = await client.request(GetPlatform);
+        return res?.getPlatform;
       } catch (error) {
         return JSON.parse(JSON.stringify(error, undefined, 2)).response
       }
     };
-}
+  };

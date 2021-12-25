@@ -70,6 +70,7 @@ type ComplexityRoot struct {
 		UpdateMe                      func(childComplexity int, input *AddUpdateMeInput) int
 		UpdatePermissionToAccessGroup func(childComplexity int, environmentID string, resource string, resourceID string, access string, accessGroupID string) int
 		UpdatePermissionToUser        func(childComplexity int, environmentID string, resource string, resourceID string, access string, userID string) int
+		UpdatePlatform                func(childComplexity int, input *UpdatePlatformInput) int
 		UpdatePreferences             func(childComplexity int, input *AddPreferencesInput) int
 		UpdateUserToAccessGroup       func(childComplexity int, environmentID string, userID string, accessGroupID string) int
 	}
@@ -89,6 +90,13 @@ type ComplexityRoot struct {
 		Name func(childComplexity int) int
 	}
 
+	Platform struct {
+		BusinessName func(childComplexity int) int
+		Complete     func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Timezone     func(childComplexity int) int
+	}
+
 	Preferences struct {
 		Preference func(childComplexity int) int
 		Value      func(childComplexity int) int
@@ -100,6 +108,7 @@ type ComplexityRoot struct {
 		GetEnvironments      func(childComplexity int) int
 		GetOnePreference     func(childComplexity int, preference string) int
 		GetPipelines         func(childComplexity int) int
+		GetPlatform          func(childComplexity int) int
 		GetUser              func(childComplexity int, userID string) int
 		GetUsers             func(childComplexity int) int
 		GetWorkers           func(childComplexity int) int
@@ -128,6 +137,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	AddEnvironment(ctx context.Context, input *AddEnvironmentInput) (*models.Environment, error)
 	RenameEnvironment(ctx context.Context, input *RenameEnvironment) (*models.Environment, error)
+	UpdatePlatform(ctx context.Context, input *UpdatePlatformInput) (*string, error)
 	AddUserToEnvironment(ctx context.Context, userID string, environmentID string) (*string, error)
 	RemoveUserFromEnvironment(ctx context.Context, userID string, environmentID string) (*string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
@@ -147,6 +157,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*models.Environment, error)
+	GetPlatform(ctx context.Context) (*Platform, error)
 	Me(ctx context.Context) (*models.Users, error)
 	AvailablePermissions(ctx context.Context) ([]*models.ResourceTypeStruct, error)
 	MyPermissions(ctx context.Context) ([]*models.Permissions, error)
@@ -402,6 +413,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdatePermissionToUser(childComplexity, args["environmentID"].(string), args["resource"].(string), args["resourceID"].(string), args["access"].(string), args["user_id"].(string)), true
 
+	case "Mutation.updatePlatform":
+		if e.complexity.Mutation.UpdatePlatform == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updatePlatform_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdatePlatform(childComplexity, args["input"].(*UpdatePlatformInput)), true
+
 	case "Mutation.updatePreferences":
 		if e.complexity.Mutation.UpdatePreferences == nil {
 			break
@@ -489,6 +512,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Pipelines.Name(childComplexity), true
 
+	case "Platform.business_name":
+		if e.complexity.Platform.BusinessName == nil {
+			break
+		}
+
+		return e.complexity.Platform.BusinessName(childComplexity), true
+
+	case "Platform.complete":
+		if e.complexity.Platform.Complete == nil {
+			break
+		}
+
+		return e.complexity.Platform.Complete(childComplexity), true
+
+	case "Platform.id":
+		if e.complexity.Platform.ID == nil {
+			break
+		}
+
+		return e.complexity.Platform.ID(childComplexity), true
+
+	case "Platform.timezone":
+		if e.complexity.Platform.Timezone == nil {
+			break
+		}
+
+		return e.complexity.Platform.Timezone(childComplexity), true
+
 	case "Preferences.preference":
 		if e.complexity.Preferences.Preference == nil {
 			break
@@ -542,6 +593,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetPipelines(childComplexity), true
+
+	case "Query.getPlatform":
+		if e.complexity.Query.GetPlatform == nil {
+			break
+		}
+
+		return e.complexity.Query.GetPlatform(childComplexity), true
 
 	case "Query.getUser":
 		if e.complexity.Query.GetUser == nil {
@@ -730,8 +788,15 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "resolvers/aa_platform.graphqls", Input: `type Environments{
-  id: String!
+    id: String!
 	name: String!
+}
+
+type Platform{
+	id: String!
+	business_name: String!
+	timezone: String!
+	complete: Boolean!
 }
 
 input RenameEnvironment{
@@ -739,6 +804,12 @@ input RenameEnvironment{
 	name: String!
 }
 
+input updatePlatformInput{
+	id: String!
+	business_name: String!
+	timezone: String!
+	complete: Boolean!
+}
 
 
 input AddEnvironmentInput {
@@ -752,6 +823,12 @@ type Query {
 	+ **Permissions**: linked to environment_user table
 	"""  
     getEnvironments: [Environments]
+	"""
+	Get platform information user logged in belongs.
+	+ **Route**: Private
+	+ **Permissions**: logged in
+	"""  
+    getPlatform: Platform
 }
 
 extend type Mutation {
@@ -760,19 +837,25 @@ extend type Mutation {
 	+ **Route**: Private
 	+ **Permissions**: admin_platform, platform_environment
 	"""  
-  addEnvironment(input: AddEnvironmentInput): Environments
+    addEnvironment(input: AddEnvironmentInput): Environments
 	"""
 	Rename the environment.
 	+ **Route**: Private
 	+ **Permissions**: admin_platform, platform_environment
 	"""  
-  renameEnvironment(input: RenameEnvironment): Environments
+    renameEnvironment(input: RenameEnvironment): Environments
+  	"""
+	Set platform information.
+	+ **Route**: Private
+	+ **Permissions**: admin_platform
+	"""  
+    updatePlatform(input: updatePlatformInput): String
   	"""
 	Add user to environment.
 	+ **Route**: Private
 	+ **Permissions**: admin_platform, platform_environment, environment_add_user
 	"""  
-  addUserToEnvironment(user_id: String!, environment_id: String!): String
+  	addUserToEnvironment(user_id: String!, environment_id: String!): String
     """
 	Remove user from environment.
 	+ **Route**: Private
@@ -947,8 +1030,8 @@ extend type Mutation {
 	first_name: String!    
 	last_name:  String!     
 	email:     String!     
-	job_title: String!
-	timezone:  String!    
+	job_title: String
+	timezone:  String   
 	status: String! 
 }
 
@@ -1418,6 +1501,21 @@ func (ec *executionContext) field_Mutation_updatePermissionToUser_args(ctx conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updatePlatform_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *UpdatePlatformInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOupdatePlatformInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdatePlatformInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updatePreferences_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1824,6 +1922,45 @@ func (ec *executionContext) _Mutation_renameEnvironment(ctx context.Context, fie
 	res := resTmp.(*models.Environment)
 	fc.Result = res
 	return ec.marshalOEnvironments2ᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updatePlatform(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updatePlatform_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdatePlatform(rctx, args["input"].(*UpdatePlatformInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_addUserToEnvironment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2786,6 +2923,146 @@ func (ec *executionContext) _Pipelines_name(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Platform_id(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Platform",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Platform_business_name(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Platform",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BusinessName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Platform_timezone(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Platform",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timezone, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Platform_complete(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Platform",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Complete, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Preferences_preference(ctx context.Context, field graphql.CollectedField, obj *Preferences) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2886,6 +3163,38 @@ func (ec *executionContext) _Query_getEnvironments(ctx context.Context, field gr
 	res := resTmp.([]*models.Environment)
 	fc.Result = res
 	return ec.marshalOEnvironments2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getPlatform(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetPlatform(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*Platform)
+	fc.Result = res
+	return ec.marshalOPlatform2ᚖdataplaneᚋgraphqlᚋprivateᚐPlatform(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3532,14 +3841,11 @@ func (ec *executionContext) _User_job_title(ctx context.Context, field graphql.C
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_timezone(ctx context.Context, field graphql.CollectedField, obj *models.Users) (ret graphql.Marshaler) {
@@ -3567,14 +3873,11 @@ func (ec *executionContext) _User_timezone(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_status(ctx context.Context, field graphql.CollectedField, obj *models.Users) (ret graphql.Marshaler) {
@@ -5003,6 +5306,53 @@ func (ec *executionContext) unmarshalInputRenameEnvironment(ctx context.Context,
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputupdatePlatformInput(ctx context.Context, obj interface{}) (UpdatePlatformInput, error) {
+	var it UpdatePlatformInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "business_name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("business_name"))
+			it.BusinessName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "timezone":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
+			it.Timezone, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "complete":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("complete"))
+			it.Complete, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -5099,6 +5449,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_addEnvironment(ctx, field)
 		case "renameEnvironment":
 			out.Values[i] = ec._Mutation_renameEnvironment(ctx, field)
+		case "updatePlatform":
+			out.Values[i] = ec._Mutation_updatePlatform(ctx, field)
 		case "addUserToEnvironment":
 			out.Values[i] = ec._Mutation_addUserToEnvironment(ctx, field)
 		case "removeUserFromEnvironment":
@@ -5252,6 +5604,48 @@ func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet
 	return out
 }
 
+var platformImplementors = []string{"Platform"}
+
+func (ec *executionContext) _Platform(ctx context.Context, sel ast.SelectionSet, obj *Platform) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, platformImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Platform")
+		case "id":
+			out.Values[i] = ec._Platform_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "business_name":
+			out.Values[i] = ec._Platform_business_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "timezone":
+			out.Values[i] = ec._Platform_timezone(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "complete":
+			out.Values[i] = ec._Platform_complete(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var preferencesImplementors = []string{"Preferences"}
 
 func (ec *executionContext) _Preferences(ctx context.Context, sel ast.SelectionSet, obj *Preferences) graphql.Marshaler {
@@ -5308,6 +5702,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getEnvironments(ctx, field)
+				return res
+			})
+		case "getPlatform":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getPlatform(ctx, field)
 				return res
 			})
 		case "me":
@@ -5484,14 +5889,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "job_title":
 			out.Values[i] = ec._User_job_title(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "timezone":
 			out.Values[i] = ec._User_timezone(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "status":
 			out.Values[i] = ec._User_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -6328,6 +6727,13 @@ func (ec *executionContext) marshalOPipelines2ᚖdataplaneᚋgraphqlᚋprivate�
 	return ec._Pipelines(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOPlatform2ᚖdataplaneᚋgraphqlᚋprivateᚐPlatform(ctx context.Context, sel ast.SelectionSet, v *Platform) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Platform(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOPreferences2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐPreferences(ctx context.Context, sel ast.SelectionSet, v []*Preferences) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -6704,6 +7110,14 @@ func (ec *executionContext) marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 		return graphql.Null
 	}
 	return ec.___Type(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOupdatePlatformInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdatePlatformInput(ctx context.Context, v interface{}) (*UpdatePlatformInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputupdatePlatformInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 // endregion ***************************** type.gotpl *****************************
