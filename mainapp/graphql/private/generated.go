@@ -907,8 +907,8 @@ extend type Mutation {
 	first_name: String!    
 	last_name:  String!     
 	email:     String!     
-	job_title: String!
-	timezone:  String!    
+	job_title: String
+	timezone:  String   
 	status: String! 
 }
 
@@ -3386,14 +3386,11 @@ func (ec *executionContext) _User_job_title(ctx context.Context, field graphql.C
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_timezone(ctx context.Context, field graphql.CollectedField, obj *models.Users) (ret graphql.Marshaler) {
@@ -3421,14 +3418,11 @@ func (ec *executionContext) _User_timezone(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_status(ctx context.Context, field graphql.CollectedField, obj *models.Users) (ret graphql.Marshaler) {
@@ -5350,14 +5344,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "job_title":
 			out.Values[i] = ec._User_job_title(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "timezone":
 			out.Values[i] = ec._User_timezone(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "status":
 			out.Values[i] = ec._User_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
