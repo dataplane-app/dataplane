@@ -16,7 +16,7 @@ const drawerWidth = 507;
 const drawerStyles = {
 width: drawerWidth,
 flexShrink: 0,
-zIndex: 9999,
+zIndex: 9998,
 [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', background:'#F7FBFD'},
 }
 

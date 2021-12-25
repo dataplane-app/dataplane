@@ -15,7 +15,7 @@ const AddUserDrawer = ({ handleClose }) => {
 
     const [timezone, setTimezone] = useState(null)
 
-    const { enqueueSnackbar } = useSnackbar();
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const { register, handleSubmit, watch, formState: { errors } } = useForm();
 
     async function onSubmit(data){
@@ -34,10 +34,10 @@ const AddUserDrawer = ({ handleClose }) => {
         let response = await createUser(allData)
         if(response && response.user_id){
             handleClose()
+            closeSnackbar()
+            enqueueSnackbar(`User created: ${data.first_name} ${data.last_name} (${data.email})`, { variant: "success" })
         }else{
-            response.errors.map(err => {
-                enqueueSnackbar(err.message, { variant: "error" });
-            })
+            response.errors.map(err => enqueueSnackbar(err.message, { variant: "error" }))
         }
     }
 
@@ -57,7 +57,7 @@ const AddUserDrawer = ({ handleClose }) => {
             <Box sx={{ p: "4.125rem" }}>
 
                 <Box position="absolute" top="26px" right="39px" display="flex" alignItems="center">
-                    <Button onClick={handleClose}  variant="text" startIcon={<FontAwesomeIcon icon={faTimes}/>}>
+                    <Button onClick={handleClose} style={{ paddingLeft: "16px", paddingRight: "16px"}}variant="text" startIcon={<FontAwesomeIcon icon={faTimes}/>}>
                         Close
                     </Button>
                 </Box>
