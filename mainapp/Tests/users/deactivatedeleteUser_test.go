@@ -63,8 +63,7 @@ func TestDeactivateDeleteUser(t *testing.T) {
 				email: "` + faker.Email() + `",
 				job_title: "",
 				password: "` + faker.Password() + `",
-				timezone: " ` + faker.Timezone() + ` ",
-				environmentID: " ` + testutils.TestEnvironmentID + ` "
+				timezone: " ` + faker.Timezone() + ` "
 				}) {
 				user_id
 				first_name
@@ -88,8 +87,7 @@ func TestDeactivateDeleteUser(t *testing.T) {
 	// --------- Deactivate User --------------
 	deactivateUser := `mutation {
 		updateDeactivateUser(
-			userid: "` + testUserID + `",
-			environmentID: " ` + testutils.TestEnvironmentID + ` "
+			userid: "` + testUserID + `"
 		) 
 	}`
 
@@ -106,8 +104,7 @@ func TestDeactivateDeleteUser(t *testing.T) {
 	// --------- Delete User --------------
 	deleteUser := `mutation {
 			updateDeleteUser(
-				userid: "` + testUserID + `",
-				environmentID: " ` + testutils.TestEnvironmentID + ` "
+				userid: "` + testUserID + `"
 			) 
 		}`
 

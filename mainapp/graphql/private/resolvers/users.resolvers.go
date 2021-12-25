@@ -26,8 +26,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: input.EnvironmentID, Access: "write", EnvironmentID: input.EnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_users", ResourceID: input.EnvironmentID, Access: "write", EnvironmentID: input.EnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_manage_users", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -99,8 +98,7 @@ func (r *mutationResolver) UpdateChangePassword(ctx context.Context, input *priv
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: input.EnvironmentID, Access: "write", EnvironmentID: input.EnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_users", ResourceID: input.EnvironmentID, Access: "write", EnvironmentID: input.EnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_manage_users", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -130,15 +128,14 @@ func (r *mutationResolver) UpdateChangePassword(ctx context.Context, input *priv
 	return &response, nil
 }
 
-func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid string, environmentID string) (*string, error) {
+func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_users", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_manage_users", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -187,15 +184,14 @@ func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid stri
 	return &response, nil
 }
 
-func (r *mutationResolver) UpdateDeleteUser(ctx context.Context, userid string, environmentID string) (*string, error) {
+func (r *mutationResolver) UpdateDeleteUser(ctx context.Context, userid string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_users", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_manage_users", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -291,6 +287,7 @@ func (r *queryResolver) GetUsers(ctx context.Context) ([]*models.Users, error) {
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_manage_users", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)

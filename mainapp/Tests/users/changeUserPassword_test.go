@@ -53,8 +53,7 @@ func TestChangeUserPassword(t *testing.T) {
 		updateChangePassword(
 			input: {
 				password: "Hello123!",
-				user_id: " ` + testutils.UserData["changeuserpassword"].Username + `",
-				environmentID: " ` + testutils.UserData["changeuserpassword"].EnvironmentID + ` "
+				user_id: " ` + testutils.UserData["changeuserpassword"].Username + `"
 			}
 		)
 	}`

@@ -63,8 +63,8 @@ type ComplexityRoot struct {
 		RenameEnvironment             func(childComplexity int, input *RenameEnvironment) int
 		UpdateChangeMyPassword        func(childComplexity int, password string) int
 		UpdateChangePassword          func(childComplexity int, input *ChangePasswordInput) int
-		UpdateDeactivateUser          func(childComplexity int, userid string, environmentID string) int
-		UpdateDeleteUser              func(childComplexity int, userid string, environmentID string) int
+		UpdateDeactivateUser          func(childComplexity int, userid string) int
+		UpdateDeleteUser              func(childComplexity int, userid string) int
 		UpdateMe                      func(childComplexity int, input *AddUpdateMeInput) int
 		UpdatePermissionToAccessGroup func(childComplexity int, environmentID string, resource string, resourceID string, access string, accessGroupID string) int
 		UpdatePermissionToUser        func(childComplexity int, environmentID string, resource string, resourceID string, access string, userID string) int
@@ -147,8 +147,8 @@ type MutationResolver interface {
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	CreateUser(ctx context.Context, input *AddUsersInput) (*models.Users, error)
 	UpdateChangePassword(ctx context.Context, input *ChangePasswordInput) (*string, error)
-	UpdateDeactivateUser(ctx context.Context, userid string, environmentID string) (*string, error)
-	UpdateDeleteUser(ctx context.Context, userid string, environmentID string) (*string, error)
+	UpdateDeactivateUser(ctx context.Context, userid string) (*string, error)
+	UpdateDeleteUser(ctx context.Context, userid string) (*string, error)
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 }
 type QueryResolver interface {
@@ -335,7 +335,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateDeactivateUser(childComplexity, args["userid"].(string), args["environmentID"].(string)), true
+		return e.complexity.Mutation.UpdateDeactivateUser(childComplexity, args["userid"].(string)), true
 
 	case "Mutation.updateDeleteUser":
 		if e.complexity.Mutation.UpdateDeleteUser == nil {
@@ -347,7 +347,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateDeleteUser(childComplexity, args["userid"].(string), args["environmentID"].(string)), true
+		return e.complexity.Mutation.UpdateDeleteUser(childComplexity, args["userid"].(string)), true
 
 	case "Mutation.updateMe":
 		if e.complexity.Mutation.UpdateMe == nil {
@@ -1002,12 +1002,10 @@ input AddUsersInput {
 	job_title: String! 
 	password:  String!   
 	timezone:  String! 
-	environmentID: String!
 }
 
 input ChangePasswordInput {
-	password: String!    
-	environmentID: String!
+	password: String! 
 	user_id: String!
 }
 
@@ -1037,27 +1035,27 @@ extend type Mutation {
 	"""
 	Creating a user and attaching to an environment.
 	+ **Route**: Private
-	+ **Permission**: admin_platform (write), admin_environment (of env)(write), environment_users (write)
+	+ **Permission**: admin_platform (write), platform_manage_users (write)
 	"""
   	createUser(input: AddUsersInput): User
 	"""
 	Change password on behalf of user.
 	+ **Route**: Private
-	+ **Permission**: admin_platform, admin_environment (of env), environment_users
+	+ **Permission**: admin_platform, platform_manage_users
 	"""
 	updateChangePassword(input: ChangePasswordInput): String
 	"""
 	Deactivate user.
 	+ **Route**: Private
-	+ **Permission**: admin_platform, admin_environment (of env), environment_users
+	+ **Permission**: admin_platform, platform_manage_users
 	"""
-	updateDeactivateUser(userid: String!, environmentID: String!): String
+	updateDeactivateUser(userid: String!): String
 	"""
 	Delete user.
 	+ **Route**: Private
-	+ **Permission**: admin_platform, admin_environment (of env), environment_users
+	+ **Permission**: admin_platform, platform_manage_users
 	"""
-	updateDeleteUser(userid: String!, environmentID: String!): String
+	updateDeleteUser(userid: String!): String
 	"""
 	Change my password.
 	+ **Route**: Private
@@ -1280,15 +1278,6 @@ func (ec *executionContext) field_Mutation_updateDeactivateUser_args(ctx context
 		}
 	}
 	args["userid"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["environmentID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["environmentID"] = arg1
 	return args, nil
 }
 
@@ -1304,15 +1293,6 @@ func (ec *executionContext) field_Mutation_updateDeleteUser_args(ctx context.Con
 		}
 	}
 	args["userid"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["environmentID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["environmentID"] = arg1
 	return args, nil
 }
 
@@ -2370,7 +2350,7 @@ func (ec *executionContext) _Mutation_updateDeactivateUser(ctx context.Context, 
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateDeactivateUser(rctx, args["userid"].(string), args["environmentID"].(string))
+		return ec.resolvers.Mutation().UpdateDeactivateUser(rctx, args["userid"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2409,7 +2389,7 @@ func (ec *executionContext) _Mutation_updateDeleteUser(ctx context.Context, fiel
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateDeleteUser(rctx, args["userid"].(string), args["environmentID"].(string))
+		return ec.resolvers.Mutation().UpdateDeleteUser(rctx, args["userid"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5092,14 +5072,6 @@ func (ec *executionContext) unmarshalInputAddUsersInput(ctx context.Context, obj
 			if err != nil {
 				return it, err
 			}
-		case "environmentID":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
-			it.EnvironmentID, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		}
 	}
 
@@ -5120,14 +5092,6 @@ func (ec *executionContext) unmarshalInputChangePasswordInput(ctx context.Contex
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 			it.Password, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "environmentID":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
-			it.EnvironmentID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}

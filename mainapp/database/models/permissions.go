@@ -26,11 +26,13 @@ var ResourceType = []*ResourceTypeStruct{
 	// Platform level
 	{Code: "admin_platform", Level: "platform", Label: "Admin"},
 	{Code: "platform_environment", Level: "platform", Label: "Manage environments"},
+	{Code: "platform_manage_users", Level: "platform", Label: "Manage users"},
 
 	// Environment level
-	{Code: "admin_environment", Level: "environment", Label: "Admin"},
+	{Code: "admin_environment", Level: "environment", Label: "Environment admin"},
 	// To add an admin user - you will need admin rights
-	{Code: "environment_users", Level: "environment", Label: "Manage users"},
+	{Code: "environment_add_user", Level: "environment", Label: "Add user to environment"},
+	{Code: "environment_remove_user", Level: "environment", Label: "Remove user from environment"},
 	{Code: "environment_permissions", Level: "environment", Label: "Manage permissions"},
 	{Code: "environment_all_pipelines", Level: "environment", Label: "View all pipelines"},
 	{Code: "environment_secrets", Level: "environment", Label: "Manage secrets"},
