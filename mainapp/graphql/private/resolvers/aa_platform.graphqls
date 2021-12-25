@@ -60,5 +60,5 @@ extend type Mutation {
 	+ **Route**: Private
 	+ **Permissions**: admin_platform
 	"""  
-    updatePlatform: Platform
+    updatePlatform(input: updatePlatformInput): String
 }

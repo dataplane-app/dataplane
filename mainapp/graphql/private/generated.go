@@ -68,7 +68,7 @@ type ComplexityRoot struct {
 		UpdateMe                      func(childComplexity int, input *AddUpdateMeInput) int
 		UpdatePermissionToAccessGroup func(childComplexity int, environmentID string, resource string, resourceID string, access string, accessGroupID string) int
 		UpdatePermissionToUser        func(childComplexity int, environmentID string, resource string, resourceID string, access string, userID string) int
-		UpdatePlatform                func(childComplexity int) int
+		UpdatePlatform                func(childComplexity int, input *UpdatePlatformInput) int
 		UpdatePreferences             func(childComplexity int, input *AddPreferencesInput) int
 		UpdateUserToAccessGroup       func(childComplexity int, environmentID string, userID string, accessGroupID string) int
 	}
@@ -135,7 +135,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	AddEnvironment(ctx context.Context, input *AddEnvironmentInput) (*models.Environment, error)
 	RenameEnvironment(ctx context.Context, input *RenameEnvironment) (*models.Environment, error)
-	UpdatePlatform(ctx context.Context) (*Platform, error)
+	UpdatePlatform(ctx context.Context, input *UpdatePlatformInput) (*string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	CreateAccessGroup(ctx context.Context, environmentID string, name string) (string, error)
 	DeleteAccessGroup(ctx context.Context, accessGroupID string, environmentID string) (string, error)
@@ -390,7 +390,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Mutation.UpdatePlatform(childComplexity), true
+		args, err := ec.field_Mutation_updatePlatform_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdatePlatform(childComplexity, args["input"].(*UpdatePlatformInput)), true
 
 	case "Mutation.updatePreferences":
 		if e.complexity.Mutation.UpdatePreferences == nil {
@@ -816,7 +821,7 @@ extend type Mutation {
 	+ **Route**: Private
 	+ **Permissions**: admin_platform
 	"""  
-    updatePlatform: Platform
+    updatePlatform(input: updatePlatformInput): String
 }`, BuiltIn: false},
 	{Name: "resolvers/me.graphqls", Input: `input AddUpdateMeInput {
 	first_name: String!    
@@ -1428,6 +1433,21 @@ func (ec *executionContext) field_Mutation_updatePermissionToUser_args(ctx conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updatePlatform_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *UpdatePlatformInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOupdatePlatformInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdatePlatformInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updatePreferences_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1852,9 +1872,16 @@ func (ec *executionContext) _Mutation_updatePlatform(ctx context.Context, field 
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updatePlatform_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdatePlatform(rctx)
+		return ec.resolvers.Mutation().UpdatePlatform(rctx, args["input"].(*UpdatePlatformInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1863,9 +1890,9 @@ func (ec *executionContext) _Mutation_updatePlatform(ctx context.Context, field 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*Platform)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOPlatform2ᚖdataplaneᚋgraphqlᚋprivateᚐPlatform(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateMe(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6949,6 +6976,14 @@ func (ec *executionContext) marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 		return graphql.Null
 	}
 	return ec.___Type(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOupdatePlatformInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdatePlatformInput(ctx context.Context, v interface{}) (*UpdatePlatformInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputupdatePlatformInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 // endregion ***************************** type.gotpl *****************************

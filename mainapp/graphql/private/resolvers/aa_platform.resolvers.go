@@ -11,7 +11,6 @@ import (
 	privategraphql "dataplane/graphql/private"
 	"dataplane/logging"
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -121,8 +120,39 @@ func (r *mutationResolver) RenameEnvironment(ctx context.Context, input *private
 	}, nil
 }
 
-func (r *mutationResolver) UpdatePlatform(ctx context.Context) (*privategraphql.Platform, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *mutationResolver) UpdatePlatform(ctx context.Context, input *privategraphql.UpdatePlatformInput) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	// ----- Database actions
+
+	err := database.DBConn.Updates(models.Platform{
+		ID:           input.ID,
+		BusinessName: input.BusinessName,
+		Timezone:     input.Timezone,
+		Complete:     input.Complete,
+	}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("update platform database error")
+	}
+
+	response := "Platform updated"
+	return &response, nil
 }
 
 func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environment, error) {
