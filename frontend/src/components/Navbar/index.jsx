@@ -5,34 +5,32 @@ import Typography from '@mui/material/Typography';
 import UserDropdown from '../UserDropdown';
 import { useMe } from '../../graphql/me';
 import { useEffect, useState } from 'react'
+import timeInTimezone from '../../utils/timeInTimezone';
 
 const Navbar = () => {
-  const me = useMe()
-  const [meData, setMeData] = useState({})
+  const meGraphQL = useMe()
+  const [me, setMe] = useState({})
   const [time, setTime] = useState('')
 
     // Retrieve me on load
     useEffect(() => {
         (async () => {
-          const meData = await me();
-          if(!me.errors){
-            setMeData(meData)
-            setTime(getTime(meData.timezone))
+          const me = await meGraphQL();
+          if(me?.r !== "error"){
+            setMe(me)
           }
         })();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [])
 
-    // Calculate time for user's timezones
-    function getTime(timezone) {
-        let options = {
-            timeZone: timezone.trim(),
-            hour: 'numeric',
-            minute: 'numeric',
-            hour12: false
-          }
-        const formatter = new Intl.DateTimeFormat([], options);
-        return formatter.format(new Date());
-    }
+    // Updates time every second
+    useEffect(() => {
+      let secTimer = setInterval( () => {
+          me.timezone && setTime(timeInTimezone(me.timezone))
+        },1000)
+    
+        return () => clearInterval(secTimer);
+    }, [me.timezone]);
 
     return(
         <Grid container alignItems="center" justifyContent="space-between" flexWrap="nowrap">
@@ -40,12 +38,12 @@ const Navbar = () => {
             <Box display="flex" alignItems="center" mr={2}>
                 <Box mr={4} sx={{ display: { xxs: "none" , md: "block" } }}>
                     <Typography sx={{ fontSize: 24 }} color="text.primary">{time}</Typography>
-                    <Typography variant="h3" fontWeight={400} mt={-1} color="text.primary">{meData.timezone}</Typography>
+                    <Typography variant="h3" fontWeight={400} mt={-1} color="text.primary">{me.timezone}</Typography>
                 </Box>
 
                 <Box display="flex" alignItems="center">
                     <EnviromentDropdown />
-                    <UserDropdown me={meData} />
+                    <UserDropdown me={me} />
                 </Box>
             </Box>
         </Grid>

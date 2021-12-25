@@ -13,6 +13,7 @@ import createCustomTheme from "./theme";
 import Congratulations from "./pages/Congratulations";
 import GetStarted from "./pages/GetStarted";
 import LoginUser from "./pages/Login";
+import LogoutUser from "./pages/Logout";
 import Pipelines from './pages/Pipelines';
 import TeamDetail from "./pages/TeamDetail";
 import MemberDetail from "./pages/MemberDetail";
@@ -94,6 +95,9 @@ function App() {
                                     </Route>
                                 </Layout>
                             </PrivateRoute>
+                            <PrivateRoute exact path="/logout">
+                            <LogoutUser />
+                            </PrivateRoute>    
                         </UserAuth>
                     </Box>
                 </SnackbarProvider>
