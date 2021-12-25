@@ -1,14 +1,20 @@
+import {useEffect, useState} from 'react'
 import { Box, Typography, Button, Grid, TextField } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { useForm } from "react-hook-form";
 import { useCreateUser } from "../../../graphql/createUser";
+import { useGetPlatform } from "../../../graphql/getPlatform";
 import { useSnackbar } from 'notistack';
 import ct from "countries-and-timezones";
 import Autocomplete from '@mui/material/Autocomplete';
 
 const AddUserDrawer = ({ handleClose }) => {
     const createUser = useCreateUser();
+    const getPlatform = useGetPlatform();
+
+    const [timezone, setTimezone] = useState(null)
+
     const { enqueueSnackbar } = useSnackbar();
     const { register, handleSubmit, watch, formState: { errors } } = useForm();
 
@@ -34,6 +40,15 @@ const AddUserDrawer = ({ handleClose }) => {
             })
         }
     }
+
+    // Get platform timezone on load
+        useEffect(() => {
+            (async () => {
+                let platform = await getPlatform();
+                !platform.errors ? setTimezone(platform.timezone) : enqueueSnackbar("Unable to retrieve timezone", { variant: "error" });
+        })()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [])
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -104,7 +119,11 @@ const AddUserDrawer = ({ handleClose }) => {
 
                 <Autocomplete
                       disablePortal
+                      value={timezone}
                       id="combo-box-demo"
+                      onChange={(event, newValue) => {
+                        setTimezone(newValue);
+                      }}
                       options={Object.keys(ct.getAllTimezones())}
                       renderInput={(params) => <TextField {...params} label="Timezone" id="timezone" size="small" sx={{ mt: 2, fontSize: ".75rem", display: "flex", background: "white" }} {...register("timezone")} />}
                 />
