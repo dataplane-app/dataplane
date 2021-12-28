@@ -1,16 +1,7 @@
 import './styles.css';
-import {
-    faAlignCenter,
-    faBullhorn,
-    faCodeBranch,
-    faCog,
-    faConciergeBell,
-    faGraduationCap,
-    faKey,
-    faUsers,
-} from '@fortawesome/free-solid-svg-icons';
+import { faAlignCenter, faBullhorn, faCodeBranch, faCog, faConciergeBell, faGraduationCap, faKey, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import Divider from '@mui/material/Divider';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -25,51 +16,53 @@ const Sidebar = () => {
     const history = useHistory();
 
     return (
-        <>
-            <List sx={{ mt: 4, mb: 2, mr: 2, p: 0 }}>
-                {MENU_ITEMS_TOP.map((menu) => (
-                    <ListItem
-                        disableRipple
-                        disableTouchRipple
-                        disableFocusRibble
-                        button
-                        key={menu.id}
-                        mt={1}
-                        mb={1}
-                        sx={{ '&:hover': { backgroundColor: 'transparent' }, '& .MuiTouchRipple-root': { borderRadius: '42px' } }}
-                        position="relative"
-                        onClick={() => history.push(`/${menu.url}`)}
-                        className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
-                        <ListItemIcon sx={{ minWidth: '43px' }}>{menu.icon}</ListItemIcon>
-                        <ListItemText primary={menu.name} />
-                    </ListItem>
-                ))}
-            </List>
-            <Divider sx={{ mb: 3, mt: 3 }} />
-            <List sx={{ mt: 4, mb: 2, mr: 2, p: 0 }}>
-                {MENU_ITEMS_BOTTOM.map((menu) => (
-                    <ListItem
-                        button
-                        key={menu.id}
-                        mt={1}
-                        mb={1}
-                        disableRipple
-                        disableTouchRipple
-                        disableFocusRibble
-                        sx={{ '&:hover': { backgroundColor: 'transparent' }, '& .MuiTouchRipple-root': { borderRadius: '42px' } }}
-                        position="relative"
-                        onClick={() => history.push(`/${menu.url}`)}
-                        className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
-                        <ListItemIcon sx={{ minWidth: '43px' }}>{menu.icon}</ListItemIcon>
-                        <ListItemText primary={menu.name} />
-                    </ListItem>
-                ))}
-            </List>
+        <Grid container height="100%">
+            <Box flex={2}>
+                <List sx={{ mt: 4, mb: 2, mr: 2, p: 0 }}>
+                    {MENU_ITEMS_TOP.map((menu) => (
+                        <ListItem
+                            disableRipple
+                            disableTouchRipple
+                            disableFocusRibble
+                            button
+                            key={menu.id}
+                            mt={1}
+                            mb={1}
+                            sx={{ '&:hover': { backgroundColor: 'transparent' }, '& .MuiTouchRipple-root': { borderRadius: '42px' } }}
+                            position="relative"
+                            onClick={() => history.push(`/${menu.url}`)}
+                            className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
+                            <ListItemIcon sx={{ minWidth: '43px' }}>{menu.icon}</ListItemIcon>
+                            <ListItemText primary={menu.name} />
+                        </ListItem>
+                    ))}
+                </List>
+                <Divider sx={{ mb: 3, mt: 3 }} />
+                <List sx={{ mt: 4, mb: 2, mr: 2, p: 0 }}>
+                    {MENU_ITEMS_BOTTOM.map((menu) => (
+                        <ListItem
+                            button
+                            key={menu.id}
+                            mt={1}
+                            mb={1}
+                            disableRipple
+                            disableTouchRipple
+                            disableFocusRibble
+                            sx={{ '&:hover': { backgroundColor: 'transparent' }, '& .MuiTouchRipple-root': { borderRadius: '42px' } }}
+                            position="relative"
+                            onClick={() => history.push(`/${menu.url}`)}
+                            className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
+                            <ListItemIcon sx={{ minWidth: '43px' }}>{menu.icon}</ListItemIcon>
+                            <ListItemText primary={menu.name} />
+                        </ListItem>
+                    ))}
+                </List>
+            </Box>
 
-            <Box display="flex" alignItems="center" justifyContent="center" position="absolute" bottom={40} right={0} left={0}>
+            <Box display="flex" alignItems="flex-end" justifyContent="center" position="relative" flex={1} pt={2} pb={7}>
                 <ThemeToggle />
             </Box>
-        </>
+        </Grid>
     );
 };
 
