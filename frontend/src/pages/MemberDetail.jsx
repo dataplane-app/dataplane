@@ -16,6 +16,9 @@ import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import {useHistory, useParams} from "react-router-dom";
 import { useGetUser } from '../graphql/getUser'
 import ct from "countries-and-timezones";
+import { useForm } from "react-hook-form";
+import { useUpdateUser } from "../graphql/updateUser";
+import { useSnackbar } from 'notistack';
 
 const drawerWidth = 507;
 const drawerStyles = {
@@ -26,10 +29,18 @@ const drawerStyles = {
 }
 
 const MemberDetail = () => {
-    let history = useHistory();
-    const getUser = useGetUser()
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
+    // Router
+    let history = useHistory();
     const { memberId } = useParams();
+
+    // GraphQL hooks
+    const getUser = useGetUser()
+    const updateUser = useUpdateUser();
+
+    // React Hook form
+    const { register, handleSubmit, watch, reset, formState: { errors } } = useForm();
 
     // Member states
     const [user, setUser] = useState({})
@@ -40,13 +51,22 @@ const MemberDetail = () => {
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
 
-    // Retrieve me on load
+    // Retrieve user data on load
     useEffect(() => {
         (async () => {
           const user = await getUser({user_id: memberId});
 
           if(user?.r !== "error"){
             setUser(user)
+            
+            // Reset form default values
+            reset({
+                first_name: user.first_name,
+                last_name: user.last_name,
+                email: user.email,
+                job_title: user.job_title,
+                timezone: user.timezone,
+            })
             
             // Check if user is active
             if (user.status !== 'active'){
@@ -61,6 +81,33 @@ const MemberDetail = () => {
         })();
       // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [])
+
+      
+    // Submit user data
+      async function onSubmit(data){
+        const allData = {
+            input: {
+                first_name: data.first_name,
+				last_name: data.last_name,
+				email: data.email,
+				job_title: data.job_title,
+				timezone: data.timezone,
+            }
+        }
+
+        let response = await updateUser(allData)
+        if (response === 'success') {
+            closeSnackbar()
+            enqueueSnackbar(`Success`, { variant: "success" })
+        }else{
+            if (response.errors) {
+              response.errors.map(err => enqueueSnackbar(err.message, { variant: "error" }))
+            }
+            if (response.r === 'error') {
+                enqueueSnackbar(response.msg, { variant: "error" })
+            }
+        }
+    }
 
     return (
         <>
@@ -82,6 +129,9 @@ const MemberDetail = () => {
                         Details
                     </Typography>
 
+                <form onSubmit={handleSubmit(onSubmit)}>
+
+                    {user.email ? 
                     <Box mt={2} display="grid" flexDirection="row">
                         <TextField
                             label="First name"
@@ -89,6 +139,7 @@ const MemberDetail = () => {
                             size="small"
                             required
                             sx={{ mb: ".45rem" }}
+                            {...register("first_name", { required: true })}
                         />
 
                         <TextField
@@ -97,6 +148,7 @@ const MemberDetail = () => {
                             size="small"
                             required
                             sx={{ margin: ".45rem 0" }}
+                            {...register("last_name", { required: true })}
                         />
 
                         <TextField
@@ -106,6 +158,7 @@ const MemberDetail = () => {
                             size="small"
                             required
                             sx={{ margin: ".45rem 0" }}
+                            {...register("email", { required: true })}
                         />
 
                         <TextField
@@ -114,19 +167,25 @@ const MemberDetail = () => {
                             size="small"
                             required
                             sx={{ margin: ".45rem 0" }}
+                            {...register("job_title", { required: true })}
                         />
 
                         <Autocomplete
-                            disablePortal
-                            id="combo-box-demo"
-                            options={Object.keys(ct.getAllTimezones())}
-                            renderInput={(params) => <TextField {...params} label="Timezone" required id="timezone" size="small" sx={{ mt: 2, fontSize: ".75rem", display: "flex", background: "white" }} 
-                            // {...register("timezone")} 
-                            />}
+                        disablePortal
+                        value={user.timezone}
+                        id="combo-box-demo"
+                        onChange={(event, newValue) => {
+                          setUser({...user, timezone: newValue});
+                        }}
+                        options={Object.keys(ct.getAllTimezones())}
+                        renderInput={(params) => <TextField {...params} label="Timezone" id="timezone" size="small" sx={{ mt: 2, fontSize: ".75rem", display: "flex"}} {...register("timezone")} />}
                         />
 
-                        <Button variant="contained" color="primary" sx={{ width: "100%", mt: "1rem" }}>Save</Button>
+                        <Button type="submit" variant="contained" color="primary" sx={{ width: "100%", mt: "1rem" }}>Save</Button>
                     </Box>
+                    : null}
+
+                </form>
 
                     <Box sx={{ margin: "2.45rem 0", borderTop: 1, borderColor: "divider" }}></Box>
 
@@ -136,29 +195,14 @@ const MemberDetail = () => {
                         </Typography>
 
                         <Button onClick={() => setIsOpenPassword(true)} size="small" variant="outlined" color="error" sx={{ fontWeight: "700", width: "100%", mt: ".78rem", fontSize: ".81rem", border: 2, "&:hover": { border: 2 } }}>Change password</Button>
-                        <Button size="small" variant="outlined" color={isActive ? "error" : "success"} sx={{ fontWeight: "700", width: "100%", mt: ".78rem", fontSize: ".81rem", border: 2, "&:hover": { border: 2 }}}>{isActive ? "Deactivate" : "Activate"} user</Button>
-                        <Button onClick={() => setIsOpenDeleteUser(true)} size="small" variant="outlined" color="error" sx={{ fontWeight: "700", width: "100%", mt: ".78rem", fontSize: ".81rem", border: 2, "&:hover": { border: 2 }}}>Delete user</Button>
-
-                        <Typography color="rgba(248, 0, 0, 1)" lineHeight="15.23px" sx={{ mt: ".56rem" }} variant="subtitle2">
-                            Warning: this action can’t be undone. It is usually better to deactivate a user. 
-                        </Typography>
                     </Box>
 
                 </Grid>
                 <Grid item sx={{ flex: 2.2, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
                     <Box>
-                        <Typography component="h3" variant="h3" color="text.primary">
-                            Permissions
-                        </Typography>
-
-                        <Grid mt={2} display="flex" alignItems="center">
-                            <Search placeholder="Find platform permissions" onChange={()=> null} />
-                            <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }} >Add</Button>
-                        </Grid>
-
-                        <Box mt={4}>
+                        <Box>
                             <Typography component="h3" variant="h3" color="text.primary">
-                                Platform
+                                Platform permissions
                             </Typography>
                         </Box>
 
@@ -166,7 +210,6 @@ const MemberDetail = () => {
                             {
                                 platformItems.map(plat => (
                                     <Grid display="flex" alignItems="center" key={plat.id} mt={1.5} mb={1.5}>
-                                        <Box component={FontAwesomeIcon} sx={{ fontSize: "17px",mr: "7px", color: "rgba(248, 0, 0, 1)" }} icon={faTrashAlt} />
                                         <Typography variant="subtitle2" lineHeight="15.23px">{plat.name}</Typography>
                                     </Grid>
                                 ))
@@ -182,7 +225,6 @@ const MemberDetail = () => {
                                 {
                                     environmentPermissions.map(env => (
                                         <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
-                                            <Box component={FontAwesomeIcon} sx={{ fontSize: "17px",mr: "7px", color: "rgba(248, 0, 0, 1)" }} icon={faTrashAlt} />
                                             <Typography variant="subtitle2" lineHeight="15.23px">{env.name}</Typography>
                                         </Grid>
                                     ))
@@ -200,7 +242,6 @@ const MemberDetail = () => {
                                 {
                                     expecificPermissionsItems.map(exp => (
                                         <Grid display="flex" alignItems="center" key={exp.id} mt={1.5} mb={1.5}>
-                                            <Box component={FontAwesomeIcon} sx={{ fontSize: "17px",mr: "7px", color: "rgba(248, 0, 0, 1)" }} icon={faTrashAlt} />
                                             <Typography variant="subtitle2" lineHeight="15.23px">{exp.name}</Typography>
                                         </Grid>
                                     ))
@@ -215,17 +256,11 @@ const MemberDetail = () => {
                         Belongs to environments
                     </Typography>
 
-                    <Grid mt={2} display="flex" alignItems="center">
-                        <Search placeholder="Find access groups" onChange={()=> null}/>
-                        <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }} >Add</Button>
-                    </Grid>
-
                     <Box mt="1.31rem">
                         {
                             belongToEnvironmentItems.map(env => (
                                 <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
-                                    <Box component={FontAwesomeIcon} sx={{ fontSize: "17px",mr: "7px", color: "rgba(248, 0, 0, 1)" }} icon={faTrashAlt} />
-                                    <Typography variant="subtitle2" lineHeight="15.23px" color="primary" fontWeight="900">{env.name}</Typography>
+                                    <Typography variant="subtitle2" lineHeight="15.23px" color="primary">{env.name}</Typography>
                                 </Grid>
                             ))
                         }
@@ -236,17 +271,11 @@ const MemberDetail = () => {
                             Belongs to access groups
                         </Typography>
 
-                        <Grid mt={2} display="flex" alignItems="center">
-                            <Search placeholder="Find access groups" onChange={()=> null} />
-                            <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }} >Add</Button>
-                        </Grid>
-
                         <Box mt="1.31rem">
                             {
                                 belongToAcessGroupsItems.map(env => (
                                     <Grid sx={{ cursor: "pointer", pt: 1.5, pb: 1.5 ,borderRadius: 2 ,"&:hover": { background: "rgba(196, 196, 196, 0.15)"} }} display="flex" alignItems="center" key={env.id} onClick={() => history.push(`/teams/access/${env.name}`)}>
-                                        <Box component={FontAwesomeIcon} sx={{ fontSize: "17px",mr: "7px", color: "rgba(248, 0, 0, 1)" }} icon={faTrashAlt} />
-                                        <Typography variant="subtitle2" lineHeight="15.23px" color="primary" fontWeight="900">{env.name}</Typography>
+                                        <Typography variant="subtitle2" lineHeight="15.23px" color="primary">{env.name}</Typography>
                                     </Grid>
                                 ))
                             }
