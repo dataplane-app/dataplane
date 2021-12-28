@@ -7,8 +7,11 @@ import { belongToAcessGroupsItems, belongToEnvironmentItems, environmentPermissi
 import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
-import { useHistory } from 'react-router-dom';
-import { useMe } from '../graphql/me';
+import { useHistory, useParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { useGetUser } from '../graphql/getUser';
+import { useSnackbar } from 'notistack';
+import { useUpdateUser } from '../graphql/updateUser';
 import ct from 'countries-and-timezones';
 
 const drawerWidth = 507;
@@ -21,49 +24,40 @@ const drawerStyles = {
 
 const TeamDetail = () => {
     let history = useHistory();
-    const meGraphQL = useMe();
 
-    // meData states
-    const [me, setMe] = useState({});
-    const [isActive, setIsActive] = useState(true);
-    const [isAdmin, setIsAdmin] = useState(false);
+    // React hook form
+    const {
+        register,
+        handleSubmit,
+        watch,
+        reset,
+        formState: { errors },
+    } = useForm();
+
+    // User state
+    const [user, setUser] = useState({});
 
     // Sidebar states
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
 
-    // Retrieve me on load
-    useEffect(() => {
-        (async () => {
-            const me = await meGraphQL();
-            if (!meGraphQL.errors) {
-                setMe(me);
+    // Retrieve user data on load
+    useGetData(setUser, reset);
 
-                // Check if user is active
-                if (me.status !== 'active') {
-                    setIsActive(false);
-                }
-
-                // Check if user is admin
-                if (me.user_type === 'admin') {
-                    setIsAdmin(true);
-                }
-            }
-        })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // Submit user data
+    const onSubmit = useSubmitData();
 
     return (
         <>
             <Box className="page" width="83%">
                 <Grid container alignItems="center">
                     <Typography component="h2" variant="h2" color="text.primary">
-                        Team {' > '} {me.first_name} {me.last_name}
+                        Team {' > '} {user.first_name} {user.last_name}
                     </Typography>
 
                     <Grid item ml={4}>
-                        {isActive ? <CustomChip label="Active" customColor="green" margin={1} /> : <CustomChip label="Inactive" customColor="red" margin={1} />}
-                        {isAdmin && <CustomChip label="Admin" customColor="orange" />}
+                        {user.status === 'active' ? <CustomChip label="Active" customColor="green" margin={1} /> : <CustomChip label="Inactive" customColor="red" margin={1} />}
+                        {user.user_type === 'admin' ? <CustomChip label="Admin" customColor="orange" /> : null}
                     </Grid>
                 </Grid>
 
@@ -73,36 +67,43 @@ const TeamDetail = () => {
                             Details
                         </Typography>
 
-                        <Box mt={2} display="grid" flexDirection="row">
-                            <TextField label="First name" id="first_name" size="small" required sx={{ mb: '.45rem' }} />
+                        <form onSubmit={handleSubmit(onSubmit)}>
+                            {user.email ? (
+                                <Box mt={2} display="grid" flexDirection="row">
+                                    <TextField label="First name" id="first_name" size="small" required sx={{ mb: '.45rem' }} {...register('first_name', { required: true })} />
 
-                            <TextField label="Last name" id="last_name" size="small" required sx={{ margin: '.45rem 0' }} />
+                                    <TextField label="Last name" id="last_name" size="small" required sx={{ margin: '.45rem 0' }} {...register('last_name', { required: true })} />
 
-                            <TextField label="Email" type="email" id="email" size="small" required sx={{ margin: '.45rem 0' }} />
+                                    <TextField label="Email" type="email" id="email" size="small" required sx={{ margin: '.45rem 0' }} {...register('email', { required: true })} />
 
-                            <TextField label="Job title" id="job_title" size="small" required sx={{ margin: '.45rem 0' }} />
+                                    <TextField label="Job title" id="job_title" size="small" required sx={{ margin: '.45rem 0' }} {...register('job_title', { required: true })} />
 
-                            <Autocomplete
-                                disablePortal
-                                id="combo-box-demo"
-                                options={Object.keys(ct.getAllTimezones())}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        label="Timezone"
-                                        required
-                                        id="timezone"
-                                        size="small"
-                                        sx={{ mt: 2, fontSize: '.75rem', display: 'flex', background: 'white' }}
-                                        // {...register("timezone")}
+                                    <Autocomplete
+                                        disablePortal
+                                        value={user.timezone}
+                                        id="combo-box-demo"
+                                        onChange={(event, newValue) => {
+                                            setUser({ ...user, timezone: newValue });
+                                        }}
+                                        options={Object.keys(ct.getAllTimezones())}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label="Timezone"
+                                                id="timezone"
+                                                size="small"
+                                                sx={{ mt: 2, fontSize: '.75rem', display: 'flex' }}
+                                                {...register('timezone')}
+                                            />
+                                        )}
                                     />
-                                )}
-                            />
 
-                            <Button variant="contained" color="primary" sx={{ width: '100%', mt: '1rem' }}>
-                                Save
-                            </Button>
-                        </Box>
+                                    <Button type="submit" variant="contained" color="primary" sx={{ width: '100%', mt: '1rem' }}>
+                                        Save
+                                    </Button>
+                                </Box>
+                            ) : null}
+                        </form>
 
                         <Box sx={{ margin: '2.45rem 0', borderTop: 1, borderColor: 'divider' }}></Box>
 
@@ -122,9 +123,9 @@ const TeamDetail = () => {
                             <Button
                                 size="small"
                                 variant="outlined"
-                                color={isActive ? 'error' : 'success'}
+                                color={user.status === 'active' ? 'error' : 'success'}
                                 sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                                {isActive ? 'Deactivate' : 'Activate'} user
+                                {user.status === 'active' ? 'Deactivate' : 'Activate'} user
                             </Button>
                             <Button
                                 onClick={() => setIsOpenDeleteUser(true)}
@@ -277,3 +278,67 @@ const TeamDetail = () => {
 };
 
 export default TeamDetail;
+
+// --------- Custom hooks
+
+const useGetData = (setUser, reset) => {
+    // GraphQL hook
+    const getUser = useGetUser();
+
+    // URI parameter
+    const { teamId } = useParams();
+
+    // Retrieve data
+    useEffect(() => {
+        (async () => {
+            const user = await getUser({ user_id: teamId });
+
+            if (user?.r !== 'error') {
+                setUser(user);
+
+                // Reset form default values
+                reset({
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    email: user.email,
+                    job_title: user.job_title,
+                    timezone: user.timezone,
+                });
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+};
+
+const useSubmitData = () => {
+    // GraphQL hook
+    const updateUser = useUpdateUser();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Retrieve data
+    return async function onSubmit(data) {
+        const allData = {
+            input: {
+                first_name: data.first_name,
+                last_name: data.last_name,
+                email: data.email,
+                job_title: data.job_title,
+                timezone: data.timezone,
+            },
+        };
+
+        let response = await updateUser(allData);
+        if (response === 'success') {
+            closeSnackbar();
+            enqueueSnackbar(`Success`, { variant: 'success' });
+        } else {
+            if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            }
+            if (response.r === 'error') {
+                enqueueSnackbar(response.msg, { variant: 'error' });
+            }
+        }
+    };
+};
