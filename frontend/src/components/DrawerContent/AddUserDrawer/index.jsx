@@ -68,10 +68,6 @@ const AddUserDrawer = ({ handleClose }) => {
                         Add user
                     </Typography>
 
-                    <Typography variant="body2" sx={{ mt: 2 }}>
-                        This will add a team member to the Production environment.
-                    </Typography>
-
                     <TextField
                         label="First name"
                         id="first_name"
