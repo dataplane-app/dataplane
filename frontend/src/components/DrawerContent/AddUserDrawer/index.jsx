@@ -32,7 +32,6 @@ const AddUserDrawer = ({ handleClose }) => {
                 job_title: data.job_title,
                 password: data.password,
                 timezone: data.timezone,
-                environmentID: '10',
             },
         };
 
