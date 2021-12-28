@@ -29,15 +29,8 @@ const drawerStyles = {
 }
 
 const MemberDetail = () => {
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
     // Router
     let history = useHistory();
-    const { memberId } = useParams();
-
-    // GraphQL hooks
-    const getUser = useGetUser()
-    const updateUser = useUpdateUser();
 
     // React Hook form
     const { register, handleSubmit, watch, reset, formState: { errors } } = useForm();
@@ -52,62 +45,10 @@ const MemberDetail = () => {
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
 
     // Retrieve user data on load
-    useEffect(() => {
-        (async () => {
-          const user = await getUser({user_id: memberId});
-
-          if(user?.r !== "error"){
-            setUser(user)
-            
-            // Reset form default values
-            reset({
-                first_name: user.first_name,
-                last_name: user.last_name,
-                email: user.email,
-                job_title: user.job_title,
-                timezone: user.timezone,
-            })
-            
-            // Check if user is active
-            if (user.status !== 'active'){
-                setIsActive(false)
-            }
-
-            // Check if user is admin
-            if (user.user_type === 'admin'){
-                setIsAdmin(true)
-            }
-          }
-        })();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [])
-
-      
-    // Submit user data
-      async function onSubmit(data){
-        const allData = {
-            input: {
-                first_name: data.first_name,
-				last_name: data.last_name,
-				email: data.email,
-				job_title: data.job_title,
-				timezone: data.timezone,
-            }
-        }
-
-        let response = await updateUser(allData)
-        if (response === 'success') {
-            closeSnackbar()
-            enqueueSnackbar(`Success`, { variant: "success" })
-        }else{
-            if (response.errors) {
-              response.errors.map(err => enqueueSnackbar(err.message, { variant: "error" }))
-            }
-            if (response.r === 'error') {
-                enqueueSnackbar(response.msg, { variant: "error" })
-            }
-        }
-    }
+    useGetData(setUser, reset, setIsActive, setIsAdmin)
+    
+     // Submit user data
+    const onSubmit = useSubmitData()
 
     return (
         <>
@@ -286,7 +227,7 @@ const MemberDetail = () => {
         </Box>
 
         <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)} sx={drawerStyles}>
-            <ChangePasswordDrawer />
+            <ChangePasswordDrawer handleClose={() => setIsOpenPassword(false)} />
         </Drawer>
 
         <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
@@ -297,3 +238,72 @@ const MemberDetail = () => {
 };
 
 export default MemberDetail;
+
+// --------- Custom hooks
+
+const useGetData = (setUser, reset, setIsActive, setIsAdmin) => {
+    const getUser = useGetUser()
+    const { memberId } = useParams();
+
+        // Retrieve user data on load
+        useEffect(() => {
+            (async () => {
+              const user = await getUser({user_id: memberId});
+    
+              if(user?.r !== "error"){
+                setUser(user)
+                
+                // Reset form default values
+                reset({
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    email: user.email,
+                    job_title: user.job_title,
+                    timezone: user.timezone,
+                })
+                
+                // Check if user is active
+                if (user.status !== 'active'){
+                    setIsActive(false)
+                }
+    
+                // Check if user is admin
+                if (user.user_type === 'admin'){
+                    setIsAdmin(true)
+                }
+              }
+            })();
+          // eslint-disable-next-line react-hooks/exhaustive-deps
+          }, [])
+}
+
+const useSubmitData = () => {
+    const updateUser = useUpdateUser();
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+
+    return async function onSubmit(data){
+        const allData = {
+            input: {
+                first_name: data.first_name,
+				last_name: data.last_name,
+				email: data.email,
+				job_title: data.job_title,
+				timezone: data.timezone,
+            }
+        }
+
+        let response = await updateUser(allData)
+        if (response === 'success') {
+            closeSnackbar()
+            enqueueSnackbar(`Success`, { variant: "success" })
+        }else{
+            if (response.errors) {
+              response.errors.map(err => enqueueSnackbar(err.message, { variant: "error" }))
+            }
+            if (response.r === 'error') {
+                enqueueSnackbar(response.msg, { variant: "error" })
+            }
+        }
+    }
+}
