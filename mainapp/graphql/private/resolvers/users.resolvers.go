@@ -91,6 +91,28 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql
 	}, nil
 }
 
+func (r *mutationResolver) UpdateUser(ctx context.Context, input *privategraphql.UpdateUsersInput) (*string, error) {
+	userID := ctx.Value("currentUser").(string)
+
+	err := database.DBConn.Where("user_id = ?", userID).Updates(models.Users{
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		Email:     input.Email,
+		JobTitle:  input.JobTitle,
+		Timezone:  input.Timezone,
+	}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("update user database error")
+	}
+
+	response := "success"
+	return &response, nil
+}
+
 func (r *mutationResolver) UpdateChangePassword(ctx context.Context, input *privategraphql.ChangePasswordInput) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

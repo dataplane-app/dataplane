@@ -18,6 +18,14 @@ input AddUsersInput {
 	timezone:  String! 
 }
 
+input UpdateUsersInput {
+	first_name: String!  
+	last_name:  String!   
+	email:     String!   
+	job_title: String! 
+	timezone:  String! 
+}
+
 input ChangePasswordInput {
 	password: String! 
 	user_id: String!
@@ -52,6 +60,12 @@ extend type Mutation {
 	+ **Permission**: admin_platform (write), platform_manage_users (write)
 	"""
   	createUser(input: AddUsersInput): User
+	"""
+	Update user values.
+	+ **Route**: Private
+	+ **Permission**: logged in user
+	"""
+  	updateUser(input: UpdateUsersInput): String
 	"""
 	Change password on behalf of user.
 	+ **Route**: Private
