@@ -54,11 +54,11 @@ func TestUpdateUser(t *testing.T) {
 		updateUser(
 			input: {
 				user_id: "` + testutils.UserData["changeuser"].UserID + `"
-				first_name: "` + faker.FirstName() + `"
-				last_name: "` + faker.LastName() + `"
+				first_name: "` + testutils.TextEscape(faker.FirstName()) + `"
+				last_name: "` + testutils.TextEscape(faker.LastName()) + `"
 				email: "` + testutils.UserData["changeuser"].Username + `"
-				job_title: "` + faker.LastName() + `"
-				timezone: "` + faker.Timezone() + `"
+				job_title: "` + testutils.TextEscape(faker.LastName()) + `"
+				timezone: "` + testutils.TextEscape(faker.Timezone()) + `"
 			}
 		)
 	}`
