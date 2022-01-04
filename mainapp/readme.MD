@@ -4,7 +4,7 @@ Logout uses access token derived from the refresh token. This removes all refres
 
 ### Run tests
 ```
-go test -count=1 -timeout=15s ./... -v -p 1
+go run Tests/mainTest.go
 ```
 
 # Update graphql schemas
