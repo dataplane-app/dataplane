@@ -92,9 +92,22 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql
 }
 
 func (r *mutationResolver) UpdateUser(ctx context.Context, input *privategraphql.UpdateUsersInput) (*string, error) {
-	userID := ctx.Value("currentUser").(string)
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
 
-	err := database.DBConn.Where("user_id = ?", userID).Updates(models.Users{
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_manage_users", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	err := database.DBConn.Where("user_id = ?", input.UserID).Updates(models.Users{
 		FirstName: input.FirstName,
 		LastName:  input.LastName,
 		Email:     input.Email,
@@ -243,32 +256,6 @@ func (r *mutationResolver) UpdateDeleteUser(ctx context.Context, userid string) 
 	}
 
 	response := "User deleted"
-	return &response, nil
-}
-
-func (r *mutationResolver) UpdateChangeMyPassword(ctx context.Context, password string) (*string, error) {
-	// Permission: logged in user
-
-	userID := ctx.Value("currentUser").(string)
-
-	passwordhashed, err := auth.Encrypt(password)
-
-	if err != nil {
-		return nil, errors.New("Password hash failed.")
-	}
-
-	err = database.DBConn.Where("user_id = ?", userID).Updates(models.Users{
-		Password: passwordhashed,
-	}).Error
-
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return nil, errors.New("database error.")
-	}
-
-	response := "success"
 	return &response, nil
 }
 
