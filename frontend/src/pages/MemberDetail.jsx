@@ -13,11 +13,12 @@ import {
 import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
-import {useHistory, useParams} from "react-router-dom";
-import { useGetUser } from '../graphql/getUser'
+import {useHistory} from "react-router-dom";
+import { useMe } from '../graphql/me';
+import { useUpdateMe } from "../graphql/updateMe";
+
 import ct from "countries-and-timezones";
 import { useForm } from "react-hook-form";
-import { useUpdateUser } from "../graphql/updateUser";
 import { useSnackbar } from 'notistack';
 
 const drawerWidth = 507;
@@ -44,10 +45,10 @@ const MemberDetail = () => {
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
 
-    // Retrieve user data on load
+    // Get user data on load
     useGetData(setUser, reset, setIsActive, setIsAdmin)
     
-     // Submit user data
+    // Submit user data
     const onSubmit = useSubmitData()
 
     return (
@@ -242,68 +243,80 @@ export default MemberDetail;
 // --------- Custom hooks
 
 const useGetData = (setUser, reset, setIsActive, setIsAdmin) => {
-    const getUser = useGetUser()
-    const { memberId } = useParams();
-
-        // Retrieve user data on load
-        useEffect(() => {
-            (async () => {
-              const user = await getUser({user_id: memberId});
-    
-              if(user?.r !== "error"){
-                setUser(user)
-                
-                // Reset form default values
-                reset({
-                    first_name: user.first_name,
-                    last_name: user.last_name,
-                    email: user.email,
-                    job_title: user.job_title,
-                    timezone: user.timezone,
-                })
-                
-                // Check if user is active
-                if (user.status !== 'active'){
-                    setIsActive(false)
-                }
-    
-                // Check if user is admin
-                if (user.user_type === 'admin'){
-                    setIsAdmin(true)
-                }
-              }
-            })();
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          }, [])
-}
-
-const useSubmitData = () => {
-    const updateUser = useUpdateUser();
+    const getMe = useMe();
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
+    // Get user data on load
+    useEffect(() => {
+        (async () => {
+            const response = await getMe();
 
-    return async function onSubmit(data){
+            if (response.r === 'error') {
+                closeSnackbar();
+                enqueueSnackbar("Can't get user data: " + response.msg, {
+                    variant: 'error',
+                });
+            } else if (response.errors) {
+                response.errors.map((err) =>
+                    enqueueSnackbar(err.message, { variant: 'error' })
+                );
+            } else {
+                setUser(response);
+
+                // Reset form default values to incoming user data
+                reset({
+                    first_name: response.first_name,
+                    last_name: response.last_name,
+                    email: response.email,
+                    job_title: response.job_title,
+                    timezone: response.timezone,
+                });
+
+                // Check if user is active
+                if (response.status !== 'active') {
+                    setIsActive(false);
+                }
+
+                // Check if user is admin
+                if (response.user_type === 'admin') {
+                    setIsAdmin(true);
+                }
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+};
+
+const useSubmitData = () => {
+    const updateMe = useUpdateMe();
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    return async function onSubmit(formData) {
         const allData = {
             input: {
-                first_name: data.first_name,
-				last_name: data.last_name,
-				email: data.email,
-				job_title: data.job_title,
-				timezone: data.timezone,
-            }
-        }
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+                email: formData.email,
+                job_title: formData.job_title,
+                timezone: formData.timezone,
+            },
+        };
 
-        let response = await updateUser(allData)
-        if (response === 'success') {
-            closeSnackbar()
-            enqueueSnackbar(`Success`, { variant: "success" })
-        }else{
-            if (response.errors) {
-              response.errors.map(err => enqueueSnackbar(err.message, { variant: "error" }))
-            }
-            if (response.r === 'error') {
-                enqueueSnackbar(response.msg, { variant: "error" })
-            }
+        let response = await updateMe(allData);
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't update user data: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            closeSnackbar();
+            response.errors.map((err) =>
+                enqueueSnackbar(err.message, { variant: 'error' })
+            );
+        } else {
+            closeSnackbar();
+            enqueueSnackbar(`Success`, { variant: 'success' });
         }
-    }
-}
+    };
+};
