@@ -19,7 +19,7 @@ const ChangePasswordDrawer = ({ handleClose }) => {
     // Clear snackbar on load
     useEffect(() => {
         closeSnackbar();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Submit new password
