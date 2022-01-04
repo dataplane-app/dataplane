@@ -17,7 +17,7 @@ const drawerStyles = {
 width: drawerWidth,
 flexShrink: 0,
 zIndex: 9998,
-[`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', background:'#F7FBFD'},
+[`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
 }
 
 const Teams = () => {
