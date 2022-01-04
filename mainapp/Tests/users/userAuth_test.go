@@ -45,15 +45,15 @@ func TestUserAuth(t *testing.T) {
 	graphQLUrl := "http://localhost:9000/private/graphql"
 
 	testUser := faker.Email()
-	testPassword := faker.Password()
+	testPassword := testutils.TextEscape(faker.Password())
 
 	//--------- Create user ------------
 	createUser := `mutation {
 			createUser(input: {
-			first_name: "` + faker.FirstName() + `",
-			last_name: "` + faker.LastName() + `",
+			first_name: "` + testutils.TextEscape(faker.FirstName()) + `",
+			last_name: "` + testutils.TextEscape(faker.LastName()) + `",
 			email: "` + testUser + `",
-			job_title: " ` + faker.Word() + `",
+			job_title: " ` + testutils.TextEscape(faker.Word()) + `",
 			password: "` + testPassword + `",
 			timezone: " ` + faker.Timezone() + ` "
 			}) {

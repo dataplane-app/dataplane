@@ -75,14 +75,14 @@ func main() {
 					setupPlatform(
 						input: {
 							PlatformInput: {
-								business_name: "` + faker.DomainName() + `",,
+								business_name: "` + testutils.TextEscape(faker.DomainName()) + `",,
 								timezone: " ` + faker.Timezone() + ` ",
 								complete: true }
 							AddUsersInput: {
-								first_name: "` + faker.FirstName() + `",
-								last_name: "` + faker.LastName() + `",
+								first_name: "` + testutils.TextEscape(faker.FirstName()) + `",
+								last_name: "` + testutils.TextEscape(faker.LastName()) + `",
 								email: "` + testUser + `",
-								job_title: "` + faker.Name() + `",
+								job_title: "` + testutils.TextEscape(faker.Name()) + `",
 								password: "` + testPassword + `",
 								timezone: " ` + faker.Timezone() + ` ",
 							}
@@ -157,9 +157,9 @@ func main() {
 
 		userData := models.Users{
 			UserID:    v.UserID,
-			FirstName: faker.FirstName(),
-			LastName:  faker.LastName(),
-			JobTitle:  faker.Word(),
+			FirstName: testutils.TextEscape(faker.FirstName()),
+			LastName:  testutils.TextEscape(faker.LastName()),
+			JobTitle:  testutils.TextEscape(faker.Word()),
 			Password:  password,
 			Email:     v.Username,
 			Status:    "active",
