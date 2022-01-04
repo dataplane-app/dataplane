@@ -15,8 +15,14 @@ Resource types are resources that users want access to.
 Requesting access to what?
 */
 
+func (ResourceTypeStruct) IsEntity() {}
+
+func (ResourceTypeStruct) TableName() string {
+	return "permissions_resource_types"
+}
+
 type ResourceTypeStruct struct {
-	Code  string
+	Code  string `gorm:"PRIMARY_KEY;"`
 	Label string
 	Level string
 }
