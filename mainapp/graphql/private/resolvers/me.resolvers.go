@@ -5,6 +5,7 @@ package privateresolvers
 
 import (
 	"context"
+	"dataplane/auth"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -45,6 +46,32 @@ func (r *mutationResolver) UpdateMe(ctx context.Context, input *privategraphql.A
 		JobTitle:  u.JobTitle,
 		Timezone:  u.Timezone,
 	}, nil
+}
+
+func (r *mutationResolver) UpdateChangeMyPassword(ctx context.Context, password string) (*string, error) {
+	// Permission: logged in user
+
+	userID := ctx.Value("currentUser").(string)
+
+	passwordhashed, err := auth.Encrypt(password)
+
+	if err != nil {
+		return nil, errors.New("Password hash failed.")
+	}
+
+	err = database.DBConn.Where("user_id = ?", userID).Updates(models.Users{
+		Password: passwordhashed,
+	}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("database error.")
+	}
+
+	response := "success"
+	return &response, nil
 }
 
 func (r *queryResolver) Me(ctx context.Context) (*models.Users, error) {

@@ -23,4 +23,10 @@ extend type Mutation {
 	+ **Permission**: based on user ID
 	"""
   updateMe(input: AddUpdateMeInput): User
+  	"""
+	Change my password.
+	+ **Route**: Private
+	+ **Permission**: logged in user
+	"""
+	updateChangeMyPassword(password: String!): String
 }

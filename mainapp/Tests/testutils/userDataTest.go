@@ -59,6 +59,14 @@ var UserData = map[string]*UserTestDataPerms{
 		EnvironmentID: "",
 		Permissions:   []models.Permissions{},
 	},
+	"changeuser": {
+		UserID:        "changeuser",
+		Username:      "changeuser@email.com",
+		Password:      "changeuser123!",
+		Environment:   "Development",
+		EnvironmentID: "",
+		Permissions:   []models.Permissions{},
+	},
 	"addremoveuser_environment": {
 		UserID:        "addremoveuser_environment",
 		Username:      "addremoveuser@email.com",

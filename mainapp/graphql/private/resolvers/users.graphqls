@@ -18,6 +18,15 @@ input AddUsersInput {
 	timezone:  String! 
 }
 
+input UpdateUsersInput {
+	user_id: String!
+	first_name: String!  
+	last_name:  String!   
+	email:     String!   
+	job_title: String! 
+	timezone:  String! 
+}
+
 input ChangePasswordInput {
 	password: String! 
 	user_id: String!
@@ -28,19 +37,21 @@ extend type Query{
 	"""
 	Logout current user.
 	+ **Route**: Private
-	+ **Permission**: based on user ID
+	+ **Permission**: based on logged in user
 	"""
 	logoutUser: String
 	"""
 	Get user.
 	+ **Route**: Private
-	+ **Permission**: based on user ID
+	+ **Permission**: anyone logged in
+	+ **Security**: Based on selected fields in User struct
 	"""
 	getUser(user_id: String!): User
 	"""
 	Get users.
 	+ **Route**: Private
-	+ **Permission**: based on user ID
+	+ **Permission**: anyone logged in
+	+ **Security**: Based on selected fields in User struct
 	"""
 	getUsers: [User]
 }
@@ -52,6 +63,12 @@ extend type Mutation {
 	+ **Permission**: admin_platform (write), platform_manage_users (write)
 	"""
   	createUser(input: AddUsersInput): User
+	"""
+	Update user values.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, platform_manage_users
+	"""
+  	updateUser(input: UpdateUsersInput): String
 	"""
 	Change password on behalf of user.
 	+ **Route**: Private
@@ -70,10 +87,4 @@ extend type Mutation {
 	+ **Permission**: admin_platform, platform_manage_users
 	"""
 	updateDeleteUser(userid: String!): String
-	"""
-	Change my password.
-	+ **Route**: Private
-	+ **Permission**: logged in user
-	"""
-	updateChangeMyPassword(password: String!): String
 }
