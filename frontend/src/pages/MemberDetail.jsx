@@ -45,10 +45,10 @@ const MemberDetail = () => {
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
 
-    // Get user data on load
+    // Get me data on load
     useGetData(setUser, reset, setIsActive, setIsAdmin)
     
-    // Submit user data
+    // Submit me data
     const onSubmit = useSubmitData()
 
     return (
@@ -246,7 +246,7 @@ const useGetData = (setUser, reset, setIsActive, setIsAdmin) => {
     const getMe = useMe();
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Get user data on load
+    // Get me data on load
     useEffect(() => {
         (async () => {
             const response = await getMe();
@@ -263,7 +263,7 @@ const useGetData = (setUser, reset, setIsActive, setIsAdmin) => {
             } else {
                 setUser(response);
 
-                // Reset form default values to incoming user data
+                // Reset form default values to incoming me data
                 reset({
                     first_name: response.first_name,
                     last_name: response.last_name,
