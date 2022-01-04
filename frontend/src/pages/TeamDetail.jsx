@@ -45,7 +45,7 @@ const TeamDetail = () => {
     useGetData(setUser, reset);
 
     // Submit user data
-    const onSubmit = useSubmitData();
+    const onSubmit = useSubmitData(user.user_id);
 
     return (
         <>
@@ -288,7 +288,7 @@ const useGetData = (setUser, reset) => {
     // URI parameter
     const { teamId } = useParams();
 
-    // Retrieve data
+    // Get user data
     useEffect(() => {
         (async () => {
             const user = await getUser({ user_id: teamId });
@@ -296,7 +296,7 @@ const useGetData = (setUser, reset) => {
             if (user?.r !== 'error') {
                 setUser(user);
 
-                // Reset form default values
+                // Reset form default values to incoming user data
                 reset({
                     first_name: user.first_name,
                     last_name: user.last_name,
@@ -310,16 +310,17 @@ const useGetData = (setUser, reset) => {
     }, []);
 };
 
-const useSubmitData = () => {
+const useSubmitData = (userId) => {
     // GraphQL hook
     const updateUser = useUpdateUser();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Retrieve data
+    // Update user info
     return async function onSubmit(data) {
         const allData = {
             input: {
+                user_id: userId,
                 first_name: data.first_name,
                 last_name: data.last_name,
                 email: data.email,
