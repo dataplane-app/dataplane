@@ -54,7 +54,7 @@ const ChangePasswordDrawer = ({ handleClose }) => {
                     </Button>
                 </Box>
 
-                <Typography component="h2" variant="h2">
+                <Typography component="h2" variant="h2" mt={2}>
                     Change password
                 </Typography>
 
@@ -75,7 +75,7 @@ const ChangePasswordDrawer = ({ handleClose }) => {
                         size="small"
                         required
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }}
+                        sx={{ mb: 3, fontSize: '.75rem', display: 'flex' }}
                     />
                     <Button onClick={handleSubmit} variant="contained" color="primary" height="100%" style={{ width: '100%' }}>
                         Submit
