@@ -72,6 +72,7 @@ type ComplexityRoot struct {
 		UpdatePermissionToUser        func(childComplexity int, environmentID string, resource string, resourceID string, access string, userID string) int
 		UpdatePlatform                func(childComplexity int, input *UpdatePlatformInput) int
 		UpdatePreferences             func(childComplexity int, input *AddPreferencesInput) int
+		UpdateUser                    func(childComplexity int, input *UpdateUsersInput) int
 		UpdateUserToAccessGroup       func(childComplexity int, environmentID string, userID string, accessGroupID string) int
 	}
 
@@ -141,6 +142,7 @@ type MutationResolver interface {
 	AddUserToEnvironment(ctx context.Context, userID string, environmentID string) (*string, error)
 	RemoveUserFromEnvironment(ctx context.Context, userID string, environmentID string) (*string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
+	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 	CreateAccessGroup(ctx context.Context, environmentID string, name string) (string, error)
 	DeleteAccessGroup(ctx context.Context, accessGroupID string, environmentID string) (string, error)
 	UpdatePermissionToAccessGroup(ctx context.Context, environmentID string, resource string, resourceID string, access string, accessGroupID string) (string, error)
@@ -150,10 +152,10 @@ type MutationResolver interface {
 	RemoveUserFromAccessGroup(ctx context.Context, userID string, accessGroupID string, environmentID string) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	CreateUser(ctx context.Context, input *AddUsersInput) (*models.Users, error)
+	UpdateUser(ctx context.Context, input *UpdateUsersInput) (*string, error)
 	UpdateChangePassword(ctx context.Context, input *ChangePasswordInput) (*string, error)
 	UpdateDeactivateUser(ctx context.Context, userid string) (*string, error)
 	UpdateDeleteUser(ctx context.Context, userid string) (*string, error)
-	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 }
 type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*models.Environment, error)
@@ -436,6 +438,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdatePreferences(childComplexity, args["input"].(*AddPreferencesInput)), true
+
+	case "Mutation.updateUser":
+		if e.complexity.Mutation.UpdateUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["input"].(*UpdateUsersInput)), true
 
 	case "Mutation.updateUserToAccessGroup":
 		if e.complexity.Mutation.UpdateUserToAccessGroup == nil {
@@ -888,6 +902,12 @@ extend type Mutation {
 	+ **Permission**: based on user ID
 	"""
   updateMe(input: AddUpdateMeInput): User
+  	"""
+	Change my password.
+	+ **Route**: Private
+	+ **Permission**: logged in user
+	"""
+	updateChangeMyPassword(password: String!): String
 }
 `, BuiltIn: false},
 	{Name: "resolvers/permissions.graphqls", Input: `type AvailablePermissions {
@@ -1044,6 +1064,15 @@ input AddUsersInput {
 	timezone:  String! 
 }
 
+input UpdateUsersInput {
+	user_id: String!
+	first_name: String!  
+	last_name:  String!   
+	email:     String!   
+	job_title: String! 
+	timezone:  String! 
+}
+
 input ChangePasswordInput {
 	password: String! 
 	user_id: String!
@@ -1054,19 +1083,21 @@ extend type Query{
 	"""
 	Logout current user.
 	+ **Route**: Private
-	+ **Permission**: based on user ID
+	+ **Permission**: based on logged in user
 	"""
 	logoutUser: String
 	"""
 	Get user.
 	+ **Route**: Private
-	+ **Permission**: based on user ID
+	+ **Permission**: anyone logged in
+	+ **Security**: Based on selected fields in User struct
 	"""
 	getUser(user_id: String!): User
 	"""
 	Get users.
 	+ **Route**: Private
-	+ **Permission**: based on user ID
+	+ **Permission**: anyone logged in
+	+ **Security**: Based on selected fields in User struct
 	"""
 	getUsers: [User]
 }
@@ -1078,6 +1109,12 @@ extend type Mutation {
 	+ **Permission**: admin_platform (write), platform_manage_users (write)
 	"""
   	createUser(input: AddUsersInput): User
+	"""
+	Update user values.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, platform_manage_users
+	"""
+  	updateUser(input: UpdateUsersInput): String
 	"""
 	Change password on behalf of user.
 	+ **Route**: Private
@@ -1096,12 +1133,6 @@ extend type Mutation {
 	+ **Permission**: admin_platform, platform_manage_users
 	"""
 	updateDeleteUser(userid: String!): String
-	"""
-	Change my password.
-	+ **Route**: Private
-	+ **Permission**: logged in user
-	"""
-	updateChangeMyPassword(password: String!): String
 }`, BuiltIn: false},
 	{Name: "resolvers/workers.graphqls", Input: `type Workers {
 	name: String!
@@ -1561,6 +1592,21 @@ func (ec *executionContext) field_Mutation_updateUserToAccessGroup_args(ctx cont
 		}
 	}
 	args["access_group_id"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *UpdateUsersInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOUpdateUsersInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdateUsersInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -2080,6 +2126,45 @@ func (ec *executionContext) _Mutation_updateMe(ctx context.Context, field graphq
 	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_updateChangeMyPassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateChangeMyPassword_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateChangeMyPassword(rctx, args["password"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createAccessGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2452,6 +2537,45 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateUser_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateUser(rctx, args["input"].(*UpdateUsersInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_updateChangePassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2556,45 +2680,6 @@ func (ec *executionContext) _Mutation_updateDeleteUser(ctx context.Context, fiel
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().UpdateDeleteUser(rctx, args["userid"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_updateChangeMyPassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_updateChangeMyPassword_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateChangeMyPassword(rctx, args["password"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5306,6 +5391,69 @@ func (ec *executionContext) unmarshalInputRenameEnvironment(ctx context.Context,
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateUsersInput(ctx context.Context, obj interface{}) (UpdateUsersInput, error) {
+	var it UpdateUsersInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "user_id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user_id"))
+			it.UserID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "first_name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first_name"))
+			it.FirstName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "last_name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("last_name"))
+			it.LastName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "job_title":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("job_title"))
+			it.JobTitle, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "timezone":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
+			it.Timezone, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputupdatePlatformInput(ctx context.Context, obj interface{}) (UpdatePlatformInput, error) {
 	var it UpdatePlatformInput
 	asMap := map[string]interface{}{}
@@ -5457,6 +5605,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_removeUserFromEnvironment(ctx, field)
 		case "updateMe":
 			out.Values[i] = ec._Mutation_updateMe(ctx, field)
+		case "updateChangeMyPassword":
+			out.Values[i] = ec._Mutation_updateChangeMyPassword(ctx, field)
 		case "createAccessGroup":
 			out.Values[i] = ec._Mutation_createAccessGroup(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -5496,14 +5646,14 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_updatePreferences(ctx, field)
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
+		case "updateUser":
+			out.Values[i] = ec._Mutation_updateUser(ctx, field)
 		case "updateChangePassword":
 			out.Values[i] = ec._Mutation_updateChangePassword(ctx, field)
 		case "updateDeactivateUser":
 			out.Values[i] = ec._Mutation_updateDeactivateUser(ctx, field)
 		case "updateDeleteUser":
 			out.Values[i] = ec._Mutation_updateDeleteUser(ctx, field)
-		case "updateChangeMyPassword":
-			out.Values[i] = ec._Mutation_updateChangeMyPassword(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6812,6 +6962,14 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return graphql.MarshalString(*v)
+}
+
+func (ec *executionContext) unmarshalOUpdateUsersInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdateUsersInput(ctx context.Context, v interface{}) (*UpdateUsersInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputUpdateUsersInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOUser2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx context.Context, sel ast.SelectionSet, v []*models.Users) graphql.Marshaler {

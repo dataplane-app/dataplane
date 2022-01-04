@@ -2,14 +2,14 @@ body {
     margin: 0;
     height: 100%;
     overflow: hidden;
-    font-family: 'Roboto' ,-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-        "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-        "Helvetica Neue", sans-serif;
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+        'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+        'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
-.app{
+.app {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -19,11 +19,15 @@ body {
 }
 
 code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
         monospace;
 }
 
-.page{
+.page {
     padding-top: 1rem;
     min-height: 100vh;
+}
+
+.SnackbarContainer-top {
+    top: 90px !important;
 }

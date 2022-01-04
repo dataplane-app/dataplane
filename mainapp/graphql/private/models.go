@@ -54,6 +54,15 @@ type RenameEnvironment struct {
 	Name string `json:"name"`
 }
 
+type UpdateUsersInput struct {
+	UserID    string `json:"user_id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	JobTitle  string `json:"job_title"`
+	Timezone  string `json:"timezone"`
+}
+
 type Workers struct {
 	Name string `json:"name"`
 }

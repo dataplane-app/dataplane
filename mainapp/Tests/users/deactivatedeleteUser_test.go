@@ -62,7 +62,7 @@ func TestDeactivateDeleteUser(t *testing.T) {
 				last_name: "TestUserLastName",
 				email: "` + faker.Email() + `",
 				job_title: "",
-				password: "` + faker.Password() + `",
+				password: "` + testutils.TextEscape(faker.Password()) + `",
 				timezone: " ` + faker.Timezone() + ` "
 				}) {
 				user_id

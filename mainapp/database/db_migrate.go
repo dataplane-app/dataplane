@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	// "gorm.io/gorm/clause"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 
@@ -61,6 +62,7 @@ func Migrate() {
 		&models.PermissionsAccessGUsers{},
 		&models.Pipelines{},
 		&models.PipelinesArchive{},
+		&models.ResourceTypeStruct{},
 	)
 	if err1 != nil {
 		panic(err1)
@@ -72,11 +74,11 @@ func Migrate() {
 	// }).Create(&dataingest.Mcctradeingest)
 	// log.Println("mcc loaded")
 
-	// // ---- load country data
-	// dbConn.Clauses(clause.OnConflict{
-	// 	UpdateAll: true,
-	// }).Create(&dataingest.CountryPrices)
-	// log.Println("country default pricing loaded")
+	// ---- load permissions data
+	dbConn.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&models.ResourceType)
+	log.Println("country default pricing loaded")
 
 	hypertable := "SELECT create_hypertable('logs_platform', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
 
