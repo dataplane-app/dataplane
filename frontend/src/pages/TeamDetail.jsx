@@ -278,7 +278,7 @@ const TeamDetail = () => {
             </Box>
 
             <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)} sx={drawerStyles}>
-                <ChangePasswordDrawer />
+                <ChangePasswordDrawer handleClose={() => setIsOpenPassword(false)} />
             </Drawer>
 
             <Drawer anchor="right" open={isOpenDeactivateUser} onClose={() => setIsOpenDeactivateUser(!isOpenDeactivateUser)} sx={drawerStyles}>
