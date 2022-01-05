@@ -37,12 +37,13 @@ const TeamDetail = () => {
 
     // User state
     const [user, setUser] = useState({});
-    const [availablePermissions, setAvailablePermissions] = useState([]);  // <==
-    const [selectedPermission, setSelectedPermission] = useState(null);    // <==
+    const [availablePermissions, setAvailablePermissions] = useState([]);
+    const [selectedPermission, setSelectedPermission] = useState(null);
 
     // Sidebar states
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
+    const [isOpenDeactivateUser, setIsOpenDeactivateUser] = useState(false);
 
     // Get user data custom hook
     const getData = useGetData(setUser, reset);
