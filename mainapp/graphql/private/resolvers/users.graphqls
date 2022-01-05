@@ -82,6 +82,12 @@ extend type Mutation {
 	"""
 	updateDeactivateUser(userid: String!): String
 	"""
+	Activate user.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, platform_manage_users
+	"""
+	updateActivateUser(userid: String!): String
+	"""
 	Delete user.
 	+ **Route**: Private
 	+ **Permission**: admin_platform, platform_manage_users

@@ -6,7 +6,7 @@ package privateresolvers
 import (
 	"context"
 	"dataplane/auth"
-	"dataplane/auth_permissions"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -216,6 +216,57 @@ func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid stri
 	}
 
 	response := "User deactivated"
+	return &response, nil
+}
+
+func (r *mutationResolver) UpdateActivateUser(ctx context.Context, userid string) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_manage_users", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	if currentUser == userid {
+		return nil, errors.New("User to be activated cannot be the same as logged in user.")
+	}
+
+	// Check if user alredy active
+	u := models.Users{}
+
+	err := database.DBConn.Where("user_id = ?", userid).First(&u).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive user database error.")
+	}
+
+	if u.Active == true {
+		return nil, errors.New("User is already active.")
+	}
+
+	// Activate user
+	err = database.DBConn.Where(&models.Users{UserID: userid}).Select("status", "active").
+		Updates(models.Users{Status: "active", Active: true}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("ActivateUser database error.")
+	}
+
+	response := "User Activated"
 	return &response, nil
 }
 
