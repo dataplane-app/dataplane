@@ -19,6 +19,7 @@ go test -p 1 -v -count=1 -run TestDeactivateDeleteUser dataplane/Tests/users
 * Login
 * Create a user
 * Deactivate user
+* Activate user
 * Delete user
 */
 func TestDeactivateDeleteUser(t *testing.T) {
@@ -100,6 +101,23 @@ func TestDeactivateDeleteUser(t *testing.T) {
 	}
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Deactivate user 200 status code")
+
+	// --------- Activate User --------------
+	activateUser := `mutation {
+			updateActivateUser(
+				userid: "` + testUserID + `"
+			) 
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(activateUser, accessTokenAdmin, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Activate user 200 status code")
 
 	// --------- Delete User --------------
 	deleteUser := `mutation {

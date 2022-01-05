@@ -63,6 +63,7 @@ type ComplexityRoot struct {
 		RemoveUserFromAccessGroup     func(childComplexity int, userID string, accessGroupID string, environmentID string) int
 		RemoveUserFromEnvironment     func(childComplexity int, userID string, environmentID string) int
 		RenameEnvironment             func(childComplexity int, input *RenameEnvironment) int
+		UpdateActivateUser            func(childComplexity int, userid string) int
 		UpdateChangeMyPassword        func(childComplexity int, password string) int
 		UpdateChangePassword          func(childComplexity int, input *ChangePasswordInput) int
 		UpdateDeactivateUser          func(childComplexity int, userid string) int
@@ -155,6 +156,7 @@ type MutationResolver interface {
 	UpdateUser(ctx context.Context, input *UpdateUsersInput) (*string, error)
 	UpdateChangePassword(ctx context.Context, input *ChangePasswordInput) (*string, error)
 	UpdateDeactivateUser(ctx context.Context, userid string) (*string, error)
+	UpdateActivateUser(ctx context.Context, userid string) (*string, error)
 	UpdateDeleteUser(ctx context.Context, userid string) (*string, error)
 }
 type QueryResolver interface {
@@ -330,6 +332,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.RenameEnvironment(childComplexity, args["input"].(*RenameEnvironment)), true
+
+	case "Mutation.updateActivateUser":
+		if e.complexity.Mutation.UpdateActivateUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateActivateUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateActivateUser(childComplexity, args["userid"].(string)), true
 
 	case "Mutation.updateChangeMyPassword":
 		if e.complexity.Mutation.UpdateChangeMyPassword == nil {
@@ -1128,6 +1142,12 @@ extend type Mutation {
 	"""
 	updateDeactivateUser(userid: String!): String
 	"""
+	Activate user.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, platform_manage_users
+	"""
+	updateActivateUser(userid: String!): String
+	"""
 	Delete user.
 	+ **Route**: Private
 	+ **Permission**: admin_platform, platform_manage_users
@@ -1352,6 +1372,21 @@ func (ec *executionContext) field_Mutation_renameEnvironment_args(ctx context.Co
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateActivateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["userid"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userid"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userid"] = arg0
 	return args, nil
 }
 
@@ -2641,6 +2676,45 @@ func (ec *executionContext) _Mutation_updateDeactivateUser(ctx context.Context, 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().UpdateDeactivateUser(rctx, args["userid"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateActivateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateActivateUser_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateActivateUser(rctx, args["userid"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5652,6 +5726,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_updateChangePassword(ctx, field)
 		case "updateDeactivateUser":
 			out.Values[i] = ec._Mutation_updateDeactivateUser(ctx, field)
+		case "updateActivateUser":
+			out.Values[i] = ec._Mutation_updateActivateUser(ctx, field)
 		case "updateDeleteUser":
 			out.Values[i] = ec._Mutation_updateDeleteUser(ctx, field)
 		default:

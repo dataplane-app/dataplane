@@ -7,6 +7,7 @@ import { belongToAcessGroupsItems, belongToEnvironmentItems, environmentPermissi
 import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
+import DeactivateUserDrawer from '../components/DrawerContent/DeactivateUserDrawer';
 import { useHistory, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useGetUser } from '../graphql/getUser';
@@ -40,9 +41,16 @@ const TeamDetail = () => {
     // Sidebar states
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
+    const [isOpenDeactivateUser, setIsOpenDeactivateUser] = useState(false);
 
-    // Retrieve user data on load
-    useGetData(setUser, reset);
+    // Get user data custom hook
+    const getData = useGetData(setUser, reset);
+
+    // Get user data on load
+    useEffect(() => {
+        getData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Submit user data
     const onSubmit = useSubmitData(user.user_id);
@@ -120,13 +128,16 @@ const TeamDetail = () => {
                                 sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                                 Change password
                             </Button>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                color={user.status === 'active' ? 'error' : 'success'}
-                                sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                                {user.status === 'active' ? 'Deactivate' : 'Activate'} user
-                            </Button>
+                            {user.email ? (
+                                <Button
+                                    onClick={() => setIsOpenDeactivateUser(true)}
+                                    size="small"
+                                    variant="outlined"
+                                    color={user.status === 'active' ? 'error' : 'success'}
+                                    sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                                    {user.status === 'active' ? 'Deactivate' : 'Activate'} user
+                                </Button>
+                            ) : null}
                             <Button
                                 onClick={() => setIsOpenDeleteUser(true)}
                                 size="small"
@@ -270,6 +281,10 @@ const TeamDetail = () => {
                 <ChangePasswordDrawer handleClose={() => setIsOpenPassword(false)} />
             </Drawer>
 
+            <Drawer anchor="right" open={isOpenDeactivateUser} onClose={() => setIsOpenDeactivateUser(!isOpenDeactivateUser)} sx={drawerStyles}>
+                <DeactivateUserDrawer user={user} handleClose={() => setIsOpenDeactivateUser(false)} refreshData={getData} />
+            </Drawer>
+
             <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
                 <DeleteUserDrawer user="Saul Frank" handleClose={() => setIsOpenDeleteUser(false)} />
             </Drawer>
@@ -289,25 +304,22 @@ const useGetData = (setUser, reset) => {
     const { teamId } = useParams();
 
     // Get user data
-    useEffect(() => {
-        (async () => {
-            const user = await getUser({ user_id: teamId });
+    return async () => {
+        const user = await getUser({ user_id: teamId });
 
-            if (user?.r !== 'error') {
-                setUser(user);
+        if (user?.r !== 'error') {
+            setUser(user);
 
-                // Reset form default values to incoming user data
-                reset({
-                    first_name: user.first_name,
-                    last_name: user.last_name,
-                    email: user.email,
-                    job_title: user.job_title,
-                    timezone: user.timezone,
-                });
-            }
-        })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+            // Reset form default values to incoming user data
+            reset({
+                first_name: user.first_name,
+                last_name: user.last_name,
+                email: user.email,
+                job_title: user.job_title,
+                timezone: user.timezone,
+            });
+        }
+    };
 };
 
 const useSubmitData = (userId) => {
