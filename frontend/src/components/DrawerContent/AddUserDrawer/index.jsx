@@ -73,7 +73,7 @@ const AddUserDrawer = ({ handleClose }) => {
                         id="first_name"
                         size="small"
                         required
-                        sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex', background: 'white' }}
+                        sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }}
                         {...register('first_name', { required: true })}
                     />
                     <TextField
@@ -81,7 +81,7 @@ const AddUserDrawer = ({ handleClose }) => {
                         id="last_name"
                         size="small"
                         required
-                        sx={{ mb: 2, fontSize: '.75rem', display: 'flex', background: 'white' }}
+                        sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }}
                         {...register('last_name', { required: true })}
                     />
                     <TextField
@@ -90,7 +90,7 @@ const AddUserDrawer = ({ handleClose }) => {
                         type="email"
                         size="small"
                         required
-                        sx={{ mb: 2, fontSize: '.75rem', display: 'flex', background: 'white' }}
+                        sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }}
                         {...register('email', { required: true })}
                     />
                     <TextField
@@ -99,7 +99,7 @@ const AddUserDrawer = ({ handleClose }) => {
                         type="password"
                         size="small"
                         required
-                        sx={{ fontSize: '.75rem', display: 'flex', background: 'white' }}
+                        sx={{ fontSize: '.75rem', display: 'flex' }}
                         {...register('password', { required: true })}
                     />
 
@@ -107,7 +107,7 @@ const AddUserDrawer = ({ handleClose }) => {
                         The user will be asked to change password on first login.
                     </Typography>
 
-                    <TextField label="Job title" id="job_title" size="small" sx={{ mt: 2, fontSize: '.75rem', display: 'flex', background: 'white' }} {...register('job_title')} />
+                    <TextField label="Job title" id="job_title" size="small" sx={{ mt: 2, fontSize: '.75rem', display: 'flex' }} {...register('job_title')} />
 
                     <Autocomplete
                         disablePortal
@@ -123,7 +123,7 @@ const AddUserDrawer = ({ handleClose }) => {
                                 label="Timezone"
                                 id="timezone"
                                 size="small"
-                                sx={{ mt: 2, fontSize: '.75rem', display: 'flex', background: 'white' }}
+                                sx={{ mt: 2, fontSize: '.75rem', display: 'flex' }}
                                 {...register('timezone')}
                             />
                         )}
