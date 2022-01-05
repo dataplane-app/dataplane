@@ -10,6 +10,7 @@ import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import { useHistory, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useGetUser } from '../graphql/getUser';
+import { useAvailablePermissions } from '../graphql/availablePermissions';
 import { useSnackbar } from 'notistack';
 import { useUpdateUser } from '../graphql/updateUser';
 import ct from 'countries-and-timezones';
@@ -36,13 +37,25 @@ const TeamDetail = () => {
 
     // User state
     const [user, setUser] = useState({});
+    const [availablePermissions, setAvailablePermissions] = useState([]);  // <==
+    const [selectedPermission, setSelectedPermission] = useState(null);    // <==
 
     // Sidebar states
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
 
-    // Retrieve user data on load
-    useGetData(setUser, reset);
+    // Get user data custom hook
+    const getData = useGetData(setUser, reset);
+
+    // Get user data custom hook
+    const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, reset);
+
+    // Get user data on load
+    useEffect(() => {
+        getData();
+        getAvailablePermissions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Submit user data
     const onSubmit = useSubmitData(user.user_id);
@@ -120,13 +133,16 @@ const TeamDetail = () => {
                                 sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                                 Change password
                             </Button>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                color={user.status === 'active' ? 'error' : 'success'}
-                                sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                                {user.status === 'active' ? 'Deactivate' : 'Activate'} user
-                            </Button>
+                            {user.email ? (
+                                <Button
+                                    onClick={() => setIsOpenDeactivateUser(true)}
+                                    size="small"
+                                    variant="outlined"
+                                    color={user.status === 'active' ? 'error' : 'success'}
+                                    sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                                    {user.status === 'active' ? 'Deactivate' : 'Activate'} user
+                                </Button>
+                            ) : null}
                             <Button
                                 onClick={() => setIsOpenDeleteUser(true)}
                                 size="small"
@@ -148,7 +164,20 @@ const TeamDetail = () => {
                             </Typography>
 
                             <Grid mt={2} display="flex" alignItems="center">
-                                <Search placeholder="Find platform permissions" onChange={() => null} />
+                                <Autocomplete
+                                    disablePortal
+                                    id="available_permissions_autocomplete"
+                                    onChange={(event, newValue) => {
+                                        setSelectedPermission(newValue);
+                                    }}
+                                    sx={{ minWidth: '280px' }}
+                                    options={availablePermissions}
+                                    getOptionLabel={(option) => option.Label}
+                                    renderInput={(params) => (
+                                        <TextField {...params} label="Available permissions" id="available_permissions" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
+                                    )}
+                                />
+
                                 <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }}>
                                     Add
                                 </Button>
@@ -271,7 +300,7 @@ const TeamDetail = () => {
             </Drawer>
 
             <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
-                <DeleteUserDrawer user="Saul Frank" handleClose={() => setIsOpenDeleteUser(false)} />
+                <DeleteUserDrawer user={user} handleClose={() => setIsOpenDeleteUser(false)} refreshData={getData} />
             </Drawer>
         </>
     );
@@ -289,25 +318,22 @@ const useGetData = (setUser, reset) => {
     const { teamId } = useParams();
 
     // Get user data
-    useEffect(() => {
-        (async () => {
-            const user = await getUser({ user_id: teamId });
+    return async () => {
+        const user = await getUser({ user_id: teamId });
 
-            if (user?.r !== 'error') {
-                setUser(user);
+        if (user?.r !== 'error') {
+            setUser(user);
 
-                // Reset form default values to incoming user data
-                reset({
-                    first_name: user.first_name,
-                    last_name: user.last_name,
-                    email: user.email,
-                    job_title: user.job_title,
-                    timezone: user.timezone,
-                });
-            }
-        })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+            // Reset form default values to incoming user data
+            reset({
+                first_name: user.first_name,
+                last_name: user.last_name,
+                email: user.email,
+                job_title: user.job_title,
+                timezone: user.timezone,
+            });
+        }
+    };
 };
 
 const useSubmitData = (userId) => {
@@ -340,6 +366,29 @@ const useSubmitData = (userId) => {
             if (response.r === 'error') {
                 enqueueSnackbar(response.msg, { variant: 'error' });
             }
+        }
+    };
+};
+
+const useGetAvailablePermissions = (setAvailablePermissions, reset) => {
+    // GraphQL hook
+    const getAvailablePermissions = useAvailablePermissions();
+
+    // Get available permissions
+    return async () => {
+        const permissions = await getAvailablePermissions();
+
+        if (permissions?.r !== 'error') {
+            setAvailablePermissions(permissions);
+
+            // Reset form default values to incoming user data
+            // reset({
+            //     first_name: user.first_name,
+            //     last_name: user.last_name,
+            //     email: user.email,
+            //     job_title: user.job_title,
+            //     timezone: user.timezone,
+            // });
         }
     };
 };
