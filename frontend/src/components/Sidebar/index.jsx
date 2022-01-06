@@ -1,5 +1,5 @@
 import './styles.css';
-import { faAlignCenter, faBullhorn, faCodeBranch, faCog, faConciergeBell, faGraduationCap, faKey, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faAlignCenter, faBullhorn, faCodeBranch, faCog, faConciergeBell, faGraduationCap, faKey, faUsers, faLock } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid } from '@mui/material';
 import Divider from '@mui/material/Divider';
@@ -93,6 +93,12 @@ const MENU_ITEMS_TOP = [
     },
     {
         id: 5,
+        name: 'Access groups',
+        icon: <FontAwesomeIcon className="menu-icons" icon={faLock} />,
+        url: 'access_groups',
+    },
+    {
+        id: 6,
         name: 'Settings',
         icon: <FontAwesomeIcon className="menu-icons" icon={faCog} />,
         url: 'settings',

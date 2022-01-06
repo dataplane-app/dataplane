@@ -7,7 +7,7 @@ import * as React from 'react';
 import Navbar from '../Navbar';
 import Sidebar from '../Sidebar';
 
-const drawerWidth = 190;
+const drawerWidth = 204;
 
 const Layout = ({ children }) => {
     return (
