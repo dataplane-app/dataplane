@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form';
 import { useGetUser } from '../graphql/getUser';
 import { useSnackbar } from 'notistack';
 import { useUpdateUser } from '../graphql/updateUser';
+import { useMe } from '../graphql/me';
 import ct from 'countries-and-timezones';
 
 const drawerWidth = 507;
@@ -40,6 +41,7 @@ const TeamDetail = () => {
 
     // User state
     const [user, setUser] = useState({});
+    const [meData, setMeData] = useState({});
 
     // Sidebar states
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
@@ -49,11 +51,16 @@ const TeamDetail = () => {
     // Get user data custom hook
     const getData = useGetData(setUser, reset);
 
+    // Get me data custom hook
+    const getMeUserData = useGetMeData(setMeData);
+
+    console.log(JSON.stringify(meData));
     // Get user data on load
     useEffect(() => {
         // Scroll to top
         containerRef.current.parentElement.scrollIntoView();
 
+        getMeUserData();
         getData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -121,42 +128,44 @@ const TeamDetail = () => {
 
                         <Box sx={{ margin: '2.45rem 0', borderTop: 1, borderColor: 'divider' }}></Box>
 
-                        <Box>
-                            <Typography component="h3" variant="h3" color="text.primary">
-                                Control
-                            </Typography>
-
-                            <Button
-                                onClick={() => setIsOpenPassword(true)}
-                                size="small"
-                                variant="outlined"
-                                color="error"
-                                sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                                Change password
-                            </Button>
-                            {user.email ? (
+                        {user.email && meData.email ? (
+                            <Box>
+                                <Typography component="h3" variant="h3" color="text.primary">
+                                    Control
+                                </Typography>
+                                <Button
+                                    onClick={() => setIsOpenPassword(true)}
+                                    size="small"
+                                    variant="outlined"
+                                    color="error"
+                                    sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                                    Change password
+                                </Button>
                                 <Button
                                     onClick={() => setIsOpenDeactivateUser(true)}
+                                    disabled={user.user_id === meData.user_id ? true : false}
                                     size="small"
                                     variant="outlined"
                                     color={user.status === 'active' ? 'error' : 'success'}
                                     sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                                     {user.status === 'active' ? 'Deactivate' : 'Activate'} user
                                 </Button>
-                            ) : null}
-                            <Button
-                                onClick={() => setIsOpenDeleteUser(true)}
-                                size="small"
-                                variant="outlined"
-                                color="error"
-                                sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                                Delete user
-                            </Button>
-
-                            <Typography color="rgba(248, 0, 0, 1)" lineHeight="15.23px" sx={{ mt: '.56rem' }} variant="subtitle2">
-                                Warning: this action can’t be undone. It is usually better to deactivate a user.
-                            </Typography>
-                        </Box>
+                                <Button
+                                    onClick={() => setIsOpenDeleteUser(true)}
+                                    disabled={user.user_id === meData.user_id ? true : false}
+                                    size="small"
+                                    variant="outlined"
+                                    color="error"
+                                    sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                                    Delete user
+                                </Button>
+                                {user.user_id !== meData.user_id ? (
+                                    <Typography color="rgba(248, 0, 0, 1)" lineHeight="15.23px" sx={{ mt: '.56rem' }} variant="subtitle2">
+                                        Warning: this action can’t be undone. It is usually better to deactivate a user.
+                                    </Typography>
+                                ) : null}
+                            </Box>
+                        ) : null}
                     </Grid>
                     <Grid item sx={{ flex: 2.2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
                         <Box>
@@ -358,6 +367,27 @@ const useSubmitData = (userId) => {
             if (response.r === 'error') {
                 enqueueSnackbar(response.msg, { variant: 'error' });
             }
+        }
+    };
+};
+
+const useGetMeData = (setMeData) => {
+    const getMe = useMe();
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get me data on load
+    return async () => {
+        const response = await getMe();
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get me data: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setMeData(response);
         }
     };
 };
