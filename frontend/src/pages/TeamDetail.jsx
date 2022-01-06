@@ -238,7 +238,7 @@ const TeamDetail = () => {
                             {belongToEnvironmentItems.map((env) => (
                                 <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
                                     <Box component={FontAwesomeIcon} sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)' }} icon={faTrashAlt} />
-                                    <Typography variant="subtitle2" lineHeight="15.23px" color="primary" fontWeight="900">
+                                    <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
                                         {env.name}
                                     </Typography>
                                 </Grid>
@@ -266,7 +266,7 @@ const TeamDetail = () => {
                                         key={env.id}
                                         onClick={() => history.push(`/teams/access/${env.name}`)}>
                                         <Box component={FontAwesomeIcon} sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)' }} icon={faTrashAlt} />
-                                        <Typography variant="subtitle2" lineHeight="15.23px" color="primary" fontWeight="900">
+                                        <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
                                             {env.name}
                                         </Typography>
                                     </Grid>
