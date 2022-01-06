@@ -22,31 +22,32 @@ func (ResourceTypeStruct) TableName() string {
 }
 
 type ResourceTypeStruct struct {
-	Code  string `gorm:"PRIMARY_KEY;"`
-	Label string
-	Level string
+	Code   string `gorm:"PRIMARY_KEY;"`
+	Label  string
+	Level  string
+	Access string
 }
 
 var ResourceType = []*ResourceTypeStruct{
 
 	// Platform level
-	{Code: "admin_platform", Level: "platform", Label: "Admin"},
-	{Code: "platform_environment", Level: "platform", Label: "Manage environments"},
-	{Code: "platform_manage_users", Level: "platform", Label: "Manage users"},
+	{Code: "admin_platform", Level: "platform", Label: "Admin", Access: "write"},
+	{Code: "platform_environment", Level: "platform", Label: "Manage environments", Access: "write"},
+	{Code: "platform_manage_users", Level: "platform", Label: "Manage users", Access: "write"},
 
 	// Environment level
-	{Code: "admin_environment", Level: "environment", Label: "Environment admin"},
+	{Code: "admin_environment", Level: "environment", Label: "Environment admin", Access: "write"},
 	// To add an admin user - you will need admin rights
-	{Code: "environment_add_user", Level: "environment", Label: "Add user to environment"},
-	{Code: "environment_remove_user", Level: "environment", Label: "Remove user from environment"},
-	{Code: "environment_permissions", Level: "environment", Label: "Manage permissions"},
-	{Code: "environment_all_pipelines", Level: "environment", Label: "View all pipelines"},
-	{Code: "environment_secrets", Level: "environment", Label: "Manage secrets"},
-	{Code: "environment_edit_workers", Level: "environment", Label: "Manage workers"},
+	{Code: "environment_add_user", Level: "environment", Label: "Add user to environment", Access: "write"},
+	{Code: "environment_remove_user", Level: "environment", Label: "Remove user from environment", Access: "write"},
+	{Code: "environment_permissions", Level: "environment", Label: "Manage permissions", Access: "write"},
+	{Code: "environment_all_pipelines", Level: "environment", Label: "View all pipelines", Access: "read"},
+	{Code: "environment_secrets", Level: "environment", Label: "Manage secrets", Access: "write"},
+	{Code: "environment_edit_workers", Level: "environment", Label: "Manage workers", Access: "write"},
 
 	// Specific level
-	{Code: "specific_worker", Level: "specific", Label: "Worker - ${{worker_name}}"},
-	{Code: "specific_pipeline", Level: "specific", Label: "Pipeline - ${{pipeline_name}}"},
+	// {Code: "specific_worker", Level: "specific", Label: "Worker - ${{worker_name}}",},
+	// {Code: "specific_pipeline", Level: "specific", Label: "Pipeline - ${{pipeline_name}}",},
 }
 
 /* Access: what type of access does the user have to the resource - read, write */

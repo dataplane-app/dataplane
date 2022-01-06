@@ -9,6 +9,8 @@ const query = gql`
             Code
             Level
             Label
+            ResourceID
+            AccessType
         }
     }
 `;

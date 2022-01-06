@@ -5,16 +5,22 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/auth_permissions"
+	"dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
+	privategraphql "dataplane/graphql/private"
 	"dataplane/logging"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+func (r *availablePermissionsResolver) ResourceID(ctx context.Context, obj *models.ResourceTypeStruct) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
 
 func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID string, name string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
@@ -423,4 +429,21 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 	}
 
 	return Permissions, nil
+}
+
+// AvailablePermissions returns privategraphql.AvailablePermissionsResolver implementation.
+func (r *Resolver) AvailablePermissions() privategraphql.AvailablePermissionsResolver {
+	return &availablePermissionsResolver{r}
+}
+
+type availablePermissionsResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *availablePermissionsResolver) AccessType(ctx context.Context, obj *models.ResourceTypeStruct) (string, error) {
+	panic(fmt.Errorf("not implemented"))
 }

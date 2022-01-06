@@ -9,6 +9,7 @@ import (
 	"errors"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -34,6 +35,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	AvailablePermissions() AvailablePermissionsResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 }
@@ -43,9 +45,11 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	AvailablePermissions struct {
-		Code  func(childComplexity int) int
-		Label func(childComplexity int) int
-		Level func(childComplexity int) int
+		Access     func(childComplexity int) int
+		Code       func(childComplexity int) int
+		Label      func(childComplexity int) int
+		Level      func(childComplexity int) int
+		ResourceID func(childComplexity int) int
 	}
 
 	Environments struct {
@@ -136,6 +140,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type AvailablePermissionsResolver interface {
+	ResourceID(ctx context.Context, obj *models.ResourceTypeStruct) (string, error)
+}
 type MutationResolver interface {
 	AddEnvironment(ctx context.Context, input *AddEnvironmentInput) (*models.Environment, error)
 	RenameEnvironment(ctx context.Context, input *RenameEnvironment) (*models.Environment, error)
@@ -190,6 +197,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "AvailablePermissions.Access":
+		if e.complexity.AvailablePermissions.Access == nil {
+			break
+		}
+
+		return e.complexity.AvailablePermissions.Access(childComplexity), true
+
 	case "AvailablePermissions.Code":
 		if e.complexity.AvailablePermissions.Code == nil {
 			break
@@ -210,6 +224,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AvailablePermissions.Level(childComplexity), true
+
+	case "AvailablePermissions.ResourceID":
+		if e.complexity.AvailablePermissions.ResourceID == nil {
+			break
+		}
+
+		return e.complexity.AvailablePermissions.ResourceID(childComplexity), true
 
 	case "Environments.id":
 		if e.complexity.Environments.ID == nil {
@@ -928,6 +949,8 @@ extend type Mutation {
     Code:  String!
 	Level: String!
     Label: String!
+	ResourceID: String!
+	Access: String!
 }
 
 type Permissions {
@@ -1841,6 +1864,76 @@ func (ec *executionContext) _AvailablePermissions_Label(ctx context.Context, fie
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Label, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AvailablePermissions_ResourceID(ctx context.Context, field graphql.CollectedField, obj *models.ResourceTypeStruct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AvailablePermissions",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.AvailablePermissions().ResourceID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AvailablePermissions_Access(ctx context.Context, field graphql.CollectedField, obj *models.ResourceTypeStruct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AvailablePermissions",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Access, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5597,17 +5690,36 @@ func (ec *executionContext) _AvailablePermissions(ctx context.Context, sel ast.S
 		case "Code":
 			out.Values[i] = ec._AvailablePermissions_Code(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "Level":
 			out.Values[i] = ec._AvailablePermissions_Level(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "Label":
 			out.Values[i] = ec._AvailablePermissions_Label(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "ResourceID":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AvailablePermissions_ResourceID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "Access":
+			out.Values[i] = ec._AvailablePermissions_Access(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
