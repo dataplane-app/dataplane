@@ -31,6 +31,9 @@ const createCustomTheme = (mode) => ({
                       hoverMain: 'rgba(244, 244, 244, 1)',
                       hoverSecondary: 'rgba(9, 30, 58, .40)',
                   },
+                  sidebar: {
+                      main: '#F7FBFD',
+                  },
                   text: {
                       primary: '#000',
                       secondary: '#222',
@@ -60,6 +63,9 @@ const createCustomTheme = (mode) => ({
                       secondary: 'rgba(9, 30, 58, 1)',
                       hoverMain: 'rgba(14, 25, 40, .30)',
                       hoverSecondary: 'rgba(9, 30, 58, .40)',
+                  },
+                  sidebar: {
+                      main: '#292929',
                   },
                   text: {
                       primary: '#fff',
