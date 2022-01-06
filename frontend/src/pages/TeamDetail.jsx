@@ -1,5 +1,5 @@
 import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer, Autocomplete } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Search from '../components/Search';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
@@ -26,6 +26,9 @@ const drawerStyles = {
 const TeamDetail = () => {
     let history = useHistory();
 
+    // For scroll to top
+    const containerRef = useRef(null);
+
     // React hook form
     const {
         register,
@@ -48,6 +51,9 @@ const TeamDetail = () => {
 
     // Get user data on load
     useEffect(() => {
+        // Scroll to top
+        containerRef.current.parentElement.scrollIntoView();
+
         getData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -57,7 +63,7 @@ const TeamDetail = () => {
 
     return (
         <>
-            <Box className="page" width="83%">
+            <Box className="page" width="83%" ref={containerRef}>
                 <Grid container alignItems="center">
                     <Typography component="h2" variant="h2" color="text.primary">
                         Team {' > '} {user.first_name} {user.last_name}
