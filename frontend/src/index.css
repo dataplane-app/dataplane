@@ -1,10 +1,33 @@
+@font-face {
+    font-family: 'Roboto';
+    src: url('./assets/fonts/Roboto-regular.woff2') format('woff2'), url('./assets/fonts/Roboto-regular.woff') format('woff'),
+        url('./assets/fonts/Roboto-regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Roboto';
+    font-weight: 500;
+    src: url('./assets/fonts/Roboto-medium.woff2') format('woff2'), url('./assets/fonts/Roboto-medium.woff') format('woff'),
+        url('./assets/fonts/Roboto-medium.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Roboto';
+    font-weight: 700;
+    src: url('./assets/fonts/Roboto-bold.woff2') format('woff2'), url('./assets/fonts/Roboto-bold.woff') format('woff'), url('./assets/fonts/Roboto-bold.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Roboto';
+    font-weight: 900;
+    src: url('./assets/fonts/Roboto-black.woff2') format('woff2'), url('./assets/fonts/Roboto-black.woff') format('woff'), url('./assets/fonts/Roboto-black.ttf') format('truetype');
+}
+
 body {
     margin: 0;
     height: 100%;
     overflow: hidden;
-    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI',
-        'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
-        'Helvetica Neue', sans-serif;
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -19,8 +42,7 @@ body {
 }
 
 code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-        monospace;
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
 .page {
