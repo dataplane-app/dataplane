@@ -7,6 +7,7 @@ import { belongToAcessGroupsItems, belongToEnvironmentItems, environmentPermissi
 import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
+import DeactivateUserDrawer from '../components/DrawerContent/DeactivateUserDrawer';
 import { useHistory, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useGetUser } from '../graphql/getUser';
@@ -298,6 +299,10 @@ const TeamDetail = () => {
 
             <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)} sx={drawerStyles}>
                 <ChangePasswordDrawer handleClose={() => setIsOpenPassword(false)} />
+            </Drawer>
+
+            <Drawer anchor="right" open={isOpenDeactivateUser} onClose={() => setIsOpenDeactivateUser(!isOpenDeactivateUser)} sx={drawerStyles}>
+                <DeactivateUserDrawer user={user} handleClose={() => setIsOpenDeactivateUser(false)} refreshData={getData} />
             </Drawer>
 
             <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>

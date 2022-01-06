@@ -2,11 +2,11 @@ import { useEffect } from 'react';
 import { Box, Typography, Button, Grid } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useUpdateDeleteUser } from '../../../graphql/updateDeleteUser';
+import { useUpdateDeactivateUser } from '../../../graphql/updateDeactivateUser';
+import { useUpdateActivateUser } from '../../../graphql/updateActivateUser';
 import { useSnackbar } from 'notistack';
-import { useHistory } from 'react-router-dom';
 
-const DeleteUserDrawer = ({ user, handleClose }) => {
+const DeactivateUserDrawer = ({ user, handleClose, refreshData }) => {
     const { closeSnackbar } = useSnackbar();
 
     // Clear snackbar on load
@@ -15,8 +15,11 @@ const DeleteUserDrawer = ({ user, handleClose }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Delete user hook
-    const deleteUser = useDelete(user.user_id);
+    // Deactivate user hook
+    const deactivate = useDeactivate(user.user_id, handleClose, refreshData);
+
+    // Activate user hook
+    const activate = useActivate(user.user_id, handleClose, refreshData);
 
     return (
         <Box position="relative">
@@ -28,45 +31,38 @@ const DeleteUserDrawer = ({ user, handleClose }) => {
                 </Box>
 
                 <Typography component="h2" variant="h2">
-                    Delete user - {user.first_name} {user.last_name}
+                    {user.status === 'active' ? 'Deactivate' : 'Activate'} user - {user.first_name} {user.last_name}
                 </Typography>
 
                 <Typography variant="body2" sx={{ mt: 2 }}>
-                    You are about to delete a user, would you like to continue?
+                    You are about to {user.status === 'active' ? 'deactivate' : 'activate'} a user, would you like to continue?
                 </Typography>
 
                 <Grid mt={4} display="flex" alignItems="center">
-                    <Button onClick={deleteUser} variant="contained" color="primary" sx={{ mr: 2 }}>
+                    <Button onClick={user.status === 'active' ? deactivate : activate} variant="contained" color="primary" sx={{ mr: 2 }}>
                         Yes
                     </Button>
                     <Button onClick={handleClose} variant="contained" color="primary">
                         No
                     </Button>
                 </Grid>
-
-                <Typography variant="body2" sx={{ mt: 4 }} color="rgba(248, 0, 0, 1)">
-                    Warning: this action can't be undone.
-                </Typography>
             </Box>
         </Box>
     );
 };
 
-export default DeleteUserDrawer;
+export default DeactivateUserDrawer;
 
 // ------ Custom hooks
 
-const useDelete = (userid) => {
+const useDeactivate = (userid, handleClose, refreshData) => {
     // GraphQL hook
-    const updateDeleteUser = useUpdateDeleteUser();
+    const updateDeactivateUser = useUpdateDeactivateUser();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // React router
-    const history = useHistory();
-
     return async function () {
-        let response = await updateDeleteUser({ userid });
+        let response = await updateDeactivateUser({ userid });
 
         if (response.r === 'error') {
             closeSnackbar();
@@ -79,7 +75,34 @@ const useDelete = (userid) => {
         } else {
             closeSnackbar();
             enqueueSnackbar(`Success`, { variant: 'success' });
-            history.push('/teams');
+            handleClose();
+            refreshData();
+        }
+    };
+};
+
+const useActivate = (userid, handleClose, refreshData) => {
+    // GraphQL hook
+    const updateActivateUser = useUpdateActivateUser();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    return async function () {
+        let response = await updateActivateUser({ userid });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't Activate user: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            closeSnackbar();
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            closeSnackbar();
+            enqueueSnackbar(`Success`, { variant: 'success' });
+            handleClose();
+            refreshData();
         }
     };
 };
