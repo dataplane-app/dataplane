@@ -6,7 +6,7 @@ package publicresolvers
 import (
 	"context"
 	"dataplane/auth"
-	permissions "dataplane/auth_permissions"
+	"dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	publicgraphql "dataplane/graphql/public"
@@ -15,7 +15,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/go-playground/validator/v10"
+	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
