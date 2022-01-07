@@ -5,22 +5,17 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/auth_permissions"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
-	privategraphql "dataplane/graphql/private"
 	"dataplane/logging"
 	"errors"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
-
-func (r *availablePermissionsResolver) ResourceID(ctx context.Context, obj *models.ResourceTypeStruct) (string, error) {
-	panic(fmt.Errorf("not implemented"))
-}
 
 func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID string, name string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
@@ -299,8 +294,41 @@ func (r *mutationResolver) RemoveUserFromAccessGroup(ctx context.Context, userID
 	return e.AccessGroupID, nil
 }
 
-func (r *queryResolver) AvailablePermissions(ctx context.Context) ([]*models.ResourceTypeStruct, error) {
-	return models.ResourceType, nil
+func (r *queryResolver) AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error) {
+	platformID := ctx.Value("platformID").(string)
+
+	var Permissions []*models.ResourceTypeStruct
+
+	err := database.DBConn.Raw(
+		`
+		(select 
+		p.code,
+		p.label,
+		p.level,
+		p.access
+		from 
+		permissions_resource_types p
+		)
+`,
+		//direct
+	).Scan(
+		&Permissions,
+	).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Error retrieving permissions")
+	}
+
+	// Set resource ids
+	for _, p := range Permissions {
+		log.Print(p.Level)
+		if p.Level == "platform" {
+			p.ResourceID = platformID
+		} else if p.Level == "environment" {
+			p.ResourceID = environmentID
+		}
+	}
+
+	return Permissions, nil
 }
 
 func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permissions, error) {
@@ -429,21 +457,4 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 	}
 
 	return Permissions, nil
-}
-
-// AvailablePermissions returns privategraphql.AvailablePermissionsResolver implementation.
-func (r *Resolver) AvailablePermissions() privategraphql.AvailablePermissionsResolver {
-	return &availablePermissionsResolver{r}
-}
-
-type availablePermissionsResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *availablePermissionsResolver) AccessType(ctx context.Context, obj *models.ResourceTypeStruct) (string, error) {
-	panic(fmt.Errorf("not implemented"))
 }

@@ -15,6 +15,8 @@ import { useAvailablePermissions } from '../graphql/availablePermissions';
 import { useSnackbar } from 'notistack';
 import { useUpdateUser } from '../graphql/updateUser';
 import { useMe } from '../graphql/me';
+import { useGetOnePreference } from '../graphql/getOnePreference';
+
 import ct from 'countries-and-timezones';
 
 const drawerWidth = 507;
@@ -51,23 +53,18 @@ const TeamDetail = () => {
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
     const [isOpenDeactivateUser, setIsOpenDeactivateUser] = useState(false);
 
-    // Get user data custom hook
-    const getData = useGetData(setUser, reset);
+    // Custom GraphQL hooks
+    const getMeData = useGetMeData(setMeData);
+    const getUserData = useGetUserData(setUser, reset);
+    const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions);
 
-    // Get user data custom hook
-    const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, reset);
-
-    // Get me data custom hook
-    const getMeUserData = useGetMeData(setMeData);
-
-    console.log(JSON.stringify(meData));
     // Get user data on load
     useEffect(() => {
         // Scroll to top
         containerRef.current.parentElement.scrollIntoView();
 
-        getMeUserData();
-        getData();
+        getMeData();
+        getUserData();
         getAvailablePermissions();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -317,11 +314,11 @@ const TeamDetail = () => {
             </Drawer>
 
             <Drawer anchor="right" open={isOpenDeactivateUser} onClose={() => setIsOpenDeactivateUser(!isOpenDeactivateUser)} sx={drawerStyles}>
-                <DeactivateUserDrawer user={user} handleClose={() => setIsOpenDeactivateUser(false)} refreshData={getData} />
+                <DeactivateUserDrawer user={user} handleClose={() => setIsOpenDeactivateUser(false)} refreshData={getUserData} />
             </Drawer>
 
             <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
-                <DeleteUserDrawer user={user} handleClose={() => setIsOpenDeleteUser(false)} refreshData={getData} />
+                <DeleteUserDrawer user={user} handleClose={() => setIsOpenDeleteUser(false)} refreshData={getUserData} />
             </Drawer>
         </>
     );
@@ -331,7 +328,7 @@ export default TeamDetail;
 
 // --------- Custom hooks
 
-const useGetData = (setUser, reset) => {
+const useGetUserData = (setUser, reset) => {
     // GraphQL hook
     const getUser = useGetUser();
 
@@ -391,31 +388,42 @@ const useSubmitData = (userId) => {
     };
 };
 
-const useGetAvailablePermissions = (setAvailablePermissions, reset) => {
-    // GraphQL hook
+const useGetAvailablePermissions = (setAvailablePermissions) => {
+    // GraphQL hooks
     const getAvailablePermissions = useAvailablePermissions();
+    const getOnePreference = useGetOnePreference();
+
+    const { enqueueSnackbar } = useSnackbar();
 
     // Get available permissions
     return async () => {
-        const permissions = await getAvailablePermissions();
+        // Get environment
+        const responseEnv = await getOnePreference({ preference: 'environment' });
+        let environment;
+
+        if (responseEnv.r === 'error') {
+            enqueueSnackbar("Can't get environment: " + responseEnv.msg, {
+                variant: 'error',
+            });
+        } else if (responseEnv.errors) {
+            responseEnv.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            environment = responseEnv.value;
+        }
+
+        //    Get available permissions
+        const permissions = await getAvailablePermissions({ environmentID: environment });
 
         if (permissions?.r !== 'error') {
             setAvailablePermissions(permissions);
-
-            // Reset form default values to incoming user data
-            // reset({
-            //     first_name: user.first_name,
-            //     last_name: user.last_name,
-            //     email: user.email,
-            //     job_title: user.job_title,
-            //     timezone: user.timezone,
-            // });
         }
     };
 };
 
 const useGetMeData = (setMeData) => {
+    // GraphQL hook
     const getMe = useMe();
+
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get me data on load

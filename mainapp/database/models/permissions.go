@@ -22,10 +22,11 @@ func (ResourceTypeStruct) TableName() string {
 }
 
 type ResourceTypeStruct struct {
-	Code   string `gorm:"PRIMARY_KEY;"`
-	Label  string
-	Level  string
-	Access string
+	Code       string `gorm:"PRIMARY_KEY;"`
+	Label      string
+	Level      string
+	Access     string
+	ResourceID string
 }
 
 var ResourceType = []*ResourceTypeStruct{

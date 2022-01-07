@@ -23,7 +23,7 @@ extend type Query {
 	+ **Route**: Private
 	+ **Permissions**: none needed
 	"""  
-  availablePermissions: [AvailablePermissions]
+  availablePermissions(environmentID: String!): [AvailablePermissions]
   """
 	Retrieve my permissions.
 	+ **Route**: Private

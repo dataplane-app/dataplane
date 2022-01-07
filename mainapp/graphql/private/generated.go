@@ -9,7 +9,6 @@ import (
 	"errors"
 	"strconv"
 	"sync"
-	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -35,7 +34,6 @@ type Config struct {
 }
 
 type ResolverRoot interface {
-	AvailablePermissions() AvailablePermissionsResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 }
@@ -109,7 +107,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		AvailablePermissions func(childComplexity int) int
+		AvailablePermissions func(childComplexity int, environmentID string) int
 		GetAllPreferences    func(childComplexity int) int
 		GetEnvironments      func(childComplexity int) int
 		GetOnePreference     func(childComplexity int, preference string) int
@@ -140,9 +138,6 @@ type ComplexityRoot struct {
 	}
 }
 
-type AvailablePermissionsResolver interface {
-	ResourceID(ctx context.Context, obj *models.ResourceTypeStruct) (string, error)
-}
 type MutationResolver interface {
 	AddEnvironment(ctx context.Context, input *AddEnvironmentInput) (*models.Environment, error)
 	RenameEnvironment(ctx context.Context, input *RenameEnvironment) (*models.Environment, error)
@@ -170,7 +165,7 @@ type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*models.Environment, error)
 	GetPlatform(ctx context.Context) (*Platform, error)
 	Me(ctx context.Context) (*models.Users, error)
-	AvailablePermissions(ctx context.Context) ([]*models.ResourceTypeStruct, error)
+	AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error)
 	MyPermissions(ctx context.Context) ([]*models.Permissions, error)
 	UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.Permissions, error)
 	GetPipelines(ctx context.Context) ([]*Pipelines, error)
@@ -608,7 +603,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.AvailablePermissions(childComplexity), true
+		args, err := ec.field_Query_availablePermissions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AvailablePermissions(childComplexity, args["environmentID"].(string)), true
 
 	case "Query.getAllPreferences":
 		if e.complexity.Query.GetAllPreferences == nil {
@@ -970,7 +970,7 @@ extend type Query {
 	+ **Route**: Private
 	+ **Permissions**: none needed
 	"""  
-  availablePermissions: [AvailablePermissions]
+  availablePermissions(environmentID: String!): [AvailablePermissions]
   """
 	Retrieve my permissions.
 	+ **Route**: Private
@@ -1683,6 +1683,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_availablePermissions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_getOnePreference_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1891,14 +1906,14 @@ func (ec *executionContext) _AvailablePermissions_ResourceID(ctx context.Context
 		Object:     "AvailablePermissions",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.AvailablePermissions().ResourceID(rctx, obj)
+		return obj.ResourceID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3497,9 +3512,16 @@ func (ec *executionContext) _Query_availablePermissions(ctx context.Context, fie
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_availablePermissions_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AvailablePermissions(rctx)
+		return ec.resolvers.Query().AvailablePermissions(rctx, args["environmentID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5690,36 +5712,27 @@ func (ec *executionContext) _AvailablePermissions(ctx context.Context, sel ast.S
 		case "Code":
 			out.Values[i] = ec._AvailablePermissions_Code(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "Level":
 			out.Values[i] = ec._AvailablePermissions_Level(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "Label":
 			out.Values[i] = ec._AvailablePermissions_Label(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "ResourceID":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._AvailablePermissions_ResourceID(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._AvailablePermissions_ResourceID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "Access":
 			out.Values[i] = ec._AvailablePermissions_Access(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
