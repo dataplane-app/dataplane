@@ -3,21 +3,24 @@ import { useEffect, useState, useRef } from 'react';
 import Search from '../components/Search';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
-import { belongToAcessGroupsItems, belongToEnvironmentItems, environmentPermissions, expecificPermissionsItems, platformItems } from '../utils/teamsMockData';
+import { belongToAcessGroupsItems, belongToEnvironmentItems, expecificPermissionsItems } from '../utils/teamsMockData';
 import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import DeactivateUserDrawer from '../components/DrawerContent/DeactivateUserDrawer';
 import { useHistory, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useSnackbar } from 'notistack';
+import ct from 'countries-and-timezones';
+// GraphQL Hooks
 import { useGetUser } from '../graphql/getUser';
 import { useAvailablePermissions } from '../graphql/availablePermissions';
-import { useSnackbar } from 'notistack';
 import { useUpdateUser } from '../graphql/updateUser';
 import { useMe } from '../graphql/me';
 import { useGetOnePreference } from '../graphql/getOnePreference';
-
-import ct from 'countries-and-timezones';
+import { useUserPermissions } from '../graphql/getUserPermissions';
+import { useUpdatePermissionToUser } from '../graphql/updatePermissionToUser';
+import { useDeletePermissionToUser } from '../graphql/deletePermissionToUser';
 
 const drawerWidth = 507;
 const drawerStyles = {
@@ -28,9 +31,10 @@ const drawerStyles = {
 };
 
 const TeamDetail = () => {
+    // React router
     let history = useHistory();
 
-    // For scroll to top
+    // Ref for scroll to top
     const containerRef = useRef(null);
 
     // React hook form
@@ -42,11 +46,14 @@ const TeamDetail = () => {
         formState: { errors },
     } = useForm();
 
-    // User state
+    // User states
     const [user, setUser] = useState({});
     const [availablePermissions, setAvailablePermissions] = useState([]);
     const [selectedPermission, setSelectedPermission] = useState(null);
+    const [userPermissions, setUserPermissions] = useState([]);
     const [meData, setMeData] = useState({});
+    const [environmentId, setEnvironmentId] = useState(null);
+    const [clear, setClear] = useState(1);
 
     // Sidebar states
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
@@ -56,15 +63,19 @@ const TeamDetail = () => {
     // Custom GraphQL hooks
     const getMeData = useGetMeData(setMeData);
     const getUserData = useGetUserData(setUser, reset);
-    const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions);
+    const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, environmentId, setEnvironmentId);
+    const getUserPermissions = useGetUserPermissions(setUserPermissions, user.user_id, environmentId);
+    const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, environmentId, user.user_id);
+    const deletePermission = useDeletePermission(getUserPermissions);
 
     // Get user data on load
     useEffect(() => {
-        // Scroll to top
+        // Scroll to top on load
         containerRef.current.parentElement.scrollIntoView();
 
         getMeData();
         getUserData();
+        getUserPermissions();
         getAvailablePermissions();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -110,6 +121,7 @@ const TeamDetail = () => {
                                         onChange={(event, newValue) => {
                                             setUser({ ...user, timezone: newValue });
                                         }}
+                                        // isOptionEqualToValue={(option, value) => option === value}
                                         options={Object.keys(ct.getAllTimezones())}
                                         renderInput={(params) => (
                                             <TextField
@@ -181,18 +193,29 @@ const TeamDetail = () => {
                                 <Autocomplete
                                     disablePortal
                                     id="available_permissions_autocomplete"
+                                    key={clear} //Changing this value on submit clears the input field
                                     onChange={(event, newValue) => {
                                         setSelectedPermission(newValue);
                                     }}
                                     sx={{ minWidth: '280px' }}
-                                    options={availablePermissions}
+                                    isOptionEqualToValue={(option, value) => option.label === value.label}
+                                    // Filter out users permissions from available permissions
+                                    options={availablePermissions.filter((row) => !userPermissions.map((a) => a.Resource).includes(row.Code)) || ''}
                                     getOptionLabel={(option) => option.Label}
                                     renderInput={(params) => (
                                         <TextField {...params} label="Available permissions" id="available_permissions" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
                                     )}
                                 />
 
-                                <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }}>
+                                <Button
+                                    onClick={() => {
+                                        updatePermission();
+                                        setClear(clear * -1); // Clears autocomplete input field
+                                    }}
+                                    variant="contained"
+                                    color="primary"
+                                    height="100%"
+                                    sx={{ ml: 1 }}>
                                     Add
                                 </Button>
                             </Grid>
@@ -204,14 +227,21 @@ const TeamDetail = () => {
                             </Box>
 
                             <Box mt={2}>
-                                {platformItems.map((plat) => (
-                                    <Grid display="flex" alignItems="center" key={plat.id} mt={1.5} mb={1.5}>
-                                        <Box component={FontAwesomeIcon} sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)' }} icon={faTrashAlt} />
-                                        <Typography variant="subtitle2" lineHeight="15.23px">
-                                            {plat.name}
-                                        </Typography>
-                                    </Grid>
-                                ))}
+                                {userPermissions
+                                    .filter((plat) => plat.Resource.includes('platform'))
+                                    .map((plat) => (
+                                        <Grid display="flex" alignItems="center" key={plat.Resource} mt={1.5} mb={1.5}>
+                                            <Box
+                                                onClick={() => deletePermission(plat)}
+                                                component={FontAwesomeIcon}
+                                                sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                                icon={faTrashAlt}
+                                            />
+                                            <Typography variant="subtitle2" lineHeight="15.23px">
+                                                {plat.Resource}
+                                            </Typography>
+                                        </Grid>
+                                    ))}
                             </Box>
                             <Box mt="2.31rem">
                                 <Typography component="h3" variant="h3" color="text.primary">
@@ -222,14 +252,21 @@ const TeamDetail = () => {
                                 </Typography>
 
                                 <Box mt={2}>
-                                    {environmentPermissions.map((env) => (
-                                        <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
-                                            <Box component={FontAwesomeIcon} sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)' }} icon={faTrashAlt} />
-                                            <Typography variant="subtitle2" lineHeight="15.23px">
-                                                {env.name}
-                                            </Typography>
-                                        </Grid>
-                                    ))}
+                                    {userPermissions
+                                        .filter((env) => !env.Resource.includes('platform'))
+                                        .map((env) => (
+                                            <Grid display="flex" alignItems="center" key={env.Resource} mt={1.5} mb={1.5}>
+                                                <Box
+                                                    onClick={() => deletePermission(env)}
+                                                    component={FontAwesomeIcon}
+                                                    sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                                    icon={faTrashAlt}
+                                                />
+                                                <Typography variant="subtitle2" lineHeight="15.23px">
+                                                    {env.Resource}
+                                                </Typography>
+                                            </Grid>
+                                        ))}
                                 </Box>
                             </Box>
 
@@ -328,32 +365,6 @@ export default TeamDetail;
 
 // --------- Custom hooks
 
-const useGetUserData = (setUser, reset) => {
-    // GraphQL hook
-    const getUser = useGetUser();
-
-    // URI parameter
-    const { teamId } = useParams();
-
-    // Get user data
-    return async () => {
-        const user = await getUser({ user_id: teamId });
-
-        if (user?.r !== 'error') {
-            setUser(user);
-
-            // Reset form default values to incoming user data
-            reset({
-                first_name: user.first_name,
-                last_name: user.last_name,
-                email: user.email,
-                job_title: user.job_title,
-                timezone: user.timezone,
-            });
-        }
-    };
-};
-
 const useSubmitData = (userId) => {
     // GraphQL hook
     const updateUser = useUpdateUser();
@@ -388,38 +399,6 @@ const useSubmitData = (userId) => {
     };
 };
 
-const useGetAvailablePermissions = (setAvailablePermissions) => {
-    // GraphQL hooks
-    const getAvailablePermissions = useAvailablePermissions();
-    const getOnePreference = useGetOnePreference();
-
-    const { enqueueSnackbar } = useSnackbar();
-
-    // Get available permissions
-    return async () => {
-        // Get environment
-        const responseEnv = await getOnePreference({ preference: 'environment' });
-        let environment;
-
-        if (responseEnv.r === 'error') {
-            enqueueSnackbar("Can't get environment: " + responseEnv.msg, {
-                variant: 'error',
-            });
-        } else if (responseEnv.errors) {
-            responseEnv.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            environment = responseEnv.value;
-        }
-
-        //    Get available permissions
-        const permissions = await getAvailablePermissions({ environmentID: environment });
-
-        if (permissions?.r !== 'error') {
-            setAvailablePermissions(permissions);
-        }
-    };
-};
-
 const useGetMeData = (setMeData) => {
     // GraphQL hook
     const getMe = useMe();
@@ -439,6 +418,185 @@ const useGetMeData = (setMeData) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setMeData(response);
+        }
+    };
+};
+
+const useGetUserData = (setUser, reset) => {
+    // GraphQL hook
+    const getUser = useGetUser();
+
+    // URI parameter
+    const { teamId } = useParams();
+
+    // Get user data
+    return async () => {
+        const user = await getUser({ user_id: teamId });
+
+        if (user?.r !== 'error') {
+            setUser(user);
+
+            // Reset form default values to incoming user data
+            reset({
+                first_name: user.first_name,
+                last_name: user.last_name,
+                email: user.email,
+                job_title: user.job_title,
+                timezone: user.timezone,
+            });
+        }
+    };
+};
+
+const useGetAvailablePermissions = (setAvailablePermissions, environmentID, setEnvironmentId) => {
+    // GraphQL hooks
+    const getAvailablePermissions = useAvailablePermissions();
+    const getOnePreference = useGetOnePreference();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get available permissions
+    return async () => {
+        if (environmentID === null) {
+            // Get environment on load
+            const response = await getOnePreference({ preference: 'environment' });
+
+            if (response.r === 'error') {
+                enqueueSnackbar("Can't get environment: " + response.msg, {
+                    variant: 'error',
+                });
+            } else if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            } else {
+                setEnvironmentId(response.value);
+                environmentID = response.value;
+            }
+        }
+
+        // Get available permissions
+        const permissions = await getAvailablePermissions({ environmentID });
+
+        if (permissions?.r !== 'error') {
+            setAvailablePermissions(permissions);
+        }
+    };
+};
+
+const useGetUserPermissions = (setUserPermissions, userID, environmentID) => {
+    // GraphQL hooks
+    const getUserPermissions = useUserPermissions();
+    const getOnePreference = useGetOnePreference();
+    const getUser = useGetUser();
+
+    // URI parameter
+    const { teamId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get user permissions
+    return async () => {
+        if (environmentID === null) {
+            // Get environment on load
+            const responseEnv = await getOnePreference({ preference: 'environment' });
+
+            if (responseEnv.r === 'error') {
+                enqueueSnackbar("Can't get environment: " + responseEnv.msg, {
+                    variant: 'error',
+                });
+            } else if (responseEnv.errors) {
+                responseEnv.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            } else {
+                environmentID = responseEnv.value;
+            }
+        }
+
+        // Get user id on load
+        if (userID === undefined) {
+            const responseMe = await getUser({ user_id: teamId });
+
+            if (responseMe.r === 'error') {
+                closeSnackbar();
+                enqueueSnackbar("Can't get user data: " + responseMe.msg, {
+                    variant: 'error',
+                });
+            } else if (responseMe.errors) {
+                responseMe.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            } else {
+                userID = responseMe.user_id;
+            }
+        }
+
+        const response = await getUserPermissions({ userID, environmentID });
+
+        if (response === null) {
+            setUserPermissions([]);
+        } else if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't user permissions: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get user permissions', { variant: 'error' }));
+        } else {
+            setUserPermissions(response);
+        }
+    };
+};
+
+const useUpdatePermissions = (getUserPermissions, selectedPermission, environmentID, user_id) => {
+    // GraphQL hook
+    const updatePermissionToUser = useUpdatePermissionToUser();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    if (selectedPermission === null) return;
+
+    // Get me data on load
+    return async () => {
+        const response = await updatePermissionToUser({
+            environmentID,
+            resource: selectedPermission.Code,
+            resourceID: selectedPermission.ResourceID,
+            user_id,
+            access: selectedPermission.Access,
+        });
+        if (response.r === 'error') {
+            enqueueSnackbar("Can't update permissions: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getUserPermissions();
+        }
+    };
+};
+
+const useDeletePermission = (getUserPermissions) => {
+    // GraphQL hook
+    const deletePermissionToUser = useDeletePermissionToUser();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Delete permission
+    return async (permission) => {
+        let user_id = permission.SubjectID;
+        let permission_id = permission.ID;
+        let environmentID = permission.EnvironmentID;
+
+        const response = await deletePermissionToUser({ user_id, permission_id, environmentID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't delete permission: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getUserPermissions();
         }
     };
 };

@@ -5,11 +5,13 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/auth_permissions"
+	"dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
+	privategraphql "dataplane/graphql/private"
 	"dataplane/logging"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 
@@ -294,6 +296,10 @@ func (r *mutationResolver) RemoveUserFromAccessGroup(ctx context.Context, userID
 	return e.AccessGroupID, nil
 }
 
+func (r *permissionsResolver) Code(ctx context.Context, obj *models.Permissions) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *queryResolver) AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error) {
 	platformID := ctx.Value("platformID").(string)
 
@@ -458,3 +464,8 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 
 	return Permissions, nil
 }
+
+// Permissions returns privategraphql.PermissionsResolver implementation.
+func (r *Resolver) Permissions() privategraphql.PermissionsResolver { return &permissionsResolver{r} }
+
+type permissionsResolver struct{ *Resolver }
