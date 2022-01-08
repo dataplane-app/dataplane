@@ -9,7 +9,6 @@ import (
 	"errors"
 	"strconv"
 	"sync"
-	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -36,7 +35,6 @@ type Config struct {
 
 type ResolverRoot interface {
 	Mutation() MutationResolver
-	Permissions() PermissionsResolver
 	Query() QueryResolver
 }
 
@@ -84,7 +82,6 @@ type ComplexityRoot struct {
 	Permissions struct {
 		Access        func(childComplexity int) int
 		Active        func(childComplexity int) int
-		Code          func(childComplexity int) int
 		EnvironmentID func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Resource      func(childComplexity int) int
@@ -163,9 +160,6 @@ type MutationResolver interface {
 	UpdateDeactivateUser(ctx context.Context, userid string) (*string, error)
 	UpdateActivateUser(ctx context.Context, userid string) (*string, error)
 	UpdateDeleteUser(ctx context.Context, userid string) (*string, error)
-}
-type PermissionsResolver interface {
-	Code(ctx context.Context, obj *models.Permissions) (string, error)
 }
 type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*models.Environment, error)
@@ -512,13 +506,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Permissions.Active(childComplexity), true
-
-	case "Permissions.Code":
-		if e.complexity.Permissions.Code == nil {
-			break
-		}
-
-		return e.complexity.Permissions.Code(childComplexity), true
 
 	case "Permissions.EnvironmentID":
 		if e.complexity.Permissions.EnvironmentID == nil {
@@ -975,7 +962,6 @@ type Permissions {
 	Access:        String!
 	Active:        Boolean!
 	EnvironmentID: String!
-	Code: String!
 }
 
 extend type Query {
@@ -3153,41 +3139,6 @@ func (ec *executionContext) _Permissions_EnvironmentID(ctx context.Context, fiel
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.EnvironmentID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Permissions_Code(ctx context.Context, field graphql.CollectedField, obj *models.Permissions) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Permissions",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Permissions().Code(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5929,57 +5880,43 @@ func (ec *executionContext) _Permissions(ctx context.Context, sel ast.SelectionS
 		case "ID":
 			out.Values[i] = ec._Permissions_ID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "Subject":
 			out.Values[i] = ec._Permissions_Subject(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "SubjectID":
 			out.Values[i] = ec._Permissions_SubjectID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "Resource":
 			out.Values[i] = ec._Permissions_Resource(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "ResourceID":
 			out.Values[i] = ec._Permissions_ResourceID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "Access":
 			out.Values[i] = ec._Permissions_Access(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "Active":
 			out.Values[i] = ec._Permissions_Active(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "EnvironmentID":
 			out.Values[i] = ec._Permissions_EnvironmentID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
-		case "Code":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Permissions_Code(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

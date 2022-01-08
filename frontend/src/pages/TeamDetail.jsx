@@ -35,7 +35,7 @@ const TeamDetail = () => {
     let history = useHistory();
 
     // Ref for scroll to top
-    const containerRef = useRef(null);
+    const scrollRef = useRef(null);
 
     // React hook form
     const {
@@ -71,7 +71,7 @@ const TeamDetail = () => {
     // Get user data on load
     useEffect(() => {
         // Scroll to top on load
-        containerRef.current.parentElement.scrollIntoView();
+        scrollRef.current.parentElement.scrollIntoView();
 
         getMeData();
         getUserData();
@@ -85,7 +85,7 @@ const TeamDetail = () => {
 
     return (
         <>
-            <Box className="page" width="83%" ref={containerRef}>
+            <Box className="page" width="83%" ref={scrollRef}>
                 <Grid container alignItems="center">
                     <Typography component="h2" variant="h2" color="text.primary">
                         Team {' > '} {user.first_name} {user.last_name}
