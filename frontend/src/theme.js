@@ -126,9 +126,22 @@ const createCustomTheme = (mode) => ({
                 },
             },
         },
+        MuiDrawer: {
+            styleOverrides: {
+                width: 507,
+                flexShrink: 0,
+                zIndex: 9998,
+                paper: {
+                    boxSizing: 'border-box',
+                    width: 507,
+                    backgroundColor: mode === 'light' ? '#F7FBFD' : '#292929',
+                },
+            },
+        },
     },
     zIndex: {
         snackbar: 9999,
+        appBar: 9996,
     },
 });
 

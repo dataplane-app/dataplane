@@ -8,7 +8,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTable, useGlobalFilter } from 'react-table';
 import { useHistory } from 'react-router-dom';
 import AddEnvironmentDrawer from '../components/DrawerContent/AddEnvironmentDrawer';
-import drawerStyles from '../utils/drawerStyles';
 import { useGetPlatform } from '../graphql/getPlatform';
 
 const Settings = () => {
@@ -198,7 +197,7 @@ const Settings = () => {
                 </Box>
             </Box>
 
-            <Drawer anchor="right" open={isOpenAddEnv} onClose={() => setIsOpenAddEnv(!isOpenAddEnv)} sx={drawerStyles}>
+            <Drawer anchor="right" open={isOpenAddEnv} onClose={() => setIsOpenAddEnv(!isOpenAddEnv)}>
                 <AddEnvironmentDrawer
                     handleClose={() => {
                         setIsOpenAddEnv(false);
