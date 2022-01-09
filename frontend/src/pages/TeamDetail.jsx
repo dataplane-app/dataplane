@@ -75,12 +75,16 @@ const TeamDetail = () => {
 
         getMeData();
         getUserData();
-        getUserPermissions();
         getAvailablePermissions();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Submit user data
+    useEffect(() => {
+        getUserPermissions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [environmentId, user.user_id]);
+
+    // Submit user details
     const onSubmit = useSubmitData(user.user_id);
 
     return (
