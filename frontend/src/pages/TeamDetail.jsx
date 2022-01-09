@@ -385,16 +385,14 @@ const useSubmitData = (userId) => {
         };
 
         let response = await updateUser(allData);
-        if (response === 'success') {
+
+        if (response.r === 'error') {
+            enqueueSnackbar("Can't update user data: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
             closeSnackbar();
             enqueueSnackbar(`Success`, { variant: 'success' });
-        } else {
-            if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-            }
-            if (response.r === 'error') {
-                enqueueSnackbar(response.msg, { variant: 'error' });
-            }
         }
     };
 };
@@ -411,9 +409,7 @@ const useGetMeData = (setMeData) => {
 
         if (response.r === 'error') {
             closeSnackbar();
-            enqueueSnackbar("Can't get me data: " + response.msg, {
-                variant: 'error',
-            });
+            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
@@ -426,23 +422,29 @@ const useGetUserData = (setUser, reset) => {
     // GraphQL hook
     const getUser = useGetUser();
 
+    const { enqueueSnackbar } = useSnackbar();
+
     // URI parameter
     const { teamId } = useParams();
 
     // Get user data
     return async () => {
-        const user = await getUser({ user_id: teamId });
+        const response = await getUser({ user_id: teamId });
 
-        if (user?.r !== 'error') {
-            setUser(user);
+        if (response.r === 'error') {
+            enqueueSnackbar("Can't get user data: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setUser(response);
 
             // Reset form default values to incoming user data
             reset({
-                first_name: user.first_name,
-                last_name: user.last_name,
-                email: user.email,
-                job_title: user.job_title,
-                timezone: user.timezone,
+                first_name: response.first_name,
+                last_name: response.last_name,
+                email: response.email,
+                job_title: response.job_title,
+                timezone: response.timezone,
             });
         }
     };
@@ -455,16 +457,13 @@ const useGetAvailablePermissions = (setAvailablePermissions, environmentID, setE
 
     const { enqueueSnackbar } = useSnackbar();
 
-    // Get available permissions
     return async () => {
+        // Get environment on load
         if (environmentID === null) {
-            // Get environment on load
             const response = await getOnePreference({ preference: 'environment' });
 
             if (response.r === 'error') {
-                enqueueSnackbar("Can't get environment: " + response.msg, {
-                    variant: 'error',
-                });
+                enqueueSnackbar("Can't get environment: " + response.msg, { variant: 'error' });
             } else if (response.errors) {
                 response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
             } else {
@@ -474,71 +473,39 @@ const useGetAvailablePermissions = (setAvailablePermissions, environmentID, setE
         }
 
         // Get available permissions
-        const permissions = await getAvailablePermissions({ environmentID });
+        const response = await getAvailablePermissions({ environmentID });
 
-        if (permissions?.r !== 'error') {
-            setAvailablePermissions(permissions);
+        if (response.r === 'error') {
+            enqueueSnackbar("Can't get permissions: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setAvailablePermissions(response);
         }
     };
 };
 
 const useGetUserPermissions = (setUserPermissions, userID, environmentID) => {
-    // GraphQL hooks
+    // GraphQL hook
     const getUserPermissions = useUserPermissions();
-    const getOnePreference = useGetOnePreference();
-    const getUser = useGetUser();
-
-    // URI parameter
-    const { teamId } = useParams();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get user permissions
     return async () => {
-        if (environmentID === null) {
-            // Get environment on load
-            const responseEnv = await getOnePreference({ preference: 'environment' });
+        if (userID !== undefined && environmentID !== null) {
+            const response = await getUserPermissions({ userID, environmentID });
 
-            if (responseEnv.r === 'error') {
-                enqueueSnackbar("Can't get environment: " + responseEnv.msg, {
-                    variant: 'error',
-                });
-            } else if (responseEnv.errors) {
-                responseEnv.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-            } else {
-                environmentID = responseEnv.value;
-            }
-        }
-
-        // Get user id on load
-        if (userID === undefined) {
-            const responseMe = await getUser({ user_id: teamId });
-
-            if (responseMe.r === 'error') {
+            if (response === null) {
+                setUserPermissions([]);
+            } else if (response.r === 'error') {
                 closeSnackbar();
-                enqueueSnackbar("Can't get user data: " + responseMe.msg, {
-                    variant: 'error',
-                });
-            } else if (responseMe.errors) {
-                responseMe.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+                enqueueSnackbar("Can't user permissions: " + response.msg, { variant: 'error' });
+            } else if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message + ': get user permissions', { variant: 'error' }));
             } else {
-                userID = responseMe.user_id;
+                setUserPermissions(response);
             }
-        }
-
-        const response = await getUserPermissions({ userID, environmentID });
-
-        if (response === null) {
-            setUserPermissions([]);
-        } else if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't user permissions: " + response.msg, {
-                variant: 'error',
-            });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get user permissions', { variant: 'error' }));
-        } else {
-            setUserPermissions(response);
         }
     };
 };
@@ -549,7 +516,7 @@ const useUpdatePermissions = (getUserPermissions, selectedPermission, environmen
 
     const { enqueueSnackbar } = useSnackbar();
 
-    if (selectedPermission === null) return;
+    if (selectedPermission === null) return; // If add button is clicked without a selection
 
     // Get me data on load
     return async () => {
