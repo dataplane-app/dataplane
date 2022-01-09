@@ -48,10 +48,10 @@ const TeamDetail = () => {
 
     // User states
     const [user, setUser] = useState({});
+    const [meData, setMeData] = useState({});
     const [availablePermissions, setAvailablePermissions] = useState([]);
     const [selectedPermission, setSelectedPermission] = useState(null);
     const [userPermissions, setUserPermissions] = useState([]);
-    const [meData, setMeData] = useState({});
     const [environmentId, setEnvironmentId] = useState(null);
     const [clear, setClear] = useState(1);
 
@@ -367,7 +367,7 @@ const TeamDetail = () => {
 
 export default TeamDetail;
 
-// --------- Custom hooks
+// --------- Custom hooks ---------- //
 
 const useSubmitData = (userId) => {
     // GraphQL hook
@@ -377,7 +377,7 @@ const useSubmitData = (userId) => {
 
     // Update user info
     return async function onSubmit(data) {
-        const allData = {
+        const userDetails = {
             input: {
                 user_id: userId,
                 first_name: data.first_name,
@@ -388,7 +388,7 @@ const useSubmitData = (userId) => {
             },
         };
 
-        let response = await updateUser(allData);
+        let response = await updateUser(userDetails);
 
         if (response.r === 'error') {
             enqueueSnackbar("Can't update user data: " + response.msg, { variant: 'error' });
