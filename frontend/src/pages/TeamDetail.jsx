@@ -431,7 +431,7 @@ const useGetUserData = (setUser, reset) => {
     // URI parameter
     const { teamId } = useParams();
 
-    // Get user data
+    // Get user data on load
     return async () => {
         const response = await getUser({ user_id: teamId });
 
@@ -522,7 +522,7 @@ const useUpdatePermissions = (getUserPermissions, selectedPermission, environmen
 
     if (selectedPermission === null) return; // If add button is clicked without a selection
 
-    // Get me data on load
+    // Update permissions
     return async () => {
         const response = await updatePermissionToUser({
             environmentID,
@@ -550,7 +550,7 @@ const useDeletePermission = (getUserPermissions) => {
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Delete permission
+    // Delete a permission
     return async (permission) => {
         let user_id = permission.SubjectID;
         let permission_id = permission.ID;
