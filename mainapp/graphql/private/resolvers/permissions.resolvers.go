@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/auth_permissions"
+	"dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	"dataplane/logging"
@@ -424,8 +424,7 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		where 
 		p.subject = 'user' and 
 		p.subject_id = ? and
-		p.active = true and
-		p.environment_id = ?		
+		p.active = true		
 		)
 		union
 		(
@@ -444,15 +443,12 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		p.subject = 'access_group' and 
 		p.subject_id = agu.user_id and
 		p.subject_id = ? and
-		p.active = true and
-		p.environment_id = ?		
+		p.active = true		
 		)
 `,
 		//direct
 		userID,
-		environmentID,
 		userID,
-		environmentID,
 	).Scan(
 		&Permissions,
 	).Error
