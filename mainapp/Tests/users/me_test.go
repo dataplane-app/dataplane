@@ -80,7 +80,7 @@ func TestMe(t *testing.T) {
 				last_name: "` + faker.LastName() + `",
 				email: "` + testutils.AdminUser + `",
 				job_title: "Manager"
-				timezone: " ` + faker.Timezone() + ` ",
+				timezone: "` + faker.Timezone() + `",
 			}
 		) {
 			user_id
