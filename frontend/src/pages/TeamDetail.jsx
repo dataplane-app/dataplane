@@ -234,7 +234,7 @@ const TeamDetail = () => {
                                 {userPermissions
                                     .filter((plat) => plat.Resource.includes('platform'))
                                     .map((plat) => (
-                                        <Grid display="flex" alignItems="center" key={plat.Resource} mt={1.5} mb={1.5}>
+                                        <Grid display="flex" alignItems="center" key={plat.Label} mt={1.5} mb={1.5}>
                                             <Box
                                                 onClick={() => deletePermission(plat)}
                                                 component={FontAwesomeIcon}
@@ -242,7 +242,7 @@ const TeamDetail = () => {
                                                 icon={faTrashAlt}
                                             />
                                             <Typography variant="subtitle2" lineHeight="15.23px">
-                                                {plat.Resource}
+                                                {plat.Label}
                                             </Typography>
                                         </Grid>
                                     ))}
@@ -259,7 +259,7 @@ const TeamDetail = () => {
                                     {userPermissions
                                         .filter((env) => !env.Resource.includes('platform'))
                                         .map((env) => (
-                                            <Grid display="flex" alignItems="center" key={env.Resource} mt={1.5} mb={1.5}>
+                                            <Grid display="flex" alignItems="center" key={env.Label} mt={1.5} mb={1.5}>
                                                 <Box
                                                     onClick={() => deletePermission(env)}
                                                     component={FontAwesomeIcon}
@@ -267,7 +267,7 @@ const TeamDetail = () => {
                                                     icon={faTrashAlt}
                                                 />
                                                 <Typography variant="subtitle2" lineHeight="15.23px">
-                                                    {env.Resource}
+                                                    {env.Label}
                                                 </Typography>
                                             </Grid>
                                         ))}

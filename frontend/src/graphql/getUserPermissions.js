@@ -14,6 +14,8 @@ const query = gql`
             Access
             Active
             EnvironmentID
+            Level
+            Label
         }
     }
 `;
