@@ -24,7 +24,7 @@ export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
 });
 
-export const EnvironmentContext = React.createContext();
+export const EnvironmentContext = React.createContext(null);
 
 function App() {
     // Theme
@@ -39,7 +39,7 @@ function App() {
     );
 
     // Environment provider
-    const [environment, setEnvironment] = React.useState();
+    const [environment, setEnvironment] = React.useState(null);
     const environmentProvider = React.useMemo(() => [environment, setEnvironment], [environment, setEnvironment]);
 
     const theme = React.useMemo(() => createTheme(createCustomTheme(mode)), [mode]);

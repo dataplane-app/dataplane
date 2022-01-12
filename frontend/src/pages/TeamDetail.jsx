@@ -55,7 +55,6 @@ const TeamDetail = () => {
     const [availablePermissions, setAvailablePermissions] = useState([]);
     const [selectedPermission, setSelectedPermission] = useState(null);
     const [userPermissions, setUserPermissions] = useState([]);
-    const [environmentId, setEnvironmentId] = useState(null);
     const [clear, setClear] = useState(1);
 
     // Sidebar states
@@ -66,9 +65,9 @@ const TeamDetail = () => {
     // Custom GraphQL hooks
     const getMeData = useGetMeData(setMeData);
     const getUserData = useGetUserData(setUser, reset);
-    const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, environmentId, setEnvironmentId);
-    const getUserPermissions = useGetUserPermissions(setUserPermissions, user.user_id, environmentId);
-    const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, environmentId, user.user_id);
+    const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, currentEnvironment?.id);
+    const getUserPermissions = useGetUserPermissions(setUserPermissions, user.user_id, currentEnvironment?.id);
+    const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, currentEnvironment?.id, user.user_id);
     const deletePermission = useDeletePermission(getUserPermissions);
 
     // Get user data on load
@@ -78,14 +77,16 @@ const TeamDetail = () => {
 
         getMeData();
         getUserData();
-        getAvailablePermissions();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
-        getUserPermissions();
+        if (currentEnvironment && user) {
+            getUserPermissions();
+            getAvailablePermissions();
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [environmentId, user.user_id]);
+    }, [currentEnvironment?.id, user.user_id]);
 
     // Submit user details
     const onSubmit = useSubmitData(user.user_id);
@@ -455,28 +456,14 @@ const useGetUserData = (setUser, reset) => {
     };
 };
 
-const useGetAvailablePermissions = (setAvailablePermissions, environmentID, setEnvironmentId) => {
+const useGetAvailablePermissions = (setAvailablePermissions, environmentID) => {
     // GraphQL hooks
     const getAvailablePermissions = useAvailablePermissions();
-    const getOnePreference = useGetOnePreference();
+    // const getOnePreference = useGetOnePreference();
 
     const { enqueueSnackbar } = useSnackbar();
 
     return async () => {
-        // Get environment on load
-        if (environmentID === null) {
-            const response = await getOnePreference({ preference: 'environment' });
-
-            if (response.r === 'error') {
-                enqueueSnackbar("Can't get environment: " + response.msg, { variant: 'error' });
-            } else if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-            } else {
-                setEnvironmentId(response.value);
-                environmentID = response.value;
-            }
-        }
-
         // Get available permissions
         const response = await getAvailablePermissions({ environmentID });
 
