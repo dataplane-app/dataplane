@@ -82,6 +82,28 @@ type Permissions struct {
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
+type PermissionsOutput struct {
+	ID string `gorm:"PRIMARY_KEY;type:varchar(64);" json:"id" validate:"required"`
+
+	// Who requires access - user, server, access_group
+	Subject   string `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"subject" validate:"required"`
+	SubjectID string `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"subject_id" validate:"required"`
+
+	// To which resource
+	Resource   string `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"resource" validate:"required"`
+	ResourceID string `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"resource_id" validate:"required"`
+
+	// Type of access - read or write
+	Access        string    `gorm:"index:idx_permissions,unique;type:varchar(64);" json:"access" validate:"required"`
+	Level         string    `json:"level"`
+	Label         string    `json:"label"`
+	Active        bool      `json:"active" validate:"required"`
+	EnvironmentID string    `json:"environment_id"`
+	Test          string    `json:"test"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
 // -------------- Access groups
 
 func (PermissionsAccessGroups) IsEntity() {}

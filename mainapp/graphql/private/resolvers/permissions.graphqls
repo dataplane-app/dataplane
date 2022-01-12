@@ -17,6 +17,19 @@ type Permissions {
 	EnvironmentID: String!
 }
 
+type PermissionsOutput {
+  ID: String!
+	Subject: String!
+	SubjectID: String!
+	Resource:  String!
+	ResourceID: String!
+	Access:        String!
+	Active:        Boolean!
+	EnvironmentID: String!
+	Level: String!
+	Label: String!
+}
+
 extend type Query {
   	"""
 	Retrieve available permissions.
@@ -29,13 +42,13 @@ extend type Query {
 	+ **Route**: Private
 	+ **Permissions**: logged in user
 	"""  
-  myPermissions: [Permissions]
+  myPermissions: [PermissionsOutput]
   """
 	Retrieve user's permissions.
 	+ **Route**: Private
 	+ **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
 	"""  
-  userPermissions(userID: String!, environmentID: String!): [Permissions]
+  userPermissions(userID: String!, environmentID: String!): [PermissionsOutput]
 }
 
 extend type Mutation {

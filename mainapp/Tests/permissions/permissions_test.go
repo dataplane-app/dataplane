@@ -61,7 +61,7 @@ func TestPermissions(t *testing.T) {
 	mutation := `mutation {
 		updatePermissionToUser(
 					environmentID: "` + envID + `",
-					resource: "specific_worker",
+					resource: "environment_secrets",
 					resourceID: "test-` + uuid.NewString() + `",
 					user_id: "` + usertoaddperm + `",
 					access: "write",
@@ -90,6 +90,8 @@ func TestPermissions(t *testing.T) {
 		Access
 		Active
 		EnvironmentID
+		Level
+		Label
 		}
 	}`
 
@@ -114,6 +116,8 @@ func TestPermissions(t *testing.T) {
 			Access
 			Active
 			EnvironmentID
+			Level
+			Label
 			}
 		}`
 

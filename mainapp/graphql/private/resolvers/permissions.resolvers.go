@@ -5,12 +5,11 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/auth_permissions"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	"dataplane/logging"
 	"errors"
-	"log"
 	"os"
 
 	"github.com/google/uuid"
@@ -320,7 +319,7 @@ func (r *queryResolver) AvailablePermissions(ctx context.Context, environmentID 
 
 	// Set resource ids
 	for _, p := range Permissions {
-		log.Print(p.Level)
+		// log.Print(p.Level)
 		if p.Level == "platform" {
 			p.ResourceID = platformID
 		} else if p.Level == "environment" {
@@ -331,10 +330,10 @@ func (r *queryResolver) AvailablePermissions(ctx context.Context, environmentID 
 	return Permissions, nil
 }
 
-func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permissions, error) {
+func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.PermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 
-	var Permissions []*models.Permissions
+	var PermissionsOutput []*models.PermissionsOutput
 
 	err := database.DBConn.Raw(
 		`
@@ -346,10 +345,13 @@ func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permission
 		p.resource,
 		p.resource_id,
 		p.environment_id,
-		p.active
+		p.active,
+		pt.level,
+		pt.label
 		from 
-		permissions p
+		permissions p, permissions_resource_types pt
 		where 
+		p.resource = pt.code and
 		p.subject = 'user' and 
 		p.subject_id = ? and
 		p.active = true
@@ -364,10 +366,13 @@ func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permission
 		p.resource,
 		p.resource_id,
 		p.environment_id,
-		p.active
+		p.active,
+		pt.level,
+		pt.label
 		from 
-		permissions p, permissions_accessg_users agu
+		permissions p, permissions_accessg_users agu, permissions_resource_types pt
 		where 
+		p.resource = pt.code and
 		p.subject = 'access_group' and 
 		p.subject_id = agu.user_id and
 		p.subject_id = ? and
@@ -378,16 +383,16 @@ func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permission
 		currentUser,
 		currentUser,
 	).Scan(
-		&Permissions,
+		&PermissionsOutput,
 	).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errors.New("Error retrieving permissions")
 	}
 
-	return Permissions, nil
+	return PermissionsOutput, nil
 }
 
-func (r *queryResolver) UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.Permissions, error) {
+func (r *queryResolver) UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -406,7 +411,7 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		return nil, errors.New("Requires permissions.")
 	}
 
-	var Permissions []*models.Permissions
+	var PermissionsOutput []*models.PermissionsOutput
 
 	err := database.DBConn.Raw(
 		`
@@ -418,10 +423,13 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		p.resource,
 		p.resource_id,
 		p.environment_id,
-		p.active
+		p.active,
+		pt.level,
+		pt.label
 		from 
-		permissions p
+		permissions p, permissions_resource_types pt
 		where 
+		p.resource = pt.code and
 		p.subject = 'user' and 
 		p.subject_id = ? and
 		p.active = true		
@@ -436,10 +444,13 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		p.resource,
 		p.resource_id,
 		p.environment_id,
-		p.active
+		p.active,
+		pt.level,
+		pt.label
 		from 
-		permissions p, permissions_accessg_users agu
+		permissions p, permissions_accessg_users agu, permissions_resource_types pt
 		where 
+		p.resource = pt.code and
 		p.subject = 'access_group' and 
 		p.subject_id = agu.user_id and
 		p.subject_id = ? and
@@ -450,11 +461,11 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		userID,
 		userID,
 	).Scan(
-		&Permissions,
+		&PermissionsOutput,
 	).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errors.New("Error retrieving permissions")
 	}
 
-	return Permissions, nil
+	return PermissionsOutput, nil
 }
