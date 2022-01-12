@@ -1,5 +1,5 @@
 import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer, Autocomplete } from '@mui/material';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useContext } from 'react';
 import Search from '../components/Search';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
@@ -12,7 +12,6 @@ import { useHistory, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
 import ct from 'countries-and-timezones';
-// GraphQL Hooks
 import { useGetUser } from '../graphql/getUser';
 import { useAvailablePermissions } from '../graphql/availablePermissions';
 import { useUpdateUser } from '../graphql/updateUser';
@@ -21,6 +20,7 @@ import { useGetOnePreference } from '../graphql/getOnePreference';
 import { useUserPermissions } from '../graphql/getUserPermissions';
 import { useUpdatePermissionToUser } from '../graphql/updatePermissionToUser';
 import { useDeletePermissionToUser } from '../graphql/deletePermissionToUser';
+import { EnvironmentContext } from '../App';
 
 const drawerWidth = 507;
 const drawerStyles = {
@@ -31,6 +31,9 @@ const drawerStyles = {
 };
 
 const TeamDetail = () => {
+    // Context
+    const [currentEnvironment] = useContext(EnvironmentContext);
+
     // React router
     let history = useHistory();
 
@@ -125,7 +128,6 @@ const TeamDetail = () => {
                                         onChange={(event, newValue) => {
                                             setUser({ ...user, timezone: newValue });
                                         }}
-                                        // isOptionEqualToValue={(option, value) => option === value}
                                         options={Object.keys(ct.getAllTimezones())}
                                         renderInput={(params) => (
                                             <TextField
@@ -202,7 +204,6 @@ const TeamDetail = () => {
                                         setSelectedPermission(newValue);
                                     }}
                                     sx={{ minWidth: '280px' }}
-                                    isOptionEqualToValue={(option, value) => option.label === value.label}
                                     // Filter out users permissions from available permissions
                                     options={availablePermissions.filter((row) => !userPermissions.map((a) => a.Resource).includes(row.Code)) || ''}
                                     getOptionLabel={(option) => option.Label}
@@ -252,7 +253,7 @@ const TeamDetail = () => {
                                     Environment permissions
                                 </Typography>
                                 <Typography variant="subtitle2" mt=".20rem">
-                                    Environment: Production
+                                    Environment: {currentEnvironment?.name}
                                 </Typography>
 
                                 <Box mt={2}>

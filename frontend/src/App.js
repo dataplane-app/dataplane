@@ -24,6 +24,8 @@ export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
 });
 
+export const EnvironmentContext = React.createContext();
+
 function App() {
     // Theme
     const [mode, setMode] = React.useState('light');
@@ -36,6 +38,10 @@ function App() {
         []
     );
 
+    // Environment provider
+    const [environment, setEnvironment] = React.useState();
+    const environmentProvider = React.useMemo(() => [environment, setEnvironment], [environment, setEnvironment]);
+
     const theme = React.useMemo(() => createTheme(createCustomTheme(mode)), [mode]);
 
     // Snackbar
@@ -46,61 +52,59 @@ function App() {
 
     return (
         <ColorModeContext.Provider value={colorModeToggle}>
-            <ThemeProvider theme={theme}>
-                <SnackbarProvider
-                    hideIconVariant={true}
-                    ref={notistackRef}
-                    anchorOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right',
-                    }}
-                    action={(key) => (
-                        <Button onClick={onClickDismiss(key)} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <Box component={FontAwesomeIcon} color="white" icon={faTimesCircle} />
-                        </Button>
-                    )}
-                    autoHideDuration={60000}>
-                    <Box className="app" backgroundColor="background.main">
-                        <UserAuth
-                            refreshTokenUrl="/refreshtoken"
-                            LogincallbackUrl="/loginCallback"
-                            loginUrl="/webapp/login"
-                            logoutUrl="/webapp/logout">
-                            <Route exact path="/congratulations">
-                                <Congratulations />
-                            </Route>
-                            <Route exact path="/get-started">
-                                <GetStarted />
-                            </Route>
-                            <Route exact path="/login">
-                                <LoginUser />
-                            </Route>
-                            <PrivateRoute exact path={['/', '/teams', '/teams/:teamId', '/myaccount/:memberId', '/teams/access/:accessId']}>
-                                <Layout>
-                                    <Route exact path="/">
-                                        <Pipelines />
-                                    </Route>
-                                    <Route exact path="/teams">
-                                        <Teams />
-                                    </Route>
-                                    <Route exact path="/teams/:teamId">
-                                        <TeamDetail />
-                                    </Route>
-                                    <Route exact path="/teams/access/:accessId">
-                                        <TeamGroup />
-                                    </Route>
-                                    <Route exact path="/myaccount/:memberId">
-                                        <MemberDetail />
-                                    </Route>
-                                </Layout>
-                            </PrivateRoute>
-                            <PrivateRoute exact path="/logout">
-                                <LogoutUser />
-                            </PrivateRoute>
-                        </UserAuth>
-                    </Box>
-                </SnackbarProvider>
-            </ThemeProvider>
+            <EnvironmentContext.Provider value={environmentProvider}>
+                <ThemeProvider theme={theme}>
+                    <SnackbarProvider
+                        hideIconVariant={true}
+                        ref={notistackRef}
+                        anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                        action={(key) => (
+                            <Button onClick={onClickDismiss(key)} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <Box component={FontAwesomeIcon} color="white" icon={faTimesCircle} />
+                            </Button>
+                        )}
+                        autoHideDuration={60000}>
+                        <Box className="app" backgroundColor="background.main">
+                            <UserAuth refreshTokenUrl="/refreshtoken" LogincallbackUrl="/loginCallback" loginUrl="/webapp/login" logoutUrl="/webapp/logout">
+                                <Route exact path="/congratulations">
+                                    <Congratulations />
+                                </Route>
+                                <Route exact path="/get-started">
+                                    <GetStarted />
+                                </Route>
+                                <Route exact path="/login">
+                                    <LoginUser />
+                                </Route>
+                                <PrivateRoute exact path={['/', '/teams', '/teams/:teamId', '/myaccount/:memberId', '/teams/access/:accessId']}>
+                                    <Layout>
+                                        <Route exact path="/">
+                                            <Pipelines />
+                                        </Route>
+                                        <Route exact path="/teams">
+                                            <Teams />
+                                        </Route>
+                                        <Route exact path="/teams/:teamId">
+                                            <TeamDetail />
+                                        </Route>
+                                        <Route exact path="/teams/access/:accessId">
+                                            <TeamGroup />
+                                        </Route>
+                                        <Route exact path="/myaccount/:memberId">
+                                            <MemberDetail />
+                                        </Route>
+                                    </Layout>
+                                </PrivateRoute>
+                                <PrivateRoute exact path="/logout">
+                                    <LogoutUser />
+                                </PrivateRoute>
+                            </UserAuth>
+                        </Box>
+                    </SnackbarProvider>
+                </ThemeProvider>
+            </EnvironmentContext.Provider>
         </ColorModeContext.Provider>
     );
 }
