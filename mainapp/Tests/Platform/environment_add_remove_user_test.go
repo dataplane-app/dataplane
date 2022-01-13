@@ -17,7 +17,9 @@ import (
 For individual tests - in separate window run: go run server.go
 go test -p 1 -v -count=1 -run TestAddRemoveUserEnvironment dataplane/Tests/Platform
 * Login
+* Add user to environment
 * Get environments
+* Remove user from environment
 */
 func TestAddRemoveUserEnvironment(t *testing.T) {
 
@@ -72,11 +74,36 @@ func TestAddRemoveUserEnvironment(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
-	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add user to environment 200 status code")
 
 	validateResponse := jsoniter.Get(response, "data", "addUserToEnvironment").ToString()
 
 	assert.Equalf(t, "success", validateResponse, "Added user to environment")
+
+	// -------- Get user environments  -------------
+	query := `{
+		getUserEnvironments(
+					user_id: "` + testutils.UserData["user_environment"].UserID + `",
+					environment_id: "` + u.ID + `"
+				){
+					id
+					name
+			   }
+			}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get user environments 200 status code")
+
+	validateResponse = jsoniter.Get(response, "data", "getUserEnvironments").ToString()
+
+	assert.Equalf(t, "success", validateResponse, "Got user environments")
 
 	// -------- Remove user from environment  -------------
 	getEnvironment = `mutation {
@@ -94,10 +121,10 @@ func TestAddRemoveUserEnvironment(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
-	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Remove from environment 200 status code")
 
 	validateResponse = jsoniter.Get(response, "data", "removeUserFromEnvironment").ToString()
 
-	assert.Equalf(t, "success", validateResponse, "Added user to environment")
+	assert.Equalf(t, "success", validateResponse, "Removed user from environment")
 
 }
