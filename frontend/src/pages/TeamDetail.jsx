@@ -79,11 +79,9 @@ export default function TeamDetail() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    console.log('Available permissions', availablePermissions);
     useEffect(() => {
         // Get user permissions when user environment and id are available and if empty
         if (globalEnvironment && user && userPermissions.length === 0) {
-            console.log('Available permissions: if');
             getUserPermissions();
         }
 
@@ -192,7 +190,7 @@ export default function TeamDetail() {
                                 </Button>
                                 {user.user_id !== meData.user_id ? (
                                     <Typography color="rgba(248, 0, 0, 1)" lineHeight="15.23px" sx={{ mt: '.56rem' }} variant="subtitle2">
-                                        Warning: this action can’t be undone. It is usually better to deactivate a user.
+                                        Warning: this action can't be undone. It is usually better to deactivate a user.
                                     </Typography>
                                 ) : null}
                             </Box>
