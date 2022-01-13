@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Grid, Typography, IconButton, Chip, Button, Drawer } from '@mui/material';
+import { Box, Grid, Typography, IconButton, Chip, Button, Drawer, alertTitleClasses } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import { useMemo } from 'react';
@@ -8,7 +8,7 @@ import { useTable, useGlobalFilter } from 'react-table';
 import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import CustomChip from '../components/CustomChip';
-import { useGetUsers } from '../graphql/getUsers';
+import { useGetAccessGroups } from '../graphql/getAccessGroups';
 import { useSnackbar } from 'notistack';
 import AddAccessGroupDrawer from '../components/DrawerContent/AddAccessGroupDrawer';
 
@@ -25,36 +25,35 @@ const AccessGroups = () => {
     const { enqueueSnackbar } = useSnackbar();
 
     // Users state
-    const [data, setData] = useState([
-        { access_group_id: 1, name: 'Data engineering team', description: 'To build data pipelines', active: true, environment_id: '10' },
-        { access_group_id: 2, name: 'BAU run team', description: 'To perform the daily run of data pipelines', active: true, environment_id: '10' },
-    ]);
+    const [accessGroups, setAccessGroups] = useState([]);
+    console.log('🚀 ~ file: AccessGroups.jsx ~ line 29 ~ AccessGroups ~ accessGroups', accessGroups);
+    const [environmentID] = useState('0423dade-d213-4897-abf6-f6da9a668b50');
+    const [userID] = useState('changeuser');
+    const [data, setData] = useState([]);
 
     // Sidebar states
     const [isOpenAddAccessGroup, setIsOpenAddAccessGroup] = useState(false);
 
-    // Get users on load                      <==
-    // const getUsers = useGetUsers();
-    // useEffect(() => {
-    //     retrieveUsers();
-    // }, []);
+    // Custom hook
+    const getAccessGroups = useGetAccessGroups_(environmentID, userID, setData);
 
-    // Get users                              <==
-    // const retrieveUsers = async () => {
-    //     let users = await getUsers();
-    //     !users.errors ? setData(users) : enqueueSnackbar('Unable to retrieve users', { variant: 'error' });
-    // };
+    // Get access groups on load                      <==
+    useEffect(() => {
+        getAccessGroups();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const columns = useMemo(
         () => [
             {
                 Header: 'Access group',
-                accessor: (row) => [row.name, row.description],
+                // accessor: (row) => [row.name, row.description],
+                accessor: (row) => row.Name,
                 Cell: (row) => <CustomAccessGroup row={row} onClick={() => history.push(`/teams/${row.row.original.user_id}`)} />,
             },
             {
                 Header: 'Status',
-                accessor: 'active',
+                accessor: 'Active',
                 Cell: (row) => (row.value === true ? <CustomChip label="Active" customColor="green" /> : <CustomChip label="Inactive" customColor="red" />),
             },
         ],
@@ -166,18 +165,39 @@ const AccessGroups = () => {
 };
 
 const CustomAccessGroup = ({ row, onClick }) => {
-    const [name, description] = row.value;
+    // const [name, description] = row.value;
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start" onClick={onClick}>
             <Typography component="h4" variant="h3" color="primary" className="text-blue font-black text-lg ">
-                {name}
+                {row.value}
             </Typography>
             <Typography component="h5" variant="subtitle1">
-                {description}
+                {/* {description} */}
             </Typography>
         </Grid>
     );
 };
 
 export default AccessGroups;
+
+// ------- Custom Hooks
+const useGetAccessGroups_ = (environmentID, userID, setAccessGroups) => {
+    // GraphQL hook
+    const getAccessGroups = useGetAccessGroups();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get user data on load
+    return async () => {
+        const response = await getAccessGroups({ environmentID, userID });
+
+        if (response.r === 'error') {
+            enqueueSnackbar("Can't get user data: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setAccessGroups(response);
+        }
+    };
+};

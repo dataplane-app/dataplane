@@ -15,6 +15,13 @@ type Permissions {
 	EnvironmentID: String!
 }
 
+type AccessGroups {
+    AccessGroupID: String!
+	Name:          String!
+	Active:        Boolean!
+	EnvironmentID: String!
+}
+
 extend type Query {
   	"""
 	Retrieve available permissions.
@@ -34,6 +41,12 @@ extend type Query {
 	+ **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
 	"""  
   userPermissions(userID: String!, environmentID: String!): [Permissions]
+  """
+	Retrieve access groups for an environment.
+	+ **Route**: Private
+	+ **Permissions**:  ????????
+    """  
+  getAccessGroups(userID: String!, environmentID: String!): [AccessGroups]
 }
 
 extend type Mutation {

@@ -424,3 +424,19 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 
 	return Permissions, nil
 }
+
+func (r *queryResolver) GetAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error) {
+
+	// NEEDS PERMISSIONS <==================
+
+	e := []*models.PermissionsAccessGroups{}
+
+	err := database.DBConn.Find(&e).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive users database error.")
+	}
+	return e, nil
+}

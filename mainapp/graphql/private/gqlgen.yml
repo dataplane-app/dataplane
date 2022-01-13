@@ -21,6 +21,8 @@ models:
    model: dataplane/database/models.Environment
  Permissions:
    model: dataplane/database/models.Permissions
+ AccessGroups:
+   model: dataplane/database/models.PermissionsAccessGroups
 
 resolver:
   layout: follow-schema
