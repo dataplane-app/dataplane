@@ -270,7 +270,7 @@ export default function TeamDetail() {
 
                                 <Box mt={2}>
                                     {userPermissions
-                                        .filter((env) => !env.Resource.includes('platform'))
+                                        .filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === globalEnvironment.id)
                                         .map((env) => (
                                             <Grid display="flex" alignItems="center" key={env.Label} mt={1.5} mb={1.5}>
                                                 <Box
@@ -519,6 +519,10 @@ const useUpdatePermissions = (getUserPermissions, selectedPermission, environmen
 
     if (selectedPermission === null) return; // If add button is clicked without a selection
 
+    // If level environment, set resource id to current environment's id
+    if (selectedPermission.Level === 'environment') {
+        selectedPermission.ResourceID = environmentID;
+    }
     // Update permissions
     return async () => {
         const response = await updatePermissionToUser({
