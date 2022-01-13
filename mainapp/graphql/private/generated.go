@@ -127,6 +127,7 @@ type ComplexityRoot struct {
 		GetPipelines         func(childComplexity int) int
 		GetPlatform          func(childComplexity int) int
 		GetUser              func(childComplexity int, userID string) int
+		GetUserEnvironments  func(childComplexity int, userID string, environmentID string) int
 		GetUsers             func(childComplexity int) int
 		GetWorkers           func(childComplexity int) int
 		LogoutUser           func(childComplexity int) int
@@ -176,6 +177,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*models.Environment, error)
+	GetUserEnvironments(ctx context.Context, userID string, environmentID string) ([]*models.Environment, error)
 	GetPlatform(ctx context.Context) (*Platform, error)
 	Me(ctx context.Context) (*models.Users, error)
 	AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error)
@@ -745,6 +747,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetUser(childComplexity, args["user_id"].(string)), true
 
+	case "Query.getUserEnvironments":
+		if e.complexity.Query.GetUserEnvironments == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getUserEnvironments_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetUserEnvironments(childComplexity, args["user_id"].(string), args["environment_id"].(string)), true
+
 	case "Query.getUsers":
 		if e.complexity.Query.GetUsers == nil {
 			break
@@ -955,6 +969,12 @@ type Query {
 	+ **Permissions**: linked to environment_user table
 	"""  
     getEnvironments: [Environments]
+		"""
+	Get user environments
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, platform_environment, environment_permissions
+	"""  
+    getUserEnvironments(user_id: String!, environment_id: String!): [Environments]
 	"""
 	Get platform information user logged in belongs.
 	+ **Route**: Private
@@ -1806,6 +1826,30 @@ func (ec *executionContext) field_Query_getOnePreference_args(ctx context.Contex
 		}
 	}
 	args["preference"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getUserEnvironments_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["user_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user_id"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["user_id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environment_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environment_id"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environment_id"] = arg1
 	return args, nil
 }
 
@@ -3865,6 +3909,45 @@ func (ec *executionContext) _Query_getEnvironments(ctx context.Context, field gr
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetEnvironments(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Environment)
+	fc.Result = res
+	return ec.marshalOEnvironments2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getUserEnvironments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getUserEnvironments_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetUserEnvironments(rctx, args["user_id"].(string), args["environment_id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6571,6 +6654,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getEnvironments(ctx, field)
+				return res
+			})
+		case "getUserEnvironments":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getUserEnvironments(ctx, field)
 				return res
 			})
 		case "getPlatform":

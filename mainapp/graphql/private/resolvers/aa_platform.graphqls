@@ -35,6 +35,12 @@ type Query {
 	"""  
     getEnvironments: [Environments]
 	"""
+	Get user environments
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, platform_environment, environment_permissions
+	"""  
+    getUserEnvironments(user_id: String!, environment_id: String!): [Environments]
+	"""
 	Get platform information user logged in belongs.
 	+ **Route**: Private
 	+ **Permissions**: logged in
@@ -72,5 +78,5 @@ extend type Mutation {
 	+ **Route**: Private
 	+ **Permissions**: admin_platform, platform_environment, environment_remove_user
 	"""  
-  removeUserFromEnvironment(user_id: String!, environment_id: String!): String
+    removeUserFromEnvironment(user_id: String!, environment_id: String!): String
 }

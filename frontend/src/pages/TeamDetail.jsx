@@ -19,6 +19,10 @@ import { useMe } from '../graphql/me';
 import { useUserPermissions } from '../graphql/getUserPermissions';
 import { useUpdatePermissionToUser } from '../graphql/updatePermissionToUser';
 import { useDeletePermissionToUser } from '../graphql/deletePermissionToUser';
+import { useGetEnvironments } from '../graphql/getEnvironments';
+import { useGetUserEnvironments } from '../graphql/getUserEnvironments';
+import { useRemoveUserFromEnvironment } from '../graphql/removeUserToEnvironment';
+import { useAddUserToEnvironment } from '../graphql/addUserToEnvironment';
 import { EnvironmentContext } from '../App';
 
 const drawerWidth = 507;
@@ -51,6 +55,9 @@ export default function TeamDetail() {
     // User states
     const [user, setUser] = useState({});
     const [meData, setMeData] = useState({});
+    const [availableEnvironments, setAvailableEnvironments] = useState([]);
+    const [userEnvironments, setUserEnvironments] = useState([]);
+    const [selectedUserEnvironment, setSelectedUserEnvironment] = useState(null);
     const [availablePermissions, setAvailablePermissions] = useState([]);
     const [selectedPermission, setSelectedPermission] = useState(null);
     const [userPermissions, setUserPermissions] = useState([]);
@@ -64,6 +71,10 @@ export default function TeamDetail() {
     // Custom GraphQL hooks
     const getMeData = useGetMeData(setMeData);
     const getUserData = useGetUserData(setUser, reset);
+    const getEnvironments = useGetEnvironmentsData(setAvailableEnvironments);
+    const getUserEnvironments = useGetUserEnvironmentsData(setUserEnvironments, user.user_id, globalEnvironment?.id);
+    const removeUserFromEnv = useRemoveUserFromEnv(getUserEnvironments);
+    const addUserToEnv = useAddUserToEnv(getUserEnvironments);
     const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, globalEnvironment?.id);
     const getUserPermissions = useGetUserPermissions(setUserPermissions, user.user_id, globalEnvironment?.id);
     const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
@@ -85,11 +96,20 @@ export default function TeamDetail() {
             getUserPermissions();
         }
 
-        // Get available permissions when user environment and id are available and if empty
+        // Get all available permissions when user environment and id are available and if empty
         if (globalEnvironment && user && availablePermissions.length === 0) {
             getAvailablePermissions();
         }
-        // getAvailablePermissions();
+
+        // Get all available environments when user environment and id are available and if empty
+        if (globalEnvironment && user && userEnvironments.length === 0) {
+            getUserEnvironments();
+        }
+
+        // Get environments the user belongs when user environment and id are available and if empty
+        if (globalEnvironment && user && availableEnvironments.length === 0) {
+            getEnvironments();
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [globalEnvironment?.id, user.user_id]);
@@ -314,16 +334,46 @@ export default function TeamDetail() {
                         </Typography>
 
                         <Grid mt={2} display="flex" alignItems="center">
-                            <Search placeholder="Find access groups" onChange={() => null} />
-                            <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }}>
+                            <Autocomplete
+                                disablePortal
+                                id="available_permissions_autocomplete"
+                                key={clear} //Changing this value on submit clears the input field
+                                onChange={(event, newValue) => {
+                                    setSelectedUserEnvironment(newValue);
+                                }}
+                                sx={{ minWidth: '280px' }}
+                                // Filter out users permissions from available permissions
+                                options={availableEnvironments.filter((row) => !userEnvironments.map((a) => a.id).includes(row.id)) || ''}
+                                // options={availableEnvironments}
+                                getOptionLabel={(option) => option.name}
+                                renderInput={(params) => (
+                                    <TextField {...params} label="Available environments" id="available_environments" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
+                                )}
+                            />
+                            <Button
+                                onClick={() => {
+                                    addUserToEnv(user.user_id, selectedUserEnvironment.id);
+                                    setClear(clear * -1);
+                                }}
+                                variant="contained"
+                                color="primary"
+                                height="100%"
+                                sx={{ ml: 1 }}>
                                 Add
                             </Button>
                         </Grid>
 
                         <Box mt="1.31rem">
-                            {belongToEnvironmentItems.map((env) => (
+                            {userEnvironments.map((env) => (
                                 <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
-                                    <Box component={FontAwesomeIcon} sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)' }} icon={faTrashAlt} />
+                                    <Box
+                                        onClick={() => {
+                                            removeUserFromEnv(user.user_id, env.id);
+                                        }}
+                                        component={FontAwesomeIcon}
+                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                        icon={faTrashAlt}
+                                    />
                                     <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
                                         {env.name}
                                     </Typography>
@@ -461,6 +511,92 @@ const useGetUserData = (setUser, reset) => {
                 job_title: response.job_title,
                 timezone: response.timezone,
             });
+        }
+    };
+};
+
+const useGetEnvironmentsData = (setAvailableEnvironments) => {
+    // GraphQL hook
+    const getEnvironments = useGetEnvironments();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get environments on load
+    return async () => {
+        const response = await getEnvironments();
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setAvailableEnvironments(response);
+        }
+    };
+};
+
+const useGetUserEnvironmentsData = (setUserEnvironments, user_id, environment_id) => {
+    // GraphQL hook
+    const getUserEnvironments = useGetUserEnvironments();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get environments on load
+    return async () => {
+        const response = await getUserEnvironments({ user_id, environment_id });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setUserEnvironments(response);
+        }
+    };
+};
+
+const useRemoveUserFromEnv = (getUserEnvironments) => {
+    // GraphQL hook
+    const removeUserFromEnvironment = useRemoveUserFromEnvironment();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get environments on load
+    return async (user_id, environment_id) => {
+        const response = await removeUserFromEnvironment({ user_id, environment_id });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getUserEnvironments();
+        }
+    };
+};
+
+const useAddUserToEnv = (getUserEnvironments) => {
+    // GraphQL hook
+    const addUserToEnvironment = useAddUserToEnvironment();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get environments on load
+    return async (user_id, environment_id) => {
+        const response = await addUserToEnvironment({ user_id, environment_id });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getUserEnvironments();
         }
     };
 };
