@@ -6,7 +6,10 @@ import { useCreateAccessGroup } from '../../../graphql/createAccessGroup';
 import { useSnackbar } from 'notistack';
 
 const AddAccessGroupDrawer = ({ handleClose }) => {
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const [environment] = useState('0423dade-d213-4897-abf6-f6da9a668b50');
+    const [name, setName] = useState('');
+    // const getUserEnvironments = useCreateAccessGroupData(globalEnvironment?.id);
+    const getUserEnvironments = useCreateAccessGroupData(environment, name);
 
     return (
         <Box position="relative" style={{ maxWidth: '400px', margin: 'auto', marginTop: 0 }}>
@@ -21,10 +24,18 @@ const AddAccessGroupDrawer = ({ handleClose }) => {
                     Add access group
                 </Typography>
 
-                <TextField label="Access group name" id="name" size="small" required sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }} />
+                <TextField
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    label="Access group name"
+                    id="name"
+                    size="small"
+                    required
+                    sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }}
+                />
 
                 <Grid mt={4} display="flex" alignItems="center">
-                    <Button type="submit" variant="contained" color="primary" style={{ width: '100%' }}>
+                    <Button onClick={getUserEnvironments} variant="contained" color="primary" style={{ width: '100%' }}>
                         Save
                     </Button>
                 </Grid>
@@ -34,3 +45,26 @@ const AddAccessGroupDrawer = ({ handleClose }) => {
 };
 
 export default AddAccessGroupDrawer;
+
+// ---------- Custom Hooks
+
+const useCreateAccessGroupData = (environment_id, name) => {
+    // GraphQL hook
+    const createAccessGroup = useCreateAccessGroup();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get environments on load
+    return async () => {
+        const response = await createAccessGroup({ name, environment_id });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            // setUserEnvironments(response);
+        }
+    };
+};
