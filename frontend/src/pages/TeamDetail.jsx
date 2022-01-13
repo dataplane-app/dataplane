@@ -102,7 +102,7 @@ export default function TeamDetail() {
         }
 
         // Get all available environments when user environment and id are available and if empty
-        if (globalEnvironment && user && userEnvironments.length === 0) {
+        if (globalEnvironment && user.user_id && userEnvironments.length === 0) {
             getUserEnvironments();
         }
 
