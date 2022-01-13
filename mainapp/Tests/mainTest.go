@@ -76,7 +76,7 @@ func main() {
 						input: {
 							PlatformInput: {
 								business_name: "` + testutils.TextEscape(faker.DomainName()) + `",,
-								timezone: " ` + faker.Timezone() + ` ",
+								timezone: "` + faker.Timezone() + `",
 								complete: true }
 							AddUsersInput: {
 								first_name: "` + testutils.TextEscape(faker.FirstName()) + `",
@@ -84,7 +84,7 @@ func main() {
 								email: "` + testUser + `",
 								job_title: "` + testutils.TextEscape(faker.Name()) + `",
 								password: "` + testPassword + `",
-								timezone: " ` + faker.Timezone() + ` ",
+								timezone: "` + faker.Timezone() + `",
 							}
 						}
 					) {
