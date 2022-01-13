@@ -16,7 +16,6 @@ import { useGetUser } from '../graphql/getUser';
 import { useAvailablePermissions } from '../graphql/availablePermissions';
 import { useUpdateUser } from '../graphql/updateUser';
 import { useMe } from '../graphql/me';
-import { useGetOnePreference } from '../graphql/getOnePreference';
 import { useUserPermissions } from '../graphql/getUserPermissions';
 import { useUpdatePermissionToUser } from '../graphql/updatePermissionToUser';
 import { useDeletePermissionToUser } from '../graphql/deletePermissionToUser';
@@ -30,9 +29,9 @@ const drawerStyles = {
     [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
 };
 
-const TeamDetail = () => {
+export default function TeamDetail() {
     // Context
-    const [currentEnvironment] = useContext(EnvironmentContext);
+    const [globalEnvironment] = useContext(EnvironmentContext);
 
     // React router
     let history = useHistory();
@@ -65,9 +64,9 @@ const TeamDetail = () => {
     // Custom GraphQL hooks
     const getMeData = useGetMeData(setMeData);
     const getUserData = useGetUserData(setUser, reset);
-    const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, currentEnvironment?.id);
-    const getUserPermissions = useGetUserPermissions(setUserPermissions, user.user_id, currentEnvironment?.id);
-    const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, currentEnvironment?.id, user.user_id);
+    const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, globalEnvironment?.id);
+    const getUserPermissions = useGetUserPermissions(setUserPermissions, user.user_id, globalEnvironment?.id);
+    const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
     const deletePermission = useDeletePermission(getUserPermissions);
 
     // Get user data on load
@@ -80,13 +79,22 @@ const TeamDetail = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    console.log('Available permissions', availablePermissions);
     useEffect(() => {
-        if (currentEnvironment && user) {
+        // Get user permissions when user environment and id are available and if empty
+        if (globalEnvironment && user && userPermissions.length === 0) {
+            console.log('Available permissions: if');
             getUserPermissions();
+        }
+
+        // Get available permissions when user environment and id are available and if empty
+        if (globalEnvironment && user && availablePermissions.length === 0) {
             getAvailablePermissions();
         }
+        // getAvailablePermissions();
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentEnvironment?.id, user.user_id]);
+    }, [globalEnvironment?.id, user.user_id]);
 
     // Submit user details
     const onSubmit = useSubmitData(user.user_id);
@@ -238,9 +246,14 @@ const TeamDetail = () => {
                                     .map((plat) => (
                                         <Grid display="flex" alignItems="center" key={plat.Label} mt={1.5} mb={1.5}>
                                             <Box
-                                                onClick={() => deletePermission(plat)}
+                                                onClick={() => !(user.user_id === meData.user_id && plat.Label === 'Admin') && deletePermission(plat)}
                                                 component={FontAwesomeIcon}
-                                                sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                                sx={{
+                                                    fontSize: '17px',
+                                                    mr: '7px',
+                                                    color: user.user_id === meData.user_id && plat.Label === 'Admin' ? 'rgba(0, 0, 0, 0.26)' : 'rgba(248, 0, 0, 1)',
+                                                    cursor: !(user.user_id === meData.user_id && plat.Label === 'Admin') && 'pointer',
+                                                }}
                                                 icon={faTrashAlt}
                                             />
                                             <Typography variant="subtitle2" lineHeight="15.23px">
@@ -254,7 +267,7 @@ const TeamDetail = () => {
                                     Environment permissions
                                 </Typography>
                                 <Typography variant="subtitle2" mt=".20rem">
-                                    Environment: {currentEnvironment?.name}
+                                    Environment: {globalEnvironment?.name}
                                 </Typography>
 
                                 <Box mt={2}>
@@ -365,9 +378,7 @@ const TeamDetail = () => {
             </Drawer>
         </>
     );
-};
-
-export default TeamDetail;
+}
 
 // --------- Custom hooks ---------- //
 
