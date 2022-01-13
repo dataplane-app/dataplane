@@ -10,7 +10,7 @@ import { useHistory } from 'react-router-dom';
 import CustomChip from '../components/CustomChip';
 import { useGetUsers } from '../graphql/getUsers';
 import { useSnackbar } from 'notistack';
-import AddUserDrawer from '../components/DrawerContent/AddUserDrawer';
+import AddAccessGroupDrawer from '../components/DrawerContent/AddAccessGroupDrawer';
 
 const drawerWidth = 507;
 const drawerStyles = {
@@ -153,7 +153,7 @@ const AccessGroups = () => {
             </Box>
 
             <Drawer anchor="right" open={isOpenAddAccessGroup} onClose={() => setIsOpenAddAccessGroup(!isOpenAddAccessGroup)} sx={drawerStyles}>
-                <AddUserDrawer
+                <AddAccessGroupDrawer
                     user="Saul Frank"
                     handleClose={() => {
                         setIsOpenAddAccessGroup(false);
