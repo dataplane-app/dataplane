@@ -23,6 +23,8 @@ models:
    model: dataplane/database/models.Permissions
  PermissionsOutput:
    model: dataplane/database/models.PermissionsOutput
+ AccessGroups:
+   model: dataplane/database/models.PermissionsAccessGroups
 
 resolver:
   layout: follow-schema

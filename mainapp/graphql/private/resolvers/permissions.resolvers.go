@@ -10,6 +10,7 @@ import (
 	"dataplane/database/models"
 	"dataplane/logging"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/google/uuid"
@@ -468,4 +469,8 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 	}
 
 	return PermissionsOutput, nil
+}
+
+func (r *queryResolver) GetAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error) {
+	panic(fmt.Errorf("not implemented"))
 }
