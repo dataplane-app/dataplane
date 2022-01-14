@@ -24,7 +24,7 @@ import { useGetUserEnvironments } from '../graphql/getUserEnvironments';
 import { useRemoveUserFromEnvironment } from '../graphql/removeUserToEnvironment';
 import { useAddUserToEnvironment } from '../graphql/addUserToEnvironment';
 import { useCreateAccessGroup } from '../graphql/createAccessGroup';
-// import { useGetAccessGroups } from '../graphql/getAccessGroups';
+import { useGetAccessGroups } from '../graphql/getAccessGroups';
 import { EnvironmentContext } from '../App';
 
 const drawerWidth = 507;
@@ -63,9 +63,9 @@ export default function TeamDetail() {
     const [availablePermissions, setAvailablePermissions] = useState([]);
     const [selectedPermission, setSelectedPermission] = useState(null);
     const [userPermissions, setUserPermissions] = useState([]);
-    // const [accessGroup, setAccessGroup] = useState('');
-    // const [accessGroups, setAccessGroups] = useState([]);
-    // const [userAccessGroups, setUserAccessGroups] = useState([]);
+    const [accessGroup, setAccessGroup] = useState('');
+    const [accessGroups, setAccessGroups] = useState([]);
+    const [userAccessGroups, setUserAccessGroups] = useState([]);
     const [clear, setClear] = useState(1);
 
     // Sidebar states
@@ -84,8 +84,8 @@ export default function TeamDetail() {
     const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
     const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
     const deletePermission = useDeletePermission(getUserPermissions);
-    // const createAccessGroup = useCreateAccessGroup_(globalEnvironment?.id);
-    // const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
+    const createAccessGroup = useCreateAccessGroup_(globalEnvironment?.id);
+    const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
 
     // Get user data on load
     useEffect(() => {
@@ -118,10 +118,10 @@ export default function TeamDetail() {
             getEnvironments();
         }
 
-        // // Get all access groups when environment and id are available and if empty
-        // if (globalEnvironment && user.user_id && accessGroups.length === 0) {
-        //     getAccessGroups();
-        // }
+        // Get all access groups when environment and id are available and if empty
+        if (globalEnvironment && user.user_id && accessGroups.length === 0) {
+            getAccessGroups();
+        }
 
         // // Get access groups the user belongs when user environment and id are available and if empty
         // if (globalEnvironment && user && userAccessGroups.length === 0) {
@@ -412,8 +412,8 @@ export default function TeamDetail() {
                             </Typography>
 
                             <Grid mt={2} display="flex" alignItems="center">
-                                <Search placeholder="Find access groups" />
-                                {/* <Autocomplete
+                                {/* <Search placeholder="Find access groups" /> */}
+                                <Autocomplete
                                     disablePortal
                                     id="available_access_groups"
                                     key={clear} //Changing this value on submit clears the input field
@@ -426,7 +426,7 @@ export default function TeamDetail() {
                                     renderInput={(params) => (
                                         <TextField {...params} label="Find access groups" id="access_groups" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
                                     )}
-                                /> */}
+                                />
                                 <Button
                                     // onClick={() => createAccessGroup(accessGroup)}
                                     variant="contained"
@@ -776,29 +776,29 @@ const useCreateAccessGroup_ = (environmentID) => {
     };
 };
 
-// const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
-//     // GraphQL hook
-//     const getAccessGroups = useGetAccessGroups();
+const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
+    // GraphQL hook
+    const getAccessGroups = useGetAccessGroups();
 
-//     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-//     // Create access group
-//     return async () => {
-//         const response = await getAccessGroups({ environmentID, userID });
+    // Create access group
+    return async () => {
+        const response = await getAccessGroups({ environmentID, userID });
 
-//         if (response.r === 'error') {
-//             closeSnackbar();
-//             enqueueSnackbar("Can't delete permission: " + response.msg, {
-//                 variant: 'error',
-//             });
-//         } else if (response.errors) {
-//             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-//         } else {
-//             enqueueSnackbar('Success', { variant: 'success' });
-//             setAccessGroups(response);
-//         }
-//     };
-// };
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't delete permission: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            setAccessGroups(response);
+        }
+    };
+};
 
 // ----------- Utility Functions
 // Filters permissions dropdown from selected permissions
