@@ -421,8 +421,8 @@ export default function TeamDetail() {
                                     sx={{ minWidth: '280px' }}
                                     // Filter out available access groups from the ones user belongs
                                     // options={availableEnvironments.filter((row) => !userEnvironments.map((a) => a.id).includes(row.id)) || ''}
-                                    options={['']}
-                                    // getOptionLabel={(option) => option.name}
+                                    options={accessGroups}
+                                    getOptionLabel={(option) => option.Name}
                                     renderInput={(params) => (
                                         <TextField {...params} label="Find access groups" id="access_groups" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
                                     )}
@@ -794,7 +794,6 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            enqueueSnackbar('Success', { variant: 'success' });
             setAccessGroups(response);
         }
     };

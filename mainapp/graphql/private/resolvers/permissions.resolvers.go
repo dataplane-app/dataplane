@@ -5,12 +5,11 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/auth_permissions"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	"dataplane/logging"
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/google/uuid"
@@ -472,5 +471,16 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 }
 
 func (r *queryResolver) GetAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error) {
-	panic(fmt.Errorf("not implemented"))
+	// NEEDS PERMISSIONS <==================
+
+	e := []*models.PermissionsAccessGroups{}
+
+	err := database.DBConn.Find(&e).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive users database error.")
+	}
+	return e, nil
 }
