@@ -9,9 +9,12 @@ import { useTable, useGlobalFilter } from 'react-table';
 import { useHistory } from 'react-router-dom';
 import AddEnvironmentDrawer from '../components/DrawerContent/AddEnvironmentDrawer';
 import { useGetPlatform } from '../graphql/getPlatform';
+import { useSnackbar } from 'notistack';
+import { useUpdatePlatform } from '../graphql/updatePlatform';
 
 const Settings = () => {
     let history = useHistory();
+    const { enqueueSnackbar } = useSnackbar();
 
     // User states
     const [platform, setPlatform] = useState({});
@@ -19,8 +22,8 @@ const Settings = () => {
     const [isOpenAddEnv, setIsOpenAddEnv] = useState(false);
 
     // GraphQL Hooks
-    const getEnvironments = useGetEnvironments();
     const getPlatform = useGetPlatform();
+    const environments = useGetEnvData(setData, enqueueSnackbar);
 
     // Form hook
     const { register, handleSubmit, reset } = useForm();
@@ -29,10 +32,10 @@ const Settings = () => {
     useEffect(() => {
         let active = true;
 
+        environments();
+
         (async () => {
             const getPlatformResponse = await getPlatform();
-            const getEnvironmentsResponse = await getEnvironments();
-
             if (active && !getPlatformResponse.errors) {
                 setPlatform(getPlatformResponse);
 
@@ -41,30 +44,26 @@ const Settings = () => {
                     timezone: getPlatformResponse?.timezone,
                 });
             }
-
-            if (active && getEnvironmentsResponse) {
-                setData(getEnvironmentsResponse);
-            }
         })();
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    async function onSubmit(data) {
-        console.log(data);
-    }
+    // Submit user data
+    const onSubmit = useSubmitData(platform?.id);
 
     // Environment table
     const columns = useMemo(
         () => [
             {
                 Header: 'Environments',
-                accessor: (row) => [row.name],
+                accessor: (row) => [row.name, row.description],
                 Cell: (row) => <CustomEnvName row={row} onClick={() => history.push(`/settings/environment/${row.row.original.id}`)} />,
             },
             {
                 Header: 'Status',
                 accessor: 'status',
-                Cell: (row) => (row.value === 'active' ? <CustomChip label="Active" customColor="green" /> : <CustomChip label="Inactive" customColor="red" />),
+                Cell: (row) => (row.row.original.active === true ? <CustomChip label="Active" customColor="green" /> : <CustomChip label="Inactive" customColor="red" />),
             },
         ],
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -199,6 +198,7 @@ const Settings = () => {
 
             <Drawer anchor="right" open={isOpenAddEnv} onClose={() => setIsOpenAddEnv(!isOpenAddEnv)}>
                 <AddEnvironmentDrawer
+                    refreshData={environments}
                     handleClose={() => {
                         setIsOpenAddEnv(false);
                     }}
@@ -209,7 +209,7 @@ const Settings = () => {
 };
 
 const CustomEnvName = ({ row, onClick }) => {
-    const [title] = row.value;
+    const [title, description] = row.value;
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start" onClick={onClick}>
@@ -217,10 +217,60 @@ const CustomEnvName = ({ row, onClick }) => {
                 {title}
             </Typography>
             <Typography component="h5" variant="subtitle1">
-                Play pen to try out new concepts and innovate
+                {description || '-'}
             </Typography>
         </Grid>
     );
 };
 
 export default Settings;
+
+// --------- Custom hooks
+
+const useGetEnvData = (setData, enqueueSnackbar) => {
+    // GraphQL hook
+    const getEnvironmentsResponse = useGetEnvironments();
+
+    // Get user data
+    return async () => {
+        const envs = await getEnvironmentsResponse();
+
+        if (!envs.errors) {
+            setData(envs);
+        } else {
+            enqueueSnackbar('Unable to retrieve environments', { variant: 'error' });
+        }
+    };
+};
+
+const useSubmitData = (platform_id) => {
+    // GraphQL hook
+    const updatePlatform = useUpdatePlatform();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Update user info
+    return async function onSubmit(data) {
+        const allData = {
+            input: {
+                id: platform_id,
+                business_name: data.business_name,
+                timezone: data.timezone,
+                complete: true,
+            },
+        };
+
+        let response = await updatePlatform(allData);
+        if (response === 'success') {
+            closeSnackbar();
+            enqueueSnackbar(`Success`, { variant: 'success' });
+        } else {
+            if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            }
+            if (response.r === 'error') {
+                enqueueSnackbar(response.msg, { variant: 'error' });
+            }
+        }
+    };
+};

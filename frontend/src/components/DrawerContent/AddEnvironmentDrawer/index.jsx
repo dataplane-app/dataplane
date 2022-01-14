@@ -5,7 +5,7 @@ import { useSnackbar } from 'notistack';
 import { useForm } from 'react-hook-form';
 import { useAddEnvironment } from '../../../graphql/addEnvironment';
 
-const AddEnvironmentDrawer = ({ handleClose }) => {
+const AddEnvironmentDrawer = ({ handleClose, refreshData }) => {
     // Hooks
     const addEnvironment = useAddEnvironment();
 
@@ -16,6 +16,7 @@ const AddEnvironmentDrawer = ({ handleClose }) => {
         const allData = {
             input: {
                 name: data.name,
+                description: data.description,
             },
         };
 
@@ -23,6 +24,7 @@ const AddEnvironmentDrawer = ({ handleClose }) => {
         if (response && response.name) {
             handleClose();
             closeSnackbar();
+            refreshData();
             enqueueSnackbar(`Environment added: ${data.name}`, { variant: 'success' });
         } else {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
