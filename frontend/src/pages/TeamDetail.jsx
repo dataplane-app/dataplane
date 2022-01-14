@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useContext } from 'react';
 import Search from '../components/Search';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
-import { belongToAcessGroupsItems, belongToEnvironmentItems, expecificPermissionsItems } from '../utils/teamsMockData';
+import { belongToAcessGroupsItems, expecificPermissionsItems } from '../utils/teamsMockData';
 import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
@@ -23,6 +23,8 @@ import { useGetEnvironments } from '../graphql/getEnvironments';
 import { useGetUserEnvironments } from '../graphql/getUserEnvironments';
 import { useRemoveUserFromEnvironment } from '../graphql/removeUserToEnvironment';
 import { useAddUserToEnvironment } from '../graphql/addUserToEnvironment';
+import { useCreateAccessGroup } from '../graphql/createAccessGroup';
+// import { useGetAccessGroups } from '../graphql/getAccessGroups';
 import { EnvironmentContext } from '../App';
 
 const drawerWidth = 507;
@@ -61,6 +63,9 @@ export default function TeamDetail() {
     const [availablePermissions, setAvailablePermissions] = useState([]);
     const [selectedPermission, setSelectedPermission] = useState(null);
     const [userPermissions, setUserPermissions] = useState([]);
+    // const [accessGroup, setAccessGroup] = useState('');
+    // const [accessGroups, setAccessGroups] = useState([]);
+    // const [userAccessGroups, setUserAccessGroups] = useState([]);
     const [clear, setClear] = useState(1);
 
     // Sidebar states
@@ -72,13 +77,15 @@ export default function TeamDetail() {
     const getMeData = useGetMeData(setMeData);
     const getUserData = useGetUserData(setUser, reset);
     const getEnvironments = useGetEnvironmentsData(setAvailableEnvironments);
-    const getUserEnvironments = useGetUserEnvironmentsData(setUserEnvironments, user.user_id, globalEnvironment?.id);
+    const getUserEnvironments = useGetUserEnvironments_(setUserEnvironments, user.user_id, globalEnvironment?.id);
     const removeUserFromEnv = useRemoveUserFromEnv(getUserEnvironments);
     const addUserToEnv = useAddUserToEnv(getUserEnvironments);
     const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, globalEnvironment?.id);
     const getUserPermissions = useGetUserPermissions(setUserPermissions, user.user_id, globalEnvironment?.id);
     const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
     const deletePermission = useDeletePermission(getUserPermissions);
+    // const createAccessGroup = useCreateAccessGroup_(globalEnvironment?.id);
+    // const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
 
     // Get user data on load
     useEffect(() => {
@@ -97,7 +104,7 @@ export default function TeamDetail() {
         }
 
         // Get all available permissions when user environment and id are available and if empty
-        if (globalEnvironment && user && availablePermissions.length === 0) {
+        if (globalEnvironment && user) {
             getAvailablePermissions();
         }
 
@@ -111,8 +118,26 @@ export default function TeamDetail() {
             getEnvironments();
         }
 
+        // // Get all access groups when environment and id are available and if empty
+        // if (globalEnvironment && user.user_id && accessGroups.length === 0) {
+        //     getAccessGroups();
+        // }
+
+        // // Get access groups the user belongs when user environment and id are available and if empty
+        // if (globalEnvironment && user && userAccessGroups.length === 0) {
+        //     //
+        // }
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [globalEnvironment?.id, user.user_id]);
+
+    useEffect(() => {
+        // Update available permissions' ResourceIDs on environment change
+        setAvailablePermissions(
+            availablePermissions.map(({ a, ...permission }) => ({ ...permission, ResourceID: permission.Level === 'environment' ? globalEnvironment.id : permission.ResourceID }))
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [globalEnvironment?.id]);
 
     // Submit user details
     const onSubmit = useSubmitData(user.user_id);
@@ -232,7 +257,7 @@ export default function TeamDetail() {
                                     }}
                                     sx={{ minWidth: '280px' }}
                                     // Filter out users permissions from available permissions
-                                    options={availablePermissions.filter((row) => !userPermissions.map((a) => a.Resource).includes(row.Code)) || ''}
+                                    options={filterPermissionsDropdown(availablePermissions, userPermissions, globalEnvironment?.id)}
                                     getOptionLabel={(option) => option.Label}
                                     renderInput={(params) => (
                                         <TextField {...params} label="Available permissions" id="available_permissions" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
@@ -387,8 +412,27 @@ export default function TeamDetail() {
                             </Typography>
 
                             <Grid mt={2} display="flex" alignItems="center">
-                                <Search placeholder="Find access groups" onChange={() => null} />
-                                <Button variant="contained" color="primary" height="100%" sx={{ ml: 1 }}>
+                                <Search placeholder="Find access groups" />
+                                {/* <Autocomplete
+                                    disablePortal
+                                    id="available_access_groups"
+                                    key={clear} //Changing this value on submit clears the input field
+                                    onChange={(e) => setAccessGroup(e.target.value)}
+                                    sx={{ minWidth: '280px' }}
+                                    // Filter out available access groups from the ones user belongs
+                                    // options={availableEnvironments.filter((row) => !userEnvironments.map((a) => a.id).includes(row.id)) || ''}
+                                    options={['']}
+                                    // getOptionLabel={(option) => option.name}
+                                    renderInput={(params) => (
+                                        <TextField {...params} label="Find access groups" id="access_groups" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
+                                    )}
+                                /> */}
+                                <Button
+                                    // onClick={() => createAccessGroup(accessGroup)}
+                                    variant="contained"
+                                    color="primary"
+                                    height="100%"
+                                    sx={{ ml: 1 }}>
                                     Add
                                 </Button>
                             </Grid>
@@ -536,7 +580,7 @@ const useGetEnvironmentsData = (setAvailableEnvironments) => {
     };
 };
 
-const useGetUserEnvironmentsData = (setUserEnvironments, user_id, environment_id) => {
+const useGetUserEnvironments_ = (setUserEnvironments, user_id, environment_id) => {
     // GraphQL hook
     const getUserEnvironments = useGetUserEnvironments();
 
@@ -708,3 +752,72 @@ const useDeletePermission = (getUserPermissions) => {
         }
     };
 };
+
+const useCreateAccessGroup_ = (environmentID) => {
+    // GraphQL hook
+    const createAccessGroup = useCreateAccessGroup();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Create access group
+    return async (name) => {
+        const response = await createAccessGroup({ environmentID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't delete permission: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+        }
+    };
+};
+
+// const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
+//     // GraphQL hook
+//     const getAccessGroups = useGetAccessGroups();
+
+//     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+//     // Create access group
+//     return async () => {
+//         const response = await getAccessGroups({ environmentID, userID });
+
+//         if (response.r === 'error') {
+//             closeSnackbar();
+//             enqueueSnackbar("Can't delete permission: " + response.msg, {
+//                 variant: 'error',
+//             });
+//         } else if (response.errors) {
+//             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+//         } else {
+//             enqueueSnackbar('Success', { variant: 'success' });
+//             setAccessGroups(response);
+//         }
+//     };
+// };
+
+// ----------- Utility Functions
+// Filters permissions dropdown from selected permissions
+function filterPermissionsDropdown(availablePermissions, userPermissions, globalEnvironmentId) {
+    return [
+        // Filter platform permissions
+        ...availablePermissions.filter(
+            (row) =>
+                row.Level === 'platform' && //
+                !userPermissions.map((a) => a.Resource).includes(row.Code)
+        ),
+        // Filter environment permissions
+        ...availablePermissions.filter(
+            (row) =>
+                row.Level !== 'platform' &&
+                !userPermissions
+                    .filter((a) => a.ResourceID === globalEnvironmentId)
+                    .map((a) => a.Resource)
+                    .includes(row.Code)
+        ),
+    ];
+}
