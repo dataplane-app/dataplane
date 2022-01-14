@@ -1,5 +1,5 @@
 import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer, Autocomplete } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import Search from '../components/Search';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
@@ -10,6 +10,9 @@ import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import { useHistory } from 'react-router-dom';
 import { useMe } from '../graphql/me';
 import { useUpdateMe } from '../graphql/updateMe';
+import { useGetUserPermissions } from '../graphql/getUserPermissions';
+import { useGetUserEnvironments } from '../graphql/getUserEnvironments';
+import { EnvironmentContext } from '../App';
 
 import ct from 'countries-and-timezones';
 import { useForm } from 'react-hook-form';
@@ -24,6 +27,9 @@ const drawerStyles = {
 };
 
 const MemberDetail = () => {
+    // Context
+    const [globalEnvironment] = useContext(EnvironmentContext);
+
     // Router
     let history = useHistory();
 
@@ -40,13 +46,32 @@ const MemberDetail = () => {
     const [user, setUser] = useState({});
     const [isActive, setIsActive] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [userPermissions, setUserPermissions] = useState([]);
+    const [userEnvironments, setUserEnvironments] = useState([]);
 
     // Sidebar states
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
 
+    // Custom Hooks
+    const getData = useGetData(setUser, reset, setIsActive, setIsAdmin);
+    const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
+    const getUserEnvironments = useGetUserEnvironments_(setUserEnvironments, user.user_id, globalEnvironment?.id);
+
     // Get me data on load
-    useGetData(setUser, reset, setIsActive, setIsAdmin);
+    useEffect(() => {
+        getData();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Data to be retrieved after the user data is retrieved
+    useEffect(() => {
+        getUserPermissions();
+        getUserEnvironments();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [globalEnvironment?.id, user.user_id]);
 
     // Submit me data
     const onSubmit = useSubmitData();
@@ -133,32 +158,35 @@ const MemberDetail = () => {
                                     Platform permissions
                                 </Typography>
                             </Box>
-
                             <Box mt={2}>
-                                {platformItems.map((plat) => (
-                                    <Grid display="flex" alignItems="center" key={plat.id} mt={1.5} mb={1.5}>
-                                        <Typography variant="subtitle2" lineHeight="15.23px">
-                                            {plat.name}
-                                        </Typography>
-                                    </Grid>
-                                ))}
+                                {userPermissions
+                                    ?.filter((permission) => permission.Level === 'platform')
+                                    .map((permission) => (
+                                        <Grid display="flex" alignItems="center" key={permission.ID} mt={1.5} mb={1.5}>
+                                            <Typography variant="subtitle2" lineHeight="15.23px">
+                                                {permission.Label}
+                                            </Typography>
+                                        </Grid>
+                                    ))}
                             </Box>
                             <Box mt="2.31rem">
                                 <Typography component="h3" variant="h3" color="text.primary">
                                     Environment permissions
                                 </Typography>
                                 <Typography variant="subtitle2" mt=".20rem">
-                                    Environment: Production
+                                    Environment: {globalEnvironment?.name}
                                 </Typography>
 
                                 <Box mt={2}>
-                                    {environmentPermissions.map((env) => (
-                                        <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
-                                            <Typography variant="subtitle2" lineHeight="15.23px">
-                                                {env.name}
-                                            </Typography>
-                                        </Grid>
-                                    ))}
+                                    {userPermissions
+                                        ?.filter((permission) => permission.Level === 'environment' && permission.ResourceID === globalEnvironment?.id)
+                                        .map((permission) => (
+                                            <Grid display="flex" alignItems="center" key={permission.ID} mt={1.5} mb={1.5}>
+                                                <Typography variant="subtitle2" lineHeight="15.23px">
+                                                    {permission.Label}
+                                                </Typography>
+                                            </Grid>
+                                        ))}
                                 </Box>
                             </Box>
 
@@ -188,7 +216,7 @@ const MemberDetail = () => {
                         </Typography>
 
                         <Box mt="1.31rem">
-                            {belongToEnvironmentItems.map((env) => (
+                            {userEnvironments.map((env) => (
                                 <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
                                     <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
                                         {env.name}
@@ -237,46 +265,45 @@ export default MemberDetail;
 // --------- Custom hooks
 
 const useGetData = (setUser, reset, setIsActive, setIsAdmin) => {
+    // GraphQL hook
     const getMe = useMe();
+
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get me data on load
-    useEffect(() => {
-        (async () => {
-            const response = await getMe();
+    return async () => {
+        const response = await getMe();
 
-            if (response.r === 'error') {
-                closeSnackbar();
-                enqueueSnackbar("Can't get user data: " + response.msg, {
-                    variant: 'error',
-                });
-            } else if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-            } else {
-                setUser(response);
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get user data: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setUser(response);
 
-                // Reset form default values to incoming me data
-                reset({
-                    first_name: response.first_name,
-                    last_name: response.last_name,
-                    email: response.email,
-                    job_title: response.job_title,
-                    timezone: response.timezone,
-                });
+            // Reset form default values to incoming me data
+            reset({
+                first_name: response.first_name,
+                last_name: response.last_name,
+                email: response.email,
+                job_title: response.job_title,
+                timezone: response.timezone,
+            });
 
-                // Check if user is active
-                if (response.status !== 'active') {
-                    setIsActive(false);
-                }
-
-                // Check if user is admin
-                if (response.user_type === 'admin') {
-                    setIsAdmin(true);
-                }
+            // Check if user is active
+            if (response.status !== 'active') {
+                setIsActive(false);
             }
-        })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+
+            // Check if user is admin
+            if (response.user_type === 'admin') {
+                setIsAdmin(true);
+            }
+        }
+    };
 };
 
 const useSubmitData = () => {
@@ -307,6 +334,54 @@ const useSubmitData = () => {
         } else {
             closeSnackbar();
             enqueueSnackbar(`Success`, { variant: 'success' });
+        }
+    };
+};
+
+const useGetUserPermissions_ = (setUserPermissions, userID, environmentID) => {
+    // GraphQL hook
+    const getUserPermissions = useGetUserPermissions();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get user permissions
+    return async () => {
+        if (userID && environmentID) {
+            const response = await getUserPermissions({ userID, environmentID });
+
+            if (response === null) {
+                setUserPermissions([]);
+            } else if (response.r === 'error') {
+                closeSnackbar();
+                enqueueSnackbar("Can't user permissions: " + response.msg, { variant: 'error' });
+            } else if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message + ': get user permissions', { variant: 'error' }));
+            } else {
+                setUserPermissions(response);
+            }
+        }
+    };
+};
+
+const useGetUserEnvironments_ = (setUserEnvironments, user_id, environment_id) => {
+    // GraphQL hook
+    const getUserEnvironments = useGetUserEnvironments();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get environments on load
+    return async () => {
+        if (user_id && environment_id) {
+            const response = await getUserEnvironments({ user_id, environment_id });
+
+            if (response.r === 'error') {
+                closeSnackbar();
+                enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+            } else if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            } else {
+                setUserEnvironments(response);
+            }
         }
     };
 };

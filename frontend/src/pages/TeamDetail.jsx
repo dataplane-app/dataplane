@@ -16,7 +16,7 @@ import { useGetUser } from '../graphql/getUser';
 import { useAvailablePermissions } from '../graphql/availablePermissions';
 import { useUpdateUser } from '../graphql/updateUser';
 import { useMe } from '../graphql/me';
-import { useUserPermissions } from '../graphql/getUserPermissions';
+import { useGetUserPermissions } from '../graphql/getUserPermissions';
 import { useUpdatePermissionToUser } from '../graphql/updatePermissionToUser';
 import { useDeletePermissionToUser } from '../graphql/deletePermissionToUser';
 import { useGetEnvironments } from '../graphql/getEnvironments';
@@ -81,7 +81,7 @@ export default function TeamDetail() {
     const removeUserFromEnv = useRemoveUserFromEnv(getUserEnvironments);
     const addUserToEnv = useAddUserToEnv(getUserEnvironments);
     const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, globalEnvironment?.id);
-    const getUserPermissions = useGetUserPermissions(setUserPermissions, user.user_id, globalEnvironment?.id);
+    const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
     const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
     const deletePermission = useDeletePermission(getUserPermissions);
     // const createAccessGroup = useCreateAccessGroup_(globalEnvironment?.id);
@@ -666,9 +666,9 @@ const useGetAvailablePermissions = (setAvailablePermissions, environmentID) => {
     };
 };
 
-const useGetUserPermissions = (setUserPermissions, userID, environmentID) => {
+const useGetUserPermissions_ = (setUserPermissions, userID, environmentID) => {
     // GraphQL hook
-    const getUserPermissions = useUserPermissions();
+    const getUserPermissions = useGetUserPermissions();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 

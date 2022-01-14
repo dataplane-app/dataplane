@@ -20,7 +20,7 @@ const query = gql`
     }
 `;
 
-export const useUserPermissions = () => {
+export const useGetUserPermissions = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
