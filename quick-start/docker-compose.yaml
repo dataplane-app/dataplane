@@ -3,14 +3,12 @@ version: '3'
 services:
   postgres:
     image: timescale/timescaledb:2.5.1-pg14
-    ports:
-      - 5435:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "Hello123!"
       POSTGRES_DB: "dataplane"
     volumes:
-      - ../pgdata:/var/lib/postgresql/data
+      - dataplane-db-volume:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 60s
@@ -18,14 +16,9 @@ services:
     restart: always
 
   mainapp:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    command: tail -f /dev/null
+    image: dataplane/dataplane:dev-0.0.3
     ports:
-      - 9000:9000
-    volumes:
-      - ../:/appdev
+      - 9010:9010
     healthcheck:
       test:
         [
@@ -38,7 +31,7 @@ services:
       timeout: 10s
       retries: 5
     environment:
-      env: "local"
+      env: "quickstart"
       basepath: "/dataplane"
       secret_db_host: postgres
       secret_db_user: postgres
@@ -46,10 +39,15 @@ services:
       secret_db_ssl: "disable"
       secret_db_port: "5432"
       secret_db_database: "dataplane"
-      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+      secret_jwt_secret: "117943e9-9d44-49ad-aa4e-9c64004c8993"
       database: "timescaledb"
+      dataplane_port: "9010"
+      mode: "development"
       debug: "true"
       dbdebug: "false"
     depends_on:
       postgres:
         condition: service_healthy
+
+volumes:
+  dataplane-db-volume:

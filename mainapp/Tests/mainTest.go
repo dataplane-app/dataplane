@@ -28,7 +28,7 @@ response: {"r": "OK", "msg": "Permission created", "count": 1}
 func MockingBird() string {
 
 	// create a listener with the desired port.
-	testutils.App = routes.Setup()
+	testutils.App = routes.Setup("9000")
 	err := testutils.App.Listen("0.0.0.0:9000")
 	if err != nil {
 		log.Fatal(err)
@@ -45,7 +45,7 @@ func main() {
 	testutils.DbInstance = "hello"
 
 	// testutils.App = routes.Setup()
-	app := routes.Setup()
+	app := routes.Setup("9000")
 	go func() {
 		log.Println("Listening on 9000")
 		app.Listen("0.0.0.0:9000")

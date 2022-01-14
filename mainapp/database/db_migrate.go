@@ -78,7 +78,7 @@ func Migrate() {
 	dbConn.Clauses(clause.OnConflict{
 		UpdateAll: true,
 	}).Create(&models.ResourceType)
-	log.Println("country default pricing loaded")
+	log.Println("🍄 Permission types loaded")
 
 	hypertable := "SELECT create_hypertable('logs_platform', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
 
