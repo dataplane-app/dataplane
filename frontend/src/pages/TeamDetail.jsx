@@ -25,6 +25,7 @@ import { useRemoveUserFromEnvironment } from '../graphql/removeUserToEnvironment
 import { useAddUserToEnvironment } from '../graphql/addUserToEnvironment';
 import { useCreateAccessGroup } from '../graphql/createAccessGroup';
 import { useGetAccessGroups } from '../graphql/getAccessGroups';
+import { useUpdateUserToAccessGroup } from '../graphql/updateUserToAccessGroup';
 import { EnvironmentContext } from '../App';
 
 const drawerWidth = 507;
@@ -86,6 +87,7 @@ export default function TeamDetail() {
     const deletePermission = useDeletePermission(getUserPermissions);
     const createAccessGroup = useCreateAccessGroup_(globalEnvironment?.id);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
+    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id);
 
     // Get user data on load
     useEffect(() => {
@@ -417,7 +419,10 @@ export default function TeamDetail() {
                                     disablePortal
                                     id="available_access_groups"
                                     key={clear} //Changing this value on submit clears the input field
-                                    onChange={(e) => setAccessGroup(e.target.value)}
+                                    onChange={(event, newValue) => {
+                                        setAccessGroup(newValue);
+                                        // alert(JSON.stringify(newValue));
+                                    }}
                                     sx={{ minWidth: '280px' }}
                                     // Filter out available access groups from the ones user belongs
                                     // options={availableEnvironments.filter((row) => !userEnvironments.map((a) => a.id).includes(row.id)) || ''}
@@ -428,7 +433,7 @@ export default function TeamDetail() {
                                     )}
                                 />
                                 <Button
-                                    // onClick={() => createAccessGroup(accessGroup)}
+                                    onClick={() => updateUserToAccessGroup(accessGroup.AccessGroupID)} //
                                     variant="contained"
                                     color="primary"
                                     height="100%"
@@ -795,6 +800,29 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setAccessGroups(response);
+        }
+    };
+};
+
+const useUpdateUserToAccessGroup_ = (environmentID, user_id) => {
+    // GraphQL hook
+    const updateUserToAccessGroup = useUpdateUserToAccessGroup();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Add user to group
+    return async (access_group_id) => {
+        const response = await updateUserToAccessGroup({ environmentID, user_id, access_group_id });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't add user to access group: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
         }
     };
 };
