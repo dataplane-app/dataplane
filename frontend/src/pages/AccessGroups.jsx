@@ -49,7 +49,7 @@ const AccessGroups = () => {
                 Header: 'Access group',
                 // accessor: (row) => [row.name, row.description],
                 accessor: (row) => row.Name,
-                Cell: (row) => <CustomAccessGroup row={row} onClick={() => history.push(`/teams/${row.row.original.user_id}`)} />,
+                Cell: (row) => <CustomAccessGroup row={row} onClick={() => history.push(`/teams/access/${row.row.original.AccessGroupID}`)} />,
             },
             {
                 Header: 'Status',

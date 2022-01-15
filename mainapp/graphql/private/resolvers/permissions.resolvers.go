@@ -500,6 +500,35 @@ func (r *queryResolver) GetAccessGroups(ctx context.Context, userID string, envi
 	return e, nil
 }
 
+func (r *queryResolver) GetAccessGroup(ctx context.Context, userID string, environmentID string, accessGroupID string) (*models.PermissionsAccessGroups, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_permissions", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	e := &models.PermissionsAccessGroups{}
+
+	err := database.DBConn.Where("access_group_id = ?", accessGroupID).First(&e).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive users database error.")
+	}
+	return e, nil
+}
+
 func (r *queryResolver) GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error) {
 	panic(fmt.Errorf("not implemented"))
 }

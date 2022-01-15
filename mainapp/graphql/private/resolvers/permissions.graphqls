@@ -59,9 +59,15 @@ extend type Query {
     """
     Retrieve access groups for an environment.
     + **Route**: Private
-    + **Permissions**:  admin_platform, admin_environment, environment_permissions, 
+??? + **Permissions**:  admin_platform, admin_environment, environment_permissions, 
     """
     getAccessGroups(userID: String!, environmentID: String!): [AccessGroups]
+    """
+    Retrieve an access groups for an environment.
+    + **Route**: Private
+??? + **Permissions**:  admin_platform, admin_environment, environment_permissions, 
+    """
+    getAccessGroup(userID: String!, environmentID: String!, access_group_id: String!): AccessGroups
     """
 	Retrieve user's access groups for an environment.
 	+ **Route**: Private
