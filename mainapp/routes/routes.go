@@ -21,7 +21,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
-func Setup() *fiber.App {
+func Setup(port string) *fiber.App {
 
 	app := fiber.New()
 
@@ -131,7 +131,7 @@ func Setup() *fiber.App {
 	// Do something with response
 	log.Println("🐆 Start time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
 
-	log.Println("🌍 Visit dashboard at:", "http://localhost:9000/webapp/")
+	log.Println("🌍 Visit dashboard at:", "http://localhost:"+port+"/webapp/")
 
 	return app
 }

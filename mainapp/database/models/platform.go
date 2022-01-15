@@ -27,6 +27,7 @@ func (Environment) TableName() string {
 type Environment struct {
 	ID         string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"id"`
 	Name       string     `gorm:"index:idx_env_name,unique;" json:"name"`
+	Description string		`json:"description"`
 	PlatformID string     `json:"platform_id"`
 	Active     bool       `json:"active"`
 	CreatedAt  time.Time  `json:"created_at"`

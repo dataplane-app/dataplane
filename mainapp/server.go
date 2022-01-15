@@ -3,11 +3,17 @@ package main
 import (
 	"dataplane/routes"
 	"log"
+	"os"
 )
 
 func main() {
 
-	app := routes.Setup()
+	port := os.Getenv("dataplane_port")
+	if port == "" {
+		port = "9000"
+	}
 
-	log.Fatal(app.Listen("0.0.0.0:9000"))
+	app := routes.Setup(port)
+
+	log.Fatal(app.Listen("0.0.0.0:" + port))
 }
