@@ -1,13 +1,26 @@
 import { Box, Grid, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Details from './Details';
 import Drawers from './Drawers';
 import Permissions from './Permissions';
 import Members from './Members';
+import { useGlobalMeState } from '../../components/Navbar';
+import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 
 const TeamGroup = () => {
-    const [isActive] = useState(true);
-    const [isAdmin] = useState(true);
+    // Global user states
+    const MeData = useGlobalMeState();
+    const EnvironmentID = useGlobalEnvironmentState();
+
+    // Local state
+    const [isGlobalDataLoaded, setIsGlobalDataLoaded] = useState(false);
+
+    // Check if global data is loaded
+    useEffect(() => {
+        if (EnvironmentID.get() && MeData.get()) {
+            setIsGlobalDataLoaded(true);
+        }
+    }, [EnvironmentID, MeData]);
 
     return (
         <Box className="page" width="83%">
@@ -17,18 +30,20 @@ const TeamGroup = () => {
                 </Typography>
             </Grid>
 
-            <Grid container mt="2.56rem" alignItems="flex-start" justifyContent="space-between">
-                <Grid item sx={{ flex: 1 }}>
-                    <Details />
-                    <Drawers />
+            {isGlobalDataLoaded ? (
+                <Grid container mt="2.56rem" alignItems="flex-start" justifyContent="space-between">
+                    <Grid item sx={{ flex: 1 }}>
+                        <Details userId={MeData.user_id.get()} environmentId={EnvironmentID.get()} />
+                        <Drawers />
+                    </Grid>
+                    <Grid item sx={{ flex: 2.2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                        <Permissions />
+                    </Grid>
+                    <Grid item sx={{ flex: 1 }}>
+                        <Members />
+                    </Grid>
                 </Grid>
-                <Grid item sx={{ flex: 2.2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                    <Permissions />
-                </Grid>
-                <Grid item sx={{ flex: 1 }}>
-                    <Members />
-                </Grid>
-            </Grid>
+            ) : null}
         </Box>
     );
 };
