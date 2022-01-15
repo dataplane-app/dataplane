@@ -1,4 +1,4 @@
-import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer, Autocomplete } from '@mui/material';
+import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer, Autocomplete, alertTitleClasses } from '@mui/material';
 import { useEffect, useState, useRef, useContext } from 'react';
 import Search from '../components/Search';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -279,62 +279,71 @@ export default function TeamDetail() {
                                 </Button>
                             </Grid>
 
-                            <Box mt={4}>
-                                <Typography component="h3" variant="h3" color="text.primary">
-                                    Platform
-                                </Typography>
-                            </Box>
+                            {/* Check if there are any permissions. If not, hide the box */}
+                            {userPermissions.filter((plat) => plat.Level === 'platform').length ? (
+                                <Box mt={4}>
+                                    <Box>
+                                        <Typography component="h3" variant="h3" color="text.primary">
+                                            Platform
+                                        </Typography>
+                                    </Box>
 
-                            <Box mt={2}>
-                                {userPermissions
-                                    .filter((plat) => plat.Resource.includes('platform'))
-                                    .map((plat) => (
-                                        <Grid display="flex" alignItems="center" key={plat.Label} mt={1.5} mb={1.5}>
-                                            <Box
-                                                onClick={() => !(user.user_id === meData.user_id && plat.Label === 'Admin') && deletePermission(plat)}
-                                                component={FontAwesomeIcon}
-                                                sx={{
-                                                    fontSize: '17px',
-                                                    mr: '7px',
-                                                    color: user.user_id === meData.user_id && plat.Label === 'Admin' ? 'rgba(0, 0, 0, 0.26)' : 'rgba(248, 0, 0, 1)',
-                                                    cursor: !(user.user_id === meData.user_id && plat.Label === 'Admin') && 'pointer',
-                                                }}
-                                                icon={faTrashAlt}
-                                            />
-                                            <Typography variant="subtitle2" lineHeight="15.23px">
-                                                {plat.Label}
-                                            </Typography>
-                                        </Grid>
-                                    ))}
-                            </Box>
-                            <Box mt="2.31rem">
-                                <Typography component="h3" variant="h3" color="text.primary">
-                                    Environment permissions
-                                </Typography>
-                                <Typography variant="subtitle2" mt=".20rem">
-                                    Environment: {globalEnvironment?.name}
-                                </Typography>
-
-                                <Box mt={2}>
-                                    {userPermissions
-                                        .filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === globalEnvironment.id)
-                                        .map((env) => (
-                                            <Grid display="flex" alignItems="center" key={env.Label} mt={1.5} mb={1.5}>
-                                                <Box
-                                                    onClick={() => deletePermission(env)}
-                                                    component={FontAwesomeIcon}
-                                                    sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
-                                                    icon={faTrashAlt}
-                                                />
-                                                <Typography variant="subtitle2" lineHeight="15.23px">
-                                                    {env.Label}
-                                                </Typography>
-                                            </Grid>
-                                        ))}
+                                    <Box mt={2}>
+                                        {userPermissions
+                                            .filter((plat) => plat.Resource.includes('platform'))
+                                            .map((plat) => (
+                                                <Grid display="flex" alignItems="center" key={plat.Label} mt={1.5} mb={1.5}>
+                                                    <Box
+                                                        onClick={() => !(user.user_id === meData.user_id && plat.Label === 'Admin') && deletePermission(plat)}
+                                                        component={FontAwesomeIcon}
+                                                        sx={{
+                                                            fontSize: '17px',
+                                                            mr: '7px',
+                                                            color: user.user_id === meData.user_id && plat.Label === 'Admin' ? 'rgba(0, 0, 0, 0.26)' : 'rgba(248, 0, 0, 1)',
+                                                            cursor: !(user.user_id === meData.user_id && plat.Label === 'Admin') && 'pointer',
+                                                        }}
+                                                        icon={faTrashAlt}
+                                                    />
+                                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                                        {plat.Label}
+                                                    </Typography>
+                                                </Grid>
+                                            ))}
+                                    </Box>
                                 </Box>
-                            </Box>
+                            ) : null}
 
-                            <Box mt="3.5rem">
+                            {/* Check if there are any permissions. If not, hide the box */}
+                            {userPermissions.filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === globalEnvironment.id).length ? (
+                                <Box mt="2.31rem">
+                                    <Typography component="h3" variant="h3" color="text.primary">
+                                        Environment permissions
+                                    </Typography>
+                                    <Typography variant="subtitle2" mt=".20rem">
+                                        Environment: {globalEnvironment?.name}
+                                    </Typography>
+
+                                    <Box mt={2}>
+                                        {userPermissions
+                                            .filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === globalEnvironment.id)
+                                            .map((env) => (
+                                                <Grid display="flex" alignItems="center" key={env.Label} mt={1.5} mb={1.5}>
+                                                    <Box
+                                                        onClick={() => deletePermission(env)}
+                                                        component={FontAwesomeIcon}
+                                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                                        icon={faTrashAlt}
+                                                    />
+                                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                                        {env.Label}
+                                                    </Typography>
+                                                </Grid>
+                                            ))}
+                                    </Box>
+                                </Box>
+                            ) : null}
+
+                            {/* <Box mt="3.5rem">
                                 <Typography component="h3" variant="h3" color="text.primary">
                                     Specific permissions
                                 </Typography>
@@ -352,7 +361,7 @@ export default function TeamDetail() {
                                         </Grid>
                                     ))}
                                 </Box>
-                            </Box>
+                            </Box> */}
                         </Box>
                     </Grid>
                     <Grid item sx={{ flex: 1 }}>
