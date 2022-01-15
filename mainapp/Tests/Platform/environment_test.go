@@ -57,7 +57,9 @@ func TestEnvironment(t *testing.T) {
 	// -------- Get environments  -------------
 	getEnvironment := `{
 		getEnvironments{
+			id
 			name
+			description
 		}
 	}`
 
@@ -78,10 +80,12 @@ func TestEnvironment(t *testing.T) {
 		addEnvironment(
 			input: {
 				name: "Staging_add` + randomid1 + `",
+				description: "Description Staging_add` + randomid1 + `",
 			}
 		) {
 			id
 			name
+			description
 		}
 	}`
 	addEnvResponse, httpResponse := testutils.GraphQLRequestPrivate(addEnvironment, accessToken, "{}", graphQLUrlPrivate, t)
@@ -100,13 +104,15 @@ func TestEnvironment(t *testing.T) {
 
 	randomid2, _ := gonanoid.New()
 	renameEnvironment := `mutation {
-			renameEnvironment(
+			updateEnvironment(
 				input: {
 					id: "` + environmenteditID + `",
 					name: "` + testutils.TestEnvironment + randomid2 + `",  
+					description: "Description ` + testutils.TestEnvironment + randomid2 + `",
 				}
 			) {
 				name
+				description
 			}
 		}`
 	editEnvResponse, httpResponse := testutils.GraphQLRequestPrivate(renameEnvironment, accessToken, "{}", graphQLUrlPrivate, t)
@@ -118,5 +124,39 @@ func TestEnvironment(t *testing.T) {
 	}
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add Environment 200 status code")
+
+	// -------- Deactivate environment  -------------
+	deactivateEnvironment := `mutation {
+		updateDeactivateEnvironment(
+			environment_id: "` + environmenteditID + `"
+		)
+	}`
+
+	deactivateEnvResponse, httpResponse := testutils.GraphQLRequestPrivate(deactivateEnvironment, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(deactivateEnvResponse))
+
+	if strings.Contains(string(deactivateEnvResponse), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add Environment 200 status code")
+
+	// -------- Delete environment  -------------
+	deleteEnvironment := `mutation {
+		updateDeleteEnvironment(
+			environment_id: "` + environmenteditID + `"
+		)
+	}`
+
+	deleteEnvResponse, httpResponse := testutils.GraphQLRequestPrivate(deleteEnvironment, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(deleteEnvResponse))
+
+	if strings.Contains(string(deleteEnvResponse), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete Environment 200 status code")
 
 }

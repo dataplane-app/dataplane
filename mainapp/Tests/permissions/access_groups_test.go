@@ -80,7 +80,7 @@ func TestAccessGroups(t *testing.T) {
 	mutation = `mutation {
 		updatePermissionToAccessGroup(
 				environmentID: "` + envID + `",
-				resource: "specific_pipeline",
+				resource: "environment_secrets",
 				resourceID: "test-` + uuid.NewString() + ` ",
 				access_group_id: "` + accessgroup + `",
 				access: "write",

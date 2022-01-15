@@ -3,7 +3,8 @@
 package privategraphql
 
 type AddEnvironmentInput struct {
-	Name string `json:"name"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
 }
 
 type AddPreferencesInput struct {
@@ -49,9 +50,10 @@ type Preferences struct {
 	Value      string `json:"value"`
 }
 
-type RenameEnvironment struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type UpdateEnvironment struct {
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
 }
 
 type UpdateUsersInput struct {

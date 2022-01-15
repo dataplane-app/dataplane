@@ -1,24 +1,21 @@
 import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer, Autocomplete } from '@mui/material';
-import { useEffect,useState } from "react";
-import Search from "../components/Search";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
-import {
-    belongToAcessGroupsItems,
-    belongToEnvironmentItems,
-    environmentPermissions,
-    expecificPermissionsItems,
-    platformItems,
-} from "../utils/teamsMockData";
+import { useEffect, useState, useContext } from 'react';
+import Search from '../components/Search';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
+import { belongToAcessGroupsItems, belongToEnvironmentItems, environmentPermissions, expecificPermissionsItems, platformItems } from '../utils/teamsMockData';
 import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
-import {useHistory} from "react-router-dom";
+import { useHistory } from 'react-router-dom';
 import { useMe } from '../graphql/me';
-import { useUpdateMe } from "../graphql/updateMe";
+import { useUpdateMe } from '../graphql/updateMe';
+import { useGetUserPermissions } from '../graphql/getUserPermissions';
+import { useGetUserEnvironments } from '../graphql/getUserEnvironments';
+import { EnvironmentContext } from '../App';
 
-import ct from "countries-and-timezones";
-import { useForm } from "react-hook-form";
+import ct from 'countries-and-timezones';
+import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
 
 const drawerWidth = 507;
@@ -26,214 +23,239 @@ const drawerStyles = {
     width: drawerWidth,
     flexShrink: 0,
     zIndex: 9998,
-    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box'},
-}
+    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+};
 
 const MemberDetail = () => {
+    // Context
+    const [globalEnvironment] = useContext(EnvironmentContext);
+
     // Router
     let history = useHistory();
 
     // React Hook form
-    const { register, handleSubmit, watch, reset, formState: { errors } } = useForm();
+    const {
+        register,
+        handleSubmit,
+        watch,
+        reset,
+        formState: { errors },
+    } = useForm();
 
     // Member states
-    const [user, setUser] = useState({})
+    const [user, setUser] = useState({});
     const [isActive, setIsActive] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [userPermissions, setUserPermissions] = useState([]);
+    const [userEnvironments, setUserEnvironments] = useState([]);
 
     // Sidebar states
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
 
+    // Custom Hooks
+    const getData = useGetData(setUser, reset, setIsActive, setIsAdmin);
+    const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
+    const getUserEnvironments = useGetUserEnvironments_(setUserEnvironments, user.user_id, globalEnvironment?.id);
+
     // Get me data on load
-    useGetData(setUser, reset, setIsActive, setIsAdmin)
-    
+    useEffect(() => {
+        getData();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Data to be retrieved after the user data is retrieved
+    useEffect(() => {
+        getUserPermissions();
+        getUserEnvironments();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [globalEnvironment?.id, user.user_id]);
+
     // Submit me data
-    const onSubmit = useSubmitData()
+    const onSubmit = useSubmitData();
 
     return (
         <>
-        <Box className="page" width="83%">
-            <Grid container alignItems="center">
-                <Typography component="h2" variant="h2" color="text.primary">
-                    My Account
-                </Typography>
-
-                <Grid item ml={4}>
-                    {isActive ? <CustomChip label="Active" customColor="green" margin={1} /> : <CustomChip label="Inactive" customColor="red" margin={1} />}
-                    {isAdmin && <CustomChip label="Admin" customColor="orange"/>}
-                </Grid>
-            </Grid>
-
-            <Grid container mt={5} alignItems="flex-start" justifyContent="space-between">
-                <Grid item sx={{ flex: 1 }}>
-                    <Typography component="h3" variant="h3" color="text.primary">
-                        Details
+            <Box className="page" width="83%">
+                <Grid container alignItems="center">
+                    <Typography component="h2" variant="h2" color="text.primary">
+                        My Account
                     </Typography>
 
-                <form onSubmit={handleSubmit(onSubmit)}>
+                    <Grid item ml={4}>
+                        {isActive ? <CustomChip label="Active" customColor="green" margin={1} /> : <CustomChip label="Inactive" customColor="red" margin={1} />}
+                        {isAdmin && <CustomChip label="Admin" customColor="orange" />}
+                    </Grid>
+                </Grid>
 
-                    {user.email ? 
-                    <Box mt={2} display="grid" flexDirection="row">
-                        <TextField
-                            label="First name"
-                            id="first_name"
-                            size="small"
-                            required
-                            sx={{ mb: ".45rem" }}
-                            {...register("first_name", { required: true })}
-                        />
-
-                        <TextField
-                            label="Last name"
-                            id="last_name"
-                            size="small"
-                            required
-                            sx={{ margin: ".45rem 0" }}
-                            {...register("last_name", { required: true })}
-                        />
-
-                        <TextField
-                            label="Email"
-                            type="email"
-                            id="email"
-                            size="small"
-                            required
-                            sx={{ margin: ".45rem 0" }}
-                            {...register("email", { required: true })}
-                        />
-
-                        <TextField
-                            label="Job title"
-                            id="job_title"
-                            size="small"
-                            required
-                            sx={{ margin: ".45rem 0" }}
-                            {...register("job_title", { required: true })}
-                        />
-
-                        <Autocomplete
-                        disablePortal
-                        value={user.timezone}
-                        id="combo-box-demo"
-                        onChange={(event, newValue) => {
-                          setUser({...user, timezone: newValue});
-                        }}
-                        options={Object.keys(ct.getAllTimezones())}
-                        renderInput={(params) => <TextField {...params} label="Timezone" id="timezone" size="small" sx={{ mt: 2, fontSize: ".75rem", display: "flex"}} {...register("timezone")} />}
-                        />
-
-                        <Button type="submit" variant="contained" color="primary" sx={{ width: "100%", mt: "1rem" }}>Save</Button>
-                    </Box>
-                    : null}
-
-                </form>
-
-                    <Box sx={{ margin: "2.45rem 0", borderTop: 1, borderColor: "divider" }}></Box>
-
-                    <Box>
+                <Grid container mt={5} alignItems="flex-start" justifyContent="space-between">
+                    <Grid item sx={{ flex: 1 }}>
                         <Typography component="h3" variant="h3" color="text.primary">
-                            Control
+                            Details
                         </Typography>
 
-                        <Button onClick={() => setIsOpenPassword(true)} size="small" variant="outlined" color="error" sx={{ fontWeight: "700", width: "100%", mt: ".78rem", fontSize: ".81rem", border: 2, "&:hover": { border: 2 } }}>Change password</Button>
-                    </Box>
+                        <form onSubmit={handleSubmit(onSubmit)}>
+                            {user.email ? (
+                                <Box mt={2} display="grid" flexDirection="row">
+                                    <TextField label="First name" id="first_name" size="small" required sx={{ mb: '.45rem' }} {...register('first_name', { required: true })} />
 
-                </Grid>
-                <Grid item sx={{ flex: 2.2, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
-                    <Box>
+                                    <TextField label="Last name" id="last_name" size="small" required sx={{ margin: '.45rem 0' }} {...register('last_name', { required: true })} />
+
+                                    <TextField label="Email" type="email" id="email" size="small" required sx={{ margin: '.45rem 0' }} {...register('email', { required: true })} />
+
+                                    <TextField label="Job title" id="job_title" size="small" required sx={{ margin: '.45rem 0' }} {...register('job_title', { required: true })} />
+
+                                    <Autocomplete
+                                        disablePortal
+                                        value={user.timezone}
+                                        id="combo-box-demo"
+                                        onChange={(event, newValue) => {
+                                            setUser({ ...user, timezone: newValue });
+                                        }}
+                                        options={Object.keys(ct.getAllTimezones())}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label="Timezone"
+                                                id="timezone"
+                                                size="small"
+                                                sx={{ mt: 2, fontSize: '.75rem', display: 'flex' }}
+                                                {...register('timezone')}
+                                            />
+                                        )}
+                                    />
+
+                                    <Button type="submit" variant="contained" color="primary" sx={{ width: '100%', mt: '1rem' }}>
+                                        Save
+                                    </Button>
+                                </Box>
+                            ) : null}
+                        </form>
+
+                        <Box sx={{ margin: '2.45rem 0', borderTop: 1, borderColor: 'divider' }}></Box>
+
                         <Box>
                             <Typography component="h3" variant="h3" color="text.primary">
-                                Platform permissions
+                                Control
                             </Typography>
-                        </Box>
 
-                        <Box mt={2}>
-                            {
-                                platformItems.map(plat => (
-                                    <Grid display="flex" alignItems="center" key={plat.id} mt={1.5} mb={1.5}>
-                                        <Typography variant="subtitle2" lineHeight="15.23px">{plat.name}</Typography>
-                                    </Grid>
-                                ))
-                            }
+                            <Button
+                                onClick={() => setIsOpenPassword(true)}
+                                size="small"
+                                variant="outlined"
+                                color="error"
+                                sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                                Change password
+                            </Button>
                         </Box>
-                        <Box mt="2.31rem">
-                            <Typography component="h3" variant="h3" color="text.primary">
-                                Environment permissions
-                            </Typography>
-                            <Typography variant="subtitle2" mt=".20rem">Environment: Production</Typography>
-
-                            <Box mt={2}>
-                                {
-                                    environmentPermissions.map(env => (
-                                        <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
-                                            <Typography variant="subtitle2" lineHeight="15.23px">{env.name}</Typography>
-                                        </Grid>
-                                    ))
-                                }
+                    </Grid>
+                    <Grid item sx={{ flex: 2.2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                        <Box>
+                            <Box>
+                                <Typography component="h3" variant="h3" color="text.primary">
+                                    Platform permissions
+                                </Typography>
                             </Box>
-                        </Box>
-
-                        <Box mt="3.5rem">
-                            <Typography component="h3" variant="h3" color="text.primary">
-                                Specific permissions
-                            </Typography>
-                            <Typography variant="subtitle2" mt=".20rem">Environment: Production</Typography>
-
                             <Box mt={2}>
-                                {
-                                    expecificPermissionsItems.map(exp => (
+                                {userPermissions
+                                    ?.filter((permission) => permission.Level === 'platform')
+                                    .map((permission) => (
+                                        <Grid display="flex" alignItems="center" key={permission.ID} mt={1.5} mb={1.5}>
+                                            <Typography variant="subtitle2" lineHeight="15.23px">
+                                                {permission.Label}
+                                            </Typography>
+                                        </Grid>
+                                    ))}
+                            </Box>
+                            <Box mt="2.31rem">
+                                <Typography component="h3" variant="h3" color="text.primary">
+                                    Environment permissions
+                                </Typography>
+                                <Typography variant="subtitle2" mt=".20rem">
+                                    Environment: {globalEnvironment?.name}
+                                </Typography>
+
+                                <Box mt={2}>
+                                    {userPermissions
+                                        ?.filter((permission) => permission.Level === 'environment' && permission.ResourceID === globalEnvironment?.id)
+                                        .map((permission) => (
+                                            <Grid display="flex" alignItems="center" key={permission.ID} mt={1.5} mb={1.5}>
+                                                <Typography variant="subtitle2" lineHeight="15.23px">
+                                                    {permission.Label}
+                                                </Typography>
+                                            </Grid>
+                                        ))}
+                                </Box>
+                            </Box>
+
+                            <Box mt="3.5rem">
+                                <Typography component="h3" variant="h3" color="text.primary">
+                                    Specific permissions
+                                </Typography>
+                                <Typography variant="subtitle2" mt=".20rem">
+                                    Environment: Production
+                                </Typography>
+
+                                <Box mt={2}>
+                                    {expecificPermissionsItems.map((exp) => (
                                         <Grid display="flex" alignItems="center" key={exp.id} mt={1.5} mb={1.5}>
-                                            <Typography variant="subtitle2" lineHeight="15.23px">{exp.name}</Typography>
+                                            <Typography variant="subtitle2" lineHeight="15.23px">
+                                                {exp.name}
+                                            </Typography>
                                         </Grid>
-                                    ))
-                                }
+                                    ))}
+                                </Box>
                             </Box>
                         </Box>
-                    </Box>
-
-                </Grid>
-                <Grid item sx={{ flex: 1 }}>
-                    <Typography component="h3" variant="h3" color="text.primary">
-                        Belongs to environments
-                    </Typography>
-
-                    <Box mt="1.31rem">
-                        {
-                            belongToEnvironmentItems.map(env => (
-                                <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
-                                    <Typography variant="subtitle2" lineHeight="15.23px" color="primary">{env.name}</Typography>
-                                </Grid>
-                            ))
-                        }
-                    </Box>
-
-                    <Box mt="2.31rem">
+                    </Grid>
+                    <Grid item sx={{ flex: 1 }}>
                         <Typography component="h3" variant="h3" color="text.primary">
-                            Belongs to access groups
+                            Belongs to environments
                         </Typography>
 
                         <Box mt="1.31rem">
-                            {
-                                belongToAcessGroupsItems.map(env => (
-                                    <Grid sx={{ cursor: "pointer", pt: 1.5, pb: 1.5 ,borderRadius: 2 ,"&:hover": { background: "rgba(196, 196, 196, 0.15)"} }} display="flex" alignItems="center" key={env.id} onClick={() => history.push(`/teams/access/${env.name}`)}>
-                                        <Typography variant="subtitle2" lineHeight="15.23px" color="primary">{env.name}</Typography>
-                                    </Grid>
-                                ))
-                            }
+                            {userEnvironments.map((env) => (
+                                <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
+                                    <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
+                                        {env.name}
+                                    </Typography>
+                                </Grid>
+                            ))}
                         </Box>
-                    </Box>
+
+                        <Box mt="2.31rem">
+                            <Typography component="h3" variant="h3" color="text.primary">
+                                Belongs to access groups
+                            </Typography>
+
+                            <Box mt="1.31rem">
+                                {belongToAcessGroupsItems.map((env) => (
+                                    <Grid
+                                        sx={{ cursor: 'pointer', pt: 1.5, pb: 1.5, borderRadius: 2, '&:hover': { background: 'rgba(196, 196, 196, 0.15)' } }}
+                                        display="flex"
+                                        alignItems="center"
+                                        key={env.id}
+                                        onClick={() => history.push(`/teams/access/${env.name}`)}>
+                                        <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
+                                            {env.name}
+                                        </Typography>
+                                    </Grid>
+                                ))}
+                            </Box>
+                        </Box>
+                    </Grid>
                 </Grid>
-            </Grid>
-        </Box>
+            </Box>
 
-        <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)} sx={drawerStyles}>
-            <ChangePasswordDrawer handleClose={() => setIsOpenPassword(false)} />
-        </Drawer>
+            <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)} sx={drawerStyles}>
+                <ChangePasswordDrawer handleClose={() => setIsOpenPassword(false)} />
+            </Drawer>
 
-        <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
-            <DeleteUserDrawer user="Saul Frank" handleClose={() => setIsOpenDeleteUser(false)}/>
-        </Drawer>
+            <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
+                <DeleteUserDrawer user="Saul Frank" handleClose={() => setIsOpenDeleteUser(false)} />
+            </Drawer>
         </>
     );
 };
@@ -243,48 +265,45 @@ export default MemberDetail;
 // --------- Custom hooks
 
 const useGetData = (setUser, reset, setIsActive, setIsAdmin) => {
+    // GraphQL hook
     const getMe = useMe();
+
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get me data on load
-    useEffect(() => {
-        (async () => {
-            const response = await getMe();
+    return async () => {
+        const response = await getMe();
 
-            if (response.r === 'error') {
-                closeSnackbar();
-                enqueueSnackbar("Can't get user data: " + response.msg, {
-                    variant: 'error',
-                });
-            } else if (response.errors) {
-                response.errors.map((err) =>
-                    enqueueSnackbar(err.message, { variant: 'error' })
-                );
-            } else {
-                setUser(response);
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get user data: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setUser(response);
 
-                // Reset form default values to incoming me data
-                reset({
-                    first_name: response.first_name,
-                    last_name: response.last_name,
-                    email: response.email,
-                    job_title: response.job_title,
-                    timezone: response.timezone,
-                });
+            // Reset form default values to incoming me data
+            reset({
+                first_name: response.first_name,
+                last_name: response.last_name,
+                email: response.email,
+                job_title: response.job_title,
+                timezone: response.timezone,
+            });
 
-                // Check if user is active
-                if (response.status !== 'active') {
-                    setIsActive(false);
-                }
-
-                // Check if user is admin
-                if (response.user_type === 'admin') {
-                    setIsAdmin(true);
-                }
+            // Check if user is active
+            if (response.status !== 'active') {
+                setIsActive(false);
             }
-        })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+
+            // Check if user is admin
+            if (response.user_type === 'admin') {
+                setIsAdmin(true);
+            }
+        }
+    };
 };
 
 const useSubmitData = () => {
@@ -311,12 +330,58 @@ const useSubmitData = () => {
             });
         } else if (response.errors) {
             closeSnackbar();
-            response.errors.map((err) =>
-                enqueueSnackbar(err.message, { variant: 'error' })
-            );
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             closeSnackbar();
             enqueueSnackbar(`Success`, { variant: 'success' });
+        }
+    };
+};
+
+const useGetUserPermissions_ = (setUserPermissions, userID, environmentID) => {
+    // GraphQL hook
+    const getUserPermissions = useGetUserPermissions();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get user permissions
+    return async () => {
+        if (userID && environmentID) {
+            const response = await getUserPermissions({ userID, environmentID });
+
+            if (response === null) {
+                setUserPermissions([]);
+            } else if (response.r === 'error') {
+                closeSnackbar();
+                enqueueSnackbar("Can't user permissions: " + response.msg, { variant: 'error' });
+            } else if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message + ': get user permissions', { variant: 'error' }));
+            } else {
+                setUserPermissions(response);
+            }
+        }
+    };
+};
+
+const useGetUserEnvironments_ = (setUserEnvironments, user_id, environment_id) => {
+    // GraphQL hook
+    const getUserEnvironments = useGetUserEnvironments();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get environments on load
+    return async () => {
+        if (user_id && environment_id) {
+            const response = await getUserEnvironments({ user_id, environment_id });
+
+            if (response.r === 'error') {
+                closeSnackbar();
+                enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+            } else if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            } else {
+                setUserEnvironments(response);
+            }
         }
     };
 };

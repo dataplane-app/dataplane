@@ -6,7 +6,8 @@ Dataplane is the super fast, cloud native, scalable, secure and easy to use data
 # 🚧🧱👷‍♀️🧰🦺🏗 Under construction 🔨🔧🗜👷‍♂️🚜🪚
 
 # Web UI
-Once running, visit the dashboard at http://localhost:9000/webapp/
+Once running, visit the dashboard at http://localhost:9000/webapp/<br /><br />
+First time setup: http://localhost:9000/webapp/get-started
 
 # Development
 We setup a containerised environment in VS code using docker-compose. The idea is to have a simple setup that could simulate a Containerised/Kubernetes setup for basic development in either Mac, Windows or Linux dev environment. 

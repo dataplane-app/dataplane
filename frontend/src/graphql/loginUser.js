@@ -1,6 +1,6 @@
 import { gql, GraphQLClient } from "graphql-request";
 
-const graphlqlEndpoint = "http://localhost:9000/public/graphql"
+const graphlqlEndpoint = process.env.REACT_APP_DATAPLANE_ENDPOINT + "/public/graphql"
 
 const LoginUser = gql`
     query loginUser($username: String!, $password: String!){

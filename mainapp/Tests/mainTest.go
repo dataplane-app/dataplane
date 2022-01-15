@@ -28,7 +28,7 @@ response: {"r": "OK", "msg": "Permission created", "count": 1}
 func MockingBird() string {
 
 	// create a listener with the desired port.
-	testutils.App = routes.Setup()
+	testutils.App = routes.Setup("9000")
 	err := testutils.App.Listen("0.0.0.0:9000")
 	if err != nil {
 		log.Fatal(err)
@@ -45,7 +45,7 @@ func main() {
 	testutils.DbInstance = "hello"
 
 	// testutils.App = routes.Setup()
-	app := routes.Setup()
+	app := routes.Setup("9000")
 	go func() {
 		log.Println("Listening on 9000")
 		app.Listen("0.0.0.0:9000")
@@ -76,7 +76,7 @@ func main() {
 						input: {
 							PlatformInput: {
 								business_name: "` + testutils.TextEscape(faker.DomainName()) + `",,
-								timezone: " ` + faker.Timezone() + ` ",
+								timezone: "` + faker.Timezone() + `",
 								complete: true }
 							AddUsersInput: {
 								first_name: "` + testutils.TextEscape(faker.FirstName()) + `",
@@ -84,7 +84,7 @@ func main() {
 								email: "` + testUser + `",
 								job_title: "` + testutils.TextEscape(faker.Name()) + `",
 								password: "` + testPassword + `",
-								timezone: " ` + faker.Timezone() + ` ",
+								timezone: "` + faker.Timezone() + `",
 							}
 						}
 					) {
@@ -146,8 +146,8 @@ func main() {
 	database.DBConn.Where("test = 't'").Delete(&models.Permissions{})
 
 	// --- Get production environment to add user to ----
-	prodEnv := models.Environment{}
-	database.DBConn.Where("name = ?", "Production").First(&prodEnv)
+	devEnv := models.Environment{}
+	database.DBConn.Where("name = ?", "Development").First(&devEnv)
 
 	// Create users
 	for i, v := range testutils.UserData {
@@ -204,11 +204,11 @@ func main() {
 				v.Permissions[n].ResourceID = testutils.TestPlatformID
 				v.Permissions[n].EnvironmentID = "d_platform"
 			case "environment_add_user":
-				v.Permissions[n].ResourceID = prodEnv.ID
-				v.Permissions[n].EnvironmentID = prodEnv.ID
+				v.Permissions[n].ResourceID = devEnv.ID
+				v.Permissions[n].EnvironmentID = devEnv.ID
 			case "environment_remove_user":
-				v.Permissions[n].ResourceID = prodEnv.ID
-				v.Permissions[n].EnvironmentID = prodEnv.ID
+				v.Permissions[n].ResourceID = devEnv.ID
+				v.Permissions[n].EnvironmentID = devEnv.ID
 			default:
 
 			}
