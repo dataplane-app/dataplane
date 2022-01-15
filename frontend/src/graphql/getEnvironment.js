@@ -3,18 +3,18 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
-const GetEnvironments = gql`
-    query getEnvironments(){
-      getEnvironments{
-                id
-                name
-                description
-                active
+const GetEnvironment = gql`
+    query getEnvironment($environment_id: String!) {
+        getEnvironment(environment_id: $environment_id) {
+            id
+            name
+            description
+            active
         }
     }
 `;
 
-export const useGetEnvironments = () => {
+export const useGetEnvironment = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -26,10 +26,10 @@ export const useGetEnvironments = () => {
         headers,
     });
 
-    return async () => {
+    return async (input) => {
         try {
-            const res = await client.request(GetEnvironments);
-            return res?.getEnvironments;
+            const res = await client.request(GetEnvironment, input);
+            return res?.getEnvironment;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

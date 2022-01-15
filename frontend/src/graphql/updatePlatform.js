@@ -3,18 +3,13 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
-const GetEnvironments = gql`
-    query getEnvironments(){
-      getEnvironments{
-                id
-                name
-                description
-                active
-        }
+const UpdatePlatform = gql`
+    mutation updatePlatform($input: updatePlatformInput!) {
+        updatePlatform(input: $input)
     }
 `;
 
-export const useGetEnvironments = () => {
+export const useUpdatePlatform = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -26,10 +21,10 @@ export const useGetEnvironments = () => {
         headers,
     });
 
-    return async () => {
+    return async (input) => {
         try {
-            const res = await client.request(GetEnvironments);
-            return res?.getEnvironments;
+            const res = await client.request(UpdatePlatform, input);
+            return res?.updatePlatform;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

@@ -16,7 +16,7 @@ const Layout = ({ children }) => {
             <AppBar
                 elevation={0}
                 position="fixed"
-                sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, background: (theme) => theme.palette.background.secondary, borderBottom: 1, borderColor: 'divider' }}>
+                sx={{ zIndex: (theme) => theme.zIndex.drawer, background: (theme) => theme.palette.background.secondary, borderBottom: 1, borderColor: 'divider' }}>
                 <Toolbar>
                     <Navbar />
                 </Toolbar>
@@ -26,6 +26,7 @@ const Layout = ({ children }) => {
                 sx={{
                     width: drawerWidth,
                     flexShrink: 0,
+                    zIndex: 1100,
                     [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', backgroundColor: 'background.main' },
                 }}>
                 <Toolbar />
