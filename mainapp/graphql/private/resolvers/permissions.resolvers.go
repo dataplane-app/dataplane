@@ -5,11 +5,12 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/auth_permissions"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	"dataplane/logging"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/google/uuid"
@@ -471,7 +472,21 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 }
 
 func (r *queryResolver) GetAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error) {
-	// NEEDS PERMISSIONS <==================
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_permissions", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
 
 	e := []*models.PermissionsAccessGroups{}
 
@@ -483,4 +498,8 @@ func (r *queryResolver) GetAccessGroups(ctx context.Context, userID string, envi
 		return nil, errors.New("Retrive users database error.")
 	}
 	return e, nil
+}
+
+func (r *queryResolver) GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error) {
+	panic(fmt.Errorf("not implemented"))
 }

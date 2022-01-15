@@ -141,6 +141,7 @@ type ComplexityRoot struct {
 		GetPipelines         func(childComplexity int) int
 		GetPlatform          func(childComplexity int) int
 		GetUser              func(childComplexity int, userID string) int
+		GetUserAccessGroups  func(childComplexity int, userID string, environmentID string) int
 		GetUserEnvironments  func(childComplexity int, userID string, environmentID string) int
 		GetUsers             func(childComplexity int) int
 		GetWorkers           func(childComplexity int) int
@@ -202,6 +203,7 @@ type QueryResolver interface {
 	MyPermissions(ctx context.Context) ([]*models.PermissionsOutput, error)
 	UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error)
 	GetAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error)
+	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error)
 	GetPipelines(ctx context.Context) ([]*Pipelines, error)
 	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
 	GetOnePreference(ctx context.Context, preference string) (*Preferences, error)
@@ -868,6 +870,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetUser(childComplexity, args["user_id"].(string)), true
 
+	case "Query.getUserAccessGroups":
+		if e.complexity.Query.GetUserAccessGroups == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getUserAccessGroups_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetUserAccessGroups(childComplexity, args["userID"].(string), args["environmentID"].(string)), true
+
 	case "Query.getUserEnvironments":
 		if e.complexity.Query.GetUserEnvironments == nil {
 			break
@@ -1258,9 +1272,15 @@ extend type Query {
     """
     Retrieve access groups for an environment.
     + **Route**: Private
-    + **Permissions**:  ????????
+    + **Permissions**:  admin_platform, admin_environment, environment_permissions, 
     """
     getAccessGroups(userID: String!, environmentID: String!): [AccessGroups]
+    """
+	Retrieve user's access groups for an environment.
+	+ **Route**: Private
+	+ **Permissions**:  admin_platform, admin_environment, environment_permissions, 
+    """  
+    getUserAccessGroups(userID: String!, environmentID: String!): [AccessGroups]
 }
 
 extend type Mutation {
@@ -2073,6 +2093,30 @@ func (ec *executionContext) field_Query_getOnePreference_args(ctx context.Contex
 		}
 	}
 	args["preference"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getUserAccessGroups_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["userID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
 	return args, nil
 }
 
@@ -4781,6 +4825,45 @@ func (ec *executionContext) _Query_getAccessGroups(ctx context.Context, field gr
 	return ec.marshalOAccessGroups2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_getUserAccessGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getUserAccessGroups_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetUserAccessGroups(rctx, args["userID"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.PermissionsAccessGroups)
+	fc.Result = res
+	return ec.marshalOAccessGroups2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7456,6 +7539,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getAccessGroups(ctx, field)
+				return res
+			})
+		case "getUserAccessGroups":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getUserAccessGroups(ctx, field)
 				return res
 			})
 		case "getPipelines":

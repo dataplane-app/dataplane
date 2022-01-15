@@ -17,7 +17,12 @@ import (
 For individual tests - in separate window run: go run server.go
 go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/permissions
 * Login
-* Get environments
+* Create access group
+* Attach permission to access group
+* Attach user to access group
+* Get access groups
+* Remove user from access group
+* Delete Access Group
 */
 func TestAccessGroups(t *testing.T) {
 
@@ -108,6 +113,28 @@ func TestAccessGroups(t *testing.T) {
 			}`
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	// -------- Get Access Groups  -------------
+
+	query := `query {
+					getAccessGroups(
+						environmentID: "` + envID + `",
+						userID: "` + usertoadd + `") 
+					{
+						AccessGroupID
+						Name
+						Active
+						EnvironmentID
+					}
+				}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
 
 	log.Println(string(response))
 
