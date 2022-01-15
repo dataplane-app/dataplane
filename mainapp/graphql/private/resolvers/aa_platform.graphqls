@@ -44,6 +44,12 @@ type Query {
   """
   getEnvironment(environment_id: String!): Environments
   """
+	Get user environments
+	+ **Route**: Private
+	+ **Permissions**: admin_platform, platform_environment, environment_permissions
+	"""  
+  getUserEnvironments(user_id: String!, environment_id: String!): [Environments]
+  """
   Get platform information user logged in belongs.
   + **Route**: Private
   + **Permissions**: logged in

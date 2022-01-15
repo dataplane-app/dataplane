@@ -26,6 +26,8 @@ export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
 });
 
+export const EnvironmentContext = React.createContext(null);
+
 function App() {
     // Theme
     const [mode, setMode] = React.useState('light');
@@ -38,6 +40,10 @@ function App() {
         []
     );
 
+    // Environment provider
+    const [environment, setEnvironment] = React.useState(null);
+    const environmentProvider = React.useMemo(() => [environment, setEnvironment], [environment, setEnvironment]);
+
     const theme = React.useMemo(() => createTheme(createCustomTheme(mode)), [mode]);
 
     // Snackbar
@@ -48,6 +54,7 @@ function App() {
 
     return (
         <ColorModeContext.Provider value={colorModeToggle}>
+<EnvironmentContext.Provider value={environmentProvider}>
             <ThemeProvider theme={theme}>
                 <SnackbarProvider
                     hideIconVariant={true}
@@ -107,6 +114,7 @@ function App() {
                     </Box>
                 </SnackbarProvider>
             </ThemeProvider>
+            </EnvironmentContext.Provider>
         </ColorModeContext.Provider>
     );
 }

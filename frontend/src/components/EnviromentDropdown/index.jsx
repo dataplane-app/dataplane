@@ -6,8 +6,12 @@ import { Box, Grid, Menu, MenuItem, Typography } from '@mui/material';
 import { useGetEnvironments } from '../../graphql/getEnvironments';
 import { useUpdatePreferences } from '../../graphql/updatePreferences';
 import { useGetOnePreference } from '../../graphql/getOnePreference';
+import { EnvironmentContext } from '../../App';
 
 const EnviromentDropdown = () => {
+    // Context
+    const [, setEnvironmentId] = React.useContext(EnvironmentContext);
+
     const getEnvironments = useGetEnvironments();
     const updatePreferences = useUpdatePreferences();
     const getOnePreference = useGetOnePreference();
@@ -38,9 +42,12 @@ const EnviromentDropdown = () => {
                 // Environment is set if user has a preference in DB
                 if (getOnePreferenceResponse.value) {
                     setSelectedEnviroment(getOnePreferenceResponse.value);
+                    const environmentName = getEnvironmentsResponse.filter((a) => a.id === getOnePreferenceResponse.value)[0].name;
+                    setEnvironmentId({ name: environmentName, id: getOnePreferenceResponse.value });
                 } else {
                     // Else, defaults to first environment in DB
                     setSelectedEnviroment(getEnvironmentsResponse[0].id);
+                    setEnvironmentId({ name: getEnvironmentsResponse[0].name, id: getEnvironmentsResponse[0].id });
                 }
             }
         })();
@@ -56,6 +63,7 @@ const EnviromentDropdown = () => {
     async function onSelectEnvironment(env) {
         const input = { input: { preference: 'environment', value: env.id } };
         const updateEnvironmentsResponse = await updatePreferences(input);
+        setEnvironmentId({ name: env.name, id: env.id });
         if (!updateEnvironmentsResponse.errors) {
             setSelectedEnviroment(env.id);
         } else {
@@ -83,15 +91,11 @@ const EnviromentDropdown = () => {
                     height="2.25rem"
                     fontSize="1.5rem"
                     fontWeight={700}>
-                    {environments && environments.length > 0 && selectedEnviroment
-                        ? environments.filter((env) => env.id === selectedEnviroment)[0].name[0].toUpperCase()
-                        : '-'}
+                    {environments && environments.length > 0 && selectedEnviroment ? environments.filter((env) => env.id === selectedEnviroment)[0].name[0].toUpperCase() : '-'}
                 </Box>
                 <Box ml="1rem" mr="1rem">
                     <Typography fontSize={16} fontWeight={700} color="text.primary" noWrap maxWidth={194}>
-                        {environments && environments.length > 0 && selectedEnviroment
-                            ? environments.filter((env) => env.id === selectedEnviroment)[0].name
-                            : '-'}
+                        {environments && environments.length > 0 && selectedEnviroment ? environments.filter((env) => env.id === selectedEnviroment)[0].name : '-'}
                     </Typography>
                     <Typography variant="subtitle1" color="text.primary" marginTop={-0.7}>
                         Enviroment

@@ -146,8 +146,8 @@ func main() {
 	database.DBConn.Where("test = 't'").Delete(&models.Permissions{})
 
 	// --- Get production environment to add user to ----
-	prodEnv := models.Environment{}
-	database.DBConn.Where("name = ?", "Production").First(&prodEnv)
+	devEnv := models.Environment{}
+	database.DBConn.Where("name = ?", "Development").First(&devEnv)
 
 	// Create users
 	for i, v := range testutils.UserData {
@@ -204,11 +204,11 @@ func main() {
 				v.Permissions[n].ResourceID = testutils.TestPlatformID
 				v.Permissions[n].EnvironmentID = "d_platform"
 			case "environment_add_user":
-				v.Permissions[n].ResourceID = prodEnv.ID
-				v.Permissions[n].EnvironmentID = prodEnv.ID
+				v.Permissions[n].ResourceID = devEnv.ID
+				v.Permissions[n].EnvironmentID = devEnv.ID
 			case "environment_remove_user":
-				v.Permissions[n].ResourceID = prodEnv.ID
-				v.Permissions[n].EnvironmentID = prodEnv.ID
+				v.Permissions[n].ResourceID = devEnv.ID
+				v.Permissions[n].EnvironmentID = devEnv.ID
 			default:
 
 			}

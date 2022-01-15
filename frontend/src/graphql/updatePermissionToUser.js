@@ -4,17 +4,12 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    query getEnvironments(){
-      getEnvironments{
-                id
-                name
-                description
-                active
-        }
+    mutation updatePermissionToUser($environmentID: String!, $resource: String!, $resourceID: String!, $user_id: String!, $access: String!) {
+        updatePermissionToUser(environmentID: $environmentID, resource: $resource, resourceID: $resourceID, user_id: $user_id, access: $access)
     }
 `;
 
-export const useGetEnvironments = () => {
+export const useUpdatePermissionToUser = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -26,10 +21,10 @@ export const useGetEnvironments = () => {
         headers,
     });
 
-    return async () => {
+    return async (input) => {
         try {
-            const res = await client.request(query);
-            return res?.getEnvironments;
+            const res = await client.request(query, input);
+            return res?.updatePermissionToUser;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }
