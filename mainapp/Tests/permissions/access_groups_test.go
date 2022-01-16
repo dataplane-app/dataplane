@@ -24,6 +24,7 @@ go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/permissions
 * Get access groups
 * Get access group
 * Remove user from access group
+* Deactivate Access Group
 * Delete Access Group
 */
 func TestAccessGroups(t *testing.T) {
@@ -210,6 +211,43 @@ func TestAccessGroups(t *testing.T) {
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
 	}
+
+	// -------- Deactivate Access Group  -------------
+	mutation = `mutation {
+		deactivateAccessGroup(
+				environmentID: "` + envID + `",
+				access_group_id: "` + accessgroup + `",
+			)
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+
+	// -------- Activate Access Group  -------------
+	mutation = `mutation {
+		activateAccessGroup(
+				environmentID: "` + envID + `",
+				access_group_id: "` + accessgroup + `",
+			)
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+
 	// -------- Delete Access Group  -------------
 	mutation = `mutation {
 			deleteAccessGroup(

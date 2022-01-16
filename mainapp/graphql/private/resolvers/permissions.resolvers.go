@@ -90,6 +90,102 @@ func (r *mutationResolver) UpdateAccessGroup(ctx context.Context, input *private
 	return response, nil
 }
 
+func (r *mutationResolver) ActivateAccessGroup(ctx context.Context, accessGroupID string, environmentID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_permissions", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	// Check if access group alredy active
+	p := models.PermissionsAccessGroups{}
+
+	err := database.DBConn.Where("access_group_id = ?", accessGroupID).First(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrive me database error.")
+	}
+
+	if p.Active == true {
+		return "", errors.New("User is already active.")
+	}
+
+	// Activate user
+	err = database.DBConn.Where(&models.PermissionsAccessGroups{AccessGroupID: accessGroupID}).Select("active", false).
+		Updates(models.PermissionsAccessGroups{Active: true}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Activate access group database error.")
+	}
+
+	response := "Access group activated"
+	return response, nil
+}
+
+func (r *mutationResolver) DeactivateAccessGroup(ctx context.Context, accessGroupID string, environmentID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_permissions", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	// Check if access group alredy inactive
+	p := models.PermissionsAccessGroups{}
+
+	err := database.DBConn.Where("access_group_id = ?", accessGroupID).First(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrive me database error.")
+	}
+
+	if p.Active == false {
+		return "", errors.New("User is already inactive.")
+	}
+
+	// Deactivate user
+	err = database.DBConn.Where(&models.PermissionsAccessGroups{AccessGroupID: accessGroupID}).Select("active", true).
+		Updates(models.PermissionsAccessGroups{Active: false}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Deactivate access group database error.")
+	}
+
+	response := "Access group deactivated"
+	return response, nil
+}
+
 func (r *mutationResolver) DeleteAccessGroup(ctx context.Context, accessGroupID string, environmentID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

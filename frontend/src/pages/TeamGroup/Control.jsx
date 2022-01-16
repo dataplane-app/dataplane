@@ -3,7 +3,7 @@ import { useState } from 'react';
 import DeleteAccessGroupDrawer from './../../components/DrawerContent/DeleteAccessGroupDrawer';
 import DeactivateAccessGroupDrawer from './../../components/DrawerContent/DeactivateAccessGroupDrawer';
 
-export default function Control({ environmentId, accessGroup }) {
+export default function Control({ environmentId, accessGroup, getAccessGroup }) {
     // Sidebar state
     const [isOpenDelete, setIsOpenDelete] = useState(false);
     const [isOpenDeactivate, setIsOpenDeactivate] = useState(false);
@@ -14,10 +14,11 @@ export default function Control({ environmentId, accessGroup }) {
                 <Button
                     size="small"
                     variant="outlined"
-                    color="error"
+                    // color="error"
+                    color={accessGroup.Active ? 'error' : 'success'}
                     onClick={() => setIsOpenDeactivate(true)}
                     sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                    Deactivate access group
+                    {accessGroup.Active ? 'Deactivate' : 'Activate'} access group
                 </Button>
 
                 <Button
@@ -34,12 +35,21 @@ export default function Control({ environmentId, accessGroup }) {
                 </Typography>
             </Box>
 
-            <Drawer anchor="right" open={isOpenDeactivate} onClose={() => setIsOpenDelete(false)}>
-                <DeactivateAccessGroupDrawer handleClose={() => setIsOpenDeactivate(false)} accessGroup={accessGroup} environmentID={environmentId} />
+            <Drawer anchor="right" open={isOpenDeactivate} onClose={() => setIsOpenDeactivate(false)}>
+                <DeactivateAccessGroupDrawer
+                    handleClose={() => setIsOpenDeactivate(false)}
+                    accessGroup={accessGroup}
+                    environmentID={environmentId}
+                    getAccessGroup={getAccessGroup}
+                />
             </Drawer>
 
             <Drawer anchor="right" open={isOpenDelete} onClose={() => setIsOpenDelete(false)}>
-                <DeleteAccessGroupDrawer handleClose={() => setIsOpenDelete(false)} accessGroup={accessGroup} environmentID={environmentId} />
+                <DeleteAccessGroupDrawer
+                    handleClose={() => setIsOpenDelete(false)} //
+                    accessGroup={accessGroup}
+                    environmentID={environmentId}
+                />
             </Drawer>
         </>
     );

@@ -23,8 +23,8 @@ export default function Details({ environmentId, accessGroup, getAccessGroup }) 
             </Typography>
 
             {accessGroup ? (
-                <Box mt={2} display="grid" flexDirection="row">
-                    <form onSubmit={handleSubmit(updateAccessGroup)}>
+                <form onSubmit={handleSubmit(updateAccessGroup)}>
+                    <Box mt={2} display="grid" flexDirection="row">
                         <TextField
                             label="Access group name"
                             id="access_group_name"
@@ -38,8 +38,8 @@ export default function Details({ environmentId, accessGroup, getAccessGroup }) 
                         <Button type="submit" variant="contained" color="primary" sx={{ width: '100%', mt: '1.375rem' }}>
                             Save
                         </Button>
-                    </form>
-                </Box>
+                    </Box>
+                </form>
             ) : null}
         </>
     );

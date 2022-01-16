@@ -50,7 +50,10 @@ const TeamGroup = () => {
                 <Grid container mt="2.56rem" alignItems="flex-start" justifyContent="space-between">
                     <Grid item sx={{ flex: 1 }}>
                         <Details environmentId={EnvironmentID.get()} accessGroup={accessGroup} getAccessGroup={getAccessGroup} />
-                        <Control environmentId={EnvironmentID.get()} accessGroup={accessGroup} />
+
+                        <Box sx={{ margin: '2.45rem 0', borderTop: 1, borderColor: 'divider' }}></Box>
+
+                        <Control environmentId={EnvironmentID.get()} accessGroup={accessGroup} getAccessGroup={getAccessGroup} />
                     </Grid>
                     <Grid item sx={{ flex: 2.2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
                         <Permissions />
