@@ -1,41 +1,56 @@
 import { Box, Grid, Typography } from '@mui/material';
 import { useState, useEffect } from 'react';
-import Details from './Details';
-import Drawers from './Drawers';
-import Permissions from './Permissions';
-import Members from './Members';
+import { useSnackbar } from 'notistack';
+import { useParams } from 'react-router-dom';
 import { useGlobalMeState } from '../../components/Navbar';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
+import { useGetAccessGroup } from '../../graphql/getAccessGroup';
+import Details from './Details';
+import Control from './Control';
+import Permissions from './Permissions';
+import Members from './Members';
 
 const TeamGroup = () => {
-    // Global user states
+    // Global user states with hookstate
     const MeData = useGlobalMeState();
     const EnvironmentID = useGlobalEnvironmentState();
 
     // Local state
     const [isGlobalDataLoaded, setIsGlobalDataLoaded] = useState(false);
-    const [name, setName] = useState('');
+    const [accessGroup, setAccessGroup] = useState('');
+
+    // URI parameter
+    const { accessId } = useParams();
+
+    // Custom Hook
+    const getAccessGroup = useGetAccessGroup_(EnvironmentID.get(), MeData.user_id.get(), accessId, setAccessGroup);
 
     // Check if global data is loaded
     useEffect(() => {
         if (EnvironmentID.get() && MeData.get()) {
             setIsGlobalDataLoaded(true);
+            // getAccessGroup();
         }
     }, [EnvironmentID, MeData]);
+
+    // Get access group data on load
+    useEffect(() => {
+        getAccessGroup();
+    }, []);
 
     return (
         <Box className="page" width="83%">
             <Grid container alignItems="center">
                 <Typography component="h2" variant="h2" color="text.primary">
-                    Team {'>'} Access group {'>'} {name}
+                    Team {'>'} Access group {'>'} {accessGroup.Name}
                 </Typography>
             </Grid>
 
-            {isGlobalDataLoaded ? (
+            {isGlobalDataLoaded && accessGroup ? (
                 <Grid container mt="2.56rem" alignItems="flex-start" justifyContent="space-between">
                     <Grid item sx={{ flex: 1 }}>
-                        <Details userId={MeData.user_id.get()} environmentId={EnvironmentID.get()} setName={setName} />
-                        <Drawers />
+                        <Details environmentId={EnvironmentID.get()} accessGroup={accessGroup} getAccessGroup={getAccessGroup} />
+                        <Control environmentId={EnvironmentID.get()} accessGroup={accessGroup} />
                     </Grid>
                     <Grid item sx={{ flex: 2.2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
                         <Permissions />
@@ -50,3 +65,28 @@ const TeamGroup = () => {
 };
 
 export default TeamGroup;
+
+// ----------- Custom Hooks
+
+const useGetAccessGroup_ = (environmentID, userID, access_group_id, setAccessGroup) => {
+    // GraphQL hook
+    const getAccessGroup = useGetAccessGroup();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get access group data
+    return async () => {
+        const response = await getAccessGroup({ environmentID, userID, access_group_id });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get access group data: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setAccessGroup(response);
+        }
+    };
+};

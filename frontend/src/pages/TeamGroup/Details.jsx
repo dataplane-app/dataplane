@@ -1,32 +1,20 @@
 import { Box, Typography, Button, TextField } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { useGetAccessGroup } from '../../graphql/getAccessGroup';
 import { useUpdateAccessGroup } from '../../graphql/updateAccessGroup';
 import { useForm } from 'react-hook-form';
 
-export default function Details({ userId, environmentId, setName }) {
-    // Access group state
-    const [dataLoaded, setIsDataLoaded] = useState(false);
-    const [accessGroup, setAccessGroup] = useState();
-
-    // URI parameter
-    const { accessId } = useParams();
-
+export default function Details({ environmentId, accessGroup, getAccessGroup }) {
+    console.log('🚀 ~ file: Details.jsx ~ line 7 ~ Details ~ environmentId', environmentId);
     // React hook form
-    const { register, handleSubmit, reset } = useForm();
+    const { register, handleSubmit } = useForm({
+        defaultValues: {
+            access_group_name: accessGroup.Name,
+            description: accessGroup.Description,
+        },
+    });
 
-    // Custom Hooks
-    const getAccessGroup = useGetAccessGroup_(environmentId, userId, accessId, reset, setIsDataLoaded, setName, setAccessGroup);
-    const updateAccessGroup = useUpdateAccessGroup_(accessId, environmentId, accessGroup?.Active, getAccessGroup);
-
-    // Get Access Group data on load
-    useEffect(() => {
-        getAccessGroup();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // Custom Hook
+    const updateAccessGroup = useUpdateAccessGroup_(accessGroup, environmentId, getAccessGroup);
 
     return (
         <>
@@ -34,7 +22,7 @@ export default function Details({ userId, environmentId, setName }) {
                 Details
             </Typography>
 
-            {dataLoaded ? (
+            {accessGroup ? (
                 <Box mt={2} display="grid" flexDirection="row">
                     <form onSubmit={handleSubmit(updateAccessGroup)}>
                         <TextField
@@ -57,40 +45,9 @@ export default function Details({ userId, environmentId, setName }) {
     );
 }
 
-// -------------------- Custom Hooks --------------------------
+// -------------------- Custom Hook --------------------------
 
-const useGetAccessGroup_ = (environmentID, userID, access_group_id, reset, setIsAccessGroupDataLoaded, setName, setAccessGroup) => {
-    // GraphQL hook
-    const getAccessGroup = useGetAccessGroup();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Get access group data
-    return async () => {
-        const response = await getAccessGroup({ environmentID, userID, access_group_id });
-        setIsAccessGroupDataLoaded(true);
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get access group data: " + response.msg, {
-                variant: 'error',
-            });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            setName(response.Name);
-            setAccessGroup(response);
-
-            // Reset form default values to incoming access group data
-            reset({
-                access_group_name: response.Name,
-                description: response.Description,
-            });
-        }
-    };
-};
-
-const useUpdateAccessGroup_ = (AccessGroupID, EnvironmentID, Active, getAccessGroup) => {
+const useUpdateAccessGroup_ = (accessGroup, EnvironmentID, getAccessGroup) => {
     // GraphQL hook
     const updateAccessGroup = useUpdateAccessGroup();
 
@@ -98,7 +55,15 @@ const useUpdateAccessGroup_ = (AccessGroupID, EnvironmentID, Active, getAccessGr
 
     // Update access group
     return async (data) => {
-        const variables = { input: { AccessGroupID, EnvironmentID, Name: data.access_group_name, Description: data.description, Active } };
+        const variables = {
+            input: {
+                AccessGroupID: accessGroup.AccessGroupID,
+                EnvironmentID,
+                Name: data.access_group_name,
+                Description: data.description,
+                Active: accessGroup.Active,
+            },
+        };
 
         const response = await updateAccessGroup(variables);
 
