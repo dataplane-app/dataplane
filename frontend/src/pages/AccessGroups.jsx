@@ -16,7 +16,7 @@ const AccessGroups = () => {
 
     // Global user states with hookstate
     const MeData = useGlobalMeState();
-    const EnvironmentID = useGlobalEnvironmentState();
+    const Environment = useGlobalEnvironmentState();
 
     // Users state
     const [data, setData] = useState([]);
@@ -25,7 +25,7 @@ const AccessGroups = () => {
     const [isOpenAddAccessGroup, setIsOpenAddAccessGroup] = useState(false);
 
     // Custom hook
-    const getAccessGroups = useGetAccessGroups_(EnvironmentID.get(), MeData.user_id.get(), setData);
+    const getAccessGroups = useGetAccessGroups_(Environment.id.get(), MeData.user_id.get(), setData);
 
     // Get access groups on load
     useEffect(() => {
@@ -146,7 +146,8 @@ const AccessGroups = () => {
                     handleClose={() => {
                         setIsOpenAddAccessGroup(false);
                     }}
-                    environmentID={EnvironmentID.get()}
+                    environmentID={Environment.id.get()}
+                    getAccessGroups={getAccessGroups}
                 />
             </Drawer>
         </Box>

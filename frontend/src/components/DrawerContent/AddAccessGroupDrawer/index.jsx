@@ -1,18 +1,16 @@
-import { useState, useContext } from 'react';
 import { Box, Typography, Button, Grid, TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useCreateAccessGroup } from '../../../graphql/createAccessGroup';
 import { useSnackbar } from 'notistack';
 import { useForm } from 'react-hook-form';
-// import { EnvironmentContext } from '../../../App';   <=======  Add
 
-const AddAccessGroupDrawer = ({ handleClose, environmentID }) => {
+const AddAccessGroupDrawer = ({ handleClose, environmentID, getAccessGroups }) => {
     // React hook form
     const { register, handleSubmit } = useForm();
 
     // Custom hook
-    const createAccessGroup = useCreateAccessGroup_(environmentID, handleClose);
+    const createAccessGroup = useCreateAccessGroup_(environmentID, handleClose, getAccessGroups);
 
     return (
         <form onSubmit={handleSubmit(createAccessGroup)}>
@@ -54,12 +52,11 @@ export default AddAccessGroupDrawer;
 
 // ---------- Custom Hook
 
-const useCreateAccessGroup_ = (environmentID, handleClose) => {
+const useCreateAccessGroup_ = (environmentID, handleClose, getAccessGroups) => {
     // GraphQL hook
     const createAccessGroup = useCreateAccessGroup();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
     // Create access group
     return async (data) => {
         const response = await createAccessGroup({ name: data.name, environmentID, description: data.description });
@@ -72,6 +69,7 @@ const useCreateAccessGroup_ = (environmentID, handleClose) => {
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             handleClose();
+            getAccessGroups();
         }
     };
 };
