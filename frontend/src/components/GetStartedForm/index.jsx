@@ -1,8 +1,10 @@
-import { Box, Button, Grid, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Button, TextField, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useCreateAdmin } from '../../graphql/createAdmin';
-import CustomSwitch from '../CustomSwitch';
 import { useSnackbar } from 'notistack';
+import ct from 'countries-and-timezones';
+import ThemeToggle from '../ThemeToggle';
+import PasswordField from '../PasswordField';
 
 const GetStartedForm = ({ handleNext }) => {
     const createAdmin = useCreateAdmin();
@@ -14,12 +16,10 @@ const GetStartedForm = ({ handleNext }) => {
     } = useForm();
 
     async function onSubmit(data) {
-        console.log(data);
-
         const allData = {
             platform: {
                 business_name: data.business_name,
-                timezone: 'GMT+2',
+                timezone: data.timezone,
                 complete: false,
             },
             users: {
@@ -28,7 +28,7 @@ const GetStartedForm = ({ handleNext }) => {
                 email: data.email,
                 job_title: data.job_title,
                 password: data.password,
-                timezone: 'GMT+3',
+                timezone: data.timezone,
             },
         };
 
@@ -44,7 +44,7 @@ const GetStartedForm = ({ handleNext }) => {
     }
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <Box component="form" sx={{ width: { sm: '250px' } }} onSubmit={handleSubmit(onSubmit)}>
             <Box sx={{ mt: 3, mb: 3 }} display="block">
                 <Typography component="h3" variant="h2" color="text.primary">
                     Business
@@ -56,6 +56,22 @@ const GetStartedForm = ({ handleNext }) => {
                     required
                     sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }}
                     {...register('business_name', { required: true })}
+                />
+
+                <Autocomplete
+                    disablePortal
+                    id="combo-box-demo"
+                    options={Object.keys(ct.getAllTimezones())}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="Timezone"
+                            id="timezone"
+                            size="small"
+                            sx={{ mt: 2, fontSize: '.75rem', display: 'flex' }}
+                            {...register('timezone', { required: true })}
+                        />
+                    )}
                 />
 
                 {errors.businessName && (
@@ -102,33 +118,34 @@ const GetStartedForm = ({ handleNext }) => {
                     sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }}
                     {...register('job_title', { required: true })}
                 />
-                <TextField
+                <PasswordField
                     label="Password"
                     id="password"
+                    name="password"
                     type="password"
                     size="small"
                     required
-                    sx={{ fontSize: '.75rem', display: 'flex' }}
-                    {...register('password', { required: true })}
+                    style={{ fontSize: '.75rem', display: 'flex' }}
+                    register={{ ...register('password', { required: true }) }}
                 />
             </Box>
 
-            <Grid container alignItems="center" justifyContent="center">
-                <CustomSwitch />
-                <Typography ml="1.5rem" variant="subtitle2" color="text.primary" fontSize={14}>
+            <Box display="flex" alignItems="center" justifyContent="space-evenly">
+                <ThemeToggle />
+                <Typography color="text.primary" fontSize={14} lineHeight="16.41px">
                     Mode{' '}
-                    <Typography display="block" variant="subtitle2" fontSize={14}>
+                    <Typography component="span" display="block" fontSize={14}>
                         preference
                     </Typography>
                 </Typography>
-            </Grid>
+            </Box>
 
             <Box sx={{ mt: '37px' }}>
                 <Button variant="contained" type="submit" color="primary" sx={{ width: '100%' }}>
                     Next
                 </Button>
             </Box>
-        </form>
+        </Box>
     );
 };
 
