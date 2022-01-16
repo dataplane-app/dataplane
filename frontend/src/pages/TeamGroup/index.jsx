@@ -59,7 +59,7 @@ const TeamGroup = () => {
                         <Permissions />
                     </Grid>
                     <Grid item sx={{ flex: 1 }}>
-                        <Members />
+                        <Members environmentId={Environment.id.get()} />
                     </Grid>
                 </Grid>
             ) : null}

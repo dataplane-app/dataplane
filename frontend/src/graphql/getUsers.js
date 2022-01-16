@@ -1,9 +1,9 @@
-import { gql, GraphQLClient } from "graphql-request";
-import { useGlobalAuthState } from "../Auth/UserAuth";
+import { gql, GraphQLClient } from 'graphql-request';
+import { useGlobalAuthState } from '../Auth/UserAuth';
 
-const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE
+const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
-const GetUsers = gql`
+const query = gql`
     query getUsers(){
       getUsers{
                 user_id
@@ -18,24 +18,24 @@ const GetUsers = gql`
     }
 `;
 
-export const useGetUsers = () => { 
+export const useGetUsers = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
     const headers = {
-      Authorization: "Bearer " + jwt,
+        Authorization: 'Bearer ' + jwt,
     };
-  
+
     const client = new GraphQLClient(graphlqlEndpoint, {
-      headers,
+        headers,
     });
-  
+
     return async () => {
-      try {
-        const res = await client.request(GetUsers);
-        return res?.getUsers;
-      } catch (error) {
-        return JSON.parse(JSON.stringify(error, undefined, 2)).response
-      }
+        try {
+            const res = await client.request(query);
+            return res?.getUsers;
+        } catch (error) {
+            return JSON.parse(JSON.stringify(error, undefined, 2)).response;
+        }
     };
-  };
+};
