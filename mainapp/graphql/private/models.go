@@ -2,6 +2,14 @@
 
 package privategraphql
 
+type AccessGroupsInput struct {
+	AccessGroupID string `json:"AccessGroupID"`
+	Name          string `json:"Name"`
+	Description   string `json:"Description"`
+	Active        bool   `json:"Active"`
+	EnvironmentID string `json:"EnvironmentID"`
+}
+
 type AddEnvironmentInput struct {
 	Name        string  `json:"name"`
 	Description *string `json:"description"`

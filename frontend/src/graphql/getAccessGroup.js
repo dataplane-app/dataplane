@@ -8,6 +8,7 @@ const query = gql`
         getAccessGroup(environmentID: $environmentID, userID: $userID, access_group_id: $access_group_id) {
             AccessGroupID
             Name
+            Description
             Active
             EnvironmentID
         }

@@ -18,6 +18,7 @@ For individual tests - in separate window run: go run server.go
 go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/permissions
 * Login
 * Create access group
+* Update access group
 * Attach permission to access group
 * Attach user to access group
 * Get access groups
@@ -68,6 +69,7 @@ func TestAccessGroups(t *testing.T) {
 		createAccessGroup(
 			environmentID: "` + envID + `",
 			name: "access-group-` + uuid.NewString() + `",
+			description: "description",
 		)
 	}`
 
@@ -81,6 +83,28 @@ func TestAccessGroups(t *testing.T) {
 	}
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+
+	// -------- Update Access Group  -------------
+	mutation = `mutation {
+		updateAccessGroup(input:{
+			AccessGroupID: "` + accessgroup + `"
+			EnvironmentID: "` + envID + `",
+			Name: "access-group-` + uuid.NewString() + `",
+			Description: "description",
+			Active: true
+		}
+		)
+	}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Update access group 200 status code")
 
 	// -------- Attach permission to Access Group  -------------
 	mutation = `mutation {

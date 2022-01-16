@@ -4,18 +4,12 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    query getAccessGroups($environmentID: String!, $userID: String!) {
-        getAccessGroups(environmentID: $environmentID, userID: $userID) {
-            AccessGroupID
-            Name
-            Description
-            Active
-            EnvironmentID
-        }
+    mutation updateAccessGroup($input: AccessGroupsInput!) {
+        updateAccessGroup(input: $input)
     }
 `;
 
-export const useGetAccessGroups = () => {
+export const useUpdateAccessGroup = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -30,7 +24,7 @@ export const useGetAccessGroups = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.getAccessGroups;
+            return res?.updateAccessGroup;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

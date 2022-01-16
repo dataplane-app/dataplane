@@ -8,6 +8,7 @@ import (
 	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
+	privategraphql "dataplane/graphql/private"
 	"dataplane/logging"
 	"errors"
 	"fmt"
@@ -17,7 +18,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID string, name string) (string, error) {
+func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID string, name string, description *string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -37,6 +38,7 @@ func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID 
 	e := models.PermissionsAccessGroups{
 		AccessGroupID: uuid.New().String(),
 		Name:          name,
+		Description:   *description,
 		EnvironmentID: environmentID,
 		Active:        true,
 	}
@@ -50,6 +52,42 @@ func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID 
 	}
 
 	return e.AccessGroupID, nil
+}
+
+func (r *mutationResolver) UpdateAccessGroup(ctx context.Context, input *privategraphql.AccessGroupsInput) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+	environmentID := input.EnvironmentID
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_permissions", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	err := database.DBConn.Where("access_group_id = ?", input.AccessGroupID).Updates(models.PermissionsAccessGroups{
+		Name:          input.Name,
+		Description:   input.Description,
+		Active:        input.Active,
+		EnvironmentID: input.EnvironmentID,
+	}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("update user database error")
+	}
+
+	response := "success"
+	return response, nil
 }
 
 func (r *mutationResolver) DeleteAccessGroup(ctx context.Context, accessGroupID string, environmentID string) (string, error) {

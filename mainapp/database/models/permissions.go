@@ -116,7 +116,8 @@ type PermissionsAccessGroups struct {
 	AccessGroupID string `gorm:"PRIMARY_KEY;type:varchar(64);" json:"access_group_id" validate:"required"`
 
 	// Who requires access - user, server, access_group
-	Name          string    `gorm:"index:idx_ag,unique;type:varchar(255);" json:"name" validate:"required"`
+	Name          string    `json:"name"` //???
+	Description   string    `json:"description"`
 	Active        bool      `json:"active" validate:"required"`
 	EnvironmentID string    `json:"environment_id"`
 	CreatedAt     time.Time `json:"created_at"`

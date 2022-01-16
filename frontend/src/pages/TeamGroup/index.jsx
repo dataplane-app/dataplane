@@ -14,6 +14,7 @@ const TeamGroup = () => {
 
     // Local state
     const [isGlobalDataLoaded, setIsGlobalDataLoaded] = useState(false);
+    const [name, setName] = useState('');
 
     // Check if global data is loaded
     useEffect(() => {
@@ -26,14 +27,14 @@ const TeamGroup = () => {
         <Box className="page" width="83%">
             <Grid container alignItems="center">
                 <Typography component="h2" variant="h2" color="text.primary">
-                    Team {'>'} Access group {'>'} Data engineering team
+                    Team {'>'} Access group {'>'} {name}
                 </Typography>
             </Grid>
 
             {isGlobalDataLoaded ? (
                 <Grid container mt="2.56rem" alignItems="flex-start" justifyContent="space-between">
                     <Grid item sx={{ flex: 1 }}>
-                        <Details userId={MeData.user_id.get()} environmentId={EnvironmentID.get()} />
+                        <Details userId={MeData.user_id.get()} environmentId={EnvironmentID.get()} setName={setName} />
                         <Drawers />
                     </Grid>
                     <Grid item sx={{ flex: 2.2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
