@@ -4,7 +4,6 @@ import { useUpdateAccessGroup } from '../../graphql/updateAccessGroup';
 import { useForm } from 'react-hook-form';
 
 export default function Details({ environmentId, accessGroup, getAccessGroup }) {
-    console.log('🚀 ~ file: Details.jsx ~ line 7 ~ Details ~ environmentId', environmentId);
     // React hook form
     const { register, handleSubmit } = useForm({
         defaultValues: {

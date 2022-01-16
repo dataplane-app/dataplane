@@ -7,17 +7,12 @@ import { useSnackbar } from 'notistack';
 import { useForm } from 'react-hook-form';
 // import { EnvironmentContext } from '../../../App';   <=======  Add
 
-const AddAccessGroupDrawer = ({ handleClose }) => {
-    // Context
-    // const [globalEnvironment] = useContext(EnvironmentContext); <=======  Add
-
-    const [environment] = useState('0423dade-d213-4897-abf6-f6da9a668b50'); // <====== Remove
-
-    // const createAccessGroup = useCreateAccessGroup_(globalEnvironment?.id);
-    const createAccessGroup = useCreateAccessGroup_(environment, handleClose);
-
+const AddAccessGroupDrawer = ({ handleClose, environmentID }) => {
     // React hook form
     const { register, handleSubmit } = useForm();
+
+    // Custom hook
+    const createAccessGroup = useCreateAccessGroup_(environmentID, handleClose);
 
     return (
         <form onSubmit={handleSubmit(createAccessGroup)}>
@@ -42,6 +37,8 @@ const AddAccessGroupDrawer = ({ handleClose }) => {
                         {...register('name', { required: true })}
                     />
 
+                    <TextField label="Description" id="description" size="small" sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
+
                     <Grid mt={4} display="flex" alignItems="center">
                         <Button type="submit" variant="contained" color="primary" style={{ width: '100%' }}>
                             Save
@@ -55,7 +52,7 @@ const AddAccessGroupDrawer = ({ handleClose }) => {
 
 export default AddAccessGroupDrawer;
 
-// ---------- Custom Hooks
+// ---------- Custom Hook
 
 const useCreateAccessGroup_ = (environmentID, handleClose) => {
     // GraphQL hook
@@ -65,7 +62,7 @@ const useCreateAccessGroup_ = (environmentID, handleClose) => {
 
     // Create access group
     return async (data) => {
-        const response = await createAccessGroup({ name: data.name, environmentID });
+        const response = await createAccessGroup({ name: data.name, environmentID, description: data.description });
 
         if (response.r === 'error') {
             closeSnackbar();

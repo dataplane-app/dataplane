@@ -1,8 +1,5 @@
-import { useState } from 'react';
-import { Box, Grid, Typography, IconButton, Chip, Button, Drawer, alertTitleClasses } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { Box, Grid, Typography, Button, Drawer } from '@mui/material';
 import Search from '../components/Search';
 import { useTable, useGlobalFilter } from 'react-table';
 import { useEffect } from 'react';
@@ -11,35 +8,29 @@ import CustomChip from '../components/CustomChip';
 import { useGetAccessGroups } from '../graphql/getAccessGroups';
 import { useSnackbar } from 'notistack';
 import AddAccessGroupDrawer from '../components/DrawerContent/AddAccessGroupDrawer';
-
-const drawerWidth = 507;
-const drawerStyles = {
-    width: drawerWidth,
-    flexShrink: 0,
-    zIndex: 9998,
-    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-};
+import { useGlobalMeState } from '../components/Navbar';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 const AccessGroups = () => {
     let history = useHistory();
-    const { enqueueSnackbar } = useSnackbar();
+
+    // Global user states with hookstate
+    const MeData = useGlobalMeState();
+    const EnvironmentID = useGlobalEnvironmentState();
 
     // Users state
-    const [accessGroups, setAccessGroups] = useState([]);
-    console.log('🚀 ~ file: AccessGroups.jsx ~ line 29 ~ AccessGroups ~ accessGroups', accessGroups);
-    const [environmentID] = useState('0423dade-d213-4897-abf6-f6da9a668b50');
-    const [userID] = useState('changeuser');
     const [data, setData] = useState([]);
 
     // Sidebar states
     const [isOpenAddAccessGroup, setIsOpenAddAccessGroup] = useState(false);
 
     // Custom hook
-    const getAccessGroups = useGetAccessGroups_(environmentID, userID, setData);
+    const getAccessGroups = useGetAccessGroups_(EnvironmentID.get(), MeData.user_id.get(), setData);
 
-    // Get access groups on load                      <==
+    // Get access groups on load
     useEffect(() => {
         getAccessGroups();
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -47,8 +38,7 @@ const AccessGroups = () => {
         () => [
             {
                 Header: 'Access group',
-                // accessor: (row) => [row.name, row.description],
-                accessor: (row) => row.Name,
+                accessor: (row) => [row.Name, row.Description],
                 Cell: (row) => <CustomAccessGroup row={row} onClick={() => history.push(`/teams/access/${row.row.original.AccessGroupID}`)} />,
             },
             {
@@ -110,7 +100,7 @@ const AccessGroups = () => {
                             justifyContent="flex-start"
                             {...headerGroup.getHeaderGroupProps()}>
                             {headerGroup.headers.map((column) => (
-                                <Box component="td" color="text.primary" fontWeight="600" fontSize="15px" textAlign="left" {...column.getHeaderProps()}>
+                                <Box component="td" color="text.primary" fontWeight="600" fontSize="17px" textAlign="left" {...column.getHeaderProps()}>
                                     {column.render('Header')}
                                 </Box>
                             ))}
@@ -151,13 +141,12 @@ const AccessGroups = () => {
                 </Box>
             </Box>
 
-            <Drawer anchor="right" open={isOpenAddAccessGroup} onClose={() => setIsOpenAddAccessGroup(!isOpenAddAccessGroup)} sx={drawerStyles}>
+            <Drawer anchor="right" open={isOpenAddAccessGroup} onClose={() => setIsOpenAddAccessGroup(!isOpenAddAccessGroup)}>
                 <AddAccessGroupDrawer
-                    user="Saul Frank"
                     handleClose={() => {
                         setIsOpenAddAccessGroup(false);
-                        // retrieveUsers();                <==
                     }}
+                    environmentID={EnvironmentID.get()}
                 />
             </Drawer>
         </Box>
@@ -165,15 +154,15 @@ const AccessGroups = () => {
 };
 
 const CustomAccessGroup = ({ row, onClick }) => {
-    // const [name, description] = row.value;
+    const [name, description] = row.value;
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start" onClick={onClick}>
             <Typography component="h4" variant="h3" color="primary" className="text-blue font-black text-lg ">
-                {row.value}
+                {name}
             </Typography>
             <Typography component="h5" variant="subtitle1">
-                {/* {description} */}
+                {description}
             </Typography>
         </Grid>
     );
@@ -188,12 +177,12 @@ const useGetAccessGroups_ = (environmentID, userID, setAccessGroups) => {
 
     const { enqueueSnackbar } = useSnackbar();
 
-    // Get user data on load
+    // Get access groups on load
     return async () => {
         const response = await getAccessGroups({ environmentID, userID });
 
         if (response.r === 'error') {
-            enqueueSnackbar("Can't get user data: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't get access groups: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
