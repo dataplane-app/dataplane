@@ -587,7 +587,6 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		where 
 		p.resource = pt.code and
 		p.subject = 'access_group' and 
-		p.subject_id = agu.user_id and
 		p.subject_id = ? and
 		p.active = true		
 		)

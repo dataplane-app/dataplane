@@ -258,7 +258,7 @@ export default function TeamDetail() {
                                         setSelectedPermission(newValue);
                                     }}
                                     sx={{ minWidth: '280px' }}
-                                    // Filter out users permissions from available permissions
+                                    // Filter out user's permissions from available permissions
                                     options={filterPermissionsDropdown(availablePermissions, userPermissions, globalEnvironment?.id)}
                                     getOptionLabel={(option) => option.Label}
                                     renderInput={(params) => (

@@ -9,7 +9,7 @@ import { useGetOnePreference } from '../../graphql/getOnePreference';
 import { EnvironmentContext } from '../../App';
 import { createState, useState as useHookState } from '@hookstate/core';
 
-export const globalEnvironmentState = createState('');
+export const globalEnvironmentState = createState({ id: '', name: '' });
 
 // this is a convience hook for the golableEnvironmentState, call this hook where environment is needed
 export const useGlobalEnvironmentState = () => useHookState(globalEnvironmentState);
@@ -52,12 +52,12 @@ const EnviromentDropdown = () => {
                     setSelectedEnviroment(getOnePreferenceResponse.value);
                     const environmentName = getEnvironmentsResponse.filter((a) => a.id === getOnePreferenceResponse.value)[0].name;
                     setEnvironmentId({ name: environmentName, id: getOnePreferenceResponse.value });
-                    GlobalEnvironmentID.set(getOnePreferenceResponse.value);
+                    GlobalEnvironmentID.set({ name: environmentName, id: getOnePreferenceResponse.value });
                 } else {
                     // Else, defaults to first environment in DB
                     setSelectedEnviroment(getEnvironmentsResponse[0].id);
                     setEnvironmentId({ name: getEnvironmentsResponse[0].name, id: getEnvironmentsResponse[0].id });
-                    GlobalEnvironmentID.set(getEnvironmentsResponse[0].id);
+                    GlobalEnvironmentID.set({ name: getEnvironmentsResponse[0].name, id: getEnvironmentsResponse[0].id });
                 }
             }
         })();
@@ -76,6 +76,7 @@ const EnviromentDropdown = () => {
         setEnvironmentId({ name: env.name, id: env.id });
         if (!updateEnvironmentsResponse.errors) {
             setSelectedEnviroment(env.id);
+            GlobalEnvironmentID.set({ name: env.name, id: env.id });
         } else {
             console.log('Unable to update environment');
         }

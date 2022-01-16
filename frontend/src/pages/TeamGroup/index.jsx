@@ -13,7 +13,7 @@ import Members from './Members';
 const TeamGroup = () => {
     // Global user states with hookstate
     const MeData = useGlobalMeState();
-    const EnvironmentID = useGlobalEnvironmentState();
+    const Environment = useGlobalEnvironmentState();
 
     // Local state
     const [isGlobalDataLoaded, setIsGlobalDataLoaded] = useState(false);
@@ -23,15 +23,15 @@ const TeamGroup = () => {
     const { accessId } = useParams();
 
     // Custom Hook
-    const getAccessGroup = useGetAccessGroup_(EnvironmentID.get(), MeData.user_id.get(), accessId, setAccessGroup);
+    const getAccessGroup = useGetAccessGroup_(Environment.id.get(), MeData.user_id.get(), accessId, setAccessGroup);
 
     // Check if global data is loaded
     useEffect(() => {
-        if (EnvironmentID.get() && MeData.get()) {
+        if (Environment.id.get() && MeData.get()) {
             setIsGlobalDataLoaded(true);
             // getAccessGroup();
         }
-    }, [EnvironmentID, MeData]);
+    }, [Environment, MeData]);
 
     // Get access group data on load
     useEffect(() => {
@@ -49,11 +49,11 @@ const TeamGroup = () => {
             {isGlobalDataLoaded && accessGroup ? (
                 <Grid container mt="2.56rem" alignItems="flex-start" justifyContent="space-between">
                     <Grid item sx={{ flex: 1 }}>
-                        <Details environmentId={EnvironmentID.get()} accessGroup={accessGroup} getAccessGroup={getAccessGroup} />
+                        <Details environmentId={Environment.id.get()} accessGroup={accessGroup} getAccessGroup={getAccessGroup} />
 
                         <Box sx={{ margin: '2.45rem 0', borderTop: 1, borderColor: 'divider' }}></Box>
 
-                        <Control environmentId={EnvironmentID.get()} accessGroup={accessGroup} getAccessGroup={getAccessGroup} />
+                        <Control environmentId={Environment.id.get()} accessGroup={accessGroup} getAccessGroup={getAccessGroup} />
                     </Grid>
                     <Grid item sx={{ flex: 2.2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
                         <Permissions />
