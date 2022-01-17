@@ -32,7 +32,7 @@ const Sidebar = () => {
                             position="relative"
                             onClick={() => history.push(`/${menu.url}`)}
                             className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
-                            <ListItemIcon sx={{ minWidth: '43px' }}>{menu.icon}</ListItemIcon>
+                            <ListItemIcon sx={{ minWidth: '43px', color: 'cyan.main' }}>{menu.icon}</ListItemIcon>
                             <ListItemText primary={menu.name} />
                         </ListItem>
                     ))}
@@ -52,7 +52,7 @@ const Sidebar = () => {
                             position="relative"
                             onClick={() => history.push(`/${menu.url}`)}
                             className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
-                            <ListItemIcon sx={{ minWidth: '43px' }}>{menu.icon}</ListItemIcon>
+                            <ListItemIcon sx={{ minWidth: '43px', color: 'cyan.main' }}>{menu.icon}</ListItemIcon>
                             <ListItemText primary={menu.name} />
                         </ListItem>
                     ))}

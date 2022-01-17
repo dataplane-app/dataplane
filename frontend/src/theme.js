@@ -44,8 +44,11 @@ const createCustomTheme = (mode) => ({
               }
             : {
                   success: {
-                      main: '#497B27',
+                      main: '#72B842',
                       light: 'rgba(73, 123, 39, 0.31)',
+                  },
+                  error: {
+                      main: '#F80000',
                   },
                   secondary: {
                       main: '#FF5722',
