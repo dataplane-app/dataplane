@@ -128,7 +128,7 @@ export default function TeamDetail() {
         }
 
         // Get access groups the user belongs when user environment and id are available and if empty
-        if (globalEnvironment && user && userAccessGroups.length === 0) {
+        if (globalEnvironment && user.user_id && userAccessGroups.length === 0) {
             getUserAccessGroups();
         }
 
