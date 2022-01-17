@@ -26,6 +26,7 @@ import { useAddUserToEnvironment } from '../graphql/addUserToEnvironment';
 import { useCreateAccessGroup } from '../graphql/createAccessGroup';
 import { useGetAccessGroups } from '../graphql/getAccessGroups';
 import { useUpdateUserToAccessGroup } from '../graphql/updateUserToAccessGroup';
+import { useGetUserAccessGroups } from '../graphql/getUserAccessGroups';
 import { EnvironmentContext } from '../App';
 
 const drawerWidth = 507;
@@ -87,7 +88,8 @@ export default function TeamDetail() {
     const deletePermission = useDeletePermission(getUserPermissions);
     const createAccessGroup = useCreateAccessGroup_(globalEnvironment?.id);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
-    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id);
+    const getUserAccessGroups = useGetUserAccessGroups_(setUserAccessGroups, globalEnvironment?.id, user.user_id);
+    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id, getUserAccessGroups);
 
     // Get user data on load
     useEffect(() => {
@@ -125,10 +127,10 @@ export default function TeamDetail() {
             getAccessGroups();
         }
 
-        // // Get access groups the user belongs when user environment and id are available and if empty
-        // if (globalEnvironment && user && userAccessGroups.length === 0) {
-        //     //
-        // }
+        // Get access groups the user belongs when user environment and id are available and if empty
+        if (globalEnvironment && user && userAccessGroups.length === 0) {
+            getUserAccessGroups();
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [globalEnvironment?.id, user.user_id]);
@@ -452,16 +454,18 @@ export default function TeamDetail() {
                             </Grid>
 
                             <Box mt="1.31rem">
-                                {belongToAcessGroupsItems.map((env) => (
-                                    <Grid
-                                        sx={{ cursor: 'pointer', pt: 1.5, pb: 1.5, borderRadius: 2, '&:hover': { background: 'rgba(196, 196, 196, 0.15)' } }}
-                                        display="flex"
-                                        alignItems="center"
-                                        key={env.id}
-                                        onClick={() => history.push(`/teams/access/${env.name}`)}>
-                                        <Box component={FontAwesomeIcon} sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)' }} icon={faTrashAlt} />
+                                {userAccessGroups.map((row) => (
+                                    <Grid display="flex" alignItems="center" key={row.Name} mt={1.5} mb={1.5}>
+                                        <Box
+                                            // onClick={() => {
+                                            //     removeUserFromAccessGroup(row.AccessGroupID, row.EnvironmentID, row.UserID);
+                                            // }}
+                                            component={FontAwesomeIcon}
+                                            sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                            icon={faTrashAlt}
+                                        />
                                         <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
-                                            {env.name}
+                                            {row.Name}
                                         </Typography>
                                     </Grid>
                                 ))}
@@ -813,7 +817,30 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
     };
 };
 
-const useUpdateUserToAccessGroup_ = (environmentID, user_id) => {
+const useGetUserAccessGroups_ = (setUserAccessGroups, environmentID, userID) => {
+    // GraphQL hook
+    const getUserAccessGroups = useGetUserAccessGroups();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get user's access groups
+    return async () => {
+        const response = await getUserAccessGroups({ environmentID, userID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get user's access groups: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ": get user's access groups failed", { variant: 'error' }));
+        } else {
+            setUserAccessGroups(response);
+        }
+    };
+};
+
+const useUpdateUserToAccessGroup_ = (environmentID, user_id, getUserAccessGroups) => {
     // GraphQL hook
     const updateUserToAccessGroup = useUpdateUserToAccessGroup();
 
@@ -832,6 +859,7 @@ const useUpdateUserToAccessGroup_ = (environmentID, user_id) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
+            getUserAccessGroups();
         }
     };
 };

@@ -4,18 +4,14 @@ import { useSnackbar } from 'notistack';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import { useParams } from 'react-router-dom';
-
-import { useGlobalMeState } from '../../components/Navbar';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
-
 import { useUpdatePermissionToAccessGroup } from '../../graphql/updatePermissionToAccessGroup';
 import { useAvailablePermissions } from '../../graphql/availablePermissions';
 import { useGetUserPermissions } from '../../graphql/getUserPermissions';
 import { useDeletePermissionToUser } from '../../graphql/deletePermissionToUser';
 
 export default function Permissions() {
-    // Global user states with hookstate
-    const MeData = useGlobalMeState();
+    // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
 
     // User states
@@ -35,7 +31,7 @@ export default function Permissions() {
 
     // Get permissions on load
     useEffect(() => {
-        // Get permissions and availablePermissions when environment is retrieved on first render
+        // Get permissions and availablePermissions when environment is retrieved on load
         if (Environment.id.get() && firstRender) {
             getPermissions();
             getAvailablePermissions();
@@ -43,7 +39,7 @@ export default function Permissions() {
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [Environment, MeData]);
+    }, [Environment]);
 
     return (
         <Box>
@@ -268,18 +264,18 @@ function filterPermissionsDropdown(availablePermissions, userPermissions, global
     return [
         // Filter platform permissions
         ...availablePermissions.filter(
-            (row) =>
-                row.Level === 'platform' && //
-                !userPermissions.map((a) => a.Resource).includes(row.Code)
+            (permission) =>
+                permission.Level === 'platform' && //
+                !userPermissions.map((a) => a.Resource).includes(permission.Code)
         ),
         // Filter environment permissions
         ...availablePermissions.filter(
-            (row) =>
-                row.Level !== 'platform' &&
+            (permission) =>
+                permission.Level !== 'platform' &&
                 !userPermissions
                     .filter((a) => a.ResourceID === globalEnvironmentId)
                     .map((a) => a.Resource)
-                    .includes(row.Code)
+                    .includes(permission.Code)
         ),
     ];
 }

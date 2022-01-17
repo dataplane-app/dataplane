@@ -139,3 +139,13 @@ type PermissionsAccessGUsers struct {
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
+
+type PermissionsAccessGUsersOutput struct {
+	AccessGroupID string    `gorm:"PRIMARY_KEY;type:varchar(64);" json:"access_group_id" validate:"required"`
+	Name          string    `json:"name"` //???
+	UserID        string    `gorm:"PRIMARY_KEY;type:varchar(64);" json:"user_id" validate:"required"`
+	Active        bool      `json:"active" validate:"required"`
+	EnvironmentID string    `json:"environment_id"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}

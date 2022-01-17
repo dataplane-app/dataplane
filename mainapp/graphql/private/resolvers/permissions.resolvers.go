@@ -661,7 +661,7 @@ func (r *queryResolver) GetAccessGroup(ctx context.Context, userID string, envir
 	return e, nil
 }
 
-func (r *queryResolver) GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error) {
+func (r *queryResolver) GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -678,9 +678,23 @@ func (r *queryResolver) GetUserAccessGroups(ctx context.Context, userID string, 
 		return nil, errors.New("Requires permissions.")
 	}
 
-	e := []*models.PermissionsAccessGroups{}
+	e := []*models.PermissionsAccessGUsersOutput{}
 
-	err := database.DBConn.Where("user_id = ?", userID).Find(&e).Error
+	err := database.DBConn.Raw(
+
+		`
+		SELECT
+		pagu.access_group_id,
+		pag.name,
+		pagu.user_id,
+		pagu.active,
+		pagu.environment_id
+		FROM permissions_accessg_users pagu
+		JOIN permissions_access_groups pag
+		ON pagu.access_group_id = pag.access_group_id
+		WHERE pagu.user_id = ?
+		`, userID).Scan(&e).Error
+
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
@@ -689,5 +703,4 @@ func (r *queryResolver) GetUserAccessGroups(ctx context.Context, userID string, 
 	}
 
 	return e, nil
-
 }

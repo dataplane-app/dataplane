@@ -106,6 +106,14 @@ type ComplexityRoot struct {
 		SubjectID     func(childComplexity int) int
 	}
 
+	PermissionsAccessGUsersOutput struct {
+		AccessGroupID func(childComplexity int) int
+		Active        func(childComplexity int) int
+		EnvironmentID func(childComplexity int) int
+		Name          func(childComplexity int) int
+		UserID        func(childComplexity int) int
+	}
+
 	PermissionsOutput struct {
 		Access        func(childComplexity int) int
 		Active        func(childComplexity int) int
@@ -212,7 +220,7 @@ type QueryResolver interface {
 	UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error)
 	GetAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error)
 	GetAccessGroup(ctx context.Context, userID string, environmentID string, accessGroupID string) (*models.PermissionsAccessGroups, error)
-	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error)
+	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error)
 	GetPipelines(ctx context.Context) ([]*Pipelines, error)
 	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
 	GetOnePreference(ctx context.Context, preference string) (*Preferences, error)
@@ -714,6 +722,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Permissions.SubjectID(childComplexity), true
+
+	case "PermissionsAccessGUsersOutput.AccessGroupID":
+		if e.complexity.PermissionsAccessGUsersOutput.AccessGroupID == nil {
+			break
+		}
+
+		return e.complexity.PermissionsAccessGUsersOutput.AccessGroupID(childComplexity), true
+
+	case "PermissionsAccessGUsersOutput.Active":
+		if e.complexity.PermissionsAccessGUsersOutput.Active == nil {
+			break
+		}
+
+		return e.complexity.PermissionsAccessGUsersOutput.Active(childComplexity), true
+
+	case "PermissionsAccessGUsersOutput.EnvironmentID":
+		if e.complexity.PermissionsAccessGUsersOutput.EnvironmentID == nil {
+			break
+		}
+
+		return e.complexity.PermissionsAccessGUsersOutput.EnvironmentID(childComplexity), true
+
+	case "PermissionsAccessGUsersOutput.Name":
+		if e.complexity.PermissionsAccessGUsersOutput.Name == nil {
+			break
+		}
+
+		return e.complexity.PermissionsAccessGUsersOutput.Name(childComplexity), true
+
+	case "PermissionsAccessGUsersOutput.UserID":
+		if e.complexity.PermissionsAccessGUsersOutput.UserID == nil {
+			break
+		}
+
+		return e.complexity.PermissionsAccessGUsersOutput.UserID(childComplexity), true
 
 	case "PermissionsOutput.Access":
 		if e.complexity.PermissionsOutput.Access == nil {
@@ -1323,6 +1366,14 @@ input AccessGroupsInput {
     EnvironmentID: String!
 }
 
+type PermissionsAccessGUsersOutput {
+    AccessGroupID: String!
+    Name: String!
+    UserID: String!
+    Active: Boolean!
+    EnvironmentID: String!
+}
+
 extend type Query {
     """
     Retrieve available permissions.
@@ -1357,9 +1408,9 @@ extend type Query {
     """
 	Retrieve user's access groups for an environment.
 	+ **Route**: Private
-	+ **Permissions**:  admin_platform, admin_environment, environment_permissions, 
+???	+ **Permissions**:  admin_platform, admin_environment, environment_permissions, 
     """  
-    getUserAccessGroups(userID: String!, environmentID: String!): [AccessGroups]
+    getUserAccessGroups(userID: String!, environmentID: String!): [PermissionsAccessGUsersOutput]
 }
 
 extend type Mutation {
@@ -4270,6 +4321,181 @@ func (ec *executionContext) _Permissions_EnvironmentID(ctx context.Context, fiel
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _PermissionsAccessGUsersOutput_AccessGroupID(ctx context.Context, field graphql.CollectedField, obj *models.PermissionsAccessGUsersOutput) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PermissionsAccessGUsersOutput",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AccessGroupID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PermissionsAccessGUsersOutput_Name(ctx context.Context, field graphql.CollectedField, obj *models.PermissionsAccessGUsersOutput) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PermissionsAccessGUsersOutput",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PermissionsAccessGUsersOutput_UserID(ctx context.Context, field graphql.CollectedField, obj *models.PermissionsAccessGUsersOutput) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PermissionsAccessGUsersOutput",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PermissionsAccessGUsersOutput_Active(ctx context.Context, field graphql.CollectedField, obj *models.PermissionsAccessGUsersOutput) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PermissionsAccessGUsersOutput",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PermissionsAccessGUsersOutput_EnvironmentID(ctx context.Context, field graphql.CollectedField, obj *models.PermissionsAccessGUsersOutput) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PermissionsAccessGUsersOutput",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvironmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _PermissionsOutput_ID(ctx context.Context, field graphql.CollectedField, obj *models.PermissionsOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5261,9 +5487,9 @@ func (ec *executionContext) _Query_getUserAccessGroups(ctx context.Context, fiel
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*models.PermissionsAccessGroups)
+	res := resTmp.([]*models.PermissionsAccessGUsersOutput)
 	fc.Result = res
-	return ec.marshalOAccessGroups2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, field.Selections, res)
+	return ec.marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7728,6 +7954,53 @@ func (ec *executionContext) _Permissions(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var permissionsAccessGUsersOutputImplementors = []string{"PermissionsAccessGUsersOutput"}
+
+func (ec *executionContext) _PermissionsAccessGUsersOutput(ctx context.Context, sel ast.SelectionSet, obj *models.PermissionsAccessGUsersOutput) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, permissionsAccessGUsersOutputImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PermissionsAccessGUsersOutput")
+		case "AccessGroupID":
+			out.Values[i] = ec._PermissionsAccessGUsersOutput_AccessGroupID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Name":
+			out.Values[i] = ec._PermissionsAccessGUsersOutput_Name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "UserID":
+			out.Values[i] = ec._PermissionsAccessGUsersOutput_UserID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Active":
+			out.Values[i] = ec._PermissionsAccessGUsersOutput_Active(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "EnvironmentID":
+			out.Values[i] = ec._PermissionsAccessGUsersOutput_EnvironmentID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var permissionsOutputImplementors = []string{"PermissionsOutput"}
 
 func (ec *executionContext) _PermissionsOutput(ctx context.Context, sel ast.SelectionSet, obj *models.PermissionsOutput) graphql.Marshaler {
@@ -8963,6 +9236,54 @@ func (ec *executionContext) marshalOEnvironments2ᚖdataplaneᚋdatabaseᚋmodel
 		return graphql.Null
 	}
 	return ec._Environments(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsAccessGUsersOutput) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOPermissionsAccessGUsersOutput2ᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsAccessGUsersOutput) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PermissionsAccessGUsersOutput(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOPermissionsOutput2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsOutput) graphql.Marshaler {
