@@ -80,7 +80,7 @@ extend type Query {
     """
 	Retrieve user's access groups for an environment.
 	+ **Route**: Private
-	+ **Permissions**:  admin_platform, admin_environment, environment_permissions, 
+???	+ **Permissions**:  admin_platform, admin_environment, environment_permissions, 
     """  
     getUserAccessGroups(userID: String!, environmentID: String!): [AccessGroups]
 }

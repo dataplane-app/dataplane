@@ -22,7 +22,10 @@ export default function Permissions() {
     const [availablePermissions, setAvailablePermissions] = useState([]);
     const [selectedPermission, setSelectedPermission] = useState(null);
     const [permissions, setPermissions] = useState([]);
+
+    // Control states
     const [clear, setClear] = useState(1);
+    const [firstRender, setFirstRender] = useState(true);
 
     // Custom GraphQL hooks
     const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, Environment.id.get());
@@ -32,14 +35,11 @@ export default function Permissions() {
 
     // Get permissions on load
     useEffect(() => {
-        // Get permissions when environment is retrieved and if permissions is empty
-        if (Environment.id.get() && permissions.length === 0) {
+        // Get permissions and availablePermissions when environment is retrieved on first render
+        if (Environment.id.get() && firstRender) {
             getPermissions();
-        }
-
-        // Get all available permissions when environment is retrieved and if available permissions is empty
-        if (Environment.id.get() && availablePermissions.length === 0) {
             getAvailablePermissions();
+            setFirstRender(false);
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
