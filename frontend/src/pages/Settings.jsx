@@ -4,7 +4,7 @@ import ct from 'countries-and-timezones';
 import Search from '../components/Search';
 import CustomChip from '../components/CustomChip';
 import { useGetEnvironments } from '../graphql/getEnvironments';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTable, useGlobalFilter } from 'react-table';
 import { useHistory } from 'react-router-dom';
 import AddEnvironmentDrawer from '../components/DrawerContent/AddEnvironmentDrawer';
@@ -15,6 +15,9 @@ import { useUpdatePlatform } from '../graphql/updatePlatform';
 const Settings = () => {
     let history = useHistory();
     const { enqueueSnackbar } = useSnackbar();
+
+    // Ref for scroll to top
+    const scrollRef = useRef(null);
 
     // User states
     const [platform, setPlatform] = useState({});
@@ -30,6 +33,9 @@ const Settings = () => {
 
     // Retrieve environments and me query on load
     useEffect(() => {
+        // Scroll to top on load
+        scrollRef.current.parentElement.scrollIntoView();
+
         let active = true;
 
         environments();
@@ -80,7 +86,7 @@ const Settings = () => {
 
     return (
         <>
-            <Box className="page">
+            <Box className="page" ref={scrollRef}>
                 <Typography component="h2" variant="h2" color="text.primary">
                     Settings
                 </Typography>
@@ -141,14 +147,14 @@ const Settings = () => {
                     </Grid>
 
                     {data && data.length > 0 ? (
-                        <Box component="table" mt={4} {...getTableProps()}>
+                        <Box component="table" width="100%" mt={4} {...getTableProps()}>
                             <thead>
                                 {headerGroups.map((headerGroup) => (
                                     <Box
                                         component="tr"
                                         display="grid"
                                         sx={{ '*:first-child': { ml: '22px' }, '*:last-child': { textAlign: 'center' } }}
-                                        gridTemplateColumns="repeat(2, 1fr)"
+                                        gridTemplateColumns="1fr .4fr"
                                         justifyContent="flex-start"
                                         {...headerGroup.getHeaderGroupProps()}>
                                         {headerGroup.headers.map((column) => (
@@ -167,7 +173,7 @@ const Settings = () => {
                                             component="tr"
                                             {...row.getRowProps()}
                                             display="grid"
-                                            gridTemplateColumns="repeat(2, 1fr)"
+                                            gridTemplateColumns="1fr .4fr"
                                             alignItems="start"
                                             borderRadius="5px"
                                             backgroundColor="background.secondary"
@@ -263,7 +269,7 @@ const useSubmitData = (platform_id) => {
         let response = await updatePlatform(allData);
         if (response === 'success') {
             closeSnackbar();
-            enqueueSnackbar(`Success`, { variant: 'success' });
+            enqueueSnackbar(`Saved`, { variant: 'success' });
         } else {
             if (response.errors) {
                 response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
