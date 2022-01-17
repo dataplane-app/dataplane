@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/auth_permissions"
+	"dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -694,6 +694,53 @@ func (r *queryResolver) GetUserAccessGroups(ctx context.Context, userID string, 
 		ON pagu.access_group_id = pag.access_group_id
 		WHERE pagu.user_id = ?
 		`, userID).Scan(&e).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive users database error.")
+	}
+
+	return e, nil
+}
+
+func (r *queryResolver) GetAccessGroupUsers(ctx context.Context, environmentID string, accessGroupID string) ([]*models.Users, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_permissions", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	e := []*models.Users{}
+
+	err := database.DBConn.Raw(
+
+		`
+		SELECT 
+		u.user_id,
+		u.user_type,
+		u.first_name,
+		u.last_name,
+		u.email,
+		u.job_title,
+		u.timezone,
+		u.status
+		FROM users u
+		JOIN permissions_accessg_users
+		ON u.user_id = permissions_accessg_users.user_id
+		WHERE permissions_accessg_users.access_group_id = ?		
+		`, accessGroupID).Scan(&e).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {

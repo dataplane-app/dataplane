@@ -91,6 +91,12 @@ extend type Query {
 ???	+ **Permissions**:  admin_platform, admin_environment, environment_permissions, 
     """  
     getUserAccessGroups(userID: String!, environmentID: String!): [PermissionsAccessGUsersOutput]
+    """
+	Retrieve an access group's members for an environment.
+	+ **Route**: Private
+???	+ **Permissions**:  admin_platform, admin_environment, environment_permissions, 
+    """  
+    getAccessGroupUsers( environmentID: String!, access_group_id: String!): [User]
 }
 
 extend type Mutation {

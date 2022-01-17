@@ -6,22 +6,28 @@ import { useSnackbar } from 'notistack';
 import { useParams } from 'react-router-dom';
 import { useGetUsers } from '../../graphql/getUsers';
 import { useUpdateUserToAccessGroup } from '../../graphql/updateUserToAccessGroup';
+import { useGetAccessGroupUsers } from '../../graphql/getAccessGroupUsers';
+import { useRemoveUserFromAccessGroup } from '../../graphql/removeUserFromAccessGroup';
 
 export default function Members({ environmentId }) {
     // User states
     const [selectedUser, setSelectedUser] = useState(null);
-    console.log('🚀 ~ file: Members.jsx ~ line 12 ~ Members ~ selectedMember', selectedUser);
     const [users, setUsers] = useState([]);
-    console.log('🚀 ~ file: Members.jsx ~ line 14 ~ Members ~ users', users);
+    const [accessGroupUsers, setAccessGroupUsers] = useState([]);
+
+    // Control state
     const [clear, setClear] = useState(1);
 
     // Custom GraphQL hooks
     const getUsers = useGetUsers_(setUsers);
-    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(environmentId, selectedUser?.user_id);
+    const getAccessGroupUsers = useGetAccessGroupUsers_(environmentId, setAccessGroupUsers);
+    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(environmentId, selectedUser?.user_id, getAccessGroupUsers);
+    const removeUserFromAccessGroup = useRemoveUserFromAccessGroup_(environmentId, getAccessGroupUsers);
 
     // Get members on load
     useEffect(() => {
         getUsers();
+        getAccessGroupUsers();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -29,7 +35,7 @@ export default function Members({ environmentId }) {
     return (
         <>
             <Typography component="h3" variant="h3" color="text.primary">
-                Members (10)
+                Members ({accessGroupUsers.length})
             </Typography>
 
             <Grid mt={2} display="flex" alignItems="center">
@@ -41,9 +47,8 @@ export default function Members({ environmentId }) {
                         setSelectedUser(newValue);
                     }}
                     sx={{ minWidth: '280px' }}
-                    // Filter out user's permissions from available permissions
-                    // options={filterPermissionsDropdown(availablePermissions, permissions, Environment.id.get())}
-                    options={users}
+                    // Filter out users from access group members
+                    options={users.filter((row) => !accessGroupUsers.map((a) => a.user_id).includes(row.user_id))}
                     getOptionLabel={(option) => option.first_name + ' ' + option.last_name}
                     renderInput={(params) => <TextField {...params} label="Find members" id="members" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />
@@ -61,12 +66,21 @@ export default function Members({ environmentId }) {
             </Grid>
 
             <Box mt="1.31rem">
-                <Grid display="flex" alignItems="center" mt={1.5} mb={1.5}>
-                    <Box component={FontAwesomeIcon} sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)' }} icon={faTrashAlt} />
-                    <Typography variant="subtitle2" lineHeight="15.23px" color="primary" fontWeight="900">
-                        Saul Frank
-                    </Typography>
-                </Grid>
+                {accessGroupUsers.map((row) => (
+                    <Grid display="flex" alignItems="center" key={row.user_id} mt={1.5} mb={1.5}>
+                        <Box
+                            onClick={() => {
+                                removeUserFromAccessGroup(row.user_id);
+                            }}
+                            component={FontAwesomeIcon}
+                            sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                            icon={faTrashAlt}
+                        />
+                        <Typography variant="subtitle2" lineHeight="15.23px" color="primary" fontWeight="900">
+                            {row.first_name} {row.last_name}
+                        </Typography>
+                    </Grid>
+                ))}
             </Box>
         </>
     );
@@ -96,7 +110,33 @@ const useGetUsers_ = (setUsers) => {
     };
 };
 
-const useUpdateUserToAccessGroup_ = (environmentID, user_id) => {
+const useGetAccessGroupUsers_ = (environmentID, setAccessGroupUsers) => {
+    // GraphQL hook
+    const getAccessGroupUsers = useGetAccessGroupUsers();
+
+    // URI parameter
+    const { accessId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get access group members
+    return async () => {
+        const response = await getAccessGroupUsers({ environmentID, access_group_id: accessId });
+
+        if (response === null) {
+            setAccessGroupUsers([]);
+        } else if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get members: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get members failed', { variant: 'error' }));
+        } else {
+            setAccessGroupUsers(response);
+        }
+    };
+};
+
+const useUpdateUserToAccessGroup_ = (environmentID, user_id, getAccessGroupUsers) => {
     // GraphQL hook
     const updateUserToAccessGroup = useUpdateUserToAccessGroup();
 
@@ -116,6 +156,32 @@ const useUpdateUserToAccessGroup_ = (environmentID, user_id) => {
             response.errors.map((err) => enqueueSnackbar(err.message + ': update member to access group', { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
+            getAccessGroupUsers();
+        }
+    };
+};
+
+const useRemoveUserFromAccessGroup_ = (environmentID, getAccessGroupUsers) => {
+    // GraphQL hook
+    const removeUserFromAccessGroup = useRemoveUserFromAccessGroup();
+
+    // URI parameter
+    const { accessId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Remove member
+    return async (user_id) => {
+        const response = await removeUserFromAccessGroup({ environmentID, user_id, access_group_id: accessId });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't remove member: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': remove member failed', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getAccessGroupUsers();
         }
     };
 };
