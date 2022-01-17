@@ -1,14 +1,12 @@
 import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer, Autocomplete, alertTitleClasses } from '@mui/material';
 import { useEffect, useState, useRef, useContext } from 'react';
-import Search from '../components/Search';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
-import { belongToAcessGroupsItems, expecificPermissionsItems } from '../utils/teamsMockData';
 import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import DeactivateUserDrawer from '../components/DrawerContent/DeactivateUserDrawer';
-import { useHistory, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
 import ct from 'countries-and-timezones';
@@ -27,22 +25,12 @@ import { useCreateAccessGroup } from '../graphql/createAccessGroup';
 import { useGetAccessGroups } from '../graphql/getAccessGroups';
 import { useUpdateUserToAccessGroup } from '../graphql/updateUserToAccessGroup';
 import { useGetUserAccessGroups } from '../graphql/getUserAccessGroups';
+import { useRemoveUserFromAccessGroup } from '../graphql/removeUserFromAccessGroup';
 import { EnvironmentContext } from '../App';
-
-const drawerWidth = 507;
-const drawerStyles = {
-    width: drawerWidth,
-    flexShrink: 0,
-    zIndex: 9998,
-    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-};
 
 export default function TeamDetail() {
     // Context
     const [globalEnvironment] = useContext(EnvironmentContext);
-
-    // React router
-    let history = useHistory();
 
     // Ref for scroll to top
     const scrollRef = useRef(null);
@@ -68,6 +56,8 @@ export default function TeamDetail() {
     const [accessGroup, setAccessGroup] = useState('');
     const [accessGroups, setAccessGroups] = useState([]);
     const [userAccessGroups, setUserAccessGroups] = useState([]);
+
+    // Control state
     const [clear, setClear] = useState(1);
 
     // Sidebar states
@@ -86,10 +76,10 @@ export default function TeamDetail() {
     const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
     const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
     const deletePermission = useDeletePermission(getUserPermissions);
-    const createAccessGroup = useCreateAccessGroup_(globalEnvironment?.id);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
     const getUserAccessGroups = useGetUserAccessGroups_(setUserAccessGroups, globalEnvironment?.id, user.user_id);
     const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id, getUserAccessGroups);
+    const removeUserFromAccessGroup = useRemoveUserFromAccessGroup_(getUserAccessGroups);
 
     // Get user data on load
     useEffect(() => {
@@ -382,7 +372,6 @@ export default function TeamDetail() {
                                 sx={{ minWidth: '280px' }}
                                 // Filter out users permissions from available permissions
                                 options={availableEnvironments.filter((row) => !userEnvironments.map((a) => a.id).includes(row.id)) || ''}
-                                // options={availableEnvironments}
                                 getOptionLabel={(option) => option.name}
                                 renderInput={(params) => (
                                     <TextField {...params} label="Available environments" id="available_environments" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
@@ -425,26 +414,26 @@ export default function TeamDetail() {
                             </Typography>
 
                             <Grid mt={2} display="flex" alignItems="center">
-                                {/* <Search placeholder="Find access groups" /> */}
                                 <Autocomplete
                                     disablePortal
                                     id="available_access_groups"
                                     key={clear} //Changing this value on submit clears the input field
                                     onChange={(event, newValue) => {
                                         setAccessGroup(newValue);
-                                        // alert(JSON.stringify(newValue));
                                     }}
                                     sx={{ minWidth: '280px' }}
                                     // Filter out available access groups from the ones user belongs
-                                    // options={availableEnvironments.filter((row) => !userEnvironments.map((a) => a.id).includes(row.id)) || ''}
-                                    options={accessGroups}
+                                    options={accessGroups.filter((row) => !userAccessGroups.map((a) => a.AccessGroupID).includes(row.AccessGroupID)) || ''}
                                     getOptionLabel={(option) => option.Name}
                                     renderInput={(params) => (
                                         <TextField {...params} label="Find access groups" id="access_groups" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
                                     )}
                                 />
                                 <Button
-                                    onClick={() => updateUserToAccessGroup(accessGroup.AccessGroupID)} //
+                                    onClick={() => {
+                                        updateUserToAccessGroup(accessGroup.AccessGroupID);
+                                        setClear(clear * -1); // Clears autocomplete input field
+                                    }}
                                     variant="contained"
                                     color="primary"
                                     height="100%"
@@ -457,9 +446,9 @@ export default function TeamDetail() {
                                 {userAccessGroups.map((row) => (
                                     <Grid display="flex" alignItems="center" key={row.Name} mt={1.5} mb={1.5}>
                                         <Box
-                                            // onClick={() => {
-                                            //     removeUserFromAccessGroup(row.AccessGroupID, row.EnvironmentID, row.UserID);
-                                            // }}
+                                            onClick={() => {
+                                                removeUserFromAccessGroup(row.AccessGroupID, row.EnvironmentID, row.UserID);
+                                            }}
                                             component={FontAwesomeIcon}
                                             sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
                                             icon={faTrashAlt}
@@ -475,15 +464,15 @@ export default function TeamDetail() {
                 </Grid>
             </Box>
 
-            <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)} sx={drawerStyles}>
+            <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)}>
                 <ChangePasswordDrawer handleClose={() => setIsOpenPassword(false)} />
             </Drawer>
 
-            <Drawer anchor="right" open={isOpenDeactivateUser} onClose={() => setIsOpenDeactivateUser(!isOpenDeactivateUser)} sx={drawerStyles}>
+            <Drawer anchor="right" open={isOpenDeactivateUser} onClose={() => setIsOpenDeactivateUser(!isOpenDeactivateUser)}>
                 <DeactivateUserDrawer user={user} handleClose={() => setIsOpenDeactivateUser(false)} refreshData={getUserData} />
             </Drawer>
 
-            <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
+            <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)}>
                 <DeleteUserDrawer user={user} handleClose={() => setIsOpenDeleteUser(false)} refreshData={getUserData} />
             </Drawer>
         </>
@@ -771,29 +760,6 @@ const useDeletePermission = (getUserPermissions) => {
     };
 };
 
-const useCreateAccessGroup_ = (environmentID) => {
-    // GraphQL hook
-    const createAccessGroup = useCreateAccessGroup();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Create access group
-    return async (name) => {
-        const response = await createAccessGroup({ environmentID });
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't delete permission: " + response.msg, {
-                variant: 'error',
-            });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            enqueueSnackbar('Success', { variant: 'success' });
-        }
-    };
-};
-
 const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
     // GraphQL hook
     const getAccessGroups = useGetAccessGroups();
@@ -857,6 +823,28 @@ const useUpdateUserToAccessGroup_ = (environmentID, user_id, getUserAccessGroups
             });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getUserAccessGroups();
+        }
+    };
+};
+
+const useRemoveUserFromAccessGroup_ = (getUserAccessGroups) => {
+    // GraphQL hook
+    const removeUserFromAccessGroup = useRemoveUserFromAccessGroup();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Remove user from an access group
+    return async (access_group_id, environmentID, user_id) => {
+        const response = await removeUserFromAccessGroup({ user_id, environmentID, access_group_id });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': remove user from access group failed', { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getUserAccessGroups();
