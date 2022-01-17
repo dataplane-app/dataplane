@@ -21,7 +21,6 @@ import { useGetEnvironments } from '../graphql/getEnvironments';
 import { useGetUserEnvironments } from '../graphql/getUserEnvironments';
 import { useRemoveUserFromEnvironment } from '../graphql/removeUserToEnvironment';
 import { useAddUserToEnvironment } from '../graphql/addUserToEnvironment';
-import { useCreateAccessGroup } from '../graphql/createAccessGroup';
 import { useGetAccessGroups } from '../graphql/getAccessGroups';
 import { useUpdateUserToAccessGroup } from '../graphql/updateUserToAccessGroup';
 import { useGetUserAccessGroups } from '../graphql/getUserAccessGroups';
