@@ -21,6 +21,7 @@ go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/permissions
 * Update access group
 * Attach permission to access group
 * Attach user to access group
+* Get user access groups
 * Get access groups
 * Get access group
 * Remove user from access group
@@ -146,9 +147,34 @@ func TestAccessGroups(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
-	// -------- Get Access Groups  -------------
+	// -------- Get User's Access Groups  -------------
 
 	query := `query {
+			getUserAccessGroups(
+				environmentID: "` + envID + `",
+				userID: "` + usertoadd + `"
+				) 
+			{
+				AccessGroupID
+				Name
+				Active
+				EnvironmentID
+			}
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get user's access groups 200 status code")
+
+	// -------- Get Access Groups  -------------
+
+	query = `query {
 					getAccessGroups(
 						environmentID: "` + envID + `",
 						userID: "` + usertoadd + `") 
