@@ -134,7 +134,8 @@ const createCustomTheme = (mode) => ({
                 paper: {
                     boxSizing: 'border-box',
                     width: 507,
-                    backgroundColor: mode === 'light' ? '#F7FBFD' : '#292929',
+                    backgroundColor: mode === 'light' ? '#F7FBFD' : '#081E3A',
+                    backgroundImage: 'none',
                 },
             },
         },
