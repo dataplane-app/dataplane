@@ -391,9 +391,10 @@ export default function TeamDetail() {
                                         variant="subtitle2"
                                         lineHeight="15.23px"
                                         color="primary"
-                                        sx={{ cursor: 'pointer' }}>
+                                        sx={{ cursor: 'pointer', marginRight: 1 }}>
                                         {env.name}
                                     </Typography>
+                                    <CustomChip size="small" label={env.active ? 'Active' : 'Inactive'} customColor={env.active ? 'green' : 'red'} />
                                 </Grid>
                             ))}
                         </Box>
@@ -413,7 +414,11 @@ export default function TeamDetail() {
                                     }}
                                     sx={{ minWidth: '280px' }}
                                     // Filter out available access groups from the ones user belongs
-                                    options={accessGroups.filter((row) => !userAccessGroups.map((a) => a.AccessGroupID).includes(row.AccessGroupID)) || ''}
+                                    options={
+                                        accessGroups.filter(
+                                            (row) => !userAccessGroups.map((a) => a.AccessGroupID).includes(row.AccessGroupID) && row.EnvironmentID === globalEnvironment.id
+                                        ) || ''
+                                    }
                                     getOptionLabel={(option) => option.Name}
                                     renderInput={(params) => (
                                         <TextField {...params} label="Find access groups" id="access_groups" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
@@ -434,26 +439,29 @@ export default function TeamDetail() {
                             </Grid>
 
                             <Box mt="1.31rem">
-                                {userAccessGroups.map((row) => (
-                                    <Grid display="flex" alignItems="center" key={row.Name} mt={1.5} mb={1.5}>
-                                        <Box
-                                            onClick={() => {
-                                                removeUserFromAccessGroup(row.AccessGroupID, row.EnvironmentID, row.UserID);
-                                            }}
-                                            component={FontAwesomeIcon}
-                                            sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
-                                            icon={faTrashAlt}
-                                        />
-                                        <Typography
-                                            onClick={() => history.push(`/teams/access/${row.AccessGroupID}`)}
-                                            variant="subtitle2"
-                                            lineHeight="15.23px"
-                                            color="primary"
-                                            sx={{ cursor: 'pointer' }}>
-                                            {row.Name}
-                                        </Typography>
-                                    </Grid>
-                                ))}
+                                {userAccessGroups
+                                    .filter((row) => row.EnvironmentID === globalEnvironment.id)
+                                    .map((row) => (
+                                        <Grid display="flex" alignItems="center" key={row.Name} mt={1.5} mb={1.5}>
+                                            <Box
+                                                onClick={() => {
+                                                    removeUserFromAccessGroup(row.AccessGroupID, row.EnvironmentID, row.UserID);
+                                                }}
+                                                component={FontAwesomeIcon}
+                                                sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                                icon={faTrashAlt}
+                                            />
+                                            <Typography
+                                                onClick={() => history.push(`/teams/access/${row.AccessGroupID}`)}
+                                                variant="subtitle2"
+                                                lineHeight="15.23px"
+                                                color="primary"
+                                                sx={{ cursor: 'pointer', marginRight: 1 }}>
+                                                {row.Name}
+                                            </Typography>
+                                            <CustomChip size="small" label={row.Active ? 'Active' : 'Inactive'} customColor={row.Active ? 'green' : 'red'} />
+                                        </Grid>
+                                    ))}
                             </Box>
                         </Box>
                     </Grid>

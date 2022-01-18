@@ -121,9 +121,20 @@ func (r *mutationResolver) ActivateAccessGroup(ctx context.Context, accessGroupI
 		return "", errors.New("User is already active.")
 	}
 
-	// Activate user
+	// Activate access group
 	err = database.DBConn.Where(&models.PermissionsAccessGroups{AccessGroupID: accessGroupID}).Select("active", false).
 		Updates(models.PermissionsAccessGroups{Active: true}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Activate access group database error.")
+	}
+
+	// Activate access group user
+	err = database.DBConn.Where(&models.PermissionsAccessGUsers{AccessGroupID: accessGroupID}).Select("active", false).
+		Updates(models.PermissionsAccessGUsers{Active: true}).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -169,9 +180,20 @@ func (r *mutationResolver) DeactivateAccessGroup(ctx context.Context, accessGrou
 		return "", errors.New("User is already inactive.")
 	}
 
-	// Deactivate user
+	// Deactivate access group
 	err = database.DBConn.Where(&models.PermissionsAccessGroups{AccessGroupID: accessGroupID}).Select("active", true).
 		Updates(models.PermissionsAccessGroups{Active: false}).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Deactivate access group database error.")
+	}
+
+	// Deactivate access groups users
+	err = database.DBConn.Where(&models.PermissionsAccessGUsers{AccessGroupID: accessGroupID}).Select("active", true).
+		Updates(models.PermissionsAccessGUsers{Active: false}).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
