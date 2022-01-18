@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/auth_permissions"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -244,6 +244,8 @@ func (r *mutationResolver) UpdatePermissionToAccessGroup(ctx context.Context, en
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
+	// Check that the access group environment is equal to the environment of the permission being added
+
 	if permOutcome == "denied" {
 		return "", errors.New("Requires permissions.")
 	}
@@ -284,6 +286,8 @@ func (r *mutationResolver) UpdateUserToAccessGroup(ctx context.Context, environm
 	if permOutcome == "denied" {
 		return "", errors.New("Requires permissions.")
 	}
+
+	// Check that the access group environment is equal to the environment being added
 
 	e := models.PermissionsAccessGUsers{
 		AccessGroupID: accessGroupID,
