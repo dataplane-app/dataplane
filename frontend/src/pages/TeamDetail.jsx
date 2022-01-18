@@ -81,7 +81,7 @@ export default function TeamDetail() {
     const deletePermission = useDeletePermission(getUserPermissions);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
     const getUserAccessGroups = useGetUserAccessGroups_(setUserAccessGroups, globalEnvironment?.id, user.user_id);
-    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id, getUserAccessGroups);
+    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id, getUserAccessGroups, accessGroup);
     const removeUserFromAccessGroup = useRemoveUserFromAccessGroup_(getUserAccessGroups);
 
     // Get user data on load
@@ -265,6 +265,7 @@ export default function TeamDetail() {
                                     onClick={() => {
                                         updatePermission();
                                         setClear(clear * -1); // Clears autocomplete input field
+                                        setSelectedPermission(null);
                                     }}
                                     variant="contained"
                                     color="primary"
@@ -364,6 +365,7 @@ export default function TeamDetail() {
                                 onClick={() => {
                                     addUserToEnv(user.user_id, selectedUserEnvironment.id);
                                     setClear(clear * -1);
+                                    setSelectedUserEnvironment(null);
                                 }}
                                 variant="contained"
                                 color="primary"
@@ -421,6 +423,7 @@ export default function TeamDetail() {
                                     onClick={() => {
                                         updateUserToAccessGroup(accessGroup.AccessGroupID);
                                         setClear(clear * -1); // Clears autocomplete input field
+                                        setAccessGroup('');
                                     }}
                                     variant="contained"
                                     color="primary"
@@ -799,11 +802,13 @@ const useGetUserAccessGroups_ = (setUserAccessGroups, environmentID, userID) => 
     };
 };
 
-const useUpdateUserToAccessGroup_ = (environmentID, user_id, getUserAccessGroups) => {
+const useUpdateUserToAccessGroup_ = (environmentID, user_id, getUserAccessGroups, accessGroup) => {
     // GraphQL hook
     const updateUserToAccessGroup = useUpdateUserToAccessGroup();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    if (accessGroup === '') return; // If add button is clicked without a selection
 
     // Add user to group
     return async (access_group_id) => {
