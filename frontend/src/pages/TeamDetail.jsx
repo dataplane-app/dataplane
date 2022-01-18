@@ -9,6 +9,7 @@ import DeactivateUserDrawer from '../components/DrawerContent/DeactivateUserDraw
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
+import { useHistory } from 'react-router-dom';
 import ct from 'countries-and-timezones';
 import { useGetUser } from '../graphql/getUser';
 import { useAvailablePermissions } from '../graphql/availablePermissions';
@@ -42,6 +43,9 @@ export default function TeamDetail() {
         reset,
         formState: { errors },
     } = useForm();
+
+    // Router
+    let history = useHistory();
 
     // User states
     const [user, setUser] = useState({});
@@ -333,26 +337,6 @@ export default function TeamDetail() {
                                     </Box>
                                 </Box>
                             ) : null}
-
-                            {/* <Box mt="3.5rem">
-                                <Typography component="h3" variant="h3" color="text.primary">
-                                    Specific permissions
-                                </Typography>
-                                <Typography variant="subtitle2" mt=".20rem">
-                                    Environment: Production
-                                </Typography>
-
-                                <Box mt={2}>
-                                    {expecificPermissionsItems.map((exp) => (
-                                        <Grid display="flex" alignItems="center" key={exp.id} mt={1.5} mb={1.5}>
-                                            <Box component={FontAwesomeIcon} sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)' }} icon={faTrashAlt} />
-                                            <Typography variant="subtitle2" lineHeight="15.23px">
-                                                {exp.name}
-                                            </Typography>
-                                        </Grid>
-                                    ))}
-                                </Box>
-                            </Box> */}
                         </Box>
                     </Grid>
                     <Grid item sx={{ flex: 1 }}>
@@ -400,7 +384,12 @@ export default function TeamDetail() {
                                         sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
                                         icon={faTrashAlt}
                                     />
-                                    <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
+                                    <Typography
+                                        onClick={() => history.push(`/settings/environment/${env.id}`)}
+                                        variant="subtitle2"
+                                        lineHeight="15.23px"
+                                        color="primary"
+                                        sx={{ cursor: 'pointer' }}>
                                         {env.name}
                                     </Typography>
                                 </Grid>
@@ -452,7 +441,12 @@ export default function TeamDetail() {
                                             sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
                                             icon={faTrashAlt}
                                         />
-                                        <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
+                                        <Typography
+                                            onClick={() => history.push(`/teams/access/${row.AccessGroupID}`)}
+                                            variant="subtitle2"
+                                            lineHeight="15.23px"
+                                            color="primary"
+                                            sx={{ cursor: 'pointer' }}>
                                             {row.Name}
                                         </Typography>
                                     </Grid>
