@@ -245,6 +245,19 @@ func (r *mutationResolver) UpdatePermissionToAccessGroup(ctx context.Context, en
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	// Check that the access group environment is equal to the environment of the permission being added
+	p := models.PermissionsAccessGroups{}
+
+	err := database.DBConn.Where("access_group_id =?", accessGroupID).First(&p).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Add access group database error.")
+	}
+
+	if p.EnvironmentID != environmentID {
+		return "", errors.New("Environment does not match the environment access group belongs.")
+	}
 
 	if permOutcome == "denied" {
 		return "", errors.New("Requires permissions.")
@@ -288,6 +301,19 @@ func (r *mutationResolver) UpdateUserToAccessGroup(ctx context.Context, environm
 	}
 
 	// Check that the access group environment is equal to the environment being added
+	p := models.PermissionsAccessGroups{}
+
+	err := database.DBConn.Where("access_group_id =?", accessGroupID).First(&p).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Add access group database error.")
+	}
+
+	if p.EnvironmentID != environmentID {
+		return "", errors.New("Environment does not match the environment access group belongs.")
+	}
 
 	e := models.PermissionsAccessGUsers{
 		AccessGroupID: accessGroupID,
@@ -296,7 +322,7 @@ func (r *mutationResolver) UpdateUserToAccessGroup(ctx context.Context, environm
 		Active:        true,
 	}
 
-	err := database.DBConn.Create(&e).Error
+	err = database.DBConn.Create(&e).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
