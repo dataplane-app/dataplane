@@ -1,116 +1,71 @@
 type AvailablePermissions {
-    Code:  String!
-	Level: String!
+    Code: String!
+    Level: String!
     Label: String!
-	ResourceID: String!
-	Access: String!
+    ResourceID: String!
+    Access: String!
 }
 
 type Permissions {
-  ID: String!
-	Subject: String!
-	SubjectID: String!
-	Resource:  String!
-	ResourceID: String!
-	Access:        String!
-	Active:        Boolean!
-	EnvironmentID: String!
+    ID: String!
+    Subject: String!
+    SubjectID: String!
+    Resource: String!
+    ResourceID: String!
+    Access: String!
+    Active: Boolean!
+    EnvironmentID: String!
 }
 
 type PermissionsOutput {
-  ID: String!
-	Subject: String!
-	SubjectID: String!
-	Resource:  String!
-	ResourceID: String!
-	Access:        String!
-	Active:        Boolean!
-	EnvironmentID: String!
-	Level: String!
-	Label: String!
-}
-
-type AccessGroups {
-    AccessGroupID: String!
-	Name:          String!
-	Active:        Boolean!
-	EnvironmentID: String!
+    ID: String!
+    Subject: String!
+    SubjectID: String!
+    Resource: String!
+    ResourceID: String!
+    Access: String!
+    Active: Boolean!
+    EnvironmentID: String!
+    Level: String!
+    Label: String!
 }
 
 extend type Query {
-  	"""
-	Retrieve available permissions.
-	+ **Route**: Private
-	+ **Permissions**: none needed
-	"""  
-  availablePermissions(environmentID: String!): [AvailablePermissions]
-  """
-	Retrieve my permissions.
-	+ **Route**: Private
-	+ **Permissions**: logged in user
-	"""  
-  myPermissions: [PermissionsOutput]
-  """
-	Retrieve user's permissions.
-	+ **Route**: Private
-	+ **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
-	"""  
-  userPermissions(userID: String!, environmentID: String!): [PermissionsOutput]
-  """
-	Retrieve access groups for an environment.
-	+ **Route**: Private
-	+ **Permissions**:  ????????
-    """  
-  getAccessGroups(userID: String!, environmentID: String!): [AccessGroups]
+    """
+    Retrieve available permissions.
+    + **Route**: Private
+    + **Permissions**: none needed
+    """
+    availablePermissions(environmentID: String!): [AvailablePermissions]
+    """
+    Retrieve my permissions.
+    + **Route**: Private
+    + **Permissions**: logged in user
+    """
+    myPermissions: [PermissionsOutput]
+    """
+    Retrieve user's permissions.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
+    """
+    userPermissions(userID: String!, environmentID: String!): [PermissionsOutput]
+
 }
 
 extend type Mutation {
-  	"""
-	Create Access Group.
-	+ **Route**: Private
-	+ **Permissions**: admin_platform, admin_environment, environment_permissions
-	"""  
-  createAccessGroup(environmentID: String!, name: String!): String!
 
-  """
-	Delete Access Group.
-	+ **Route**: Private
-	+ **Permissions**: admin_platform, admin_environment, environment_permissions
-	"""  
-  deleteAccessGroup(access_group_id: String!, environmentID: String!): String!
-  
-  """
-	Attach Permission to Access Group.
-	+ **Route**: Private
-	+ **Permissions**: admin_platform, admin_environment, environment_permissions
-	"""  
-  updatePermissionToAccessGroup(environmentID: String!, resource: String!, resourceID: String!, access: String!, access_group_id: String!): String!
-  
-    	"""
-	Grant Permission to User.
-	+ **Route**: Private
-	+ **Permissions**: admin_platform, admin_environment, environment_permissions
-	"""  
-  updatePermissionToUser(environmentID: String!, resource: String!, resourceID: String!, access: String!, user_id: String!): String!
+    """
+    Grant Permission to User.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions
+    """
+    updatePermissionToUser(environmentID: String!, resource: String!, resourceID: String!, access: String!, user_id: String!): String!
 
-   """
-	Revoke Permission from User.
-	+ **Route**: Private
-	+ **Permissions**: admin_platform, admin_environment, environment_permissions
-	"""  
-  deletePermissionToUser(user_id: String!, permission_id: String!, environmentID: String!): String!
+    """
+    Revoke Permission from User.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions
+    """
+    deletePermissionToUser(user_id: String!, permission_id: String!, environmentID: String!): String!
 
-    	"""
-	Attach User to Access Group.
-	+ **Route**: Private
-	+ **Permissions**: admin_platform, admin_environment, environment_permissions
-	"""  
-  updateUserToAccessGroup(environmentID: String!, user_id: String!, access_group_id: String!): String!
-  
-  """
-	Remove User from Access Group.
-	+ **Route**: Private
-	+ **Permissions**: admin_platform, admin_environment, environment_permissions
-	"""  
-  removeUserFromAccessGroup(user_id: String!, access_group_id: String!, environmentID: String!): String!
 }

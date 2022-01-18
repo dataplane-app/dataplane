@@ -1,14 +1,12 @@
-import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer, Autocomplete } from '@mui/material';
+import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer, Autocomplete, alertTitleClasses } from '@mui/material';
 import { useEffect, useState, useRef, useContext } from 'react';
-import Search from '../components/Search';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
-import { belongToAcessGroupsItems, expecificPermissionsItems } from '../utils/teamsMockData';
 import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import DeactivateUserDrawer from '../components/DrawerContent/DeactivateUserDrawer';
-import { useHistory, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
 import ct from 'countries-and-timezones';
@@ -23,25 +21,15 @@ import { useGetEnvironments } from '../graphql/getEnvironments';
 import { useGetUserEnvironments } from '../graphql/getUserEnvironments';
 import { useRemoveUserFromEnvironment } from '../graphql/removeUserToEnvironment';
 import { useAddUserToEnvironment } from '../graphql/addUserToEnvironment';
-import { useCreateAccessGroup } from '../graphql/createAccessGroup';
 import { useGetAccessGroups } from '../graphql/getAccessGroups';
 import { useUpdateUserToAccessGroup } from '../graphql/updateUserToAccessGroup';
+import { useGetUserAccessGroups } from '../graphql/getUserAccessGroups';
+import { useRemoveUserFromAccessGroup } from '../graphql/removeUserFromAccessGroup';
 import { EnvironmentContext } from '../App';
-
-const drawerWidth = 507;
-const drawerStyles = {
-    width: drawerWidth,
-    flexShrink: 0,
-    zIndex: 9998,
-    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-};
 
 export default function TeamDetail() {
     // Context
     const [globalEnvironment] = useContext(EnvironmentContext);
-
-    // React router
-    let history = useHistory();
 
     // Ref for scroll to top
     const scrollRef = useRef(null);
@@ -67,6 +55,8 @@ export default function TeamDetail() {
     const [accessGroup, setAccessGroup] = useState('');
     const [accessGroups, setAccessGroups] = useState([]);
     const [userAccessGroups, setUserAccessGroups] = useState([]);
+
+    // Control state
     const [clear, setClear] = useState(1);
 
     // Sidebar states
@@ -85,9 +75,10 @@ export default function TeamDetail() {
     const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
     const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
     const deletePermission = useDeletePermission(getUserPermissions);
-    const createAccessGroup = useCreateAccessGroup_(globalEnvironment?.id);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
-    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id);
+    const getUserAccessGroups = useGetUserAccessGroups_(setUserAccessGroups, globalEnvironment?.id, user.user_id);
+    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id, getUserAccessGroups);
+    const removeUserFromAccessGroup = useRemoveUserFromAccessGroup_(getUserAccessGroups);
 
     // Get user data on load
     useEffect(() => {
@@ -125,10 +116,10 @@ export default function TeamDetail() {
             getAccessGroups();
         }
 
-        // // Get access groups the user belongs when user environment and id are available and if empty
-        // if (globalEnvironment && user && userAccessGroups.length === 0) {
-        //     //
-        // }
+        // Get access groups the user belongs when user environment and id are available and if empty
+        if (globalEnvironment && user.user_id && userAccessGroups.length === 0) {
+            getUserAccessGroups();
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [globalEnvironment?.id, user.user_id]);
@@ -258,7 +249,7 @@ export default function TeamDetail() {
                                         setSelectedPermission(newValue);
                                     }}
                                     sx={{ minWidth: '280px' }}
-                                    // Filter out users permissions from available permissions
+                                    // Filter out user's permissions from available permissions
                                     options={filterPermissionsDropdown(availablePermissions, userPermissions, globalEnvironment?.id)}
                                     getOptionLabel={(option) => option.Label}
                                     renderInput={(params) => (
@@ -279,62 +270,71 @@ export default function TeamDetail() {
                                 </Button>
                             </Grid>
 
-                            <Box mt={4}>
-                                <Typography component="h3" variant="h3" color="text.primary">
-                                    Platform
-                                </Typography>
-                            </Box>
+                            {/* Check if there are any permissions. If not, hide the box */}
+                            {userPermissions.filter((plat) => plat.Level === 'platform').length ? (
+                                <Box mt={4}>
+                                    <Box>
+                                        <Typography component="h3" variant="h3" color="text.primary">
+                                            Platform
+                                        </Typography>
+                                    </Box>
 
-                            <Box mt={2}>
-                                {userPermissions
-                                    .filter((plat) => plat.Resource.includes('platform'))
-                                    .map((plat) => (
-                                        <Grid display="flex" alignItems="center" key={plat.Label} mt={1.5} mb={1.5}>
-                                            <Box
-                                                onClick={() => !(user.user_id === meData.user_id && plat.Label === 'Admin') && deletePermission(plat)}
-                                                component={FontAwesomeIcon}
-                                                sx={{
-                                                    fontSize: '17px',
-                                                    mr: '7px',
-                                                    color: user.user_id === meData.user_id && plat.Label === 'Admin' ? 'rgba(0, 0, 0, 0.26)' : 'rgba(248, 0, 0, 1)',
-                                                    cursor: !(user.user_id === meData.user_id && plat.Label === 'Admin') && 'pointer',
-                                                }}
-                                                icon={faTrashAlt}
-                                            />
-                                            <Typography variant="subtitle2" lineHeight="15.23px">
-                                                {plat.Label}
-                                            </Typography>
-                                        </Grid>
-                                    ))}
-                            </Box>
-                            <Box mt="2.31rem">
-                                <Typography component="h3" variant="h3" color="text.primary">
-                                    Environment permissions
-                                </Typography>
-                                <Typography variant="subtitle2" mt=".20rem">
-                                    Environment: {globalEnvironment?.name}
-                                </Typography>
-
-                                <Box mt={2}>
-                                    {userPermissions
-                                        .filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === globalEnvironment.id)
-                                        .map((env) => (
-                                            <Grid display="flex" alignItems="center" key={env.Label} mt={1.5} mb={1.5}>
-                                                <Box
-                                                    onClick={() => deletePermission(env)}
-                                                    component={FontAwesomeIcon}
-                                                    sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
-                                                    icon={faTrashAlt}
-                                                />
-                                                <Typography variant="subtitle2" lineHeight="15.23px">
-                                                    {env.Label}
-                                                </Typography>
-                                            </Grid>
-                                        ))}
+                                    <Box mt={2}>
+                                        {userPermissions
+                                            .filter((plat) => plat.Resource.includes('platform'))
+                                            .map((plat) => (
+                                                <Grid display="flex" alignItems="center" key={plat.Label} mt={1.5} mb={1.5}>
+                                                    <Box
+                                                        onClick={() => !(user.user_id === meData.user_id && plat.Label === 'Admin') && deletePermission(plat)}
+                                                        component={FontAwesomeIcon}
+                                                        sx={{
+                                                            fontSize: '17px',
+                                                            mr: '7px',
+                                                            color: user.user_id === meData.user_id && plat.Label === 'Admin' ? 'rgba(0, 0, 0, 0.26)' : 'rgba(248, 0, 0, 1)',
+                                                            cursor: !(user.user_id === meData.user_id && plat.Label === 'Admin') && 'pointer',
+                                                        }}
+                                                        icon={faTrashAlt}
+                                                    />
+                                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                                        {plat.Label}
+                                                    </Typography>
+                                                </Grid>
+                                            ))}
+                                    </Box>
                                 </Box>
-                            </Box>
+                            ) : null}
 
-                            <Box mt="3.5rem">
+                            {/* Check if there are any permissions. If not, hide the box */}
+                            {userPermissions.filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === globalEnvironment.id).length ? (
+                                <Box mt="2.31rem">
+                                    <Typography component="h3" variant="h3" color="text.primary">
+                                        Environment permissions
+                                    </Typography>
+                                    <Typography variant="subtitle2" mt=".20rem">
+                                        Environment: {globalEnvironment?.name}
+                                    </Typography>
+
+                                    <Box mt={2}>
+                                        {userPermissions
+                                            .filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === globalEnvironment.id)
+                                            .map((env) => (
+                                                <Grid display="flex" alignItems="center" key={env.Label} mt={1.5} mb={1.5}>
+                                                    <Box
+                                                        onClick={() => deletePermission(env)}
+                                                        component={FontAwesomeIcon}
+                                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                                        icon={faTrashAlt}
+                                                    />
+                                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                                        {env.Label}
+                                                    </Typography>
+                                                </Grid>
+                                            ))}
+                                    </Box>
+                                </Box>
+                            ) : null}
+
+                            {/* <Box mt="3.5rem">
                                 <Typography component="h3" variant="h3" color="text.primary">
                                     Specific permissions
                                 </Typography>
@@ -352,7 +352,7 @@ export default function TeamDetail() {
                                         </Grid>
                                     ))}
                                 </Box>
-                            </Box>
+                            </Box> */}
                         </Box>
                     </Grid>
                     <Grid item sx={{ flex: 1 }}>
@@ -371,7 +371,6 @@ export default function TeamDetail() {
                                 sx={{ minWidth: '280px' }}
                                 // Filter out users permissions from available permissions
                                 options={availableEnvironments.filter((row) => !userEnvironments.map((a) => a.id).includes(row.id)) || ''}
-                                // options={availableEnvironments}
                                 getOptionLabel={(option) => option.name}
                                 renderInput={(params) => (
                                     <TextField {...params} label="Available environments" id="available_environments" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
@@ -414,26 +413,26 @@ export default function TeamDetail() {
                             </Typography>
 
                             <Grid mt={2} display="flex" alignItems="center">
-                                {/* <Search placeholder="Find access groups" /> */}
                                 <Autocomplete
                                     disablePortal
                                     id="available_access_groups"
                                     key={clear} //Changing this value on submit clears the input field
                                     onChange={(event, newValue) => {
                                         setAccessGroup(newValue);
-                                        // alert(JSON.stringify(newValue));
                                     }}
                                     sx={{ minWidth: '280px' }}
                                     // Filter out available access groups from the ones user belongs
-                                    // options={availableEnvironments.filter((row) => !userEnvironments.map((a) => a.id).includes(row.id)) || ''}
-                                    options={accessGroups}
+                                    options={accessGroups.filter((row) => !userAccessGroups.map((a) => a.AccessGroupID).includes(row.AccessGroupID)) || ''}
                                     getOptionLabel={(option) => option.Name}
                                     renderInput={(params) => (
                                         <TextField {...params} label="Find access groups" id="access_groups" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
                                     )}
                                 />
                                 <Button
-                                    onClick={() => updateUserToAccessGroup(accessGroup.AccessGroupID)} //
+                                    onClick={() => {
+                                        updateUserToAccessGroup(accessGroup.AccessGroupID);
+                                        setClear(clear * -1); // Clears autocomplete input field
+                                    }}
                                     variant="contained"
                                     color="primary"
                                     height="100%"
@@ -443,16 +442,18 @@ export default function TeamDetail() {
                             </Grid>
 
                             <Box mt="1.31rem">
-                                {belongToAcessGroupsItems.map((env) => (
-                                    <Grid
-                                        sx={{ cursor: 'pointer', pt: 1.5, pb: 1.5, borderRadius: 2, '&:hover': { background: 'rgba(196, 196, 196, 0.15)' } }}
-                                        display="flex"
-                                        alignItems="center"
-                                        key={env.id}
-                                        onClick={() => history.push(`/teams/access/${env.name}`)}>
-                                        <Box component={FontAwesomeIcon} sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)' }} icon={faTrashAlt} />
+                                {userAccessGroups.map((row) => (
+                                    <Grid display="flex" alignItems="center" key={row.Name} mt={1.5} mb={1.5}>
+                                        <Box
+                                            onClick={() => {
+                                                removeUserFromAccessGroup(row.AccessGroupID, row.EnvironmentID, row.UserID);
+                                            }}
+                                            component={FontAwesomeIcon}
+                                            sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                            icon={faTrashAlt}
+                                        />
                                         <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
-                                            {env.name}
+                                            {row.Name}
                                         </Typography>
                                     </Grid>
                                 ))}
@@ -462,15 +463,15 @@ export default function TeamDetail() {
                 </Grid>
             </Box>
 
-            <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)} sx={drawerStyles}>
+            <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)}>
                 <ChangePasswordDrawer handleClose={() => setIsOpenPassword(false)} />
             </Drawer>
 
-            <Drawer anchor="right" open={isOpenDeactivateUser} onClose={() => setIsOpenDeactivateUser(!isOpenDeactivateUser)} sx={drawerStyles}>
+            <Drawer anchor="right" open={isOpenDeactivateUser} onClose={() => setIsOpenDeactivateUser(!isOpenDeactivateUser)}>
                 <DeactivateUserDrawer user={user} handleClose={() => setIsOpenDeactivateUser(false)} refreshData={getUserData} />
             </Drawer>
 
-            <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
+            <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)}>
                 <DeleteUserDrawer user={user} handleClose={() => setIsOpenDeleteUser(false)} refreshData={getUserData} />
             </Drawer>
         </>
@@ -758,29 +759,6 @@ const useDeletePermission = (getUserPermissions) => {
     };
 };
 
-const useCreateAccessGroup_ = (environmentID) => {
-    // GraphQL hook
-    const createAccessGroup = useCreateAccessGroup();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Create access group
-    return async (name) => {
-        const response = await createAccessGroup({ environmentID });
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't delete permission: " + response.msg, {
-                variant: 'error',
-            });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            enqueueSnackbar('Success', { variant: 'success' });
-        }
-    };
-};
-
 const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
     // GraphQL hook
     const getAccessGroups = useGetAccessGroups();
@@ -804,7 +782,30 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
     };
 };
 
-const useUpdateUserToAccessGroup_ = (environmentID, user_id) => {
+const useGetUserAccessGroups_ = (setUserAccessGroups, environmentID, userID) => {
+    // GraphQL hook
+    const getUserAccessGroups = useGetUserAccessGroups();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get user's access groups
+    return async () => {
+        const response = await getUserAccessGroups({ environmentID, userID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get user's access groups: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ": get user's access groups failed", { variant: 'error' }));
+        } else {
+            setUserAccessGroups(response);
+        }
+    };
+};
+
+const useUpdateUserToAccessGroup_ = (environmentID, user_id, getUserAccessGroups) => {
     // GraphQL hook
     const updateUserToAccessGroup = useUpdateUserToAccessGroup();
 
@@ -823,6 +824,29 @@ const useUpdateUserToAccessGroup_ = (environmentID, user_id) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
+            getUserAccessGroups();
+        }
+    };
+};
+
+const useRemoveUserFromAccessGroup_ = (getUserAccessGroups) => {
+    // GraphQL hook
+    const removeUserFromAccessGroup = useRemoveUserFromAccessGroup();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Remove user from an access group
+    return async (access_group_id, environmentID, user_id) => {
+        const response = await removeUserFromAccessGroup({ user_id, environmentID, access_group_id });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': remove user from access group failed', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getUserAccessGroups();
         }
     };
 };

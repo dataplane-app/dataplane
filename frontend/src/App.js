@@ -19,6 +19,7 @@ import TeamDetail from './pages/TeamDetail';
 import MemberDetail from './pages/MemberDetail';
 import TeamGroup from './pages/TeamGroup';
 import Teams from './pages/Teams';
+import AccessGroups from './pages/AccessGroups';
 import Settings from './pages/Settings';
 import EnvironmentDetail from './pages/EnvironmentDetail';
 
@@ -54,66 +55,78 @@ function App() {
 
     return (
         <ColorModeContext.Provider value={colorModeToggle}>
-<EnvironmentContext.Provider value={environmentProvider}>
-            <ThemeProvider theme={theme}>
-                <SnackbarProvider
-                    hideIconVariant={true}
-                    ref={notistackRef}
-                    anchorOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right',
-                    }}
-                    action={(key) => (
-                        <Button onClick={onClickDismiss(key)} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <Box component={FontAwesomeIcon} color="white" icon={faTimesCircle} />
-                        </Button>
-                    )}
-                    autoHideDuration={60000}>
-                    <Box className="app" backgroundColor="background.main">
-                        <UserAuth refreshTokenUrl="/refreshtoken" LogincallbackUrl="/loginCallback" loginUrl="/webapp/login" logoutUrl="/webapp/logout">
-                            <Route exact path="/congratulations">
-                                <Congratulations />
-                            </Route>
-                            <Route exact path="/get-started">
-                                <GetStarted />
-                            </Route>
-                            <Route exact path="/login">
-                                <LoginUser />
-                            </Route>
-                            <PrivateRoute
-                                exact
-                                path={['/', '/teams', '/teams/:teamId', '/myaccount/:memberId', '/teams/access/:accessId', '/settings', '/settings/environment/:environmentId']}>
-                                <Layout>
-                                    <Route exact path="/">
-                                        <Pipelines />
-                                    </Route>
-                                    <Route exact path="/teams">
-                                        <Teams />
-                                    </Route>
-                                    <Route exact path="/teams/:teamId">
-                                        <TeamDetail />
-                                    </Route>
-                                    <Route exact path="/teams/access/:accessId">
-                                        <TeamGroup />
-                                    </Route>
-                                    <Route exact path="/myaccount/:memberId">
-                                        <MemberDetail />
-                                    </Route>
-                                    <Route exact path="/settings">
-                                        <Settings />
-                                    </Route>
-                                    <Route exact path="/settings/environment/:environmentId">
-                                        <EnvironmentDetail />
-                                    </Route>
-                                </Layout>
-                            </PrivateRoute>
-                            <PrivateRoute exact path="/logout">
-                                <LogoutUser />
-                            </PrivateRoute>
-                        </UserAuth>
-                    </Box>
-                </SnackbarProvider>
-            </ThemeProvider>
+            <EnvironmentContext.Provider value={environmentProvider}>
+                <ThemeProvider theme={theme}>
+                    <SnackbarProvider
+                        hideIconVariant={true}
+                        ref={notistackRef}
+                        anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                        action={(key) => (
+                            <Button onClick={onClickDismiss(key)} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <Box component={FontAwesomeIcon} color="white" icon={faTimesCircle} />
+                            </Button>
+                        )}
+                        autoHideDuration={60000}>
+                        <Box className="app" backgroundColor="background.main">
+                            <UserAuth refreshTokenUrl="/refreshtoken" LogincallbackUrl="/loginCallback" loginUrl="/webapp/login" logoutUrl="/webapp/logout">
+                                <Route exact path="/congratulations">
+                                    <Congratulations />
+                                </Route>
+                                <Route exact path="/get-started">
+                                    <GetStarted />
+                                </Route>
+                                <Route exact path="/login">
+                                    <LoginUser />
+                                </Route>
+                                <PrivateRoute
+                                    exact
+                                    path={[
+                                        '/',
+                                        '/teams',
+                                        '/teams/:teamId',
+                                        '/teams/access/:accessId',
+                                        '/myaccount/:memberId',
+                                        '/access_groups',
+                                        '/settings',
+                                        '/settings/environment/:environmentId',
+                                    ]}>
+                                    <Layout>
+                                        <Route exact path="/">
+                                            <Pipelines />
+                                        </Route>
+                                        <Route exact path="/teams">
+                                            <Teams />
+                                        </Route>
+                                        <Route exact path="/teams/:teamId">
+                                            <TeamDetail />
+                                        </Route>
+                                        <Route exact path="/teams/access/:accessId">
+                                            <TeamGroup />
+                                        </Route>
+                                        <Route exact path="/access_groups">
+                                            <AccessGroups />
+                                        </Route>
+                                        <Route exact path="/myaccount/:memberId">
+                                            <MemberDetail />
+                                        </Route>
+                                        <Route exact path="/settings">
+                                            <Settings />
+                                        </Route>
+                                        <Route exact path="/settings/environment/:environmentId">
+                                            <EnvironmentDetail />
+                                        </Route>
+                                    </Layout>
+                                </PrivateRoute>
+                                <PrivateRoute exact path="/logout">
+                                    <LogoutUser />
+                                </PrivateRoute>
+                            </UserAuth>
+                        </Box>
+                    </SnackbarProvider>
+                </ThemeProvider>
             </EnvironmentContext.Provider>
         </ColorModeContext.Provider>
     );

@@ -25,6 +25,8 @@ models:
    model: dataplane/database/models.PermissionsOutput
  AccessGroups:
    model: dataplane/database/models.PermissionsAccessGroups
+ PermissionsAccessGUsersOutput:
+   model: dataplane/database/models.PermissionsAccessGUsersOutput
 
 resolver:
   layout: follow-schema

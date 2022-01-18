@@ -17,7 +17,17 @@ import (
 For individual tests - in separate window run: go run server.go
 go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/permissions
 * Login
-* Get environments
+* Create access group
+* Update access group
+* Attach permission to access group
+* Attach user to access group
+* Get access group's users
+* Get user access groups
+* Get access groups
+* Get access group
+* Remove user from access group
+* Deactivate Access Group
+* Delete Access Group
 */
 func TestAccessGroups(t *testing.T) {
 
@@ -62,6 +72,7 @@ func TestAccessGroups(t *testing.T) {
 		createAccessGroup(
 			environmentID: "` + envID + `",
 			name: "access-group-` + uuid.NewString() + `",
+			description: "description",
 		)
 	}`
 
@@ -75,6 +86,28 @@ func TestAccessGroups(t *testing.T) {
 	}
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+
+	// -------- Update Access Group  -------------
+	mutation = `mutation {
+		updateAccessGroup(input:{
+			AccessGroupID: "` + accessgroup + `"
+			EnvironmentID: "` + envID + `",
+			Name: "access-group-` + uuid.NewString() + `",
+			Description: "description",
+			Active: true
+		}
+		)
+	}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Update access group 200 status code")
 
 	// -------- Attach permission to Access Group  -------------
 	mutation = `mutation {
@@ -115,6 +148,109 @@ func TestAccessGroups(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
+	// -------- GetAccess Group's users  -------------
+
+	query := `query {
+			getAccessGroupUsers(
+				environmentID: "` + envID + `",
+				access_group_id: "` + accessgroup + `"
+				)
+			{
+				user_id
+				first_name
+				last_name
+				email
+				job_title
+				timezone
+				status
+				user_type
+			 }
+		}`
+
+	log.Println("!!!!!!!!!!!!!!!!!!!!!!!", accessgroup)
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get access group's users 200 status code")
+
+	// -------- Get User's Access Groups  -------------
+
+	query = `query {
+			getUserAccessGroups(
+				environmentID: "` + envID + `",
+				userID: "` + usertoadd + `"
+				) 
+			{
+				AccessGroupID
+				Name
+				Active
+				EnvironmentID
+			}
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get user's access groups 200 status code")
+
+	// -------- Get Access Groups  -------------
+
+	query = `query {
+					getAccessGroups(
+						environmentID: "` + envID + `",
+						userID: "` + usertoadd + `") 
+					{
+						AccessGroupID
+						Name
+						Active
+						EnvironmentID
+					}
+				}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+
+	// -------- Get Access Group  -------------
+
+	query = `query {
+			getAccessGroup(
+				environmentID: "` + envID + `",
+				userID: "` + usertoadd + `",
+			    access_group_id: "` + accessgroup + `",) 
+			{
+				AccessGroupID
+				Name
+				Active
+				EnvironmentID
+			}
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
 
 	// -------- Remove user from access group -------
@@ -133,6 +269,43 @@ func TestAccessGroups(t *testing.T) {
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
 	}
+
+	// -------- Deactivate Access Group  -------------
+	mutation = `mutation {
+		deactivateAccessGroup(
+				environmentID: "` + envID + `",
+				access_group_id: "` + accessgroup + `",
+			)
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+
+	// -------- Activate Access Group  -------------
+	mutation = `mutation {
+		activateAccessGroup(
+				environmentID: "` + envID + `",
+				access_group_id: "` + accessgroup + `",
+			)
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+
 	// -------- Delete Access Group  -------------
 	mutation = `mutation {
 			deleteAccessGroup(

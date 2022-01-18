@@ -3,22 +3,13 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
-const GetUser = gql`
-    query getUser($user_id: String!) {
-        getUser(user_id: $user_id) {
-            user_id
-            first_name
-            last_name
-            email
-            job_title
-            timezone
-            status
-            user_type
-        }
+const query = gql`
+    mutation activateAccessGroup($environmentID: String!, $access_group_id: String!) {
+        activateAccessGroup(environmentID: $environmentID, access_group_id: $access_group_id)
     }
 `;
 
-export const useGetUser = () => {
+export const useActivateAccessGroup = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -32,8 +23,8 @@ export const useGetUser = () => {
 
     return async (input) => {
         try {
-            const res = await client.request(GetUser, input);
-            return res?.getUser;
+            const res = await client.request(query, input);
+            return res?.activateAccessGroup;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

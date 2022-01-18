@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation createAccessGroup($environmentID: String!, $name: String!) {
-        createAccessGroup(environmentID: $environmentID, name: $name)
+    mutation createAccessGroup($environmentID: String!, $name: String!, $description: String) {
+        createAccessGroup(environmentID: $environmentID, name: $name, description: $description)
     }
 `;
 
