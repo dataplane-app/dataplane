@@ -1,0 +1,109 @@
+type AccessGroups {
+    AccessGroupID: String!
+    Name: String!
+    Description: String
+    Active: Boolean!
+    EnvironmentID: String!
+}
+
+input AccessGroupsInput {
+    AccessGroupID: String!
+    Name: String!
+    Description: String!
+    Active: Boolean!
+    EnvironmentID: String!
+}
+
+type PermissionsAccessGUsersOutput {
+    AccessGroupID: String!
+    Name: String!
+    UserID: String!
+    Active: Boolean!
+    EnvironmentID: String!
+}
+
+extend type Query {
+
+    """
+    Retrieve access groups for an environment.
+    + **Route**: Private
+    + **Permissions**:  admin_platform, admin_environment, environment_permissions, 
+    """
+    getAccessGroups(userID: String!, environmentID: String!): [AccessGroups]
+    """
+    Retrieve an access group for an environment.
+    + **Route**: Private
+    + **Permissions**:  admin_platform, admin_environment, environment_permissions, 
+    """
+    getAccessGroup(userID: String!, environmentID: String!, access_group_id: String!): AccessGroups
+    """
+	Retrieve user's access groups for an environment.
+	+ **Route**: Private
+	+ **Permissions**:  admin_platform, admin_environment, environment_permissions, 
+    """  
+    getUserAccessGroups(userID: String!, environmentID: String!): [PermissionsAccessGUsersOutput]
+    """
+	Retrieve an access group's members for an environment.
+	+ **Route**: Private
+	+ **Permissions**:  admin_platform, admin_environment, environment_permissions, 
+    """  
+    getAccessGroupUsers( environmentID: String!, access_group_id: String!): [User]
+}
+
+extend type Mutation {
+    """
+    Create Access Group.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions
+    """
+    createAccessGroup(environmentID: String!, name: String!, description: String): String!
+
+    """
+    Update Access Group.
+    + **Route**: Private
+??? + **Permissions**: admin_platform, admin_environment, environment_permissions
+    """
+    updateAccessGroup(input: AccessGroupsInput): String!
+
+    """
+    Activate Access Group.
+    + **Route**: Private
+??? + **Permissions**: admin_platform, admin_environment, environment_permissions
+    """
+    activateAccessGroup(access_group_id: String!, environmentID: String!,): String!
+
+    """
+    Deactivate Access Group.
+    + **Route**: Private
+??? + **Permissions**: admin_platform, admin_environment, environment_permissions
+    """
+    deactivateAccessGroup(access_group_id: String!, environmentID: String!,): String!
+
+    """
+    Delete Access Group.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions
+    """
+    deleteAccessGroup(access_group_id: String!, environmentID: String!,): String!
+
+    """
+    Attach Permission to Access Group.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions
+    """
+    updatePermissionToAccessGroup(environmentID: String!, resource: String!, resourceID: String!, access: String!, access_group_id: String!): String!
+
+    """
+    Attach User to Access Group.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions
+    """
+    updateUserToAccessGroup(environmentID: String!, user_id: String!, access_group_id: String!): String!
+
+    """
+    Remove User from Access Group.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions
+    """
+    removeUserFromAccessGroup(user_id: String!, access_group_id: String!, environmentID: String!): String!
+}

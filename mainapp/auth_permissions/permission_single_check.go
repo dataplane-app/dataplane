@@ -23,6 +23,7 @@ func PermissionSingleCheck(
 	rid := Checkstruct{}
 	permresult := "denied"
 
+	/* Access groups operate at environment level. The environment id will be equal to provided environment id. */
 	result := database.DBConn.Raw(
 		`
 		(select 
@@ -62,6 +63,7 @@ func PermissionSingleCheck(
 		p.resource_id = ?
 		and p.access= ?
 		and p.environment_id = ?
+		and p.environment_id = agu.environment_id
 		and p.active = true
 		)
 `,
