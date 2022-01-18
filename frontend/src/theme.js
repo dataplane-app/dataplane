@@ -44,8 +44,11 @@ const createCustomTheme = (mode) => ({
               }
             : {
                   success: {
-                      main: '#497B27',
+                      main: '#72B842',
                       light: 'rgba(73, 123, 39, 0.31)',
+                  },
+                  error: {
+                      main: '#F80000',
                   },
                   secondary: {
                       main: '#FF5722',
@@ -134,7 +137,8 @@ const createCustomTheme = (mode) => ({
                 paper: {
                     boxSizing: 'border-box',
                     width: 507,
-                    backgroundColor: mode === 'light' ? '#F7FBFD' : '#292929',
+                    backgroundColor: mode === 'light' ? '#F7FBFD' : '#081E3A',
+                    backgroundImage: 'none',
                 },
             },
         },
