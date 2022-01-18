@@ -10,7 +10,7 @@ import { useAvailablePermissions } from '../../graphql/availablePermissions';
 import { useGetUserPermissions } from '../../graphql/getUserPermissions';
 import { useDeletePermissionToUser } from '../../graphql/deletePermissionToUser';
 
-export default function Permissions() {
+export default function Permissions({ environmentId }) {
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
 
@@ -26,7 +26,7 @@ export default function Permissions() {
     // Custom GraphQL hooks
     const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, Environment.id.get());
     const getPermissions = useGetPermissions(setPermissions, Environment.id.get());
-    const updatePermission = useUpdatePermissions(getPermissions, selectedPermission, Environment.id.get());
+    const updatePermission = useUpdatePermissions(getPermissions, selectedPermission, environmentId);
     const deletePermission = useDeletePermission(getPermissions);
 
     // Get permissions on load
@@ -57,7 +57,7 @@ export default function Permissions() {
                     }}
                     sx={{ minWidth: '280px' }}
                     // Filter out user's permissions from available permissions
-                    options={filterPermissionsDropdown(availablePermissions, permissions, Environment.id.get())}
+                    options={filterPermissionsDropdown(availablePermissions, permissions, environmentId)}
                     getOptionLabel={(option) => option.Label}
                     renderInput={(params) => (
                         <TextField {...params} label="Available permissions" id="available_permissions" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
@@ -68,6 +68,7 @@ export default function Permissions() {
                     onClick={() => {
                         updatePermission();
                         setClear(clear * -1); // Clears autocomplete input field
+                        setSelectedPermission(null);
                     }}
                     variant="contained"
                     color="primary"
@@ -78,65 +79,26 @@ export default function Permissions() {
             </Grid>
 
             {/* Check if there are any permissions. If not, hide the box */}
-            {permissions.filter((plat) => plat.Level === 'platform').length ? (
-                <Box mt={4}>
-                    <Box>
-                        <Typography component="h3" variant="h3" color="text.primary">
-                            Platform
-                        </Typography>
-                    </Box>
-
-                    <Box mt={2}>
-                        {permissions
-                            .filter((plat) => plat.Resource.includes('platform'))
-                            .map((plat) => (
-                                <Grid display="flex" alignItems="center" key={plat.Label} mt={1.5} mb={1.5}>
-                                    <Box
-                                        onClick={() => deletePermission(plat)}
-                                        component={FontAwesomeIcon}
-                                        sx={{
-                                            fontSize: '17px',
-                                            mr: '7px',
-                                            color: 'rgba(248, 0, 0, 1)',
-                                            cursor: 'pointer',
-                                        }}
-                                        icon={faTrashAlt}
-                                    />
-                                    <Typography variant="subtitle2" lineHeight="15.23px">
-                                        {plat.Label}
-                                    </Typography>
-                                </Grid>
-                            ))}
-                    </Box>
-                </Box>
-            ) : null}
-
-            {/* Check if there are any permissions. If not, hide the box */}
-            {permissions.filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === Environment.id.get()).length ? (
+            {permissions.length ? (
                 <Box mt="2.31rem">
                     <Typography component="h3" variant="h3" color="text.primary">
                         Environment permissions
                     </Typography>
-                    <Typography variant="subtitle2" mt=".20rem">
-                        Environment: {Environment.name.get()}
-                    </Typography>
 
                     <Box mt={2}>
-                        {permissions
-                            .filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === Environment.id.get())
-                            .map((env) => (
-                                <Grid display="flex" alignItems="center" key={env.Label} mt={1.5} mb={1.5}>
-                                    <Box
-                                        onClick={() => deletePermission(env)}
-                                        component={FontAwesomeIcon}
-                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
-                                        icon={faTrashAlt}
-                                    />
-                                    <Typography variant="subtitle2" lineHeight="15.23px">
-                                        {env.Label}
-                                    </Typography>
-                                </Grid>
-                            ))}
+                        {permissions.map((env) => (
+                            <Grid display="flex" alignItems="center" key={env.Label} mt={1.5} mb={1.5}>
+                                <Box
+                                    onClick={() => deletePermission(env)}
+                                    component={FontAwesomeIcon}
+                                    sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                    icon={faTrashAlt}
+                                />
+                                <Typography variant="subtitle2" lineHeight="15.23px">
+                                    {env.Label}
+                                </Typography>
+                            </Grid>
+                        ))}
                     </Box>
                 </Box>
             ) : null}
@@ -184,16 +146,12 @@ const useUpdatePermissions = (getUserPermissions, selectedPermission, environmen
 
     if (selectedPermission === null) return; // If add button is clicked without a selection
 
-    // If level environment, set resource id to current environment's id
-    if (selectedPermission.Level === 'environment') {
-        selectedPermission.ResourceID = environmentID;
-    }
     // Update permissions
     return async () => {
         const response = await updatePermissionToUser({
             environmentID,
             resource: selectedPermission.Code,
-            resourceID: selectedPermission.ResourceID,
+            resourceID: environmentID,
             access_group_id: accessId,
             access: selectedPermission.Access,
         });
@@ -262,12 +220,6 @@ const useDeletePermission = (getUserPermissions) => {
 // Filters permissions dropdown from selected permissions
 function filterPermissionsDropdown(availablePermissions, userPermissions, globalEnvironmentId) {
     return [
-        // Filter platform permissions
-        ...availablePermissions.filter(
-            (permission) =>
-                permission.Level === 'platform' && //
-                !userPermissions.map((a) => a.Resource).includes(permission.Code)
-        ),
         // Filter environment permissions
         ...availablePermissions.filter(
             (permission) =>

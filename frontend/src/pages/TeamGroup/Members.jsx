@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, Typography, Button, Grid, Autocomplete, TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
+import { useHistory } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { useParams } from 'react-router-dom';
 import { useGetUsers } from '../../graphql/getUsers';
@@ -18,10 +19,13 @@ export default function Members({ environmentId }) {
     // Control state
     const [clear, setClear] = useState(1);
 
+    // React router
+    let history = useHistory();
+
     // Custom GraphQL hooks
     const getUsers = useGetUsers_(setUsers);
     const getAccessGroupUsers = useGetAccessGroupUsers_(environmentId, setAccessGroupUsers);
-    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(environmentId, selectedUser?.user_id, getAccessGroupUsers);
+    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(environmentId, selectedUser, getAccessGroupUsers);
     const removeUserFromAccessGroup = useRemoveUserFromAccessGroup_(environmentId, getAccessGroupUsers);
 
     // Get members on load
@@ -56,6 +60,7 @@ export default function Members({ environmentId }) {
                     onClick={() => {
                         updateUserToAccessGroup();
                         setClear(clear * -1); // Clears autocomplete input field
+                        setSelectedUser(null);
                     }}
                     variant="contained"
                     color="primary"
@@ -76,7 +81,13 @@ export default function Members({ environmentId }) {
                             sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
                             icon={faTrashAlt}
                         />
-                        <Typography variant="subtitle2" lineHeight="15.23px" color="primary" fontWeight="900">
+                        <Typography
+                            onClick={() => history.push(`/teams/${row.user_id}`)}
+                            variant="subtitle2"
+                            lineHeight="15.23px"
+                            color="primary"
+                            fontWeight="900"
+                            sx={{ cursor: 'pointer' }}>
                             {row.first_name} {row.last_name}
                         </Typography>
                     </Grid>
@@ -136,7 +147,7 @@ const useGetAccessGroupUsers_ = (environmentID, setAccessGroupUsers) => {
     };
 };
 
-const useUpdateUserToAccessGroup_ = (environmentID, user_id, getAccessGroupUsers) => {
+const useUpdateUserToAccessGroup_ = (environmentID, selectedUser, getAccessGroupUsers) => {
     // GraphQL hook
     const updateUserToAccessGroup = useUpdateUserToAccessGroup();
 
@@ -145,9 +156,11 @@ const useUpdateUserToAccessGroup_ = (environmentID, user_id, getAccessGroupUsers
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
+    if (selectedUser === null) return; // If add button is clicked without a selection
+
     // Get members
     return async () => {
-        const response = await updateUserToAccessGroup({ environmentID, user_id, access_group_id: accessId });
+        const response = await updateUserToAccessGroup({ environmentID, user_id: selectedUser.user_id, access_group_id: accessId });
 
         if (response.r === 'error') {
             closeSnackbar();
