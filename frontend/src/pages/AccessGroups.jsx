@@ -25,14 +25,16 @@ const AccessGroups = () => {
     const [isOpenAddAccessGroup, setIsOpenAddAccessGroup] = useState(false);
 
     // Custom hook
-    const getAccessGroups = useGetAccessGroups_(Environment.id.get(), MeData.user_id.get(), setData);
+    const getAccessGroups = useGetAccessGroups_(MeData.user_id.get(), setData);
 
     // Get access groups on load
     useEffect(() => {
-        getAccessGroups();
+        if (Environment.id.get()) {
+            getAccessGroups(Environment.id.get());
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [Environment.id.get()]);
 
     const columns = useMemo(
         () => [
@@ -72,8 +74,7 @@ const AccessGroups = () => {
             </Typography>
 
             <Typography variant="subtitle2" mt=".20rem">
-                {/* Environment: {accessGroupEnvironmentName} */}
-                {/* Environment: Development */}
+                Environment: {Environment.name.get()}
             </Typography>
 
             <Box mt={4} sx={{ width: '640px' }}>
@@ -177,14 +178,14 @@ const CustomAccessGroup = ({ row, onClick }) => {
 export default AccessGroups;
 
 // ------- Custom Hooks
-const useGetAccessGroups_ = (environmentID, userID, setAccessGroups) => {
+const useGetAccessGroups_ = (userID, setAccessGroups) => {
     // GraphQL hook
     const getAccessGroups = useGetAccessGroups();
 
     const { enqueueSnackbar } = useSnackbar();
 
     // Get access groups on load
-    return async () => {
+    return async (environmentID) => {
         const response = await getAccessGroups({ environmentID, userID });
 
         if (response.r === 'error') {
@@ -192,7 +193,7 @@ const useGetAccessGroups_ = (environmentID, userID, setAccessGroups) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setAccessGroups(response);
+            setAccessGroups(response.filter((a) => a.EnvironmentID === environmentID));
         }
     };
 };

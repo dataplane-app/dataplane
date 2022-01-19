@@ -69,7 +69,7 @@ const useCreateAccessGroup_ = (environmentID, handleClose, getAccessGroups) => {
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             handleClose();
-            getAccessGroups();
+            getAccessGroups(environmentID);
         }
     };
 };
