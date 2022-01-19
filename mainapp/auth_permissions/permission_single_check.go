@@ -65,6 +65,7 @@ func PermissionSingleCheck(
 		and p.environment_id = ?
 		and p.environment_id = agu.environment_id
 		and p.active = true
+		and agu.active = true
 		)
 `,
 		//direct
