@@ -1,4 +1,4 @@
-import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer, Autocomplete, alertTitleClasses } from '@mui/material';
+import { Box, Grid, Typography, Button, TextField, Drawer, Autocomplete } from '@mui/material';
 import { useEffect, useState, useRef, useContext } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
@@ -15,6 +15,7 @@ import { useGetUser } from '../graphql/getUser';
 import { useAvailablePermissions } from '../graphql/availablePermissions';
 import { useUpdateUser } from '../graphql/updateUser';
 import { useMe } from '../graphql/me';
+
 import { useGetUserPermissions } from '../graphql/getUserPermissions';
 import { useUpdatePermissionToUser } from '../graphql/updatePermissionToUser';
 import { useDeletePermissionToUser } from '../graphql/deletePermissionToUser';
@@ -36,13 +37,7 @@ export default function TeamDetail() {
     const scrollRef = useRef(null);
 
     // React hook form
-    const {
-        register,
-        handleSubmit,
-        watch,
-        reset,
-        formState: { errors },
-    } = useForm();
+    const { register, handleSubmit, reset } = useForm();
 
     // Router
     let history = useHistory();

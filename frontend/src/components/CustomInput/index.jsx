@@ -6,16 +6,16 @@ const CustomInput = ({ label, required, ...props }) => {
             <input
                 {...props}
                 required={required}
-                type="text" 
-                name="customInput" 
-                placeholder=" " 
+                type="text"
+                name="customInput"
+                placeholder=" "
                 className="block relative z-2 text-sm px-4 py-3 w-full appearance-none focus:outline-none bg-transparent text-grayInput dark:text-white"
             />
-            <label 
-                htmlFor="customInput" 
-                className="outline rounded-md absolute top-0 px-4 py-3 text-grayInput dark:text-white bg-white dark:bg-darkPrimary z-1 duration-300 origin-0 text-sm"
-            >
-                {label}{required && <span className="text-red text-xs ml-2">*</span>}
+            <label
+                htmlFor="customInput"
+                className="outline rounded-md absolute top-0 px-4 py-3 text-grayInput dark:text-white bg-white dark:bg-darkPrimary z-1 duration-300 origin-0 text-sm">
+                {label}
+                {required && <span className="text-red text-xs ml-2">*</span>}
             </label>
         </div>
     );

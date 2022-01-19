@@ -1,15 +1,10 @@
-import { gql, GraphQLClient } from "graphql-request";
+import { gql, GraphQLClient } from 'graphql-request';
 
-const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PUBLIC
+const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PUBLIC;
 
-const CreateAdminUser = gql`
-    mutation createAdminUser($platform: PlatformInput!, $users: AddUsersInput!){
-        setupPlatform(
-            input: {
-                PlatformInput: $platform,
-                AddUsersInput: $users
-            }
-        ) {
+const query = gql`
+    mutation createAdminUser($platform: PlatformInput!, $users: AddUsersInput!) {
+        setupPlatform(input: { PlatformInput: $platform, AddUsersInput: $users }) {
             Platform {
                 id
                 business_name
@@ -25,7 +20,7 @@ const CreateAdminUser = gql`
                 job_title
                 timezone
             }
-            Auth{
+            Auth {
                 access_token
                 refresh_token
             }
@@ -33,18 +28,18 @@ const CreateAdminUser = gql`
     }
 `;
 
-export const useCreateAdmin = () => {    
+export const useCreateAdmin = () => {
     const client = new GraphQLClient(graphlqlEndpoint);
-  
-    return async (input) => {
-      const variables = { input };
 
-      try {
-        const res = await client.request(CreateAdminUser, input);
-        console.log("FROM FILE", res);
-        return res?.setupPlatform;
-      } catch (error) {
-        return JSON.parse(JSON.stringify(error, undefined, 2)).response
-      }
+    return async (input) => {
+        const variables = { input };
+
+        try {
+            const res = await client.request(query, input);
+            console.log('FROM FILE', res);
+            return res?.setupPlatform;
+        } catch (error) {
+            return JSON.parse(JSON.stringify(error, undefined, 2)).response;
+        }
     };
-  };
+};

@@ -1,5 +1,5 @@
 const removeBaseName = (url) => {
-    return url.replace("/webapp", "");
-}
+    return url.replace('/webapp', '');
+};
 
-export default removeBaseName
+export default removeBaseName;
