@@ -4,7 +4,7 @@ import ct from 'countries-and-timezones';
 import Search from '../components/Search';
 import CustomChip from '../components/CustomChip';
 import { useGetEnvironments } from '../graphql/getEnvironments';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTable, useGlobalFilter } from 'react-table';
 import { useHistory } from 'react-router-dom';
 import AddEnvironmentDrawer from '../components/DrawerContent/AddEnvironmentDrawer';
@@ -16,41 +16,37 @@ const Settings = () => {
     let history = useHistory();
     const { enqueueSnackbar } = useSnackbar();
 
+    // Ref for scroll to top
+    const scrollRef = useRef(null);
+
     // User states
     const [platform, setPlatform] = useState({});
     const [data, setData] = useState([]);
     const [isOpenAddEnv, setIsOpenAddEnv] = useState(false);
 
-    // GraphQL Hooks
-    const getPlatform = useGetPlatform();
-    const environments = useGetEnvData(setData, enqueueSnackbar);
-
     // Form hook
     const { register, handleSubmit, reset } = useForm();
 
-    // Retrieve environments and me query on load
+    // GraphQL Hooks
+    const getPlatform = useGetPlatData(setPlatform, enqueueSnackbar, reset);
+    const environments = useGetEnvData(setData, enqueueSnackbar);
+
+    // Retrieve environments, platform and me query on load
     useEffect(() => {
+        // Scroll to top on load
+        scrollRef.current.parentElement.scrollIntoView();
+
         let active = true;
-
-        environments();
-
-        (async () => {
-            const getPlatformResponse = await getPlatform();
-            if (active && !getPlatformResponse.errors) {
-                setPlatform(getPlatformResponse);
-
-                reset({
-                    business_name: getPlatformResponse?.business_name,
-                    timezone: getPlatformResponse?.timezone,
-                });
-            }
-        })();
+        if (active) {
+            environments();
+            getPlatform();
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Submit user data
-    const onSubmit = useSubmitData(platform?.id);
+    const onSubmit = useSubmitData(platform?.id, setPlatform);
 
     // Environment table
     const columns = useMemo(
@@ -80,7 +76,7 @@ const Settings = () => {
 
     return (
         <>
-            <Box className="page">
+            <Box className="page" ref={scrollRef}>
                 <Typography component="h2" variant="h2" color="text.primary">
                     Settings
                 </Typography>
@@ -141,14 +137,14 @@ const Settings = () => {
                     </Grid>
 
                     {data && data.length > 0 ? (
-                        <Box component="table" mt={4} {...getTableProps()}>
+                        <Box component="table" width="100%" mt={4} {...getTableProps()}>
                             <thead>
                                 {headerGroups.map((headerGroup) => (
                                     <Box
                                         component="tr"
                                         display="grid"
                                         sx={{ '*:first-child': { ml: '22px' }, '*:last-child': { textAlign: 'center' } }}
-                                        gridTemplateColumns="repeat(2, 1fr)"
+                                        gridTemplateColumns="1fr .4fr"
                                         justifyContent="flex-start"
                                         {...headerGroup.getHeaderGroupProps()}>
                                         {headerGroup.headers.map((column) => (
@@ -167,7 +163,7 @@ const Settings = () => {
                                             component="tr"
                                             {...row.getRowProps()}
                                             display="grid"
-                                            gridTemplateColumns="repeat(2, 1fr)"
+                                            gridTemplateColumns="1fr .4fr"
                                             alignItems="start"
                                             borderRadius="5px"
                                             backgroundColor="background.secondary"
@@ -243,7 +239,28 @@ const useGetEnvData = (setData, enqueueSnackbar) => {
     };
 };
 
-const useSubmitData = (platform_id) => {
+const useGetPlatData = (setData, enqueueSnackbar, reset) => {
+    // GraphQL hook
+    const getPlatformResponse = useGetPlatform();
+
+    // Get user platform data
+    return async () => {
+        const platform = await getPlatformResponse();
+
+        if (!platform.errors) {
+            setData(platform);
+
+            reset({
+                business_name: platform?.business_name,
+                timezone: platform?.timezone,
+            });
+        } else {
+            enqueueSnackbar('Unable to retrieve platform', { variant: 'error' });
+        }
+    };
+};
+
+const useSubmitData = (platform_id, setPlatform) => {
     // GraphQL hook
     const updatePlatform = useUpdatePlatform();
 
@@ -261,9 +278,11 @@ const useSubmitData = (platform_id) => {
         };
 
         let response = await updatePlatform(allData);
-        if (response === 'success') {
+        if (response === 'Platform updated') {
             closeSnackbar();
-            enqueueSnackbar(`Success`, { variant: 'success' });
+            enqueueSnackbar(`Saved`, { variant: 'success' });
+
+            setPlatform(allData.input);
         } else {
             if (response.errors) {
                 response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));

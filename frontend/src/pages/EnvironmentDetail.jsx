@@ -1,6 +1,6 @@
 import { Box, Button, Drawer, Grid, TextField, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import DeactivateEnvironmentDrawer from '../components/DrawerContent/DeactivateEnvironmentDrawer';
@@ -18,10 +18,16 @@ const EnvironmentDetail = () => {
 
     const { register, handleSubmit, reset } = useForm();
 
+    // Ref for scroll to top
+    const scrollRef = useRef(null);
+
     // Get environment data custom hook
     const getData = useGetData(setEnvironment, reset);
 
     useEffect(() => {
+        // Scroll to top on load
+        scrollRef.current.parentElement.scrollIntoView();
+
         getData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -31,7 +37,7 @@ const EnvironmentDetail = () => {
 
     return (
         <>
-            <Box className="page" sx={{ width: { sm: '50%' } }}>
+            <Box className="page" sx={{ width: { sm: '50%' } }} ref={scrollRef}>
                 <Typography component="h2" variant="h2" color="text.primary">
                     Settings {' > '} Environments {' > '} {environment?.name}
                 </Typography>
@@ -137,7 +143,7 @@ const useSubmitData = (environment_id) => {
         let response = await updateEnvironment(allData);
         if (response?.r !== 'error') {
             closeSnackbar();
-            enqueueSnackbar(`Success`, { variant: 'success' });
+            enqueueSnackbar(`Saved`, { variant: 'success' });
         } else {
             if (response.errors) {
                 response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
