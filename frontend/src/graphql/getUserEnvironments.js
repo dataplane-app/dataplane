@@ -8,6 +8,8 @@ const query = gql`
         getUserEnvironments(user_id: $user_id, environment_id: $environment_id) {
             id
             name
+            description
+            active
         }
     }
 `;

@@ -9,6 +9,7 @@ import DeactivateUserDrawer from '../components/DrawerContent/DeactivateUserDraw
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
+import { useHistory } from 'react-router-dom';
 import ct from 'countries-and-timezones';
 import { useGetUser } from '../graphql/getUser';
 import { useAvailablePermissions } from '../graphql/availablePermissions';
@@ -42,6 +43,9 @@ export default function TeamDetail() {
         reset,
         formState: { errors },
     } = useForm();
+
+    // Router
+    let history = useHistory();
 
     // User states
     const [user, setUser] = useState({});
@@ -77,7 +81,7 @@ export default function TeamDetail() {
     const deletePermission = useDeletePermission(getUserPermissions);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
     const getUserAccessGroups = useGetUserAccessGroups_(setUserAccessGroups, globalEnvironment?.id, user.user_id);
-    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id, getUserAccessGroups);
+    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id, getUserAccessGroups, accessGroup);
     const removeUserFromAccessGroup = useRemoveUserFromAccessGroup_(getUserAccessGroups);
 
     // Get user data on load
@@ -261,6 +265,7 @@ export default function TeamDetail() {
                                     onClick={() => {
                                         updatePermission();
                                         setClear(clear * -1); // Clears autocomplete input field
+                                        setSelectedPermission(null);
                                     }}
                                     variant="contained"
                                     color="primary"
@@ -333,26 +338,6 @@ export default function TeamDetail() {
                                     </Box>
                                 </Box>
                             ) : null}
-
-                            {/* <Box mt="3.5rem">
-                                <Typography component="h3" variant="h3" color="text.primary">
-                                    Specific permissions
-                                </Typography>
-                                <Typography variant="subtitle2" mt=".20rem">
-                                    Environment: Production
-                                </Typography>
-
-                                <Box mt={2}>
-                                    {expecificPermissionsItems.map((exp) => (
-                                        <Grid display="flex" alignItems="center" key={exp.id} mt={1.5} mb={1.5}>
-                                            <Box component={FontAwesomeIcon} sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)' }} icon={faTrashAlt} />
-                                            <Typography variant="subtitle2" lineHeight="15.23px">
-                                                {exp.name}
-                                            </Typography>
-                                        </Grid>
-                                    ))}
-                                </Box>
-                            </Box> */}
                         </Box>
                     </Grid>
                     <Grid item sx={{ flex: 1 }}>
@@ -380,6 +365,7 @@ export default function TeamDetail() {
                                 onClick={() => {
                                     addUserToEnv(user.user_id, selectedUserEnvironment.id);
                                     setClear(clear * -1);
+                                    setSelectedUserEnvironment(null);
                                 }}
                                 variant="contained"
                                 color="primary"
@@ -400,9 +386,15 @@ export default function TeamDetail() {
                                         sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
                                         icon={faTrashAlt}
                                     />
-                                    <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
+                                    <Typography
+                                        onClick={() => history.push(`/settings/environment/${env.id}`)}
+                                        variant="subtitle2"
+                                        lineHeight="15.23px"
+                                        color="primary"
+                                        sx={{ cursor: 'pointer', marginRight: 1 }}>
                                         {env.name}
                                     </Typography>
+                                    <CustomChip size="small" label={env.active ? 'Active' : 'Inactive'} customColor={env.active ? 'green' : 'red'} />
                                 </Grid>
                             ))}
                         </Box>
@@ -422,7 +414,11 @@ export default function TeamDetail() {
                                     }}
                                     sx={{ minWidth: '280px' }}
                                     // Filter out available access groups from the ones user belongs
-                                    options={accessGroups.filter((row) => !userAccessGroups.map((a) => a.AccessGroupID).includes(row.AccessGroupID)) || ''}
+                                    options={
+                                        accessGroups.filter(
+                                            (row) => !userAccessGroups.map((a) => a.AccessGroupID).includes(row.AccessGroupID) && row.EnvironmentID === globalEnvironment.id
+                                        ) || ''
+                                    }
                                     getOptionLabel={(option) => option.Name}
                                     renderInput={(params) => (
                                         <TextField {...params} label="Find access groups" id="access_groups" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
@@ -432,6 +428,7 @@ export default function TeamDetail() {
                                     onClick={() => {
                                         updateUserToAccessGroup(accessGroup.AccessGroupID);
                                         setClear(clear * -1); // Clears autocomplete input field
+                                        setAccessGroup('');
                                     }}
                                     variant="contained"
                                     color="primary"
@@ -442,21 +439,29 @@ export default function TeamDetail() {
                             </Grid>
 
                             <Box mt="1.31rem">
-                                {userAccessGroups.map((row) => (
-                                    <Grid display="flex" alignItems="center" key={row.Name} mt={1.5} mb={1.5}>
-                                        <Box
-                                            onClick={() => {
-                                                removeUserFromAccessGroup(row.AccessGroupID, row.EnvironmentID, row.UserID);
-                                            }}
-                                            component={FontAwesomeIcon}
-                                            sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
-                                            icon={faTrashAlt}
-                                        />
-                                        <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
-                                            {row.Name}
-                                        </Typography>
-                                    </Grid>
-                                ))}
+                                {userAccessGroups
+                                    .filter((row) => row.EnvironmentID === globalEnvironment.id)
+                                    .map((row) => (
+                                        <Grid display="flex" alignItems="center" key={row.Name} mt={1.5} mb={1.5}>
+                                            <Box
+                                                onClick={() => {
+                                                    removeUserFromAccessGroup(row.AccessGroupID, row.EnvironmentID, row.UserID);
+                                                }}
+                                                component={FontAwesomeIcon}
+                                                sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                                icon={faTrashAlt}
+                                            />
+                                            <Typography
+                                                onClick={() => history.push(`/teams/access/${row.AccessGroupID}`)}
+                                                variant="subtitle2"
+                                                lineHeight="15.23px"
+                                                color="primary"
+                                                sx={{ cursor: 'pointer', marginRight: 1 }}>
+                                                {row.Name}
+                                            </Typography>
+                                            <CustomChip size="small" label={row.Active ? 'Active' : 'Inactive'} customColor={row.Active ? 'green' : 'red'} />
+                                        </Grid>
+                                    ))}
                             </Box>
                         </Box>
                     </Grid>
@@ -805,11 +810,13 @@ const useGetUserAccessGroups_ = (setUserAccessGroups, environmentID, userID) => 
     };
 };
 
-const useUpdateUserToAccessGroup_ = (environmentID, user_id, getUserAccessGroups) => {
+const useUpdateUserToAccessGroup_ = (environmentID, user_id, getUserAccessGroups, accessGroup) => {
     // GraphQL hook
     const updateUserToAccessGroup = useUpdateUserToAccessGroup();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    if (accessGroup === '') return; // If add button is clicked without a selection
 
     // Add user to group
     return async (access_group_id) => {

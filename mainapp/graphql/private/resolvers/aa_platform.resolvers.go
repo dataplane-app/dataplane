@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/auth_permissions"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -483,12 +483,12 @@ func (r *queryResolver) GetUserEnvironments(ctx context.Context, userID string, 
 		`select 
 	environment.id, 
 	environment.name, 
-	environment.platform_id
+	environment.platform_id,
+	environment.active
 	from 
 	environment inner join environment_user 
 	on environment.id = environment_user.environment_id
 	where 
-	environment.active=true and
 	environment_user.user_id=? and
 	environment.platform_id=?
 
