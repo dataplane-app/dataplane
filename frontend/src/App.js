@@ -69,7 +69,7 @@ function App() {
                                 <Box component={FontAwesomeIcon} color="white" icon={faTimesCircle} />
                             </Button>
                         )}
-                        autoHideDuration={30000}>
+                        autoHideDuration={8000}>
                         <Box className="app" backgroundColor="background.main">
                             <UserAuth refreshTokenUrl="/refreshtoken" LogincallbackUrl="/loginCallback" loginUrl="/webapp/login" logoutUrl="/webapp/logout">
                                 <Route exact path="/congratulations">
