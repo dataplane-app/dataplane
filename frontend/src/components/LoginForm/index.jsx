@@ -9,11 +9,7 @@ const LoginForm = ({ handleNext }) => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     const loginUser = useLoginUser();
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm();
+    const { register, handleSubmit } = useForm();
 
     async function onSubmit(data) {
         console.log(data);

@@ -1,29 +1,25 @@
-import { gql, GraphQLClient } from "graphql-request";
+import { gql, GraphQLClient } from 'graphql-request';
 
-const graphlqlEndpoint = process.env.REACT_APP_DATAPLANE_ENDPOINT + "/public/graphql"
+const graphlqlEndpoint = process.env.REACT_APP_DATAPLANE_ENDPOINT + '/public/graphql';
 
-const LoginUser = gql`
-    query loginUser($username: String!, $password: String!){
-        loginUser(
-                username: $username,
-                password: $password
-        ) {
-                access_token
-                refresh_token
+const query = gql`
+    query loginUser($username: String!, $password: String!) {
+        loginUser(username: $username, password: $password) {
+            access_token
+            refresh_token
         }
     }
 `;
 
-
-export const useLoginUser = () => {    
+export const useLoginUser = () => {
     const client = new GraphQLClient(graphlqlEndpoint);
-  
+
     return async (input) => {
-      try {
-        const res = await client.request(LoginUser, input);
-        return res?.loginUser;
-      } catch (error) {
-        return JSON.parse(JSON.stringify(error, undefined, 2)).response
-      }
+        try {
+            const res = await client.request(query, input);
+            return res?.loginUser;
+        } catch (error) {
+            return JSON.parse(JSON.stringify(error, undefined, 2)).response;
+        }
     };
-  };
+};

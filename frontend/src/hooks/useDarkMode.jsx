@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 function useSafeLocalStorage(key, initialValue) {
     const [valueProxy, setValueProxy] = useState(() => {
@@ -26,12 +26,12 @@ function usePrefersDarkMode() {
     const [value, setValue] = useState(true);
 
     useEffect(() => {
-        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         setValue(mediaQuery.matches);
 
         const handler = () => setValue(mediaQuery.matches);
-        mediaQuery.addEventListener("change", handler);
-        return () => mediaQuery.removeEventListener("change", handler);
+        mediaQuery.addEventListener('change', handler);
+        return () => mediaQuery.removeEventListener('change', handler);
     }, []);
 
     return value;
@@ -39,20 +39,16 @@ function usePrefersDarkMode() {
 
 export function useDarkMode() {
     const prefersDarkMode = usePrefersDarkMode();
-    const [isEnabled, setIsEnabled] = useSafeLocalStorage(
-        "theme",
-        undefined
-    );
+    const [isEnabled, setIsEnabled] = useSafeLocalStorage('theme', undefined);
 
-    
     const enabled = isEnabled === undefined ? prefersDarkMode : isEnabled;
-    console.log("THEME DARK: ", enabled)
+    console.log('THEME DARK: ', enabled);
 
     useEffect(() => {
         if (window === undefined) return;
         const root = window.document.documentElement;
-        root.classList.remove(enabled ? "light" : "dark");
-        root.classList.add(enabled ? "dark" : "light");
+        root.classList.remove(enabled ? 'light' : 'dark');
+        root.classList.add(enabled ? 'dark' : 'light');
     }, [enabled]);
 
     return [enabled, setIsEnabled];

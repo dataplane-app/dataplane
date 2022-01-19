@@ -1,24 +1,12 @@
-import { useState } from 'react';
-import { Box, Grid, Typography, IconButton, Chip, Button, Drawer } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
-import { useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { Box, Grid, Typography, Button, Drawer } from '@mui/material';
 import Search from '../components/Search';
 import { useTable, useGlobalFilter } from 'react-table';
-import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import CustomChip from '../components/CustomChip';
 import { useGetUsers } from '../graphql/getUsers';
 import { useSnackbar } from 'notistack';
 import AddUserDrawer from '../components/DrawerContent/AddUserDrawer';
-
-const drawerWidth = 507;
-const drawerStyles = {
-    width: drawerWidth,
-    flexShrink: 0,
-    zIndex: 9998,
-    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-};
 
 const Teams = () => {
     let history = useHistory();
@@ -34,6 +22,8 @@ const Teams = () => {
     const getUsers = useGetUsers();
     useEffect(() => {
         retrieveUsers();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Get users
@@ -60,7 +50,7 @@ const Teams = () => {
                 Cell: (row) => (row.value === 'active' ? <CustomChip label="Active" customColor="green" /> : <CustomChip label="Inactive" customColor="red" />),
             },
         ],
-        []
+        [history]
     );
 
     // Use the state and functions returned from useTable to build your UI
@@ -154,7 +144,7 @@ const Teams = () => {
                 </Box>
             </Box>
 
-            <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
+            <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)}>
                 <AddUserDrawer
                     user="Saul Frank"
                     handleClose={() => {

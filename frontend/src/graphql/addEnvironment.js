@@ -3,7 +3,7 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
-const AddEnvironment = gql`
+const query = gql`
     mutation addEnvironment($input: AddEnvironmentInput!) {
         addEnvironment(input: $input) {
             id
@@ -27,7 +27,7 @@ export const useAddEnvironment = () => {
 
     return async (input) => {
         try {
-            const res = await client.request(AddEnvironment, input);
+            const res = await client.request(query, input);
             return res?.addEnvironment;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;

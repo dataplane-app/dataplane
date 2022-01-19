@@ -47,7 +47,7 @@ const AccessGroups = () => {
                 Cell: (row) => (row.value === true ? <CustomChip label="Active" customColor="green" /> : <CustomChip label="Inactive" customColor="red" />),
             },
         ],
-        []
+        [history]
     );
 
     // Use the state and functions returned from useTable to build your UI

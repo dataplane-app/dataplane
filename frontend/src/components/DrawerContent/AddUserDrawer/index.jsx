@@ -16,12 +16,7 @@ const AddUserDrawer = ({ handleClose }) => {
     const [timezone, setTimezone] = useState(null);
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-    const {
-        register,
-        handleSubmit,
-        watch,
-        formState: { errors },
-    } = useForm();
+    const { register, handleSubmit } = useForm();
 
     async function onSubmit(data) {
         const allData = {
@@ -118,14 +113,7 @@ const AddUserDrawer = ({ handleClose }) => {
                         }}
                         options={Object.keys(ct.getAllTimezones())}
                         renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                label="Timezone"
-                                id="timezone"
-                                size="small"
-                                sx={{ mt: 2, fontSize: '.75rem', display: 'flex' }}
-                                {...register('timezone')}
-                            />
+                            <TextField {...params} label="Timezone" id="timezone" size="small" sx={{ mt: 2, fontSize: '.75rem', display: 'flex' }} {...register('timezone')} />
                         )}
                     />
 
