@@ -16,6 +16,7 @@
         "@testing-library/react": "^11.1.0",
         "@testing-library/user-event": "^12.1.10",
         "axios": "^0.24.0",
+        "check-password-strength": "^2.0.3",
         "countries-and-timezones": "^3.3.0",
         "env-cmd": "^10.1.0",
         "graphql": "^16.1.0",
