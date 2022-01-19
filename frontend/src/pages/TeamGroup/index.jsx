@@ -38,6 +38,8 @@ const TeamGroup = () => {
     // Get access group data on load
     useEffect(() => {
         getAccessGroup();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (

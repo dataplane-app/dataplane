@@ -37,6 +37,8 @@ const SetupLoader = () => {
             window.clearTimeout(isCreatingAdmin);
             window.clearTimeout(goToCongrats);
         };
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (

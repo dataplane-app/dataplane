@@ -22,6 +22,8 @@ const Teams = () => {
     const getUsers = useGetUsers();
     useEffect(() => {
         retrieveUsers();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Get users
@@ -48,7 +50,7 @@ const Teams = () => {
                 Cell: (row) => (row.value === 'active' ? <CustomChip label="Active" customColor="green" /> : <CustomChip label="Inactive" customColor="red" />),
             },
         ],
-        []
+        [history]
     );
 
     // Use the state and functions returned from useTable to build your UI

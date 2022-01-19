@@ -42,7 +42,7 @@ export const useGlobalAuthState = () => useHookState(globalAuthState);
 
 // Is it time to do a silent refresh? Refresh on 80% life
 const getAccessTokenRefreshTime = (token) => {
-    if (token == 'empty') {
+    if (token === 'empty') {
         ConsoleLogHelper('Empty token');
         return true;
     }
@@ -152,6 +152,8 @@ export const UserAuth = ({ children, Env, loginUrl, refreshTokenUrl, logoutUrl, 
         if (Authstate.privateRoute.get() === true) {
             fetchToken();
         }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [refreshCount.get()]);
 
     return (
@@ -180,6 +182,7 @@ const PrivateRouteChecker = ({ children }) => {
     let auth = useGlobalAuthState();
     const refreshCount = useHookState(refreshCountState);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {}, [auth.privateRoute.get(), auth.authToken.get()]);
 
     // if privateRoute is not yet set set it

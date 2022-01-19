@@ -32,8 +32,6 @@ export const useCreateAdmin = () => {
     const client = new GraphQLClient(graphlqlEndpoint);
 
     return async (input) => {
-        const variables = { input };
-
         try {
             const res = await client.request(query, input);
             console.log('FROM FILE', res);

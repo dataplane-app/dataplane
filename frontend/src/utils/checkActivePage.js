@@ -4,7 +4,7 @@ const checkActivePage = (currentURL, menuItemToCheck) => {
     }
 
     return menuItemToCheck !== '/' && currentURL.includes(menuItemToCheck) ? 'active' : 'non-active';
-    return currentURL === menuItemToCheck ? 'active' : 'non-active';
+    // return currentURL === menuItemToCheck ? 'active' : 'non-active';
 };
 
 export default checkActivePage;
