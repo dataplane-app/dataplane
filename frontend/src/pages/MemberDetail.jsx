@@ -1,9 +1,6 @@
-import { Box, Grid, Typography, Chip, Avatar, IconButton, Button, TextField, Drawer, Autocomplete } from '@mui/material';
+import { Box, Grid, Typography, Button, TextField, Drawer, Autocomplete } from '@mui/material';
 import { useEffect, useState, useContext } from 'react';
-import Search from '../components/Search';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
-import { belongToAcessGroupsItems, belongToEnvironmentItems, environmentPermissions, expecificPermissionsItems, platformItems } from '../utils/teamsMockData';
+import { belongToAcessGroupsItems, expecificPermissionsItems } from '../utils/teamsMockData';
 import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
@@ -18,14 +15,6 @@ import ct from 'countries-and-timezones';
 import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
 
-const drawerWidth = 507;
-const drawerStyles = {
-    width: drawerWidth,
-    flexShrink: 0,
-    zIndex: 9998,
-    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-};
-
 const MemberDetail = () => {
     // Context
     const [globalEnvironment] = useContext(EnvironmentContext);
@@ -34,13 +23,7 @@ const MemberDetail = () => {
     let history = useHistory();
 
     // React Hook form
-    const {
-        register,
-        handleSubmit,
-        watch,
-        reset,
-        formState: { errors },
-    } = useForm();
+    const { register, handleSubmit, reset } = useForm();
 
     // Member states
     const [user, setUser] = useState({});
@@ -249,11 +232,11 @@ const MemberDetail = () => {
                 </Grid>
             </Box>
 
-            <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)} sx={drawerStyles}>
+            <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)}>
                 <ChangePasswordDrawer handleClose={() => setIsOpenPassword(false)} />
             </Drawer>
 
-            <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)} sx={drawerStyles}>
+            <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)}>
                 <DeleteUserDrawer user="Saul Frank" handleClose={() => setIsOpenDeleteUser(false)} />
             </Drawer>
         </>

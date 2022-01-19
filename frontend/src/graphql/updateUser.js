@@ -3,7 +3,7 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
-const UpdateUser = gql`
+const query = gql`
     mutation updateUser($input: UpdateUsersInput!) {
         updateUser(input: $input)
     }
@@ -23,7 +23,7 @@ export const useUpdateUser = () => {
 
     return async (input) => {
         try {
-            const res = await client.request(UpdateUser, input);
+            const res = await client.request(query, input);
             return res?.updateUser;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;

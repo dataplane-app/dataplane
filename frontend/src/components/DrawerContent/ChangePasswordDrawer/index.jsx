@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useState } from 'react';
-import { Box, Typography, Button, Grid, TextField } from '@mui/material';
+import { Box, Typography, Button, TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useUpdateChangeMyPassword } from '../../../graphql/updateChangeMyPassword';

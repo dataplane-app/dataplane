@@ -7,24 +7,16 @@ const Button = ({ classes, text, size = 'large', variant = 'solid', ...props }) 
     };
 
     const COLOR_MAPS = {
-        blue: 'bg-blue hover:bg-indigo-500' ,
+        blue: 'bg-blue hover:bg-indigo-500',
     };
 
     const VARIANT_MAPS = {
         border: 'bg-transparent border-2 border-red text-red hover:bg-redLight',
-        solid: COLOR_MAPS['blue']
+        solid: COLOR_MAPS['blue'],
     };
-    
+
     return (
-        <button
-            {...props}
-            className={
-                classNames(
-                    'rounded-md text-white font-bold w-full',
-                    classes,
-                    SIZE_MAPS[size],
-                    VARIANT_MAPS[variant]
-            )}>
+        <button {...props} className={classNames('rounded-md text-white font-bold w-full', classes, SIZE_MAPS[size], VARIANT_MAPS[variant])}>
             {text}
         </button>
     );

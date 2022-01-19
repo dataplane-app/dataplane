@@ -1,58 +1,58 @@
 export const platformItems = [
     {
         id: 1,
-        name: 'Admin'
+        name: 'Admin',
     },
     {
         id: 2,
-        name: 'Manage environments'
+        name: 'Manage environments',
     },
     {
         id: 3,
-        name: 'Manage users'
+        name: 'Manage users',
     },
-]
+];
 
 export const environmentPermissions = [
     {
         id: 1,
-        name: 'View all pipelines'
+        name: 'View all pipelines',
     },
     {
         id: 2,
-        name: 'Edit secrets'
+        name: 'Edit secrets',
     },
     {
         id: 3,
-        name: 'Edit compute'
+        name: 'Edit compute',
     },
     {
         id: 4,
-        name: 'Edit settings'
+        name: 'Edit settings',
     },
-]
+];
 
 export const expecificPermissionsItems = [
     {
         id: 1,
-        name: 'Edit pipeline - delete logs'
+        name: 'Edit pipeline - delete logs',
     },
-]
+];
 
 export const belongToEnvironmentItems = [
     {
         id: 1,
-        name: 'Development'
+        name: 'Development',
     },
     {
         id: 2,
-        name: 'Production'
+        name: 'Production',
     },
-]
+];
 
 export const belongToAcessGroupsItems = [
     {
         id: 1,
-        name: 'Data engineering team'
-    }
-]
+        name: 'Data engineering team',
+    },
+];

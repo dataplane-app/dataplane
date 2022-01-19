@@ -3,7 +3,7 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
-const GetUser = gql`
+const query = gql`
     query getUser($user_id: String!) {
         getUser(user_id: $user_id) {
             user_id
@@ -32,7 +32,7 @@ export const useGetUser = () => {
 
     return async (input) => {
         try {
-            const res = await client.request(GetUser, input);
+            const res = await client.request(query, input);
             return res?.getUser;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
