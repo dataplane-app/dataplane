@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	// "gorm.io/gorm/clause"
 	"gorm.io/gorm/clause"
@@ -63,6 +64,7 @@ func Migrate() {
 		&models.Pipelines{},
 		&models.PipelinesArchive{},
 		&models.ResourceTypeStruct{},
+		&models.Secrets{},
 	)
 	if err1 != nil {
 		panic(err1)
@@ -79,6 +81,25 @@ func Migrate() {
 		UpdateAll: true,
 	}).Create(&models.ResourceType)
 	log.Println("🍄 Permission types loaded")
+
+	// ---- load secrets into database
+	secretsload := []*models.Secrets{}
+	for _, e := range os.Environ() {
+		pair := strings.SplitN(e, "=", 2)
+		if strings.Contains(pair[0], "secret") {
+			secretsload = append(secretsload, &models.Secrets{
+				Secret:     strings.ReplaceAll(pair[0], "secret_", ""),
+				EnvVar:     pair[0],
+				SecretType: "environment",
+			})
+		}
+
+	}
+
+	dbConn.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&secretsload)
+	log.Println("🐿  Secrets loaded")
 
 	hypertable := "SELECT create_hypertable('logs_platform', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
 
