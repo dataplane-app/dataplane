@@ -22,6 +22,9 @@ import Teams from './pages/Teams';
 import AccessGroups from './pages/AccessGroups';
 import Settings from './pages/Settings';
 import EnvironmentDetail from './pages/EnvironmentDetail';
+import Secrets from './pages/Secrets';
+import AddSecret from './pages/AddSecret';
+import SecretDetail from './pages/SecretDetail';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
@@ -92,6 +95,9 @@ function App() {
                                         '/access_groups',
                                         '/settings',
                                         '/settings/environment/:environmentId',
+                                        '/secrets',
+                                        '/secrets/:secretId',
+                                        '/addsecret',
                                     ]}>
                                     <Layout>
                                         <Route exact path="/">
@@ -117,6 +123,15 @@ function App() {
                                         </Route>
                                         <Route exact path="/settings/environment/:environmentId">
                                             <EnvironmentDetail />
+                                        </Route>
+                                        <Route exact path="/secrets">
+                                            <Secrets />
+                                        </Route>
+                                        <Route exact path="/secrets/:secretId">
+                                            <SecretDetail />
+                                        </Route>
+                                        <Route exact path="/addsecret">
+                                            <AddSecret />
                                         </Route>
                                     </Layout>
                                 </PrivateRoute>
