@@ -33,7 +33,12 @@ const GetStartedForm = ({ handleNext }) => {
         };
 
         let response = await createAdmin(allData);
-        if (response && response.platform) {
+
+        if (!response) {
+            return enqueueSnackbar('An error has occured', { variant: 'error' });
+        }
+
+        if (response && response.Platform) {
             closeSnackbar();
             handleNext();
         } else {
@@ -131,7 +136,7 @@ const GetStartedForm = ({ handleNext }) => {
             </Box>
 
             <Box display="flex" alignItems="center" justifyContent="space-evenly">
-                <ThemeToggle />
+                <ThemeToggle fromPage="get-started" />
                 <Typography color="text.primary" fontSize={14} lineHeight="16.41px">
                     Mode{' '}
                     <Typography component="span" display="block" fontSize={14}>

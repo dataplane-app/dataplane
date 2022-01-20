@@ -93,11 +93,17 @@ const ThemeToggle = (props) => {
         (async () => {
             const colorModeResponse = await getOnePreference({ preference: 'theme' });
 
+            if (colorModeResponse.r === 'Unauthorized') {
+                return;
+            }
+
             // If color mode in DB doesn't match current color mode, toggle.
             if (!colorModeResponse.errors) {
                 if (colorModeResponse.value !== theme.palette.mode) {
                     colorMode.toggleColorMode();
                 }
+            } else {
+                return;
             }
         })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
