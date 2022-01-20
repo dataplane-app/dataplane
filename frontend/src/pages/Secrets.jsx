@@ -151,7 +151,6 @@ const Secrets = () => {
 
 const CustomSecretName = ({ row, onClick }) => {
     const [name] = row.value;
-    console.log('Row', row);
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start" onClick={onClick}>
