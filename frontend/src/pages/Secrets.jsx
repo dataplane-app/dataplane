@@ -191,7 +191,7 @@ const useGetSecrets_ = (setSecrets) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': get secrets failed', { variant: 'error' }));
         } else {
-            setSecrets(response);
+            setSecrets(response.filter((a) => a.SecretType === 'environment' || a.EnvironmentId === environmentId));
         }
     };
 };

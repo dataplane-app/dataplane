@@ -12,6 +12,7 @@ const query = gql`
             Value
             EnvVar
             Active
+            EnvironmentId
             UpdatedAt
         }
     }

@@ -32,11 +32,12 @@ func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraph
 	}
 
 	secretData := models.Secrets{
-		Secret:      input.Secret,
-		SecretType:  "custom",
-		Description: input.Description,
-		EnvVar:      input.EnvVar,
-		Active:      true,
+		Secret:        input.Secret,
+		SecretType:    "custom",
+		Description:   input.Description,
+		EnvVar:        input.EnvVar,
+		Active:        true,
+		EnvironmentID: input.EnvironmentID,
 	}
 
 	if input.Value != nil {
