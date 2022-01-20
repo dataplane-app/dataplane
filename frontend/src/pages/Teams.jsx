@@ -162,7 +162,7 @@ const CustomMember = ({ row, onClick }) => {
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start" onClick={onClick}>
-            <Typography component="h4" variant="h3" color="primary" className="text-blue font-black text-lg ">
+            <Typography component="h4" variant="h3" sx={{ color: 'cyan.main' }}>
                 {name}
             </Typography>
             <Typography component="h5" variant="subtitle1">

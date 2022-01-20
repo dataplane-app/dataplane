@@ -209,7 +209,7 @@ const CustomEnvName = ({ row, onClick }) => {
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start" onClick={onClick}>
-            <Typography component="h4" noWrap variant="h3" color="primary" sx={{ maxWidth: { md: 200 } }}>
+            <Typography component="h4" noWrap variant="h3" sx={{ maxWidth: { md: 200 }, color: 'cyan.main' }}>
                 {title}
             </Typography>
             <Typography component="h5" variant="subtitle1">
