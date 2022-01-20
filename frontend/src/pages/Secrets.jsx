@@ -180,7 +180,7 @@ const useGetSecrets_ = (setSecrets) => {
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Get me data on load
+    // Get secrets
     return async (environmentId) => {
         const response = await getSecrets({ environmentId });
 
