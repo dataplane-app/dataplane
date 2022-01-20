@@ -3,12 +3,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
+import { useUpdateSecretValue } from '../../../graphql/updateSecretValue';
 
-const ChangeSecretDrawer = ({ secretName, handleClose }) => {
+const ChangeSecretDrawer = ({ secretName, handleClose, environmentId }) => {
     // State
     const [newSecretValue, setNewSecretValue] = useState(null);
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const { closeSnackbar } = useSnackbar();
 
     // Clear snackbar on load
     useEffect(() => {
@@ -16,16 +17,8 @@ const ChangeSecretDrawer = ({ secretName, handleClose }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Submit new password
-    const handleSubmit = async () => {
-        if (!newSecretValue) {
-            return;
-        } else {
-            // Mutation code here
-            enqueueSnackbar(`Success`, { variant: 'success' });
-            handleClose();
-        }
-    };
+    // Custom GraphQL hook
+    const updateScretValue = useUpdateSecretValue_(secretName, environmentId, newSecretValue, handleClose);
 
     return (
         <Box position="relative">
@@ -45,11 +38,12 @@ const ChangeSecretDrawer = ({ secretName, handleClose }) => {
                         label="New secret"
                         id="new_secret"
                         size="small"
+                        type="password"
                         required
                         onChange={(e) => setNewSecretValue(e.target.value)}
                         sx={{ mb: 3.4, fontSize: '.75rem', display: 'flex', width: '100%' }}
                     />
-                    <Button onClick={handleSubmit} variant="contained" color="primary" height="100%" style={{ width: '100%' }}>
+                    <Button onClick={updateScretValue} variant="contained" color="primary" height="100%" style={{ width: '100%' }}>
                         Submit
                     </Button>
                 </Box>
@@ -59,3 +53,26 @@ const ChangeSecretDrawer = ({ secretName, handleClose }) => {
 };
 
 export default ChangeSecretDrawer;
+
+// ------ Custom Hook
+const useUpdateSecretValue_ = (secret, environmentId, value, handleClose) => {
+    // GraphQL hook
+    const updateSecretValue = useUpdateSecretValue();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Update secret value
+    return async () => {
+        const response = await updateSecretValue({ secret, environmentId, value });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't update secret value: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': update secret value failed', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            handleClose();
+        }
+    };
+};

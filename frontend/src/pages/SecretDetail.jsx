@@ -121,7 +121,7 @@ const SecretDetail = () => {
             </Drawer>
 
             <Drawer anchor="right" open={isOpenChangeSecret} onClose={() => setIsOpenChangeSecret(!isOpenChangeSecret)}>
-                <ChangeSecretDrawer secretName="Squirrel" handleClose={() => setIsOpenChangeSecret(false)} />
+                <ChangeSecretDrawer environmentId={Environment.id.get()} secretName={secret?.Secret} handleClose={() => setIsOpenChangeSecret(false)} />
             </Drawer>
         </>
     );
@@ -187,6 +187,7 @@ const useUpdateSecret_ = (setSecrets, Environment, getSecret) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': update secrets failed', { variant: 'error' }));
         } else {
+            enqueueSnackbar('Success', { variant: 'success' });
             setSecrets(response);
             getSecret();
         }

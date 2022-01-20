@@ -34,14 +34,11 @@ func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraph
 	secretData := models.Secrets{
 		Secret:        input.Secret,
 		SecretType:    "custom",
+		Value:         input.Value,
 		Description:   input.Description,
 		EnvVar:        input.EnvVar,
 		Active:        true,
 		EnvironmentID: input.EnvironmentID,
-	}
-
-	if input.Value != nil {
-		secretData.Value = *input.Value
 	}
 
 	err := database.DBConn.Create(&secretData).Error
@@ -56,7 +53,7 @@ func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraph
 	return &secretData, nil
 }
 
-func (r *mutationResolver) UpdateSecret(ctx context.Context, input *privategraphql.AddSecretsInput) (*models.Secrets, error) {
+func (r *mutationResolver) UpdateSecret(ctx context.Context, input *privategraphql.UpdateSecretsInput) (*models.Secrets, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -74,16 +71,11 @@ func (r *mutationResolver) UpdateSecret(ctx context.Context, input *privategraph
 	}
 
 	secretData := models.Secrets{
-		Secret:     input.Secret,
-		SecretType: "custom",
-		// Value:       *input.Value,
+		Secret:      input.Secret,
+		SecretType:  "custom",
 		Description: input.Description,
 		EnvVar:      input.EnvVar,
 		Active:      true,
-	}
-
-	if input.Value != nil {
-		secretData.Value = *input.Value
 	}
 
 	err := database.DBConn.Where("secret = ?", input.Secret).Updates(&secretData).Error
@@ -96,6 +88,40 @@ func (r *mutationResolver) UpdateSecret(ctx context.Context, input *privategraph
 	}
 
 	return &secretData, nil
+}
+
+func (r *mutationResolver) UpdateSecretValue(ctx context.Context, secret string, value string, environmentID string) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	secretData := models.Secrets{
+		Value: value,
+	}
+
+	err := database.DBConn.Where("secret = ?", secret).Updates(&secretData).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Update secret database error.")
+	}
+
+	response := "Secret changed"
+	return &response, nil
 }
 
 func (r *mutationResolver) UpdateDeleteSecret(ctx context.Context, secret string, environmentID string) (*string, error) {

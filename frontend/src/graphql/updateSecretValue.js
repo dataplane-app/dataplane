@@ -4,18 +4,12 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation updateSecret($input: UpdateSecretsInput!) {
-        updateSecret(input: $input) {
-            Secret
-            SecretType
-            Description
-            EnvVar
-            UpdatedAt
-        }
+    mutation updateSecretValue($secret: String!, $environmentId: String!, $value: String!) {
+        updateSecretValue(secret: $secret, environmentId: $environmentId, value: $value)
     }
 `;
 
-export const useUpdateSecret = () => {
+export const useUpdateSecretValue = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -30,7 +24,7 @@ export const useUpdateSecret = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.updateSecret;
+            return res?.updateSecretValue;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

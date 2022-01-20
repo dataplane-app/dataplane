@@ -94,7 +94,8 @@ type ComplexityRoot struct {
 		UpdatePermissionToUser        func(childComplexity int, environmentID string, resource string, resourceID string, access string, userID string) int
 		UpdatePlatform                func(childComplexity int, input *UpdatePlatformInput) int
 		UpdatePreferences             func(childComplexity int, input *AddPreferencesInput) int
-		UpdateSecret                  func(childComplexity int, input *AddSecretsInput) int
+		UpdateSecret                  func(childComplexity int, input *UpdateSecretsInput) int
+		UpdateSecretValue             func(childComplexity int, secret string, value string, environmentID string) int
 		UpdateUser                    func(childComplexity int, input *UpdateUsersInput) int
 		UpdateUserToAccessGroup       func(childComplexity int, environmentID string, userID string, accessGroupID string) int
 	}
@@ -221,7 +222,8 @@ type MutationResolver interface {
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	CreateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
-	UpdateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
+	UpdateSecret(ctx context.Context, input *UpdateSecretsInput) (*models.Secrets, error)
+	UpdateSecretValue(ctx context.Context, secret string, value string, environmentID string) (*string, error)
 	UpdateDeleteSecret(ctx context.Context, secret string, environmentID string) (*string, error)
 	CreateUser(ctx context.Context, input *AddUsersInput) (*models.Users, error)
 	UpdateUser(ctx context.Context, input *UpdateUsersInput) (*string, error)
@@ -701,7 +703,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateSecret(childComplexity, args["input"].(*AddSecretsInput)), true
+		return e.complexity.Mutation.UpdateSecret(childComplexity, args["input"].(*UpdateSecretsInput)), true
+
+	case "Mutation.updateSecretValue":
+		if e.complexity.Mutation.UpdateSecretValue == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateSecretValue_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateSecretValue(childComplexity, args["secret"].(string), args["value"].(string), args["environmentId"].(string)), true
 
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
@@ -1714,11 +1728,18 @@ type Secrets {
 input AddSecretsInput {
 	Secret:   String!
     Description: String!
-	Value: String
+	EnvVar:  String!
+	Value: String!
+    EnvironmentId: String!
+    Active: Boolean!
+}
+
+input UpdateSecretsInput {
+	Secret:   String!
+    Description: String!
 	EnvVar:  String!
     EnvironmentId: String!
     Active: Boolean!
-
 }
 
 extend type Query{
@@ -1752,7 +1773,14 @@ extend type Mutation {
 	+ **Route**: Private
 	+ **Permission**: admin_platform, admin_environment, environment_secrets
 	"""
-  	updateSecret(input: AddSecretsInput): Secrets
+  	updateSecret(input: UpdateSecretsInput): Secrets
+
+    """
+	Update the secret value.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_secrets
+	"""
+  	updateSecretValue(secret: String!, value: String!, environmentId: String!): String
 
 	"""
 	Delete secret.
@@ -2456,13 +2484,46 @@ func (ec *executionContext) field_Mutation_updatePreferences_args(ctx context.Co
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updateSecretValue_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["secret"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("secret"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["secret"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["value"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["value"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["environmentId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentId"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentId"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateSecret_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *AddSecretsInput
+	var arg0 *UpdateSecretsInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddSecretsInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddSecretsInput(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateSecretsInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdateSecretsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4218,7 +4279,7 @@ func (ec *executionContext) _Mutation_updateSecret(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateSecret(rctx, args["input"].(*AddSecretsInput))
+		return ec.resolvers.Mutation().UpdateSecret(rctx, args["input"].(*UpdateSecretsInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4230,6 +4291,45 @@ func (ec *executionContext) _Mutation_updateSecret(ctx context.Context, field gr
 	res := resTmp.(*models.Secrets)
 	fc.Result = res
 	return ec.marshalOSecrets2ᚖdataplaneᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateSecretValue(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateSecretValue_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateSecretValue(rctx, args["secret"].(string), args["value"].(string), args["environmentId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateDeleteSecret(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -8232,19 +8332,19 @@ func (ec *executionContext) unmarshalInputAddSecretsInput(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
-		case "Value":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Value"))
-			it.Value, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "EnvVar":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("EnvVar"))
 			it.EnvVar, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "Value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Value"))
+			it.Value, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8449,6 +8549,61 @@ func (ec *executionContext) unmarshalInputUpdateEnvironment(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateSecretsInput(ctx context.Context, obj interface{}) (UpdateSecretsInput, error) {
+	var it UpdateSecretsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "Secret":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Secret"))
+			it.Secret, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "Description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "EnvVar":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("EnvVar"))
+			it.EnvVar, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "EnvironmentId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("EnvironmentId"))
+			it.EnvironmentID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "Active":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Active"))
+			it.Active, err = ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8794,6 +8949,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_createSecret(ctx, field)
 		case "updateSecret":
 			out.Values[i] = ec._Mutation_updateSecret(ctx, field)
+		case "updateSecretValue":
+			out.Values[i] = ec._Mutation_updateSecretValue(ctx, field)
 		case "updateDeleteSecret":
 			out.Values[i] = ec._Mutation_updateDeleteSecret(ctx, field)
 		case "createUser":
@@ -10562,6 +10719,14 @@ func (ec *executionContext) unmarshalOUpdateEnvironment2ᚖdataplaneᚋgraphql�
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputUpdateEnvironment(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOUpdateSecretsInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdateSecretsInput(ctx context.Context, v interface{}) (*UpdateSecretsInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputUpdateSecretsInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
