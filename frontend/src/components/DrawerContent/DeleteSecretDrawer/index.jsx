@@ -22,7 +22,7 @@ const DeleteSecretDrawer = ({ secretName, handleClose, environmentId }) => {
         <Box position="relative">
             <Box sx={{ p: '4.125rem 2.5rem 4.125rem 4.125rem' }}>
                 <Box position="absolute" top="26px" right="39px" display="flex" alignItems="center">
-                    <Button variant="text" startIcon={<FontAwesomeIcon icon={faTimes} onClick={handleClose} />}>
+                    <Button onClick={handleClose} style={{ paddingLeft: '16px', paddingRight: '16px' }} variant="text" startIcon={<FontAwesomeIcon icon={faTimes} />}>
                         Close
                     </Button>
                 </Box>
