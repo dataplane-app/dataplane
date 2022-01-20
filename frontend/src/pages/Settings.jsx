@@ -143,7 +143,7 @@ const Settings = () => {
                                     <Box
                                         component="tr"
                                         display="grid"
-                                        sx={{ '*:first-child': { ml: '22px' }, '*:last-child': { textAlign: 'center' } }}
+                                        sx={{ '*:first-of-type': { ml: '22px' }, '*:last-child': { textAlign: 'center' } }}
                                         gridTemplateColumns="1fr .4fr"
                                         justifyContent="flex-start"
                                         {...headerGroup.getHeaderGroupProps()}>
