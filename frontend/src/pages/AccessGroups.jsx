@@ -95,57 +95,63 @@ const AccessGroups = () => {
                 </Grid>
             </Box>
 
-            <Box component="table" mt={4} sx={{ width: '640px' }} {...getTableProps()}>
-                <thead>
-                    {headerGroups.map((headerGroup) => (
-                        <Box
-                            component="tr"
-                            display="grid"
-                            sx={{ '*:first-child': { ml: '22px' }, '*:last-child': { textAlign: 'center' } }}
-                            gridTemplateColumns="repeat(2, 1fr)"
-                            justifyContent="flex-start"
-                            {...headerGroup.getHeaderGroupProps()}>
-                            {headerGroup.headers.map((column) => (
-                                <Box component="td" color="text.primary" fontWeight="600" fontSize="17px" textAlign="left" {...column.getHeaderProps()}>
-                                    {column.render('Header')}
-                                </Box>
-                            ))}
-                        </Box>
-                    ))}
-                </thead>
-                <Box component="tbody" display="flex" sx={{ flexDirection: 'column' }} {...getTableBodyProps()}>
-                    {rows.map((row, i) => {
-                        prepareRow(row);
-                        return (
+            {data.length ? (
+                <Box component="table" mt={4} sx={{ width: '640px' }} {...getTableProps()}>
+                    <thead>
+                        {headerGroups.map((headerGroup) => (
                             <Box
                                 component="tr"
-                                {...row.getRowProps()}
                                 display="grid"
+                                sx={{ '*:first-child': { ml: '22px' }, '*:last-child': { textAlign: 'center' } }}
                                 gridTemplateColumns="repeat(2, 1fr)"
-                                alignItems="start"
-                                borderRadius="5px"
-                                backgroundColor="background.secondary"
-                                mt={2}
-                                sx={{
-                                    border: 1,
-                                    borderColor: 'divider',
-                                    padding: '15px 0',
-                                    cursor: 'pointer',
-                                    '&:hover': { background: 'background.hoverSecondary' },
-                                    'td:last-child': { textAlign: 'center' },
-                                }}>
-                                {row.cells.map((cell) => {
-                                    return (
-                                        <Box component="td" {...cell.getCellProps()} textAlign="left">
-                                            {cell.render('Cell')}
-                                        </Box>
-                                    );
-                                })}
+                                justifyContent="flex-start"
+                                {...headerGroup.getHeaderGroupProps()}>
+                                {headerGroup.headers.map((column) => (
+                                    <Box component="td" color="text.primary" fontWeight="600" fontSize="17px" textAlign="left" {...column.getHeaderProps()}>
+                                        {column.render('Header')}
+                                    </Box>
+                                ))}
                             </Box>
-                        );
-                    })}
+                        ))}
+                    </thead>
+                    <Box component="tbody" display="flex" sx={{ flexDirection: 'column' }} {...getTableBodyProps()}>
+                        {rows.map((row, i) => {
+                            prepareRow(row);
+                            return (
+                                <Box
+                                    component="tr"
+                                    {...row.getRowProps()}
+                                    display="grid"
+                                    gridTemplateColumns="repeat(2, 1fr)"
+                                    alignItems="start"
+                                    borderRadius="5px"
+                                    backgroundColor="background.secondary"
+                                    mt={2}
+                                    sx={{
+                                        border: 1,
+                                        borderColor: 'divider',
+                                        padding: '15px 0',
+                                        cursor: 'pointer',
+                                        '&:hover': { background: 'background.hoverSecondary' },
+                                        'td:last-child': { textAlign: 'center' },
+                                    }}>
+                                    {row.cells.map((cell) => {
+                                        return (
+                                            <Box component="td" {...cell.getCellProps()} textAlign="left">
+                                                {cell.render('Cell')}
+                                            </Box>
+                                        );
+                                    })}
+                                </Box>
+                            );
+                        })}
+                    </Box>
                 </Box>
-            </Box>
+            ) : (
+                <Typography mt={3} variant="h3" color="text.primary" fontWeight="600" fontSize="17px">
+                    No access groups
+                </Typography>
+            )}
 
             <Drawer anchor="right" open={isOpenAddAccessGroup} onClose={() => setIsOpenAddAccessGroup(!isOpenAddAccessGroup)}>
                 <AddAccessGroupDrawer
