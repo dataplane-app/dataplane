@@ -136,7 +136,7 @@ const GetStartedForm = ({ handleNext }) => {
             </Box>
 
             <Box display="flex" alignItems="center" justifyContent="space-evenly">
-                <ThemeToggle fromPage="get-started" />
+                <ThemeToggle />
                 <Typography color="text.primary" fontSize={14} lineHeight="16.41px">
                     Mode{' '}
                     <Typography component="span" display="block" fontSize={14}>
