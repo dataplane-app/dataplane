@@ -91,6 +91,7 @@ func Migrate() {
 				Secret:     strings.ReplaceAll(pair[0], "secret_", ""),
 				EnvVar:     pair[0],
 				SecretType: "environment",
+				Active:     true,
 			})
 		}
 

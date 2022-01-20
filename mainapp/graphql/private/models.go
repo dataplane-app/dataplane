@@ -20,6 +20,15 @@ type AddPreferencesInput struct {
 	Value      string `json:"value"`
 }
 
+type AddSecretsInput struct {
+	Secret        string  `json:"Secret"`
+	Description   string  `json:"Description"`
+	Value         *string `json:"Value"`
+	EnvVar        string  `json:"EnvVar"`
+	EnvironmentID string  `json:"EnvironmentId"`
+	Active        bool    `json:"Active"`
+}
+
 type AddUpdateMeInput struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`

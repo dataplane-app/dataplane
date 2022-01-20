@@ -1,36 +1,52 @@
 import { Box, Button, Grid, Typography } from '@mui/material';
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../components/CustomChip';
 import Search from '../components/Search';
+import { useSnackbar } from 'notistack';
+import { useGetSecrets } from '../graphql/getSecrets';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 const Secrets = () => {
+    // React router
     const history = useHistory();
 
     // Ref for scroll to top
     const scrollRef = useRef(null);
 
+    // Global environment state with hookstate
+    const Environment = useGlobalEnvironmentState();
+
+    // Secrets states
+    const [data, setData] = useState([]);
+
+    // Custom GraphQL hook
+    const getSecrets = useGetSecrets_(setData);
+
     useEffect(() => {
         // Scroll to top on load
         scrollRef.current.parentElement.scrollIntoView();
 
+        // Get secrets once the envrement id is available
+        Environment.id.get() && getSecrets(Environment.id.get());
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [Environment.id.get()]);
 
     const columns = useMemo(
         () => [
             {
                 Header: 'Secrets',
-                accessor: (row) => [row.name],
-                Cell: (row) => <CustomSecretName row={row} onClick={() => history.push(`/secrets/${row.row.original.id}`)} />,
+                accessor: (row) => [row.Secret],
+                Cell: (row) => <CustomSecretName row={row} onClick={() => history.push(`/secrets/${row.row.original.Secret}`)} />,
             },
             {
                 Header: 'Status',
-                accessor: 'status',
+                accessor: 'Active',
                 Cell: (row) => (
                     <Box mr={4} display="flex" justifyContent="flex-end">
-                        {row.value === 'Environment variable' ? (
+                        {row.row.original.SecretType === 'environment' ? (
                             <CustomChip label="Environment variable" customColor="green" />
                         ) : row.value === true ? (
                             <CustomChip label="Active" customColor="green" />
@@ -140,42 +156,56 @@ const CustomSecretName = ({ row, onClick }) => {
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start" onClick={onClick}>
             <Box display="flex">
-                <Typography component="h4" variant="h3" sx={{ color: `${row.row.original.status !== 'Environment variable' ? 'cyan.main' : 'text.main'}` }}>
+                <Typography component="h4" variant="h3" sx={{ color: `${row.row.original.SecretType !== 'environment' ? 'cyan.main' : 'text.main'}` }}>
                     {name}
                 </Typography>
 
-                {row.row.original.last_updated && (
-                    <Typography ml={5} variant="subtitle1">
-                        {row.row.original.last_updated}
-                    </Typography>
-                )}
-            </Box>
-            {row.row.original.env_variable && <Typography variant="subtitle1">Environment variable - {row.row.original.env_variable}</Typography>}
-            {row.row.original.description && (
-                <Typography mt={1} component="h5" variant="subtitle1">
-                    {row.row.original.description}
+                <Typography ml={5} variant="subtitle1">
+                    Last updated: {formatDate(row.row.original.UpdatedAt)}
                 </Typography>
-            )}
+            </Box>
+            {row.row.original.EnvVar && <Typography variant="subtitle1">Environment variable: {row.row.original.EnvVar}</Typography>}
+            <Typography mt={1} component="h5" variant="subtitle1">
+                {row.row.original.SecretType === 'custom' ? row.row.original.Description : '******'}
+            </Typography>
         </Grid>
     );
 };
 
-// Data for testing
-const data = [
-    {
-        id: 1,
-        status: 'Environment variable',
-        name: 'db_host',
-        description: '******',
-    },
-    {
-        id: 2,
-        status: true,
-        name: 'Squirrel',
-        env_variable: 'secret_squirrel',
-        description: 'The secret squirrel is for connectivity to AWS S3 buckets.',
-        last_updated: 'Last updated: 3 Jan 2021 15:05 GMT',
-    },
-];
-
 export default Secrets;
+
+// ----------- Custom Hooks
+const useGetSecrets_ = (setSecrets) => {
+    // GraphQL hook
+    const getSecrets = useGetSecrets();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get me data on load
+    return async (environmentId) => {
+        const response = await getSecrets({ environmentId });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get secrets: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get secrets failed', { variant: 'error' }));
+        } else {
+            setSecrets(response);
+        }
+    };
+};
+
+// ----------- Utility function
+/**
+ * Formats date
+ * @param {string} dateString 2022-01-20T13:27:08Z
+ * @return {string} 20 Jan 2022 13:27 GMT
+ */
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    let day = new Intl.DateTimeFormat('en', { day: 'numeric' }).format(date);
+    let monthYear = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short' }).format(date);
+    let time = new Intl.DateTimeFormat('en', { hourCycle: 'h23', hour: '2-digit', minute: 'numeric', timeZoneName: 'short' }).format(date);
+    return `${day} ${monthYear} ${time}`;
+}

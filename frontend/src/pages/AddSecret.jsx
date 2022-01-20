@@ -3,6 +3,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { useHistory } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
+import { useCreateSecret } from '../graphql/createSecret';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 const AddSecret = () => {
     // Secret states
@@ -14,16 +18,15 @@ const AddSecret = () => {
     // Ref for scroll to top
     const scrollRef = useRef(null);
 
+    // Custom GraphQL hook
+    const createSecret = useCreateSecret_();
+
     useEffect(() => {
         // Scroll to top on load
         scrollRef.current.parentElement.scrollIntoView();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    async function onSubmit(data) {
-        console.log(data);
-    }
 
     return (
         <Box className="page" ref={scrollRef}>
@@ -33,7 +36,7 @@ const AddSecret = () => {
 
             <Grid container alignItems="flex-start" mt={4}>
                 <Box sx={{ width: '212px' }}>
-                    <form onSubmit={handleSubmit(onSubmit)}>
+                    <form onSubmit={handleSubmit(createSecret)}>
                         <TextField label="Name" id="name" size="small" required sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('name', { required: true })} />
 
                         <TextField
@@ -73,7 +76,7 @@ const AddSecret = () => {
                 </Box>
 
                 <Typography variant="subtitle2" ml={4} mt={1}>
-                    Environment variable: secret_{watch('name') ? watch('name').toLowerCase() : null}
+                    Environment variable: secret_dp_{watch('name') ? watch('name').toLowerCase() : null}
                 </Typography>
             </Grid>
         </Box>
@@ -81,3 +84,42 @@ const AddSecret = () => {
 };
 
 export default AddSecret;
+
+// ----------- Custom Hooks
+const useCreateSecret_ = () => {
+    // React router
+    const history = useHistory();
+
+    // Global environment state with hookstate
+    const Environment = useGlobalEnvironmentState();
+
+    // GraphQL hook
+    const createSecret = useCreateSecret();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Create secret
+    return async (data) => {
+        const variables = {
+            input: {
+                Secret: data.name,
+                Description: data.description,
+                Value: data.secret,
+                EnvVar: 'secret_dp_' + data.name.toLowerCase(),
+                Active: true,
+                EnvironmentId: Environment.id.get(),
+            },
+        };
+        const response = await createSecret(variables);
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't create secret: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': create secret failed', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            history.push(`/secrets`);
+        }
+    };
+};

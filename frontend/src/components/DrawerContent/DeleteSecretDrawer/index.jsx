@@ -2,10 +2,15 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
+import { useHistory } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useUpdateDeleteSecret } from '../../../graphql/updateDeleteSecret';
 
-const DeleteSecretDrawer = ({ secretName, handleClose }) => {
+const DeleteSecretDrawer = ({ secretName, handleClose, environmentId }) => {
     const { closeSnackbar } = useSnackbar();
+
+    // Custom GraphQL hooks
+    const deleteSecret = useUpdateDeleteSecret_(environmentId, secretName);
 
     // Clear snackbar on load
     useEffect(() => {
@@ -31,7 +36,7 @@ const DeleteSecretDrawer = ({ secretName, handleClose }) => {
                 </Typography>
 
                 <Grid mt={4} display="flex" alignItems="center">
-                    <Button variant="contained" color="primary" sx={{ mr: 2 }}>
+                    <Button onClick={deleteSecret} variant="contained" color="primary" sx={{ mr: 2 }}>
                         Yes
                     </Button>
                     <Button variant="contained" color="primary" onClick={handleClose}>
@@ -48,3 +53,28 @@ const DeleteSecretDrawer = ({ secretName, handleClose }) => {
 };
 
 export default DeleteSecretDrawer;
+
+const useUpdateDeleteSecret_ = (environmentId, secret) => {
+    // GraphQL hook
+    const deleteSecret = useUpdateDeleteSecret();
+
+    // React router
+    const history = useHistory();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Delete secret
+    return async () => {
+        const response = await deleteSecret({ environmentId, secret });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't delete secrets: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': delete secret failed', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            history.push(`/secrets`);
+        }
+    };
+};
