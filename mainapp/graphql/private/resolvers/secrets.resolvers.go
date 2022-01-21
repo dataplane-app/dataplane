@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/auth_permissions"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -82,7 +82,6 @@ func (r *mutationResolver) UpdateSecret(ctx context.Context, input *privategraph
 	}
 
 	secretData := models.Secrets{
-		Secret:      input.Secret,
 		SecretType:  "custom",
 		Description: input.Description,
 		EnvVar:      "secret_dp_" + strings.ToLower(input.Secret),

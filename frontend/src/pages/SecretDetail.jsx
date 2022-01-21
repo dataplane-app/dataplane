@@ -57,14 +57,10 @@ const SecretDetail = () => {
                     <Box sx={{ width: '250px' }}>
                         {secret ? (
                             <form onSubmit={handleSubmit(getUpdateSecret)}>
-                                <TextField
-                                    label="Name"
-                                    id="name"
-                                    size="small"
-                                    required
-                                    sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }}
-                                    {...register('name', { required: true })}
-                                />
+                                <Typography variant="subtitle2" mt={1} mb={3}>
+                                    Environment variable: {secret?.SecretType === 'environment' ? 'secret_' : 'secret_dp_'}
+                                    {watch('name') && watch('name').toLowerCase()}
+                                </Typography>
 
                                 <TextField
                                     label="Description"
@@ -108,11 +104,6 @@ const SecretDetail = () => {
                             Warning: this action can't be undone.
                         </Typography>
                     </Box>
-
-                    <Typography variant="subtitle2" ml={4} mt={1}>
-                        Environment variable: {secret?.SecretType === 'environment' ? 'secret_' : 'secret_dp_'}
-                        {watch('name') && watch('name').toLowerCase()}
-                    </Typography>
                 </Grid>
             </Box>
 
@@ -172,7 +163,6 @@ const useUpdateSecret_ = (setSecrets, Environment, getSecret) => {
             input: {
                 Secret: data.name,
                 Description: data.description,
-                Value: data.secret,
                 Active: true,
                 EnvironmentId: Environment.id.get(),
             },
