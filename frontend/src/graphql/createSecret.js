@@ -9,7 +9,6 @@ const query = gql`
             Secret
             SecretType
             Description
-            Value
             EnvVar
             Active
             UpdatedAt
