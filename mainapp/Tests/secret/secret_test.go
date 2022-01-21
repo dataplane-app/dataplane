@@ -67,7 +67,6 @@ func TestSecrets(t *testing.T) {
 			Secret: "testing",
 			Description: "Secret description",
 			Value: "Hello123!",
-			EnvVar: "dp_test",
 			Active: true,
 			EnvironmentId: "` + envID + `"
 		}
@@ -97,7 +96,6 @@ func TestSecrets(t *testing.T) {
 		updateSecret(input:{
 			Secret: "testing",
 			Description: "Secret description updated",
-			EnvVar: "dp_test",
 			Active: true,
 			EnvironmentId: "` + envID + `"
 		}
