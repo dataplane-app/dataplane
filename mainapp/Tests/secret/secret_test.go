@@ -1,4 +1,4 @@
-package permissiontests
+package secrettests
 
 import (
 	"dataplane/Tests/testutils"
