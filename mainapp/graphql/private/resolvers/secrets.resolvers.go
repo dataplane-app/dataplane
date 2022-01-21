@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/auth_permissions"
+	"dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -13,6 +13,7 @@ import (
 	"dataplane/utilities"
 	"errors"
 	"os"
+	"strings"
 )
 
 func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraphql.AddSecretsInput) (*models.Secrets, error) {
@@ -46,7 +47,7 @@ func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraph
 		SecretType:    "custom",
 		Value:         encryptedSecretValue,
 		Description:   input.Description,
-		EnvVar:        input.EnvVar,
+		EnvVar:        "secret_dp_" + strings.ToLower(input.Secret),
 		Active:        true,
 		EnvironmentID: input.EnvironmentID,
 	}
@@ -84,7 +85,7 @@ func (r *mutationResolver) UpdateSecret(ctx context.Context, input *privategraph
 		Secret:      input.Secret,
 		SecretType:  "custom",
 		Description: input.Description,
-		EnvVar:      input.EnvVar,
+		EnvVar:      "secret_dp_" + strings.ToLower(input.Secret),
 		Active:      true,
 	}
 

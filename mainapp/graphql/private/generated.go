@@ -1719,7 +1719,6 @@ type Secrets {
 input AddSecretsInput {
 	Secret:   String!
     Description: String!
-	EnvVar:  String!
 	Value: String!
     EnvironmentId: String!
     Active: Boolean!
@@ -1728,7 +1727,6 @@ input AddSecretsInput {
 input UpdateSecretsInput {
 	Secret:   String!
     Description: String!
-	EnvVar:  String!
     EnvironmentId: String!
     Active: Boolean!
 }
@@ -8291,14 +8289,6 @@ func (ec *executionContext) unmarshalInputAddSecretsInput(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
-		case "EnvVar":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("EnvVar"))
-			it.EnvVar, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "Value":
 			var err error
 
@@ -8539,14 +8529,6 @@ func (ec *executionContext) unmarshalInputUpdateSecretsInput(ctx context.Context
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Description"))
 			it.Description, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "EnvVar":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("EnvVar"))
-			it.EnvVar, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}

@@ -173,7 +173,6 @@ const useUpdateSecret_ = (setSecrets, Environment, getSecret) => {
                 Secret: data.name,
                 Description: data.description,
                 Value: data.secret,
-                EnvVar: 'secret_dp_' + data.name.toLowerCase(),
                 Active: true,
                 EnvironmentId: Environment.id.get(),
             },

@@ -23,7 +23,6 @@ type AddPreferencesInput struct {
 type AddSecretsInput struct {
 	Secret        string `json:"Secret"`
 	Description   string `json:"Description"`
-	EnvVar        string `json:"EnvVar"`
 	Value         string `json:"Value"`
 	EnvironmentID string `json:"EnvironmentId"`
 	Active        bool   `json:"Active"`
@@ -76,7 +75,6 @@ type UpdateEnvironment struct {
 type UpdateSecretsInput struct {
 	Secret        string `json:"Secret"`
 	Description   string `json:"Description"`
-	EnvVar        string `json:"EnvVar"`
 	EnvironmentID string `json:"EnvironmentId"`
 	Active        bool   `json:"Active"`
 }
