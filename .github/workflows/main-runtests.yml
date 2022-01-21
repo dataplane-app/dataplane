@@ -72,6 +72,7 @@ jobs:
           secret_db_port: "5432"
           secret_db_database: "dataplane"
           secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+          secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
           database: "timescaledb"
           mode: "development"
           debug: "true"

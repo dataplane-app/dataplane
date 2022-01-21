@@ -75,7 +75,6 @@ func TestSecrets(t *testing.T) {
 			Secret
 			SecretType
 			Description
-			Value
 			EnvVar
 			Active
 			UpdatedAt
@@ -106,7 +105,6 @@ func TestSecrets(t *testing.T) {
 			Secret
 			SecretType
 			Description
-			Value
 			EnvVar
 			Active
 			UpdatedAt
@@ -151,7 +149,6 @@ func TestSecrets(t *testing.T) {
 				Secret
 				SecretType
 				Description
-				Value
 				EnvVar
 				UpdatedAt
 			  }
@@ -175,7 +172,6 @@ func TestSecrets(t *testing.T) {
 					Secret
 					SecretType
 					Description
-					Value
 					EnvVar
 					UpdatedAt
 				  }

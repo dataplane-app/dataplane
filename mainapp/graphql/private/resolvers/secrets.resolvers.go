@@ -202,16 +202,7 @@ func (r *queryResolver) GetSecret(ctx context.Context, secret string, environmen
 		return nil, errors.New("Retrive secret database error.")
 	}
 
-	// Decrypt secret value
-	decryptedSecretValue, err := utilities.Decrypt(s.Value)
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return nil, errors.New("Secret value decryption failed.")
-	}
-
-	s.Value = decryptedSecretValue
+	s.Value = "*****"
 
 	return &s, nil
 }
@@ -246,16 +237,8 @@ func (r *queryResolver) GetSecrets(ctx context.Context, environmentID string) ([
 	// Decrypt secret values
 	for i, e := range s {
 		if e.SecretType == "custom" {
-			// Decrypt secret value
-			decryptedSecretValue, err := utilities.Decrypt(e.Value)
-			if err != nil {
-				if os.Getenv("debug") == "true" {
-					logging.PrintSecretsRedact(err)
-				}
-				return nil, errors.New("Secret value decryption failed.")
-			}
 
-			s[i].Value = decryptedSecretValue
+			s[i].Value = "*****"
 		}
 	}
 
