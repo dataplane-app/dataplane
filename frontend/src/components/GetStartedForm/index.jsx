@@ -33,7 +33,12 @@ const GetStartedForm = ({ handleNext }) => {
         };
 
         let response = await createAdmin(allData);
-        if (response && response.platform) {
+
+        if (!response) {
+            return enqueueSnackbar('An error has occured', { variant: 'error' });
+        }
+
+        if (response && response.Platform) {
             closeSnackbar();
             handleNext();
         } else {

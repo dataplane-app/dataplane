@@ -93,34 +93,40 @@ const ThemeToggle = (props) => {
         (async () => {
             const colorModeResponse = await getOnePreference({ preference: 'theme' });
 
+            if (colorModeResponse.r === 'Unauthorized') {
+                return;
+            }
+
             // If color mode in DB doesn't match current color mode, toggle.
             if (!colorModeResponse.errors) {
                 if (colorModeResponse.value !== theme.palette.mode) {
                     colorMode.toggleColorMode();
                 }
+            } else {
+                return;
             }
         })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Toggle color mode on change
-    React.useEffect(() => {
-        (async () => {
-            const input = { input: { preference: 'theme', value: theme.palette.mode } };
-            const updateEnvironmentsResponse = await updatePreferences(input);
-            if (updateEnvironmentsResponse.errors) {
-                console.log('Unable to update color theme');
-            }
-        })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [theme.palette.mode]);
+    // Toggle color mode on click
+    async function handleClick() {
+        const color = theme.palette.mode === 'light' ? 'dark' : 'light';
+        const input = { input: { preference: 'theme', value: color } };
+        colorMode.toggleColorMode();
+        const updateEnvironmentsResponse = await updatePreferences(input);
+
+        if (updateEnvironmentsResponse.errors) {
+            console.log('Unable to update color theme');
+        }
+    }
 
     return (
         <DarkToggle
             {...props}
             disableTouchRipple={true}
             checked={theme.palette.mode !== 'dark'}
-            onChange={colorMode.toggleColorMode}
+            onClick={handleClick}
             sx={{
                 padding: 0,
                 borderRadius: 19,

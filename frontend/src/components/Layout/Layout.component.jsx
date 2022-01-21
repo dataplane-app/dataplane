@@ -1,6 +1,5 @@
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
-import CssBaseline from '@mui/material/CssBaseline';
 import Drawer from '@mui/material/Drawer';
 import Toolbar from '@mui/material/Toolbar';
 import * as React from 'react';
@@ -12,7 +11,6 @@ const drawerWidth = 204;
 const Layout = ({ children }) => {
     return (
         <Box sx={{ display: 'flex' }}>
-            <CssBaseline />
             <AppBar
                 elevation={0}
                 position="fixed"
