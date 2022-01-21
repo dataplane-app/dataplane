@@ -25,7 +25,7 @@ services:
     expose:
       - 6379
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 30s
       retries: 50
@@ -53,6 +53,7 @@ services:
       secret_db_port: "5432"
       secret_db_database: "dataplane"
       secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+      secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
       database: "timescaledb"
       dataplane_port: "9000"
       mode: "development"

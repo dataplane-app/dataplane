@@ -40,6 +40,7 @@ services:
       secret_db_port: "5432"
       secret_db_database: "dataplane"
       secret_jwt_secret: "117943e9-9d44-49ad-aa4e-9c64004c8993"
+      secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
       database: "timescaledb"
       dataplane_port: "9010"
       mode: "development"

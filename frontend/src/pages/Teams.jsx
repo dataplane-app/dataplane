@@ -98,7 +98,7 @@ const Teams = () => {
                         <Box
                             component="tr"
                             display="grid"
-                            sx={{ '*:first-child': { ml: '22px' }, '*:last-child': { textAlign: 'center' } }}
+                            sx={{ '*:first-of-type': { ml: '22px' }, '*:last-child': { textAlign: 'center' } }}
                             gridTemplateColumns="repeat(3, 1fr)"
                             justifyContent="flex-start"
                             {...headerGroup.getHeaderGroupProps()}>

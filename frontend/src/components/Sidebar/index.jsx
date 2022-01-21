@@ -23,7 +23,6 @@ const Sidebar = () => {
                         <ListItem
                             disableRipple
                             disableTouchRipple
-                            disableFocusRibble
                             button
                             key={menu.id}
                             mt={1}
@@ -47,7 +46,6 @@ const Sidebar = () => {
                             mb={1}
                             disableRipple
                             disableTouchRipple
-                            disableFocusRibble
                             sx={{ '&:hover': { backgroundColor: 'transparent' }, '& .MuiTouchRipple-root': { borderRadius: '42px' } }}
                             position="relative"
                             onClick={() => history.push(`/${menu.url}`)}
