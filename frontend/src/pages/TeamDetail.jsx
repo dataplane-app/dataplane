@@ -504,7 +504,7 @@ const useSubmitData = (userId) => {
         if (response.r === 'error') {
             enqueueSnackbar("Can't update user data: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': update user data failed', { variant: 'error' }));
         } else {
             closeSnackbar();
             enqueueSnackbar(`Success`, { variant: 'success' });
@@ -526,7 +526,7 @@ const useGetMeData = (setMeData) => {
             closeSnackbar();
             enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get me data failed', { variant: 'error' }));
         } else {
             setMeData(response);
         }
@@ -549,7 +549,7 @@ const useGetUserData = (setUser, reset) => {
         if (response.r === 'error') {
             enqueueSnackbar("Can't get user data: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get user data failed', { variant: 'error' }));
         } else {
             setUser(response);
 
@@ -577,9 +577,9 @@ const useGetEnvironmentsData = (setAvailableEnvironments) => {
 
         if (response.r === 'error') {
             closeSnackbar();
-            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't get environments: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get environments failed', { variant: 'error' }));
         } else {
             setAvailableEnvironments(response);
         }
@@ -592,15 +592,15 @@ const useGetUserEnvironments_ = (setUserEnvironments, user_id, environment_id) =
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Get environments on load
+    // Get user environments
     return async () => {
         const response = await getUserEnvironments({ user_id, environment_id });
 
         if (response.r === 'error') {
             closeSnackbar();
-            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't get user environments: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get user environments failed', { variant: 'error' }));
         } else {
             setUserEnvironments(response);
         }
@@ -613,15 +613,15 @@ const useRemoveUserFromEnv = (getUserEnvironments) => {
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Get environments on load
+    // Remove user from environment
     return async (user_id, environment_id) => {
         const response = await removeUserFromEnvironment({ user_id, environment_id });
 
         if (response.r === 'error') {
             closeSnackbar();
-            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't remove user from environment: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': remove user from environment failed', { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getUserEnvironments();
@@ -635,15 +635,15 @@ const useAddUserToEnv = (getUserEnvironments) => {
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Get environments on load
+    // Add user to environment
     return async (user_id, environment_id) => {
         const response = await addUserToEnvironment({ user_id, environment_id });
 
         if (response.r === 'error') {
             closeSnackbar();
-            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't add user to environment: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': add user to environment failed', { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getUserEnvironments();
@@ -663,9 +663,9 @@ const useGetAvailablePermissions = (setAvailablePermissions, environmentID) => {
         const response = await getAvailablePermissions({ environmentID });
 
         if (response.r === 'error') {
-            enqueueSnackbar("Can't get permissions: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't get available permissions: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get available permissions failed', { variant: 'error' }));
         } else {
             setAvailablePermissions(response);
         }
@@ -687,9 +687,9 @@ const useGetUserPermissions_ = (setUserPermissions, userID, environmentID) => {
                 setUserPermissions([]);
             } else if (response.r === 'error') {
                 closeSnackbar();
-                enqueueSnackbar("Can't user permissions: " + response.msg, { variant: 'error' });
+                enqueueSnackbar("Can't get user permissions: " + response.msg, { variant: 'error' });
             } else if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message + ': get user permissions', { variant: 'error' }));
+                response.errors.map((err) => enqueueSnackbar(err.message + ': get user permissions failed', { variant: 'error' }));
             } else {
                 setUserPermissions(response);
             }
@@ -723,7 +723,7 @@ const useUpdatePermissions = (getUserPermissions, selectedPermission, environmen
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': update permissions failed', { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getUserPermissions();
@@ -751,7 +751,7 @@ const useDeletePermission = (getUserPermissions) => {
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': delete permission failed', { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getUserPermissions();
@@ -765,17 +765,17 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Create access group
+    // Get access groups
     return async () => {
         const response = await getAccessGroups({ environmentID, userID });
 
         if (response.r === 'error') {
             closeSnackbar();
-            enqueueSnackbar("Can't delete permission: " + response.msg, {
+            enqueueSnackbar("Can't get access groups: " + response.msg, {
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get access groups failed', { variant: 'error' }));
         } else {
             setAccessGroups(response);
         }
@@ -823,7 +823,7 @@ const useUpdateUserToAccessGroup_ = (environmentID, user_id, getUserAccessGroups
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': add user to access group failed', { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getUserAccessGroups();
@@ -843,7 +843,7 @@ const useRemoveUserFromAccessGroup_ = (getUserAccessGroups) => {
 
         if (response.r === 'error') {
             closeSnackbar();
-            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't remove user: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': remove user from access group failed', { variant: 'error' }));
         } else {
