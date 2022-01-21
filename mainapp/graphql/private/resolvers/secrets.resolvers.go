@@ -13,6 +13,7 @@ import (
 	"dataplane/utilities"
 	"errors"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -31,6 +32,12 @@ func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraph
 
 	if permOutcome == "denied" {
 		return nil, errors.New("Requires permissions.")
+	}
+
+	// Validate secret name
+	var isStringAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
+	if !isStringAlphaNumeric(input.Secret) {
+		return nil, errors.New("Only [a-z], [A-Z], [0-9] and _ are allowed")
 	}
 
 	// Encrypt secret value

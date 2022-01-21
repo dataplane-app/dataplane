@@ -13,7 +13,12 @@ const AddSecret = () => {
     const [isShowingSecret, setIsShowingSecret] = useState(false);
 
     // Form
-    const { register, handleSubmit, watch } = useForm();
+    const {
+        register,
+        handleSubmit,
+        watch,
+        formState: { errors },
+    } = useForm();
 
     // Ref for scroll to top
     const scrollRef = useRef(null);
@@ -37,7 +42,19 @@ const AddSecret = () => {
             <Grid container alignItems="flex-start" mt={4}>
                 <Box sx={{ width: '212px' }}>
                     <form onSubmit={handleSubmit(createSecret)}>
-                        <TextField label="Name" id="name" size="small" required sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('name', { required: true })} />
+                        <TextField
+                            label="Name"
+                            id="name"
+                            size="small"
+                            required
+                            sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }}
+                            {...register('name', { pattern: /^[A-Za-z0-9_]+$/i })}
+                        />
+                        {errors.name?.type === 'pattern' ? (
+                            <Typography variant="subtitle2" mt={1} mb={2} color={'red'} sx={{ width: 'max-content' }}>
+                                Only [a-z], [A-Z], [0-9] and _ are allowed
+                            </Typography>
+                        ) : null}
 
                         <TextField
                             label="Description"
