@@ -76,8 +76,8 @@ func TestMe(t *testing.T) {
 	updateMe := `mutation {
 		updateMe(
 			input: {
-				first_name: "` + faker.FirstName() + `",
-				last_name: "` + faker.LastName() + `",
+				first_name: "` + testutils.TextEscape(faker.FirstName()) + `",
+				last_name: "` + testutils.TextEscape(faker.LastName()) + `",
 				email: "` + testutils.AdminUser + `",
 				job_title: "Manager"
 				timezone: "` + faker.Timezone() + `",
