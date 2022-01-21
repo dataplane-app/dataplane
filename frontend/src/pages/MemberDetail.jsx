@@ -8,7 +8,7 @@ import { useMe } from '../graphql/me';
 import { useUpdateMe } from '../graphql/updateMe';
 import { useGetUserPermissions } from '../graphql/getUserPermissions';
 import { useGetUserEnvironments } from '../graphql/getUserEnvironments';
-import { useGetAccessGroups } from '../graphql/getAccessGroups';
+import { useGetUserAccessGroups } from '../graphql/getUserAccessGroups';
 import { EnvironmentContext } from '../App';
 import ct from 'countries-and-timezones';
 import { useForm } from 'react-hook-form';
@@ -40,7 +40,7 @@ const MemberDetail = () => {
     const getData = useGetData(setUser, reset, setIsActive, setIsAdmin);
     const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
     const getUserEnvironments = useGetUserEnvironments_(setUserEnvironments, user.user_id, globalEnvironment?.id);
-    const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
+    const getAccessGroups = useGetUserAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
 
     // Get me data on load
     useEffect(() => {
@@ -187,18 +187,24 @@ const MemberDetail = () => {
                         </Typography>
 
                         <Box mt="1.31rem">
-                            {userEnvironments.map((env) => (
-                                <Grid display="flex" mt={1.5} mb={1.5} alignItems="center" key={env.id}>
-                                    <Typography
-                                        onClick={() => history.push(`/settings/environment/${env.id}`)}
-                                        sx={{ cursor: 'pointer' }}
-                                        variant="subtitle2"
-                                        lineHeight="15.23px"
-                                        color="primary">
-                                        {env.name}
-                                    </Typography>
-                                </Grid>
-                            ))}
+                            {userEnvironments.length ? (
+                                userEnvironments.map((env) => (
+                                    <Grid display="flex" mt={1.5} mb={1.5} alignItems="center" key={env.id}>
+                                        <Typography
+                                            onClick={() => history.push(`/settings/environment/${env.id}`)}
+                                            sx={{ cursor: 'pointer' }}
+                                            variant="subtitle2"
+                                            lineHeight="15.23px"
+                                            color="primary">
+                                            {env.name}
+                                        </Typography>
+                                    </Grid>
+                                ))
+                            ) : (
+                                <Typography variant="subtitle2" lineHeight="15.23px">
+                                    None
+                                </Typography>
+                            )}
                         </Box>
 
                         <Box mt="2.31rem">
@@ -207,20 +213,26 @@ const MemberDetail = () => {
                             </Typography>
 
                             <Box mt="1.31rem">
-                                {accessGroups
-                                    .filter((env) => env.EnvironmentID === globalEnvironment.id)
-                                    .map((env) => (
-                                        <Grid display="flex" mt={1.5} mb={1.5} alignItems="center" key={env.AccessGroupID}>
-                                            <Typography
-                                                onClick={() => history.push(`/teams/access/${env.AccessGroupID}`)}
-                                                sx={{ cursor: 'pointer' }}
-                                                variant="subtitle2"
-                                                lineHeight="15.23px"
-                                                color="primary">
-                                                {env.Name}
-                                            </Typography>
-                                        </Grid>
-                                    ))}
+                                {accessGroups.filter((env) => env.EnvironmentID === globalEnvironment.id).length ? (
+                                    accessGroups
+                                        .filter((env) => env.EnvironmentID === globalEnvironment.id)
+                                        .map((env) => (
+                                            <Grid display="flex" mt={1.5} mb={1.5} alignItems="center" key={env.AccessGroupID}>
+                                                <Typography
+                                                    onClick={() => history.push(`/teams/access/${env.AccessGroupID}`)}
+                                                    sx={{ cursor: 'pointer' }}
+                                                    variant="subtitle2"
+                                                    lineHeight="15.23px"
+                                                    color="primary">
+                                                    {env.Name ? env.Name : 'None'}
+                                                </Typography>
+                                            </Grid>
+                                        ))
+                                ) : (
+                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                        None
+                                    </Typography>
+                                )}
                             </Box>
                         </Box>
                     </Grid>
@@ -364,15 +376,15 @@ const useGetUserEnvironments_ = (setUserEnvironments, user_id, environment_id) =
     };
 };
 
-const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
+const useGetUserAccessGroups_ = (setAccessGroups, environmentID, userID) => {
     // GraphQL hook
-    const getAccessGroups = useGetAccessGroups();
+    const getUserAccessGroups = useGetUserAccessGroups();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get access groups
     return async () => {
-        const response = await getAccessGroups({ environmentID, userID });
+        const response = await getUserAccessGroups({ environmentID, userID });
 
         if (response.r === 'error') {
             closeSnackbar();
