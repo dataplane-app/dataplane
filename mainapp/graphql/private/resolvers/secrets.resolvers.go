@@ -10,6 +10,7 @@ import (
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
 	"dataplane/logging"
+	"dataplane/utilities"
 	"errors"
 	"os"
 )
@@ -31,17 +32,26 @@ func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraph
 		return nil, errors.New("Requires permissions.")
 	}
 
+	// Encrypt secret value
+	encryptedSecretValue, err := utilities.Encrypt(input.Value)
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Secret value encryption failed.")
+	}
+
 	secretData := models.Secrets{
 		Secret:        input.Secret,
 		SecretType:    "custom",
-		Value:         input.Value,
+		Value:         encryptedSecretValue,
 		Description:   input.Description,
 		EnvVar:        input.EnvVar,
 		Active:        true,
 		EnvironmentID: input.EnvironmentID,
 	}
 
-	err := database.DBConn.Create(&secretData).Error
+	err = database.DBConn.Create(&secretData).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -107,11 +117,20 @@ func (r *mutationResolver) UpdateSecretValue(ctx context.Context, secret string,
 		return nil, errors.New("Requires permissions.")
 	}
 
-	secretData := models.Secrets{
-		Value: value,
+	// Encrypt secret value
+	encryptedSecretValue, err := utilities.Encrypt(value)
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Secret value encryption failed.")
 	}
 
-	err := database.DBConn.Where("secret = ?", secret).Updates(&secretData).Error
+	secretData := models.Secrets{
+		Value: encryptedSecretValue,
+	}
+
+	err = database.DBConn.Where("secret = ?", secret).Updates(&secretData).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -182,6 +201,18 @@ func (r *queryResolver) GetSecret(ctx context.Context, secret string, environmen
 		}
 		return nil, errors.New("Retrive secret database error.")
 	}
+
+	// Decrypt secret value
+	decryptedSecretValue, err := utilities.Decrypt(s.Value)
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Secret value decryption failed.")
+	}
+
+	s.Value = decryptedSecretValue
+
 	return &s, nil
 }
 
@@ -211,5 +242,22 @@ func (r *queryResolver) GetSecrets(ctx context.Context, environmentID string) ([
 		}
 		return nil, errors.New("Retrive secrets database error.")
 	}
+
+	// Decrypt secret values
+	for i, e := range s {
+		if e.SecretType == "custom" {
+			// Decrypt secret value
+			decryptedSecretValue, err := utilities.Decrypt(e.Value)
+			if err != nil {
+				if os.Getenv("debug") == "true" {
+					logging.PrintSecretsRedact(err)
+				}
+				return nil, errors.New("Secret value decryption failed.")
+			}
+
+			s[i].Value = decryptedSecretValue
+		}
+	}
+
 	return s, nil
 }
