@@ -1,6 +1,5 @@
 import { Box, Grid, Typography, Button, TextField, Drawer, Autocomplete } from '@mui/material';
 import { useEffect, useState, useContext } from 'react';
-import { belongToAcessGroupsItems, expecificPermissionsItems } from '../utils/teamsMockData';
 import CustomChip from '../components/CustomChip';
 import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
@@ -9,8 +8,8 @@ import { useMe } from '../graphql/me';
 import { useUpdateMe } from '../graphql/updateMe';
 import { useGetUserPermissions } from '../graphql/getUserPermissions';
 import { useGetUserEnvironments } from '../graphql/getUserEnvironments';
+import { useGetUserAccessGroups } from '../graphql/getUserAccessGroups';
 import { EnvironmentContext } from '../App';
-
 import ct from 'countries-and-timezones';
 import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
@@ -31,6 +30,7 @@ const MemberDetail = () => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [userPermissions, setUserPermissions] = useState([]);
     const [userEnvironments, setUserEnvironments] = useState([]);
+    const [accessGroups, setAccessGroups] = useState([]);
 
     // Sidebar states
     const [isOpenChangePassword, setIsOpenPassword] = useState(false);
@@ -40,6 +40,7 @@ const MemberDetail = () => {
     const getData = useGetData(setUser, reset, setIsActive, setIsAdmin);
     const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
     const getUserEnvironments = useGetUserEnvironments_(setUserEnvironments, user.user_id, globalEnvironment?.id);
+    const getAccessGroups = useGetUserAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
 
     // Get me data on load
     useEffect(() => {
@@ -52,6 +53,10 @@ const MemberDetail = () => {
     useEffect(() => {
         getUserPermissions();
         getUserEnvironments();
+
+        if (globalEnvironment?.id && user.user_id) {
+            getAccessGroups();
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [globalEnvironment?.id, user.user_id]);
@@ -152,45 +157,28 @@ const MemberDetail = () => {
                                         </Grid>
                                     ))}
                             </Box>
-                            <Box mt="2.31rem">
-                                <Typography component="h3" variant="h3" color="text.primary">
-                                    Environment permissions
-                                </Typography>
-                                <Typography variant="subtitle2" mt=".20rem">
-                                    Environment: {globalEnvironment?.name}
-                                </Typography>
+                            {userPermissions.filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === globalEnvironment.id).length ? (
+                                <Box mt="2.31rem">
+                                    <Typography component="h3" variant="h3" color="text.primary">
+                                        Environment permissions
+                                    </Typography>
+                                    <Typography variant="subtitle2" mt=".20rem">
+                                        Environment: {globalEnvironment?.name}
+                                    </Typography>
 
-                                <Box mt={2}>
-                                    {userPermissions
-                                        ?.filter((permission) => permission.Level === 'environment' && permission.ResourceID === globalEnvironment?.id)
-                                        .map((permission) => (
-                                            <Grid display="flex" alignItems="center" key={permission.ID} mt={1.5} mb={1.5}>
-                                                <Typography variant="subtitle2" lineHeight="15.23px">
-                                                    {permission.Label}
-                                                </Typography>
-                                            </Grid>
-                                        ))}
+                                    <Box mt={2}>
+                                        {userPermissions
+                                            ?.filter((permission) => permission.Level === 'environment' && permission.ResourceID === globalEnvironment?.id)
+                                            .map((permission) => (
+                                                <Grid display="flex" alignItems="center" key={permission.ID} mt={1.5} mb={1.5}>
+                                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                                        {permission.Label}
+                                                    </Typography>
+                                                </Grid>
+                                            ))}
+                                    </Box>
                                 </Box>
-                            </Box>
-
-                            <Box mt="3.5rem">
-                                <Typography component="h3" variant="h3" color="text.primary">
-                                    Specific permissions
-                                </Typography>
-                                <Typography variant="subtitle2" mt=".20rem">
-                                    Environment: Production
-                                </Typography>
-
-                                <Box mt={2}>
-                                    {expecificPermissionsItems.map((exp) => (
-                                        <Grid display="flex" alignItems="center" key={exp.id} mt={1.5} mb={1.5}>
-                                            <Typography variant="subtitle2" lineHeight="15.23px">
-                                                {exp.name}
-                                            </Typography>
-                                        </Grid>
-                                    ))}
-                                </Box>
-                            </Box>
+                            ) : null}
                         </Box>
                     </Grid>
                     <Grid item sx={{ flex: 1 }}>
@@ -199,13 +187,24 @@ const MemberDetail = () => {
                         </Typography>
 
                         <Box mt="1.31rem">
-                            {userEnvironments.map((env) => (
-                                <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
-                                    <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
-                                        {env.name}
-                                    </Typography>
-                                </Grid>
-                            ))}
+                            {userEnvironments.length ? (
+                                userEnvironments.map((env) => (
+                                    <Grid display="flex" mt={1.5} mb={1.5} alignItems="center" key={env.id}>
+                                        <Typography
+                                            onClick={() => history.push(`/settings/environment/${env.id}`)}
+                                            sx={{ cursor: 'pointer' }}
+                                            variant="subtitle2"
+                                            lineHeight="15.23px"
+                                            color="primary">
+                                            {env.name}
+                                        </Typography>
+                                    </Grid>
+                                ))
+                            ) : (
+                                <Typography variant="subtitle2" lineHeight="15.23px">
+                                    None
+                                </Typography>
+                            )}
                         </Box>
 
                         <Box mt="2.31rem">
@@ -214,18 +213,26 @@ const MemberDetail = () => {
                             </Typography>
 
                             <Box mt="1.31rem">
-                                {belongToAcessGroupsItems.map((env) => (
-                                    <Grid
-                                        sx={{ cursor: 'pointer', pt: 1.5, pb: 1.5, borderRadius: 2, '&:hover': { background: 'rgba(196, 196, 196, 0.15)' } }}
-                                        display="flex"
-                                        alignItems="center"
-                                        key={env.id}
-                                        onClick={() => history.push(`/teams/access/${env.name}`)}>
-                                        <Typography variant="subtitle2" lineHeight="15.23px" color="primary">
-                                            {env.name}
-                                        </Typography>
-                                    </Grid>
-                                ))}
+                                {accessGroups.filter((env) => env.EnvironmentID === globalEnvironment.id).length ? (
+                                    accessGroups
+                                        .filter((env) => env.EnvironmentID === globalEnvironment.id)
+                                        .map((env) => (
+                                            <Grid display="flex" mt={1.5} mb={1.5} alignItems="center" key={env.AccessGroupID}>
+                                                <Typography
+                                                    onClick={() => history.push(`/teams/access/${env.AccessGroupID}`)}
+                                                    sx={{ cursor: 'pointer' }}
+                                                    variant="subtitle2"
+                                                    lineHeight="15.23px"
+                                                    color="primary">
+                                                    {env.Name ? env.Name : 'None'}
+                                                </Typography>
+                                            </Grid>
+                                        ))
+                                ) : (
+                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                        None
+                                    </Typography>
+                                )}
                             </Box>
                         </Box>
                     </Grid>
@@ -365,6 +372,29 @@ const useGetUserEnvironments_ = (setUserEnvironments, user_id, environment_id) =
             } else {
                 setUserEnvironments(response);
             }
+        }
+    };
+};
+
+const useGetUserAccessGroups_ = (setAccessGroups, environmentID, userID) => {
+    // GraphQL hook
+    const getUserAccessGroups = useGetUserAccessGroups();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get access groups
+    return async () => {
+        const response = await getUserAccessGroups({ environmentID, userID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get access groups: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get access groups failed', { variant: 'error' }));
+        } else {
+            setAccessGroups(response);
         }
     };
 };
