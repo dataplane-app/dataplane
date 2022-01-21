@@ -1,6 +1,6 @@
 import React from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { Box, Button } from '@mui/material';
+import { Box, Button, CssBaseline } from '@mui/material';
 import { Route } from 'react-router-dom';
 import { UserAuth, PrivateRoute } from './Auth/UserAuth';
 import { SnackbarProvider } from 'notistack';
@@ -72,6 +72,7 @@ function App() {
                         autoHideDuration={8000}>
                         <Box className="app" backgroundColor="background.main">
                             <UserAuth refreshTokenUrl="/refreshtoken" LogincallbackUrl="/loginCallback" loginUrl="/webapp/login" logoutUrl="/webapp/logout">
+                                <CssBaseline />
                                 <Route exact path="/congratulations">
                                     <Congratulations />
                                 </Route>
