@@ -1,9 +1,9 @@
 import { Box, Grid, Typography, TextField, MenuItem } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import Search from '../components/Search';
 import CustomChip from '../components/CustomChip';
 import PipelineTable from '../components/TableContent/PipelineTable';
+import MoreInfoMenu from '../components/MoreInfoMenu';
+import PipelinePageItem from '../components/MoreInfoContent/PipelinePageItem';
 
 const Pipelines = () => {
     return (
@@ -12,7 +12,9 @@ const Pipelines = () => {
                 <Typography component="h2" variant="h2" color="text.primary">
                     Pipelines
                 </Typography>
-                <FontAwesomeIcon icon={faEllipsisV} />
+                <MoreInfoMenu>
+                    <PipelinePageItem handleRefresh={() => {}} />
+                </MoreInfoMenu>
             </Grid>
 
             <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start" sx={{ width: { xl: '85%' } }}>

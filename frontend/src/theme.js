@@ -41,6 +41,15 @@ const createCustomTheme = (mode) => ({
                   cyan: {
                       main: '#0073C6',
                   },
+                  editor: {
+                      selectedTabColor: '#f2f2f2',
+                      tabColor: '#fff',
+                      tabTextColor: '#222',
+                  },
+                  status: {
+                      pipelineOnline: '#72B842',
+                      pipelineOnlineText: '#2E6707',
+                  },
               }
             : {
                   success: {
@@ -76,6 +85,15 @@ const createCustomTheme = (mode) => ({
                   },
                   cyan: {
                       main: 'rgba(101, 190, 255, 1)',
+                  },
+                  editor: {
+                      selectedTabColor: 'rgba(73, 123, 39, 0.31)',
+                      tabColor: '#222',
+                      tabTextColor: '#fff',
+                  },
+                  status: {
+                      pipelineOnline: '#72B842',
+                      pipelineOnlineText: '#72B842',
                   },
               }),
     },

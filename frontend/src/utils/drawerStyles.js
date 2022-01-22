@@ -1,12 +1,12 @@
-const drawerWidth = 507;
+const drawerWidth = 720;
 
-const drawerStyles = (theme) => {
+const customDrawerStyles = (theme) => {
     return {
         width: drawerWidth,
         flexShrink: 0,
         zIndex: 9998,
-        [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', background: theme.palette.sidebar.main },
+        [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
     };
 };
 
-export default drawerStyles;
+export default customDrawerStyles;
