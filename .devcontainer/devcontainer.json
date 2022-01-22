@@ -29,6 +29,7 @@
         "source=node_modules,target=/appdev/frontend/node_modules,type=volume"
     ],
 	// "runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined" ],
+	"runArgs": [ "--network=dataplane_network" ],
 
 // rather use docker-compose for environment variables - easier to find/read
     "containerEnv":{
@@ -71,6 +72,8 @@
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "cd mainapp && go mod download",
+
+	"initializeCommand": "docker network create --driver bridge dataplane_network || true"
 
 	// Uncomment to connect as a non-root user. More info: https://aka.ms/vscode-remote/containers/non-root.
 	// "remoteUser": "vscode"

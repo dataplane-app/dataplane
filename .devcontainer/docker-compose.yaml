@@ -48,7 +48,7 @@ services:
       - "nats://nats:6222"
     deploy:
       replicas: 2
-
+      
   mainapp:
     build:
       context: .
@@ -78,3 +78,8 @@ services:
       debug: "true"
       dbdebug: "false"
       worker_heartbeat_seconds: "1"
+
+networks:
+  default:
+    external: true
+    name: dataplane_network
