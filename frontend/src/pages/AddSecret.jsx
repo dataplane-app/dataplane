@@ -132,7 +132,7 @@ const useCreateSecret_ = () => {
             closeSnackbar();
             enqueueSnackbar("Can't create secret: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': create secret failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             history.push(`/secrets`);

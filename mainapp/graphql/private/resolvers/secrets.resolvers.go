@@ -65,6 +65,11 @@ func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraph
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
+
+		if strings.Contains(err.Error(), "duplicate key") {
+			return nil, errors.New("Duplicate secret")
+		}
+
 		return nil, errors.New("Create secret database error.")
 	}
 
