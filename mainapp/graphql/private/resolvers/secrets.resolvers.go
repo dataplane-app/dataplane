@@ -53,7 +53,7 @@ func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraph
 		Secret:        input.Secret,
 		SecretType:    "custom",
 		Value:         encryptedSecretValue,
-		Description:   input.Description,
+		Description:   *input.Description,
 		EnvVar:        "secret_dp_" + strings.ToLower(input.Secret),
 		Active:        true,
 		EnvironmentID: input.EnvironmentID,
@@ -65,6 +65,11 @@ func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraph
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
+
+		if strings.Contains(err.Error(), "duplicate key") {
+			return nil, errors.New("Duplicate secret")
+		}
+
 		return nil, errors.New("Create secret database error.")
 	}
 
@@ -90,12 +95,12 @@ func (r *mutationResolver) UpdateSecret(ctx context.Context, input *privategraph
 
 	secretData := models.Secrets{
 		SecretType:  "custom",
-		Description: input.Description,
+		Description: *input.Description,
 		EnvVar:      "secret_dp_" + strings.ToLower(input.Secret),
 		Active:      true,
 	}
 
-	err := database.DBConn.Where("secret = ?", input.Secret).Updates(&secretData).Error
+	err := database.DBConn.Where("secret = ?", input.Secret).Select("description").Updates(&secretData).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {

@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/auth_permissions"
+	permissions "dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -150,7 +150,7 @@ func (r *mutationResolver) UpdateDeactivateEnvironment(ctx context.Context, envi
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return nil, errors.New("Retrive me database error.")
+		return nil, errors.New("Deactivate environment database error.")
 	}
 
 	if e.Active == false {
@@ -197,7 +197,7 @@ func (r *mutationResolver) UpdateActivateEnvironment(ctx context.Context, enviro
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return nil, errors.New("Retrive me database error.")
+		return nil, errors.New("Activate environment database error.")
 	}
 
 	if e.Active == true {

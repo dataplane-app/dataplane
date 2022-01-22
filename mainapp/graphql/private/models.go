@@ -21,11 +21,11 @@ type AddPreferencesInput struct {
 }
 
 type AddSecretsInput struct {
-	Secret        string `json:"Secret"`
-	Description   string `json:"Description"`
-	Value         string `json:"Value"`
-	EnvironmentID string `json:"EnvironmentId"`
-	Active        bool   `json:"Active"`
+	Secret        string  `json:"Secret"`
+	Description   *string `json:"Description"`
+	Value         string  `json:"Value"`
+	EnvironmentID string  `json:"EnvironmentId"`
+	Active        bool    `json:"Active"`
 }
 
 type AddUpdateMeInput struct {
@@ -73,10 +73,10 @@ type UpdateEnvironment struct {
 }
 
 type UpdateSecretsInput struct {
-	Secret        string `json:"Secret"`
-	Description   string `json:"Description"`
-	EnvironmentID string `json:"EnvironmentId"`
-	Active        bool   `json:"Active"`
+	Secret        string  `json:"Secret"`
+	Description   *string `json:"Description"`
+	EnvironmentID string  `json:"EnvironmentId"`
+	Active        bool    `json:"Active"`
 }
 
 type UpdateUsersInput struct {

@@ -56,14 +56,7 @@ const AddSecret = () => {
                             </Typography>
                         ) : null}
 
-                        <TextField
-                            label="Description"
-                            id="description"
-                            size="small"
-                            required
-                            sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }}
-                            {...register('description', { required: true })}
-                        />
+                        <TextField label="Description" id="description" size="small" sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
 
                         <TextField
                             label="Secret"
@@ -132,7 +125,7 @@ const useCreateSecret_ = () => {
             closeSnackbar();
             enqueueSnackbar("Can't create secret: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': create secret failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             history.push(`/secrets`);
