@@ -56,14 +56,7 @@ const AddSecret = () => {
                             </Typography>
                         ) : null}
 
-                        <TextField
-                            label="Description"
-                            id="description"
-                            size="small"
-                            required
-                            sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }}
-                            {...register('description', { required: true })}
-                        />
+                        <TextField label="Description" id="description" size="small" sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
 
                         <TextField
                             label="Secret"
