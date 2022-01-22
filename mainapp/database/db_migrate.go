@@ -65,6 +65,9 @@ func Migrate() {
 		&models.PipelinesArchive{},
 		&models.ResourceTypeStruct{},
 		&models.Secrets{},
+		&models.WorkerGroups{},
+		&models.Workers{},
+		&models.WorkerSecrets{},
 	)
 	if err1 != nil {
 		panic(err1)

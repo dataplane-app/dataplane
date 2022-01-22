@@ -20,17 +20,35 @@ services:
       retries: 5
     restart: always
 
-  redis:
-    image: redis:6.2.6-bullseye
-    expose:
-      - 6379
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 5s
-      timeout: 30s
-      retries: 50
-    restart: always
+  nats:
+    image: nats:2.7.0-scratch
+    command:
+      - "--debug"
+      - "--cluster"
+      - "nats://0.0.0.0:6222"
+      - "--http_port"
+      - "8222"
+      - "--port"
+      - "4222"
+    ports:
+      - "14222:4222"
+      - "18222:8222"
 
+  nats-r:
+    image: nats:2.7.0-scratch
+    command:
+      - "--debug"
+      - "--cluster"
+      - "nats://0.0.0.0:6222"
+      - "--http_port"
+      - "8222"
+      - "--port"
+      - "4222"
+      - "--routes"
+      - "nats://nats:6222"
+    deploy:
+      replicas: 2
+      
   mainapp:
     build:
       context: .
@@ -56,6 +74,13 @@ services:
       secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
       database: "timescaledb"
       dataplane_port: "9000"
+      dataplane_nats: nats://nats:4222
       mode: "development"
       debug: "true"
       dbdebug: "false"
+      worker_heartbeat_seconds: "1"
+
+networks:
+  default:
+    external: true
+    name: dataplane_network
