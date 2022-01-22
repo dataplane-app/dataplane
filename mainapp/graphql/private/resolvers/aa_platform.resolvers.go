@@ -197,7 +197,7 @@ func (r *mutationResolver) UpdateActivateEnvironment(ctx context.Context, enviro
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return nil, errors.New("Retrive me database error.")
+		return nil, errors.New("Activate environment database error.")
 	}
 
 	if e.Active == true {
