@@ -9,26 +9,17 @@ import { faDocker } from '@fortawesome/free-brands-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { formatDate } from '../utils/formatDate';
 import { useSnackbar } from 'notistack';
+import graph1 from '../assets/images/graph1.png';
+import graph2 from '../assets/images/graph2.png';
 
-const tableWidth = '570px';
+const tableWidth = '1140px';
 
 export default function WorkerDetail() {
     let history = useHistory();
     const { enqueueSnackbar } = useSnackbar();
 
     // Users state
-    const [data, setData] = useState([
-        {
-            id: '36474-6768-6768-67859',
-            name: 'Python 1',
-            description: 'Python workers for generic work loads.',
-            type: 'Docker',
-            workers: 3,
-            cpu: 1,
-            mb: 200,
-            lastUpdate: '2022-01-20T11:56:08Z',
-        },
-    ]);
+    const [data, setData] = useState(dummyData);
 
     // Get workers on load
     // const getUsers = useGetUsers();
@@ -47,13 +38,26 @@ export default function WorkerDetail() {
         () => [
             {
                 Header: 'Worker',
-                accessor: (row) => [row.name, row.description],
-                Cell: (row) => <CustomWorker row={row} onClick={() => history.push(`/teams/${row.row.original.user_id}`)} />,
+                accessor: (row) => [
+                    row.worker.id,
+                    row.worker.status,
+                    formatDate(row.worker.lastUpdate),
+                    row.worker.queue,
+                    row.worker.running,
+                    row.worker.succeeded,
+                    row.worker.failed,
+                ],
+                Cell: (row) => <CustomWorker row={row} />,
             },
             {
-                Header: 'Status',
-                accessor: 'workers',
-                Cell: (row) => <CustomStatus row={row} />,
+                Header: 'CPU',
+                accessor: (row) => [row.cpu.percentage.toFixed(1), row.cpu.load],
+                Cell: (row) => <CustomCPU row={row} />,
+            },
+            {
+                Header: 'Memoery',
+                accessor: (row) => [row.memory.percentage.toFixed(1), row.memory.mb],
+                Cell: (row) => <CustomMemory row={row} />,
             },
         ],
         [history]
@@ -77,19 +81,74 @@ export default function WorkerDetail() {
     return (
         <Box className="page">
             <Typography component="h2" variant="h2" color="text.primary">
-                Worker groups
+                Workers
             </Typography>
 
             <Box mt={4} sx={{ width: tableWidth }}>
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
-                        <CustomChip amount={rows.length} label="Worker groups" margin={2} customColor="orange" />
+                        <CustomChip amount={rows.length} label="Workers" margin={2} customColor="orange" />
                     </Grid>
 
                     <Grid item display="flex" alignItems="center" sx={{ marginLeft: 'auto', marginRight: '2px' }}>
                         <FontAwesomeIcon icon={faSearch} style={{ marginRight: 10 }} color="#0000006B" size="xs" />
 
                         <Search placeholder="Find workers" onChange={setGlobalFilter} width="290px" />
+                    </Grid>
+                </Grid>
+            </Box>
+
+            <Box mt={4} sx={{ width: tableWidth }}>
+                <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
+                    <Grid item display="flex" direction="column">
+                        <Typography component="h4" variant="body1" sx={{ fontSize: '1.0625rem' }} mb={1}>
+                            Worker group: Python_1
+                            <Typography ml={3} variant="subtitle1" style={{ display: 'inline' }}>
+                                <FontAwesomeIcon icon={faDocker} style={{ marginRight: 4 }} />
+                                Docker
+                            </Typography>
+                        </Typography>
+                        <Typography component="h5" variant="subtitle1">
+                            Python workers for generic work loads.
+                        </Typography>
+                    </Grid>
+
+                    <Grid item display="flex" alignItems="center" sx={{ marginLeft: 'auto', marginRight: '2px' }}>
+                        <div>
+                            <Typography component="h2" variant="h2" align="right" sx={{ fontWeight: 900 }}>
+                                6
+                            </Typography>
+                            <Typography variant="body1" sx={{ fontSize: '1.0625rem' }}>
+                                Queue
+                            </Typography>
+                        </div>
+
+                        <div style={{ marginLeft: 38 }}>
+                            <Typography component="h2" variant="h2" align="right" sx={{ fontWeight: 900 }}>
+                                6
+                            </Typography>
+                            <Typography variant="body1" sx={{ fontSize: '1.0625rem' }}>
+                                Running
+                            </Typography>
+                        </div>
+
+                        <div style={{ marginLeft: 38 }}>
+                            <Typography component="h2" variant="h2" align="right" sx={{ fontWeight: 900 }}>
+                                6
+                            </Typography>
+                            <Typography variant="body1" sx={{ fontSize: '1.0625rem' }}>
+                                Succeeded
+                            </Typography>
+                        </div>
+
+                        <div style={{ marginLeft: 38 }}>
+                            <Typography component="h2" variant="h2" align="right" sx={{ fontWeight: 900 }}>
+                                6
+                            </Typography>
+                            <Typography variant="body1" sx={{ fontSize: '1.0625rem' }}>
+                                Failed
+                            </Typography>
+                        </div>
                     </Grid>
                 </Grid>
             </Box>
@@ -120,7 +179,7 @@ export default function WorkerDetail() {
                                 component="tr"
                                 {...row.getRowProps()}
                                 display="grid"
-                                gridTemplateColumns="repeat(2, 1fr)"
+                                gridTemplateColumns="repeat(3, 1fr)"
                                 alignItems="start"
                                 borderRadius="5px"
                                 backgroundColor="background.secondary"
@@ -149,33 +208,145 @@ export default function WorkerDetail() {
     );
 }
 
-const CustomWorker = ({ row, onClick }) => {
-    const [name, description] = row.value;
+const CustomWorker = ({ row }) => {
+    const [id, status, lastUpdate, queue, running, succeeded, failed] = row.value;
 
     return (
-        <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start" onClick={onClick}>
-            <Typography component="h4" variant="h3" mb={1} sx={{ color: 'cyan.main' }}>
-                {name}
+        <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
+            <div>
+                <Typography component="h4" variant="h3" sx={{ display: 'inline' }}>
+                    {id}
+                </Typography>
+                <Typography
+                    component="h4"
+                    variant="subtitle1"
+                    color={status === 'Online' ? 'green' : 'red'}
+                    fontWeight={700}
+                    ml={3}
+                    sx={{ display: 'inline', verticalAlign: 'top' }}>
+                    {status}
+                </Typography>
+            </div>
+            <Typography component="h5" mt={0.5} variant="subtitle1">
+                {lastUpdate}
             </Typography>
-            <Typography component="h5" variant="subtitle1">
-                {description}
-            </Typography>
-            <Typography component="h5" mt={2} variant="subtitle1" style={{ fontSize: '17px' }}>
-                <FontAwesomeIcon icon={faDocker} style={{ marginRight: 4 }} />
-                Docker
-            </Typography>
+            <Grid item display="flex" alignItems="center" mt={2} sx={{ alignSelf: 'flex-start' }}>
+                <CustomChip amount={queue} label="Queue" margin={2} customColor="purple" />
+                <CustomChip amount={running} label="Running" margin={1} customColor="orange" />
+                <CustomChip amount={succeeded} label="Succeeded" margin={1} customColor="green" />
+                <CustomChip amount={failed} label="Failed" margin={1} customColor="red" />
+            </Grid>
         </Grid>
     );
 };
 
-const CustomStatus = ({ row }) => {
-    return (
-        <Grid container direction="column" alignItems="flex-end" pr={5}>
-            {row.value > 0 ? <CustomChip label={row.value + ' Online'} customColor="green" /> : <CustomChip label="Offline" customColor="red" />}
+const CustomCPU = ({ row }) => {
+    const [percentage, load] = row.value;
 
-            <Typography mt={4} variant="subtitle1">
-                Last updated: {formatDate(row.row.original.lastUpdate)}
-            </Typography>
+    return (
+        <Grid container direction="column" alignItems="flex-start" flexDirection="row" pr={1}>
+            <Grid item>
+                <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
+                    {percentage}%
+                </Typography>
+                <Typography variant="body1" align="right" sx={{ fontSize: '1.0625rem' }}>
+                    CPU
+                </Typography>
+                <Typography mt={1} variant="subtitle1" align="right">
+                    {load} Load
+                </Typography>
+            </Grid>
+            <img src={graph1} alt="" width="250px" style={{ marginLeft: '10px' }} />
         </Grid>
     );
 };
+
+const CustomMemory = ({ row }) => {
+    const [percentage, mb] = row.value;
+
+    return (
+        <Grid container direction="column" alignItems="flex-start" flexDirection="row" pr={1}>
+            <Grid item>
+                <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
+                    {percentage}%
+                </Typography>
+                <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
+                    {mb}MB
+                </Typography>
+                <Typography variant="body1" align="right" sx={{ fontSize: '1.0625rem' }}>
+                    Memory
+                </Typography>
+            </Grid>
+            <img src={graph2} alt="" width="250px" style={{ marginLeft: '5px' }} />
+        </Grid>
+    );
+};
+
+const dummyData = [
+    {
+        worker: {
+            id: '36474-6768-6768-67859',
+            name: 'Python 1',
+            description: 'Python workers for generic work loads.',
+            status: 'Online',
+            type: 'Docker',
+            lastUpdate: '2022-01-20T11:56:08Z',
+            queue: 2,
+            running: 2,
+            succeeded: 2,
+            failed: 2,
+        },
+        cpu: {
+            percentage: 10,
+            load: 0.27,
+        },
+        memory: {
+            percentage: 10,
+            mb: 200,
+        },
+    },
+    {
+        worker: {
+            id: '36474-6768-6768-67859',
+            name: 'Python 1',
+            description: 'Python workers for generic work loads.',
+            status: 'Online',
+            type: 'Docker',
+            lastUpdate: '2022-01-20T11:56:08Z',
+            queue: 2,
+            running: 2,
+            succeeded: 2,
+            failed: 2,
+        },
+        cpu: {
+            percentage: 10,
+            load: 0.27,
+        },
+        memory: {
+            percentage: 10,
+            mb: 200,
+        },
+    },
+    {
+        worker: {
+            id: '36474-6768-6768-67859',
+            name: 'Python 1',
+            description: 'Python workers for generic work loads.',
+            status: 'Online',
+            type: 'Docker',
+            lastUpdate: '2022-01-20T11:56:08Z',
+            queue: 2,
+            running: 2,
+            succeeded: 2,
+            failed: 2,
+        },
+        cpu: {
+            percentage: 10,
+            load: 0.27,
+        },
+        memory: {
+            percentage: 10,
+            mb: 200,
+        },
+    },
+];
