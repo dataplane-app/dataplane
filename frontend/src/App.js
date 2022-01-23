@@ -15,6 +15,8 @@ import GetStarted from './pages/GetStarted';
 import LoginUser from './pages/Login';
 import LogoutUser from './pages/Logout';
 import Pipelines from './pages/Pipelines';
+import Workers from './pages/Workers';
+import WorkerDetail from './pages/WorkerDetail';
 import TeamDetail from './pages/TeamDetail';
 import MemberDetail from './pages/MemberDetail';
 import TeamGroup from './pages/TeamGroup';
@@ -89,6 +91,8 @@ function App() {
                                     exact
                                     path={[
                                         '/',
+                                        '/workers',
+                                        '/workers/:workerId',
                                         '/teams',
                                         '/teams/:teamId',
                                         '/teams/access/:accessId',
@@ -103,6 +107,12 @@ function App() {
                                     <Layout>
                                         <Route exact path="/">
                                             <Pipelines />
+                                        </Route>
+                                        <Route exact path="/workers">
+                                            <Workers />
+                                        </Route>
+                                        <Route exact path="/workers/:workerId">
+                                            <WorkerDetail />
                                         </Route>
                                         <Route exact path="/teams">
                                             <Teams />
