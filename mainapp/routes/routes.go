@@ -6,6 +6,7 @@ import (
 	"dataplane/database/models"
 	"dataplane/logging"
 	"dataplane/logme"
+	"dataplane/messageq"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,6 +20,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/nats-io/nats.go"
 )
 
 func Setup(port string) *fiber.App {
@@ -31,6 +33,9 @@ func Setup(port string) *fiber.App {
 	// ------- DATABASE CONNECT ------
 	database.DBConnect()
 	log.Println("🏃 Running on: ", os.Getenv("env"))
+
+	// -------- NATS Connect -------
+	messageq.NATSConnect()
 
 	start := time.Now()
 
@@ -132,6 +137,15 @@ func Setup(port string) *fiber.App {
 	log.Println("🐆 Start time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
 
 	log.Println("🌍 Visit dashboard at:", "http://localhost:"+port+"/webapp/")
+
+	/* Subscriptions activate */
+	// messageq.SubscribeMsgReply("workerload", msg interface{}, resp interface{})
+	hello, err := messageq.NATSencoded.Subscribe("workerload", func(m *nats.Msg) {
+		messageq.NATSencoded.Publish(m.Reply, []byte("ok"))
+		log.Println("ok")
+	})
+
+	log.Println("Subscribe", hello, err)
 
 	return app
 }

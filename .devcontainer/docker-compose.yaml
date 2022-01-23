@@ -78,7 +78,7 @@ services:
       mode: "development"
       debug: "true"
       dbdebug: "false"
-      worker_heartbeat_seconds: "1"
+      messagedebug: "true"
 
 networks:
   default:
