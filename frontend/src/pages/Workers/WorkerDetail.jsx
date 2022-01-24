@@ -106,7 +106,7 @@ export default function WorkerDetail() {
             <Box mt={4} sx={{ width: tableWidth }}>
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid>
-                        <Grid id="hi" item display="flex" alignItems="center" flexDirection="row">
+                        <Grid item display="flex" alignItems="center" flexDirection="row">
                             <Typography component="div" variant="body1" sx={{ fontSize: '1.0625rem' }}>
                                 Worker group: Python_1
                             </Typography>
