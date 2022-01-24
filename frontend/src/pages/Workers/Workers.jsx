@@ -1,14 +1,14 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Box, Grid, Typography, Button, Drawer } from '@mui/material';
-import Search from '../components/Search';
+import Search from '../../components/Search';
 import { useTable, useGlobalFilter } from 'react-table';
 import { useHistory } from 'react-router-dom';
-import CustomChip from '../components/CustomChip';
+import CustomChip from '../../components/CustomChip';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDocker } from '@fortawesome/free-brands-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import { formatDate } from '../utils/formatDate';
-import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
+import { formatDate } from '../../utils/formatDate';
+import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 
 // import { useGetUsers } from '../graphql/getUsers';
 // import { useSnackbar } from 'notistack';

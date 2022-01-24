@@ -1,17 +1,16 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Box, Grid, Typography } from '@mui/material';
-import Search from '../components/Search';
+import Search from '../../components/Search';
 import { useTable, useGlobalFilter } from 'react-table';
-import CustomChip from '../components/CustomChip';
+import CustomChip from '../../components/CustomChip';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDocker } from '@fortawesome/free-brands-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import { formatDate } from '../utils/formatDate';
+import { formatDate } from '../../utils/formatDate';
 // import { useSnackbar } from 'notistack';
-import graph1 from '../assets/images/graph1.png';
-import graph2 from '../assets/images/graph2.png';
-import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
-
+import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
+import WorkerDetailCPU from './WorkerDetailCPU';
+import WorkerDetailMemory from './WorkerDetailMemory';
 const tableWidth = '1140px';
 
 export default function WorkerDetail() {
@@ -54,12 +53,12 @@ export default function WorkerDetail() {
             {
                 Header: 'CPU',
                 accessor: (row) => [row.cpu.percentage.toFixed(1), row.cpu.load],
-                Cell: (row) => <CustomCPU row={row} />,
+                Cell: (row) => <WorkerDetailCPU row={row} />,
             },
             {
                 Header: 'Memoery',
                 accessor: (row) => [row.memory.percentage.toFixed(1), row.memory.mb],
-                Cell: (row) => <CustomMemory row={row} />,
+                Cell: (row) => <WorkerDetailMemory row={row} />,
             },
         ],
         []
@@ -246,47 +245,26 @@ const CustomWorker = ({ row }) => {
     );
 };
 
-const CustomCPU = ({ row }) => {
-    const [percentage, load] = row.value;
+// const CustomMemory = ({ row }) => {
+//     const [percentage, mb] = row.value;
 
-    return (
-        <Grid container direction="column" alignItems="flex-start" flexDirection="row" pr={1}>
-            <Grid item>
-                <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
-                    {percentage}%
-                </Typography>
-                <Typography variant="body1" align="right" sx={{ fontSize: '1.0625rem' }}>
-                    CPU
-                </Typography>
-                <Typography mt={1} variant="subtitle1" align="right">
-                    {load} Load
-                </Typography>
-            </Grid>
-            <img src={graph1} alt="" width="250px" style={{ marginLeft: '10px' }} />
-        </Grid>
-    );
-};
-
-const CustomMemory = ({ row }) => {
-    const [percentage, mb] = row.value;
-
-    return (
-        <Grid container direction="column" alignItems="flex-start" flexDirection="row" pr={1}>
-            <Grid item>
-                <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
-                    {percentage}%
-                </Typography>
-                <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
-                    {mb}MB
-                </Typography>
-                <Typography variant="body1" align="right" sx={{ fontSize: '1.0625rem' }}>
-                    Memory
-                </Typography>
-            </Grid>
-            <img src={graph2} alt="" width="250px" style={{ marginLeft: '5px' }} />
-        </Grid>
-    );
-};
+//     return (
+//         <Grid container direction="column" alignItems="flex-start" flexDirection="row" pr={1}>
+//             <Grid item>
+//                 <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
+//                     {percentage}%
+//                 </Typography>
+//                 <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
+//                     {mb}MB
+//                 </Typography>
+//                 <Typography variant="body1" align="right" sx={{ fontSize: '1.0625rem' }}>
+//                     Memory
+//                 </Typography>
+//             </Grid>
+//             <img src={graph2} alt="" width="250px" style={{ marginLeft: '5px' }} />
+//         </Grid>
+//     );
+// };
 
 const dummyData = [
     {
