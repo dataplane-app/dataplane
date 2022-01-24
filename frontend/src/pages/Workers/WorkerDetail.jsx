@@ -105,17 +105,31 @@ export default function WorkerDetail() {
 
             <Box mt={4} sx={{ width: tableWidth }}>
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
-                    <Grid item display="flex" direction="column">
-                        <Typography component="h4" variant="body1" sx={{ fontSize: '1.0625rem' }} mb={1}>
-                            Worker group: Python_1
-                            <Typography ml={3} variant="subtitle1" style={{ display: 'inline' }}>
-                                <FontAwesomeIcon icon={faDocker} style={{ marginRight: 4 }} />
-                                Docker
+                    <Grid>
+                        <Grid id="hi" item display="flex" alignItems="center" flexDirection="row">
+                            <Typography component="div" variant="body1" sx={{ fontSize: '1.0625rem' }}>
+                                Worker group: Python_1
                             </Typography>
-                        </Typography>
-                        <Typography component="h5" variant="subtitle1">
-                            Python workers for generic work loads.
-                        </Typography>
+
+                            <Box display="flex" ml={4} alignItems="center">
+                                <FontAwesomeIcon icon={faDocker} style={{ marginRight: 4 }} />
+                                <Typography variant="subtitle1" style={{ display: 'inline' }}>
+                                    Docker
+                                </Typography>
+                            </Box>
+
+                            <Box display="flex" ml={4} flexDirection="row" alignItems="center">
+                                <Typography variant="subtitle1" fontWeight="700">
+                                    Load balancer:
+                                </Typography>
+                                <Typography variant="subtitle1" align="left" sx={{ lineHeight: 1, marginLeft: 1 }}>
+                                    Round robin
+                                </Typography>
+                            </Box>
+                        </Grid>
+                        <Grid item>
+                            <Typography variant="subtitle1">Python workers for generic work loads.</Typography>
+                        </Grid>
                     </Grid>
 
                     <Grid item display="flex" alignItems="center" sx={{ marginLeft: 'auto', marginRight: '2px' }}>

@@ -7,8 +7,8 @@ import CustomChip from '../../components/CustomChip';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDocker } from '@fortawesome/free-brands-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import { formatDate } from '../../utils/formatDate';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
+import SecretsDrawer from '../../components/DrawerContent/SecretsDrawer';
 
 // import { useGetUsers } from '../graphql/getUsers';
 // import { useSnackbar } from 'notistack';
@@ -33,8 +33,13 @@ export default function Workers() {
             cpu: 1,
             mb: 200,
             lastUpdate: '2022-01-20T11:56:08Z',
+            balancer: 'Round robin',
         },
     ]);
+
+    // Sidebar states
+    const [isOpenChangePassword, setIsOpenPassword] = useState(false);
+    const [isOpenSecrets, setIsOpenSecrets] = useState(false);
 
     // Get workers on load
     // const getUsers = useGetUsers();
@@ -54,11 +59,11 @@ export default function Workers() {
             {
                 Header: 'Member',
                 accessor: (row) => [row.name, row.description, row.type],
-                Cell: (row) => <CustomWorker row={row} onClick={() => history.push(`/workers/${row.row.original.id}`)} />,
+                Cell: (row) => <CustomWorker row={row} onClick={() => history.push(`/workers/${row.row.original.id}`)} setIsOpenSecrets={setIsOpenSecrets} />,
             },
             {
                 Header: 'Status',
-                accessor: (row) => [row.workers, formatDate(row.lastUpdate)],
+                accessor: (row) => [row.workers, row.balancer],
                 Cell: (row) => <CustomStatus row={row} />,
             },
         ],
@@ -139,7 +144,6 @@ export default function Workers() {
                                     border: 1,
                                     borderColor: 'divider',
                                     padding: '15px 0',
-                                    cursor: 'pointer',
                                     '&:hover': { background: 'background.hoverSecondary' },
                                     'td:last-child': { textAlign: 'center' },
                                 }}>
@@ -155,38 +159,58 @@ export default function Workers() {
                     })}
                 </Box>
             </Box>
+
+            <Drawer anchor="right" open={isOpenSecrets} onClose={() => setIsOpenSecrets(!isOpenSecrets)}>
+                <SecretsDrawer handleClose={() => setIsOpenSecrets(false)} />
+            </Drawer>
         </Box>
     );
 }
 
-const CustomWorker = ({ row, onClick }) => {
+const CustomWorker = ({ row, onClick, setIsOpenSecrets }) => {
     const [name, description, type] = row.value;
 
     return (
-        <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start" onClick={onClick}>
-            <Typography component="h4" variant="h3" mb={1} sx={{ color: 'cyan.main' }}>
+        <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
+            <Typography component="h4" variant="h3" mb={1} sx={{ color: 'cyan.main', cursor: 'pointer' }} onClick={onClick}>
                 {name}
             </Typography>
-            <Typography component="h5" variant="subtitle1">
+            <Typography component="h5" variant="subtitle1" onClick={onClick} sx={{ cursor: 'pointer' }}>
                 {description}
             </Typography>
-            <Typography component="h5" mt={2} variant="subtitle1" style={{ fontSize: '17px' }}>
-                <FontAwesomeIcon icon={faDocker} style={{ marginRight: 4 }} />
-                {type}
-            </Typography>
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                <Typography component="h5" mt={2} variant="subtitle1" style={{ fontSize: '17px', cursor: 'pointer' }} onClick={onClick}>
+                    <FontAwesomeIcon icon={faDocker} style={{ marginRight: 4 }} />
+                    {type}
+                </Typography>
+                <Typography
+                    component="h5"
+                    ml={4}
+                    mt={2}
+                    variant="subtitle1"
+                    sx={{ color: 'cyan.main', fontSize: ' 1.0625rem', display: 'inline', cursor: 'pointer' }}
+                    onClick={() => setIsOpenSecrets(true)}>
+                    Secrets
+                </Typography>
+            </div>
         </Grid>
     );
 };
 
 const CustomStatus = ({ row }) => {
-    const [workers, lastUpdate] = row.value;
+    const [workers, balancer] = row.value;
     return (
         <Grid container direction="column" alignItems="flex-end" pr={5}>
             {workers > 0 ? <CustomChip label={workers + ' Online'} customColor="green" /> : <CustomChip label="Offline" customColor="red" />}
 
-            <Typography mt={4} variant="subtitle1">
-                Last updated: {lastUpdate}
-            </Typography>
+            <div>
+                <Typography mt={3} variant="subtitle1" fontWeight="700">
+                    Load balancer:
+                </Typography>
+                <Typography variant="subtitle1" align="left" sx={{ lineHeight: 1 }}>
+                    {balancer}
+                </Typography>
+            </div>
         </Grid>
     );
 };
