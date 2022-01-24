@@ -2,21 +2,23 @@ import { useState, useMemo, useEffect } from 'react';
 import { Box, Grid, Typography } from '@mui/material';
 import Search from '../components/Search';
 import { useTable, useGlobalFilter } from 'react-table';
-import { useHistory } from 'react-router-dom';
 import CustomChip from '../components/CustomChip';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDocker } from '@fortawesome/free-brands-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { formatDate } from '../utils/formatDate';
-import { useSnackbar } from 'notistack';
+// import { useSnackbar } from 'notistack';
 import graph1 from '../assets/images/graph1.png';
 import graph2 from '../assets/images/graph2.png';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 const tableWidth = '1140px';
 
 export default function WorkerDetail() {
-    let history = useHistory();
-    const { enqueueSnackbar } = useSnackbar();
+    // const { enqueueSnackbar } = useSnackbar();
+
+    // Global environment state with hookstate
+    const Environment = useGlobalEnvironmentState();
 
     // Users state
     const [data, setData] = useState(dummyData);
@@ -60,7 +62,7 @@ export default function WorkerDetail() {
                 Cell: (row) => <CustomMemory row={row} />,
             },
         ],
-        [history]
+        []
     );
 
     // Use the state and functions returned from useTable to build your UI
@@ -82,6 +84,10 @@ export default function WorkerDetail() {
         <Box className="page">
             <Typography component="h2" variant="h2" color="text.primary">
                 Workers
+            </Typography>
+
+            <Typography variant="subtitle2" mt=".20rem">
+                Environment: {Environment.name.get()}
             </Typography>
 
             <Box mt={4} sx={{ width: tableWidth }}>

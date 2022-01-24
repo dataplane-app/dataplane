@@ -8,15 +8,19 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDocker } from '@fortawesome/free-brands-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { formatDate } from '../utils/formatDate';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 // import { useGetUsers } from '../graphql/getUsers';
-import { useSnackbar } from 'notistack';
+// import { useSnackbar } from 'notistack';
 
 const tableWidth = '570px';
 
 export default function Workers() {
     let history = useHistory();
-    const { enqueueSnackbar } = useSnackbar();
+    // const { enqueueSnackbar } = useSnackbar();
+
+    // Global environment state with hookstate
+    const Environment = useGlobalEnvironmentState();
 
     // Users state
     const [data, setData] = useState([
@@ -80,6 +84,10 @@ export default function Workers() {
         <Box className="page">
             <Typography component="h2" variant="h2" color="text.primary">
                 Worker groups
+            </Typography>
+
+            <Typography variant="subtitle2" mt=".20rem">
+                Environment: {Environment.name.get()}
             </Typography>
 
             <Box mt={4} sx={{ width: tableWidth }}>
