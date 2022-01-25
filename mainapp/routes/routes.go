@@ -292,10 +292,11 @@ func ServeWs(conn *websocket.Conn, subject string) {
 	// client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
 
 	// When the function returns, unregister the client and close the connection
-	// defer func() {
-	// 	unregister <- conn
-	// 	conn.Close()
-	// }()
+	defer func() {
+		// 	unregister <- conn
+		conn.Close()
+		messageq.NATSencoded.Flush()
+	}()
 
 	// Register the client
 	// register <- conn
