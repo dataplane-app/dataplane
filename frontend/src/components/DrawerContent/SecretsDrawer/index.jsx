@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, Button, Grid } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useUpdateDeleteUser } from '../../../graphql/updateDeleteUser';
 import { useSnackbar } from 'notistack';
-import { useHistory } from 'react-router-dom';
 import CustomChip from '../../../components/CustomChip';
 
 const SecretsDrawer = ({ handleClose }) => {
@@ -31,8 +29,7 @@ const SecretsDrawer = ({ handleClose }) => {
     // Clear snackbar on load
     useEffect(() => {
         closeSnackbar();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [closeSnackbar]);
 
     return (
         <Box position="relative">
@@ -74,33 +71,3 @@ const SecretsDrawer = ({ handleClose }) => {
 };
 
 export default SecretsDrawer;
-
-// ------ Custom hooks
-
-const useDelete = (userid) => {
-    // GraphQL hook
-    const updateDeleteUser = useUpdateDeleteUser();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // React router
-    const history = useHistory();
-
-    return async function () {
-        let response = await updateDeleteUser({ userid });
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't deactivate user: " + response.msg, {
-                variant: 'error',
-            });
-        } else if (response.errors) {
-            closeSnackbar();
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            closeSnackbar();
-            enqueueSnackbar(`Success`, { variant: 'success' });
-            history.push('/teams');
-        }
-    };
-};
