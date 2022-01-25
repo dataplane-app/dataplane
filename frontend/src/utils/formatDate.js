@@ -1,4 +1,3 @@
-// ----------- Utility function
 /**
  * Formats date
  * @param {string} dateString 2022-01-20T13:27:08Z
