@@ -7,6 +7,7 @@ import (
 	"dataplane/logging"
 	"dataplane/logme"
 	"dataplane/messageq"
+	"dataplane/worker"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,54 +22,59 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/websocket/v2"
+	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 )
 
 type client struct{} // Add more data to this type if needed
 
-var clients = make(map[*websocket.Conn]client) // Note: although large maps with pointer-like types (e.g. strings) as keys are slow, using pointers themselves as keys is acceptable and fast
-var register = make(chan *websocket.Conn)
-var broadcast = make(chan []byte)
-var unregister = make(chan *websocket.Conn)
-var x = 0
+// var clients = make(map[*websocket.Conn]client) // Note: although large maps with pointer-like types (e.g. strings) as keys are slow, using pointers themselves as keys is acceptable and fast
+// var register = make(chan *websocket.Conn)
 
-func runHub() {
-	for {
-		select {
-		case connection := <-register:
-			clients[connection] = client{}
-			log.Println("connection registered")
+// var unregister = make(chan *websocket.Conn)
+// var x = 0
 
-		case message := <-broadcast:
-			log.Println("message received:", string(message))
-			x = x + 1
+// func runHub() {
+// 	for {
+// 		select {
+// 		case connection := <-register:
+// 			clients[connection] = client{}
+// 			log.Println("connection registered")
 
-			// Send the message to all clients
-			for connection := range clients {
-				log.Println("conn:", connection, websocket.TextMessage)
-				if err := connection.WriteMessage(x, message); err != nil {
-					// 	// 	log.Println("write error:", err)
+// 		case message := <-broadcast:
+// 			log.Println("message received:", string(message))
+// 			x = x + 1
 
-					connection.WriteMessage(websocket.CloseMessage, []byte{})
-					connection.Close()
-					delete(clients, connection)
-				}
-			}
+// 			// Send the message to all clients
+// 			for connection := range clients {
+// 				log.Println("conn:", connection, websocket.TextMessage)
+// 				if err := connection.WriteMessage(x, message); err != nil {
+// 					// 	// 	log.Println("write error:", err)
 
-		case connection := <-unregister:
-			// Remove the client from the hub
-			delete(clients, connection)
+// 					connection.WriteMessage(websocket.CloseMessage, []byte{})
+// 					connection.Close()
+// 					delete(clients, connection)
+// 				}
+// 			}
 
-			log.Println("connection unregistered")
-		}
-	}
-}
+// 		case connection := <-unregister:
+// 			// Remove the client from the hub
+// 			delete(clients, connection)
+
+// 			log.Println("connection unregistered")
+// 		}
+// 	}
+// }
+
+var MainAppID string
 
 func Setup(port string) *fiber.App {
 
 	app := fiber.New()
 
 	// go runHub()
+	MainAppID = uuid.NewString()
+	log.Println("🍦 Server ID: ", MainAppID)
 
 	// ------- LOAD secrets ------
 	logging.MapSecrets()
@@ -193,9 +199,10 @@ func Setup(port string) *fiber.App {
 		return fiber.ErrUpgradeRequired
 	})
 
-	app.Get("/ws/workerstats", websocket.New(func(c *websocket.Conn) {
+	app.Get("/ws/workerstats/:workergroup", websocket.New(func(c *websocket.Conn) {
 
-		ServeWs(c, "workerstats")
+		log.Println(c.Params("workergroup"))
+		worker.WorkerStatsWs(c, "workerstats."+c.Params("workergroup"))
 	}))
 
 	// Check healthz
@@ -209,134 +216,29 @@ func Setup(port string) *fiber.App {
 
 	log.Println("🌍 Visit dashboard at:", "http://localhost:"+port+"/webapp/")
 
-	/* Subscriptions activate */
-	// messageq.SubscribeMsgReply("workerload", msg interface{}, resp interface{})
-	// hello, err := messageq.NATSencoded.Subscribe("workerstats", func(m *nats.Msg) {
-	// 	messageq.NATSencoded.Publish(m.Reply, []byte("ok"))
-	// 	log.Println("ok", string(m.Data), string(m.Subject), m.Header)
-	// })
+	type workerResponse struct {
+		Response  string
+		MainAppID string
+	}
+	/* Worker Load Subscriptions activate */
+	messageq.NATS.Subscribe("workerload", func(m *nats.Msg) {
+		// sendjson, _ := json.Marshal(`{"response":"ok"}`)
+		send := workerResponse{
+			Response:  "ok",
+			MainAppID: MainAppID,
+		}
+		messageq.NATSencoded.Publish(m.Reply, send)
+		if os.Getenv("messagedebug") == "true" {
+			log.Println(string(m.Data))
+		}
+	})
+
+	/* Ping any active workers while starting up */
 
 	// log.Println("Subscribe", hello, err)
 
 	return app
 
-}
-
-// https://github.com/marcelo-tm/testws/blob/master/main.go
-func ServeWs(conn *websocket.Conn, subject string) {
-	// client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
-
-	// When the function returns, unregister the client and close the connection
-	defer func() {
-		// 	unregister <- conn
-		conn.Close()
-		messageq.NATSencoded.Flush()
-	}()
-
-	// Register the client
-	// register <- conn
-
-	// for {
-	// 	messageType, message, err := conn.ReadMessage()
-	// 	if err != nil {
-	// 		if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-	// 			log.Println("read error:", err)
-	// 		}
-
-	// 		return // Calls the deferred function, i.e. closes the connection on error
-	// 	}
-
-	// 	if messageType == websocket.TextMessage {
-	// 		// Broadcast the received message
-	// 		broadcast <- string(message)
-	// 	} else {
-	// 		log.Println("websocket message received of type", messageType)
-	// 	}
-	// }
-
-	// var broadcast chan []byte
-	messageq.NATSencoded.Subscribe("workerstats", func(m *nats.Msg) {
-		// messageq.NATSencoded.Publish(m.Reply, []byte("ok"))
-		log.Println(string(m.Data))
-		broadcast <- m.Data
-
-	})
-
-	for {
-
-		message := <-broadcast
-		if err := conn.WriteMessage(1, []byte(message)); err != nil {
-			conn.WriteMessage(websocket.CloseMessage, []byte{})
-			conn.Close()
-			log.Println("write:", err)
-			break
-		}
-
-		// defer conn.Close()
-
-		// if _, _, err := conn.Close(); err != nil {
-		// 	log.Println("read:", err)
-		// 	break
-		// }
-	}
-	// defer messageq.NATSencoded.Close()
-
-	// for {
-	// // 	err := conn.WriteMessage(websocket.TextMessage, []byte("hello"))
-	// // 	if err != nil {
-	// // 		log.Println("write:", err)
-	// // 		break
-	// // 	}
-	// }
-
-	// log.Println("Broadcast: ", &broadcast)
-
-	// Channel Subscriber
-	// ch := make(chan *nats.Msg, 64)
-	// sub, err := messageq.NATSencoded.Subscribe("workerstats", ch)
-	// // handle err
-	// for msg := range ch {
-	// 	// do something to the nats.Msg object
-	// }
-	// // Unsubscribe if needed
-	// sub.Unsubscribe()
-	// close(ch)
-
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// // messageq.NATSencoded.Flush()
-
-	// for {
-	// 	mt, _, err := conn.ReadMessage()
-
-	// 	err = conn.WriteMessage(mt, <-broadcast)
-	// 	if err != nil {
-	// 		log.Println("write:", err)
-	// 		break
-	// 	}
-	// }
-
-	// subscribe nats
-	// sub, err := nc.Subscribe(subject, func(m *nats.Msg) {
-	// 	log.Println(string(m.Data))
-	// 	broadcast <- m.Data
-	// })
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// nc.Flush()
-
-	// if err := nc.LastError(); err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// client.natsSub = sub
-	// client.hub.register <- client
-
-	// // Allow Connection of memory referenced by the calloer by doing all work in new goroutines
-	// go client.writePump()
-	// go client.readPump()
 }
 
 //Defining the Playground handler

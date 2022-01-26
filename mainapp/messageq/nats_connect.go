@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/encoders/protobuf"
 )
 
 var NATS *nats.Conn
 var NATSencoded *nats.EncodedConn
+var NATSProtobuf *nats.EncodedConn
 
 func NATSConnect() {
 	var err error
@@ -25,6 +27,12 @@ func NATSConnect() {
 	}
 
 	NATSencoded, _ = nats.NewEncodedConn(NATS, nats.JSON_ENCODER)
+	if err != nil {
+		logging.PrintSecretsRedact(err.Error())
+		log.Fatal("Failed to connect to encoded NATS")
+	}
+
+	NATSProtobuf, _ = nats.NewEncodedConn(NATS, protobuf.PROTOBUF_ENCODER)
 	if err != nil {
 		logging.PrintSecretsRedact(err.Error())
 		log.Fatal("Failed to connect to encoded NATS")
