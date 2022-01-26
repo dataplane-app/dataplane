@@ -1,12 +1,15 @@
-import { Autocomplete, Box, Button, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Button, TextField, Typography, useTheme } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useCreateAdmin } from '../../graphql/createAdmin';
 import { useSnackbar } from 'notistack';
 import ct from 'countries-and-timezones';
 import ThemeToggle from '../ThemeToggle';
 import PasswordField from '../PasswordField';
+import { useGlobalAuthState } from '../../Auth/UserAuth';
 
 const GetStartedForm = ({ handleNext }) => {
+    const theme = useTheme();
+    const authState = useGlobalAuthState();
     const createAdmin = useCreateAdmin();
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const {
@@ -38,7 +41,9 @@ const GetStartedForm = ({ handleNext }) => {
             return enqueueSnackbar('An error has occured', { variant: 'error' });
         }
 
-        if (response && response.Platform) {
+        if (response && response.Auth) {
+            localStorage.setItem('refresh_token', response.Auth.refresh_token);
+            authState.authToken.set(response.Auth.access_token);
             closeSnackbar();
             handleNext();
         } else {
@@ -132,6 +137,7 @@ const GetStartedForm = ({ handleNext }) => {
                     required
                     style={{ fontSize: '.75rem', display: 'flex' }}
                     register={{ ...register('password', { required: true }) }}
+                    theme={theme.palette.mode}
                 />
             </Box>
 
