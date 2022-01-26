@@ -1,32 +1,33 @@
-import React from 'react';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { Box, Button, CssBaseline } from '@mui/material';
-import { Route } from 'react-router-dom';
-import { UserAuth, PrivateRoute } from './Auth/UserAuth';
-import { SnackbarProvider } from 'notistack';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, Button, CssBaseline } from '@mui/material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { SnackbarProvider } from 'notistack';
+import React from 'react';
+import { Redirect, Route, Switch } from 'react-router-dom';
+import { PrivateRoute, UserAuth } from './Auth/UserAuth';
 import Layout from './components/Layout/Layout.component';
-import createCustomTheme from './theme';
-
+import NotDesktop from './components/NotDesktop';
+import useWindowSize from './hooks/useWindowsSize';
+import AccessGroups from './pages/AccessGroups';
+import AddSecret from './pages/AddSecret';
 import Congratulations from './pages/Congratulations';
+import EnvironmentDetail from './pages/EnvironmentDetail';
 import GetStarted from './pages/GetStarted';
 import LoginUser from './pages/Login';
 import LogoutUser from './pages/Logout';
+import MemberDetail from './pages/MemberDetail';
+import NotFound from './pages/NotFound';
 import Pipelines from './pages/Pipelines';
 import Workers from './pages/Workers/Workers';
 import WorkerDetail from './pages/Workers/WorkerDetail';
+import SecretDetail from './pages/SecretDetail';
+import Secrets from './pages/Secrets';
+import Settings from './pages/Settings';
 import TeamDetail from './pages/TeamDetail';
-import MemberDetail from './pages/MemberDetail';
 import TeamGroup from './pages/TeamGroup';
 import Teams from './pages/Teams';
-import AccessGroups from './pages/AccessGroups';
-import Settings from './pages/Settings';
-import EnvironmentDetail from './pages/EnvironmentDetail';
-import Secrets from './pages/Secrets';
-import AddSecret from './pages/AddSecret';
-import SecretDetail from './pages/SecretDetail';
+import createCustomTheme from './theme';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
@@ -58,6 +59,17 @@ function App() {
         notistackRef.current.closeSnackbar(key);
     };
 
+    // Screen size hook
+    const { width } = useWindowSize();
+
+    if (width && width < 768) {
+        return (
+            <ThemeProvider theme={theme}>
+                <NotDesktop />
+            </ThemeProvider>
+        );
+    }
+
     return (
         <ColorModeContext.Provider value={colorModeToggle}>
             <EnvironmentContext.Provider value={environmentProvider}>
@@ -78,77 +90,93 @@ function App() {
                         <Box className="app" backgroundColor="background.main">
                             <UserAuth refreshTokenUrl="/refreshtoken" LogincallbackUrl="/loginCallback" loginUrl="/webapp/login" logoutUrl="/webapp/logout">
                                 <CssBaseline />
-                                <Route exact path="/congratulations">
-                                    <Congratulations />
-                                </Route>
-                                <Route exact path="/get-started">
-                                    <GetStarted />
-                                </Route>
-                                <Route exact path="/login">
-                                    <LoginUser />
-                                </Route>
-                                <PrivateRoute
-                                    exact
-                                    path={[
-                                        '/',
-                                        '/workers',
-                                        '/workers/:workerId',
-                                        '/teams',
-                                        '/teams/:teamId',
-                                        '/teams/access/:accessId',
-                                        '/myaccount/:memberId',
-                                        '/access_groups',
-                                        '/settings',
-                                        '/settings/environment/:environmentId',
-                                        '/secrets',
-                                        '/secrets/:secretId',
-                                        '/addsecret',
-                                    ]}>
-                                    <Layout>
-                                        <Route exact path="/">
-                                            <Pipelines />
-                                        </Route>
-                                        <Route exact path="/workers">
-                                            <Workers />
-                                        </Route>
-                                        <Route exact path="/workers/:workerId">
-                                            <WorkerDetail />
-                                        </Route>
-                                        <Route exact path="/teams">
-                                            <Teams />
-                                        </Route>
-                                        <Route exact path="/teams/:teamId">
-                                            <TeamDetail />
-                                        </Route>
-                                        <Route exact path="/teams/access/:accessId">
-                                            <TeamGroup />
-                                        </Route>
-                                        <Route exact path="/access_groups">
-                                            <AccessGroups />
-                                        </Route>
-                                        <Route exact path="/myaccount/:memberId">
-                                            <MemberDetail />
-                                        </Route>
-                                        <Route exact path="/settings">
-                                            <Settings />
-                                        </Route>
-                                        <Route exact path="/settings/environment/:environmentId">
-                                            <EnvironmentDetail />
-                                        </Route>
-                                        <Route exact path="/secrets">
-                                            <Secrets />
-                                        </Route>
-                                        <Route exact path="/secrets/:secretId">
-                                            <SecretDetail />
-                                        </Route>
-                                        <Route exact path="/addsecret">
-                                            <AddSecret />
-                                        </Route>
-                                    </Layout>
-                                </PrivateRoute>
-                                <PrivateRoute exact path="/logout">
-                                    <LogoutUser />
-                                </PrivateRoute>
+                                <Switch>
+                                    <Route exact path="/congratulations">
+                                        <Congratulations />
+                                    </Route>
+
+                                    <Route exact path="/get-started">
+                                        <GetStarted />
+                                    </Route>
+
+                                    <Route exact path="/login">
+                                        <LoginUser />
+                                    </Route>
+
+                                    <PrivateRoute exact path="/logout">
+                                        <LogoutUser />
+                                    </PrivateRoute>
+
+                                    <PrivateRoute
+                                        exact
+                                        path={[
+                                            '/',
+                                            '/workers',
+                                            '/workers/:workerId',
+                                            '/teams',
+                                            '/teams/:teamId',
+                                            '/teams/access/:accessId',
+                                            '/myaccount/:memberId',
+                                            '/access_groups',
+                                            '/settings',
+                                            '/settings/environment/:environmentId',
+                                            '/secrets',
+                                            '/secrets/:secretId',
+                                            '/addsecret',
+                                            '/notfound',
+                                        ]}>
+                                        <Switch>
+                                            <Layout>
+                                                <Route exact path="/">
+                                                    <Pipelines />
+                                                </Route>
+                                                <Route exact path="/workers">
+                                                    <Workers />
+                                                </Route>
+                                                <Route exact path="/workers/:workerId">
+                                                    <WorkerDetail />
+                                                </Route>
+                                                <Route exact path="/teams">
+                                                    <Teams />
+                                                </Route>
+                                                <Route exact path="/teams/:teamId">
+                                                    <TeamDetail />
+                                                </Route>
+                                                <Route exact path="/teams/access/:accessId">
+                                                    <TeamGroup />
+                                                </Route>
+                                                <Route exact path="/access_groups">
+                                                    <AccessGroups />
+                                                </Route>
+                                                <Route exact path="/myaccount/:memberId">
+                                                    <MemberDetail />
+                                                </Route>
+                                                <Route exact path="/settings">
+                                                    <Settings />
+                                                </Route>
+                                                <Route exact path="/settings/environment/:environmentId">
+                                                    <EnvironmentDetail />
+                                                </Route>
+                                                <Route exact path="/secrets">
+                                                    <Secrets />
+                                                </Route>
+                                                <Route exact path="/secrets/:secretId">
+                                                    <SecretDetail />
+                                                </Route>
+                                                <Route exact path="/addsecret">
+                                                    <AddSecret />
+                                                </Route>
+                                                <Route exact path="/notfound">
+                                                    <NotFound />
+                                                </Route>
+                                            </Layout>
+                                        </Switch>
+                                    </PrivateRoute>
+
+                                    <Route exact path="*">
+                                        <Redirect to="/notfound" />
+                                    </Route>
+                                </Switch>
                             </UserAuth>
                         </Box>
                     </SnackbarProvider>

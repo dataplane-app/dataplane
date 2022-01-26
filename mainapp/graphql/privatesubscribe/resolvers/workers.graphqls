@@ -1,0 +1,23 @@
+scalar Time
+
+type WorkerStats {
+	WorkerGroup: String!
+	WorkerID:    String!
+	Status:     String!
+	T:      Time!
+	Interval:    Int!
+	CPUPerc:     Float!
+	Load:        Float!
+	MemoryPerc:  Float!
+	MemoryUsed:  Float!
+}
+
+type Subscription {
+  """
+  Get worker stats
+  + **Route**: Private
+  + **Permissions**: linked to environment_user table
+  """
+  getWorkerStats: WorkerStats
+  
+}
