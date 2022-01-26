@@ -11,23 +11,80 @@ import { formatDate } from '../../utils/formatDate';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import WorkerDetailCPU from './WorkerDetailCPU';
 import WorkerDetailMemory from './WorkerDetailMemory';
+import useWebSocket from './useWebSocket';
+import io from 'socket.io-client';
+
 const tableWidth = '1140px';
+
+const socket = io('ws://localhost:9000/ws/workerstats');
 
 export default function WorkerDetail() {
     // const { enqueueSnackbar } = useSnackbar();
+
+    // Instantiate websocket connection
+    // const socketResponse = useWebSocket();
 
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
 
     // Users state
-    const [data, setData] = useState(dummyData);
+    const [data, setData] = useState([
+        {
+            WorkerGroup: 'python_1',
+            WorkerID: 'a23426eb-de00-44b5-ac0d-3ff496e5b76b',
+            Status: 'Online',
+            T: '2022-01-26T09:58:49.039100836Z',
+            Interval: 1,
+            CPUPerc: 6.42,
+            Load: 0.37,
+            MemoryPerc: 35.14,
+            MemoryUsed: 11826483200,
+            worker: {
+                // id: '36474-6768-6768-67859',
+                // name: 'Python 1',
+                description: 'Python workers for generic work loads.',
+                // status: 'Online',
+                type: 'Docker',
+                // lastUpdate: '2022-01-20T11:56:08Z',
+                queue: 2,
+                running: 2,
+                succeeded: 2,
+                failed: 2,
+            },
+            // cpu: {
+            //     percentage: 10,
+            //     load: 0.27,
+            // },
+            memory: {
+                percentage: 10,
+                mb: 200,
+            },
+        },
+    ]);
 
     // Get workers on load
     // const getUsers = useGetUsers();
+
+    const [isConnected, setIsConnected] = useState(socket.connected);
+    const [lastMessage, setLastMessage] = useState(null);
+
     useEffect(() => {
-        // retrieveUsers();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        socket.on('connect', () => {
+            setIsConnected(true);
+        });
+        socket.on('disconnect', () => {
+            setIsConnected(false);
+        });
+        socket.on('message', (data) => {
+            setLastMessage(data);
+            console.log('🚀 ~ file: WorkerDetail.jsx ~ line 80 ~ socket.on ~ data', data);
+        });
+        return () => {
+            socket.off('connect');
+            socket.off('disconnect');
+            socket.off('message');
+        };
+    });
 
     // Get users
     // const retrieveUsers = async () => {
@@ -40,28 +97,28 @@ export default function WorkerDetail() {
             {
                 Header: 'Worker',
                 accessor: (row) => [
-                    row.worker.id,
-                    row.worker.status,
-                    formatDate(row.worker.lastUpdate),
-                    row.worker.queue,
-                    row.worker.running,
-                    row.worker.succeeded,
-                    row.worker.failed,
+                    row.WorkerID,
+                    row.Status,
+                    formatDate(row.T),
+                    // row.worker.queue,
+                    // row.worker.running,
+                    // row.worker.succeeded,
+                    // row.worker.failed,
                 ],
                 Cell: (row) => <CustomWorker row={row} />,
             },
             {
                 Header: 'CPU',
-                accessor: (row) => [row.cpu.percentage.toFixed(1), row.cpu.load],
+                accessor: (row) => [row.CPUPerc, data.Load],
                 Cell: (row) => <WorkerDetailCPU row={row} />,
             },
-            {
-                Header: 'Memoery',
-                accessor: (row) => [row.memory.percentage.toFixed(1), row.memory.mb],
-                Cell: (row) => <WorkerDetailMemory row={row} />,
-            },
+            // {
+            //     Header: 'Memory',
+            //     accessor: (row) => [row.MemoryPerc, (row.MemoryUsed / 1000000).toFixed()],
+            //     Cell: (row) => <WorkerDetailMemory row={row} />,
+            // },
         ],
-        []
+        [data.CPUPerc, data.Load]
     );
 
     // Use the state and functions returned from useTable to build your UI
@@ -108,7 +165,7 @@ export default function WorkerDetail() {
                     <Grid>
                         <Grid item display="flex" alignItems="center" flexDirection="row">
                             <Typography component="div" variant="body1" sx={{ fontSize: '1.0625rem' }}>
-                                Worker group: Python_1
+                                {/* Worker group: {socketResponse?.WorkerGroup} */}
                             </Typography>
 
                             <Box display="flex" ml={4} alignItems="center">
@@ -198,7 +255,7 @@ export default function WorkerDetail() {
                                 component="tr"
                                 {...row.getRowProps()}
                                 display="grid"
-                                gridTemplateColumns="repeat(3, 1fr)"
+                                gridTemplateColumns="400px 1fr 1fr"
                                 alignItems="start"
                                 borderRadius="5px"
                                 backgroundColor="background.secondary"
@@ -228,26 +285,26 @@ export default function WorkerDetail() {
 }
 
 const CustomWorker = ({ row }) => {
-    const [id, status, lastUpdate, queue, running, succeeded, failed] = row.value;
+    const [WorkerID, Status, T, queue = 2, running = 2, succeeded = 2, failed = 2] = row.value;
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
             <div>
                 <Typography component="h4" variant="h3" sx={{ display: 'inline' }}>
-                    {id}
+                    {WorkerID}
                 </Typography>
                 <Typography
                     component="h4"
                     variant="subtitle1"
-                    color={status === 'Online' ? 'green' : 'red'}
+                    color={Status === 'Online' ? 'green' : 'red'}
                     fontWeight={700}
                     ml={3}
                     sx={{ display: 'inline', verticalAlign: 'top' }}>
-                    {status}
+                    {Status}
                 </Typography>
             </div>
             <Typography component="h5" mt={0.5} variant="subtitle1">
-                {lastUpdate}
+                Last updated: {T}
             </Typography>
             <Grid item display="flex" alignItems="center" mt={2} sx={{ alignSelf: 'flex-start' }}>
                 <CustomChip amount={queue} label="Queue" margin={2} customColor="purple" />
@@ -282,69 +339,48 @@ const CustomWorker = ({ row }) => {
 
 const dummyData = [
     {
+        WorkerGroup: 'python_1',
+        WorkerID: 'a23426eb-de00-44b5-ac0d-3ff496e5b76b',
+        Status: 'Online',
+        T: '2022-01-26T09:58:49.039100836Z',
+        Interval: 1,
+        CPUPerc: 6.42,
+        Load: 0.37,
+        MemoryPerc: 35.14,
+        MemoryUsed: 11826483200,
         worker: {
-            id: '36474-6768-6768-67859',
-            name: 'Python 1',
+            // id: '36474-6768-6768-67859',
+            // name: 'Python 1',
             description: 'Python workers for generic work loads.',
-            status: 'Online',
+            // status: 'Online',
             type: 'Docker',
-            lastUpdate: '2022-01-20T11:56:08Z',
+            // lastUpdate: '2022-01-20T11:56:08Z',
             queue: 2,
             running: 2,
             succeeded: 2,
             failed: 2,
         },
-        cpu: {
-            percentage: 10,
-            load: 0.27,
-        },
+        // cpu: {
+        //     percentage: 10,
+        //     load: 0.27,
+        // },
         memory: {
             percentage: 10,
             mb: 200,
         },
     },
+];
+
+const dummyDataReal = [
     {
-        worker: {
-            id: '36474-6768-6768-67859',
-            name: 'Python 1',
-            description: 'Python workers for generic work loads.',
-            status: 'Online',
-            type: 'Docker',
-            lastUpdate: '2022-01-20T11:56:08Z',
-            queue: 2,
-            running: 2,
-            succeeded: 2,
-            failed: 2,
-        },
-        cpu: {
-            percentage: 10,
-            load: 0.27,
-        },
-        memory: {
-            percentage: 10,
-            mb: 200,
-        },
-    },
-    {
-        worker: {
-            id: '36474-6768-6768-67859',
-            name: 'Python 1',
-            description: 'Python workers for generic work loads.',
-            status: 'Online',
-            type: 'Docker',
-            lastUpdate: '2022-01-20T11:56:08Z',
-            queue: 2,
-            running: 2,
-            succeeded: 2,
-            failed: 2,
-        },
-        cpu: {
-            percentage: 10,
-            load: 0.27,
-        },
-        memory: {
-            percentage: 10,
-            mb: 200,
-        },
+        WorkerGroup: 'python_1',
+        WorkerID: 'a23426eb-de00-44b5-ac0d-3ff496e5b76b',
+        Status: 'Online',
+        T: '2022-01-26T09:58:49.039100836Z',
+        Interval: 1,
+        CPUPerc: 6.42,
+        Load: 0.37,
+        MemoryPerc: 35.14,
+        MemoryUsed: 11826483200,
     },
 ];

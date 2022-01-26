@@ -4,9 +4,7 @@ go 1.17
 
 require (
 	github.com/99designs/gqlgen v0.14.0
-	github.com/arsmn/fastgql v0.14.0
 	github.com/bxcodec/faker/v3 v3.6.0
-	github.com/fasthttp/websocket v1.4.5
 	github.com/go-co-op/gocron v1.11.0
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
@@ -14,6 +12,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gofiber/adaptor/v2 v2.1.15
 	github.com/gofiber/fiber/v2 v2.24.0
+	github.com/gofiber/websocket/v2 v2.0.15
 	github.com/golang-jwt/jwt/v4 v4.2.0
 	github.com/google/uuid v1.3.0
 	github.com/json-iterator/go v1.1.12
@@ -41,12 +40,12 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.0-20210816181553-5444fa50b93d // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
+	github.com/fasthttp/websocket v1.4.5 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/goccy/go-json v0.7.10 // indirect
 	github.com/gofiber/utils v0.1.2 // indirect
-	github.com/gofiber/websocket/v2 v2.0.15 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect

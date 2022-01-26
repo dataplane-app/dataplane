@@ -42,11 +42,12 @@ export const data = {
 };
 
 export default function WorkerDetailCPU({ row }) {
-    const [percentage, load] = row.value;
+    // const [percentage, load] = row.value;
+    console.count('🚀 ~ file: WorkerDetailCPU.jsx ~ line 46 ~ WorkerDetailCPU ~ load');
 
     return (
-        <Grid container direction="row" alignItems="flex-start" pr={1}>
-            <Grid item mr={1.5}>
+        <Grid container direction="row" alignItems="flex-start" justifyContent="end" pr={1}>
+            {/* <Grid item mr={1.5}>
                 <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
                     {percentage}%
                 </Typography>
@@ -62,7 +63,7 @@ export default function WorkerDetailCPU({ row }) {
                 <div style={{ position: 'relative', width: '240px' }}>
                     <Line options={options} data={data} />
                 </div>
-            </Grid>
+            </Grid> */}
         </Grid>
     );
 }

@@ -43,6 +43,7 @@ export const data = {
 
 export default function WorkerDetailMemory({ row }) {
     const [percentage, mb] = row.value;
+    console.count('🚀 ~ file: WorkerDetailMemory.jsx ~ line 46 ~ WorkerDetailMemory ~ mb', mb);
 
     return (
         <Grid container direction="row" alignItems="flex-start" pr={1}>

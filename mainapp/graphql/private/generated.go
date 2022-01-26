@@ -1506,21 +1506,21 @@ extend type Mutation {
     """
     Update Access Group.
     + **Route**: Private
-??? + **Permissions**: admin_platform, admin_environment, environment_permissions
+    + **Permissions**: admin_platform, admin_environment, environment_permissions
     """
     updateAccessGroup(input: AccessGroupsInput): String!
 
     """
     Activate Access Group.
     + **Route**: Private
-??? + **Permissions**: admin_platform, admin_environment, environment_permissions
+    + **Permissions**: admin_platform, admin_environment, environment_permissions
     """
     activateAccessGroup(access_group_id: String!, environmentID: String!,): String!
 
     """
     Deactivate Access Group.
     + **Route**: Private
-??? + **Permissions**: admin_platform, admin_environment, environment_permissions
+    + **Permissions**: admin_platform, admin_environment, environment_permissions
     """
     deactivateAccessGroup(access_group_id: String!, environmentID: String!,): String!
 
