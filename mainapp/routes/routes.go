@@ -7,7 +7,6 @@ import (
 	"dataplane/logging"
 	"dataplane/logme"
 	"dataplane/messageq"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -194,73 +193,9 @@ func Setup(port string) *fiber.App {
 		return fiber.ErrUpgradeRequired
 	})
 
-	app.Get("/ws/2", websocket.New(func(c *websocket.Conn) {
-		var (
-			mt  int
-			msg []byte
-			err error
-		)
-		for {
-			if mt, msg, err = c.ReadMessage(); err != nil {
-				log.Println("read:", err)
-				break
-			}
-			log.Println("recv: ", msg, mt)
-
-			if err = c.WriteMessage(mt, msg); err != nil {
-				log.Println("write:", err)
-				break
-			}
-		}
-	}))
-
-	app.Get("/ws/stats", websocket.New(func(c *websocket.Conn) {
+	app.Get("/ws/workerstats", websocket.New(func(c *websocket.Conn) {
 
 		ServeWs(c, "workerstats")
-	}))
-
-	app.Use("/ws/hello", websocket.New(func(c *websocket.Conn) {
-
-		y := 0
-		// messageq.SubscribeMsgReply("workerload", msg interface{}, resp interface{})
-		hello, err1 := messageq.NATSencoded.Subscribe("workerstats", func(m *nats.Msg) {
-			messageq.NATSencoded.Publish(m.Reply, []byte("ok"))
-			x := []byte(`{"hello":"hello"}`)
-			var dat map[string]interface{}
-			json.Unmarshal(x, &dat)
-			// c.WriteJSON(&x)
-			y = y + 1
-			c.WriteMessage(y, x)
-			log.Println("ok", string(m.Data), string(m.Subject), m.Header)
-		})
-
-		log.Println("Subscribe", hello, err1)
-
-		// c.Locals is added to the *websocket.Conn
-		log.Println(c.Locals("allowed"))  // true
-		log.Println(c.Params("id"))       // 123
-		log.Println(c.Query("v"))         // 1.0
-		log.Println(c.Cookies("session")) // ""
-
-		// websocket.Conn bindings https://pkg.go.dev/github.com/fasthttp/websocket?tab=doc#pkg-index
-		// var (
-		// 	mt  int
-		// 	msg []byte
-		// 	err error
-		// )
-		// for {
-		// 	if mt, msg, err = c.ReadMessage(); err != nil {
-		// 		log.Println("read:", err)
-		// 		break
-		// 	}
-		// 	log.Printf("recv: %s", msg)
-
-		// 	if err = c.WriteMessage(mt, msg); err != nil {
-		// 		log.Println("write:", err)
-		// 		break
-		// 	}
-		// }
-
 	}))
 
 	// Check healthz
