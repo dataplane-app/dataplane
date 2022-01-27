@@ -40,7 +40,7 @@ const PasswordField = (props) => {
 
     console.log(strength.get());
 
-    const strengthClass = ['strength-meter mt-2', passwordLength > 0 ? 'visible' : 'invisible'].join(' ').trim();
+    const strengthClass = [`${props.theme === 'light' ? 'strength-meter' : 'strength-meter-dark'} mt-2`, passwordLength > 0 ? 'visible' : 'invisible'].join(' ').trim();
     const counterClass = ['badge badge-pill', isPasswordLong ? (isPasswordStrong ? 'badge-success' : 'badge-warning') : 'badge-danger'].join(' ').trim();
     return (
         <div className="position-relative">
