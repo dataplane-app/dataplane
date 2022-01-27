@@ -1,11 +1,11 @@
 import { Grid, Typography } from '@mui/material';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
+import { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
 export const options = {
-    responsive: true,
     interaction: {
         mode: 'index',
         intersect: false,
@@ -21,29 +21,54 @@ export const options = {
             type: 'linear',
             display: true,
             position: 'left',
+            min: 0,
+            max: 100,
+            ticks: {
+                stepSize: 5,
+            },
         },
     },
 };
 
-const labels = ['15:14', '15:16', '15:20', '15:23', '15:26'];
-
-export const data = {
-    labels,
-    datasets: [
-        {
-            label: 'Dataset 1',
-            data: labels.map(() => Math.floor(Math.random() * Math.floor(1000)) / 10),
-            borderColor: '#4777DF',
-            backgroundColor: '#D8E2F8',
-            yAxisID: 'y',
-            fill: true,
-        },
-    ],
-};
-
 export default function WorkerDetailMemory({ row }) {
+    const [dataStream, setDataStream] = useState([]);
+    const [labels, setLabels] = useState(['']);
+
+    useEffect(() => {
+        // Make sure date is not null
+        if (row.value[2]) {
+            // If labels length is 5, remove the oldest.
+            if (labels.length > 4) {
+                setLabels([...labels.slice(1), timeLabel(row.value[2])]);
+            } else {
+                setLabels([...labels, timeLabel(row.value[2])]);
+            }
+
+            // If dataStrem length is 5, remove the oldest.
+            if (dataStream.length > 4) {
+                setDataStream([...dataStream.slice(1), { MemoryPerc: row.value[0], Interval: row.value[1], T: row.value[2] }]);
+            } else {
+                setDataStream([...dataStream, { MemoryPerc: row.value[0], Interval: row.value[1], T: row.value[2] }]);
+            }
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [row.value]);
+
+    const chartData = {
+        labels,
+        datasets: [
+            {
+                data: dataStream.map((a) => a.MemoryPerc),
+                borderColor: '#4777DF',
+                backgroundColor: '#D8E2F8',
+                yAxisID: 'y',
+                fill: true,
+            },
+        ],
+    };
+
     const [percentage, mb] = row.value;
-    console.count('🚀 ~ file: WorkerDetailMemory.jsx ~ line 46 ~ WorkerDetailMemory ~ mb', mb);
 
     return (
         <Grid container direction="row" alignItems="flex-start" pr={1}>
@@ -61,9 +86,22 @@ export default function WorkerDetailMemory({ row }) {
 
             <Grid item>
                 <div style={{ position: 'relative', width: '240px' }}>
-                    <Line options={options} data={data} />
+                    <Line options={options} data={chartData} />
                 </div>
             </Grid>
         </Grid>
     );
+}
+
+// ----------- Utility Functions
+
+/**
+ * Takes a date string, returns minutes with seconds
+ * @param {string} dateString 2022-01-20T13:27:08Z
+ * @return {string} 27:08
+ * @example "2022-01-20T13:27:08Z" => "27:08"
+ */
+function timeLabel(dateString) {
+    let dd = new Date(dateString);
+    return `${('0' + dd.getMinutes()).slice(-2)}:${('0' + dd.getSeconds()).slice(-2)}`;
 }

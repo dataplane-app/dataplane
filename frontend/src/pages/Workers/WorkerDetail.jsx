@@ -12,17 +12,14 @@ import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import WorkerDetailCPU from './WorkerDetailCPU';
 import WorkerDetailMemory from './WorkerDetailMemory';
 import useWebSocket from './useWebSocket';
-import io from 'socket.io-client';
 
 const tableWidth = '1140px';
-
-const socket = io('ws://localhost:9000/ws/workerstats');
 
 export default function WorkerDetail() {
     // const { enqueueSnackbar } = useSnackbar();
 
     // Instantiate websocket connection
-    // const socketResponse = useWebSocket();
+    const socketResponse = useWebSocket();
 
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
@@ -33,7 +30,7 @@ export default function WorkerDetail() {
             WorkerGroup: 'python_1',
             WorkerID: 'a23426eb-de00-44b5-ac0d-3ff496e5b76b',
             Status: 'Online',
-            T: '2022-01-26T09:58:49.039100836Z',
+            // T: '2022-01-26T09:58:49.039100836Z',
             Interval: 1,
             CPUPerc: 6.42,
             Load: 0.37,
@@ -51,46 +48,21 @@ export default function WorkerDetail() {
                 succeeded: 2,
                 failed: 2,
             },
-            // cpu: {
-            //     percentage: 10,
-            //     load: 0.27,
-            // },
-            memory: {
-                percentage: 10,
-                mb: 200,
-            },
         },
     ]);
 
     // Get workers on load
     // const getUsers = useGetUsers();
 
-    const [isConnected, setIsConnected] = useState(socket.connected);
-    const [lastMessage, setLastMessage] = useState(null);
-
-    useEffect(() => {
-        socket.on('connect', () => {
-            setIsConnected(true);
-        });
-        socket.on('disconnect', () => {
-            setIsConnected(false);
-        });
-        socket.on('message', (data) => {
-            setLastMessage(data);
-            console.log('🚀 ~ file: WorkerDetail.jsx ~ line 80 ~ socket.on ~ data', data);
-        });
-        return () => {
-            socket.off('connect');
-            socket.off('disconnect');
-            socket.off('message');
-        };
-    });
-
     // Get users
     // const retrieveUsers = async () => {
     //     let users = await getUsers();
     //     !users.errors ? setData(users) : enqueueSnackbar('Unable to retrieve users', { variant: 'error' });
     // };
+
+    useEffect(() => {
+        socketResponse.T && setData([socketResponse]);
+    }, [socketResponse.T]);
 
     const columns = useMemo(
         () => [
@@ -109,14 +81,14 @@ export default function WorkerDetail() {
             },
             {
                 Header: 'CPU',
-                accessor: (row) => [row.CPUPerc, data.Load],
+                accessor: (row) => [row.CPUPerc, row.Load, row.T],
                 Cell: (row) => <WorkerDetailCPU row={row} />,
             },
-            // {
-            //     Header: 'Memory',
-            //     accessor: (row) => [row.MemoryPerc, (row.MemoryUsed / 1000000).toFixed()],
-            //     Cell: (row) => <WorkerDetailMemory row={row} />,
-            // },
+            {
+                Header: 'Memory',
+                accessor: (row) => [row.MemoryPerc, (row.MemoryUsed / 1000000).toFixed(), row.T],
+                Cell: (row) => <WorkerDetailMemory row={row} />,
+            },
         ],
         [data.CPUPerc, data.Load]
     );
@@ -165,7 +137,7 @@ export default function WorkerDetail() {
                     <Grid>
                         <Grid item display="flex" alignItems="center" flexDirection="row">
                             <Typography component="div" variant="body1" sx={{ fontSize: '1.0625rem' }}>
-                                {/* Worker group: {socketResponse?.WorkerGroup} */}
+                                Worker group: {socketResponse?.WorkerGroup}
                             </Typography>
 
                             <Box display="flex" ml={4} alignItems="center">

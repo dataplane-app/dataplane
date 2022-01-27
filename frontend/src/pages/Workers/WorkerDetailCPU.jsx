@@ -1,11 +1,11 @@
 import { Grid, Typography } from '@mui/material';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import { useEffect, useState } from 'react';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
 export const options = {
-    // responsive: true,
     interaction: {
         mode: 'index',
         intersect: false,
@@ -21,33 +21,58 @@ export const options = {
             type: 'linear',
             display: true,
             position: 'left',
+            min: 0,
+            max: 100,
+            ticks: {
+                stepSize: 5,
+            },
         },
     },
 };
 
-const labels = ['15:14', '15:16', '15:20', '15:23', '15:26'];
-
-export const data = {
-    labels,
-    datasets: [
-        {
-            label: 'Dataset 1',
-            data: labels.map(() => Math.random().toFixed(2)),
-            borderColor: '#5CC362',
-            backgroundColor: '#D5F3DF',
-            yAxisID: 'y',
-            fill: true,
-        },
-    ],
-};
-
 export default function WorkerDetailCPU({ row }) {
-    // const [percentage, load] = row.value;
-    console.count('🚀 ~ file: WorkerDetailCPU.jsx ~ line 46 ~ WorkerDetailCPU ~ load');
+    const [dataStream, setDataStream] = useState([]);
+    const [labels, setLabels] = useState(['']);
+
+    useEffect(() => {
+        // Make sure date is not null
+        if (row.value[2]) {
+            // If labels length is 5, remove the oldest.
+            if (labels.length > 4) {
+                setLabels([...labels.slice(1), timeLabel(row.value[2])]);
+            } else {
+                setLabels([...labels, timeLabel(row.value[2])]);
+            }
+
+            // If dataStrem length is 5, remove the oldest.
+            if (dataStream.length > 4) {
+                setDataStream([...dataStream.slice(1), { CPUPerc: row.value[0], Interval: row.value[1], T: row.value[2] }]);
+            } else {
+                setDataStream([...dataStream, { CPUPerc: row.value[0], Interval: row.value[1], T: row.value[2] }]);
+            }
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [row.value]);
+
+    const chartData = {
+        labels,
+        datasets: [
+            {
+                data: dataStream.map((a) => a.CPUPerc),
+                borderColor: '#5CC362',
+                backgroundColor: '#D5F3DF',
+                yAxisID: 'y',
+                fill: true,
+            },
+        ],
+    };
+
+    const [percentage, load] = row.value;
 
     return (
-        <Grid container direction="row" alignItems="flex-start" justifyContent="end" pr={1}>
-            {/* <Grid item mr={1.5}>
+        <Grid container direction="row" alignItems="flex-start" justifyContent="flex-end" pr={1}>
+            <Grid item mr={1.5}>
                 <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
                     {percentage}%
                 </Typography>
@@ -61,9 +86,35 @@ export default function WorkerDetailCPU({ row }) {
 
             <Grid item>
                 <div style={{ position: 'relative', width: '240px' }}>
-                    <Line options={options} data={data} />
+                    <Line options={options} data={chartData} />
                 </div>
-            </Grid> */}
+            </Grid>
         </Grid>
     );
+}
+
+// ----------- Utility Functions
+
+/**
+ * Takes a date string, returns minutes with seconds
+ * @param {string} dateString 2022-01-20T13:27:08Z
+ * @return {string} 27:08
+ * @example "2022-01-20T13:27:08Z" => "27:08"
+ */
+function timeLabel(dateString) {
+    let dd = new Date(dateString);
+    return `${('0' + dd.getMinutes()).slice(-2)}:${('0' + dd.getSeconds()).slice(-2)}`;
+}
+
+function extractTime(dateString) {
+    // Time label with current second
+    let dd = new Date(dateString);
+    let labelsArray = [`${('0' + dd.getMinutes()).slice(-2)}:${('0' + dd.getSeconds()).slice(-2)}`];
+
+    // Add 4 more time labels 5 seconds apart
+    for (let index = 0; index < 4; index++) {
+        dd.setSeconds(dd.getSeconds() + 1);
+        labelsArray.push(`${('0' + dd.getMinutes()).slice(-2)}:${('0' + dd.getSeconds()).slice(-2)}`);
+    }
+    return labelsArray;
 }

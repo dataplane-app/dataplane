@@ -5,7 +5,7 @@ export default function useWebSocket() {
     const ws = useRef(null);
 
     useEffect(() => {
-        ws.current = new WebSocket('ws://localhost:9000/ws/workerstats');
+        ws.current = new WebSocket('ws://localhost:9000/ws/workerstats/python_1');
         ws.current.onopen = () => console.log('ws opened');
         ws.current.onclose = () => console.log('ws closed');
 
