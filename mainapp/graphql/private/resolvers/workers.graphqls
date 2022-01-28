@@ -2,6 +2,17 @@ type Workers {
 	name: String!
 }
 
+type WorkerGroup {
+	WorkerGroup: String!
+	Status:      String!
+	T:           Time!
+	Interval:    Int!
+	Env:         String!
+	LB:          String!
+	WorkerType:  String!
+}
+
 extend type Query {
   getWorkers: [Workers]
+  getWorkerGroups(environmentName: String!): [WorkerGroup]
 }

@@ -2,6 +2,10 @@
 
 package privategraphql
 
+import (
+	"time"
+)
+
 type AccessGroupsInput struct {
 	AccessGroupID string `json:"AccessGroupID"`
 	Name          string `json:"Name"`
@@ -86,6 +90,16 @@ type UpdateUsersInput struct {
 	Email     string `json:"email"`
 	JobTitle  string `json:"job_title"`
 	Timezone  string `json:"timezone"`
+}
+
+type WorkerGroup struct {
+	WorkerGroup string    `json:"WorkerGroup"`
+	Status      string    `json:"Status"`
+	T           time.Time `json:"T"`
+	Interval    int       `json:"Interval"`
+	Env         string    `json:"Env"`
+	Lb          string    `json:"LB"`
+	WorkerType  string    `json:"WorkerType"`
 }
 
 type Workers struct {

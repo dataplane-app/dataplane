@@ -15,7 +15,7 @@ var Broadcast = make(chan []byte)
 // https://github.com/marcelo-tm/testws/blob/master/main.go
 func WorkerStatsWs(conn *websocket.Conn, subject string) {
 
-	// var broadcast chan []byte
+	// Subscribe to a specific worker group when the connection is open
 	sub, _ := messageq.NATSencoded.Subscribe(subject, func(m *nats.Msg) {
 		if os.Getenv("messagedebug") == "true" {
 			logging.PrintSecretsRedact(string(m.Data))
@@ -24,6 +24,7 @@ func WorkerStatsWs(conn *websocket.Conn, subject string) {
 
 	})
 
+	// Write back from Broadcast go routine channel
 	for {
 
 		message := <-Broadcast
