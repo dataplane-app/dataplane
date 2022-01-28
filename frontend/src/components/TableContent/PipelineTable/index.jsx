@@ -8,8 +8,12 @@ import MoreInfoMenu from '../../MoreInfoMenu';
 import PipelineItemTable from '../../MoreInfoContent/PipelineTableItem';
 import customDrawerStyles from '../../../utils/drawerStyles';
 import ShowYAMLCodeDrawer from '../../DrawerContent/ShowYAMLCodeDrawer';
+import { useHistory } from 'react-router-dom';
 
 const PipelineTable = () => {
+    // React router
+    const history = useHistory();
+
     // Table item states
     const [isOpenYAML, setIsOpenYAML] = useState(false);
 
@@ -101,6 +105,7 @@ const PipelineTable = () => {
             <Box component="table" mt={4} width="100%" {...getTableProps()}>
                 <Box component="tbody" display="flex" sx={{ flexDirection: 'column' }} {...getTableBodyProps()}>
                     {rows.map((row, i) => {
+                        console.log(row);
                         prepareRow(row);
                         return (
                             <Box
@@ -113,7 +118,7 @@ const PipelineTable = () => {
                                 sx={{ border: 1, borderColor: 'divider', padding: 3, cursor: 'pointer', '&:hover': { background: 'background.hoverSecondary' }, mt: 2 }}>
                                 <Box component="td">
                                     <Grid display="flex" alignItems="flex-start" justifyContent="space-between">
-                                        <Grid item>
+                                        <Grid item onClick={() => history.push(`/pipelines/remove_logs/${row.original.id}`)}>
                                             <Typography variant="h3" color="cyan.main">
                                                 Remove logs
                                             </Typography>
@@ -181,7 +186,7 @@ const PipelineTable = () => {
 
                                         <Grid item sx={{ flex: 1 }} display="flex" alignItems="center" justifyContent="center">
                                             <MoreInfoMenu>
-                                                <PipelineItemTable handleOpenYaml={() => setIsOpenYAML(!isOpenYAML)} />
+                                                <PipelineItemTable id={row.original.id} handleOpenYaml={() => setIsOpenYAML(!isOpenYAML)} />
                                             </MoreInfoMenu>
                                         </Grid>
                                     </Grid>

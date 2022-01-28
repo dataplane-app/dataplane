@@ -3,6 +3,7 @@ const createCustomTheme = (mode) => ({
         mode,
         primary: {
             main: '#0073C6',
+            light: 'rgba(0, 115, 198, 0.16)',
         },
         purple: {
             main: '#7B61FF',
