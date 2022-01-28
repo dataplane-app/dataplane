@@ -98,6 +98,8 @@ func LoadWorkers(MainAppID string) {
 				return nil
 			})
 
+			// log.Println(string(workerGroupdatajson))
+
 			// log.Println("---------------------------")
 
 		}

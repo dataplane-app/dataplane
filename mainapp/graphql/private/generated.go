@@ -166,7 +166,7 @@ type ComplexityRoot struct {
 		GetUserEnvironments  func(childComplexity int, userID string, environmentID string) int
 		GetUsers             func(childComplexity int) int
 		GetWorkerGroups      func(childComplexity int, environmentName string) int
-		GetWorkers           func(childComplexity int) int
+		GetWorkers           func(childComplexity int, environmentName string) int
 		LogoutUser           func(childComplexity int) int
 		Me                   func(childComplexity int) int
 		MyPermissions        func(childComplexity int) int
@@ -205,7 +205,18 @@ type ComplexityRoot struct {
 	}
 
 	Workers struct {
-		Name func(childComplexity int) int
+		CPUPerc     func(childComplexity int) int
+		Env         func(childComplexity int) int
+		Interval    func(childComplexity int) int
+		Lb          func(childComplexity int) int
+		Load        func(childComplexity int) int
+		MemoryPerc  func(childComplexity int) int
+		MemoryUsed  func(childComplexity int) int
+		Status      func(childComplexity int) int
+		T           func(childComplexity int) int
+		WorkerGroup func(childComplexity int) int
+		WorkerID    func(childComplexity int) int
+		WorkerType  func(childComplexity int) int
 	}
 }
 
@@ -263,7 +274,7 @@ type QueryResolver interface {
 	LogoutUser(ctx context.Context) (*string, error)
 	GetUser(ctx context.Context, userID string) (*models.Users, error)
 	GetUsers(ctx context.Context) ([]*models.Users, error)
-	GetWorkers(ctx context.Context) ([]*Workers, error)
+	GetWorkers(ctx context.Context, environmentName string) ([]*Workers, error)
 	GetWorkerGroups(ctx context.Context, environmentName string) ([]*WorkerGroup, error)
 }
 
@@ -1146,7 +1157,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.GetWorkers(childComplexity), true
+		args, err := ec.field_Query_getWorkers_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetWorkers(childComplexity, args["environmentName"].(string)), true
 
 	case "Query.logoutUser":
 		if e.complexity.Query.LogoutUser == nil {
@@ -1335,12 +1351,89 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.WorkerGroup.WorkerType(childComplexity), true
 
-	case "Workers.name":
-		if e.complexity.Workers.Name == nil {
+	case "Workers.CPUPerc":
+		if e.complexity.Workers.CPUPerc == nil {
 			break
 		}
 
-		return e.complexity.Workers.Name(childComplexity), true
+		return e.complexity.Workers.CPUPerc(childComplexity), true
+
+	case "Workers.Env":
+		if e.complexity.Workers.Env == nil {
+			break
+		}
+
+		return e.complexity.Workers.Env(childComplexity), true
+
+	case "Workers.Interval":
+		if e.complexity.Workers.Interval == nil {
+			break
+		}
+
+		return e.complexity.Workers.Interval(childComplexity), true
+
+	case "Workers.LB":
+		if e.complexity.Workers.Lb == nil {
+			break
+		}
+
+		return e.complexity.Workers.Lb(childComplexity), true
+
+	case "Workers.Load":
+		if e.complexity.Workers.Load == nil {
+			break
+		}
+
+		return e.complexity.Workers.Load(childComplexity), true
+
+	case "Workers.MemoryPerc":
+		if e.complexity.Workers.MemoryPerc == nil {
+			break
+		}
+
+		return e.complexity.Workers.MemoryPerc(childComplexity), true
+
+	case "Workers.MemoryUsed":
+		if e.complexity.Workers.MemoryUsed == nil {
+			break
+		}
+
+		return e.complexity.Workers.MemoryUsed(childComplexity), true
+
+	case "Workers.Status":
+		if e.complexity.Workers.Status == nil {
+			break
+		}
+
+		return e.complexity.Workers.Status(childComplexity), true
+
+	case "Workers.T":
+		if e.complexity.Workers.T == nil {
+			break
+		}
+
+		return e.complexity.Workers.T(childComplexity), true
+
+	case "Workers.WorkerGroup":
+		if e.complexity.Workers.WorkerGroup == nil {
+			break
+		}
+
+		return e.complexity.Workers.WorkerGroup(childComplexity), true
+
+	case "Workers.WorkerID":
+		if e.complexity.Workers.WorkerID == nil {
+			break
+		}
+
+		return e.complexity.Workers.WorkerID(childComplexity), true
+
+	case "Workers.WorkerType":
+		if e.complexity.Workers.WorkerType == nil {
+			break
+		}
+
+		return e.complexity.Workers.WorkerType(childComplexity), true
 
 	}
 	return 0, false
@@ -1948,7 +2041,18 @@ extend type Mutation {
 	updateDeleteUser(userid: String!): String
 }`, BuiltIn: false},
 	{Name: "resolvers/workers.graphqls", Input: `type Workers {
-	name: String!
+	WorkerGroup: String!
+	WorkerID:    String!
+	Status:      String!
+	T:           Time!
+	Interval:    Int!
+	CPUPerc:     Float!
+	Load:        Float!
+	MemoryPerc:  Float!
+	MemoryUsed:  Float!
+	Env:         String!
+	LB:          String!
+	WorkerType:  String!
 }
 
 type WorkerGroup {
@@ -1962,7 +2066,19 @@ type WorkerGroup {
 }
 
 extend type Query {
-  getWorkers: [Workers]
+  """
+	Get workers.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+	+ **Security**: Based on environment selected
+	"""
+  getWorkers(environmentName: String!): [Workers]
+  """
+	Get worker groups.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+	+ **Security**: Based on environment selected
+	"""
   getWorkerGroups(environmentName: String!): [WorkerGroup]
 }`, BuiltIn: false},
 }
@@ -2897,6 +3013,21 @@ func (ec *executionContext) field_Query_getUser_args(ctx context.Context, rawArg
 }
 
 func (ec *executionContext) field_Query_getWorkerGroups_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentName"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentName"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getWorkers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -6483,9 +6614,16 @@ func (ec *executionContext) _Query_getWorkers(ctx context.Context, field graphql
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getWorkers_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetWorkers(rctx)
+		return ec.resolvers.Query().GetWorkers(rctx, args["environmentName"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7373,7 +7511,7 @@ func (ec *executionContext) _WorkerGroup_WorkerType(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Workers_name(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+func (ec *executionContext) _Workers_WorkerGroup(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -7391,7 +7529,392 @@ func (ec *executionContext) _Workers_name(ctx context.Context, field graphql.Col
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
+		return obj.WorkerGroup, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Workers_WorkerID(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Workers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkerID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Workers_Status(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Workers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Workers_T(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Workers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.T, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Workers_Interval(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Workers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Interval, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Workers_CPUPerc(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Workers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CPUPerc, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Workers_Load(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Workers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Load, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Workers_MemoryPerc(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Workers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MemoryPerc, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Workers_MemoryUsed(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Workers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MemoryUsed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Workers_Env(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Workers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Env, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Workers_LB(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Workers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Lb, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Workers_WorkerType(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Workers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkerType, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10035,8 +10558,63 @@ func (ec *executionContext) _Workers(ctx context.Context, sel ast.SelectionSet, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Workers")
-		case "name":
-			out.Values[i] = ec._Workers_name(ctx, field, obj)
+		case "WorkerGroup":
+			out.Values[i] = ec._Workers_WorkerGroup(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "WorkerID":
+			out.Values[i] = ec._Workers_WorkerID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Status":
+			out.Values[i] = ec._Workers_Status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "T":
+			out.Values[i] = ec._Workers_T(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Interval":
+			out.Values[i] = ec._Workers_Interval(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "CPUPerc":
+			out.Values[i] = ec._Workers_CPUPerc(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Load":
+			out.Values[i] = ec._Workers_Load(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "MemoryPerc":
+			out.Values[i] = ec._Workers_MemoryPerc(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "MemoryUsed":
+			out.Values[i] = ec._Workers_MemoryUsed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Env":
+			out.Values[i] = ec._Workers_Env(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "LB":
+			out.Values[i] = ec._Workers_LB(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "WorkerType":
+			out.Values[i] = ec._Workers_WorkerType(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10308,6 +10886,21 @@ func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interf
 
 func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
 	res := graphql.MarshalBoolean(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
+	res, err := graphql.UnmarshalFloat(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	res := graphql.MarshalFloat(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")

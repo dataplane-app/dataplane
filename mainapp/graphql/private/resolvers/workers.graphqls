@@ -1,5 +1,16 @@
 type Workers {
-	name: String!
+	WorkerGroup: String!
+	WorkerID:    String!
+	Status:      String!
+	T:           Time!
+	Interval:    Int!
+	CPUPerc:     Float!
+	Load:        Float!
+	MemoryPerc:  Float!
+	MemoryUsed:  Float!
+	Env:         String!
+	LB:          String!
+	WorkerType:  String!
 }
 
 type WorkerGroup {
@@ -13,6 +24,18 @@ type WorkerGroup {
 }
 
 extend type Query {
-  getWorkers: [Workers]
+  """
+	Get workers.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+	+ **Security**: Based on environment selected
+	"""
+  getWorkers(environmentName: String!): [Workers]
+  """
+	Get worker groups.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+	+ **Security**: Based on environment selected
+	"""
   getWorkerGroups(environmentName: String!): [WorkerGroup]
 }
