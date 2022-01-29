@@ -23,7 +23,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/websocket/v2"
 	"github.com/google/uuid"
-	"github.com/nats-io/nats.go"
 )
 
 type client struct{} // Add more data to this type if needed
@@ -81,6 +80,7 @@ func Setup(port string) *fiber.App {
 
 	// ------- DATABASE CONNECT ------
 	database.DBConnect()
+	database.GoDBConnect()
 	log.Println("🏃 Running on: ", os.Getenv("env"))
 
 	// -------- NATS Connect -------
@@ -216,24 +216,8 @@ func Setup(port string) *fiber.App {
 
 	log.Println("🌍 Visit dashboard at:", "http://localhost:"+port+"/webapp/")
 
-	type workerResponse struct {
-		Response  string
-		MainAppID string
-	}
 	/* Worker Load Subscriptions activate */
-	messageq.NATS.Subscribe("workerload", func(m *nats.Msg) {
-		// sendjson, _ := json.Marshal(`{"response":"ok"}`)
-		send := workerResponse{
-			Response:  "ok",
-			MainAppID: MainAppID,
-		}
-		messageq.NATSencoded.Publish(m.Reply, send)
-		if os.Getenv("messagedebug") == "true" {
-			log.Println(string(m.Data))
-		}
-	})
-
-	/* Ping any active workers while starting up */
+	worker.LoadWorkers(MainAppID)
 
 	// log.Println("Subscribe", hello, err)
 
