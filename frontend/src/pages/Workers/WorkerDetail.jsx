@@ -43,7 +43,10 @@ export default function WorkerDetail() {
 
     // Polling on websocket
     useEffect(() => {
-        socketResponse.T && setData([socketResponse]);
+        // Keep workers that are incoming response
+        let keep = data.filter((a) => a.WorkerID !== socketResponse.WorkerID);
+
+        socketResponse.T && setData([...keep, socketResponse].sort(sortObjectByName));
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [socketResponse.T]);
@@ -269,3 +272,14 @@ const useGetWorkers_ = (environmentName, setData, workerId) => {
         }
     };
 };
+
+// -------- Utility function
+function sortObjectByName(a, b) {
+    if (a.WorkerID < b.WorkerID) {
+        return -1;
+    }
+    if (a.WorkerID > b.WorkerID) {
+        return 1;
+    }
+    return 0;
+}
