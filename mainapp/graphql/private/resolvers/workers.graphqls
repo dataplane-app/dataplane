@@ -23,6 +23,12 @@ type WorkerGroup {
 	WorkerType:  String!
 }
 
+type SecretWorkerGroups {
+	SecretID:      String!
+	WorkerGroupID: String!
+	Active:        Boolean!
+}
+
 extend type Query {
   """
 	Get workers.
@@ -38,4 +44,29 @@ extend type Query {
 	+ **Security**: Based on environment selected
 	"""
   getWorkerGroups(environmentName: String!): [WorkerGroup]
+  """
+	Get a secret's worker groups.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_secrets
+	+ **Security**: Based on environment selected
+	"""
+  getSecretGroups(environmentName: String!, Secret: String!): [SecretWorkerGroups]
+}
+
+extend type Mutation {
+  """
+	Add secret to a worker group.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_secrets
+	+ **Security**: Based on environment selected
+	"""
+  addSecretToWorkerGroup(environmentName: String!, WorkerGroup: String!, Secret: String!): String
+
+  """
+	Remove secret from worker group.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_secrets
+	+ **Security**: Based on environment selected
+	"""
+  deleteSecretFromWorkerGroup(environmentName: String!, WorkerGroup: String!, Secret: String!): String
 }
