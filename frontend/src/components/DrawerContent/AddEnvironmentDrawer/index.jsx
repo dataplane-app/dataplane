@@ -4,6 +4,7 @@ import { Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useForm } from 'react-hook-form';
 import { useAddEnvironment } from '../../../graphql/addEnvironment';
+import { useGlobalEnvironmentsState } from '../../EnviromentDropdown';
 
 const AddEnvironmentDrawer = ({ handleClose, refreshData }) => {
     // Hooks
@@ -11,6 +12,9 @@ const AddEnvironmentDrawer = ({ handleClose, refreshData }) => {
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const { register, handleSubmit } = useForm();
+
+    // Environment global state
+    const Environment = useGlobalEnvironmentsState();
 
     async function onSubmit(data) {
         const allData = {
@@ -22,6 +26,7 @@ const AddEnvironmentDrawer = ({ handleClose, refreshData }) => {
 
         let response = await addEnvironment(allData);
         if (response && response.name) {
+            Environment.set([...Environment.get(), response]);
             handleClose();
             closeSnackbar();
             refreshData();

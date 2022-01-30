@@ -5,6 +5,8 @@ import { useSnackbar } from 'notistack';
 import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useUpdateDeleteEnvironment } from '../../../graphql/updateDeleteEnvironment';
+import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../EnviromentDropdown';
+import { Downgraded } from '@hookstate/core';
 
 const DeleteEnvironmentDrawer = ({ environment, handleClose }) => {
     const { closeSnackbar } = useSnackbar();
@@ -58,10 +60,21 @@ const useDelete = (environment_id) => {
     // GraphQL hook
     const updateDeleteEnvironment = useUpdateDeleteEnvironment();
 
+    // Environment global state
+    const AllEnvironments = useGlobalEnvironmentsState();
+
+    // Selected environment global state
+    const SelectedEnvironment = useGlobalEnvironmentState();
+
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // React router
     const history = useHistory();
+
+    // Check if user is trying to delete a environment that is current selected
+    if (SelectedEnvironment.id.get() === environment_id) {
+        return () => enqueueSnackbar("You can't delete a selected environment.", { variant: 'error' });
+    }
 
     return async function () {
         let response = await updateDeleteEnvironment({ environment_id });
@@ -75,6 +88,10 @@ const useDelete = (environment_id) => {
             closeSnackbar();
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
+            const newEnvList = AllEnvironments.attach(Downgraded)
+                .get()
+                .filter((env) => env.id !== environment_id);
+            AllEnvironments.set(newEnvList);
             closeSnackbar();
             enqueueSnackbar(`Success`, { variant: 'success' });
             history.push('/settings');
