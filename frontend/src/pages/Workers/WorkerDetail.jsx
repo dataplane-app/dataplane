@@ -7,76 +7,52 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDocker } from '@fortawesome/free-brands-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { formatDate } from '../../utils/formatDate';
-// import { useSnackbar } from 'notistack';
+import { useSnackbar } from 'notistack';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
+import { useGetWorkers } from '../../graphql/getWorkers';
 import WorkerDetailCPU from './WorkerDetailCPU';
 import WorkerDetailMemory from './WorkerDetailMemory';
 import useWebSocket from './useWebSocket';
+import { useParams } from 'react-router-dom';
+import { balancerDict } from './Workers';
 
 const tableWidth = '1140px';
 
 export default function WorkerDetail() {
-    // const { enqueueSnackbar } = useSnackbar();
+    // URI parameter
+    const { workerId } = useParams();
 
     // Instantiate websocket connection
-    const socketResponse = useWebSocket();
+    const socketResponse = useWebSocket(workerId);
 
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
 
     // Users state
-    const [data, setData] = useState([
-        {
-            WorkerGroup: 'python_1',
-            WorkerID: 'a23426eb-de00-44b5-ac0d-3ff496e5b76b',
-            Status: 'Online',
-            // T: '2022-01-26T09:58:49.039100836Z',
-            Interval: 1,
-            CPUPerc: 6.42,
-            Load: 0.37,
-            MemoryPerc: 35.14,
-            MemoryUsed: 11826483200,
-            worker: {
-                // id: '36474-6768-6768-67859',
-                // name: 'Python 1',
-                description: 'Python workers for generic work loads.',
-                // status: 'Online',
-                type: 'Docker',
-                // lastUpdate: '2022-01-20T11:56:08Z',
-                queue: 2,
-                running: 2,
-                succeeded: 2,
-                failed: 2,
-            },
-        },
-    ]);
+    const [data, setData] = useState([]);
 
-    // Get workers on load
-    // const getUsers = useGetUsers();
+    // Custom hook
+    const getWorkers = useGetWorkers_(Environment.name.get(), setData, workerId);
 
-    // Get users
-    // const retrieveUsers = async () => {
-    //     let users = await getUsers();
-    //     !users.errors ? setData(users) : enqueueSnackbar('Unable to retrieve users', { variant: 'error' });
-    // };
+    // Get workers on load and environment change
+    useEffect(() => {
+        getWorkers();
 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [Environment.name.get()]);
+
+    // Polling on websocket
     useEffect(() => {
         socketResponse.T && setData([socketResponse]);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [socketResponse.T]);
 
     const columns = useMemo(
         () => [
             {
                 Header: 'Worker',
-                accessor: (row) => [
-                    row.WorkerID,
-                    row.Status,
-                    formatDate(row.T),
-                    // row.worker.queue,
-                    // row.worker.running,
-                    // row.worker.succeeded,
-                    // row.worker.failed,
-                ],
+                accessor: (row) => [row.WorkerID, row.Status, formatDate(row.T)],
                 Cell: (row) => <CustomWorker row={row} />,
             },
             {
@@ -90,7 +66,7 @@ export default function WorkerDetail() {
                 Cell: (row) => <WorkerDetailMemory row={row} />,
             },
         ],
-        [data.CPUPerc, data.Load]
+        []
     );
 
     // Use the state and functions returned from useTable to build your UI
@@ -143,7 +119,7 @@ export default function WorkerDetail() {
                             <Box display="flex" ml={4} alignItems="center">
                                 <FontAwesomeIcon icon={faDocker} style={{ marginRight: 4 }} />
                                 <Typography variant="subtitle1" style={{ display: 'inline' }}>
-                                    Docker
+                                    {socketResponse.WorkerType}
                                 </Typography>
                             </Box>
 
@@ -152,7 +128,7 @@ export default function WorkerDetail() {
                                     Load balancer:
                                 </Typography>
                                 <Typography variant="subtitle1" align="left" sx={{ lineHeight: 1, marginLeft: 1 }}>
-                                    Round robin
+                                    {balancerDict[socketResponse.LB]}
                                 </Typography>
                             </Box>
                         </Grid>
@@ -202,23 +178,6 @@ export default function WorkerDetail() {
             </Box>
 
             <Box component="table" mt={2} sx={{ width: tableWidth }} {...getTableProps()}>
-                {/* <thead>
-                    {headerGroups.map((headerGroup) => (
-                        <Box
-                            component="tr"
-                            display="grid"
-                            sx={{ '*:first-of-type': { ml: '22px' }, '*:last-child': { textAlign: 'center' } }}
-                            gridTemplateColumns="repeat(3, 1fr)"
-                            justifyContent="flex-start"
-                            {...headerGroup.getHeaderGroupProps()}>
-                            {headerGroup.headers.map((column) => (
-                                <Box component="td" color="text.primary" fontWeight="600" fontSize="15px" textAlign="left" {...column.getHeaderProps()}>
-                                    {column.render('Header')}
-                                </Box>
-                            ))}
-                        </Box>
-                    ))}
-                </thead> */}
                 <Box component="tbody" display="flex" sx={{ flexDirection: 'column' }} {...getTableBodyProps()}>
                     {rows.map((row, i) => {
                         prepareRow(row);
@@ -288,71 +247,25 @@ const CustomWorker = ({ row }) => {
     );
 };
 
-// const CustomMemory = ({ row }) => {
-//     const [percentage, mb] = row.value;
+// ------- Custom Hooks
+const useGetWorkers_ = (environmentName, setData, workerId) => {
+    // GraphQL hook
+    const getWorkers = useGetWorkers();
 
-//     return (
-//         <Grid container direction="column" alignItems="flex-start" flexDirection="row" pr={1}>
-//             <Grid item>
-//                 <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
-//                     {percentage}%
-//                 </Typography>
-//                 <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
-//                     {mb}MB
-//                 </Typography>
-//                 <Typography variant="body1" align="right" sx={{ fontSize: '1.0625rem' }}>
-//                     Memory
-//                 </Typography>
-//             </Grid>
-//             <img src={graph2} alt="" width="250px" style={{ marginLeft: '5px' }} />
-//         </Grid>
-//     );
-// };
+    const { enqueueSnackbar } = useSnackbar();
 
-const dummyData = [
-    {
-        WorkerGroup: 'python_1',
-        WorkerID: 'a23426eb-de00-44b5-ac0d-3ff496e5b76b',
-        Status: 'Online',
-        T: '2022-01-26T09:58:49.039100836Z',
-        Interval: 1,
-        CPUPerc: 6.42,
-        Load: 0.37,
-        MemoryPerc: 35.14,
-        MemoryUsed: 11826483200,
-        worker: {
-            // id: '36474-6768-6768-67859',
-            // name: 'Python 1',
-            description: 'Python workers for generic work loads.',
-            // status: 'Online',
-            type: 'Docker',
-            // lastUpdate: '2022-01-20T11:56:08Z',
-            queue: 2,
-            running: 2,
-            succeeded: 2,
-            failed: 2,
-        },
-        // cpu: {
-        //     percentage: 10,
-        //     load: 0.27,
-        // },
-        memory: {
-            percentage: 10,
-            mb: 200,
-        },
-    },
-];
+    // Get workers
+    return async () => {
+        const response = await getWorkers({ environmentName });
 
-const dummyDataReal = [
-    {
-        WorkerGroup: 'python_1',
-        WorkerID: 'a23426eb-de00-44b5-ac0d-3ff496e5b76b',
-        Status: 'Online',
-        T: '2022-01-26T09:58:49.039100836Z',
-        Interval: 1,
-        CPUPerc: 6.42,
-        Load: 0.37,
-        MemoryPerc: 35.14,
-        MemoryUsed: 11826483200,
-    },
-];
+        if (response === null) {
+            setData([]);
+        } else if (response.r === 'error') {
+            enqueueSnackbar("Can't get workers: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get workers failed', { variant: 'error' }));
+        } else {
+            setData(response.filter((a) => a.WorkerGroup === workerId));
+        }
+    };
+};

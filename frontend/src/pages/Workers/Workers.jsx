@@ -55,7 +55,7 @@ export default function Workers() {
             {
                 Header: 'Member',
                 accessor: (row) => [properCase(row.WorkerGroup), properCase(row.WorkerType)],
-                Cell: (row) => <CustomWorker row={row} onClick={() => history.push(`/workers/${row.row.original.id}`)} setIsOpenSecrets={setIsOpenSecrets} />,
+                Cell: (row) => <CustomWorker row={row} onClick={() => history.push(`/workers/${row.row.original.WorkerGroup}`)} setIsOpenSecrets={setIsOpenSecrets} />,
             },
             {
                 Header: 'Status',
@@ -236,6 +236,6 @@ function properCase(text) {
     return (text[0].toUpperCase() + text.slice(1)).replace('_', ' ');
 }
 
-const balancerDict = {
+export const balancerDict = {
     roundrobin: 'Round robin',
 };

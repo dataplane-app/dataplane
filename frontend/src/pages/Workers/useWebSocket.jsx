@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function useWebSocket() {
+export default function useWebSocket(workerId) {
     const [socketResponse, setSocketResponse] = useState([]);
     const ws = useRef(null);
 
     useEffect(() => {
-        ws.current = new WebSocket('ws://localhost:9000/ws/workerstats/python_1');
+        ws.current = new WebSocket(`ws://localhost:9000/ws/workerstats/${workerId}`);
         ws.current.onopen = () => console.log('ws opened');
         ws.current.onclose = () => console.log('ws closed');
 
@@ -16,7 +16,7 @@ export default function useWebSocket() {
         return () => {
             ws.current.close();
         };
-    }, []);
+    }, [workerId]);
 
     return socketResponse;
 }
