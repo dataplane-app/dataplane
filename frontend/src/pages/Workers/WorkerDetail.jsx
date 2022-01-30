@@ -43,7 +43,7 @@ export default function WorkerDetail() {
 
     // Polling on websocket
     useEffect(() => {
-        // Keep workers that are incoming response
+        // Keep workers that aren't same as incoming response
         let keep = data.filter((a) => a.WorkerID !== socketResponse.WorkerID);
 
         socketResponse.T && setData([...keep, socketResponse].sort(sortObjectByName));

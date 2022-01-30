@@ -18,5 +18,10 @@ export default function useWebSocket(workerId) {
         };
     }, [workerId]);
 
-    return socketResponse;
+    // Make sure socket response is matching the worked id requested.
+    if (socketResponse.WorkerGroup === workerId) {
+        return socketResponse;
+    } else {
+        return [];
+    }
 }
