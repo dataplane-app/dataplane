@@ -1,9 +1,21 @@
 import { MenuItem } from '@mui/material';
+import { useHistory } from 'react-router-dom';
 
 const PipelineItemTable = (props) => {
+    // React router
+    const history = useHistory();
+
+    //Props
+    const { handleCloseMenu, handleOpenYaml, id } = props;
+
     const yamlClick = () => {
-        props.handleCloseMenu();
-        props.handleOpenYaml();
+        handleCloseMenu();
+        handleOpenYaml();
+    };
+
+    const permissionClick = () => {
+        handleCloseMenu();
+        history.push(`/pipelines/permissions/${id}`);
     };
 
     return (
@@ -14,7 +26,7 @@ const PipelineItemTable = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
                 Turn off
             </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={permissionClick}>
                 Permissions
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>

@@ -4,14 +4,25 @@ import CustomChip from '../components/CustomChip';
 import PipelineTable from '../components/TableContent/PipelineTable';
 import MoreInfoMenu from '../components/MoreInfoMenu';
 import PipelinePageItem from '../components/MoreInfoContent/PipelinePageItem';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 const Pipelines = () => {
+    // Global user states with hookstate
+    const Environment = useGlobalEnvironmentState();
+
     return (
         <Box className="page">
             <Grid container alignItems="center" justifyContent="space-between">
-                <Typography component="h2" variant="h2" color="text.primary">
-                    Pipelines
-                </Typography>
+                <Box>
+                    <Typography component="h2" variant="h2" color="text.primary">
+                        Pipelines
+                    </Typography>
+
+                    <Typography variant="subtitle2" mt=".20rem">
+                        Environment: {Environment.name.get()}
+                    </Typography>
+                </Box>
+
                 <MoreInfoMenu>
                     <PipelinePageItem handleRefresh={() => {}} />
                 </MoreInfoMenu>

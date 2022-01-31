@@ -53,3 +53,21 @@ code {
 .SnackbarContainer-top {
     top: 90px !important;
 }
+
+.react-flow__node-output {
+    border-color: #0073c6 !important;
+    border-width: 3px !important;
+}
+
+.react-flow__node-input {
+    border-color: #c4c4c4 !important;
+    border-width: 3px !important;
+}
+
+.react-flow__node-input.selected {
+    border-color: #76a853 !important;
+}
+
+.react-flow__node-output.selected {
+    border-color: #0073c6 !important;
+}

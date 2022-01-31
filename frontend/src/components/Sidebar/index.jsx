@@ -19,7 +19,7 @@ const Sidebar = () => {
         <Grid container height="100%">
             <Box flex={2}>
                 <List sx={{ mt: 4, mb: 2, mr: 2, p: 0 }}>
-                    {MENU_ITEMS_TOP.map((menu) => (
+                    {MENU_ITEMS_TOP.map((menu, idx) => (
                         <ListItem
                             disableRipple
                             disableTouchRipple
@@ -29,7 +29,7 @@ const Sidebar = () => {
                             mb={1}
                             sx={{ '&:hover': { backgroundColor: 'transparent' }, '& .MuiTouchRipple-root': { borderRadius: '42px' } }}
                             position="relative"
-                            onClick={() => history.push(`/${menu.url}`)}
+                            onClick={() => history.push(`/${idx === 0 ? '' : menu.url}`)}
                             className={`${checkActivePage(location.pathname, `/${menu.url}`)}`}>
                             <ListItemIcon sx={{ minWidth: '43px', color: 'cyan.main' }}>{menu.icon}</ListItemIcon>
                             <ListItemText primary={menu.name} />
@@ -69,7 +69,7 @@ const MENU_ITEMS_TOP = [
         id: 1,
         name: 'Pipelines',
         icon: <FontAwesomeIcon className="menu-icons" icon={faCodeBranch} />,
-        url: '',
+        url: 'pipelines',
     },
     {
         id: 2,

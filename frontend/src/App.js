@@ -25,6 +25,8 @@ import Settings from './pages/Settings';
 import TeamDetail from './pages/TeamDetail';
 import TeamGroup from './pages/TeamGroup';
 import Teams from './pages/Teams';
+import RemoveLogs from './pages/RemoveLogs';
+import PipelinesPermission from './pages/PipelinesPermission';
 import createCustomTheme from './theme';
 
 export const ColorModeContext = React.createContext({
@@ -118,6 +120,8 @@ function App() {
                                             '/secrets/:secretId',
                                             '/addsecret',
                                             '/notfound',
+                                            '/pipelines/remove_logs/:pipelineId',
+                                            '/pipelines/permissions/:pipelineId',
                                         ]}>
                                         <Switch>
                                             <Layout>
@@ -153,6 +157,12 @@ function App() {
                                                 </Route>
                                                 <Route exact path="/addsecret">
                                                     <AddSecret />
+                                                </Route>
+                                                <Route exact path="/pipelines/remove_logs/:pipelineId">
+                                                    <RemoveLogs />
+                                                </Route>
+                                                <Route exact path="/pipelines/permissions/:pipelineId">
+                                                    <PipelinesPermission />
                                                 </Route>
                                                 <Route exact path="/notfound">
                                                     <NotFound />

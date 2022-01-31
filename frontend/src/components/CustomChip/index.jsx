@@ -6,6 +6,7 @@ const CustomChip = ({ customColor = 'red', amount, margin = 0, ...props }) => {
         green: 'success.main',
         red: 'error.main',
         purple: 'purple.main',
+        blue: 'primary.main',
     };
 
     const AMOUNT_COLOR_LIGHT = {
@@ -13,6 +14,7 @@ const CustomChip = ({ customColor = 'red', amount, margin = 0, ...props }) => {
         green: 'success.light',
         red: 'redLight.main',
         purple: 'purpleLight.main',
+        blue: 'primary.light',
     };
 
     return amount ? (
