@@ -115,6 +115,7 @@ func Setup(port string) *fiber.App {
 
 	// Start the scheduler
 	// scheduler.SchedulerStart()
+	go worker.RunHub()
 
 	//recover from panic
 	app.Use(recover.New())
@@ -201,7 +202,7 @@ func Setup(port string) *fiber.App {
 
 	app.Get("/ws/workerstats/:workergroup", websocket.New(func(c *websocket.Conn) {
 
-		log.Println(c.Params("workergroup"))
+		// log.Println(c.Params("workergroup"))
 		worker.WorkerStatsWs(c, "workerstats."+c.Params("workergroup"))
 	}))
 
