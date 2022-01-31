@@ -65,7 +65,7 @@ export default function WorkerDetail() {
             },
             {
                 Header: 'Memory',
-                accessor: (row) => [row.MemoryPerc, (row.MemoryUsed / 1000000).toFixed(), row.T],
+                accessor: (row) => [row.MemoryPerc, formatMemory(row.MemoryUsed), row.T],
                 Cell: (row) => <WorkerDetailMemory row={row} />,
             },
         ],
@@ -282,4 +282,17 @@ function sortObjectByName(a, b) {
         return 1;
     }
     return 0;
+}
+
+/**
+ * @example 8821968896 => 8.8GB
+ *          882196889  => 882MB
+ */
+function formatMemory(memory) {
+    const GB = 1000000000;
+    if (memory < GB) {
+        return (memory / 1000000).toFixed() + 'MB';
+    } else {
+        return (memory / 1000000000).toFixed(1) + 'GB';
+    }
 }
