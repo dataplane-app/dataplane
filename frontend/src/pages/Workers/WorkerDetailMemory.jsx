@@ -77,7 +77,7 @@ export default function WorkerDetailMemory({ row }) {
                     {percentage}%
                 </Typography>
                 <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
-                    {mb}MB
+                    {mb}
                 </Typography>
                 <Typography variant="body1" align="right" sx={{ fontSize: '1.0625rem' }}>
                     Memory
