@@ -16,17 +16,11 @@ import (
 For individual tests - in separate window run: go run server.go
 go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/permissions
 * Login
-* Create access group
-* Update access group
-* Attach permission to access group
-* Attach user to access group
-* Get access group's users
-* Get user access groups
-* Get access groups
-* Get access group
-* Remove user from access group
-* Deactivate Access Group
-* Delete Access Group
+* Get worker groups
+* Get workers
+* Add secret to worker group
+* Get secret's worker groups
+* Delete secret from worker group
 */
 func TestAccessGroups(t *testing.T) {
 
@@ -88,7 +82,7 @@ func TestAccessGroups(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Worker groups 200 status code")
 
-	// -------- Get User's Access Groups  -------------
+	// -------- Get Workers  -------------
 
 	query = `query {
 		getWorkers(
@@ -119,5 +113,69 @@ func TestAccessGroups(t *testing.T) {
 	}
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get workers 200 status code")
+
+	// -------- Add secret to worker group  -------------
+
+	mutation := `mutation {
+			addSecretToWorkerGroup(
+				environmentName: "Development",
+				WorkerGroup: "Test",
+				Secret: "Test_Secret"
+			)
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add secret to worker group 200 status code")
+
+	// -------- Get secret's worker groups -------------
+
+	query = `query {
+			getSecretGroups(
+					environmentName: "Development",
+					Secret: "Test_Secret"
+					)
+				{
+					SecretID
+					WorkerGroupID
+					Active
+				 }
+			}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Secret's worker groups 200 status code")
+
+	// -------- De;ete secret from worker group  -------------
+
+	mutation = `mutation {
+			deleteSecretFromWorkerGroup(
+				environmentName: "Development",
+				WorkerGroup: "Test",
+				Secret: "Test_Secret"
+			)
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete secret from worker group 200 status code")
 
 }

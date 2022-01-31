@@ -69,6 +69,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		ActivateAccessGroup           func(childComplexity int, accessGroupID string, environmentID string) int
 		AddEnvironment                func(childComplexity int, input *AddEnvironmentInput) int
+		AddSecretToWorkerGroup        func(childComplexity int, environmentName string, workerGroup string, secret string) int
 		AddUserToEnvironment          func(childComplexity int, userID string, environmentID string) int
 		CreateAccessGroup             func(childComplexity int, environmentID string, name string, description *string) int
 		CreateSecret                  func(childComplexity int, input *AddSecretsInput) int
@@ -76,6 +77,7 @@ type ComplexityRoot struct {
 		DeactivateAccessGroup         func(childComplexity int, accessGroupID string, environmentID string) int
 		DeleteAccessGroup             func(childComplexity int, accessGroupID string, environmentID string) int
 		DeletePermissionToUser        func(childComplexity int, userID string, permissionID string, environmentID string) int
+		DeleteSecretFromWorkerGroup   func(childComplexity int, environmentName string, workerGroup string, secret string) int
 		RemoveUserFromAccessGroup     func(childComplexity int, userID string, accessGroupID string, environmentID string) int
 		RemoveUserFromEnvironment     func(childComplexity int, userID string, environmentID string) int
 		UpdateAccessGroup             func(childComplexity int, input *AccessGroupsInput) int
@@ -160,6 +162,7 @@ type ComplexityRoot struct {
 		GetPipelines         func(childComplexity int) int
 		GetPlatform          func(childComplexity int) int
 		GetSecret            func(childComplexity int, secret string, environmentID string) int
+		GetSecretGroups      func(childComplexity int, environmentName string, secret string) int
 		GetSecrets           func(childComplexity int, environmentID string) int
 		GetUser              func(childComplexity int, userID string) int
 		GetUserAccessGroups  func(childComplexity int, userID string, environmentID string) int
@@ -171,6 +174,12 @@ type ComplexityRoot struct {
 		Me                   func(childComplexity int) int
 		MyPermissions        func(childComplexity int) int
 		UserPermissions      func(childComplexity int, userID string, environmentID string) int
+	}
+
+	SecretWorkerGroups struct {
+		Active        func(childComplexity int) int
+		SecretID      func(childComplexity int) int
+		WorkerGroupID func(childComplexity int) int
 	}
 
 	Secrets struct {
@@ -252,6 +261,8 @@ type MutationResolver interface {
 	UpdateDeactivateUser(ctx context.Context, userid string) (*string, error)
 	UpdateActivateUser(ctx context.Context, userid string) (*string, error)
 	UpdateDeleteUser(ctx context.Context, userid string) (*string, error)
+	AddSecretToWorkerGroup(ctx context.Context, environmentName string, workerGroup string, secret string) (*string, error)
+	DeleteSecretFromWorkerGroup(ctx context.Context, environmentName string, workerGroup string, secret string) (*string, error)
 }
 type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*models.Environment, error)
@@ -276,6 +287,7 @@ type QueryResolver interface {
 	GetUsers(ctx context.Context) ([]*models.Users, error)
 	GetWorkers(ctx context.Context, environmentName string) ([]*Workers, error)
 	GetWorkerGroups(ctx context.Context, environmentName string) ([]*WorkerGroup, error)
+	GetSecretGroups(ctx context.Context, environmentName string, secret string) ([]*models.WorkerSecrets, error)
 }
 
 type executableSchema struct {
@@ -415,6 +427,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddEnvironment(childComplexity, args["input"].(*AddEnvironmentInput)), true
 
+	case "Mutation.addSecretToWorkerGroup":
+		if e.complexity.Mutation.AddSecretToWorkerGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addSecretToWorkerGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddSecretToWorkerGroup(childComplexity, args["environmentName"].(string), args["WorkerGroup"].(string), args["Secret"].(string)), true
+
 	case "Mutation.addUserToEnvironment":
 		if e.complexity.Mutation.AddUserToEnvironment == nil {
 			break
@@ -498,6 +522,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeletePermissionToUser(childComplexity, args["user_id"].(string), args["permission_id"].(string), args["environmentID"].(string)), true
+
+	case "Mutation.deleteSecretFromWorkerGroup":
+		if e.complexity.Mutation.DeleteSecretFromWorkerGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSecretFromWorkerGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSecretFromWorkerGroup(childComplexity, args["environmentName"].(string), args["WorkerGroup"].(string), args["Secret"].(string)), true
 
 	case "Mutation.removeUserFromAccessGroup":
 		if e.complexity.Mutation.RemoveUserFromAccessGroup == nil {
@@ -1085,6 +1121,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetSecret(childComplexity, args["secret"].(string), args["environmentId"].(string)), true
 
+	case "Query.getSecretGroups":
+		if e.complexity.Query.GetSecretGroups == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getSecretGroups_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetSecretGroups(childComplexity, args["environmentName"].(string), args["Secret"].(string)), true
+
 	case "Query.getSecrets":
 		if e.complexity.Query.GetSecrets == nil {
 			break
@@ -1196,6 +1244,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.UserPermissions(childComplexity, args["userID"].(string), args["environmentID"].(string)), true
+
+	case "SecretWorkerGroups.Active":
+		if e.complexity.SecretWorkerGroups.Active == nil {
+			break
+		}
+
+		return e.complexity.SecretWorkerGroups.Active(childComplexity), true
+
+	case "SecretWorkerGroups.SecretID":
+		if e.complexity.SecretWorkerGroups.SecretID == nil {
+			break
+		}
+
+		return e.complexity.SecretWorkerGroups.SecretID(childComplexity), true
+
+	case "SecretWorkerGroups.WorkerGroupID":
+		if e.complexity.SecretWorkerGroups.WorkerGroupID == nil {
+			break
+		}
+
+		return e.complexity.SecretWorkerGroups.WorkerGroupID(childComplexity), true
 
 	case "Secrets.Active":
 		if e.complexity.Secrets.Active == nil {
@@ -2065,6 +2134,12 @@ type WorkerGroup {
 	WorkerType:  String!
 }
 
+type SecretWorkerGroups {
+	SecretID:      String!
+	WorkerGroupID: String!
+	Active:        Boolean!
+}
+
 extend type Query {
   """
 	Get workers.
@@ -2080,6 +2155,31 @@ extend type Query {
 	+ **Security**: Based on environment selected
 	"""
   getWorkerGroups(environmentName: String!): [WorkerGroup]
+  """
+	Get a secret's worker groups.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_secrets
+	+ **Security**: Based on environment selected
+	"""
+  getSecretGroups(environmentName: String!, Secret: String!): [SecretWorkerGroups]
+}
+
+extend type Mutation {
+  """
+	Add secret to a worker group.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_secrets
+	+ **Security**: Based on environment selected
+	"""
+  addSecretToWorkerGroup(environmentName: String!, WorkerGroup: String!, Secret: String!): String
+
+  """
+	Remove secret from worker group.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_secrets
+	+ **Security**: Based on environment selected
+	"""
+  deleteSecretFromWorkerGroup(environmentName: String!, WorkerGroup: String!, Secret: String!): String
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -2124,6 +2224,39 @@ func (ec *executionContext) field_Mutation_addEnvironment_args(ctx context.Conte
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_addSecretToWorkerGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentName"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentName"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["WorkerGroup"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("WorkerGroup"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["WorkerGroup"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["Secret"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Secret"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["Secret"] = arg2
 	return args, nil
 }
 
@@ -2292,6 +2425,39 @@ func (ec *executionContext) field_Mutation_deletePermissionToUser_args(ctx conte
 		}
 	}
 	args["environmentID"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSecretFromWorkerGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentName"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentName"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["WorkerGroup"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("WorkerGroup"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["WorkerGroup"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["Secret"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Secret"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["Secret"] = arg2
 	return args, nil
 }
 
@@ -2907,6 +3073,30 @@ func (ec *executionContext) field_Query_getOnePreference_args(ctx context.Contex
 		}
 	}
 	args["preference"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getSecretGroups_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentName"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentName"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["Secret"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Secret"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["Secret"] = arg1
 	return args, nil
 }
 
@@ -4824,6 +5014,84 @@ func (ec *executionContext) _Mutation_updateDeleteUser(ctx context.Context, fiel
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_addSecretToWorkerGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_addSecretToWorkerGroup_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddSecretToWorkerGroup(rctx, args["environmentName"].(string), args["WorkerGroup"].(string), args["Secret"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteSecretFromWorkerGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteSecretFromWorkerGroup_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteSecretFromWorkerGroup(rctx, args["environmentName"].(string), args["WorkerGroup"].(string), args["Secret"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Permissions_ID(ctx context.Context, field graphql.CollectedField, obj *models.Permissions) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6676,6 +6944,45 @@ func (ec *executionContext) _Query_getWorkerGroups(ctx context.Context, field gr
 	return ec.marshalOWorkerGroup2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐWorkerGroup(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_getSecretGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getSecretGroups_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetSecretGroups(rctx, args["environmentName"].(string), args["Secret"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.WorkerSecrets)
+	fc.Result = res
+	return ec.marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6745,6 +7052,111 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	res := resTmp.(*introspection.Schema)
 	fc.Result = res
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SecretWorkerGroups_SecretID(ctx context.Context, field graphql.CollectedField, obj *models.WorkerSecrets) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SecretWorkerGroups",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SecretID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SecretWorkerGroups_WorkerGroupID(ctx context.Context, field graphql.CollectedField, obj *models.WorkerSecrets) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SecretWorkerGroups",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkerGroupID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SecretWorkerGroups_Active(ctx context.Context, field graphql.CollectedField, obj *models.WorkerSecrets) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SecretWorkerGroups",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Secrets_Secret(ctx context.Context, field graphql.CollectedField, obj *models.Secrets) (ret graphql.Marshaler) {
@@ -9812,6 +10224,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_updateActivateUser(ctx, field)
 		case "updateDeleteUser":
 			out.Values[i] = ec._Mutation_updateDeleteUser(ctx, field)
+		case "addSecretToWorkerGroup":
+			out.Values[i] = ec._Mutation_addSecretToWorkerGroup(ctx, field)
+		case "deleteSecretFromWorkerGroup":
+			out.Values[i] = ec._Mutation_deleteSecretFromWorkerGroup(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10362,10 +10778,58 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_getWorkerGroups(ctx, field)
 				return res
 			})
+		case "getSecretGroups":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getSecretGroups(ctx, field)
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
 			out.Values[i] = ec._Query___schema(ctx, field)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var secretWorkerGroupsImplementors = []string{"SecretWorkerGroups"}
+
+func (ec *executionContext) _SecretWorkerGroups(ctx context.Context, sel ast.SelectionSet, obj *models.WorkerSecrets) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, secretWorkerGroupsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SecretWorkerGroups")
+		case "SecretID":
+			out.Values[i] = ec._SecretWorkerGroups_SecretID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "WorkerGroupID":
+			out.Values[i] = ec._SecretWorkerGroups_WorkerGroupID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Active":
+			out.Values[i] = ec._SecretWorkerGroups_Active(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11653,6 +12117,54 @@ func (ec *executionContext) marshalOPreferences2ᚖdataplaneᚋgraphqlᚋprivate
 		return graphql.Null
 	}
 	return ec._Preferences(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx context.Context, sel ast.SelectionSet, v []*models.WorkerSecrets) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOSecretWorkerGroups2ᚖdataplaneᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOSecretWorkerGroups2ᚖdataplaneᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx context.Context, sel ast.SelectionSet, v *models.WorkerSecrets) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._SecretWorkerGroups(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOSecrets2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐSecrets(ctx context.Context, sel ast.SelectionSet, v []*models.Secrets) graphql.Marshaler {

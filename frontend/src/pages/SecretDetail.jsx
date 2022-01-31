@@ -1,27 +1,39 @@
-import { Box, Button, Drawer, Grid, TextField, Typography } from '@mui/material';
+import { Box, Button, Drawer, Grid, TextField, Typography, Autocomplete } from '@mui/material';
 import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
 import { useGetSecret } from '../graphql/getSecret';
 import { useUpdateSecret } from '../graphql/updateSecret';
+import { useAddSecretToWorkerGroup } from '../graphql/addSecretToWorkerGroup';
+import { useGetWorkerGroups } from '../graphql/getWorkerGroups';
+import { useGetSecretGroups } from '../graphql/getSecretWorkerGroups';
 import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
+import { useDeleteSecretFromWorkerGroup } from '../graphql/deleteSecretFromWorkerGroup';
 import DeleteSecretDrawer from '../components/DrawerContent/DeleteSecretDrawer';
 import ChangeSecretDrawer from '../components/DrawerContent/ChangeSecretDrawer';
+import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 
 const SecretDetail = () => {
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
 
-    // Secret State
+    // URI parameter
+    const { secretId } = useParams();
+
+    // Local State
     const [secret, setSecret] = useState(null);
+    const [workerGroup, setWorkerGroup] = useState('');
+    const [workerGroups, setWorkerGroups] = useState([]);
+    const [secretWorkerGroups, setSecretWorkerGroups] = useState([]);
 
     // Control States
     const [isOpenDeleteSecret, setIsOpenDeleteSecret] = useState(false);
     const [isOpenChangeSecret, setIsOpenChangeSecret] = useState(false);
     const [firstRender, setFirstRender] = useState(true);
+    const [clear, setClear] = useState(1);
 
     // Ref for scroll to top
     const scrollRef = useRef(null);
@@ -30,17 +42,23 @@ const SecretDetail = () => {
     const { register, handleSubmit, watch, reset } = useForm();
 
     // Custom GraphQL hooks
-    const getSecret = useGetSecret_(setSecret, Environment, reset);
+    const getSecret = useGetSecret_(secretId, setSecret, Environment, reset);
     const getUpdateSecret = useUpdateSecret_(setSecret, Environment, getSecret);
+    const getSecretWorkerGroups = useGetSecretGroups_(Environment.name.get(), secretId, setSecretWorkerGroups);
+    const addSecretToWorkerGroup = useAddSecretToWorkerGroup_(Environment.name.get(), workerGroup, secretId, getSecretWorkerGroups);
+    const getWorkerGroups = useGetWorkerGroups_(Environment.name.get(), setWorkerGroups);
+    const deleteSecretFromWorkerGroup = useDeleteSecretFromWorkerGroup_(Environment.name.get(), secretId, getSecretWorkerGroups);
 
     useEffect(() => {
         // Scroll to top on load
         scrollRef.current.parentElement.scrollIntoView();
 
-        // Get secret details on load, once the environment is available
+        // Get secret details and worker groups on load after the environment is available
         if (Environment.id.get() && firstRender) {
             getSecret();
+            getWorkerGroups();
             setFirstRender(false);
+            getSecretWorkerGroups();
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,7 +71,7 @@ const SecretDetail = () => {
                     Secrets {' > '} {secret?.Secret}
                 </Typography>
 
-                <Grid container alignItems="flex-start" mt={4}>
+                <Grid container alignItems="flex-start" gap={20} mt={4}>
                     <Box sx={{ width: '250px' }}>
                         {secret ? (
                             <form onSubmit={handleSubmit(getUpdateSecret)}>
@@ -97,15 +115,72 @@ const SecretDetail = () => {
                             Warning: this action can't be undone.
                         </Typography>
                     </Box>
+
+                    {secret?.SecretType === 'custom' ? (
+                        <Box sx={{ width: '300px' }}>
+                            <>
+                                <Typography variant="h3" mt={1} mb={3}>
+                                    Worker Groups
+                                </Typography>
+
+                                <Box sx={{ display: 'flex' }}>
+                                    <Autocomplete
+                                        disablePortal
+                                        freeSolo
+                                        fullWidth
+                                        id="combo-box-demo"
+                                        key={clear} //Changing this value on submit clears the input field
+                                        onChange={(event, newValue) => {
+                                            setWorkerGroup(newValue);
+                                        }}
+                                        onInputChange={(event, newValue) => {
+                                            setWorkerGroup(newValue);
+                                        }}
+                                        // Filter out already selected worker groups
+                                        options={workerGroups.map((a) => a.WorkerGroup).filter((a) => !secretWorkerGroups.map((a) => a.WorkerGroupID).includes(a))}
+                                        renderInput={(params) => <TextField {...params} label="Worker Group ID" size="small" sx={{ fontSize: '.75rem' }} />}
+                                    />
+
+                                    <Button
+                                        onClick={() => {
+                                            workerGroup && addSecretToWorkerGroup();
+                                            setClear(clear * -1); // Clears autocomplete input field
+                                            setWorkerGroup('');
+                                        }}
+                                        variant="contained"
+                                        size="small"
+                                        sx={{ marginLeft: '10px' }}>
+                                        Add
+                                    </Button>
+                                </Box>
+
+                                <Box mt={3}>
+                                    {secretWorkerGroups.map((env) => (
+                                        <Grid display="flex" alignItems="center" key={env.WorkerGroupID} mt={1.5} mb={1.5}>
+                                            <Box
+                                                onClick={() => deleteSecretFromWorkerGroup(env.WorkerGroupID)}
+                                                component={FontAwesomeIcon}
+                                                sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                                icon={faTrashAlt}
+                                            />
+                                            <Typography variant="subtitle2" lineHeight="15.23px">
+                                                {env.WorkerGroupID}
+                                            </Typography>
+                                        </Grid>
+                                    ))}
+                                </Box>
+                            </>
+                        </Box>
+                    ) : null}
                 </Grid>
             </Box>
 
             <Drawer anchor="right" open={isOpenDeleteSecret} onClose={() => setIsOpenDeleteSecret(!isOpenDeleteSecret)}>
-                <DeleteSecretDrawer environmentId={Environment.id.get()} secretName={secret?.Secret} handleClose={() => setIsOpenDeleteSecret(false)} />
+                <DeleteSecretDrawer environmentId={Environment.id.get()} secretName={secretId} handleClose={() => setIsOpenDeleteSecret(false)} />
             </Drawer>
 
             <Drawer anchor="right" open={isOpenChangeSecret} onClose={() => setIsOpenChangeSecret(!isOpenChangeSecret)}>
-                <ChangeSecretDrawer environmentId={Environment.id.get()} secretName={secret?.Secret} handleClose={() => setIsOpenChangeSecret(false)} />
+                <ChangeSecretDrawer environmentId={Environment.id.get()} secretName={secretId} handleClose={() => setIsOpenChangeSecret(false)} />
             </Drawer>
         </>
     );
@@ -114,18 +189,15 @@ const SecretDetail = () => {
 export default SecretDetail;
 
 // ----------- Custom Hook
-const useGetSecret_ = (setSecret, Environment, reset) => {
+const useGetSecret_ = (secret, setSecret, Environment, reset) => {
     // GraphQL hook
     const getSecrets = useGetSecret();
-
-    // URI parameter
-    const { secretId } = useParams();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get secret
     return async () => {
-        const response = await getSecrets({ environmentId: Environment.id.get(), secret: secretId });
+        const response = await getSecrets({ environmentId: Environment.id.get(), secret });
 
         if (response.r === 'error') {
             closeSnackbar();
@@ -172,6 +244,97 @@ const useUpdateSecret_ = (setSecrets, Environment, getSecret) => {
             enqueueSnackbar('Success', { variant: 'success' });
             setSecrets(response);
             getSecret();
+        }
+    };
+};
+
+const useAddSecretToWorkerGroup_ = (environmentName, WorkerGroup, Secret, getSecretWorkerGroups) => {
+    // GraphQL hook
+    const addSecretToWorkerGroup = useAddSecretToWorkerGroup();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Update secret
+    return async () => {
+        const response = await addSecretToWorkerGroup({ environmentName, WorkerGroup, Secret });
+
+        if (response.r === 'error') {
+            enqueueSnackbar("Can't update secrets: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': update secrets failed', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getSecretWorkerGroups();
+        }
+    };
+};
+
+const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
+    // GraphQL hook
+    const getAccessGroupUsers = useGetWorkerGroups();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get worker groups
+    return async () => {
+        const response = await getAccessGroupUsers({ environmentName });
+
+        if (response === null) {
+            setWorkerGroups([]);
+        } else if (response.r === 'error') {
+            enqueueSnackbar("Can't get worker groups: " + response.msg, { variant: 'error' });
+        } else if (response.r === 'Unauthorized') {
+            enqueueSnackbar('Idle: not polling', { variant: 'warning' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get worker groups failed', { variant: 'error' }));
+        } else {
+            setWorkerGroups(response);
+        }
+    };
+};
+
+const useGetSecretGroups_ = (environmentName, Secret, setSecretWorkerGroups) => {
+    // GraphQL hook
+    const getSecretGroups = useGetSecretGroups();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get worker groups
+    return async () => {
+        const response = await getSecretGroups({ environmentName, Secret });
+
+        if (response === null) {
+            setSecretWorkerGroups([]);
+        } else if (response.r === 'error') {
+            enqueueSnackbar("Can't get secret's worker groups: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ": get secret's worker groups failed", { variant: 'error' }));
+        } else {
+            setSecretWorkerGroups(response);
+        }
+    };
+};
+
+const useDeleteSecretFromWorkerGroup_ = (environmentName, Secret, getSecretWorkerGroups) => {
+    // GraphQL hook
+    const deletePermissionToUser = useDeleteSecretFromWorkerGroup();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Delete secret from worker group
+    return async (WorkerGroup) => {
+        const response = await deletePermissionToUser({ environmentName, WorkerGroup, Secret });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't remove secret from worker group: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': remove worker group', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getSecretWorkerGroups();
         }
     };
 };

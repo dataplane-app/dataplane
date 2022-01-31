@@ -29,6 +29,8 @@ models:
    model: dataplane/database/models.PermissionsAccessGUsersOutput
  Secrets:
    model: dataplane/database/models.Secrets
+ SecretWorkerGroups:
+   model: dataplane/database/models.WorkerSecrets
 
 
 resolver:

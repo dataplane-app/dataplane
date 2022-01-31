@@ -19,6 +19,8 @@ import LogoutUser from './pages/Logout';
 import MemberDetail from './pages/MemberDetail';
 import NotFound from './pages/NotFound';
 import Pipelines from './pages/Pipelines';
+import Workers from './pages/Workers/Workers';
+import WorkerDetail from './pages/Workers/WorkerDetail';
 import SecretDetail from './pages/SecretDetail';
 import Secrets from './pages/Secrets';
 import Settings from './pages/Settings';
@@ -94,9 +96,11 @@ function App() {
                                     <Route exact path="/congratulations">
                                         <Congratulations />
                                     </Route>
+
                                     <Route exact path="/get-started">
                                         <GetStarted />
                                     </Route>
+
                                     <Route exact path="/login">
                                         <LoginUser />
                                     </Route>
@@ -109,6 +113,8 @@ function App() {
                                         exact
                                         path={[
                                             '/',
+                                            '/workers',
+                                            '/workers/:workerId',
                                             '/teams',
                                             '/teams/:teamId',
                                             '/teams/access/:accessId',
@@ -127,6 +133,12 @@ function App() {
                                             <Layout>
                                                 <Route exact path="/">
                                                     <Pipelines />
+                                                </Route>
+                                                <Route exact path="/workers">
+                                                    <Workers />
+                                                </Route>
+                                                <Route exact path="/workers/:workerId">
+                                                    <WorkerDetail />
                                                 </Route>
                                                 <Route exact path="/teams">
                                                     <Teams />
