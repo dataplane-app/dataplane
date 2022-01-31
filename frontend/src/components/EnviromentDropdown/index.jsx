@@ -10,9 +10,11 @@ import { EnvironmentContext } from '../../App';
 import { createState, useState as useHookState } from '@hookstate/core';
 
 export const globalEnvironmentState = createState({ id: '', name: '' });
+export const globalEnvironmentsState = createState([]);
 
 // this is a convience hook for the golableEnvironmentState, call this hook where environment is needed
 export const useGlobalEnvironmentState = () => useHookState(globalEnvironmentState);
+export const useGlobalEnvironmentsState = () => useHookState(globalEnvironmentsState);
 
 const EnviromentDropdown = () => {
     // Context
@@ -26,6 +28,7 @@ const EnviromentDropdown = () => {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [selectedEnviroment, setSelectedEnviroment] = React.useState('');
     const [environments, setEnvironments] = React.useState([]);
+    const GlobalEnvironments = useGlobalEnvironmentsState();
 
     const open = Boolean(anchorEl);
 
@@ -46,6 +49,7 @@ const EnviromentDropdown = () => {
 
             if (active && getEnvironmentsResponse) {
                 setEnvironments(getEnvironmentsResponse);
+                GlobalEnvironments.set(getEnvironmentsResponse);
 
                 // Environment is set if user has a preference in DB
                 if (getOnePreferenceResponse.value) {
@@ -68,6 +72,29 @@ const EnviromentDropdown = () => {
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Retrieve environments on change
+    React.useEffect(() => {
+        let active = true;
+
+        console.log(GlobalEnvironmentID.get());
+        if (active && GlobalEnvironments.get().length !== environments.length) {
+            (async () => {
+                const getEnvironmentsResponse = await getEnvironments();
+
+                if (active && getEnvironmentsResponse) {
+                    setEnvironments(getEnvironmentsResponse);
+                    GlobalEnvironments.set(getEnvironmentsResponse);
+                }
+            })();
+        }
+
+        return () => {
+            active = false;
+        };
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [GlobalEnvironments.get().length]);
 
     // Set environment on select
     async function onSelectEnvironment(env) {
