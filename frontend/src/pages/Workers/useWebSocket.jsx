@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 
+const websocketEndpoint = process.env.REACT_APP_WEBSOCKET_ENDPOINT;
+
 export default function useWebSocket(workerId) {
     const [socketResponse, setSocketResponse] = useState([]);
     const reconnectOnClose = useRef(true);
@@ -11,7 +13,7 @@ export default function useWebSocket(workerId) {
 
     useEffect(() => {
         function connect() {
-            ws.current = new WebSocket(`ws://localhost:9000/ws/workerstats/${workerId}?token=${authToken.get()}`);
+            ws.current = new WebSocket(`${websocketEndpoint}/${workerId}?token=${authToken.get()}`);
 
             ws.current.onopen = () => ConsoleLogHelper('ws opened');
             ws.current.onclose = () => {
