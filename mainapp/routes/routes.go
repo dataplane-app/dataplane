@@ -201,9 +201,9 @@ func Setup(port string) *fiber.App {
 		return fiber.ErrUpgradeRequired
 	})
 
-	app.Get("/ws/workerstats/:workergroup", websocket.New(func(c *websocket.Conn) {
+	app.Get("/ws/workerstats/:workergroup", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
 
-		// log.Println(c.Params("workergroup"))
+		// log.Println(c.Query("token"))
 		worker.WorkerStatsWs(c, "workerstats."+c.Params("workergroup"))
 	}))
 

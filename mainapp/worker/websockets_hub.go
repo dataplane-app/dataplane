@@ -43,14 +43,6 @@ func RunHub() {
 				log.Println("connection registered")
 			}
 
-		// case timeout := <-Securetimeout:
-		// 	log.Println(timeout)
-		// 	if timeout == 200 {
-		// 		go func() { Securetimeout <- 0 }()
-		// 	}
-
-		// 	log.Println(timeout)
-
 		case message := <-broadcast:
 
 			if os.Getenv("messagedebug") == "true" {
@@ -59,27 +51,6 @@ func RunHub() {
 
 			// Send the message to all clients
 			for connection := range clients {
-
-				// timeoutready := <-securetimeout
-				// log.Println(timeoutready)
-				// if timeoutready > 10 {
-				// 	cm := websocket.FormatCloseMessage(websocket.CloseTryAgainLater, "reconnect")
-				// 	if err := connection.WriteMessage(websocket.CloseMessage, cm); err != nil {
-				// 		// handle error
-				// 		log.Println(err)
-				// 	}
-				// 	go func() { securetimeout <- 0 }()
-
-				// }
-				// select {
-				// case timeoutready := <-securetimeout:
-				// 	log.Println("received message", timeoutready)
-				// default:
-				// 	log.Println("no message received")
-				// }
-
-				// log.Println("no message received", timeoutready)
-				// go func() { Securetimeout <- 0 }()
 
 				if err := connection.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 					log.Println("write error:", err)
