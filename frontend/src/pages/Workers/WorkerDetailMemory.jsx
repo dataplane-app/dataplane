@@ -6,6 +6,9 @@ import { Line } from 'react-chartjs-2';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
 export const options = {
+    animation: {
+        duration: 0,
+    },
     interaction: {
         mode: 'index',
         intersect: false,
