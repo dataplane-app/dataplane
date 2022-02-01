@@ -4,6 +4,7 @@ import (
 	"dataplane/logging"
 	"log"
 	"os"
+	"time"
 
 	"github.com/gofiber/websocket/v2"
 )
@@ -14,15 +15,41 @@ var clients = make(map[*websocket.Conn]client) // Note: although large maps with
 var register = make(chan *websocket.Conn)
 var broadcast = make(chan []byte)
 var unregister = make(chan *websocket.Conn)
+var Securetimeout = make(chan int)
+
+func SecureTimeout(connection *websocket.Conn) {
+	time.Sleep(120 * time.Second)
+	if _, ok := clients[connection]; ok {
+		unregister <- connection
+		cm := websocket.FormatCloseMessage(websocket.CloseTryAgainLater, "reconnect")
+		if err := connection.WriteMessage(websocket.CloseMessage, cm); err != nil {
+			// handle error
+			log.Println(err)
+		}
+		if os.Getenv("messagedebug") == "true" {
+			log.Println("connection unregistered by SecureTimeout")
+		}
+	}
+}
 
 func RunHub() {
 	for {
 		select {
 		case connection := <-register:
 			clients[connection] = client{}
+			go SecureTimeout(connection)
+			// go func() { Securetimeout <- 0 }()
 			if os.Getenv("messagedebug") == "true" {
 				log.Println("connection registered")
 			}
+
+		// case timeout := <-Securetimeout:
+		// 	log.Println(timeout)
+		// 	if timeout == 200 {
+		// 		go func() { Securetimeout <- 0 }()
+		// 	}
+
+		// 	log.Println(timeout)
 
 		case message := <-broadcast:
 
@@ -32,6 +59,28 @@ func RunHub() {
 
 			// Send the message to all clients
 			for connection := range clients {
+
+				// timeoutready := <-securetimeout
+				// log.Println(timeoutready)
+				// if timeoutready > 10 {
+				// 	cm := websocket.FormatCloseMessage(websocket.CloseTryAgainLater, "reconnect")
+				// 	if err := connection.WriteMessage(websocket.CloseMessage, cm); err != nil {
+				// 		// handle error
+				// 		log.Println(err)
+				// 	}
+				// 	go func() { securetimeout <- 0 }()
+
+				// }
+				// select {
+				// case timeoutready := <-securetimeout:
+				// 	log.Println("received message", timeoutready)
+				// default:
+				// 	log.Println("no message received")
+				// }
+
+				// log.Println("no message received", timeoutready)
+				// go func() { Securetimeout <- 0 }()
+
 				if err := connection.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 					log.Println("write error:", err)
 
@@ -40,9 +89,6 @@ func RunHub() {
 					delete(clients, connection)
 				}
 			}
-		// case <-time.After(2 * time.Second):
-
-		// 	log.Println("2 seconds")
 
 		case connection := <-unregister:
 			// Remove the client from the hub

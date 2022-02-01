@@ -116,6 +116,7 @@ func Setup(port string) *fiber.App {
 	// Start the scheduler
 	// scheduler.SchedulerStart()
 	go worker.RunHub()
+	// go worker.SocketsSecureTimeout()
 
 	//recover from panic
 	app.Use(recover.New())
