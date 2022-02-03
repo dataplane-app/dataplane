@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/auth_permissions"
+	"dataplane/auth_permissions"
 	"dataplane/database"
 	"dataplane/database/models"
 	privategraphql "dataplane/graphql/private"
@@ -221,6 +221,55 @@ func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentName str
 	s := []*models.WorkerSecrets{}
 
 	err := database.DBConn.Where("secret_id = ?", secret).Find(&s).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive users database error.")
+	}
+
+	return s, nil
+}
+
+func (r *queryResolver) GetGroupSecrets(ctx context.Context, environmentName string, workerGroup string) ([]*models.Secrets, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	e := models.Environment{}
+	database.DBConn.First(&e, "name = ?", environmentName)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: e.ID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
+		{Resource: "environment_secrets", ResourceID: e.ID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	s := []*models.Secrets{}
+
+	// err := database.DBConn.Where("worker_group_id = ?", workerGroup).Find(&s).Error
+
+	err := database.DBConn.Raw(
+		`
+		SELECT 
+		secrets.secret,
+		secrets.secret_type,
+		secrets.description,
+		secrets.env_var,
+		secrets.active,
+        secrets.environment_id    
+		FROM secrets
+		JOIN worker_secrets
+		ON secrets.secret = worker_secrets.secret_id
+		WHERE worker_secrets.worker_group_id = ?	
+		`, workerGroup).Scan(&s).Error
+
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)

@@ -22,11 +22,12 @@ export default function Workers() {
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
 
-    // Users state
+    // Local state
     const [data, setData] = useState([]);
 
     // Sidebar state
     const [isOpenSecrets, setIsOpenSecrets] = useState(false);
+    const [secretDrawerWorkGroup, setSecretDrawerWorkGroup] = useState(null);
 
     // Control state
     const [triggerRefresh, setTriggerRefresh] = useState(1);
@@ -54,8 +55,15 @@ export default function Workers() {
         () => [
             {
                 Header: 'Member',
-                accessor: (row) => [properCase(row.WorkerGroup), properCase(row.WorkerType)],
-                Cell: (row) => <CustomWorker row={row} onClick={() => history.push(`/workers/${row.row.original.WorkerGroup}`)} setIsOpenSecrets={setIsOpenSecrets} />,
+                accessor: (row) => [properCase(row.WorkerGroup), properCase(row.WorkerType), row.WorkerGroup],
+                Cell: (row) => (
+                    <CustomWorker
+                        row={row}
+                        onClick={() => history.push(`/workers/${row.row.original.WorkerGroup}`)}
+                        setIsOpenSecrets={setIsOpenSecrets}
+                        setSecretDrawerWorkGroup={setSecretDrawerWorkGroup}
+                    />
+                ),
             },
             {
                 Header: 'Status',
@@ -140,14 +148,21 @@ export default function Workers() {
             </Box>
 
             <Drawer anchor="right" open={isOpenSecrets} onClose={() => setIsOpenSecrets(!isOpenSecrets)}>
-                <SecretsDrawer handleClose={() => setIsOpenSecrets(false)} />
+                <SecretsDrawer
+                    handleClose={() => {
+                        setIsOpenSecrets(false);
+                        setSecretDrawerWorkGroup(null);
+                    }}
+                    secretDrawerWorkGroup={secretDrawerWorkGroup}
+                    environmentName={Environment.name.get()}
+                />
             </Drawer>
         </Box>
     );
 }
 
-const CustomWorker = ({ row, onClick, setIsOpenSecrets }) => {
-    const [name, type] = row.value;
+const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup }) => {
+    const [name, type, workerGroup] = row.value;
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
@@ -167,7 +182,10 @@ const CustomWorker = ({ row, onClick, setIsOpenSecrets }) => {
                     mt={2}
                     variant="subtitle1"
                     sx={{ color: 'cyan.main', fontSize: ' 1.0625rem', display: 'inline', cursor: 'pointer' }}
-                    onClick={() => setIsOpenSecrets(true)}>
+                    onClick={() => {
+                        setIsOpenSecrets(true);
+                        setSecretDrawerWorkGroup(workerGroup);
+                    }}>
                     Secrets
                 </Typography>
             </div>
@@ -207,7 +225,6 @@ const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
     return async () => {
         // Check if the token expired
         if (exp * 1000 < new Date().valueOf()) {
-            enqueueSnackbar('Idle: not polling', { variant: 'warning' });
             return;
         }
 

@@ -158,6 +158,7 @@ type ComplexityRoot struct {
 		GetAllPreferences    func(childComplexity int) int
 		GetEnvironment       func(childComplexity int, environmentID string) int
 		GetEnvironments      func(childComplexity int) int
+		GetGroupSecrets      func(childComplexity int, environmentName string, workerGroup string) int
 		GetOnePreference     func(childComplexity int, preference string) int
 		GetPipelines         func(childComplexity int) int
 		GetPlatform          func(childComplexity int) int
@@ -288,6 +289,7 @@ type QueryResolver interface {
 	GetWorkers(ctx context.Context, environmentName string) ([]*Workers, error)
 	GetWorkerGroups(ctx context.Context, environmentName string) ([]*WorkerGroup, error)
 	GetSecretGroups(ctx context.Context, environmentName string, secret string) ([]*models.WorkerSecrets, error)
+	GetGroupSecrets(ctx context.Context, environmentName string, workerGroup string) ([]*models.Secrets, error)
 }
 
 type executableSchema struct {
@@ -1082,6 +1084,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetEnvironments(childComplexity), true
+
+	case "Query.getGroupSecrets":
+		if e.complexity.Query.GetGroupSecrets == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getGroupSecrets_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetGroupSecrets(childComplexity, args["environmentName"].(string), args["WorkerGroup"].(string)), true
 
 	case "Query.getOnePreference":
 		if e.complexity.Query.GetOnePreference == nil {
@@ -2162,6 +2176,14 @@ extend type Query {
 	+ **Security**: Based on environment selected
 	"""
   getSecretGroups(environmentName: String!, Secret: String!): [SecretWorkerGroups]
+
+    """
+	Get a worker group's secrets.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_secrets
+	+ **Security**: Based on environment selected
+	"""
+  getGroupSecrets(environmentName: String!, WorkerGroup: String!): [Secrets]
 }
 
 extend type Mutation {
@@ -3058,6 +3080,30 @@ func (ec *executionContext) field_Query_getEnvironment_args(ctx context.Context,
 		}
 	}
 	args["environment_id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getGroupSecrets_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentName"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentName"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["WorkerGroup"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("WorkerGroup"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["WorkerGroup"] = arg1
 	return args, nil
 }
 
@@ -6983,6 +7029,45 @@ func (ec *executionContext) _Query_getSecretGroups(ctx context.Context, field gr
 	return ec.marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_getGroupSecrets(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getGroupSecrets_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetGroupSecrets(rctx, args["environmentName"].(string), args["WorkerGroup"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Secrets)
+	fc.Result = res
+	return ec.marshalOSecrets2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -10787,6 +10872,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getSecretGroups(ctx, field)
+				return res
+			})
+		case "getGroupSecrets":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getGroupSecrets(ctx, field)
 				return res
 			})
 		case "__type":
