@@ -68,6 +68,7 @@ func Migrate() {
 		&models.WorkerGroups{},
 		&models.Workers{},
 		&models.WorkerSecrets{},
+		&models.LogsWorkers{},
 	)
 	if err1 != nil {
 		panic(err1)
@@ -106,6 +107,14 @@ func Migrate() {
 	log.Println("🐿  Secrets loaded")
 
 	hypertable := "SELECT create_hypertable('logs_platform', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
+
+	if hypertable != "" && os.Getenv("database") == "timescaledb" {
+		if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
+			panic(err)
+		}
+	}
+
+	hypertable = "SELECT create_hypertable('logs_workers', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
 
 	if hypertable != "" && os.Getenv("database") == "timescaledb" {
 		if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
