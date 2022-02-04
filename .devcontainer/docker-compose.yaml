@@ -79,6 +79,11 @@ services:
       debug: "true"
       dbdebug: "false"
       messagedebug: "true"
+      worker_heartbeat_seconds: "1"
+      worker_group: "python_1"
+      worker_type: "container"
+      worker_lb: "roundrobin"
+      worker_env: "Development"
 
 networks:
   default:
