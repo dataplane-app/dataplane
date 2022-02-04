@@ -77,4 +77,4 @@ jobs:
           mode: "development"
           debug: "true"
           dbdebug: "false"
-        run: cd mainapp && time go run Tests/mainTest.go
+        run: cd app/mainapp && time go run Tests/mainTest.go

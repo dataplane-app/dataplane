@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+  worker1:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: go run worker.go
+    volumes:
+      - ./workers:/workerdev
+    environment:
+      env: "local"
+      basepath: "/dataplane"
+      secret_db_host: postgres
+      secret_db_user: postgres
+      secret_db_pwd: "Hello123!"
+      secret_db_ssl: "disable"
+      secret_db_port: "5432"
+      secret_db_database: "dataplane"
+      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+      database: "timescaledb"
+      dataplane_port: "9000"
+      dataplane_nats: nats://nats:4222
+      mode: "development"
+      debug: "true"
+      dbdebug: "false"
+      messagedebug: "true"
+      worker_heartbeat_seconds: "3"
+      worker_group: "python_1"
+      worker_type: "container"
+      worker_lb: "roundrobin"
+      worker_env: "Development"
+
+  worker2:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: go run worker.go
+    volumes:
+      - ./workers:/workerdev
+    environment:
+      env: "local"
+      basepath: "/dataplane"
+      secret_db_host: postgres
+      secret_db_user: postgres
+      secret_db_pwd: "Hello123!"
+      secret_db_ssl: "disable"
+      secret_db_port: "5432"
+      secret_db_database: "dataplane"
+      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+      database: "timescaledb"
+      dataplane_port: "9001"
+      dataplane_nats: nats://nats:4222
+      mode: "development"
+      debug: "true"
+      dbdebug: "false"
+      messagedebug: "true"
+      worker_heartbeat_seconds: "3"
+      worker_group: "python_2"
+      worker_type: "container"
+      worker_lb: "roundrobin"
+      worker_env: "Development"
+  
+networks:
+  default:
+    external: true
+    name: dataplane_network
