@@ -162,7 +162,7 @@ func TestAccessGroups(t *testing.T) {
 	// -------- Get worker group's secrets -------------
 
 	query = `query {
-		getGroupSecrets(
+		getWorkerGroupSecrets(
 					environmentName: "Development",
 					WorkerGroup: "Test"
 					)
