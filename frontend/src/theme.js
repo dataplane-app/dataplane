@@ -51,6 +51,9 @@ const createCustomTheme = (mode) => ({
                       pipelineOnline: '#72B842',
                       pipelineOnlineText: '#2E6707',
                   },
+                  editorPageBg: {
+                      main: '#F4F6F9',
+                  },
               }
             : {
                   success: {
@@ -96,6 +99,9 @@ const createCustomTheme = (mode) => ({
                       pipelineOnline: '#72B842',
                       pipelineOnlineText: '#72B842',
                   },
+                  editorPageBg: {
+                      main: 'rgba(14, 25, 40, 1)',
+                  },
               }),
     },
     breakpoints: {
@@ -124,6 +130,9 @@ const createCustomTheme = (mode) => ({
         h3: {
             fontWeight: 900,
             fontSize: '1.0625rem',
+        },
+        h4: {
+            fontSize: '1.25rem',
         },
         subtitle1: {
             fontSize: '.75rem',

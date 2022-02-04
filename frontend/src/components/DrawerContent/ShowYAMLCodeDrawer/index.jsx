@@ -72,6 +72,9 @@ const ShowYAMLCodeDrawer = ({ handleClose }) => {
                     path={file.name}
                     defaultLanguage={file.language}
                     defaultValue={file.value}
+                    options={{
+                        automaticLayout: true,
+                    }}
                 />
             </Box>
         </Box>
