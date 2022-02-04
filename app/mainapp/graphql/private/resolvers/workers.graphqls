@@ -51,6 +51,14 @@ extend type Query {
 	+ **Security**: Based on environment selected
 	"""
   getSecretGroups(environmentName: String!, Secret: String!): [SecretWorkerGroups]
+
+    """
+	Get a worker group's secrets.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_secrets
+	+ **Security**: Based on environment selected
+	"""
+  getGroupSecrets(environmentName: String!, WorkerGroup: String!): [Secrets]
 }
 
 extend type Mutation {

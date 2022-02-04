@@ -4,32 +4,21 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
 import CustomChip from '../../../components/CustomChip';
+import { useGetGroupSecrets } from '../../../graphql/getWorkerGroupSecrets';
 
-const SecretsDrawer = ({ handleClose }) => {
-    const { closeSnackbar } = useSnackbar();
+const SecretsDrawer = ({ handleClose, secretDrawerWorkGroup, environmentName }) => {
+    // Local state
+    const [secrets, setSecrets] = useState([]);
 
-    // Secrets state
-    const [state, setState] = useState([
-        {
-            id: 1,
-            name: 'Squirrel',
-            envVar: 'secret_dp_squirrel',
-            status: 'Active',
-            description: 'The secret squirrel is for connectivity to AWS S3 buckets.',
-        },
-        {
-            id: 2,
-            name: 'Squirrel',
-            envVar: 'secret_dp_squirrel',
-            status: 'Active',
-            description: 'The secret squirrel is for connectivity to AWS S3 buckets.',
-        },
-    ]);
+    // Custom hook
+    const getGroupSecrets = useGetGroupSecrets_(environmentName, secretDrawerWorkGroup, setSecrets);
 
-    // Clear snackbar on load
+    // Get secrets on load
     useEffect(() => {
-        closeSnackbar();
-    }, [closeSnackbar]);
+        getGroupSecrets();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <Box position="relative">
@@ -49,19 +38,19 @@ const SecretsDrawer = ({ handleClose }) => {
                     </Button>
                 </Box>
 
-                {state.map((secret) => (
+                {secrets.map((secret) => (
                     <Box mt={3} key={secret.id} sx={{ borderBottom: '1px solid #9B9B9B' }}>
                         <Typography component="h2" mb={2} variant="body1" sx={{ fontSize: ' 1.0625rem' }}>
-                            {secret.name}
-                            <CustomChip label={secret.status} style={{ marginLeft: 16 }} size="small" customColor="green" />
+                            {secret.Secret}
+                            <CustomChip label={secret.Active ? 'Active' : 'Inactive'} style={{ marginLeft: 16 }} size="small" customColor="green" />
                         </Typography>
 
                         <Typography component="h5" mb={1} variant="subtitle1">
-                            Environment variable: {secret.envVar}
+                            Environment variable: {secret.EnvVar}
                         </Typography>
 
                         <Typography component="h5" mb={2} variant="subtitle1">
-                            {secret.description}
+                            {secret.Description}
                         </Typography>
                     </Box>
                 ))}
@@ -71,3 +60,31 @@ const SecretsDrawer = ({ handleClose }) => {
 };
 
 export default SecretsDrawer;
+
+// ------- Custom Hook
+const useGetGroupSecrets_ = (environmentName, WorkerGroup, setSecrets) => {
+    // GraphQL hook
+    const getGroupSecrets = useGetGroupSecrets();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Clear snackbar on load
+    useEffect(() => {
+        closeSnackbar();
+    }, [closeSnackbar]);
+
+    // Get secrets
+    return async () => {
+        const response = await getGroupSecrets({ environmentName, WorkerGroup });
+
+        if (response === null) {
+            setSecrets([]);
+        } else if (response.r === 'error') {
+            enqueueSnackbar("Can't get secrets: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get secrets failed', { variant: 'error' }));
+        } else {
+            setSecrets(response);
+        }
+    };
+};
