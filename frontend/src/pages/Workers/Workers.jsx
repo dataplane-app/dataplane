@@ -207,7 +207,6 @@ const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
     return async () => {
         // Check if the token expired
         if (exp * 1000 < new Date().valueOf()) {
-            enqueueSnackbar('Idle: not polling', { variant: 'warning' });
             return;
         }
 
