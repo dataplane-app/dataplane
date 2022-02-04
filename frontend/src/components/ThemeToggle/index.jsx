@@ -83,18 +83,6 @@ const ThemeToggle = (props) => {
     const theme = useTheme();
     const colorMode = React.useContext(ColorModeContext);
 
-    // Retrieve color mode on load
-    React.useEffect(() => {
-        const themeData = localStorage.getItem('theme');
-
-        if (themeData) {
-            if (themeData !== theme.palette.mode) {
-                colorMode.toggleColorMode();
-            }
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
     // Toggle color mode on click
     async function handleClick() {
         const color = theme.palette.mode === 'light' ? 'dark' : 'light';
