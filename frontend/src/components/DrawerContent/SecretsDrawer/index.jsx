@@ -4,18 +4,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
 import CustomChip from '../../../components/CustomChip';
-import { useGetGroupSecrets } from '../../../graphql/getWorkerGroupSecrets';
+import { useGetWorkerGroupSecrets } from '../../../graphql/getWorkerGroupSecrets';
 
 const SecretsDrawer = ({ handleClose, secretDrawerWorkGroup, environmentName }) => {
     // Local state
     const [secrets, setSecrets] = useState([]);
 
     // Custom hook
-    const getGroupSecrets = useGetGroupSecrets_(environmentName, secretDrawerWorkGroup, setSecrets);
+    const getWorkerGroupSecrets = useGetWorkerGroupSecrets_(environmentName, secretDrawerWorkGroup, setSecrets);
 
     // Get secrets on load
     useEffect(() => {
-        getGroupSecrets();
+        getWorkerGroupSecrets();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -62,9 +62,9 @@ const SecretsDrawer = ({ handleClose, secretDrawerWorkGroup, environmentName }) 
 export default SecretsDrawer;
 
 // ------- Custom Hook
-const useGetGroupSecrets_ = (environmentName, WorkerGroup, setSecrets) => {
+const useGetWorkerGroupSecrets_ = (environmentName, WorkerGroup, setSecrets) => {
     // GraphQL hook
-    const getGroupSecrets = useGetGroupSecrets();
+    const getWorkerGroupSecrets = useGetWorkerGroupSecrets();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -75,7 +75,7 @@ const useGetGroupSecrets_ = (environmentName, WorkerGroup, setSecrets) => {
 
     // Get secrets
     return async () => {
-        const response = await getGroupSecrets({ environmentName, WorkerGroup });
+        const response = await getWorkerGroupSecrets({ environmentName, WorkerGroup });
 
         if (response === null) {
             setSecrets([]);

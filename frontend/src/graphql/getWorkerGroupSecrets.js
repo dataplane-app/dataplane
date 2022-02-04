@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    query getGroupSecrets($environmentName: String!, $WorkerGroup: String!) {
-        getGroupSecrets(environmentName: $environmentName, WorkerGroup: $WorkerGroup) {
+    query getWorkerGroupSecrets($environmentName: String!, $WorkerGroup: String!) {
+        getWorkerGroupSecrets(environmentName: $environmentName, WorkerGroup: $WorkerGroup) {
             Secret
             SecretType
             Description
@@ -16,7 +16,7 @@ const query = gql`
     }
 `;
 
-export const useGetGroupSecrets = () => {
+export const useGetWorkerGroupSecrets = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -31,7 +31,7 @@ export const useGetGroupSecrets = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.getGroupSecrets;
+            return res?.getWorkerGroupSecrets;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

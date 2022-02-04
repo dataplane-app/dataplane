@@ -231,7 +231,7 @@ func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentName str
 	return s, nil
 }
 
-func (r *queryResolver) GetGroupSecrets(ctx context.Context, environmentName string, workerGroup string) ([]*models.Secrets, error) {
+func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentName string, workerGroup string) ([]*models.Secrets, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 

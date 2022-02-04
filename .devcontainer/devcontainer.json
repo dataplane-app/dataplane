@@ -71,7 +71,7 @@
 	// },
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "cd App && go mod download",
+	"postCreateCommand": "cd app && go mod download",
 
 	"initializeCommand": "docker network create --driver bridge dataplane_network || true"
 

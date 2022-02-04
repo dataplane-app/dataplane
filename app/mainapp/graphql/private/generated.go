@@ -151,30 +151,30 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		AvailablePermissions func(childComplexity int, environmentID string) int
-		GetAccessGroup       func(childComplexity int, userID string, environmentID string, accessGroupID string) int
-		GetAccessGroupUsers  func(childComplexity int, environmentID string, accessGroupID string) int
-		GetAccessGroups      func(childComplexity int, userID string, environmentID string) int
-		GetAllPreferences    func(childComplexity int) int
-		GetEnvironment       func(childComplexity int, environmentID string) int
-		GetEnvironments      func(childComplexity int) int
-		GetGroupSecrets      func(childComplexity int, environmentName string, workerGroup string) int
-		GetOnePreference     func(childComplexity int, preference string) int
-		GetPipelines         func(childComplexity int) int
-		GetPlatform          func(childComplexity int) int
-		GetSecret            func(childComplexity int, secret string, environmentID string) int
-		GetSecretGroups      func(childComplexity int, environmentName string, secret string) int
-		GetSecrets           func(childComplexity int, environmentID string) int
-		GetUser              func(childComplexity int, userID string) int
-		GetUserAccessGroups  func(childComplexity int, userID string, environmentID string) int
-		GetUserEnvironments  func(childComplexity int, userID string, environmentID string) int
-		GetUsers             func(childComplexity int) int
-		GetWorkerGroups      func(childComplexity int, environmentName string) int
-		GetWorkers           func(childComplexity int, environmentName string) int
-		LogoutUser           func(childComplexity int) int
-		Me                   func(childComplexity int) int
-		MyPermissions        func(childComplexity int) int
-		UserPermissions      func(childComplexity int, userID string, environmentID string) int
+		AvailablePermissions  func(childComplexity int, environmentID string) int
+		GetAccessGroup        func(childComplexity int, userID string, environmentID string, accessGroupID string) int
+		GetAccessGroupUsers   func(childComplexity int, environmentID string, accessGroupID string) int
+		GetAccessGroups       func(childComplexity int, userID string, environmentID string) int
+		GetAllPreferences     func(childComplexity int) int
+		GetEnvironment        func(childComplexity int, environmentID string) int
+		GetEnvironments       func(childComplexity int) int
+		GetOnePreference      func(childComplexity int, preference string) int
+		GetPipelines          func(childComplexity int) int
+		GetPlatform           func(childComplexity int) int
+		GetSecret             func(childComplexity int, secret string, environmentID string) int
+		GetSecretGroups       func(childComplexity int, environmentName string, secret string) int
+		GetSecrets            func(childComplexity int, environmentID string) int
+		GetUser               func(childComplexity int, userID string) int
+		GetUserAccessGroups   func(childComplexity int, userID string, environmentID string) int
+		GetUserEnvironments   func(childComplexity int, userID string, environmentID string) int
+		GetUsers              func(childComplexity int) int
+		GetWorkerGroupSecrets func(childComplexity int, environmentName string, workerGroup string) int
+		GetWorkerGroups       func(childComplexity int, environmentName string) int
+		GetWorkers            func(childComplexity int, environmentName string) int
+		LogoutUser            func(childComplexity int) int
+		Me                    func(childComplexity int) int
+		MyPermissions         func(childComplexity int) int
+		UserPermissions       func(childComplexity int, userID string, environmentID string) int
 	}
 
 	SecretWorkerGroups struct {
@@ -289,7 +289,7 @@ type QueryResolver interface {
 	GetWorkers(ctx context.Context, environmentName string) ([]*Workers, error)
 	GetWorkerGroups(ctx context.Context, environmentName string) ([]*WorkerGroup, error)
 	GetSecretGroups(ctx context.Context, environmentName string, secret string) ([]*models.WorkerSecrets, error)
-	GetGroupSecrets(ctx context.Context, environmentName string, workerGroup string) ([]*models.Secrets, error)
+	GetWorkerGroupSecrets(ctx context.Context, environmentName string, workerGroup string) ([]*models.Secrets, error)
 }
 
 type executableSchema struct {
@@ -1085,18 +1085,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetEnvironments(childComplexity), true
 
-	case "Query.getGroupSecrets":
-		if e.complexity.Query.GetGroupSecrets == nil {
-			break
-		}
-
-		args, err := ec.field_Query_getGroupSecrets_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.GetGroupSecrets(childComplexity, args["environmentName"].(string), args["WorkerGroup"].(string)), true
-
 	case "Query.getOnePreference":
 		if e.complexity.Query.GetOnePreference == nil {
 			break
@@ -1201,6 +1189,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetUsers(childComplexity), true
+
+	case "Query.getWorkerGroupSecrets":
+		if e.complexity.Query.GetWorkerGroupSecrets == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getWorkerGroupSecrets_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetWorkerGroupSecrets(childComplexity, args["environmentName"].(string), args["WorkerGroup"].(string)), true
 
 	case "Query.getWorkerGroups":
 		if e.complexity.Query.GetWorkerGroups == nil {
@@ -2183,7 +2183,7 @@ extend type Query {
 	+ **Permission**: admin_platform, admin_environment, environment_secrets
 	+ **Security**: Based on environment selected
 	"""
-  getGroupSecrets(environmentName: String!, WorkerGroup: String!): [Secrets]
+  getWorkerGroupSecrets(environmentName: String!, WorkerGroup: String!): [Secrets]
 }
 
 extend type Mutation {
@@ -3083,30 +3083,6 @@ func (ec *executionContext) field_Query_getEnvironment_args(ctx context.Context,
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_getGroupSecrets_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["environmentName"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentName"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["environmentName"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["WorkerGroup"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("WorkerGroup"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["WorkerGroup"] = arg1
-	return args, nil
-}
-
 func (ec *executionContext) field_Query_getOnePreference_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -3245,6 +3221,30 @@ func (ec *executionContext) field_Query_getUser_args(ctx context.Context, rawArg
 		}
 	}
 	args["user_id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getWorkerGroupSecrets_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentName"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentName"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["WorkerGroup"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("WorkerGroup"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["WorkerGroup"] = arg1
 	return args, nil
 }
 
@@ -7029,7 +7029,7 @@ func (ec *executionContext) _Query_getSecretGroups(ctx context.Context, field gr
 	return ec.marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_getGroupSecrets(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_getWorkerGroupSecrets(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -7046,7 +7046,7 @@ func (ec *executionContext) _Query_getGroupSecrets(ctx context.Context, field gr
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_getGroupSecrets_args(ctx, rawArgs)
+	args, err := ec.field_Query_getWorkerGroupSecrets_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -7054,7 +7054,7 @@ func (ec *executionContext) _Query_getGroupSecrets(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetGroupSecrets(rctx, args["environmentName"].(string), args["WorkerGroup"].(string))
+		return ec.resolvers.Query().GetWorkerGroupSecrets(rctx, args["environmentName"].(string), args["WorkerGroup"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10874,7 +10874,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_getSecretGroups(ctx, field)
 				return res
 			})
-		case "getGroupSecrets":
+		case "getWorkerGroupSecrets":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -10882,7 +10882,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_getGroupSecrets(ctx, field)
+				res = ec._Query_getWorkerGroupSecrets(ctx, field)
 				return res
 			})
 		case "__type":
