@@ -4,6 +4,7 @@ import (
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/logging"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -89,10 +90,14 @@ func WorkerRunTask(workerGroup string, taskid string, commands []string) error {
 		time.Sleep(2 * time.Second)
 	}
 
-	// Choose a worker
-	switch workerGroup {
+	if len(onlineWorkers) == 0 {
+		return errors.New("Worker group not online: " + workerGroup)
+	}
+
+	// Choose a worker based on load balancing strategy - default is round robin
+	switch onlineWorkers[0].LB {
 	case "roundrobin":
-		fmt.Println("one")
+		fmt.Println("round robin")
 	default:
 		fmt.Println("three")
 	}
