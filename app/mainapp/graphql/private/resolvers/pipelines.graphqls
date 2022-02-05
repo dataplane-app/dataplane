@@ -1,7 +1,31 @@
 type Pipelines {
+  pipelineID: String!
 	name: String!
+  version: String!
+  environmentID: String!
+  YAMLHash: String!
+  description: String!
+  active: Boolean!
+  online: Boolean!
+  current: String!
+  schedule: String!
+  scheduleType: String!
 }
 
 extend type Query {
+  """
+  Get pipelines.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment
+  """
   getPipelines: [Pipelines]
+}
+
+extend type Mutation {
+  """
+  Add a new pipeline.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment
+  """
+  addPipeline(name: String!, environmentID: String!, description: String! ): String!
 }

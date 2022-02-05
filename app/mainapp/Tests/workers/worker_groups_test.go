@@ -14,7 +14,7 @@ import (
 
 /*
 For individual tests - in separate window run: go run server.go
-go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/permissions
+go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/workers
 * Login
 * Get worker groups
 * Get workers

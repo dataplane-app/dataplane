@@ -69,6 +69,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		ActivateAccessGroup           func(childComplexity int, accessGroupID string, environmentID string) int
 		AddEnvironment                func(childComplexity int, input *AddEnvironmentInput) int
+		AddPipeline                   func(childComplexity int, name string, environmentID string, description string) int
 		AddSecretToWorkerGroup        func(childComplexity int, environmentName string, workerGroup string, secret string) int
 		AddUserToEnvironment          func(childComplexity int, userID string, environmentID string) int
 		CreateAccessGroup             func(childComplexity int, environmentID string, name string, description *string) int
@@ -135,7 +136,17 @@ type ComplexityRoot struct {
 	}
 
 	Pipelines struct {
-		Name func(childComplexity int) int
+		Active        func(childComplexity int) int
+		Current       func(childComplexity int) int
+		Description   func(childComplexity int) int
+		EnvironmentID func(childComplexity int) int
+		Name          func(childComplexity int) int
+		Online        func(childComplexity int) int
+		PipelineID    func(childComplexity int) int
+		Schedule      func(childComplexity int) int
+		ScheduleType  func(childComplexity int) int
+		Version       func(childComplexity int) int
+		YAMLHash      func(childComplexity int) int
 	}
 
 	Platform struct {
@@ -250,6 +261,7 @@ type MutationResolver interface {
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 	UpdatePermissionToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string) (string, error)
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
+	AddPipeline(ctx context.Context, name string, environmentID string, description string) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	CreateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
 	UpdateSecret(ctx context.Context, input *UpdateSecretsInput) (*models.Secrets, error)
@@ -277,7 +289,7 @@ type QueryResolver interface {
 	AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error)
 	MyPermissions(ctx context.Context) ([]*models.PermissionsOutput, error)
 	UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error)
-	GetPipelines(ctx context.Context) ([]*Pipelines, error)
+	GetPipelines(ctx context.Context) ([]*models.Pipelines, error)
 	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
 	GetOnePreference(ctx context.Context, preference string) (*Preferences, error)
 	GetSecret(ctx context.Context, secret string, environmentID string) (*models.Secrets, error)
@@ -426,6 +438,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddEnvironment(childComplexity, args["input"].(*AddEnvironmentInput)), true
+
+	case "Mutation.addPipeline":
+		if e.complexity.Mutation.AddPipeline == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addPipeline_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddPipeline(childComplexity, args["name"].(string), args["environmentID"].(string), args["description"].(string)), true
 
 	case "Mutation.addSecretToWorkerGroup":
 		if e.complexity.Mutation.AddSecretToWorkerGroup == nil {
@@ -960,12 +984,82 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PermissionsOutput.SubjectID(childComplexity), true
 
+	case "Pipelines.active":
+		if e.complexity.Pipelines.Active == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Active(childComplexity), true
+
+	case "Pipelines.current":
+		if e.complexity.Pipelines.Current == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Current(childComplexity), true
+
+	case "Pipelines.description":
+		if e.complexity.Pipelines.Description == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Description(childComplexity), true
+
+	case "Pipelines.environmentID":
+		if e.complexity.Pipelines.EnvironmentID == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.EnvironmentID(childComplexity), true
+
 	case "Pipelines.name":
 		if e.complexity.Pipelines.Name == nil {
 			break
 		}
 
 		return e.complexity.Pipelines.Name(childComplexity), true
+
+	case "Pipelines.online":
+		if e.complexity.Pipelines.Online == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Online(childComplexity), true
+
+	case "Pipelines.pipelineID":
+		if e.complexity.Pipelines.PipelineID == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.PipelineID(childComplexity), true
+
+	case "Pipelines.schedule":
+		if e.complexity.Pipelines.Schedule == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Schedule(childComplexity), true
+
+	case "Pipelines.scheduleType":
+		if e.complexity.Pipelines.ScheduleType == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.ScheduleType(childComplexity), true
+
+	case "Pipelines.version":
+		if e.complexity.Pipelines.Version == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Version(childComplexity), true
+
+	case "Pipelines.YAMLHash":
+		if e.complexity.Pipelines.YAMLHash == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.YAMLHash(childComplexity), true
 
 	case "Platform.business_name":
 		if e.complexity.Platform.BusinessName == nil {
@@ -1894,12 +1988,37 @@ extend type Mutation {
 }
 `, BuiltIn: false},
 	{Name: "resolvers/pipelines.graphqls", Input: `type Pipelines {
+  pipelineID: String!
 	name: String!
+  version: String!
+  environmentID: String!
+  YAMLHash: String!
+  description: String!
+  active: Boolean!
+  online: Boolean!
+  current: String!
+  schedule: String!
+  scheduleType: String!
 }
 
 extend type Query {
+  """
+  Get pipelines.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment
+  """
   getPipelines: [Pipelines]
-}`, BuiltIn: false},
+}
+
+extend type Mutation {
+  """
+  Add a new pipeline.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment
+  """
+  addPipeline(name: String!, environmentID: String!, description: String! ): String!
+}
+`, BuiltIn: false},
 	{Name: "resolvers/preferences.graphqls", Input: `input AddPreferencesInput {
   preference: String!
   value: String!
@@ -2218,12 +2337,45 @@ func (ec *executionContext) field_Mutation_addEnvironment_args(ctx context.Conte
 	var arg0 *AddEnvironmentInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddEnvironmentInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddEnvironmentInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAddEnvironmentInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddEnvironmentInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_addPipeline_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["description"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["description"] = arg2
 	return args, nil
 }
 
@@ -2323,7 +2475,7 @@ func (ec *executionContext) field_Mutation_createSecret_args(ctx context.Context
 	var arg0 *AddSecretsInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddSecretsInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddSecretsInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAddSecretsInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddSecretsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2338,7 +2490,7 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	var arg0 *AddUsersInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddUsersInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddUsersInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAddUsersInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddUsersInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2524,7 +2676,7 @@ func (ec *executionContext) field_Mutation_updateAccessGroup_args(ctx context.Co
 	var arg0 *AccessGroupsInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAccessGroupsInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAccessGroupsInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAccessGroupsInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAccessGroupsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2584,7 +2736,7 @@ func (ec *executionContext) field_Mutation_updateChangePassword_args(ctx context
 	var arg0 *ChangePasswordInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOChangePasswordInput2ᚖdataplaneᚋgraphqlᚋprivateᚐChangePasswordInput(ctx, tmp)
+		arg0, err = ec.unmarshalOChangePasswordInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐChangePasswordInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2683,7 +2835,7 @@ func (ec *executionContext) field_Mutation_updateEnvironment_args(ctx context.Co
 	var arg0 *UpdateEnvironment
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdateEnvironment2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdateEnvironment(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateEnvironment2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateEnvironment(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2698,7 +2850,7 @@ func (ec *executionContext) field_Mutation_updateMe_args(ctx context.Context, ra
 	var arg0 *AddUpdateMeInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddUpdateMeInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddUpdateMeInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAddUpdateMeInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddUpdateMeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2815,7 +2967,7 @@ func (ec *executionContext) field_Mutation_updatePlatform_args(ctx context.Conte
 	var arg0 *UpdatePlatformInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOupdatePlatformInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdatePlatformInput(ctx, tmp)
+		arg0, err = ec.unmarshalOupdatePlatformInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdatePlatformInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2830,7 +2982,7 @@ func (ec *executionContext) field_Mutation_updatePreferences_args(ctx context.Co
 	var arg0 *AddPreferencesInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddPreferencesInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddPreferencesInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAddPreferencesInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddPreferencesInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2878,7 +3030,7 @@ func (ec *executionContext) field_Mutation_updateSecret_args(ctx context.Context
 	var arg0 *UpdateSecretsInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdateSecretsInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdateSecretsInput(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateSecretsInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateSecretsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2926,7 +3078,7 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 	var arg0 *UpdateUsersInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdateUsersInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdateUsersInput(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateUsersInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateUsersInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3811,7 +3963,7 @@ func (ec *executionContext) _Mutation_addEnvironment(ctx context.Context, field 
 	}
 	res := resTmp.(*models.Environment)
 	fc.Result = res
-	return ec.marshalOEnvironments2ᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+	return ec.marshalOEnvironments2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateEnvironment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3850,7 +4002,7 @@ func (ec *executionContext) _Mutation_updateEnvironment(ctx context.Context, fie
 	}
 	res := resTmp.(*models.Environment)
 	fc.Result = res
-	return ec.marshalOEnvironments2ᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+	return ec.marshalOEnvironments2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateDeactivateEnvironment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4459,7 +4611,7 @@ func (ec *executionContext) _Mutation_updateMe(ctx context.Context, field graphq
 	}
 	res := resTmp.(*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateChangeMyPassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4585,6 +4737,48 @@ func (ec *executionContext) _Mutation_deletePermissionToUser(ctx context.Context
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_addPipeline(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_addPipeline_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddPipeline(rctx, args["name"].(string), args["environmentID"].(string), args["description"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_updatePreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4660,7 +4854,7 @@ func (ec *executionContext) _Mutation_createSecret(ctx context.Context, field gr
 	}
 	res := resTmp.(*models.Secrets)
 	fc.Result = res
-	return ec.marshalOSecrets2ᚖdataplaneᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
+	return ec.marshalOSecrets2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateSecret(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4699,7 +4893,7 @@ func (ec *executionContext) _Mutation_updateSecret(ctx context.Context, field gr
 	}
 	res := resTmp.(*models.Secrets)
 	fc.Result = res
-	return ec.marshalOSecrets2ᚖdataplaneᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
+	return ec.marshalOSecrets2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateSecretValue(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4816,7 +5010,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	}
 	res := resTmp.(*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5897,7 +6091,42 @@ func (ec *executionContext) _PermissionsOutput_Label(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Pipelines_name(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pipelines_pipelineID(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PipelineID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_name(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5916,6 +6145,321 @@ func (ec *executionContext) _Pipelines_name(ctx context.Context, field graphql.C
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_version(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Version, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_environmentID(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvironmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_YAMLHash(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.YAMLHash, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_description(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_active(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_online(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Online, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_current(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Current, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_schedule(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Schedule, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_scheduleType(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ScheduleType, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6171,7 +6715,7 @@ func (ec *executionContext) _Query_getEnvironments(ctx context.Context, field gr
 	}
 	res := resTmp.([]*models.Environment)
 	fc.Result = res
-	return ec.marshalOEnvironments2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+	return ec.marshalOEnvironments2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getEnvironment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6210,7 +6754,7 @@ func (ec *executionContext) _Query_getEnvironment(ctx context.Context, field gra
 	}
 	res := resTmp.(*models.Environment)
 	fc.Result = res
-	return ec.marshalOEnvironments2ᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+	return ec.marshalOEnvironments2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getUserEnvironments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6249,7 +6793,7 @@ func (ec *executionContext) _Query_getUserEnvironments(ctx context.Context, fiel
 	}
 	res := resTmp.([]*models.Environment)
 	fc.Result = res
-	return ec.marshalOEnvironments2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+	return ec.marshalOEnvironments2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getPlatform(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6281,7 +6825,7 @@ func (ec *executionContext) _Query_getPlatform(ctx context.Context, field graphq
 	}
 	res := resTmp.(*Platform)
 	fc.Result = res
-	return ec.marshalOPlatform2ᚖdataplaneᚋgraphqlᚋprivateᚐPlatform(ctx, field.Selections, res)
+	return ec.marshalOPlatform2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPlatform(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getAccessGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6320,7 +6864,7 @@ func (ec *executionContext) _Query_getAccessGroups(ctx context.Context, field gr
 	}
 	res := resTmp.([]*models.PermissionsAccessGroups)
 	fc.Result = res
-	return ec.marshalOAccessGroups2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, field.Selections, res)
+	return ec.marshalOAccessGroups2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getAccessGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6359,7 +6903,7 @@ func (ec *executionContext) _Query_getAccessGroup(ctx context.Context, field gra
 	}
 	res := resTmp.(*models.PermissionsAccessGroups)
 	fc.Result = res
-	return ec.marshalOAccessGroups2ᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, field.Selections, res)
+	return ec.marshalOAccessGroups2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getUserAccessGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6398,7 +6942,7 @@ func (ec *executionContext) _Query_getUserAccessGroups(ctx context.Context, fiel
 	}
 	res := resTmp.([]*models.PermissionsAccessGUsersOutput)
 	fc.Result = res
-	return ec.marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, field.Selections, res)
+	return ec.marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getAccessGroupUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6437,7 +6981,7 @@ func (ec *executionContext) _Query_getAccessGroupUsers(ctx context.Context, fiel
 	}
 	res := resTmp.([]*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6469,7 +7013,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 	}
 	res := resTmp.(*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_availablePermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6508,7 +7052,7 @@ func (ec *executionContext) _Query_availablePermissions(ctx context.Context, fie
 	}
 	res := resTmp.([]*models.ResourceTypeStruct)
 	fc.Result = res
-	return ec.marshalOAvailablePermissions2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx, field.Selections, res)
+	return ec.marshalOAvailablePermissions2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_myPermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6540,7 +7084,7 @@ func (ec *executionContext) _Query_myPermissions(ctx context.Context, field grap
 	}
 	res := resTmp.([]*models.PermissionsOutput)
 	fc.Result = res
-	return ec.marshalOPermissionsOutput2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_userPermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6579,7 +7123,7 @@ func (ec *executionContext) _Query_userPermissions(ctx context.Context, field gr
 	}
 	res := resTmp.([]*models.PermissionsOutput)
 	fc.Result = res
-	return ec.marshalOPermissionsOutput2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6609,9 +7153,9 @@ func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graph
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*Pipelines)
+	res := resTmp.([]*models.Pipelines)
 	fc.Result = res
-	return ec.marshalOPipelines2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐPipelines(ctx, field.Selections, res)
+	return ec.marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getAllPreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6643,7 +7187,7 @@ func (ec *executionContext) _Query_getAllPreferences(ctx context.Context, field 
 	}
 	res := resTmp.([]*Preferences)
 	fc.Result = res
-	return ec.marshalOPreferences2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐPreferences(ctx, field.Selections, res)
+	return ec.marshalOPreferences2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getOnePreference(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6682,7 +7226,7 @@ func (ec *executionContext) _Query_getOnePreference(ctx context.Context, field g
 	}
 	res := resTmp.(*Preferences)
 	fc.Result = res
-	return ec.marshalOPreferences2ᚖdataplaneᚋgraphqlᚋprivateᚐPreferences(ctx, field.Selections, res)
+	return ec.marshalOPreferences2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getSecret(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6721,7 +7265,7 @@ func (ec *executionContext) _Query_getSecret(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*models.Secrets)
 	fc.Result = res
-	return ec.marshalOSecrets2ᚖdataplaneᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
+	return ec.marshalOSecrets2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getSecrets(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6760,7 +7304,7 @@ func (ec *executionContext) _Query_getSecrets(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*models.Secrets)
 	fc.Result = res
-	return ec.marshalOSecrets2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
+	return ec.marshalOSecrets2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_logoutUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6831,7 +7375,7 @@ func (ec *executionContext) _Query_getUser(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6863,7 +7407,7 @@ func (ec *executionContext) _Query_getUsers(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getWorkers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6902,7 +7446,7 @@ func (ec *executionContext) _Query_getWorkers(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*Workers)
 	fc.Result = res
-	return ec.marshalOWorkers2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐWorkers(ctx, field.Selections, res)
+	return ec.marshalOWorkers2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getWorkerGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6941,7 +7485,7 @@ func (ec *executionContext) _Query_getWorkerGroups(ctx context.Context, field gr
 	}
 	res := resTmp.([]*WorkerGroup)
 	fc.Result = res
-	return ec.marshalOWorkerGroup2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐWorkerGroup(ctx, field.Selections, res)
+	return ec.marshalOWorkerGroup2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroup(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getSecretGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6980,7 +7524,7 @@ func (ec *executionContext) _Query_getSecretGroups(ctx context.Context, field gr
 	}
 	res := resTmp.([]*models.WorkerSecrets)
 	fc.Result = res
-	return ec.marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx, field.Selections, res)
+	return ec.marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -10202,6 +10746,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "addPipeline":
+			out.Values[i] = ec._Mutation_addPipeline(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "updatePreferences":
 			out.Values[i] = ec._Mutation_updatePreferences(ctx, field)
 		case "createSecret":
@@ -10422,7 +10971,7 @@ func (ec *executionContext) _PermissionsOutput(ctx context.Context, sel ast.Sele
 
 var pipelinesImplementors = []string{"Pipelines"}
 
-func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet, obj *Pipelines) graphql.Marshaler {
+func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet, obj *models.Pipelines) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, pipelinesImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -10431,8 +10980,58 @@ func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Pipelines")
+		case "pipelineID":
+			out.Values[i] = ec._Pipelines_pipelineID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "name":
 			out.Values[i] = ec._Pipelines_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "version":
+			out.Values[i] = ec._Pipelines_version(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "environmentID":
+			out.Values[i] = ec._Pipelines_environmentID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "YAMLHash":
+			out.Values[i] = ec._Pipelines_YAMLHash(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "description":
+			out.Values[i] = ec._Pipelines_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "active":
+			out.Values[i] = ec._Pipelines_active(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "online":
+			out.Values[i] = ec._Pipelines_online(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "current":
+			out.Values[i] = ec._Pipelines_current(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "schedule":
+			out.Values[i] = ec._Pipelines_schedule(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "scheduleType":
+			out.Values[i] = ec._Pipelines_scheduleType(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -11696,7 +12295,7 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAccessGroups2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsAccessGroups) graphql.Marshaler {
+func (ec *executionContext) marshalOAccessGroups2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsAccessGroups) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -11723,7 +12322,7 @@ func (ec *executionContext) marshalOAccessGroups2ᚕᚖdataplaneᚋdatabaseᚋmo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOAccessGroups2ᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, sel, v[i])
+			ret[i] = ec.marshalOAccessGroups2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -11737,14 +12336,14 @@ func (ec *executionContext) marshalOAccessGroups2ᚕᚖdataplaneᚋdatabaseᚋmo
 	return ret
 }
 
-func (ec *executionContext) marshalOAccessGroups2ᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsAccessGroups) graphql.Marshaler {
+func (ec *executionContext) marshalOAccessGroups2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsAccessGroups) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._AccessGroups(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOAccessGroupsInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAccessGroupsInput(ctx context.Context, v interface{}) (*AccessGroupsInput, error) {
+func (ec *executionContext) unmarshalOAccessGroupsInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAccessGroupsInput(ctx context.Context, v interface{}) (*AccessGroupsInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -11752,7 +12351,7 @@ func (ec *executionContext) unmarshalOAccessGroupsInput2ᚖdataplaneᚋgraphql�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOAddEnvironmentInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddEnvironmentInput(ctx context.Context, v interface{}) (*AddEnvironmentInput, error) {
+func (ec *executionContext) unmarshalOAddEnvironmentInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddEnvironmentInput(ctx context.Context, v interface{}) (*AddEnvironmentInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -11760,7 +12359,7 @@ func (ec *executionContext) unmarshalOAddEnvironmentInput2ᚖdataplaneᚋgraphql
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOAddPreferencesInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddPreferencesInput(ctx context.Context, v interface{}) (*AddPreferencesInput, error) {
+func (ec *executionContext) unmarshalOAddPreferencesInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddPreferencesInput(ctx context.Context, v interface{}) (*AddPreferencesInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -11768,7 +12367,7 @@ func (ec *executionContext) unmarshalOAddPreferencesInput2ᚖdataplaneᚋgraphql
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOAddSecretsInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddSecretsInput(ctx context.Context, v interface{}) (*AddSecretsInput, error) {
+func (ec *executionContext) unmarshalOAddSecretsInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddSecretsInput(ctx context.Context, v interface{}) (*AddSecretsInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -11776,7 +12375,7 @@ func (ec *executionContext) unmarshalOAddSecretsInput2ᚖdataplaneᚋgraphqlᚋp
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOAddUpdateMeInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddUpdateMeInput(ctx context.Context, v interface{}) (*AddUpdateMeInput, error) {
+func (ec *executionContext) unmarshalOAddUpdateMeInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddUpdateMeInput(ctx context.Context, v interface{}) (*AddUpdateMeInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -11784,7 +12383,7 @@ func (ec *executionContext) unmarshalOAddUpdateMeInput2ᚖdataplaneᚋgraphqlᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOAddUsersInput2ᚖdataplaneᚋgraphqlᚋprivateᚐAddUsersInput(ctx context.Context, v interface{}) (*AddUsersInput, error) {
+func (ec *executionContext) unmarshalOAddUsersInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddUsersInput(ctx context.Context, v interface{}) (*AddUsersInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -11792,7 +12391,7 @@ func (ec *executionContext) unmarshalOAddUsersInput2ᚖdataplaneᚋgraphqlᚋpri
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOAvailablePermissions2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx context.Context, sel ast.SelectionSet, v []*models.ResourceTypeStruct) graphql.Marshaler {
+func (ec *executionContext) marshalOAvailablePermissions2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx context.Context, sel ast.SelectionSet, v []*models.ResourceTypeStruct) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -11819,7 +12418,7 @@ func (ec *executionContext) marshalOAvailablePermissions2ᚕᚖdataplaneᚋdatab
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOAvailablePermissions2ᚖdataplaneᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx, sel, v[i])
+			ret[i] = ec.marshalOAvailablePermissions2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -11833,7 +12432,7 @@ func (ec *executionContext) marshalOAvailablePermissions2ᚕᚖdataplaneᚋdatab
 	return ret
 }
 
-func (ec *executionContext) marshalOAvailablePermissions2ᚖdataplaneᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx context.Context, sel ast.SelectionSet, v *models.ResourceTypeStruct) graphql.Marshaler {
+func (ec *executionContext) marshalOAvailablePermissions2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx context.Context, sel ast.SelectionSet, v *models.ResourceTypeStruct) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -11864,7 +12463,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return graphql.MarshalBoolean(*v)
 }
 
-func (ec *executionContext) unmarshalOChangePasswordInput2ᚖdataplaneᚋgraphqlᚋprivateᚐChangePasswordInput(ctx context.Context, v interface{}) (*ChangePasswordInput, error) {
+func (ec *executionContext) unmarshalOChangePasswordInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐChangePasswordInput(ctx context.Context, v interface{}) (*ChangePasswordInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -11872,7 +12471,7 @@ func (ec *executionContext) unmarshalOChangePasswordInput2ᚖdataplaneᚋgraphql
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOEnvironments2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx context.Context, sel ast.SelectionSet, v []*models.Environment) graphql.Marshaler {
+func (ec *executionContext) marshalOEnvironments2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx context.Context, sel ast.SelectionSet, v []*models.Environment) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -11899,7 +12498,7 @@ func (ec *executionContext) marshalOEnvironments2ᚕᚖdataplaneᚋdatabaseᚋmo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOEnvironments2ᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx, sel, v[i])
+			ret[i] = ec.marshalOEnvironments2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -11913,14 +12512,14 @@ func (ec *executionContext) marshalOEnvironments2ᚕᚖdataplaneᚋdatabaseᚋmo
 	return ret
 }
 
-func (ec *executionContext) marshalOEnvironments2ᚖdataplaneᚋdatabaseᚋmodelsᚐEnvironment(ctx context.Context, sel ast.SelectionSet, v *models.Environment) graphql.Marshaler {
+func (ec *executionContext) marshalOEnvironments2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx context.Context, sel ast.SelectionSet, v *models.Environment) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Environments(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsAccessGUsersOutput) graphql.Marshaler {
+func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsAccessGUsersOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -11947,7 +12546,7 @@ func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplan
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOPermissionsAccessGUsersOutput2ᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, sel, v[i])
+			ret[i] = ec.marshalOPermissionsAccessGUsersOutput2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -11961,14 +12560,14 @@ func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplan
 	return ret
 }
 
-func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsAccessGUsersOutput) graphql.Marshaler {
+func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsAccessGUsersOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._PermissionsAccessGUsersOutput(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPermissionsOutput2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsOutput) graphql.Marshaler {
+func (ec *executionContext) marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -11995,7 +12594,7 @@ func (ec *executionContext) marshalOPermissionsOutput2ᚕᚖdataplaneᚋdatabase
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOPermissionsOutput2ᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, sel, v[i])
+			ret[i] = ec.marshalOPermissionsOutput2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -12009,14 +12608,14 @@ func (ec *executionContext) marshalOPermissionsOutput2ᚕᚖdataplaneᚋdatabase
 	return ret
 }
 
-func (ec *executionContext) marshalOPermissionsOutput2ᚖdataplaneᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsOutput) graphql.Marshaler {
+func (ec *executionContext) marshalOPermissionsOutput2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._PermissionsOutput(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐPipelines(ctx context.Context, sel ast.SelectionSet, v []*Pipelines) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx context.Context, sel ast.SelectionSet, v []*models.Pipelines) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12043,7 +12642,7 @@ func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋgraphqlᚋprivat
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOPipelines2ᚖdataplaneᚋgraphqlᚋprivateᚐPipelines(ctx, sel, v[i])
+			ret[i] = ec.marshalOPipelines2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -12057,21 +12656,21 @@ func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋgraphqlᚋprivat
 	return ret
 }
 
-func (ec *executionContext) marshalOPipelines2ᚖdataplaneᚋgraphqlᚋprivateᚐPipelines(ctx context.Context, sel ast.SelectionSet, v *Pipelines) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelines2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx context.Context, sel ast.SelectionSet, v *models.Pipelines) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Pipelines(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPlatform2ᚖdataplaneᚋgraphqlᚋprivateᚐPlatform(ctx context.Context, sel ast.SelectionSet, v *Platform) graphql.Marshaler {
+func (ec *executionContext) marshalOPlatform2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPlatform(ctx context.Context, sel ast.SelectionSet, v *Platform) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Platform(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPreferences2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐPreferences(ctx context.Context, sel ast.SelectionSet, v []*Preferences) graphql.Marshaler {
+func (ec *executionContext) marshalOPreferences2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx context.Context, sel ast.SelectionSet, v []*Preferences) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12098,7 +12697,7 @@ func (ec *executionContext) marshalOPreferences2ᚕᚖdataplaneᚋgraphqlᚋpriv
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOPreferences2ᚖdataplaneᚋgraphqlᚋprivateᚐPreferences(ctx, sel, v[i])
+			ret[i] = ec.marshalOPreferences2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -12112,14 +12711,14 @@ func (ec *executionContext) marshalOPreferences2ᚕᚖdataplaneᚋgraphqlᚋpriv
 	return ret
 }
 
-func (ec *executionContext) marshalOPreferences2ᚖdataplaneᚋgraphqlᚋprivateᚐPreferences(ctx context.Context, sel ast.SelectionSet, v *Preferences) graphql.Marshaler {
+func (ec *executionContext) marshalOPreferences2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx context.Context, sel ast.SelectionSet, v *Preferences) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Preferences(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx context.Context, sel ast.SelectionSet, v []*models.WorkerSecrets) graphql.Marshaler {
+func (ec *executionContext) marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx context.Context, sel ast.SelectionSet, v []*models.WorkerSecrets) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12146,7 +12745,7 @@ func (ec *executionContext) marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋdatabas
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOSecretWorkerGroups2ᚖdataplaneᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx, sel, v[i])
+			ret[i] = ec.marshalOSecretWorkerGroups2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -12160,14 +12759,14 @@ func (ec *executionContext) marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋdatabas
 	return ret
 }
 
-func (ec *executionContext) marshalOSecretWorkerGroups2ᚖdataplaneᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx context.Context, sel ast.SelectionSet, v *models.WorkerSecrets) graphql.Marshaler {
+func (ec *executionContext) marshalOSecretWorkerGroups2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx context.Context, sel ast.SelectionSet, v *models.WorkerSecrets) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._SecretWorkerGroups(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOSecrets2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐSecrets(ctx context.Context, sel ast.SelectionSet, v []*models.Secrets) graphql.Marshaler {
+func (ec *executionContext) marshalOSecrets2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx context.Context, sel ast.SelectionSet, v []*models.Secrets) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12194,7 +12793,7 @@ func (ec *executionContext) marshalOSecrets2ᚕᚖdataplaneᚋdatabaseᚋmodels�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOSecrets2ᚖdataplaneᚋdatabaseᚋmodelsᚐSecrets(ctx, sel, v[i])
+			ret[i] = ec.marshalOSecrets2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -12208,7 +12807,7 @@ func (ec *executionContext) marshalOSecrets2ᚕᚖdataplaneᚋdatabaseᚋmodels�
 	return ret
 }
 
-func (ec *executionContext) marshalOSecrets2ᚖdataplaneᚋdatabaseᚋmodelsᚐSecrets(ctx context.Context, sel ast.SelectionSet, v *models.Secrets) graphql.Marshaler {
+func (ec *executionContext) marshalOSecrets2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx context.Context, sel ast.SelectionSet, v *models.Secrets) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12239,7 +12838,7 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return graphql.MarshalString(*v)
 }
 
-func (ec *executionContext) unmarshalOUpdateEnvironment2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdateEnvironment(ctx context.Context, v interface{}) (*UpdateEnvironment, error) {
+func (ec *executionContext) unmarshalOUpdateEnvironment2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateEnvironment(ctx context.Context, v interface{}) (*UpdateEnvironment, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -12247,7 +12846,7 @@ func (ec *executionContext) unmarshalOUpdateEnvironment2ᚖdataplaneᚋgraphql�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOUpdateSecretsInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdateSecretsInput(ctx context.Context, v interface{}) (*UpdateSecretsInput, error) {
+func (ec *executionContext) unmarshalOUpdateSecretsInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateSecretsInput(ctx context.Context, v interface{}) (*UpdateSecretsInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -12255,7 +12854,7 @@ func (ec *executionContext) unmarshalOUpdateSecretsInput2ᚖdataplaneᚋgraphql�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOUpdateUsersInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdateUsersInput(ctx context.Context, v interface{}) (*UpdateUsersInput, error) {
+func (ec *executionContext) unmarshalOUpdateUsersInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateUsersInput(ctx context.Context, v interface{}) (*UpdateUsersInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -12263,7 +12862,7 @@ func (ec *executionContext) unmarshalOUpdateUsersInput2ᚖdataplaneᚋgraphqlᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOUser2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx context.Context, sel ast.SelectionSet, v []*models.Users) graphql.Marshaler {
+func (ec *executionContext) marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx context.Context, sel ast.SelectionSet, v []*models.Users) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12290,7 +12889,7 @@ func (ec *executionContext) marshalOUser2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐU
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx, sel, v[i])
+			ret[i] = ec.marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -12304,14 +12903,14 @@ func (ec *executionContext) marshalOUser2ᚕᚖdataplaneᚋdatabaseᚋmodelsᚐU
 	return ret
 }
 
-func (ec *executionContext) marshalOUser2ᚖdataplaneᚋdatabaseᚋmodelsᚐUsers(ctx context.Context, sel ast.SelectionSet, v *models.Users) graphql.Marshaler {
+func (ec *executionContext) marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx context.Context, sel ast.SelectionSet, v *models.Users) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOWorkerGroup2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐWorkerGroup(ctx context.Context, sel ast.SelectionSet, v []*WorkerGroup) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkerGroup2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroup(ctx context.Context, sel ast.SelectionSet, v []*WorkerGroup) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12338,7 +12937,7 @@ func (ec *executionContext) marshalOWorkerGroup2ᚕᚖdataplaneᚋgraphqlᚋpriv
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOWorkerGroup2ᚖdataplaneᚋgraphqlᚋprivateᚐWorkerGroup(ctx, sel, v[i])
+			ret[i] = ec.marshalOWorkerGroup2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroup(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -12352,14 +12951,14 @@ func (ec *executionContext) marshalOWorkerGroup2ᚕᚖdataplaneᚋgraphqlᚋpriv
 	return ret
 }
 
-func (ec *executionContext) marshalOWorkerGroup2ᚖdataplaneᚋgraphqlᚋprivateᚐWorkerGroup(ctx context.Context, sel ast.SelectionSet, v *WorkerGroup) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkerGroup2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroup(ctx context.Context, sel ast.SelectionSet, v *WorkerGroup) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._WorkerGroup(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOWorkers2ᚕᚖdataplaneᚋgraphqlᚋprivateᚐWorkers(ctx context.Context, sel ast.SelectionSet, v []*Workers) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkers2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx context.Context, sel ast.SelectionSet, v []*Workers) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12386,7 +12985,7 @@ func (ec *executionContext) marshalOWorkers2ᚕᚖdataplaneᚋgraphqlᚋprivate�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOWorkers2ᚖdataplaneᚋgraphqlᚋprivateᚐWorkers(ctx, sel, v[i])
+			ret[i] = ec.marshalOWorkers2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -12400,7 +12999,7 @@ func (ec *executionContext) marshalOWorkers2ᚕᚖdataplaneᚋgraphqlᚋprivate�
 	return ret
 }
 
-func (ec *executionContext) marshalOWorkers2ᚖdataplaneᚋgraphqlᚋprivateᚐWorkers(ctx context.Context, sel ast.SelectionSet, v *Workers) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkers2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx context.Context, sel ast.SelectionSet, v *Workers) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12609,7 +13208,7 @@ func (ec *executionContext) marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 	return ec.___Type(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOupdatePlatformInput2ᚖdataplaneᚋgraphqlᚋprivateᚐUpdatePlatformInput(ctx context.Context, v interface{}) (*UpdatePlatformInput, error) {
+func (ec *executionContext) unmarshalOupdatePlatformInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdatePlatformInput(ctx context.Context, v interface{}) (*UpdatePlatformInput, error) {
 	if v == nil {
 		return nil, nil
 	}
