@@ -13,4 +13,5 @@ func GoDBConnect() {
 	GoDBWorker, _ = buntdb.Open(":memory:")
 
 	GoDBWorker.CreateIndex("environment", "*", buntdb.IndexJSON("Env"))
+	GoDBWorker.CreateIndex("workergroup", "*", buntdb.IndexJSON("WorkerGroup"))
 }

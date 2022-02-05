@@ -207,6 +207,18 @@ func Setup(port string) *fiber.App {
 		worker.WorkerStatsWs(c, "workerstats."+c.Params("workergroup"))
 	}))
 
+	// Run Task
+	app.Post("/runtask", func(c *fiber.Ctx) error {
+
+		err := worker.WorkerRunTask(string(c.Query("workergroup")), uuid.NewString(), []string{"ls"})
+		if err != nil {
+			return c.SendString(err.Error())
+		} else {
+			return c.SendString("Success")
+		}
+
+	})
+
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {
 		return c.SendString("Hello 👋! Healthy 🍏")
