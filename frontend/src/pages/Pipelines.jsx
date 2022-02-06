@@ -21,14 +21,14 @@ const Pipelines = () => {
     const [pipelines, setPipelines] = useState([]);
 
     // Custom GraphQL hook
-    const getPipelines = useGetPipelines_(setPipelines);
+    const getPipelines = useGetPipelines_(setPipelines, Environment.id.get());
 
-    // Get pipelines on load
+    // Get pipelines on load and when environment changes
     useEffect(() => {
         getPipelines();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [Environment.id.get()]);
 
     return (
         <Box className="page">
@@ -91,7 +91,7 @@ export default Pipelines;
 
 // ---------- Custom Hook
 
-function useGetPipelines_(setPipelines) {
+function useGetPipelines_(setPipelines, environmentID) {
     // GraphQL hook
     const getPipelines = useGetPipelines();
 
@@ -102,11 +102,11 @@ function useGetPipelines_(setPipelines) {
         const response = await getPipelines();
 
         if (response.r === 'error') {
-            enqueueSnackbar("Can't create pipeline: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't get pipelines: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': add pipeline', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get pipelines', { variant: 'error' }));
         } else {
-            setPipelines(response);
+            setPipelines(response.filter((a) => a.environmentID === environmentID));
         }
     };
 }
