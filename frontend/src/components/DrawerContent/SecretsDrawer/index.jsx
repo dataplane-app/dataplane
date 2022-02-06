@@ -5,8 +5,12 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
 import CustomChip from '../../../components/CustomChip';
 import { useGetWorkerGroupSecrets } from '../../../graphql/getWorkerGroupSecrets';
+import { useHistory } from 'react-router-dom';
 
 const SecretsDrawer = ({ handleClose, secretDrawerWorkGroup, environmentName }) => {
+    // React router
+    const history = useHistory();
+
     // Local state
     const [secrets, setSecrets] = useState([]);
 
@@ -33,7 +37,7 @@ const SecretsDrawer = ({ handleClose, secretDrawerWorkGroup, environmentName }) 
                     <Typography component="h2" variant="h2">
                         Secrets
                     </Typography>
-                    <Button variant="contained" onClick={handleClose} style={{ paddingLeft: '16px', paddingRight: '16px' }}>
+                    <Button variant="contained" onClick={() => history.push(`/secrets`)} style={{ paddingLeft: '16px', paddingRight: '16px' }}>
                         Manage
                     </Button>
                 </Box>

@@ -189,7 +189,7 @@ export default function WorkerDetail() {
                                 component="tr"
                                 {...row.getRowProps()}
                                 display="grid"
-                                gridTemplateColumns="400px 1fr 1fr"
+                                gridTemplateColumns="450px 1fr 1fr"
                                 alignItems="start"
                                 borderRadius="5px"
                                 backgroundColor="background.secondary"
