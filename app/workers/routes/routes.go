@@ -85,7 +85,7 @@ func Setup(port string) *fiber.App {
 	workerhealth.WorkerHealthStart()
 
 	// Runner
-	app.Post("/runner", runtask.Runtask())
+	// app.Post("/runner", runtask.Runtask())
 
 	// Cancel running job
 	app.Post("/runnercancel/:id", runtask.Canceltask())

@@ -16,6 +16,7 @@ func Canceltask() fiber.Handler {
 			_ = syscall.Kill(-Tasks[id].PID, syscall.SIGKILL)
 		}
 		Tasks[id].Cancel()
+		TasksStatus[id] = "cancel"
 
 		return c.SendString("Hello 👋! Healthy 🍏")
 
