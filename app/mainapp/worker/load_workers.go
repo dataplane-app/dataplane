@@ -2,6 +2,7 @@ package worker
 
 import (
 	"dataplane/mainapp/database"
+	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"encoding/json"
@@ -11,45 +12,15 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
-type workerResponse struct {
-	Response  string
-	MainAppID string
-}
-
-type WorkerStats struct {
-	WorkerGroup string
-	WorkerID    string
-	Status      string //Online, Busy
-	T           time.Time
-	Interval    int
-	CPUPerc     float64
-	Load        float64
-	MemoryPerc  float64
-	MemoryUsed  float64
-	Env         string `json:"Env"`
-	LB          string `json:"LB"`
-	WorkerType  string `json:"WorkerType"` //container, kubernetes
-}
-
-type WorkerGroup struct {
-	WorkerGroup string
-	Status      string //Online, Busy
-	T           time.Time
-	Interval    int
-	Env         string `json:"Env"`
-	LB          string `json:"LB"`
-	WorkerType  string `json:"WorkerType"` //container, kubernetes
-}
-
 func LoadWorkers(MainAppID string) {
 
 	// ---- Worker Group ------
 
 	// var workerdata Worker
 	var workerdatajson []byte
-	var workerdata WorkerStats
+	var workerdata models.WorkerStats
 	var workerGroupdatajson []byte
-	var workerGroupdata WorkerGroup
+	var workerGroupdata models.WorkerGroup
 
 	messageq.NATSencoded.Subscribe("workerload", func(m *nats.Msg) {
 		// if os.Getenv("messagedebug") == "true" {

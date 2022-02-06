@@ -10,7 +10,6 @@ import (
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
-	"dataplane/mainapp/worker"
 	"encoding/json"
 	"errors"
 	"os"
@@ -97,7 +96,7 @@ func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, envi
 
 func (r *queryResolver) GetWorkers(ctx context.Context, environmentName string) ([]*privategraphql.Workers, error) {
 	var resp []*privategraphql.Workers
-	var worker worker.WorkerStats
+	var worker models.WorkerStats
 
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -151,7 +150,7 @@ func (r *queryResolver) GetWorkers(ctx context.Context, environmentName string) 
 
 func (r *queryResolver) GetWorkerGroups(ctx context.Context, environmentName string) ([]*privategraphql.WorkerGroup, error) {
 	var resp []*privategraphql.WorkerGroup
-	var workergroup worker.WorkerGroup
+	var workergroup models.WorkerGroup
 
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

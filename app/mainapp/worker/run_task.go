@@ -2,11 +2,13 @@ package worker
 
 import (
 	"dataplane/mainapp/database"
+	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"time"
 
@@ -53,7 +55,7 @@ func WorkerRunTask(workerGroup string, taskid string, commands []string) error {
 	before failing */
 	// var err1 error
 	maxRetiresAllowed := 5
-	var onlineWorkers []WorkerStats
+	var onlineWorkers []models.WorkerStats
 	for i := 0; i < maxRetiresAllowed; i++ {
 
 		database.GoDBWorker.View(func(tx *buntdb.Tx) error {
@@ -61,7 +63,7 @@ func WorkerRunTask(workerGroup string, taskid string, commands []string) error {
 
 				// `{"WorkerGeroup":"`+workerGroup+`"}`,
 
-				var worker WorkerStats
+				var worker models.WorkerStats
 
 				// log.Println("Workers:", key, val)
 
@@ -77,7 +79,7 @@ func WorkerRunTask(workerGroup string, taskid string, commands []string) error {
 			return nil
 		})
 
-		log.Println("X:", len(onlineWorkers))
+		// log.Println("X:", len(onlineWorkers))
 
 		// log.Println("err1:", err1)
 
@@ -97,9 +99,16 @@ func WorkerRunTask(workerGroup string, taskid string, commands []string) error {
 	// Choose a worker based on load balancing strategy - default is round robin
 	switch onlineWorkers[0].LB {
 	case "roundrobin":
-		fmt.Println("round robin")
+
+		loadbalanceNext := utilities.Balance(onlineWorkers, workerGroup)
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact("round robin: ", loadbalanceNext)
+		}
 	default:
-		fmt.Println("three")
+		loadbalanceNext := utilities.Balance(onlineWorkers, workerGroup)
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact("round robin: ", loadbalanceNext)
+		}
 	}
 
 	// Send the request to the worker

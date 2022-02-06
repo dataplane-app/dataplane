@@ -52,3 +52,33 @@ type WorkerSecrets struct {
 	UpdatedAt     *time.Time `json:"updated_at"`
 	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
 }
+
+type workerResponse struct {
+	Response  string
+	MainAppID string
+}
+
+type WorkerStats struct {
+	WorkerGroup string
+	WorkerID    string
+	Status      string //Online, Busy
+	T           time.Time
+	Interval    int
+	CPUPerc     float64
+	Load        float64
+	MemoryPerc  float64
+	MemoryUsed  float64
+	Env         string `json:"Env"`
+	LB          string `json:"LB"`
+	WorkerType  string `json:"WorkerType"` //container, kubernetes
+}
+
+type WorkerGroup struct {
+	WorkerGroup string
+	Status      string //Online, Busy
+	T           time.Time
+	Interval    int
+	Env         string `json:"Env"`
+	LB          string `json:"LB"`
+	WorkerType  string `json:"WorkerType"` //container, kubernetes
+}
