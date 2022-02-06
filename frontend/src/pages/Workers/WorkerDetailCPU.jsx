@@ -74,10 +74,10 @@ export default function WorkerDetailCPU({ row }) {
     const [percentage, load] = row.value;
 
     return (
-        <Grid container direction="row" alignItems="flex-start" justifyContent="flex-end" pr={1}>
+        <Grid container direction="row" alignItems="flex-start" justifyContent="flex-end">
             <Grid item mr={1.5}>
                 <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
-                    {percentage}%
+                    {percentage.toFixed(1)}%
                 </Typography>
                 <Typography variant="body1" align="right" sx={{ fontSize: '1.0625rem' }}>
                     CPU
