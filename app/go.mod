@@ -19,6 +19,8 @@ require (
 	github.com/lestrrat-go/jwx v1.2.12
 	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/nats-io/nats.go v1.13.1-0.20220121202836-972a071d373d
+	github.com/pieterclaerhout/go-log v1.14.0
+	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/stretchr/testify v1.7.0
 	github.com/tidwall/buntdb v1.2.9
 	github.com/valyala/fasthttp v1.32.0
@@ -80,7 +82,6 @@ require (
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pieterclaerhout/go-formatter v1.0.4 // indirect
-	github.com/pieterclaerhout/go-log v1.14.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
@@ -89,7 +90,6 @@ require (
 	github.com/sanity-io/litter v1.2.0 // indirect
 	github.com/savsgio/gotils v0.0.0-20211223103454-d0aaa54c5899 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
-	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/tidwall/btree v1.1.0 // indirect
 	github.com/tidwall/gjson v1.12.1 // indirect
