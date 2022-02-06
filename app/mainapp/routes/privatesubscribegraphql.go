@@ -1,39 +1,39 @@
 package routes
 
-import (
-	generated "dataplane/mainapp/graphql/privatesubscribe"
-	privategraphql "dataplane/mainapp/graphql/privatesubscribe/resolvers"
-	"net/http"
+// import (
+// 	generated "dataplane/mainapp/graphql/privatesubscribe"
+// 	privategraphql "dataplane/mainapp/graphql/privatesubscribe/resolvers"
+// 	"net/http"
 
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/websocket/v2"
-	"github.com/valyala/fasthttp/fasthttpadaptor"
-)
+// 	"github.com/99designs/gqlgen/graphql/handler"
+// 	"github.com/gofiber/fiber/v2"
+// 	"github.com/gofiber/websocket/v2"
+// 	"github.com/valyala/fasthttp/fasthttpadaptor"
+// )
 
-/* GraphQL Handlers */
-func PrivateSubscribeGraphqlHandler() fiber.Handler {
+// /* GraphQL Handlers */
+// func PrivateSubscribeGraphqlHandler() fiber.Handler {
 
-	// return fiber.ErrUpgradeRequired
+// 	// return fiber.ErrUpgradeRequired
 
-	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &privategraphql.Resolver{}}))
+// 	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &privategraphql.Resolver{}}))
 
-	return pshttpHandler(h)
-}
+// 	return pshttpHandler(h)
+// }
 
-func pshttpHandler(h http.Handler) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		if websocket.IsWebSocketUpgrade(c) {
-			c.Locals("allowed", true)
-			return c.Next()
-		}
+// func pshttpHandler(h http.Handler) fiber.Handler {
+// 	return func(c *fiber.Ctx) error {
+// 		if websocket.IsWebSocketUpgrade(c) {
+// 			c.Locals("allowed", true)
+// 			return c.Next()
+// 		}
 
-		c.Locals("fiberCtx", c)
-		handler := fasthttpadaptor.NewFastHTTPHandler(h)
-		handler(c.Context())
-		return nil
-	}
-}
+// 		c.Locals("fiberCtx", c)
+// 		handler := fasthttpadaptor.NewFastHTTPHandler(h)
+// 		handler(c.Context())
+// 		return nil
+// 	}
+// }
 
 // func graphqlServer() fiber.Handler {
 

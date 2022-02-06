@@ -162,7 +162,7 @@ func Setup(port string) *fiber.App {
 		return fiber.ErrUpgradeRequired
 	})
 
-	app.Use("/privatesubscribe/graphql", PrivateSubscribeGraphqlHandler())
+	// app.Use("/privatesubscribe/graphql", PrivateSubscribeGraphqlHandler())
 
 	// WARNING: This is insecure and only for documentation, do not enable in production
 	if os.Getenv("graphqldocs") == "true" {
