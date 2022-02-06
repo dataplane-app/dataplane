@@ -71,87 +71,8 @@ func LoadWorkers(MainAppID string) {
 
 			// log.Println(string(workerGroupdatajson))
 
-			// log.Println("---------------------------")
-
 		}
-
-		// database.GoDBWorkerGroup.View(func(tx *buntdb.Tx) error {
-		// 	tx.Ascend("", func(key, val string) bool {
-		// 		fmt.Printf("Worker Groups: %s %s\n", key, val)
-		// 		return true
-		// 	})
-		// 	return nil
-		// })
-
-		// log.Println("======================")
-
-		// database.GoDBWorker.View(func(tx *buntdb.Tx) error {
-		// 	tx.Ascend("", func(key, val string) bool {
-		// 		fmt.Printf("Worker: %s %s\n", key, val)
-		// 		return true
-		// 	})
-		// 	return nil
-		// })
-
-		// log.Println(LoadedWorkers)
 
 	})
 
 }
-
-// // ----- remove after 3 seconds
-// var delkeys []string
-// deleteTime := time.Now().UTC().Add(-3 * time.Second).Unix()
-// db.View(func(tx *buntdb.Tx) error {
-// tx.Len("object:*", func(k, v string) bool {
-// 	if someCondition(k) == true {
-// 		delkeys = append(delkeys, k)
-// 	}
-// 	return true // continue
-// })
-
-// LoadedWorkers[workerdata.WorkerGroup] = Worker{
-// 	WorkerGroup: workerdata.WorkerGroup,
-// 	WorkerID:    workerdata.WorkerID,
-// 	Status:      workerdata.Status,
-// 	T:           workerdata.T,
-// 	Updated:     time.Now(),
-// }
-
-/* Worker Load Subscriptions activate */
-// messageq.NATS.Subscribe("workerload", func(m *nats.Msg) {
-// 	// sendjson, _ := json.Marshal(`{"response":"ok"}`)
-
-// 	var workerdata Worker
-
-// 	// log.Println(string(m.Data))
-
-// 	err := json.Unmarshal(m.Data, &workerdata)
-
-// 	if err != nil {
-// 		logging.PrintSecretsRedact(err)
-// 	}
-
-// 	// log.Println(workerdata)
-
-// 	LoadedWorkers[workerdata.WorkerGroup] = Worker{
-// 		WorkerGroup: workerdata.WorkerGroup,
-// 		WorkerID:    workerdata.WorkerID,
-// 		Status:      workerdata.Status,
-// 		T:           workerdata.T,
-// 		Updated:     time.Now(),
-// 	}
-
-// 	// log.Println(LoadedWorkers)
-
-// 	send := workerResponse{
-// 		Response:  "ok",
-// 		MainAppID: MainAppID,
-// 	}
-// 	messageq.NATSencoded.Publish(m.Reply, send)
-// 	if os.Getenv("messagedebug") == "true" {
-// 		log.Println(string(m.Data))
-// 	}
-// })
-
-/* Ping any active workers while starting up */

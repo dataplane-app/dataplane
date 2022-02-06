@@ -95,6 +95,9 @@ func Setup(port string) *fiber.App {
 		return c.SendString("Hello 👋! Healthy 🍏")
 	})
 
+	/* ---- Listen for tasks ------- */
+	runtask.ListenTasks()
+
 	stop := time.Now()
 	// Do something with response
 	log.Println("🐆 Worker start time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")

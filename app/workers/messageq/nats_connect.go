@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/encoders/protobuf"
 )
 
 var NATS *nats.Conn
@@ -33,14 +32,14 @@ func NATSConnect() {
 		log.Fatal("Failed to connect to encoded NATS")
 	}
 
-	NATSProtobuf, _ = nats.NewEncodedConn(NATS, protobuf.PROTOBUF_ENCODER)
-	if err != nil {
-		logging.PrintSecretsRedact(err.Error())
-		log.Fatal("Failed to connect to encoded NATS")
-	}
+	// NATSProtobuf, _ = nats.NewEncodedConn(NATS, protobuf.PROTOBUF_ENCODER)
+	// if err != nil {
+	// 	logging.PrintSecretsRedact(err.Error())
+	// 	log.Fatal("Failed to connect to encoded NATS")
+	// }
 
 	// Create JetStream Context
-	NATSStream, _ = NATS.JetStream(nats.PublishAsyncMaxPending(256))
+	// NATSStream, _ = NATS.JetStream(nats.PublishAsyncMaxPending(256))
 
 	log.Println("📧 NATS connected")
 	//DBConn.Config.PrepareStmt = true

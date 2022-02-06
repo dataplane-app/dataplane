@@ -210,7 +210,7 @@ func Setup(port string) *fiber.App {
 	// Run Task
 	app.Post("/runtask", func(c *fiber.Ctx) error {
 
-		err := worker.WorkerRunTask(string(c.Query("workergroup")), uuid.NewString(), []string{"ls"})
+		err := worker.WorkerRunTask(string(c.Query("workergroup")), uuid.NewString(), uuid.NewString(), []string{"ls"})
 		if err != nil {
 			return c.SendString(err.Error())
 		} else {
