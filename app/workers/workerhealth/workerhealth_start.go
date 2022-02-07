@@ -1,6 +1,7 @@
 package workerhealth
 
 import (
+	"dataplane/workers/cmetric"
 	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
 	"log"
@@ -94,11 +95,16 @@ func WorkerHealthStart() {
 		switch os.Getenv("worker_type") {
 
 		// TODO: Fix container usage
-		case "x":
-			// cpu := cmetric.CurrentCpuPercentUsage()
+		case "container":
+			percentCPU := cmetric.CurrentCpuPercentUsage()
+			percentCPUsend = percentCPU
 			// cpu := docker.GetDockerIDList()
 			// memory, _ := cmetric.GetContainerMemoryLimit()
-			// memoryperc := cmetric.CurrentMemoryPercentUsage()
+			memory := cmetric.CurrentMemoryUsage()
+			memoryperc := cmetric.CurrentMemoryPercentUsage()
+
+			percentMemorysend = float64(memoryperc)
+			memoryused = float64(memory)
 
 			// // if math.IsNaN(cpu) {
 			// // 	cpu = 0
@@ -117,16 +123,17 @@ func WorkerHealthStart() {
 			memory, _ := mem.VirtualMemory()
 			percentMemorysend = math.Round(memory.UsedPercent*100) / 100
 			memoryused = math.Round(float64(memory.Used)*100) / 100
+			percentCPU, _ := cpu.Percent(time.Second, false)
+			percentCPUsend = math.Round(percentCPU[0]*100) / 100
 
 		}
-
-		percentCPU, _ := cpu.Percent(time.Second, false)
-		percentCPUsend = math.Round(percentCPU[0]*100) / 100
 
 		// log.Println("CPU:", percentCPUsend)
 
 		load, _ := load.Avg()
 		loadsend := math.Round(load.Load1*100) / 100
+
+		// log.Printf("cpu perc:%v | mem percent:%v | mem used :%v | load:%v \n", percentCPUsend, percentMemorysend, memoryused, loadsend)
 
 		workerdata := &WorkerStats{
 			WorkerGroup: os.Getenv("worker_group"),
@@ -151,7 +158,7 @@ func WorkerHealthStart() {
 
 		if os.Getenv("messagedebug") == "true" {
 			// log.Println("Worker health: ", time.Now())
-			log.Printf("cpu perc:%v | mem percent:%v | load:%v \n", percentCPUsend, percentMemorysend, loadsend)
+			log.Printf("cpu perc:%v | mem percent:%v | mem used :%v | load:%v \n", percentCPUsend, percentMemorysend, memoryused, loadsend)
 			// log.Printf("Memory used:%v total:%v | Swap total: %v | Swap free: %v\n",
 			// 	utils.ByteCountIEC(int64(memory.Used)),
 			// 	utils.ByteCountIEC(int64(memory.Total)),

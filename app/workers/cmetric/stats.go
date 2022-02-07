@@ -26,11 +26,13 @@ const (
 	cgroupCpuQuotaPath  = "/sys/fs/cgroup/cpu/cpu.cfs_quota_us"
 	cgroupCpuPeriodPath = "/sys/fs/cgroup/cpu/cpu.cfs_period_us"
 	memoryPath          = "/sys/fs/cgroup/memory/memory.limit_in_bytes"
+	memoryUsage         = "/sys/fs/cgroup/memory/memory.usage_in_bytes"
 )
 
 var (
 	cpuPercentUsage    atomic.Value //  avg cpu percent in multi cpu core 100% is the max percent
 	memoryPercentUsage atomic.Value // 100% is the max percent
+	memoryUsagebytes   atomic.Value
 
 	memoryStatCollectorOnce sync.Once
 	cpuStatCollectorOnce    sync.Once
@@ -51,7 +53,7 @@ var (
 
 func init() {
 
-	log.Println("Start - container", isContainerRunning())
+	// log.Println("Start - container", isContainerRunning())
 	cpuPercentUsage.Store(NotRetrievedCpuUsageValue)
 	memoryPercentUsage.Store(NotRetrievedMemoryValue)
 
@@ -76,7 +78,7 @@ func init() {
 	cpuCount = float64(runtime.NumCPU())
 	if isContainer {
 		cpuCount, err = getContainerCpuCount()
-		log.Println("environment is  container - cpus: ", cpuCount)
+		// log.Println("environment is  container - cpus: ", cpuCount)
 		if err != nil {
 			log.Fatal(err, "Fail to getContainerCpuCount when initializing system metric")
 			return
@@ -119,7 +121,7 @@ func getContainerCpuCount() (float64, error) {
 
 	cpuCore := float64(cpuQuota) / float64(cpuPeriod)
 
-	log.Println("cpu count:", cpuPeriod, cpuQuota, cpuCore)
+	// log.Println("cpu count:", cpuPeriod, cpuQuota, cpuCore)
 
 	return cpuCore, nil
 }
@@ -159,7 +161,7 @@ func retrieveAndUpdateCpuStat() {
 		return
 	}
 	// get avg cpu percent in multi cpu core 100% is the max percent
-	cpuPercentUsage.Store(cpuPercent / cpuCount / 100)
+	cpuPercentUsage.Store(cpuPercent / cpuCount)
 }
 
 func getProcessCpuStat() (float64, error) {
@@ -188,6 +190,14 @@ func CurrentCpuPercentUsage() float64 {
 
 func CurrentMemoryPercentUsage() float32 {
 	r, ok := memoryPercentUsage.Load().(float32)
+	if !ok {
+		return NotRetrievedMemoryValue
+	}
+	return r
+}
+
+func CurrentMemoryUsage() float32 {
+	r, ok := memoryUsagebytes.Load().(float32)
 	if !ok {
 		return NotRetrievedMemoryValue
 	}
@@ -232,14 +242,22 @@ func retrieveAndUpdateMemoryStat() {
 			log.Println(err, "Fail to retrieve and update container memory statistic")
 			return
 		}
-		memoryInfo, err := p.MemoryInfo()
+		// memoryInfo, err := p.MemoryInfo()
+		// if err != nil {
+		// 	log.Println(err, "Fail to retrieve and update container memory statistic")
+		// 	return
+		// }
+		usage, err := readUint(memoryUsage)
 		if err != nil {
 			log.Println(err, "Fail to retrieve and update container memory statistic")
 			return
 		}
-		memoryPercent = float32(memoryInfo.RSS) / float32(memoryLimit)
+		// log.Println("mem usage:", usage)
+		memoryUsagebytes.Store(float32(usage))
+		memoryPercent = float32(usage) / float32(memoryLimit) * 100
 	} else {
 		memoryPercent, err = p.MemoryPercent()
+		memoryPercent = memoryPercent * 100
 		if err != nil {
 			log.Println(err, "Fail to retrieve and update container memory statistic")
 			return

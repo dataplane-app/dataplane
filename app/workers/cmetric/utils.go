@@ -2,7 +2,6 @@ package cmetric
 
 import (
 	"io/ioutil"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -33,8 +32,8 @@ func readUint(path string) (uint64, error) {
 		return 0, err
 	}
 
-	x, y := parseUint(strings.TrimSpace(string(v)), 10, 64)
-	log.Println(path, " - value read:", string(v))
-	log.Println(path, " - parsed value read:", x, y)
+	// x, y := parseUint(strings.TrimSpace(string(v)), 10, 64)
+	// log.Println(path, " - value read:", string(v))
+	// log.Println(path, " - parsed value read:", x, y)
 	return parseUint(strings.TrimSpace(string(v)), 10, 64)
 }
