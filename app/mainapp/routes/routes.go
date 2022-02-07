@@ -27,44 +27,6 @@ import (
 
 type client struct{} // Add more data to this type if needed
 
-// var clients = make(map[*websocket.Conn]client) // Note: although large maps with pointer-like types (e.g. strings) as keys are slow, using pointers themselves as keys is acceptable and fast
-// var register = make(chan *websocket.Conn)
-
-// var unregister = make(chan *websocket.Conn)
-// var x = 0
-
-// func runHub() {
-// 	for {
-// 		select {
-// 		case connection := <-register:
-// 			clients[connection] = client{}
-// 			log.Println("connection registered")
-
-// 		case message := <-broadcast:
-// 			log.Println("message received:", string(message))
-// 			x = x + 1
-
-// 			// Send the message to all clients
-// 			for connection := range clients {
-// 				log.Println("conn:", connection, websocket.TextMessage)
-// 				if err := connection.WriteMessage(x, message); err != nil {
-// 					// 	// 	log.Println("write error:", err)
-
-// 					connection.WriteMessage(websocket.CloseMessage, []byte{})
-// 					connection.Close()
-// 					delete(clients, connection)
-// 				}
-// 			}
-
-// 		case connection := <-unregister:
-// 			// Remove the client from the hub
-// 			delete(clients, connection)
-
-// 			log.Println("connection unregistered")
-// 		}
-// 	}
-// }
-
 var MainAppID string
 
 func Setup(port string) *fiber.App {

@@ -3,7 +3,6 @@ package workerhealth
 import (
 	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
-	"dataplane/workers/utils"
 	"log"
 	"math"
 	"os"
@@ -89,12 +88,42 @@ func WorkerHealthStart() {
 		// s.NextRun()
 
 		// record in the database and send status to mainapp
-		percentCPU, _ := cpu.Percent(time.Second, false)
-		percentCPUsend := math.Round(percentCPU[0]*100) / 100
+		var percentCPUsend float64
+		var percentMemorysend float64
+		var memoryused float64
+		switch os.Getenv("worker_type") {
 
-		memory, _ := mem.VirtualMemory()
-		percentMemorysend := math.Round(memory.UsedPercent*100) / 100
-		memoryused := math.Round(float64(memory.Used)*100) / 100
+		// TODO: Fix container usage
+		case "x":
+			// cpu := cmetric.CurrentCpuPercentUsage()
+			// cpu := docker.GetDockerIDList()
+			// memory, _ := cmetric.GetContainerMemoryLimit()
+			// memoryperc := cmetric.CurrentMemoryPercentUsage()
+
+			// // if math.IsNaN(cpu) {
+			// // 	cpu = 0
+			// // }
+			// log.Println("Docker cpu", cpu.Percent())
+
+			// log.Println("Memory:", utils.HumanFileSize(float64(memory)))
+			// // log.Println("CPU:", cpu)
+			// log.Println("Memory:", memoryperc)
+
+			// // percentCPUsend = math.Round(cpu*100) / 100
+			// percentMemorysend = math.Round(float64(memoryperc)*100) / 100
+			// memoryused = math.Round((float64(memoryperc)*float64(memory))*100) / 100
+		default:
+
+			memory, _ := mem.VirtualMemory()
+			percentMemorysend = math.Round(memory.UsedPercent*100) / 100
+			memoryused = math.Round(float64(memory.Used)*100) / 100
+
+		}
+
+		percentCPU, _ := cpu.Percent(time.Second, false)
+		percentCPUsend = math.Round(percentCPU[0]*100) / 100
+
+		// log.Println("CPU:", percentCPUsend)
 
 		load, _ := load.Avg()
 		loadsend := math.Round(load.Load1*100) / 100
@@ -123,11 +152,11 @@ func WorkerHealthStart() {
 		if os.Getenv("messagedebug") == "true" {
 			// log.Println("Worker health: ", time.Now())
 			log.Printf("cpu perc:%v | mem percent:%v | load:%v \n", percentCPUsend, percentMemorysend, loadsend)
-			log.Printf("Memory used:%v total:%v | Swap total: %v | Swap free: %v\n",
-				utils.ByteCountIEC(int64(memory.Used)),
-				utils.ByteCountIEC(int64(memory.Total)),
-				utils.ByteCountIEC(int64(memory.SwapTotal)),
-				utils.ByteCountIEC(int64(memory.SwapFree)))
+			// log.Printf("Memory used:%v total:%v | Swap total: %v | Swap free: %v\n",
+			// 	utils.ByteCountIEC(int64(memory.Used)),
+			// 	utils.ByteCountIEC(int64(memory.Total)),
+			// 	utils.ByteCountIEC(int64(memory.SwapTotal)),
+			// 	utils.ByteCountIEC(int64(memory.SwapFree)))
 		}
 		// cp, _ := cpu.Info()
 		// log.Println("CPU info", cp)

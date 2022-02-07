@@ -1,13 +1,18 @@
-version: '3'
+version: '2.4'
 
 services:
   worker1:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: go run worker.go
+    command: go run workers/worker.go
+    # command: tail -f /dev/null
+    mem_limit: 512MB
+    # cpu_count: 1
+    # cpu_percent: 50
+    cpus: 1.5
     volumes:
-      - ./workers:/workerdev
+      - ./:/workerdev
     environment:
       env: "local"
       basepath: "/dataplane"
@@ -24,20 +29,33 @@ services:
       mode: "development"
       debug: "true"
       dbdebug: "false"
-      messagedebug: "true"
+      messagedebug: "false"
       worker_heartbeat_seconds: "3"
       worker_group: "python_1"
       worker_type: "container"
       worker_lb: "roundrobin"
       worker_env: "Development"
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1'
+    #       memory: 500M
+    #     reservations:
+    #       cpus: '0.1'
+    #       memory: 100M
 
   worker2:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: go run worker.go
+    command: go run workers/worker.go
+    mem_limit: 512MB
+    cpu_count: 1.5
+    # cpu_percent: 50
+    # cpus: 0.5
+    # command: tail -f /dev/null
     volumes:
-      - ./workers:/workerdev
+      - ./:/workerdev
     environment:
       env: "local"
       basepath: "/dataplane"
@@ -54,12 +72,22 @@ services:
       mode: "development"
       debug: "true"
       dbdebug: "false"
-      messagedebug: "true"
+      messagedebug: "false"
       worker_heartbeat_seconds: "3"
       worker_group: "python_2"
       worker_type: "container"
       worker_lb: "roundrobin"
       worker_env: "Development"
+
+      # Metrics dont pick up resouce limits inside container
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1'
+    #       memory: 500M
+    #     reservations:
+    #       cpus: '0.1'
+    #       memory: 100M
   
 networks:
   default:

@@ -14,3 +14,5 @@ RUN npm install -g yarn n
 RUN n 16.8.0
 
 RUN yarn install --modules-folder ./frontend
+
+RUN apt-get install -y sysstat

@@ -6,12 +6,14 @@ RUN mkdir /workerfiles
 
 WORKDIR /workerdev
 
-COPY ./workers/go.mod /workerdev/go.mod
+COPY ./go.mod /workerdev/go.mod
 
 RUN go mod download
 
-COPY python-example /workerfiles/python-example
+RUN apt-get install -y sysstat
 
-RUN pip3 install -r /workerfiles/python-example/requirements.txt
+# COPY python-example /workerfiles/python-example
+
+# RUN pip3 install -r /workerfiles/python-example/requirements.txt
 
 CMD ["go","run","worker.go"]
