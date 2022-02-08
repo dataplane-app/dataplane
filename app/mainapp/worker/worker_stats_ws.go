@@ -22,24 +22,6 @@ var disconnectConn = make(chan string)
 
 // https://github.com/gorilla/websocket/blob/master/examples/chat/client.go
 
-// func SecureTimeout() {
-
-// 	for {
-// 		select {
-// 		case <-time.After(time.Second):
-// 			// conn.Close()
-// 			securetimeout <- true
-// 			if os.Getenv("messagedebug") == "true" {
-// 				log.Println("connection unregistered")
-// 			}
-// 			case time.After(120 * time.Second):
-// 			// return
-// 		}
-// 	}
-
-// 	// }
-// }
-
 // https://github.com/marcelo-tm/testws/blob/master/main.go
 func WorkerStatsWs(conn *websocket.Conn, subject string) {
 

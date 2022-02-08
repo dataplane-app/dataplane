@@ -3,9 +3,12 @@ package runtask
 import (
 	"bufio"
 	"context"
+	modelmain "dataplane/mainapp/database/models"
 	"dataplane/workers/database"
 	"dataplane/workers/database/models"
+	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
+	"dataplane/workers/workerhealth"
 	"fmt"
 	"log"
 	"os"
@@ -37,6 +40,23 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 
 	if os.Getenv("debug") == "true" {
 		fmt.Printf("starting task with id %s\n", taskID)
+	}
+
+	TaskUpdate := modelmain.WorkerTasks{
+		TaskID:        taskID,
+		CreatedAt:     time.Now().UTC(),
+		EnvironmentID: os.Getenv("worker_env"),
+		RunID:         runID,
+		WorkerGroup:   os.Getenv("worker_group"),
+		WorkerID:      workerhealth.WorkerID,
+		StartDT:       time.Now().UTC(),
+		Status:        "Run",
+	}
+	var response TaskResponse
+	_, errnats := messageq.MsgReply("taskupdate", TaskUpdate, &response)
+
+	if errnats != nil {
+		logging.PrintSecretsRedact("Update task error nats:", errnats)
 	}
 
 	for i, v := range command {
@@ -131,8 +151,24 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 			log.Println(i, err)
 		}
 	}
-	<-ctx.Done()
+
+	if os.Getenv("debug") == "true" {
+		log.Println("Update task as success - " + taskID)
+	}
+	TaskUpdate = modelmain.WorkerTasks{
+		TaskID: taskID,
+		Status: "Success",
+		EndDT:  time.Now().UTC(),
+	}
+
+	_, errnats = messageq.MsgReply("taskupdate", TaskUpdate, &response)
+
+	if errnats != nil {
+		logging.PrintSecretsRedact("Update success task error nats:", errnats)
+	}
+
 	delete(TasksStatus, taskID)
+	<-ctx.Done()
 }
 
 // func Runtask() fiber.Handler {

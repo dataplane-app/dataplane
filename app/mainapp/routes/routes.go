@@ -173,7 +173,7 @@ func Setup(port string) *fiber.App {
 	app.Post("/runtask", func(c *fiber.Ctx) error {
 
 		taskID := uuid.NewString()
-		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), []string{`for((i=1;i<=10; i+=1)); do echo "1st run $i times"; sleep 0.5; done`, `for((i=1;i<=1000; i+=1)); do echo "2nd run $i times"; sleep 0.5; done`})
+		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), []string{`for((i=1;i<=10; i+=1)); do echo "1st run $i times"; sleep 0.5; done`, `for((i=1;i<=10; i+=1)); do echo "2nd run $i times"; sleep 0.5; done`})
 		if err != nil {
 			return c.SendString(err.Error())
 		} else {
@@ -187,14 +187,16 @@ func Setup(port string) *fiber.App {
 		return c.SendString("Hello 👋! Healthy 🍏")
 	})
 
+	/* Worker Load Subscriptions activate */
+	worker.LoadWorkers(MainAppID)
+	worker.UpdateTasks(MainAppID)
+	log.Println("👷 Queue and worker subscriptions")
+
 	stop := time.Now()
 	// Do something with response
 	log.Println("🐆 Start time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
 
 	log.Println("🌍 Visit dashboard at:", "http://localhost:"+port+"/webapp/")
-
-	/* Worker Load Subscriptions activate */
-	worker.LoadWorkers(MainAppID)
 
 	// log.Println("Subscribe", hello, err)
 

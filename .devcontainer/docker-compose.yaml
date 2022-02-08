@@ -81,6 +81,7 @@ services:
       messagedebug: "true"
       worker_heartbeat_seconds: "1"
       worker_group: "python_1"
+      # vm, container, kubernetes
       worker_type: "container"
       worker_lb: "roundrobin"
       worker_env: "Development"

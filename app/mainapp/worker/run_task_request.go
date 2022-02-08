@@ -23,17 +23,29 @@ Task status: Queue, Allocated, Started, Failed, Success
 func WorkerRunTask(workerGroup string, taskid string, runid string, commands []string) error {
 
 	/* Record the task */
-	createTask := models.WorkerTasks{
-		TaskID:      taskid,
-		CreatedAt:   time.Now().UTC(),
-		WorkerGroup: workerGroup,
-		Status:      "Queue",
-	}
-	err := database.DBConn.Create(&createTask)
-	if err.Error != nil {
-		logging.PrintSecretsRedact(err.Error.Error())
-		return errors.New("Failed to create task in database.")
-	}
+	// createTask := models.WorkerTasks{
+	// 	TaskID:      taskid,
+	// 	CreatedAt:   time.Now().UTC(),
+	// 	WorkerGroup: workerGroup,
+	// 	Status:      "Queue",
+	// }
+
+	// queuedatajson, err := json.Marshal(&createTask)
+	// if err != nil {
+	// 	logging.PrintSecretsRedact(err)
+	// }
+
+	// err2 := database.DBConn.Create(&createTask)
+	// if err2.Error != nil {
+	// 	logging.PrintSecretsRedact(err2.Error.Error())
+	// 	return errors.New("Failed to create task in database.")
+	// }
+
+	// // ---- Update queue stats
+	// database.GoDBWorkerGroup.Update(func(tx *buntdb.Tx) error {
+	// 	tx.Set(taskid, string(queuedatajson), nil)
+	// 	return nil
+	// })
 
 	/* Look up chosen workers -
 	if none, keep trying for 10 x 2 seconds
@@ -43,12 +55,18 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, commands []s
 	var onlineWorkers []models.WorkerStats
 	for i := 0; i < maxRetiresAllowed; i++ {
 
+		log.Println(i)
+
 		database.GoDBWorker.View(func(tx *buntdb.Tx) error {
 			tx.AscendEqual("workergroup", `{"WorkerGroup":"`+workerGroup+`"}`, func(key, val string) bool {
 
 				// `{"WorkerGeroup":"`+workerGroup+`"}`,
 				var worker models.WorkerStats
 				// log.Println("Workers:", key, val)
+
+				if os.Getenv("debug") == "true" {
+					log.Println("worker loaded:", val)
+				}
 
 				err := json.Unmarshal([]byte(val), &worker)
 				if err != nil {
@@ -97,7 +115,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, commands []s
 
 	tasksend := models.WorkerTaskSend{
 		TaskID:        taskid,
-		CreatedAt:     createTask.CreatedAt,
+		CreatedAt:     time.Now().UTC(),
 		EnvironmentID: onlineWorkers[0].Env,
 		RunID:         runid,
 		WorkerGroup:   workerGroup,
@@ -109,7 +127,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, commands []s
 	_, errnats := messageq.MsgReply("task."+workerGroup+"."+loadbalanceNext, tasksend, &response)
 
 	if errnats != nil {
-		log.Println("error nats:", errnats)
+		log.Println("Send to worker error nats:", errnats)
 	}
 
 	log.Println(response.R)
