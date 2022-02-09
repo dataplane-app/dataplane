@@ -6,6 +6,7 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"dataplane/workers/runtask"
+	"encoding/json"
 	"log"
 
 	"gorm.io/gorm/clause"
@@ -29,6 +30,10 @@ func UpdateTasks(MainAppID string) {
 			}
 
 		}()
+
+		jsonmsg, _ := json.Marshal(&msg)
+
+		broadcastq <- jsonmsg
 
 		// Trigger stats updates:
 		// Each Pipeline queue, run, success or fail
