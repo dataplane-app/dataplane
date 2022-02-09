@@ -73,6 +73,11 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 			break
 		}
 
+		if TasksStatus[taskID] == "error" {
+			delete(TasksStatus, taskID)
+			break
+		}
+
 		// log.Println("command:", i, v)
 
 		cmd := exec.Command("/bin/bash", "-c", v)
@@ -117,8 +122,9 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 				// }
 				messageq.MsgSend("workertask."+taskID, logmsg)
 				database.DBConn.Create(&logmsg)
-
-				clog.Info(line)
+				if os.Getenv("debug") == "true" {
+					clog.Info(line)
+				}
 			}
 
 			// We're all done, unblock the channel
@@ -198,9 +204,9 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 
 		if err != nil {
 			statusUpdate = "Fail"
-			TasksStatus[taskID] = "cancel"
-			delete(TasksStatus, taskID)
-			delete(Tasks, taskID)
+			if TasksStatus[taskID] != "cancel" {
+				TasksStatus[taskID] = "error"
+			}
 			break
 		} else {
 			statusUpdate = "Success"
@@ -222,6 +228,7 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 		WorkerID:      workerhealth.WorkerID,
 		StartDT:       TaskUpdate.StartDT,
 		Status:        statusUpdate,
+		Reason:        TasksStatus[taskID],
 		EndDT:         time.Now().UTC(),
 	}
 
@@ -234,6 +241,10 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 
 	delete(TasksStatus, taskID)
 	delete(Tasks, taskID)
+
+	if os.Getenv("debug") == "true" {
+		log.Println("tasks after del:", Tasks)
+	}
 
 	<-ctx.Done()
 }

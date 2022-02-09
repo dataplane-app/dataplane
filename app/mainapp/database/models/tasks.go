@@ -18,6 +18,7 @@ type WorkerTasks struct {
 	StartDT       time.Time `json:"start_dt"`
 	EndDT         time.Time `json:"end_dt"`
 	Status        string    `json:"status"`
+	Reason        string    `json:"reason"`
 }
 
 type WorkerTaskSend struct {
