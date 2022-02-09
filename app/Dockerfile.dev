@@ -12,8 +12,8 @@ RUN go mod download
 
 RUN apt-get install -y sysstat
 
-# COPY python-example /workerfiles/python-example
+COPY examples/python-worker /workerfiles/python-worker
 
-# RUN pip3 install -r /workerfiles/python-example/requirements.txt
+RUN pip3 install -r /workerfiles/python-worker/requirements.txt
 
 CMD ["go","run","worker.go"]

@@ -18,5 +18,5 @@ type LogsWorkers struct {
 	TaskID        string    `gorm:"index:idx_logtasks;type:varchar(64);" json:"task_id"`
 	Log           string    `json:"log"`
 	LogType       string    `json:"log_type"` //info, error, debug
-	ErrorMsg      string    `json:"error_message"`
+	// ErrorMsg      string    `json:"error_message"`
 }

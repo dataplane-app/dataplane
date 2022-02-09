@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	modelmain "dataplane/mainapp/database/models"
+	"dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/database/models"
 	"dataplane/workers/logging"
@@ -38,19 +39,23 @@ var TasksStatus = make(map[string]string)
 // Worker function to run task
 func worker(ctx context.Context, runID string, taskID string, command []string) {
 
+	var statusUpdate string
+
 	if os.Getenv("debug") == "true" {
 		fmt.Printf("starting task with id %s\n", taskID)
 	}
 
+	statusUpdate = "Run"
+
 	TaskUpdate := modelmain.WorkerTasks{
 		TaskID:        taskID,
 		CreatedAt:     time.Now().UTC(),
-		EnvironmentID: os.Getenv("worker_env"),
+		EnvironmentID: config.EnvID,
 		RunID:         runID,
 		WorkerGroup:   os.Getenv("worker_group"),
 		WorkerID:      workerhealth.WorkerID,
 		StartDT:       time.Now().UTC(),
-		Status:        "Run",
+		Status:        statusUpdate,
 	}
 	var response TaskResponse
 	_, errnats := messageq.MsgReply("taskupdate", TaskUpdate, &response)
@@ -79,7 +84,7 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 		r, _ := cmd.StdoutPipe()
 
 		// Use the same pipe for standard error
-		cmd.Stderr = cmd.Stdout
+		// cmd.Stderr = cmd.Stdout
 		// cmd.Stdout
 
 		// Make a new channel which will be used to ensure we get all output
@@ -121,6 +126,48 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 
 		}()
 
+		// ------ Error logging -----------
+		rErr, _ := cmd.StderrPipe()
+
+		// Make a new channel which will be used to ensure we get all output
+		doneErr := make(chan struct{})
+
+		// Create a scanner which scans r in a line-by-line fashion
+		scannerErr := bufio.NewScanner(rErr)
+
+		// Use the scanner to scan the output line by line and log it
+		// It's running in a goroutine so that it doesn't block
+		go func() {
+
+			// Read line by line and process it
+			for scannerErr.Scan() {
+				line := scannerErr.Text()
+
+				logmsg := models.LogsWorkers{
+					CreatedAt:     time.Now().UTC(),
+					EnvironmentID: os.Getenv("worker_env"),
+					RunID:         runID,
+					TaskID:        taskID,
+					Category:      "task",
+					Log:           line,
+					LogType:       "error",
+				}
+
+				// jsonmsg, err := json.Marshal(&logmsg)
+				// if err != nil {
+				// 	logging.PrintSecretsRedact(err)
+				// }
+				messageq.MsgSend("workertask."+taskID, logmsg)
+				database.DBConn.Create(&logmsg)
+
+				clog.Error(line)
+			}
+
+			// We're all done, unblock the channel
+			doneErr <- struct{}{}
+
+		}()
+
 		// Start the command and check for errors
 		var task Task
 
@@ -144,57 +191,49 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 
 		// Wait for all output to be processed
 		<-done
+		<-doneErr
 
 		// Wait for the command to finish
 		err = cmd.Wait()
+
+		if err != nil {
+			statusUpdate = "Fail"
+			TasksStatus[taskID] = "cancel"
+			delete(TasksStatus, taskID)
+			delete(Tasks, taskID)
+			break
+		} else {
+			statusUpdate = "Success"
+		}
 		if os.Getenv("debug") == "true" {
 			log.Println(i, err)
 		}
 	}
 
 	if os.Getenv("debug") == "true" {
-		log.Println("Update task as success - " + taskID)
+		log.Println("Update task as " + statusUpdate + " - " + taskID)
 	}
-	TaskUpdate = modelmain.WorkerTasks{
-		TaskID: taskID,
-		Status: "Success",
-		EndDT:  time.Now().UTC(),
+	TaskFinal := modelmain.WorkerTasks{
+		TaskID:        taskID,
+		CreatedAt:     TaskUpdate.CreatedAt,
+		EnvironmentID: config.EnvID,
+		RunID:         runID,
+		WorkerGroup:   TaskUpdate.WorkerGroup,
+		WorkerID:      workerhealth.WorkerID,
+		StartDT:       TaskUpdate.StartDT,
+		Status:        statusUpdate,
+		EndDT:         time.Now().UTC(),
 	}
 
-	_, errnats = messageq.MsgReply("taskupdate", TaskUpdate, &response)
+	_, errnats = messageq.MsgReply("taskupdate", TaskFinal, &response)
 
-	if errnats != nil {
-		logging.PrintSecretsRedact("Update success task error nats:", errnats)
+	if os.Getenv("debug") == "true" {
+		log.Println("tasks delete:", taskID)
+		log.Println("tasks before del:", Tasks)
 	}
 
 	delete(TasksStatus, taskID)
+	delete(Tasks, taskID)
+
 	<-ctx.Done()
 }
-
-// func Runtask() fiber.Handler {
-
-// 	return func(c *fiber.Ctx) error {
-
-// 		var reqbody Runner
-// 		// TaskID := uuid.NewString()
-// 		TaskID := "f240c0bc-1593-46d5-9a5b-37cc452fb0b0"
-// 		ctx, cancel := context.WithCancel(context.Background())
-// 		var task Task
-
-// 		task.ID = TaskID
-// 		task.Context = ctx
-// 		task.Cancel = cancel
-
-// 		Tasks[task.ID] = task
-// 		command := []string{`for((i=1;i<=10000; i+=1)); do echo "Welcome $i times"; sleep 1; done`}
-// 		// command := `find . | sed -e "s/[^ ][^\/]*\// |/g" -e "s/|\([^ ]\)/| \1/"`
-// 		go worker(ctx, "", TaskID, command)
-
-// 		body := c.Body()
-// 		json.Unmarshal(body, &reqbody)
-
-// 		return c.SendString("🏃 Task run start")
-
-// 	}
-
-// }

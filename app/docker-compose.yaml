@@ -13,6 +13,7 @@ services:
     cpus: 1.5
     volumes:
       - ./:/workerdev
+      - ./examples:/workerfiles
     environment:
       env: "local"
       basepath: "/dataplane"
@@ -35,6 +36,7 @@ services:
       worker_type: "container"
       worker_lb: "roundrobin"
       worker_env: "Development"
+      worker_files: "/workerfiles/"
     # deploy:
     #   resources:
     #     limits:
@@ -56,6 +58,7 @@ services:
     # command: tail -f /dev/null
     volumes:
       - ./:/workerdev
+      - ./examples:/workerfiles
     environment:
       env: "local"
       basepath: "/dataplane"
@@ -78,6 +81,7 @@ services:
       worker_type: "container"
       worker_lb: "roundrobin"
       worker_env: "Development"
+      worker_files: "/workerfiles/"
 
       # Metrics dont pick up resouce limits inside container
     # deploy:

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/database/models"
 	"dataplane/workers/messageq"
@@ -51,6 +52,9 @@ func Setup(port string) *fiber.App {
 	if e.Name != os.Getenv("worker_env") {
 		panic("Envrionment not found - " + os.Getenv("worker_env"))
 	}
+
+	config.EnvName = e.Name
+	config.EnvID = e.ID
 
 	// -------- NATS Connect -------
 	messageq.NATSConnect()

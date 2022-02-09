@@ -190,6 +190,19 @@ func Setup(port string) *fiber.App {
 
 	})
 
+	app.Post("/runpython", func(c *fiber.Ctx) error {
+
+		taskID := uuid.NewString()
+		cmd := string(c.Query("command"))
+		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), []string{cmd})
+		if err != nil {
+			return c.SendString(err.Error())
+		} else {
+			return c.SendString("Success: " + taskID)
+		}
+
+	})
+
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {
 		return c.SendString("Hello 👋! Healthy 🍏")
