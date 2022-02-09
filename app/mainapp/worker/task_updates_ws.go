@@ -21,24 +21,17 @@ var disconnectConn1 = make(chan string)
 // https://github.com/gorilla/websocket/blob/master/examples/chat/client.go
 
 // https://github.com/marcelo-tm/testws/blob/master/main.go
-func TaskUpdatesWs(conn *websocket.Conn, subject string) {
-
-	// Subscribe to a specific worker group when the connection is open
-	// sub, _ := messageq.NATSencoded.Subscribe(subject, func(m *nats.Msg) {
-
-	// 	broadcastq <- m.Data
-
-	// })
+func TaskUpdatesWs(conn *websocket.Conn, room string) {
 
 	// When the function returns, unregister the client and close the connection
 	defer func() {
-		unregisterq <- conn
+		unregisterq <- subscription{conn: conn, room: room}
 		conn.Close()
 		// sub.Unsubscribe()
 	}()
 
 	// Register the client
-	registerq <- conn
+	registerq <- subscription{conn: conn, room: room}
 
 	// go SecureTimeout()
 

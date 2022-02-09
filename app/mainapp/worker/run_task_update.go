@@ -33,7 +33,7 @@ func UpdateTasks(MainAppID string) {
 
 		jsonmsg, _ := json.Marshal(&msg)
 
-		broadcastq <- jsonmsg
+		broadcastq <- message{data: jsonmsg, room: "taskupdate"}
 
 		// Trigger stats updates:
 		// Each Pipeline queue, run, success or fail

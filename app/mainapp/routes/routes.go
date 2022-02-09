@@ -78,7 +78,7 @@ func Setup(port string) *fiber.App {
 	// Start the scheduler
 	// scheduler.SchedulerStart()
 	go worker.RunHub()
-	go worker.RunHubQueueStats()
+	go worker.RunHubRooms()
 	// go worker.SocketsSecureTimeout()
 
 	//recover from panic
@@ -170,7 +170,7 @@ func Setup(port string) *fiber.App {
 		worker.WorkerStatsWs(c, "workerstats."+c.Params("workergroup"))
 	}))
 
-	app.Get("/ws/taskupdates/:room", websocket.New(func(c *websocket.Conn) {
+	app.Get("/ws/rooms/:room", websocket.New(func(c *websocket.Conn) {
 
 		// log.Println(c.Query("token"))
 		// "taskupdates."+c.Params("runid")
