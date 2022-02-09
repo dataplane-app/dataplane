@@ -99,38 +99,51 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, commands []s
 
 	// Choose a worker based on load balancing strategy - default is round robin
 	var loadbalanceNext string
-	switch onlineWorkers[0].LB {
-	case "roundrobin":
-		loadbalanceNext = utilities.Balance(onlineWorkers, workerGroup)
 
-	default:
-		loadbalanceNext = utilities.Balance(onlineWorkers, workerGroup)
+	// if a worker group goes offline in between, choose the next in the load balancer and retry
+	for i := 0; i < maxRetiresAllowed; i++ {
+		switch onlineWorkers[0].LB {
+		case "roundrobin":
+			loadbalanceNext = utilities.Balance(onlineWorkers, workerGroup)
 
+		default:
+			loadbalanceNext = utilities.Balance(onlineWorkers, workerGroup)
+
+		}
+
+		// Send the request to the worker
+		if os.Getenv("debug") == "true" {
+			log.Println("Selected worker:", onlineWorkers[0].LB, loadbalanceNext)
+		}
+
+		tasksend := models.WorkerTaskSend{
+			TaskID:        taskid,
+			CreatedAt:     time.Now().UTC(),
+			EnvironmentID: onlineWorkers[0].Env,
+			RunID:         runid,
+			WorkerGroup:   workerGroup,
+			WorkerID:      loadbalanceNext,
+			Commands:      commands,
+		}
+
+		var response runtask.TaskResponse
+		_, errnats := messageq.MsgReply("task."+workerGroup+"."+loadbalanceNext, tasksend, &response)
+
+		if errnats != nil {
+			log.Println("Send to worker error nats:", errnats)
+		}
+
+		// successful send to worker
+		if response.R == "ok" {
+			break
+		} else {
+			log.Println(loadbalanceNext + " not online, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
+		}
+		if os.Getenv("debug") == "true" {
+			log.Println("Send to worker", response.R)
+		}
+		time.Sleep(2 * time.Second)
 	}
-
-	// Send the request to the worker
-	if os.Getenv("debug") == "true" {
-		log.Println("Selected worker:", onlineWorkers[0].LB, loadbalanceNext)
-	}
-
-	tasksend := models.WorkerTaskSend{
-		TaskID:        taskid,
-		CreatedAt:     time.Now().UTC(),
-		EnvironmentID: onlineWorkers[0].Env,
-		RunID:         runid,
-		WorkerGroup:   workerGroup,
-		WorkerID:      loadbalanceNext,
-		Commands:      commands,
-	}
-
-	var response runtask.TaskResponse
-	_, errnats := messageq.MsgReply("task."+workerGroup+"."+loadbalanceNext, tasksend, &response)
-
-	if errnats != nil {
-		log.Println("Send to worker error nats:", errnats)
-	}
-
-	log.Println(response.R)
 
 	//
 	return nil
