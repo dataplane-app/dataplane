@@ -76,6 +76,7 @@ export default function WorkerDetail() {
         {
             columns,
             data,
+            autoResetGlobalFilter: false,
         },
         useGlobalFilter
     );
