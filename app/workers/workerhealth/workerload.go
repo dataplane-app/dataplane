@@ -1,6 +1,7 @@
 package workerhealth
 
 import (
+	"dataplane/workers/config"
 	"dataplane/workers/messageq"
 	"log"
 	"math"
@@ -35,7 +36,7 @@ func WorkerLoad(s *gocron.Scheduler) {
 
 		send := WorkerStats{
 			WorkerGroup: os.Getenv("worker_group"),
-			WorkerID:    WorkerID,
+			WorkerID:    config.WorkerID,
 			Status:      "Online",
 			CPUPerc:     percentCPUsend,
 			MemoryPerc:  percentMemorysend,

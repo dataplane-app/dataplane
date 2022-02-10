@@ -9,7 +9,6 @@ import (
 	"dataplane/workers/database/models"
 	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
-	"dataplane/workers/workerhealth"
 	"fmt"
 	"log"
 	"os"
@@ -53,7 +52,7 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 		EnvironmentID: config.EnvID,
 		RunID:         runID,
 		WorkerGroup:   os.Getenv("worker_group"),
-		WorkerID:      workerhealth.WorkerID,
+		WorkerID:      config.WorkerID,
 		StartDT:       time.Now().UTC(),
 		Status:        statusUpdate,
 	}
@@ -225,7 +224,7 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 		EnvironmentID: config.EnvID,
 		RunID:         runID,
 		WorkerGroup:   TaskUpdate.WorkerGroup,
-		WorkerID:      workerhealth.WorkerID,
+		WorkerID:      config.WorkerID,
 		StartDT:       TaskUpdate.StartDT,
 		Status:        statusUpdate,
 		Reason:        TasksStatus[taskID],

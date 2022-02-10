@@ -8,7 +8,6 @@ import (
 	"dataplane/mainapp/utilities"
 	"dataplane/workers/runtask"
 	"encoding/json"
-	"errors"
 	"log"
 	"os"
 	"strconv"
@@ -21,6 +20,8 @@ import (
 Task status: Queue, Allocated, Started, Failed, Success
 */
 func WorkerRunTask(workerGroup string, taskid string, runid string, commands []string) error {
+
+	// log.Println("task accepted")
 
 	/* Look up chosen workers -
 	if none, keep trying for 10 x 2 seconds
@@ -55,72 +56,65 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, commands []s
 			return nil
 		})
 
-		// log.Println("X:", len(onlineWorkers))
+		// log.Println("X:", onlineWorkers)
 
 		// log.Println("err1:", err1)
 
 		if len(onlineWorkers) == 0 {
 			log.Println(workerGroup + " not online, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
 		} else {
-			break
-		}
 
-		time.Sleep(2 * time.Second)
-	}
+			// Choose a worker based on load balancing strategy - default is round robin
+			var loadbalanceNext string
 
-	if len(onlineWorkers) == 0 {
-		return errors.New("Worker group not online: " + workerGroup)
-	}
+			// if a worker group goes offline in between, choose the next in the load balancer and retry
+			// for i := 0; i < maxRetiresAllowed; i++ {
 
-	// Choose a worker based on load balancing strategy - default is round robin
-	var loadbalanceNext string
+			if os.Getenv("debug") == "true" {
+				log.Println("Worker LB:", onlineWorkers[0].LB)
+			}
 
-	// if a worker group goes offline in between, choose the next in the load balancer and retry
-	for i := 0; i < maxRetiresAllowed; i++ {
+			switch onlineWorkers[0].LB {
+			case "roundrobin":
+				loadbalanceNext = utilities.Balance(onlineWorkers, workerGroup)
 
-		if os.Getenv("debug") == "true" {
-			log.Println("Worker LB:", onlineWorkers[0].LB)
-		}
+			default:
+				loadbalanceNext = utilities.Balance(onlineWorkers, workerGroup)
 
-		switch onlineWorkers[0].LB {
-		case "roundrobin":
-			loadbalanceNext = utilities.Balance(onlineWorkers, workerGroup)
+			}
 
-		default:
-			loadbalanceNext = utilities.Balance(onlineWorkers, workerGroup)
+			// Send the request to the worker
+			if os.Getenv("debug") == "true" {
+				log.Println("Selected worker:", onlineWorkers[0].LB, loadbalanceNext)
+			}
 
-		}
+			tasksend := models.WorkerTaskSend{
+				TaskID:        taskid,
+				CreatedAt:     time.Now().UTC(),
+				EnvironmentID: onlineWorkers[0].Env,
+				RunID:         runid,
+				WorkerGroup:   workerGroup,
+				WorkerID:      loadbalanceNext,
+				Commands:      commands,
+			}
 
-		// Send the request to the worker
-		if os.Getenv("debug") == "true" {
-			log.Println("Selected worker:", onlineWorkers[0].LB, loadbalanceNext)
-		}
+			var response runtask.TaskResponse
+			_, errnats := messageq.MsgReply("task."+workerGroup+"."+loadbalanceNext, tasksend, &response)
 
-		tasksend := models.WorkerTaskSend{
-			TaskID:        taskid,
-			CreatedAt:     time.Now().UTC(),
-			EnvironmentID: onlineWorkers[0].Env,
-			RunID:         runid,
-			WorkerGroup:   workerGroup,
-			WorkerID:      loadbalanceNext,
-			Commands:      commands,
-		}
+			if errnats != nil {
+				log.Println("Send to worker error nats:", errnats)
+			}
 
-		var response runtask.TaskResponse
-		_, errnats := messageq.MsgReply("task."+workerGroup+"."+loadbalanceNext, tasksend, &response)
-
-		if errnats != nil {
-			log.Println("Send to worker error nats:", errnats)
-		}
-
-		// successful send to worker
-		if response.R == "ok" {
-			break
-		} else {
-			log.Println(loadbalanceNext + " not online, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
-		}
-		if os.Getenv("debug") == "true" {
-			log.Println("Send to worker", response.R)
+			// successful send to worker
+			if response.R == "ok" {
+				break
+			}
+			// } else {
+			// 	log.Println(loadbalanceNext + " not online, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
+			// }
+			if os.Getenv("debug") == "true" {
+				log.Println("Send to worker", response.R)
+			}
 		}
 		time.Sleep(2 * time.Second)
 	}

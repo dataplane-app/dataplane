@@ -3,8 +3,9 @@ package runtask
 import (
 	"context"
 	"dataplane/mainapp/database/models"
+	"dataplane/workers/config"
 	"dataplane/workers/messageq"
-	"dataplane/workers/workerhealth"
+	"log"
 	"os"
 	"syscall"
 )
@@ -17,7 +18,7 @@ type TaskResponse struct {
 func ListenTasks() {
 
 	// Responding to a task request
-	messageq.NATSencoded.Subscribe("task."+os.Getenv("worker_group")+"."+workerhealth.WorkerID, func(subj, reply string, msg models.WorkerTaskSend) {
+	messageq.NATSencoded.Subscribe("task."+os.Getenv("worker_group")+"."+config.WorkerID, func(subj, reply string, msg models.WorkerTaskSend) {
 		// log.Println(msg)
 
 		response := "ok"
@@ -45,8 +46,11 @@ func ListenTasks() {
 			go worker(ctx, msg.RunID, TaskID, msg.Commands)
 		}
 	})
+	if os.Getenv("debug") == "true" {
+		log.Println("Listening for tasks on subject:", "task."+os.Getenv("worker_group")+"."+config.WorkerID)
+	}
 
-	messageq.NATSencoded.Subscribe("taskcancel."+os.Getenv("worker_group")+"."+workerhealth.WorkerID, func(subj, reply string, msg models.WorkerTaskSend) {
+	messageq.NATSencoded.Subscribe("taskcancel."+os.Getenv("worker_group")+"."+config.WorkerID, func(subj, reply string, msg models.WorkerTaskSend) {
 		// Respond to cancelling a task
 		id := msg.TaskID
 
