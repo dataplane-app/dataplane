@@ -16,9 +16,9 @@ extend type Query {
   """
   Get pipelines.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
-  getPipelines: [Pipelines]
+  getPipelines(environmentName: String!): [Pipelines]
 }
 
 extend type Mutation {

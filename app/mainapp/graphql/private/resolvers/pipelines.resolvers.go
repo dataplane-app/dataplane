@@ -59,14 +59,18 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	return rtn, nil
 }
 
-func (r *queryResolver) GetPipelines(ctx context.Context) ([]*models.Pipelines, error) {
+func (r *queryResolver) GetPipelines(ctx context.Context, environmentName string) ([]*models.Pipelines, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
+
+	e := models.Environment{}
+	database.DBConn.First(&e, "name = ?", environmentName)
 
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: e.ID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: e.ID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
