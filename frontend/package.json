@@ -40,6 +40,7 @@
         "react-router-dom": "5.2.0",
         "react-scripts": "5.0.0",
         "react-table": "^7.7.0",
+        "rrule": "^2.6.8",
         "web-vitals": "^1.0.1"
     },
     "scripts": {

@@ -48,6 +48,7 @@ code {
 .page {
     padding-top: 1rem;
     min-height: 100vh;
+    position: relative;
 }
 
 .SnackbarContainer-top {
