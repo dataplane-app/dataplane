@@ -57,7 +57,7 @@ const Pipelines = () => {
 
             <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start" sx={{ width: { xl: '85%' } }}>
                 <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
-                    <CustomChip amount={2} label="Pipelines" margin={1} customColor="orange" />
+                    <CustomChip amount={pipelines.length} label="Pipelines" margin={1} customColor="orange" />
                     <CustomChip amount={2} label="Succeeded" margin={1} customColor="green" />
                     <CustomChip amount={2} label="Failed" margin={1} customColor="red" />
                     <CustomChip amount={2} label="Workers online" margin={2} customColor="purple" />

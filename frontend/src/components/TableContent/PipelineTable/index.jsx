@@ -139,8 +139,8 @@ const PipelineTable = ({ data }) => {
                                                     width={16}
                                                     backgroundColor={`${row.original.online ? 'status.pipelineOnline' : 'error.main'}`}
                                                     borderRadius="100%"></Box>
-                                                <Typography ml={1} fontSize={16} sx={{ color: row.original.active ? 'status.pipelineOnlineText' : 'error.main' }}>
-                                                    {row.original.active ? 'Online' : 'Offline'}
+                                                <Typography ml={1} fontSize={16} sx={{ color: row.original.online ? 'status.pipelineOnlineText' : 'error.main' }}>
+                                                    {row.original.online ? 'Online' : 'Offline'}
                                                 </Typography>
                                             </Box>
                                         </Grid>
