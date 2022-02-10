@@ -10,7 +10,7 @@ import customDrawerStyles from '../../../utils/drawerStyles';
 import ShowYAMLCodeDrawer from '../../DrawerContent/ShowYAMLCodeDrawer';
 import { useHistory } from 'react-router-dom';
 
-const PipelineTable = ({ data, filter }) => {
+const PipelineTable = ({ data, filter, setPipelineCount }) => {
     // React router
     const history = useHistory();
 
@@ -105,6 +105,12 @@ const PipelineTable = ({ data, filter }) => {
         },
         useGlobalFilter
     );
+
+    useEffect(() => {
+        setPipelineCount(rows.length);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rows]);
 
     return (
         <>
