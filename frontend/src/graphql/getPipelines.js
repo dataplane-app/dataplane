@@ -4,19 +4,15 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    query getPipelines {
-        getPipelines {
-            name
-            version
+    query getPipelines($environmentID: String!) {
+        getPipelines(environmentID: $environmentID) {
             pipelineID
+            name
             environmentID
-            YAMLHash
             description
             active
             online
             current
-            schedule
-            scheduleType
         }
     }
 `;

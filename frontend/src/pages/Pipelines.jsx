@@ -25,6 +25,7 @@ const Pipelines = () => {
 
     // Get pipelines on load and when environment changes
     useEffect(() => {
+        if (Environment.id.get() === '') return;
         getPipelines();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,7 +100,7 @@ function useGetPipelines_(setPipelines, environmentID) {
 
     // Get pipelines
     return async () => {
-        const response = await getPipelines();
+        const response = await getPipelines({ environmentID });
 
         if (response.r === 'error') {
             enqueueSnackbar("Can't get pipelines: " + response.msg, { variant: 'error' });

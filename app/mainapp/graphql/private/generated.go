@@ -172,7 +172,7 @@ type ComplexityRoot struct {
 		GetEnvironment        func(childComplexity int, environmentID string) int
 		GetEnvironments       func(childComplexity int) int
 		GetOnePreference      func(childComplexity int, preference string) int
-		GetPipelines          func(childComplexity int, environmentName string) int
+		GetPipelines          func(childComplexity int, environmentID string) int
 		GetPlatform           func(childComplexity int) int
 		GetSecret             func(childComplexity int, secret string, environmentID string) int
 		GetSecretGroups       func(childComplexity int, environmentName string, secret string) int
@@ -300,7 +300,7 @@ type QueryResolver interface {
 	AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error)
 	MyPermissions(ctx context.Context) ([]*models.PermissionsOutput, error)
 	UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error)
-	GetPipelines(ctx context.Context, environmentName string) ([]*models.Pipelines, error)
+	GetPipelines(ctx context.Context, environmentID string) ([]*models.Pipelines, error)
 	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
 	GetOnePreference(ctx context.Context, preference string) (*Preferences, error)
 	GetSecret(ctx context.Context, secret string, environmentID string) (*models.Secrets, error)
@@ -1211,7 +1211,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetPipelines(childComplexity, args["environmentName"].(string)), true
+		return e.complexity.Query.GetPipelines(childComplexity, args["environmentID"].(string)), true
 
 	case "Query.getPlatform":
 		if e.complexity.Query.GetPlatform == nil {
@@ -2036,7 +2036,7 @@ extend type Query {
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
-  getPipelines(environmentName: String!): [Pipelines]
+  getPipelines(environmentID: String!): [Pipelines]
 }
 
 extend type Mutation {
@@ -3269,14 +3269,14 @@ func (ec *executionContext) field_Query_getPipelines_args(ctx context.Context, r
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["environmentName"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentName"))
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["environmentName"] = arg0
+	args["environmentID"] = arg0
 	return args, nil
 }
 
@@ -7227,7 +7227,7 @@ func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graph
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetPipelines(rctx, args["environmentName"].(string))
+		return ec.resolvers.Query().GetPipelines(rctx, args["environmentID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
