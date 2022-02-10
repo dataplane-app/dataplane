@@ -1,5 +1,5 @@
 import { Box, Typography, Grid, Drawer, Avatar, AvatarGroup } from '@mui/material';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTable, useGlobalFilter } from 'react-table';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlayCircle, faClock } from '@fortawesome/free-regular-svg-icons';
@@ -10,24 +10,30 @@ import customDrawerStyles from '../../../utils/drawerStyles';
 import ShowYAMLCodeDrawer from '../../DrawerContent/ShowYAMLCodeDrawer';
 import { useHistory } from 'react-router-dom';
 
-const PipelineTable = ({ data }) => {
+const PipelineTable = ({ data, filter }) => {
     // React router
     const history = useHistory();
 
     // Table item states
     const [isOpenYAML, setIsOpenYAML] = useState(false);
 
+    useEffect(() => {
+        setGlobalFilter(filter);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filter]);
+
     const columns = useMemo(
         () => [
             {
                 Header: 'Trigger',
-                accessor: 'trigger',
+                accessor: (row) => [row.name, row.description],
                 Cell: (row) => (
                     <Grid container alignItems="flex-start" flexWrap="nowrap">
                         <Box component={FontAwesomeIcon} fontSize={19} color="error.main" icon={faClock} />
                         <Box ml={0.7}>
                             <Typography fontSize={15} fontWeight={500} lineHeight="16.94px">
-                                {row.value}
+                                Every 5 minutes
                             </Typography>
                             <Typography fontSize={15} fontWeight={500} mt={0.5} lineHeight="16.94px">
                                 */5****
@@ -92,7 +98,7 @@ const PipelineTable = ({ data }) => {
     );
 
     // Use the state and functions returned from useTable to build your UI
-    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = useTable(
+    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, setGlobalFilter } = useTable(
         {
             columns,
             data,

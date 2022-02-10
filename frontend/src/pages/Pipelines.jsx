@@ -19,6 +19,7 @@ const Pipelines = () => {
 
     // Local state
     const [pipelines, setPipelines] = useState([]);
+    const [filter, setFilter] = useState();
 
     // Custom GraphQL hook
     const getPipelines = useGetPipelines_(setPipelines, Environment.id.get());
@@ -65,14 +66,14 @@ const Pipelines = () => {
 
                 <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center', flex: 1 }}>
                     <Box flex={1.2} width="100%" flexGrow={1.2}>
-                        <Search placeholder="Find a pipeline" width="100%" />
+                        <Search placeholder="Find a pipeline" width="100%" onChange={(e) => setFilter(e)} />
                     </Box>
                     <TextField label="Last 48 hours" id="last" select size="small" required sx={{ ml: 2, flex: 1 }}>
                         <MenuItem value="24">Last 24 hours</MenuItem>
                     </TextField>
                 </Grid>
 
-                <PipelineTable data={pipelines} />
+                <PipelineTable data={pipelines} filter={filter} />
             </Grid>
 
             <Drawer anchor="right" open={isOpenCreatePipeline} onClose={() => setIsOpenCreatePipeline(!isOpenCreatePipeline)}>
