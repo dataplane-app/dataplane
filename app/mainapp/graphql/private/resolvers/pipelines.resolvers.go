@@ -5,11 +5,13 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -37,7 +39,6 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 		Name:          name,
 		Description:   description,
 		EnvironmentID: environmentID,
-		Version:       "0.0.0",
 		Active:        true,
 		Online:        false,
 	}
@@ -57,6 +58,22 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	rtn := "success"
 
 	return rtn, nil
+}
+
+func (r *pipelinesResolver) Version(ctx context.Context, obj *models.Pipelines) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *pipelinesResolver) YAMLHash(ctx context.Context, obj *models.Pipelines) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *pipelinesResolver) Schedule(ctx context.Context, obj *models.Pipelines) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *pipelinesResolver) ScheduleType(ctx context.Context, obj *models.Pipelines) (string, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) GetPipelines(ctx context.Context, environmentName string) ([]*models.Pipelines, error) {
@@ -90,3 +107,8 @@ func (r *queryResolver) GetPipelines(ctx context.Context, environmentName string
 	}
 	return p, nil
 }
+
+// Pipelines returns privategraphql.PipelinesResolver implementation.
+func (r *Resolver) Pipelines() privategraphql.PipelinesResolver { return &pipelinesResolver{r} }
+
+type pipelinesResolver struct{ *Resolver }

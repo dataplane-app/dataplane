@@ -9,6 +9,7 @@ import (
 	"errors"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -36,6 +37,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Mutation() MutationResolver
+	Pipelines() PipelinesResolver
 	Query() QueryResolver
 }
 
@@ -276,6 +278,14 @@ type MutationResolver interface {
 	UpdateDeleteUser(ctx context.Context, userid string) (*string, error)
 	AddSecretToWorkerGroup(ctx context.Context, environmentName string, workerGroup string, secret string) (*string, error)
 	DeleteSecretFromWorkerGroup(ctx context.Context, environmentName string, workerGroup string, secret string) (*string, error)
+}
+type PipelinesResolver interface {
+	Version(ctx context.Context, obj *models.Pipelines) (string, error)
+
+	YAMLHash(ctx context.Context, obj *models.Pipelines) (string, error)
+
+	Schedule(ctx context.Context, obj *models.Pipelines) (string, error)
+	ScheduleType(ctx context.Context, obj *models.Pipelines) (string, error)
 }
 type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*models.Environment, error)
@@ -6238,14 +6248,14 @@ func (ec *executionContext) _Pipelines_version(ctx context.Context, field graphq
 		Object:     "Pipelines",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Version, nil
+		return ec.resolvers.Pipelines().Version(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6308,14 +6318,14 @@ func (ec *executionContext) _Pipelines_YAMLHash(ctx context.Context, field graph
 		Object:     "Pipelines",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.YAMLHash, nil
+		return ec.resolvers.Pipelines().YAMLHash(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6483,14 +6493,14 @@ func (ec *executionContext) _Pipelines_schedule(ctx context.Context, field graph
 		Object:     "Pipelines",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Schedule, nil
+		return ec.resolvers.Pipelines().Schedule(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6518,14 +6528,14 @@ func (ec *executionContext) _Pipelines_scheduleType(ctx context.Context, field g
 		Object:     "Pipelines",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ScheduleType, nil
+		return ec.resolvers.Pipelines().ScheduleType(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11095,58 +11105,94 @@ func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet
 		case "pipelineID":
 			out.Values[i] = ec._Pipelines_pipelineID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Pipelines_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "version":
-			out.Values[i] = ec._Pipelines_version(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Pipelines_version(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "environmentID":
 			out.Values[i] = ec._Pipelines_environmentID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "YAMLHash":
-			out.Values[i] = ec._Pipelines_YAMLHash(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Pipelines_YAMLHash(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "description":
 			out.Values[i] = ec._Pipelines_description(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "active":
 			out.Values[i] = ec._Pipelines_active(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "online":
 			out.Values[i] = ec._Pipelines_online(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "current":
 			out.Values[i] = ec._Pipelines_current(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "schedule":
-			out.Values[i] = ec._Pipelines_schedule(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Pipelines_schedule(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "scheduleType":
-			out.Values[i] = ec._Pipelines_scheduleType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Pipelines_scheduleType(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
