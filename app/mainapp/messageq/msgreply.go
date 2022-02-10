@@ -1,11 +1,18 @@
 package messageq
 
-import "time"
+import (
+	"time"
+)
 
-func MsgReply(channel string, msg interface{}) (interface{}, error) {
+func MsgReply(channel string, msg interface{}, response interface{}) (interface{}, error) {
 
-	var response interface{}
-	err := NATSProtobuf.Request(channel, msg, response, time.Second)
+	err := NATSencoded.Request(channel, msg, &response, time.Second)
+	if err != nil {
+
+	}
+	// if os.Getenv("messagedebug") == "true" {
+	// 	log.Println("response:", response)
+	// }
 	return response, err
 
 }

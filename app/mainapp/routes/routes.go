@@ -27,44 +27,6 @@ import (
 
 type client struct{} // Add more data to this type if needed
 
-// var clients = make(map[*websocket.Conn]client) // Note: although large maps with pointer-like types (e.g. strings) as keys are slow, using pointers themselves as keys is acceptable and fast
-// var register = make(chan *websocket.Conn)
-
-// var unregister = make(chan *websocket.Conn)
-// var x = 0
-
-// func runHub() {
-// 	for {
-// 		select {
-// 		case connection := <-register:
-// 			clients[connection] = client{}
-// 			log.Println("connection registered")
-
-// 		case message := <-broadcast:
-// 			log.Println("message received:", string(message))
-// 			x = x + 1
-
-// 			// Send the message to all clients
-// 			for connection := range clients {
-// 				log.Println("conn:", connection, websocket.TextMessage)
-// 				if err := connection.WriteMessage(x, message); err != nil {
-// 					// 	// 	log.Println("write error:", err)
-
-// 					connection.WriteMessage(websocket.CloseMessage, []byte{})
-// 					connection.Close()
-// 					delete(clients, connection)
-// 				}
-// 			}
-
-// 		case connection := <-unregister:
-// 			// Remove the client from the hub
-// 			delete(clients, connection)
-
-// 			log.Println("connection unregistered")
-// 		}
-// 	}
-// }
-
 var MainAppID string
 
 func Setup(port string) *fiber.App {
@@ -116,6 +78,7 @@ func Setup(port string) *fiber.App {
 	// Start the scheduler
 	// scheduler.SchedulerStart()
 	go worker.RunHub()
+	go worker.RunHubRooms()
 	// go worker.SocketsSecureTimeout()
 
 	//recover from panic
@@ -162,7 +125,7 @@ func Setup(port string) *fiber.App {
 		return fiber.ErrUpgradeRequired
 	})
 
-	app.Use("/privatesubscribe/graphql", PrivateSubscribeGraphqlHandler())
+	// app.Use("/privatesubscribe/graphql", PrivateSubscribeGraphqlHandler())
 
 	// WARNING: This is insecure and only for documentation, do not enable in production
 	if os.Getenv("graphqldocs") == "true" {
@@ -207,19 +170,66 @@ func Setup(port string) *fiber.App {
 		worker.WorkerStatsWs(c, "workerstats."+c.Params("workergroup"))
 	}))
 
+	app.Get("/ws/rooms/:room", websocket.New(func(c *websocket.Conn) {
+
+		// log.Println(c.Query("token"))
+		// "taskupdates."+c.Params("runid")
+		worker.TaskUpdatesWs(c, "taskupdates")
+	}))
+
+	// Run Task
+	app.Post("/runtask", func(c *fiber.Ctx) error {
+
+		taskID := uuid.NewString()
+		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), []string{`for((i=1;i<=1000; i+=1)); do echo "1st run $i times"; sleep 0.5; done`, `for((i=1;i<=10; i+=1)); do echo "2nd run $i times"; sleep 0.5; done`})
+		if err != nil {
+			return c.SendString(err.Error())
+		} else {
+			return c.SendString("Success: " + taskID)
+		}
+
+	})
+
+	app.Post("/runpython", func(c *fiber.Ctx) error {
+
+		taskID := uuid.NewString()
+		cmd := string(c.Query("command"))
+		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), []string{cmd})
+		if err != nil {
+			return c.SendString(err.Error())
+		} else {
+			return c.SendString("Success: " + taskID)
+		}
+
+	})
+
+	app.Post("/canceltask", func(c *fiber.Ctx) error {
+
+		taskID := string(c.Query("taskid"))
+		err := worker.WorkerCancelTask(taskID)
+		if err != nil {
+			return c.SendString(err.Error())
+		} else {
+			return c.SendString("Success: " + taskID)
+		}
+
+	})
+
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {
 		return c.SendString("Hello 👋! Healthy 🍏")
 	})
+
+	/* Worker Load Subscriptions activate */
+	worker.LoadWorkers(MainAppID)
+	worker.UpdateTasks(MainAppID)
+	log.Println("👷 Queue and worker subscriptions")
 
 	stop := time.Now()
 	// Do something with response
 	log.Println("🐆 Start time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
 
 	log.Println("🌍 Visit dashboard at:", "http://localhost:"+port+"/webapp/")
-
-	/* Worker Load Subscriptions activate */
-	worker.LoadWorkers(MainAppID)
 
 	// log.Println("Subscribe", hello, err)
 

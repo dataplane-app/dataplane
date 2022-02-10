@@ -74,10 +74,10 @@ export default function WorkerDetailMemory({ row }) {
     const [percentage, mb] = row.value;
 
     return (
-        <Grid container direction="row" alignItems="flex-start" pr={1}>
+        <Grid container direction="row" alignItems="flex-start" justifyContent="flex-end" pr={1}>
             <Grid item mr={1.5}>
                 <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
-                    {percentage}%
+                    {percentage.toFixed(1)}%
                 </Typography>
                 <Typography variant="h2" align="right" sx={{ fontWeight: 900 }}>
                     {mb}

@@ -20,6 +20,7 @@ go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/workers
 * Get workers
 * Add secret to worker group
 * Get secret's worker groups
+* Get worker group's secrets
 * Delete secret from worker group
 */
 func TestAccessGroups(t *testing.T) {
@@ -158,7 +159,34 @@ func TestAccessGroups(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Secret's worker groups 200 status code")
 
-	// -------- De;ete secret from worker group  -------------
+	// -------- Get worker group's secrets -------------
+
+	query = `query {
+		getWorkerGroupSecrets(
+					environmentName: "Development",
+					WorkerGroup: "Test"
+					)
+				{
+					Secret
+					SecretType
+					Description
+					EnvVar
+					Active
+					EnvironmentId
+				 }
+			}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Worker group's secrets 200 status code")
+
+	// -------- Delete secret from worker group  -------------
 
 	mutation = `mutation {
 			deleteSecretFromWorkerGroup(

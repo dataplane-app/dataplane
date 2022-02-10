@@ -1,7 +1,6 @@
 package messageq
 
 import (
-	"log"
 	"time"
 )
 
@@ -11,8 +10,9 @@ func MsgReply(channel string, msg interface{}, response interface{}) (interface{
 	if err != nil {
 
 	}
-
-	log.Println("response:", response)
+	// if os.Getenv("messagedebug") == "true" {
+	// 	log.Println("response:", response)
+	// }
 	return response, err
 
 }

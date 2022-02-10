@@ -69,6 +69,7 @@ func Migrate() {
 		&models.Workers{},
 		&models.WorkerSecrets{},
 		&models.LogsWorkers{},
+		&models.WorkerTasks{},
 	)
 	if err1 != nil {
 		panic(err1)

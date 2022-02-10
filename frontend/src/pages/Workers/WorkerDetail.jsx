@@ -189,7 +189,7 @@ export default function WorkerDetail() {
                                 component="tr"
                                 {...row.getRowProps()}
                                 display="grid"
-                                gridTemplateColumns="400px 1fr 1fr"
+                                gridTemplateColumns="450px 1fr 1fr"
                                 alignItems="start"
                                 borderRadius="5px"
                                 backgroundColor="background.secondary"
@@ -291,8 +291,8 @@ function sortObjectByName(a, b) {
 function formatMemory(memory) {
     const GB = 1000000000;
     if (memory < GB) {
-        return (memory / 1000000).toFixed() + 'MB';
+        return (memory / Math.pow(1024, 2)).toFixed() + 'MB';
     } else {
-        return (memory / 1000000000).toFixed(1) + 'GB';
+        return (memory / Math.pow(1024, 3)).toFixed(1) + 'GB';
     }
 }

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/database/models"
 	"dataplane/workers/messageq"
@@ -15,6 +16,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/google/uuid"
 )
 
 func Setup(port string) *fiber.App {
@@ -23,6 +25,9 @@ func Setup(port string) *fiber.App {
 
 	// ------- LOAD secrets ------
 	secrets.MapSecrets()
+
+	// -------- NATS Connect -------
+	messageq.NATSConnect()
 
 	// ------- DATABASE CONNECT ------
 	database.DBConnect()
@@ -52,16 +57,20 @@ func Setup(port string) *fiber.App {
 		panic("Envrionment not found - " + os.Getenv("worker_env"))
 	}
 
-	// -------- NATS Connect -------
-	messageq.NATSConnect()
+	config.EnvName = e.Name
+	config.EnvID = e.ID
 
 	start := time.Now()
 
 	// ----- Load platformID ------
 	u := models.Platform{}
 	database.DBConn.First(&u)
-	database.PlatformID = u.ID
-	log.Println("🎯 Platform ID: ", database.PlatformID)
+	config.PlatformID = u.ID
+	log.Println("🎯 Platform ID: ", config.PlatformID)
+
+	// Load a worker ID
+	config.WorkerID = uuid.NewString()
+	log.Println("👷 Worker ID: ", config.WorkerID)
 
 	//recover from panic
 	app.Use(recover.New())
@@ -81,11 +90,8 @@ func Setup(port string) *fiber.App {
 		// Query:${query}
 	}
 
-	// Every 5 seconds tell mainapp about my status
-	workerhealth.WorkerHealthStart()
-
 	// Runner
-	app.Post("/runner", runtask.Runtask())
+	// app.Post("/runner", runtask.Runtask())
 
 	// Cancel running job
 	app.Post("/runnercancel/:id", runtask.Canceltask())
@@ -94,6 +100,14 @@ func Setup(port string) *fiber.App {
 	app.Get("/healthz", func(c *fiber.Ctx) error {
 		return c.SendString("Hello 👋! Healthy 🍏")
 	})
+
+	/* ---- Listen for tasks ------- */
+	runtask.ListenTasks()
+
+	/* Every 5 seconds tell mainapp about my status
+	Needs to be called after listen for tasks to avoid timing issues when accepting tasks
+	*/
+	workerhealth.WorkerHealthStart()
 
 	stop := time.Now()
 	// Do something with response
