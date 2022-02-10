@@ -180,8 +180,11 @@ func Setup(port string) *fiber.App {
 	// Run Task
 	app.Post("/runtask", func(c *fiber.Ctx) error {
 
+		e := models.Environment{}
+		database.DBConn.First(&e, "name = ?", "Development")
+
 		taskID := uuid.NewString()
-		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), []string{`for((i=1;i<=1000; i+=1)); do echo "1st run $i times"; sleep 0.5; done`, `for((i=1;i<=10; i+=1)); do echo "2nd run $i times"; sleep 0.5; done`})
+		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), e.ID, []string{`for((i=1;i<=10; i+=1)); do echo "1st run $i times"; sleep 0.5; done`, `for((i=1;i<=10; i+=1)); do echo "2nd run $i times"; sleep 0.5; done`})
 		if err != nil {
 			return c.SendString(err.Error())
 		} else {
@@ -192,9 +195,12 @@ func Setup(port string) *fiber.App {
 
 	app.Post("/runpython", func(c *fiber.Ctx) error {
 
+		e := models.Environment{}
+		database.DBConn.First(&e, "name = ?", "Development")
+
 		taskID := uuid.NewString()
 		cmd := string(c.Query("command"))
-		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), []string{cmd})
+		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), e.ID, []string{cmd})
 		if err != nil {
 			return c.SendString(err.Error())
 		} else {

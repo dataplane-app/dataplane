@@ -54,10 +54,6 @@ type ChangePasswordInput struct {
 	UserID   string `json:"user_id"`
 }
 
-type Pipelines struct {
-	Name string `json:"name"`
-}
-
 type Platform struct {
 	ID           string `json:"id"`
 	BusinessName string `json:"business_name"`

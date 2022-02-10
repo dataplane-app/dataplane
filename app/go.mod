@@ -26,8 +26,6 @@ require (
 	github.com/valyala/fasthttp v1.32.0
 	github.com/vektah/gqlparser/v2 v2.2.0
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce
-	gopkg.in/yaml.v2 v2.4.0
-	gorm.io/datatypes v1.0.3
 	gorm.io/driver/postgres v1.2.3
 	gorm.io/gorm v1.22.3
 )
@@ -114,5 +112,6 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

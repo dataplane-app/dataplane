@@ -19,14 +19,31 @@ import (
 /*
 Task status: Queue, Allocated, Started, Failed, Success
 */
-func WorkerRunTask(workerGroup string, taskid string, runid string, commands []string) error {
+func WorkerRunTask(workerGroup string, taskid string, runid string, envID string, commands []string) error {
 
 	// log.Println("task accepted")
+
+	TaskFinal := models.WorkerTasks{
+		TaskID:        taskid,
+		CreatedAt:     time.Now().UTC(),
+		EnvironmentID: envID,
+		RunID:         runid,
+		WorkerGroup:   workerGroup,
+		StartDT:       time.Now().UTC(),
+		Status:        "Queue",
+	}
+
+	response := runtask.TaskResponse{R: "ok"}
+	_, errnats := messageq.MsgReply("taskupdate", TaskFinal, &response)
+	if errnats != nil {
+		logging.PrintSecretsRedact(errnats)
+	}
 
 	/* Look up chosen workers -
 	if none, keep trying for 10 x 2 seconds
 	before failing */
 	// var err1 error
+	markFail := true
 	maxRetiresAllowed := 5
 	var onlineWorkers []models.WorkerStats
 	for i := 0; i < maxRetiresAllowed; i++ {
@@ -107,6 +124,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, commands []s
 
 			// successful send to worker
 			if response.R == "ok" {
+				markFail = false
 				break
 			}
 			// } else {
@@ -117,6 +135,27 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, commands []s
 			}
 		}
 		time.Sleep(2 * time.Second)
+	}
+
+	// If task not successfully sent, mark as failed
+	if markFail {
+		TaskFinal := models.WorkerTasks{
+			TaskID:        taskid,
+			CreatedAt:     time.Now().UTC(),
+			EnvironmentID: envID,
+			RunID:         runid,
+			WorkerGroup:   workerGroup,
+			StartDT:       time.Now().UTC(),
+			Status:        "Fail",
+			Reason:        "No workers",
+		}
+
+		response := runtask.TaskResponse{R: "ok"}
+		_, errnats := messageq.MsgReply("taskupdate", TaskFinal, &response)
+		if errnats != nil {
+			logging.PrintSecretsRedact(errnats)
+		}
+
 	}
 
 	//

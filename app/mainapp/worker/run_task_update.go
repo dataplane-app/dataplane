@@ -23,7 +23,7 @@ func UpdateTasks(MainAppID string) {
 
 			err2 := database.DBConn.Clauses(clause.OnConflict{
 				Columns:   []clause.Column{{Name: "task_id"}},
-				DoUpdates: clause.AssignmentColumns([]string{"end_dt", "status", "reason"}),
+				DoUpdates: clause.AssignmentColumns([]string{"end_dt", "status", "reason", "worker_id"}),
 			}).Create(&msg)
 			if err2.Error != nil {
 				logging.PrintSecretsRedact(err2.Error.Error())

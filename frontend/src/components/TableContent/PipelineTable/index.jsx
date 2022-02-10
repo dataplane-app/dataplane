@@ -10,7 +10,7 @@ import customDrawerStyles from '../../../utils/drawerStyles';
 import ShowYAMLCodeDrawer from '../../DrawerContent/ShowYAMLCodeDrawer';
 import { useHistory } from 'react-router-dom';
 
-const PipelineTable = () => {
+const PipelineTable = ({ data }) => {
     // React router
     const history = useHistory();
 
@@ -118,12 +118,12 @@ const PipelineTable = () => {
                                 sx={{ border: 1, borderColor: 'divider', padding: 3, cursor: 'pointer', '&:hover': { background: 'background.hoverSecondary' }, mt: 2 }}>
                                 <Box component="td">
                                     <Grid display="flex" alignItems="flex-start" justifyContent="space-between">
-                                        <Grid item onClick={() => history.push(`/pipelines/remove_logs/${row.original.id}`)}>
+                                        <Grid item onClick={() => history.push(`/pipelines/remove_logs/${row.original.pipelineID}`)}>
                                             <Typography variant="h3" color="cyan.main">
-                                                Remove logs
+                                                {row.original.name}
                                             </Typography>
                                             <Typography fontSize={15} color="text.primary" mt={0.3}>
-                                                This removes the logs that build up.
+                                                {row.original.description}
                                             </Typography>
                                         </Grid>
 
@@ -137,7 +137,7 @@ const PipelineTable = () => {
                                                 <Box
                                                     height={16}
                                                     width={16}
-                                                    backgroundColor={`${row.original.active ? 'status.pipelineOnline' : 'error.main'}`}
+                                                    backgroundColor={`${row.original.online ? 'status.pipelineOnline' : 'error.main'}`}
                                                     borderRadius="100%"></Box>
                                                 <Typography ml={1} fontSize={16} sx={{ color: row.original.active ? 'status.pipelineOnlineText' : 'error.main' }}>
                                                     {row.original.active ? 'Online' : 'Offline'}
@@ -204,34 +204,34 @@ const PipelineTable = () => {
     );
 };
 
-const data = [
-    {
-        id: 1,
-        trigger: 'Every 5 minutes',
-        version: '0.0.1',
-        next_run: '27 Nov 2021',
-        last_run: '27 Nov 2021',
-        runs: [10, 10],
-        actions: '',
-        status: {
-            text: 'Running',
-            amount: 10,
-        },
-        active: true,
-    },
-    {
-        id: 2,
-        trigger: 'Every 5 minutes',
-        version: '0.0.1',
-        next_run: '27 Nov 2021',
-        last_run: '27 Nov 2021',
-        runs: [10, 10, 20, 30, 50],
-        actions: '',
-        status: {
-            text: 'Ready',
-        },
-        active: false,
-    },
-];
+// const data = [
+//     {
+//         id: 1,
+//         trigger: 'Every 5 minutes',
+//         version: '0.0.1',
+//         next_run: '27 Nov 2021',
+//         last_run: '27 Nov 2021',
+//         runs: [10, 10],
+//         actions: '',
+//         status: {
+//             text: 'Running',
+//             amount: 10,
+//         },
+//         active: true,
+//     },
+//     {
+//         id: 2,
+//         trigger: 'Every 5 minutes',
+//         version: '0.0.1',
+//         next_run: '27 Nov 2021',
+//         last_run: '27 Nov 2021',
+//         runs: [10, 10, 20, 30, 50],
+//         actions: '',
+//         status: {
+//             text: 'Ready',
+//         },
+//         active: false,
+//     },
+// ];
 
 export default PipelineTable;
