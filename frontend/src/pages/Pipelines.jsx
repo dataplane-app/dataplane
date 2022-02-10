@@ -107,7 +107,7 @@ function useGetPipelines_(setPipelines, environmentID) {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': get pipelines', { variant: 'error' }));
         } else {
-            setPipelines(response.filter((a) => a.environmentID === environmentID));
+            setPipelines(response);
         }
     };
 }
