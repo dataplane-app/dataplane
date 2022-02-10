@@ -26,7 +26,6 @@ require (
 	github.com/valyala/fasthttp v1.32.0
 	github.com/vektah/gqlparser/v2 v2.2.0
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce
-	gorm.io/datatypes v1.0.3
 	gorm.io/driver/postgres v1.2.3
 	gorm.io/gorm v1.22.3
 )
