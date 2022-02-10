@@ -43,8 +43,8 @@ export default function WorkerDetail() {
 
     // Polling on websocket
     useEffect(() => {
-        // Keep workers that aren't same as incoming response
-        let keep = data.filter((a) => a.WorkerID !== socketResponse.WorkerID);
+        // Keep workers that aren't same as incoming response and less than 10 seconds old
+        let keep = data.filter((a) => a.WorkerID !== socketResponse.WorkerID && new Date().valueOf() - new Date(a.T).valueOf() < 10000);
 
         socketResponse.T && setData([...keep, socketResponse].sort(sortObjectByName));
 
