@@ -4,7 +4,6 @@ import Search from '../../components/Search';
 import { useTable, useGlobalFilter } from 'react-table';
 import CustomChip from '../../components/CustomChip';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDocker } from '@fortawesome/free-brands-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { formatDate } from '../../utils/formatDate';
 import { useSnackbar } from 'notistack';
@@ -120,7 +119,9 @@ export default function WorkerDetail() {
                             </Typography>
 
                             <Box display="flex" ml={4} alignItems="center">
-                                <FontAwesomeIcon icon={faDocker} style={{ marginRight: 4 }} />
+                                <Typography variant="subtitle1" fontWeight={'bold'} mr={1}>
+                                    Worker type:
+                                </Typography>
                                 <Typography variant="subtitle1" style={{ display: 'inline' }}>
                                     {socketResponse.WorkerType}
                                 </Typography>
