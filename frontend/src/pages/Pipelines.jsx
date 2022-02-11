@@ -19,6 +19,8 @@ const Pipelines = () => {
 
     // Local state
     const [pipelines, setPipelines] = useState([]);
+    const [filter, setFilter] = useState();
+    const [pipelineCount, setPipelineCount] = useState();
 
     // Custom GraphQL hook
     const getPipelines = useGetPipelines_(setPipelines, Environment.id.get());
@@ -57,7 +59,7 @@ const Pipelines = () => {
 
             <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start" sx={{ width: { xl: '85%' } }}>
                 <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
-                    <CustomChip amount={2} label="Pipelines" margin={1} customColor="orange" />
+                    <CustomChip amount={pipelineCount} label="Pipelines" margin={1} customColor="orange" />
                     <CustomChip amount={2} label="Succeeded" margin={1} customColor="green" />
                     <CustomChip amount={2} label="Failed" margin={1} customColor="red" />
                     <CustomChip amount={2} label="Workers online" margin={2} customColor="purple" />
@@ -65,14 +67,14 @@ const Pipelines = () => {
 
                 <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center', flex: 1 }}>
                     <Box flex={1.2} width="100%" flexGrow={1.2}>
-                        <Search placeholder="Find a pipeline" width="100%" />
+                        <Search placeholder="Find a pipeline" width="100%" onChange={(e) => setFilter(e)} />
                     </Box>
                     <TextField label="Last 48 hours" id="last" select size="small" required sx={{ ml: 2, flex: 1 }}>
                         <MenuItem value="24">Last 24 hours</MenuItem>
                     </TextField>
                 </Grid>
 
-                <PipelineTable data={pipelines} />
+                <PipelineTable data={pipelines} filter={filter} setPipelineCount={setPipelineCount} />
             </Grid>
 
             <Drawer anchor="right" open={isOpenCreatePipeline} onClose={() => setIsOpenCreatePipeline(!isOpenCreatePipeline)}>
