@@ -23,7 +23,7 @@ go test -p 1 -v -count=1 -run TestUserAuth dataplane/Tests/users
 */
 func TestUserAuth(t *testing.T) {
 
-	graphQLPublicUrl := "http://localhost:9000/public/graphql"
+	graphQLPublicUrl := testutils.GraphQLUrlPublic
 
 	//--------- Login ------------
 
@@ -42,7 +42,7 @@ func TestUserAuth(t *testing.T) {
 	// Get access token
 	accessTokenAdmin := jsoniter.Get(loginAdminUserResponse, "data", "loginUser", "access_token").ToString()
 
-	graphQLUrl := "http://localhost:9000/private/graphql"
+	graphQLUrl := testutils.GraphQLUrlPrivate
 
 	testUser := faker.Email()
 	testPassword := testutils.TextEscape(faker.Password())
@@ -111,7 +111,7 @@ func TestUserAuth(t *testing.T) {
 	}
 	`
 
-	url := "http://localhost:9000/refreshtoken"
+	url := testutils.RefreshTokenUrl
 	exchangeUserResponse, httpExchangeResponse := testutils.RestRequestPrivate(reqQuery, refreshToken, "POST", url, t)
 
 	// log.Println(string(exchangeUserResponse))
@@ -127,7 +127,7 @@ func TestUserAuth(t *testing.T) {
 	logoutUser := `{
 		logoutUser
 	  }`
-	graphQLPrivateUrl := "http://localhost:9000/private/graphql"
+	graphQLPrivateUrl := testutils.GraphQLUrlPrivate
 	logoutUserResponse, httpLogoutResponse := testutils.GraphQLRequestPrivate(logoutUser, accessTokenExchange, "{}", graphQLPrivateUrl, t)
 	assert.Equalf(t, http.StatusOK, httpLogoutResponse.StatusCode, "Logout 200 status code")
 	assert.Equalf(t, "Logged out", jsoniter.Get(logoutUserResponse, "data", "logoutUser").ToString(), "Logout correct response")

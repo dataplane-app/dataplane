@@ -22,8 +22,8 @@ go test -p 1 -v -count=1 -run TestPreferences dataplane/Tests/users
 func TestPreferences(t *testing.T) {
 
 	// Delete platform for testing first time user
-	graphQLUrl := "http://localhost:9000/public/graphql"
-	graphQLUrlPrivate := "http://localhost:9000/private/graphql"
+	graphQLUrl := testutils.GraphQLUrlPublic
+	graphQLUrlPrivate := testutils.GraphQLUrlPrivate
 
 	testUser := testutils.AdminUser
 	testPassword := testutils.AdminPassword

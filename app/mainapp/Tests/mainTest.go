@@ -61,8 +61,6 @@ func main() {
 	// // Delete platform for testing first time user
 	database.DBConn.Where("1 = 1").Delete(&models.Platform{})
 
-	graphQLUrl := "http://localhost:9000/public/graphql"
-
 	testUser := testutils.AdminUser
 	testPassword := testutils.AdminPassword
 	// Remove admin user
@@ -110,7 +108,7 @@ func main() {
 					}
 				}`
 
-	createUserResponse, httpResponse := testutils.GraphQLRequestPublic(createUser, "{}", graphQLUrl, t)
+	createUserResponse, httpResponse := testutils.GraphQLRequestPublic(createUser, "{}", testutils.GraphQLUrlPublic, t)
 
 	log.Println(string(createUserResponse), httpResponse.StatusCode)
 

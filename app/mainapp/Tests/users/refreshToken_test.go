@@ -19,7 +19,7 @@ go test -p 1 -v -count=1 -run TestRefreshToken dataplane/Tests/users
 */
 func TestRefreshToken(t *testing.T) {
 
-	graphQLUrl := "http://localhost:9000/public/graphql"
+	graphQLUrl := testutils.GraphQLUrlPublic
 
 	testUser := testutils.AdminUser
 	testPassword := testutils.AdminPassword
@@ -51,7 +51,7 @@ func TestRefreshToken(t *testing.T) {
 
 	refreshToken := jsoniter.Get(loginUserResponse, "data", "loginUser", "refresh_token").ToString()
 
-	url := "http://localhost:9000/refreshtoken"
+	url := testutils.RefreshTokenUrl
 	exchangeUserResponse, httpExchangeResponse := testutils.RestRequestPrivate(reqQuery, refreshToken, "POST", url, t)
 
 	// log.Println(string(exchangeUserResponse))
