@@ -103,7 +103,7 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 
 			// Read line by line and process it
 			for scanner.Scan() {
-				line := scanner.Text()
+				line := config.Secrets.Replace(scanner.Text())
 
 				logmsg := models.LogsWorkers{
 					CreatedAt:     time.Now().UTC(),
@@ -146,7 +146,7 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 
 			// Read line by line and process it
 			for scannerErr.Scan() {
-				line := scannerErr.Text()
+				line := config.Secrets.Replace(scannerErr.Text())
 
 				logmsg := models.LogsWorkers{
 					CreatedAt:     time.Now().UTC(),
@@ -164,8 +164,9 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 				// }
 				messageq.MsgSend("workertask."+taskID, logmsg)
 				database.DBConn.Create(&logmsg)
-
-				clog.Error(line)
+				if os.Getenv("debug") == "true" {
+					clog.Error(line)
+				}
 			}
 
 			// We're all done, unblock the channel
