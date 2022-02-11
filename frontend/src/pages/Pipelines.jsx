@@ -18,8 +18,6 @@ const Pipelines = () => {
     // Global user states with hookstate
     const Environment = useGlobalEnvironmentState();
 
-    // Drawer state
-    const [isOpenCreatePipeline, setIsOpenCreatePipeline] = useState(false);
 
     // Local state
     const [pipelines, setPipelines] = useState([]);
