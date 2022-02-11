@@ -112,18 +112,18 @@ func Setup(port string) *fiber.App {
 	app.Static("/webapp/*", "frontbuild/index.html")
 
 	// ------- GRAPHQL------
-	app.Post("/public/graphql", PublicGraphqlHandler())
-	app.Post("/private/graphql", auth.TokenAuthMiddle(), PrivateGraphqlHandler())
+	app.Post("/app/public/graphql", PublicGraphqlHandler())
+	app.Post("/app/private/graphql", auth.TokenAuthMiddle(), PrivateGraphqlHandler())
 
-	app.Use("/privatesubscribe", func(c *fiber.Ctx) error {
-		// IsWebSocketUpgrade returns true if the client
-		// requested upgrade to the WebSocket protocol.
-		if websocket.IsWebSocketUpgrade(c) {
-			c.Locals("allowed", true)
-			return c.Next()
-		}
-		return fiber.ErrUpgradeRequired
-	})
+	// app.Use("/app/privatesubscribe", func(c *fiber.Ctx) error {
+	// 	// IsWebSocketUpgrade returns true if the client
+	// 	// requested upgrade to the WebSocket protocol.
+	// 	if websocket.IsWebSocketUpgrade(c) {
+	// 		c.Locals("allowed", true)
+	// 		return c.Next()
+	// 	}
+	// 	return fiber.ErrUpgradeRequired
+	// })
 
 	// app.Use("/privatesubscribe/graphql", PrivateSubscribeGraphqlHandler())
 
@@ -134,7 +134,7 @@ func Setup(port string) *fiber.App {
 	}
 	// ------ Auth ------
 	/* Exchange a refresh token for a new access token */
-	app.Post("/refreshtoken", func(c *fiber.Ctx) error {
+	app.Post("/app/refreshtoken", func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
 		// body := c.Body()
 		authHeader := strings.Split(string(c.Request().Header.Peek("Authorization")), "Bearer ")
@@ -154,7 +154,7 @@ func Setup(port string) *fiber.App {
 	})
 
 	// Websockets
-	app.Use("/ws", func(c *fiber.Ctx) error {
+	app.Use("/app/ws", func(c *fiber.Ctx) error {
 		// IsWebSocketUpgrade returns true if the client
 		// requested upgrade to the WebSocket protocol.
 		if websocket.IsWebSocketUpgrade(c) {
@@ -164,13 +164,13 @@ func Setup(port string) *fiber.App {
 		return fiber.ErrUpgradeRequired
 	})
 
-	app.Get("/ws/workerstats/:workergroup", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
+	app.Get("/app/ws/workerstats/:workergroup", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
 
 		// log.Println(c.Query("token"))
 		worker.WorkerStatsWs(c, "workerstats."+c.Params("workergroup"))
 	}))
 
-	app.Get("/ws/rooms/:room", websocket.New(func(c *websocket.Conn) {
+	app.Get("/app/ws/rooms/:room", websocket.New(func(c *websocket.Conn) {
 
 		// log.Println(c.Query("token"))
 		// "taskupdates."+c.Params("runid")
