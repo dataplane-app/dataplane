@@ -11,6 +11,7 @@ import (
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"errors"
+	"log"
 	"os"
 
 	"github.com/google/uuid"
@@ -33,6 +34,7 @@ func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID 
 		return "", errors.New("Requires permissions.")
 	}
 
+	log.Println(description)
 	e := models.PermissionsAccessGroups{
 		AccessGroupID: uuid.New().String(),
 		Name:          name,

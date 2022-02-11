@@ -8,7 +8,6 @@ import (
 	"dataplane/mainapp/utilities"
 	"dataplane/workers/runtask"
 	"encoding/json"
-	"errors"
 	"log"
 	"os"
 	"strconv"
@@ -20,12 +19,31 @@ import (
 /*
 Task status: Queue, Allocated, Started, Failed, Success
 */
-func WorkerRunTask(workerGroup string, taskid string, runid string, commands []string) error {
+func WorkerRunTask(workerGroup string, taskid string, runid string, envID string, commands []string) error {
+
+	// log.Println("task accepted")
+
+	TaskFinal := models.WorkerTasks{
+		TaskID:        taskid,
+		CreatedAt:     time.Now().UTC(),
+		EnvironmentID: envID,
+		RunID:         runid,
+		WorkerGroup:   workerGroup,
+		StartDT:       time.Now().UTC(),
+		Status:        "Queue",
+	}
+
+	response := runtask.TaskResponse{R: "ok"}
+	_, errnats := messageq.MsgReply("taskupdate", TaskFinal, &response)
+	if errnats != nil {
+		logging.PrintSecretsRedact(errnats)
+	}
 
 	/* Look up chosen workers -
 	if none, keep trying for 10 x 2 seconds
 	before failing */
 	// var err1 error
+	markFail := true
 	maxRetiresAllowed := 5
 	var onlineWorkers []models.WorkerStats
 	for i := 0; i < maxRetiresAllowed; i++ {
@@ -55,74 +73,89 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, commands []s
 			return nil
 		})
 
-		// log.Println("X:", len(onlineWorkers))
+		// log.Println("X:", onlineWorkers)
 
 		// log.Println("err1:", err1)
 
 		if len(onlineWorkers) == 0 {
 			log.Println(workerGroup + " not online, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
 		} else {
-			break
-		}
 
+			// Choose a worker based on load balancing strategy - default is round robin
+			var loadbalanceNext string
+
+			// if a worker group goes offline in between, choose the next in the load balancer and retry
+			// for i := 0; i < maxRetiresAllowed; i++ {
+
+			if os.Getenv("debug") == "true" {
+				log.Println("Worker LB:", onlineWorkers[0].LB)
+			}
+
+			switch onlineWorkers[0].LB {
+			case "roundrobin":
+				loadbalanceNext = utilities.Balance(onlineWorkers, workerGroup)
+
+			default:
+				loadbalanceNext = utilities.Balance(onlineWorkers, workerGroup)
+
+			}
+
+			// Send the request to the worker
+			if os.Getenv("debug") == "true" {
+				log.Println("Selected worker:", onlineWorkers[0].LB, loadbalanceNext)
+			}
+
+			tasksend := models.WorkerTaskSend{
+				TaskID:        taskid,
+				CreatedAt:     time.Now().UTC(),
+				EnvironmentID: onlineWorkers[0].Env,
+				RunID:         runid,
+				WorkerGroup:   workerGroup,
+				WorkerID:      loadbalanceNext,
+				Commands:      commands,
+			}
+
+			var response runtask.TaskResponse
+			_, errnats := messageq.MsgReply("task."+workerGroup+"."+loadbalanceNext, tasksend, &response)
+
+			if errnats != nil {
+				log.Println("Send to worker error nats:", errnats)
+			}
+
+			// successful send to worker
+			if response.R == "ok" {
+				markFail = false
+				break
+			}
+			// } else {
+			// 	log.Println(loadbalanceNext + " not online, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
+			// }
+			if os.Getenv("debug") == "true" {
+				log.Println("Send to worker", response.R)
+			}
+		}
 		time.Sleep(2 * time.Second)
 	}
 
-	if len(onlineWorkers) == 0 {
-		return errors.New("Worker group not online: " + workerGroup)
-	}
-
-	// Choose a worker based on load balancing strategy - default is round robin
-	var loadbalanceNext string
-
-	// if a worker group goes offline in between, choose the next in the load balancer and retry
-	for i := 0; i < maxRetiresAllowed; i++ {
-
-		if os.Getenv("debug") == "true" {
-			log.Println("Worker LB:", onlineWorkers[0].LB)
-		}
-
-		switch onlineWorkers[0].LB {
-		case "roundrobin":
-			loadbalanceNext = utilities.Balance(onlineWorkers, workerGroup)
-
-		default:
-			loadbalanceNext = utilities.Balance(onlineWorkers, workerGroup)
-
-		}
-
-		// Send the request to the worker
-		if os.Getenv("debug") == "true" {
-			log.Println("Selected worker:", onlineWorkers[0].LB, loadbalanceNext)
-		}
-
-		tasksend := models.WorkerTaskSend{
+	// If task not successfully sent, mark as failed
+	if markFail {
+		TaskFinal := models.WorkerTasks{
 			TaskID:        taskid,
 			CreatedAt:     time.Now().UTC(),
-			EnvironmentID: onlineWorkers[0].Env,
+			EnvironmentID: envID,
 			RunID:         runid,
 			WorkerGroup:   workerGroup,
-			WorkerID:      loadbalanceNext,
-			Commands:      commands,
+			StartDT:       time.Now().UTC(),
+			Status:        "Fail",
+			Reason:        "No workers",
 		}
 
-		var response runtask.TaskResponse
-		_, errnats := messageq.MsgReply("task."+workerGroup+"."+loadbalanceNext, tasksend, &response)
-
+		response := runtask.TaskResponse{R: "ok"}
+		_, errnats := messageq.MsgReply("taskupdate", TaskFinal, &response)
 		if errnats != nil {
-			log.Println("Send to worker error nats:", errnats)
+			logging.PrintSecretsRedact(errnats)
 		}
 
-		// successful send to worker
-		if response.R == "ok" {
-			break
-		} else {
-			log.Println(loadbalanceNext + " not online, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
-		}
-		if os.Getenv("debug") == "true" {
-			log.Println("Send to worker", response.R)
-		}
-		time.Sleep(2 * time.Second)
 	}
 
 	//

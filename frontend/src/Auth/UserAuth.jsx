@@ -90,30 +90,59 @@ export const UserAuth = ({ children, Env, loginUrl, refreshTokenUrl, logoutUrl, 
     // ----- Set a in memory cache for auth tokens -----
 
     // ----- As the user is active keep checking for half life
-    const onActive = (e) => {
-        ConsoleLogHelper('Called onActive');
-        // On activity test if a token is needed?
-        if (Authstate.privateRoute.get() === true) {
-            let decodedToken = decodedAccessToken(Authstate.authToken.get());
-            if (decodedToken === undefined) {
-                ConsoleLogHelper('Set Empty for onActivity');
-                Authstate.authToken.set('empty');
-            } else {
-                let x = getAccessTokenRefreshTime(decodedToken);
-                // refresh.set(x)
-                ConsoleLogHelper('On activity is refresh needed?:', x);
-                if (x === true) {
-                    ConsoleLogHelper('Refresh count up:', refreshCount.get());
-                    refreshCount.set((p) => p + 1);
-                }
+    // const onActive = (e) => {
+    //     ConsoleLogHelper('Called onActive');
+    //     // On activity test if a token is needed?
+    //     if (Authstate.privateRoute.get() === true) {
+    //         let decodedToken = decodedAccessToken(Authstate.authToken.get());
+    //         if (decodedToken === undefined) {
+    //             ConsoleLogHelper('Set Empty for onActivity');
+    //             Authstate.authToken.set('empty');
+    //         } else {
+    //             let x = getAccessTokenRefreshTime(decodedToken);
+    //             // refresh.set(x)
+    //             ConsoleLogHelper('On activity is refresh needed?:', x);
+    //             if (x === true) {
+    //                 ConsoleLogHelper('Refresh count up:', refreshCount.get());
+    //                 refreshCount.set((p) => p + 1);
+    //             }
+    //         }
+    //     }
+    //     // console.log("user is active", e);
+    //     // console.log("time remaining", this.idleTimer.getRemainingTime());
+    // };
+
+    // --------- check activity every 5 seconds --------
+    const MINUTE_MS = 5000;
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    console.log('Logs every 5 seconds');
+    if (Authstate.privateRoute.get() === true) {
+        let decodedToken = decodedAccessToken(Authstate.authToken.get());
+        if (decodedToken === undefined) {
+            ConsoleLogHelper('Set Empty for onActivity');
+            Authstate.authToken.set('empty');
+        } else {
+            let x = getAccessTokenRefreshTime(decodedToken);
+            // refresh.set(x)
+            ConsoleLogHelper('On activity is refresh needed?:', x);
+            if (x === true) {
+                ConsoleLogHelper('Refresh count up:', refreshCount.get());
+                refreshCount.set((p) => p + 1);
             }
         }
-        // console.log("user is active", e);
-        // console.log("time remaining", this.idleTimer.getRemainingTime());
-    };
+    }
+  }, MINUTE_MS);
+
+  return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
+}, [])
 
     //   ------ On refresh is True, fire off refresh token
     useEffect(() => {
+
+       
+
         ConsoleLogHelper('Fire me when token is needed - ID:', refreshCount.get());
 
         async function fetchToken() {
@@ -158,12 +187,12 @@ export const UserAuth = ({ children, Env, loginUrl, refreshTokenUrl, logoutUrl, 
 
     return (
         <React.Fragment>
-            <IdleTimer
+            {/* <IdleTimer
                 element={document}
                 onActive={onActive}
                 debounce={250}
                 timeout={1000} //every 1 seconds
-            />
+            /> */}
             <BrowserRouter basename="/webapp">
                 <Switch>
                     <Route path={LogincallbackUrl} exact>

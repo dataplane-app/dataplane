@@ -27,8 +27,8 @@ func TestSecrets(t *testing.T) {
 
 	database.DBConnect()
 
-	graphQLUrl := "http://localhost:9000/public/graphql"
-	graphQLUrlPrivate := "http://localhost:9000/private/graphql"
+	graphQLUrl := testutils.GraphQLUrlPublic
+	graphQLUrlPrivate := testutils.GraphQLUrlPrivate
 
 	testUser := testutils.AdminUser
 	testPassword := testutils.AdminPassword

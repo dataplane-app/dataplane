@@ -1,5 +1,5 @@
 import { Box, Typography, Grid, Drawer, Avatar, AvatarGroup } from '@mui/material';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTable, useGlobalFilter } from 'react-table';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlayCircle, faClock } from '@fortawesome/free-regular-svg-icons';
@@ -10,24 +10,30 @@ import customDrawerStyles from '../../../utils/drawerStyles';
 import ShowYAMLCodeDrawer from '../../DrawerContent/ShowYAMLCodeDrawer';
 import { useHistory } from 'react-router-dom';
 
-const PipelineTable = () => {
+const PipelineTable = ({ data, filter, setPipelineCount }) => {
     // React router
     const history = useHistory();
 
     // Table item states
     const [isOpenYAML, setIsOpenYAML] = useState(false);
 
+    useEffect(() => {
+        setGlobalFilter(filter);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filter]);
+
     const columns = useMemo(
         () => [
             {
                 Header: 'Trigger',
-                accessor: 'trigger',
+                accessor: (row) => [row.name, row.description],
                 Cell: (row) => (
                     <Grid container alignItems="flex-start" flexWrap="nowrap">
                         <Box component={FontAwesomeIcon} fontSize={19} color="error.main" icon={faClock} />
                         <Box ml={0.7}>
                             <Typography fontSize={15} fontWeight={500} lineHeight="16.94px">
-                                {row.value}
+                                Every 5 minutes
                             </Typography>
                             <Typography fontSize={15} fontWeight={500} mt={0.5} lineHeight="16.94px">
                                 */5****
@@ -92,13 +98,19 @@ const PipelineTable = () => {
     );
 
     // Use the state and functions returned from useTable to build your UI
-    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = useTable(
+    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, setGlobalFilter } = useTable(
         {
             columns,
             data,
         },
         useGlobalFilter
     );
+
+    useEffect(() => {
+        setPipelineCount(rows.length);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rows]);
 
     return (
         <>
@@ -120,10 +132,10 @@ const PipelineTable = () => {
                                     <Grid display="flex" alignItems="flex-start" justifyContent="space-between">
                                         <Grid item onClick={() => history.push(`/pipelines/view/${row.original.id}`)}>
                                             <Typography variant="h3" color="cyan.main">
-                                                Remove logs
+                                                {row.original.name}
                                             </Typography>
                                             <Typography fontSize={15} color="text.primary" mt={0.3}>
-                                                This removes the logs that build up.
+                                                {row.original.description}
                                             </Typography>
                                         </Grid>
 
@@ -137,10 +149,10 @@ const PipelineTable = () => {
                                                 <Box
                                                     height={16}
                                                     width={16}
-                                                    backgroundColor={`${row.original.active ? 'status.pipelineOnline' : 'error.main'}`}
+                                                    backgroundColor={`${row.original.online ? 'status.pipelineOnline' : 'error.main'}`}
                                                     borderRadius="100%"></Box>
-                                                <Typography ml={1} fontSize={16} sx={{ color: row.original.active ? 'status.pipelineOnlineText' : 'error.main' }}>
-                                                    {row.original.active ? 'Online' : 'Offline'}
+                                                <Typography ml={1} fontSize={16} sx={{ color: row.original.online ? 'status.pipelineOnlineText' : 'error.main' }}>
+                                                    {row.original.online ? 'Online' : 'Offline'}
                                                 </Typography>
                                             </Box>
                                         </Grid>
@@ -204,34 +216,34 @@ const PipelineTable = () => {
     );
 };
 
-const data = [
-    {
-        id: 1,
-        trigger: 'Every 5 minutes',
-        version: '0.0.1',
-        next_run: '27 Nov 2021',
-        last_run: '27 Nov 2021',
-        runs: [10, 10],
-        actions: '',
-        status: {
-            text: 'Running',
-            amount: 10,
-        },
-        active: true,
-    },
-    {
-        id: 2,
-        trigger: 'Every 5 minutes',
-        version: '0.0.1',
-        next_run: '27 Nov 2021',
-        last_run: '27 Nov 2021',
-        runs: [10, 10, 20, 30, 50],
-        actions: '',
-        status: {
-            text: 'Ready',
-        },
-        active: false,
-    },
-];
+// const data = [
+//     {
+//         id: 1,
+//         trigger: 'Every 5 minutes',
+//         version: '0.0.1',
+//         next_run: '27 Nov 2021',
+//         last_run: '27 Nov 2021',
+//         runs: [10, 10],
+//         actions: '',
+//         status: {
+//             text: 'Running',
+//             amount: 10,
+//         },
+//         active: true,
+//     },
+//     {
+//         id: 2,
+//         trigger: 'Every 5 minutes',
+//         version: '0.0.1',
+//         next_run: '27 Nov 2021',
+//         last_run: '27 Nov 2021',
+//         runs: [10, 10, 20, 30, 50],
+//         actions: '',
+//         status: {
+//             text: 'Ready',
+//         },
+//         active: false,
+//     },
+// ];
 
 export default PipelineTable;

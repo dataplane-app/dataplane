@@ -2,6 +2,7 @@ package workerhealth
 
 import (
 	"dataplane/workers/cmetric"
+	"dataplane/workers/config"
 	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
 	"log"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"github.com/go-co-op/gocron"
-	"github.com/google/uuid"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
@@ -42,17 +42,12 @@ type Worker struct {
 	WorkerType  string    `json:"WorkerType"` //container, kubernetes
 }
 
-var WorkerID string
-
 func WorkerHealthStart() {
-
-	// Load a worker ID
-	WorkerID = uuid.NewString()
 
 	/* Register the worker with mainapp */
 	worker := Worker{
 		WorkerGroup: os.Getenv("worker_group"),
-		WorkerID:    WorkerID,
+		WorkerID:    config.WorkerID,
 		Status:      "Online",
 		T:           time.Now().UTC(),
 	}
@@ -137,7 +132,7 @@ func WorkerHealthStart() {
 
 		workerdata := &WorkerStats{
 			WorkerGroup: os.Getenv("worker_group"),
-			WorkerID:    WorkerID,
+			WorkerID:    config.WorkerID,
 			Status:      "Online",
 			CPUPerc:     percentCPUsend,
 			MemoryPerc:  percentMemorysend,

@@ -43,6 +43,7 @@ var ResourceType = []*ResourceTypeStruct{
 	{Code: "environment_remove_user", Level: "environment", Label: "Remove user from environment", Access: "write"},
 	{Code: "environment_permissions", Level: "environment", Label: "Manage permissions", Access: "write"},
 	{Code: "environment_all_pipelines", Level: "environment", Label: "View all pipelines", Access: "read"},
+	{Code: "environment_edit_all_pipelines", Level: "environment", Label: "Edit all pipelines", Access: "write"},
 	{Code: "environment_secrets", Level: "environment", Label: "Manage secrets", Access: "write"},
 	{Code: "environment_edit_workers", Level: "environment", Label: "Manage workers", Access: "write"},
 	{Code: "environment_view_workers", Level: "environment", Label: "View workers", Access: "read"},

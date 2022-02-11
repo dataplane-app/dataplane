@@ -93,7 +93,7 @@ function App() {
                         )}
                         autoHideDuration={8000}>
                         <Box className="app" backgroundColor="background.main">
-                            <UserAuth refreshTokenUrl="/refreshtoken" LogincallbackUrl="/loginCallback" loginUrl="/webapp/login" logoutUrl="/webapp/logout">
+                            <UserAuth refreshTokenUrl="/app/refreshtoken" LogincallbackUrl="/loginCallback" loginUrl="/webapp/login" logoutUrl="/webapp/logout">
                                 <CssBaseline />
                                 <UseCheckTheme />
                                 <Switch>

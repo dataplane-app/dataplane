@@ -20,8 +20,8 @@ go test -p 1 -v -count=1 -run TestChangePassword dataplane/Tests/users
 */
 func TestChangeUserPassword(t *testing.T) {
 
-	graphQLUrl := "http://localhost:9000/public/graphql"
-	graphQLUrlPrivate := "http://localhost:9000/private/graphql"
+	graphQLUrl := testutils.GraphQLUrlPublic
+	graphQLUrlPrivate := testutils.GraphQLUrlPrivate
 
 	testUser := testutils.AdminUser
 	testPassword := testutils.AdminPassword

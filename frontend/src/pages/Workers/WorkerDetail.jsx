@@ -4,7 +4,6 @@ import Search from '../../components/Search';
 import { useTable, useGlobalFilter } from 'react-table';
 import CustomChip from '../../components/CustomChip';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDocker } from '@fortawesome/free-brands-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { formatDate } from '../../utils/formatDate';
 import { useSnackbar } from 'notistack';
@@ -43,8 +42,8 @@ export default function WorkerDetail() {
 
     // Polling on websocket
     useEffect(() => {
-        // Keep workers that aren't same as incoming response
-        let keep = data.filter((a) => a.WorkerID !== socketResponse.WorkerID);
+        // Keep workers that aren't same as incoming response and less than 10 seconds old
+        let keep = data.filter((a) => a.WorkerID !== socketResponse.WorkerID && new Date().valueOf() - new Date(a.T).valueOf() < 10000);
 
         socketResponse.T && setData([...keep, socketResponse].sort(sortObjectByName));
 
@@ -77,6 +76,7 @@ export default function WorkerDetail() {
         {
             columns,
             data,
+            autoResetGlobalFilter: false,
         },
         useGlobalFilter
     );
@@ -120,7 +120,9 @@ export default function WorkerDetail() {
                             </Typography>
 
                             <Box display="flex" ml={4} alignItems="center">
-                                <FontAwesomeIcon icon={faDocker} style={{ marginRight: 4 }} />
+                                <Typography variant="subtitle1" fontWeight={'bold'} mr={1}>
+                                    Worker type:
+                                </Typography>
                                 <Typography variant="subtitle1" style={{ display: 'inline' }}>
                                     {socketResponse.WorkerType}
                                 </Typography>

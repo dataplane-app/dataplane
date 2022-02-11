@@ -22,8 +22,8 @@ func TestGetSingleEnvironment(t *testing.T) {
 
 	database.DBConnect()
 
-	graphQLUrl := "http://localhost:9000/public/graphql"
-	graphQLUrlPrivate := "http://localhost:9000/private/graphql"
+	graphQLUrl := testutils.GraphQLUrlPublic
+	graphQLUrlPrivate := testutils.GraphQLUrlPrivate
 
 	testUser := testutils.UserData["development_env_user"].Username
 	testPassword := testutils.UserData["development_env_user"].Password

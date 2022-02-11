@@ -9,6 +9,7 @@ import (
 	"errors"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -36,6 +37,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Mutation() MutationResolver
+	Pipelines() PipelinesResolver
 	Query() QueryResolver
 }
 
@@ -69,6 +71,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		ActivateAccessGroup           func(childComplexity int, accessGroupID string, environmentID string) int
 		AddEnvironment                func(childComplexity int, input *AddEnvironmentInput) int
+		AddPipeline                   func(childComplexity int, name string, environmentID string, description string) int
 		AddSecretToWorkerGroup        func(childComplexity int, environmentName string, workerGroup string, secret string) int
 		AddUserToEnvironment          func(childComplexity int, userID string, environmentID string) int
 		CreateAccessGroup             func(childComplexity int, environmentID string, name string, description *string) int
@@ -135,7 +138,17 @@ type ComplexityRoot struct {
 	}
 
 	Pipelines struct {
-		Name func(childComplexity int) int
+		Active        func(childComplexity int) int
+		Current       func(childComplexity int) int
+		Description   func(childComplexity int) int
+		EnvironmentID func(childComplexity int) int
+		Name          func(childComplexity int) int
+		Online        func(childComplexity int) int
+		PipelineID    func(childComplexity int) int
+		Schedule      func(childComplexity int) int
+		ScheduleType  func(childComplexity int) int
+		Version       func(childComplexity int) int
+		YAMLHash      func(childComplexity int) int
 	}
 
 	Platform struct {
@@ -159,7 +172,7 @@ type ComplexityRoot struct {
 		GetEnvironment        func(childComplexity int, environmentID string) int
 		GetEnvironments       func(childComplexity int) int
 		GetOnePreference      func(childComplexity int, preference string) int
-		GetPipelines          func(childComplexity int) int
+		GetPipelines          func(childComplexity int, environmentID string) int
 		GetPlatform           func(childComplexity int) int
 		GetSecret             func(childComplexity int, secret string, environmentID string) int
 		GetSecretGroups       func(childComplexity int, environmentName string, secret string) int
@@ -251,6 +264,7 @@ type MutationResolver interface {
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 	UpdatePermissionToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string) (string, error)
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
+	AddPipeline(ctx context.Context, name string, environmentID string, description string) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	CreateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
 	UpdateSecret(ctx context.Context, input *UpdateSecretsInput) (*models.Secrets, error)
@@ -265,6 +279,14 @@ type MutationResolver interface {
 	AddSecretToWorkerGroup(ctx context.Context, environmentName string, workerGroup string, secret string) (*string, error)
 	DeleteSecretFromWorkerGroup(ctx context.Context, environmentName string, workerGroup string, secret string) (*string, error)
 }
+type PipelinesResolver interface {
+	Version(ctx context.Context, obj *models.Pipelines) (string, error)
+
+	YAMLHash(ctx context.Context, obj *models.Pipelines) (string, error)
+
+	Schedule(ctx context.Context, obj *models.Pipelines) (string, error)
+	ScheduleType(ctx context.Context, obj *models.Pipelines) (string, error)
+}
 type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*models.Environment, error)
 	GetEnvironment(ctx context.Context, environmentID string) (*models.Environment, error)
@@ -278,7 +300,7 @@ type QueryResolver interface {
 	AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error)
 	MyPermissions(ctx context.Context) ([]*models.PermissionsOutput, error)
 	UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error)
-	GetPipelines(ctx context.Context) ([]*Pipelines, error)
+	GetPipelines(ctx context.Context, environmentID string) ([]*models.Pipelines, error)
 	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
 	GetOnePreference(ctx context.Context, preference string) (*Preferences, error)
 	GetSecret(ctx context.Context, secret string, environmentID string) (*models.Secrets, error)
@@ -428,6 +450,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddEnvironment(childComplexity, args["input"].(*AddEnvironmentInput)), true
+
+	case "Mutation.addPipeline":
+		if e.complexity.Mutation.AddPipeline == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addPipeline_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddPipeline(childComplexity, args["name"].(string), args["environmentID"].(string), args["description"].(string)), true
 
 	case "Mutation.addSecretToWorkerGroup":
 		if e.complexity.Mutation.AddSecretToWorkerGroup == nil {
@@ -962,12 +996,82 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PermissionsOutput.SubjectID(childComplexity), true
 
+	case "Pipelines.active":
+		if e.complexity.Pipelines.Active == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Active(childComplexity), true
+
+	case "Pipelines.current":
+		if e.complexity.Pipelines.Current == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Current(childComplexity), true
+
+	case "Pipelines.description":
+		if e.complexity.Pipelines.Description == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Description(childComplexity), true
+
+	case "Pipelines.environmentID":
+		if e.complexity.Pipelines.EnvironmentID == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.EnvironmentID(childComplexity), true
+
 	case "Pipelines.name":
 		if e.complexity.Pipelines.Name == nil {
 			break
 		}
 
 		return e.complexity.Pipelines.Name(childComplexity), true
+
+	case "Pipelines.online":
+		if e.complexity.Pipelines.Online == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Online(childComplexity), true
+
+	case "Pipelines.pipelineID":
+		if e.complexity.Pipelines.PipelineID == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.PipelineID(childComplexity), true
+
+	case "Pipelines.schedule":
+		if e.complexity.Pipelines.Schedule == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Schedule(childComplexity), true
+
+	case "Pipelines.scheduleType":
+		if e.complexity.Pipelines.ScheduleType == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.ScheduleType(childComplexity), true
+
+	case "Pipelines.version":
+		if e.complexity.Pipelines.Version == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Version(childComplexity), true
+
+	case "Pipelines.YAMLHash":
+		if e.complexity.Pipelines.YAMLHash == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.YAMLHash(childComplexity), true
 
 	case "Platform.business_name":
 		if e.complexity.Platform.BusinessName == nil {
@@ -1102,7 +1206,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.GetPipelines(childComplexity), true
+		args, err := ec.field_Query_getPipelines_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetPipelines(childComplexity, args["environmentID"].(string)), true
 
 	case "Query.getPlatform":
 		if e.complexity.Query.GetPlatform == nil {
@@ -1908,12 +2017,37 @@ extend type Mutation {
 }
 `, BuiltIn: false},
 	{Name: "resolvers/pipelines.graphqls", Input: `type Pipelines {
+  pipelineID: String!
 	name: String!
+  version: String!
+  environmentID: String!
+  YAMLHash: String!
+  description: String!
+  active: Boolean!
+  online: Boolean!
+  current: String!
+  schedule: String!
+  scheduleType: String!
 }
 
 extend type Query {
-  getPipelines: [Pipelines]
-}`, BuiltIn: false},
+  """
+  Get pipelines.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getPipelines(environmentID: String!): [Pipelines]
+}
+
+extend type Mutation {
+  """
+  Add a new pipeline.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment
+  """
+  addPipeline(name: String!, environmentID: String!, description: String! ): String!
+}
+`, BuiltIn: false},
 	{Name: "resolvers/preferences.graphqls", Input: `input AddPreferencesInput {
   preference: String!
   value: String!
@@ -2246,6 +2380,39 @@ func (ec *executionContext) field_Mutation_addEnvironment_args(ctx context.Conte
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_addPipeline_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["description"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["description"] = arg2
 	return args, nil
 }
 
@@ -3095,6 +3262,21 @@ func (ec *executionContext) field_Query_getOnePreference_args(ctx context.Contex
 		}
 	}
 	args["preference"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getPipelines_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
 	return args, nil
 }
 
@@ -4631,6 +4813,48 @@ func (ec *executionContext) _Mutation_deletePermissionToUser(ctx context.Context
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_addPipeline(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_addPipeline_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddPipeline(rctx, args["name"].(string), args["environmentID"].(string), args["description"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_updatePreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5943,7 +6167,42 @@ func (ec *executionContext) _PermissionsOutput_Label(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Pipelines_name(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pipelines_pipelineID(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PipelineID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_name(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5962,6 +6221,321 @@ func (ec *executionContext) _Pipelines_name(ctx context.Context, field graphql.C
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_version(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Pipelines().Version(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_environmentID(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvironmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_YAMLHash(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Pipelines().YAMLHash(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_description(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_active(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_online(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Online, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_current(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Current, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_schedule(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Pipelines().Schedule(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_scheduleType(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Pipelines().ScheduleType(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6644,9 +7218,16 @@ func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graph
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getPipelines_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetPipelines(rctx)
+		return ec.resolvers.Query().GetPipelines(rctx, args["environmentID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6655,9 +7236,9 @@ func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graph
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*Pipelines)
+	res := resTmp.([]*models.Pipelines)
 	fc.Result = res
-	return ec.marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx, field.Selections, res)
+	return ec.marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getAllPreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -10287,6 +10868,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "addPipeline":
+			out.Values[i] = ec._Mutation_addPipeline(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "updatePreferences":
 			out.Values[i] = ec._Mutation_updatePreferences(ctx, field)
 		case "createSecret":
@@ -10507,7 +11093,7 @@ func (ec *executionContext) _PermissionsOutput(ctx context.Context, sel ast.Sele
 
 var pipelinesImplementors = []string{"Pipelines"}
 
-func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet, obj *Pipelines) graphql.Marshaler {
+func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet, obj *models.Pipelines) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, pipelinesImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -10516,11 +11102,97 @@ func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Pipelines")
+		case "pipelineID":
+			out.Values[i] = ec._Pipelines_pipelineID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 			out.Values[i] = ec._Pipelines_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "version":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Pipelines_version(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "environmentID":
+			out.Values[i] = ec._Pipelines_environmentID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "YAMLHash":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Pipelines_YAMLHash(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "description":
+			out.Values[i] = ec._Pipelines_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "active":
+			out.Values[i] = ec._Pipelines_active(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "online":
+			out.Values[i] = ec._Pipelines_online(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "current":
+			out.Values[i] = ec._Pipelines_current(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "schedule":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Pipelines_schedule(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "scheduleType":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Pipelines_scheduleType(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12112,7 +12784,7 @@ func (ec *executionContext) marshalOPermissionsOutput2ᚖdataplaneᚋmainappᚋd
 	return ec._PermissionsOutput(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx context.Context, sel ast.SelectionSet, v []*Pipelines) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx context.Context, sel ast.SelectionSet, v []*models.Pipelines) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12139,7 +12811,7 @@ func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋgraphq
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOPipelines2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx, sel, v[i])
+			ret[i] = ec.marshalOPipelines2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -12153,7 +12825,7 @@ func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋgraphq
 	return ret
 }
 
-func (ec *executionContext) marshalOPipelines2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx context.Context, sel ast.SelectionSet, v *Pipelines) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelines2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx context.Context, sel ast.SelectionSet, v *models.Pipelines) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

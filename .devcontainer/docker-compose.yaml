@@ -82,7 +82,7 @@ services:
       worker_heartbeat_seconds: "1"
       worker_group: "python_1"
       # vm, container, kubernetes
-      worker_type: "container"
+      worker_type: "vm"
       worker_lb: "roundrobin"
       worker_env: "Development"
 

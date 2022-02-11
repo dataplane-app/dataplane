@@ -14,7 +14,7 @@ import (
 
 /*
 For individual tests - in separate window run: go run server.go
-go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/permissions
+go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/workers
 * Login
 * Get worker groups
 * Get workers
@@ -27,8 +27,8 @@ func TestAccessGroups(t *testing.T) {
 
 	database.DBConnect()
 
-	graphQLUrl := "http://localhost:9000/public/graphql"
-	graphQLUrlPrivate := "http://localhost:9000/private/graphql"
+	graphQLUrl := testutils.GraphQLUrlPublic
+	graphQLUrlPrivate := testutils.GraphQLUrlPrivate
 
 	testUser := testutils.AdminUser
 	testPassword := testutils.AdminPassword

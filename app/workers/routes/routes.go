@@ -16,6 +16,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/google/uuid"
 )
 
 func Setup(port string) *fiber.App {
@@ -24,6 +25,9 @@ func Setup(port string) *fiber.App {
 
 	// ------- LOAD secrets ------
 	secrets.MapSecrets()
+
+	// -------- NATS Connect -------
+	messageq.NATSConnect()
 
 	// ------- DATABASE CONNECT ------
 	database.DBConnect()
@@ -56,16 +60,17 @@ func Setup(port string) *fiber.App {
 	config.EnvName = e.Name
 	config.EnvID = e.ID
 
-	// -------- NATS Connect -------
-	messageq.NATSConnect()
-
 	start := time.Now()
 
 	// ----- Load platformID ------
 	u := models.Platform{}
 	database.DBConn.First(&u)
-	database.PlatformID = u.ID
-	log.Println("🎯 Platform ID: ", database.PlatformID)
+	config.PlatformID = u.ID
+	log.Println("🎯 Platform ID: ", config.PlatformID)
+
+	// Load a worker ID
+	config.WorkerID = uuid.NewString()
+	log.Println("👷 Worker ID: ", config.WorkerID)
 
 	//recover from panic
 	app.Use(recover.New())
@@ -85,9 +90,6 @@ func Setup(port string) *fiber.App {
 		// Query:${query}
 	}
 
-	// Every 5 seconds tell mainapp about my status
-	workerhealth.WorkerHealthStart()
-
 	// Runner
 	// app.Post("/runner", runtask.Runtask())
 
@@ -101,6 +103,11 @@ func Setup(port string) *fiber.App {
 
 	/* ---- Listen for tasks ------- */
 	runtask.ListenTasks()
+
+	/* Every 5 seconds tell mainapp about my status
+	Needs to be called after listen for tasks to avoid timing issues when accepting tasks
+	*/
+	workerhealth.WorkerHealthStart()
 
 	stop := time.Now()
 	// Do something with response

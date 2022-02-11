@@ -5,8 +5,11 @@ import PipelineTable from '../components/TableContent/PipelineTable';
 import MoreInfoMenu from '../components/MoreInfoMenu';
 import PipelinePageItem from '../components/MoreInfoContent/PipelinePageItem';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
-import { useState } from 'react';
 import CreatePipelineDrawer from '../components/DrawerContent/CreatePipelineDrawer';
+import AddPipelineDrawer from '../components/DrawerContent/AddPipelineDrawer';
+import { useGetPipelines } from '../graphql/getPipelines';
+import { useEffect, useState } from 'react';
+import { useSnackbar } from 'notistack';
 
 const Pipelines = () => {
     // States
@@ -14,6 +17,25 @@ const Pipelines = () => {
 
     // Global user states with hookstate
     const Environment = useGlobalEnvironmentState();
+
+    // Drawer state
+    const [isOpenCreatePipeline, setIsOpenCreatePipeline] = useState(false);
+
+    // Local state
+    const [pipelines, setPipelines] = useState([]);
+    const [filter, setFilter] = useState();
+    const [pipelineCount, setPipelineCount] = useState();
+
+    // Custom GraphQL hook
+    const getPipelines = useGetPipelines_(setPipelines, Environment.id.get());
+
+    // Get pipelines on load and when environment changes
+    useEffect(() => {
+        if (Environment.id.get() === '') return;
+        getPipelines();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [Environment.id.get()]);
 
     return (
         <Box className="page" position="relative">
@@ -71,3 +93,25 @@ const Pipelines = () => {
 };
 
 export default Pipelines;
+
+// ---------- Custom Hook
+
+function useGetPipelines_(setPipelines, environmentID) {
+    // GraphQL hook
+    const getPipelines = useGetPipelines();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get pipelines
+    return async () => {
+        const response = await getPipelines({ environmentID });
+
+        if (response.r === 'error') {
+            enqueueSnackbar("Can't get pipelines: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get pipelines', { variant: 'error' }));
+        } else {
+            setPipelines(response);
+        }
+    };
+}

@@ -26,7 +26,7 @@ func TestAdminSetup(t *testing.T) {
 	testUser := testutils.AdminUser
 	testPassword := testutils.AdminPassword
 
-	graphQLUrl := "http://localhost:9000/public/graphql"
+	graphQLUrl := testutils.GraphQLUrlPublic
 
 	//--------- Login ------------
 
@@ -65,7 +65,7 @@ func TestAdminSetup(t *testing.T) {
 	}
 	`
 
-	url := "http://localhost:9000/refreshtoken"
+	url := testutils.RefreshTokenUrl
 	exchangeUserResponse, httpExchangeResponse := testutils.RestRequestPrivate(reqQuery, refreshToken, "POST", url, t)
 
 	// log.Println(string(exchangeUserResponse))
@@ -81,7 +81,7 @@ func TestAdminSetup(t *testing.T) {
 	logoutUser := `{
 		logoutUser
 	  }`
-	graphQLPrivateUrl := "http://localhost:9000/private/graphql"
+	graphQLPrivateUrl := testutils.GraphQLUrlPrivate
 	logoutUserResponse, httpLogoutResponse := testutils.GraphQLRequestPrivate(logoutUser, accessTokenExchange, "{}", graphQLPrivateUrl, t)
 	assert.Equalf(t, http.StatusOK, httpLogoutResponse.StatusCode, "Logout 200 status code")
 	assert.Equalf(t, "Logged out", jsoniter.Get(logoutUserResponse, "data", "logoutUser").ToString(), "Logout correct response")
