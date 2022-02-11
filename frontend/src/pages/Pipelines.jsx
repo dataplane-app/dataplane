@@ -5,19 +5,17 @@ import PipelineTable from '../components/TableContent/PipelineTable';
 import MoreInfoMenu from '../components/MoreInfoMenu';
 import PipelinePageItem from '../components/MoreInfoContent/PipelinePageItem';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
-import CreatePipelineDrawer from '../components/DrawerContent/CreatePipelineDrawer';
 import AddPipelineDrawer from '../components/DrawerContent/AddPipelineDrawer';
 import { useGetPipelines } from '../graphql/getPipelines';
 import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
 
 const Pipelines = () => {
-    // States
-    const [isOpenCreatePipeline, setIsOpenPipeline] = useState(false);
-
     // Global user states with hookstate
     const Environment = useGlobalEnvironmentState();
 
+    // Drawer state
+    const [isOpenCreatePipeline, setIsOpenCreatePipeline] = useState(false);
 
     // Local state
     const [pipelines, setPipelines] = useState([]);
@@ -50,7 +48,7 @@ const Pipelines = () => {
                     </Box>
 
                     <Box display="flex" alignItems="center">
-                        <Button variant="contained" onClick={() => setIsOpenPipeline(true)}>
+                        <Button variant="contained" onClick={() => setIsOpenCreatePipeline(true)}>
                             Create
                         </Button>
 
@@ -64,7 +62,7 @@ const Pipelines = () => {
 
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
-                        <CustomChip amount={2} label="Pipelines" margin={1} customColor="orange" />
+                        <CustomChip amount={pipelineCount} label="Pipelines" margin={1} customColor="orange" />
                         <CustomChip amount={2} label="Succeeded" margin={1} customColor="green" />
                         <CustomChip amount={2} label="Failed" margin={1} customColor="red" />
                         <CustomChip amount={2} label="Workers online" margin={2} customColor="purple" />
@@ -72,19 +70,25 @@ const Pipelines = () => {
 
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center', flex: 1 }}>
                         <Box flex={1.2} width="100%" flexGrow={1.2}>
-                            <Search placeholder="Find a pipeline" width="100%" />
+                            <Search placeholder="Find a pipeline" width="100%" onChange={(e) => setFilter(e)} />
                         </Box>
                         <TextField label="Last 48 hours" id="last" select size="small" required sx={{ ml: 2, flex: 1 }}>
                             <MenuItem value="24">Last 24 hours</MenuItem>
                         </TextField>
                     </Grid>
 
-                    <PipelineTable />
+                    <PipelineTable data={pipelines} filter={filter} setPipelineCount={setPipelineCount} />
                 </Grid>
             </Box>
 
-            <Drawer anchor="right" open={isOpenCreatePipeline} onClose={() => setIsOpenPipeline(!isOpenCreatePipeline)}>
-                <CreatePipelineDrawer handleClose={() => setIsOpenPipeline(false)} />
+            <Drawer anchor="right" open={isOpenCreatePipeline} onClose={() => setIsOpenCreatePipeline(!isOpenCreatePipeline)}>
+                <AddPipelineDrawer
+                    getPipelines={getPipelines}
+                    environmentID={Environment.id.get()}
+                    handleClose={() => {
+                        setIsOpenCreatePipeline(false);
+                    }}
+                />
             </Drawer>
         </Box>
     );
