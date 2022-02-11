@@ -1,0 +1,205 @@
+import { useTheme } from '@emotion/react';
+import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import ReactFlow, { addEdge, ControlButton, Controls, getConnectedEdges, isEdge, removeElements } from 'react-flow-renderer';
+import { useHistory } from 'react-router-dom';
+import ApiNode from '../components/CustomNodesContent/ApiNode';
+import ClearLogsNode from '../components/CustomNodesContent/ClearLogsNode';
+import CustomEdge from '../components/CustomNodesContent/CustomEdge';
+import CustomLine from '../components/CustomNodesContent/CustomLine';
+import PlayNode from '../components/CustomNodesContent/PlayNode';
+import ScheduleNode from '../components/CustomNodesContent/ScheduleNode';
+import AddCommandDrawer from '../components/DrawerContent/EditorDrawers/AddCommandDrawer';
+import EditorSidebar from '../components/EditorSidebar';
+import { createState, useState as useHookState } from '@hookstate/core';
+import ConfigureLogsDrawer from '../components/DrawerContent/ConfigureLogsDrawer';
+import ScheduleDrawer from '../components/DrawerContent/SchedulerDrawer';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+
+export const INITIAL_NODE_X_POSITION = 30;
+export const nodeTypes = {
+    scheduleNode: ScheduleNode,
+    playNode: PlayNode,
+    apiNode: ApiNode,
+    clearLogsNode: ClearLogsNode,
+};
+export const edgeTypes = {
+    custom: CustomEdge,
+};
+
+// Global flow states
+export const globalFlowState = createState({
+    isRunning: false,
+    isOpenSchedulerDrawer: false,
+    isOpenConfigureDrawer: false,
+    isOpenCommandDrawer: false,
+    isOpenAPIDrawer: false,
+    isEditorPage: false,
+    selectedElementId: null,
+    elements: [],
+});
+export const useGlobalFlowState = () => useHookState(globalFlowState);
+
+const Flow = () => {
+    // Hooks
+    const theme = useTheme();
+    const history = useHistory();
+
+    // Page states
+    const [isLoadingFlow, setIsLoadingFlow] = useState(true);
+
+    // Global states
+    const FlowState = useGlobalFlowState();
+
+    //Offset states and refs
+    const [offsetHeight, setOffsetHeight] = useState(0);
+    const offsetRef = useRef(null);
+
+    useEffect(() => {
+        setOffsetHeight(offsetRef.current.clientHeight);
+    }, [offsetRef]);
+
+    // Fetch previous elements
+    useEffect(() => {
+        const prevElements = FlowState.elements.get();
+        FlowState.isEditorPage.set(true);
+
+        setElements([...prevElements]);
+        setIsLoadingFlow(false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Flow states
+    const reactFlowWrapper = useRef(null);
+    const [reactFlowInstance, setReactFlowInstance] = useState(null);
+    const [elements, setElements] = useState([]);
+    const [selectedElement, setSelectedElement] = useState(null);
+
+    //Flow methods
+    const onElementsRemove = (elementsToRemove) => setElements((els) => removeElements(elementsToRemove, els));
+    const onClickElement = useCallback((event, element) => {
+        FlowState.selectedElementId.set(element.id);
+        // Set the clicked element in local state
+        setSelectedElement([element]);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    const onClickElementDelete = useCallback(() => {
+        // Get all edges for the flow
+        const edges = elements.filter((element) => isEdge(element));
+        // Get edges connected to selected node
+        const edgesToRemove = getConnectedEdges(selectedElement, edges);
+        onElementsRemove([...selectedElement, ...edgesToRemove]);
+
+        setSelectedElement(null);
+        FlowState.selectedElementId.set(null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [elements, selectedElement]);
+
+    const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
+    const onConnect = (params) => {
+        setElements((els) => addEdge({ ...params, type: 'custom' }, els));
+    };
+    const handleSave = useCallback(() => {
+        if (reactFlowInstance) {
+            const flowElements = reactFlowInstance.toObject();
+            FlowState.elements.set([...flowElements.elements]);
+            FlowState.isEditorPage.set(false);
+            FlowState.selectedElementId.set(null);
+            history.goBack();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [reactFlowInstance]);
+    const onDragOver = (event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+    };
+    const onDrop = (event) => {
+        event.preventDefault();
+
+        const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
+        const type = JSON.parse(event.dataTransfer.getData('application/reactflow'));
+        const position = reactFlowInstance.project({
+            x: event.clientX - reactFlowBounds.left,
+            y: event.clientY - reactFlowBounds.top,
+        });
+        const newNode = {
+            id: type.id,
+            type: type.nodeType,
+            position,
+            data: { label: `${type} node` },
+        };
+
+        setElements((es) => es.concat(newNode));
+    };
+
+    return (
+        <Box className="page" height="calc(100vh - 100px)" minHeight="min-content">
+            <Box ref={offsetRef}>
+                <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
+                    <Box display="flex">
+                        <Typography component="h2" variant="h2" color="text.primary">
+                            Pipelines {'>'} Remove logs
+                        </Typography>
+
+                        <Grid display="flex" alignItems="flex-start">
+                            <Button sx={{ ml: 4 }} onClick={handleSave} variant="contained">
+                                Save
+                            </Button>
+                        </Grid>
+                    </Box>
+                </Grid>
+            </Box>
+
+            <EditorSidebar />
+
+            <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
+                <ReactFlow
+                    nodeTypes={nodeTypes}
+                    elements={elements}
+                    onLoad={onLoad}
+                    onDrop={onDrop}
+                    onDragOver={onDragOver}
+                    onConnect={onConnect}
+                    connectionLineComponent={CustomLine}
+                    edgeTypes={edgeTypes}
+                    onElementClick={onClickElement}
+                    arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
+                    snapToGrid={true}
+                    snapGrid={[15, 15]}>
+                    <Controls style={{ left: 'auto', right: 155 }}>
+                        {selectedElement && (
+                            <ControlButton>
+                                <Box component={FontAwesomeIcon} sx={{ color: 'error.main' }} onClick={onClickElementDelete} icon={faTrash} />
+                            </ControlButton>
+                        )}
+                    </Controls>
+                    {elements.length <= 0 ? (
+                        <Box sx={{ position: 'absolute', top: '40%', left: -100, right: 0, textAlign: 'center' }}>
+                            <Typography>Create a pipeline by dragging the components here.</Typography>
+                        </Box>
+                    ) : null}
+                </ReactFlow>
+            </Box>
+
+            <Drawer anchor="right" open={FlowState.isOpenCommandDrawer.get()} onClose={() => FlowState.isOpenCommandDrawer.set(false)}>
+                <AddCommandDrawer handleClose={() => FlowState.isOpenCommandDrawer.set(false)} />
+            </Drawer>
+
+            <Drawer anchor="right" open={FlowState.isOpenConfigureDrawer.get()} onClose={() => FlowState.isOpenConfigureDrawer.set(false)}>
+                <ConfigureLogsDrawer handleClose={() => FlowState.isOpenConfigureDrawer.set(false)} />
+            </Drawer>
+
+            <Drawer anchor="right" open={FlowState.isOpenSchedulerDrawer.get()} onClose={() => FlowState.isOpenSchedulerDrawer.set(false)}>
+                <ScheduleDrawer handleClose={() => FlowState.isOpenSchedulerDrawer.set(false)} />
+            </Drawer>
+
+            <Drawer anchor="right" open={FlowState.isOpenAPIDrawer.get()} onClose={() => FlowState.isOpenAPIDrawer.set(false)}>
+                <ConfigureLogsDrawer handleClose={() => FlowState.isOpenAPIDrawer.set(false)} />
+            </Drawer>
+        </Box>
+    );
+};
+
+export default Flow;

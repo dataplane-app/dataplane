@@ -34,9 +34,9 @@ const Pipelines = () => {
     }, [Environment.id.get()]);
 
     return (
-        <Box className="page">
-            <Grid container alignItems="center" justifyContent="space-between">
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: { xl: '85%', lg: '95%', md: '95%', sm: '95%' } }}>
+        <Box className="page" position="relative">
+            <Box sx={{ width: { xl: '85%' } }}>
+                <Grid container alignItems="center" justifyContent="space-between">
                     <Box>
                         <Typography component="h2" variant="h2" color="text.primary">
                             Pipelines
@@ -47,35 +47,39 @@ const Pipelines = () => {
                         </Typography>
                     </Box>
 
-                    <Button variant="contained" sx={{ alignSelf: 'center' }} onClick={() => setIsOpenCreatePipeline(true)}>
-                        Create
-                    </Button>
-                </Box>
+                    <Box display="flex" alignItems="center">
+                        <Button variant="contained" onClick={() => setIsOpenCreatePipeline(true)}>
+                            Create
+                        </Button>
 
-                <MoreInfoMenu>
-                    <PipelinePageItem handleRefresh={() => {}} />
-                </MoreInfoMenu>
-            </Grid>
-
-            <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start" sx={{ width: { xl: '85%' } }}>
-                <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
-                    <CustomChip amount={pipelineCount} label="Pipelines" margin={1} customColor="orange" />
-                    <CustomChip amount={2} label="Succeeded" margin={1} customColor="green" />
-                    <CustomChip amount={2} label="Failed" margin={1} customColor="red" />
-                    <CustomChip amount={2} label="Workers online" margin={2} customColor="purple" />
-                </Grid>
-
-                <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center', flex: 1 }}>
-                    <Box flex={1.2} width="100%" flexGrow={1.2}>
-                        <Search placeholder="Find a pipeline" width="100%" onChange={(e) => setFilter(e)} />
+                        <Box sx={{ position: { xxs: 'relative', xl: 'absolute' }, ml: { xxs: 2, xl: 0 }, top: '0', right: '0' }}>
+                            <MoreInfoMenu>
+                                <PipelinePageItem handleRefresh={() => {}} />
+                            </MoreInfoMenu>
+                        </Box>
                     </Box>
-                    <TextField label="Last 48 hours" id="last" select size="small" required sx={{ ml: 2, flex: 1 }}>
-                        <MenuItem value="24">Last 24 hours</MenuItem>
-                    </TextField>
                 </Grid>
 
-                <PipelineTable data={pipelines} filter={filter} setPipelineCount={setPipelineCount} />
-            </Grid>
+                <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
+                    <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
+                        <CustomChip amount={pipelineCount} label="Pipelines" margin={1} customColor="orange" />
+                        <CustomChip amount={2} label="Succeeded" margin={1} customColor="green" />
+                        <CustomChip amount={2} label="Failed" margin={1} customColor="red" />
+                        <CustomChip amount={2} label="Workers online" margin={2} customColor="purple" />
+                    </Grid>
+
+                    <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center', flex: 1 }}>
+                        <Box flex={1.2} width="100%" flexGrow={1.2}>
+                            <Search placeholder="Find a pipeline" width="100%" onChange={(e) => setFilter(e)} />
+                        </Box>
+                        <TextField label="Last 48 hours" id="last" select size="small" required sx={{ ml: 2, flex: 1 }}>
+                            <MenuItem value="24">Last 24 hours</MenuItem>
+                        </TextField>
+                    </Grid>
+
+                    <PipelineTable data={pipelines} filter={filter} setPipelineCount={setPipelineCount} />
+                </Grid>
+            </Box>
 
             <Drawer anchor="right" open={isOpenCreatePipeline} onClose={() => setIsOpenCreatePipeline(!isOpenCreatePipeline)}>
                 <AddPipelineDrawer

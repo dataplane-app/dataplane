@@ -130,7 +130,7 @@ const PipelineTable = ({ data, filter, setPipelineCount }) => {
                                 sx={{ border: 1, borderColor: 'divider', padding: 3, cursor: 'pointer', '&:hover': { background: 'background.hoverSecondary' }, mt: 2 }}>
                                 <Box component="td">
                                     <Grid display="flex" alignItems="flex-start" justifyContent="space-between">
-                                        <Grid item onClick={() => history.push(`/pipelines/remove_logs/${row.original.pipelineID}`)}>
+                                        <Grid item onClick={() => history.push(`/pipelines/view/${row.original.id}`)}>
                                             <Typography variant="h3" color="cyan.main">
                                                 {row.original.name}
                                             </Typography>

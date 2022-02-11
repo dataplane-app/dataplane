@@ -28,10 +28,11 @@ import TeamDetail from './pages/TeamDetail';
 import TeamGroup from './pages/TeamGroup';
 import Teams from './pages/Teams';
 import PipelineEditor from './pages/Editor';
-import RemoveLogs from './pages/RemoveLogs';
+import View from './pages/View';
 import PipelinesPermission from './pages/PipelinesPermission';
 import createCustomTheme from './theme';
 import UseCheckTheme from './hooks/useCheckTheme';
+import Flow from './pages/Flow';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
@@ -133,8 +134,9 @@ function App() {
                                             '/secrets/:secretId',
                                             '/addsecret',
                                             '/notfound',
-                                            '/pipelines/remove_logs/:pipelineId',
+                                            '/pipelines/view/:pipelineId',
                                             '/pipelines/permissions/:pipelineId',
+                                            '/pipelines/flow/:pipelineId',
                                         ]}>
                                         <Switch>
                                             <Layout>
@@ -177,11 +179,14 @@ function App() {
                                                 <Route exact path="/addsecret">
                                                     <AddSecret />
                                                 </Route>
-                                                <Route exact path="/pipelines/remove_logs/:pipelineId">
-                                                    <RemoveLogs />
+                                                <Route exact path="/pipelines/view/:pipelineId">
+                                                    <View />
                                                 </Route>
                                                 <Route exact path="/pipelines/permissions/:pipelineId">
                                                     <PipelinesPermission />
+                                                </Route>
+                                                <Route exact path="/pipelines/flow/:pipelineId">
+                                                    <Flow />
                                                 </Route>
                                                 <Route exact path="/notfound">
                                                     <NotFound />
