@@ -58,12 +58,11 @@ func (PipelineEdges) TableName() string {
 }
 
 type PipelineEdges struct {
-	NodeID        string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"node_id"`
-	PipelineID    string         `gorm:"index:idx_pipelineid_nodes;" json:"pipeline_id"`
-	Name          string         `gorm:"type:varchar(255);" json:"name"`
+	EdgeID        string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"edge_id"`
+	PipelineID    string         `gorm:"index:idx_pipelineid_nodes_edges;" json:"pipeline_id"`
+	From          string         `gorm:"index:idx_pipelineid_edge;" json:"from"`
+	To            string         `gorm:"index:idx_pipelineid_edge;" json:"to"`
 	EnvironmentID string         `json:"environment_id"`
-	NodeType      string         `json:"node_type"`
-	Description   string         `json:"description"`
 	Meta          datatypes.JSON `json:"meta"`
 	Active        bool           `json:"active"`
 	CreatedAt     time.Time      `json:"created_at"`
