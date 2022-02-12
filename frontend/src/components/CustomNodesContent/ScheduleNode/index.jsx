@@ -9,10 +9,10 @@ import customNodeStyle from '../../../utils/customNodeStyle';
 import ScheduleTriggerNodeItem from '../../MoreInfoContent/ScheduleTriggerNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
 
-const ScheduleNode = () => {
+const ScheduleNode = (props) => {
     const [isRunning, setIsRunning] = useState(false);
     const [isEditorPage, setIsEditorPage] = useState(false);
-    const [isSelected, setIsSelected] = useState(false);
+    const [, setIsSelected] = useState(false);
 
     const FlowState = useGlobalFlowState();
 
@@ -23,7 +23,7 @@ const ScheduleNode = () => {
 
     useEffect(() => {
         setIsEditorPage(FlowState.isEditorPage.get());
-        setIsSelected(FlowState.selectedElementId.get() === 'djdsfjdf3');
+        setIsSelected(FlowState.selectedElementId.get() === props.id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -33,13 +33,13 @@ const ScheduleNode = () => {
     }, [FlowState.isEditorPage.get()]);
 
     useEffect(() => {
-        setIsSelected(FlowState.selectedElementId.get() === 'djdsfjdf3');
+        setIsSelected(FlowState.selectedElementId.get() === props.id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedElementId.get()]);
 
     return (
-        <Box sx={{ ...customNodeStyle, border: isSelected ? '3px solid #FF5722' : isRunning ? '3px solid #76A853' : '3px solid #c4c4c4' }}>
-            <Handle type="source" position="right" id="schedule" style={{ backgroundColor: 'red', right: -0.7 }} />
+        <Box sx={{ ...customNodeStyle, border: isRunning ? '3px solid #76A853' : '3px solid #c4c4c4' }}>
+            <Handle type="source" position="right" id="schedule" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
             <Grid container alignItems="flex-start" wrap="nowrap">
                 <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faClock} />
                 <Grid item ml={1.5} textAlign="left">
