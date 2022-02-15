@@ -38,10 +38,8 @@ const View = () => {
 
     // Flow states
     const reactFlowWrapper = useRef(null);
-    const [reactFlowInstance, setReactFlowInstance] = useState(null);
+    const [, setReactFlowInstance] = useState(null);
     const [elements, setElements] = useState([]);
-
-    console.log(reactFlowInstance);
 
     // Fetch previous elements
     useEffect(() => {

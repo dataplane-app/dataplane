@@ -18,7 +18,7 @@ const CheckpointNode = (props) => {
 
     useEffect(() => {
         setIsEditorPage(FlowState.isEditorPage.get());
-        setIsSelected(FlowState.selectedElementId.get() === props.id);
+        setIsSelected(FlowState.selectedElement.get()?.id === props.id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -28,9 +28,9 @@ const CheckpointNode = (props) => {
     }, [FlowState.isEditorPage.get()]);
 
     useEffect(() => {
-        setIsSelected(FlowState.selectedElementId.get() === props.id);
+        setIsSelected(FlowState.selectedElement.get()?.id === props.id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.selectedElementId.get()]);
+    }, [FlowState.selectedElement.get()]);
 
     return (
         <Box sx={{ ...customNodeStyle }}>

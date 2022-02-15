@@ -9,9 +9,14 @@ const ApiTriggerNodeItem = (props) => {
         props.handleCloseMenu();
     };
 
+    const handleOpenAPI = () => {
+        FlowState.isOpenAPIDrawer.set(true);
+        props.handleCloseMenu();
+    };
+
     return (
         <>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleOpenAPI}>
                 API
             </MenuItem>
             <MenuItem sx={{ color: 'error.main' }} onClick={handleDeleteElement}>

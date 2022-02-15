@@ -11,11 +11,12 @@ import PlayNode from '../components/CustomNodesContent/PlayNode';
 import ScheduleNode from '../components/CustomNodesContent/ScheduleNode';
 import AddCommandDrawer from '../components/DrawerContent/EditorDrawers/AddCommandDrawer';
 import EditorSidebar from '../components/EditorSidebar';
-import { createState, useState as useHookState } from '@hookstate/core';
+import { createState, useState as useHookState, Downgraded } from '@hookstate/core';
 import ConfigureLogsDrawer from '../components/DrawerContent/ConfigureLogsDrawer';
 import ScheduleDrawer from '../components/DrawerContent/SchedulerDrawer';
 import CheckpointNode from '../components/CustomNodesContent/CheckpointNode';
 import { useSnackbar } from 'notistack';
+import APITRiggerDrawer from '../components/DrawerContent/EditorDrawers/APITriggerDrawer';
 
 export const INITIAL_NODE_X_POSITION = 30;
 export const nodeTypes = {
@@ -37,7 +38,7 @@ export const globalFlowState = createState({
     isOpenCommandDrawer: false,
     isOpenAPIDrawer: false,
     isEditorPage: false,
-    selectedElementId: null,
+    selectedElement: null,
     elements: [],
     triggerDelete: 1,
 });
@@ -72,11 +73,8 @@ const Flow = () => {
 
     // Fetch previous elements
     useEffect(() => {
-        const prevElements = FlowState.elements.get();
+        const prevElements = FlowState.elements.attach(Downgraded).get();
         FlowState.isEditorPage.set(true);
-        FlowState.deleteElement.set(() => {
-            console.log('Hello');
-        });
 
         setElements([...prevElements]);
         setIsLoadingFlow(false);
@@ -92,7 +90,7 @@ const Flow = () => {
     //Flow methods
     const onElementsRemove = (elementsToRemove) => setElements((els) => removeElements(elementsToRemove, els));
     const onClickElement = useCallback((event, element) => {
-        FlowState.selectedElementId.set(element.id);
+        FlowState.selectedElement.set(element);
         // Set the clicked element in local state
         setSelectedElement([element]);
 
@@ -106,7 +104,7 @@ const Flow = () => {
         onElementsRemove([...selectedElement, ...edgesToRemove]);
 
         setSelectedElement(null);
-        FlowState.selectedElementId.set(null);
+        FlowState.selectedElement.set(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [elements, selectedElement]);
 
@@ -119,7 +117,7 @@ const Flow = () => {
             const flowElements = reactFlowInstance.toObject();
             FlowState.elements.set([...flowElements.elements]);
             FlowState.isEditorPage.set(false);
-            FlowState.selectedElementId.set(null);
+            FlowState.selectedElement.set(null);
             history.goBack();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -146,10 +144,11 @@ const Flow = () => {
                 id: `${type.id}`,
                 type: type.nodeType,
                 position,
-                data: { ...type.nodeData },
+                data: type.nodeData,
             };
 
             setElements((es) => es.concat(newNode));
+            return;
         }
     };
 
@@ -209,7 +208,7 @@ const Flow = () => {
             </Drawer>
 
             <Drawer anchor="right" open={FlowState.isOpenAPIDrawer.get()} onClose={() => FlowState.isOpenAPIDrawer.set(false)}>
-                <ConfigureLogsDrawer handleClose={() => FlowState.isOpenAPIDrawer.set(false)} />
+                <APITRiggerDrawer handleClose={() => FlowState.isOpenAPIDrawer.set(false)} />
             </Drawer>
         </Box>
     );

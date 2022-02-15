@@ -19,7 +19,7 @@ const ClearLogsNode = (props) => {
 
     useEffect(() => {
         setIsEditorPage(FlowState.isEditorPage.get());
-        setIsSelected(FlowState.selectedElementId.get() === props.id);
+        setIsSelected(FlowState.selectedElement.get()?.id === props.id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -29,9 +29,9 @@ const ClearLogsNode = (props) => {
     }, [FlowState.isEditorPage.get()]);
 
     useEffect(() => {
-        setIsSelected(FlowState.selectedElementId.get() === props.id);
+        setIsSelected(FlowState.selectedElement.get()?.id === props.id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.selectedElementId.get()]);
+    }, [FlowState.selectedElement.get()]);
 
     return (
         <Box sx={{ padding: '10px 15px', width: 160, borderRadius: '10px', border: '3px solid #c4c4c4' }}>
@@ -57,7 +57,7 @@ const ClearLogsNode = (props) => {
 
                 <Box mt={0}>
                     <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
-                        {isEditorPage ? <ClearLogsEditorModeItem openConfigure={props.data.setIsOpenConfigure} openCommand={props.data.setIsOpenCommand} /> : <ClearLogsNodeItem />}
+                        {isEditorPage ? <ClearLogsEditorModeItem /> : <ClearLogsNodeItem />}
                     </MoreInfoMenu>
                 </Box>
             </Grid>

@@ -1,10 +1,23 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Grid, TextField, Typography } from '@mui/material';
+import { useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useGlobalFlowState } from '../../../../pages/Flow';
 
-const ChangeProcessorDrawer = ({ handleClose, refreshData, processorName }) => {
+const ChangeProcessorDrawer = ({ handleClose, refreshData }) => {
+    const [processorName, setProcessorName] = useState('-');
     const { register, handleSubmit } = useForm();
+
+    const FlowState = useGlobalFlowState();
+
+    useEffect(() => {
+        console.log(FlowState.selectedElement.get());
+        setProcessorName(FlowState.selectedElement.get()?.data?.language);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [FlowState.selectedElement.get()]);
 
     async function onSubmit(data) {
         console.log(data);
