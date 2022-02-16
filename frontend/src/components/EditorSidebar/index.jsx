@@ -2,7 +2,6 @@ import { faClock } from '@fortawesome/free-regular-svg-icons';
 import { faGlobe, faMapMarkedAlt, faPlayCircle, faRunning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Typography } from '@mui/material';
-import { useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 const defaultTypographyStyle = {
@@ -34,67 +33,64 @@ const EditorSidebar = () => {
         event.dataTransfer.effectAllowed = 'move';
     };
 
-    const inputs = useMemo(
-        () => [
-            {
-                id: 1,
-                parent: 'Triggers',
-                content: [
-                    {
-                        id: uuidv4(),
-                        icon: faPlayCircle,
-                        text: 'Play',
-                        eventType: 'playNode',
-                    },
-                    {
-                        id: uuidv4(),
-                        icon: faClock,
-                        text: 'Scheduler',
-                        eventType: 'scheduleNode',
-                    },
-                    {
-                        id: uuidv4(),
-                        icon: faGlobe,
-                        text: 'API',
-                        eventType: 'apiNode',
-                    },
-                ],
-            },
-            {
-                id: 2,
-                parent: 'Processors',
-                content: [
-                    {
-                        id: uuidv4(),
-                        icon: faRunning,
-                        text: 'Python',
-                        data: { language: 'Python' },
-                        eventType: 'clearLogsNode',
-                    },
-                    {
-                        id: uuidv4(),
-                        icon: faRunning,
-                        data: { language: 'Bash' },
-                        text: 'Bash',
-                        eventType: 'clearLogsNode',
-                    },
-                ],
-            },
-            {
-                id: 3,
-                parent: 'Checkpoints',
-                content: [
-                    {
-                        id: uuidv4(),
-                        icon: faMapMarkedAlt,
-                        text: 'Checkpoint',
-                        eventType: 'checkpointNode',
-                    },
-                ],
-            },
-        ],
-        []
-    );
+    const inputs = [
+        {
+            id: 1,
+            parent: 'Triggers',
+            content: [
+                {
+                    id: uuidv4(),
+                    icon: faPlayCircle,
+                    text: 'Play',
+                    eventType: 'playNode',
+                },
+                {
+                    id: uuidv4(),
+                    icon: faClock,
+                    text: 'Scheduler',
+                    eventType: 'scheduleNode',
+                },
+                {
+                    id: uuidv4(),
+                    icon: faGlobe,
+                    text: 'API',
+                    eventType: 'apiNode',
+                },
+            ],
+        },
+        {
+            id: 2,
+            parent: 'Processors',
+            content: [
+                {
+                    id: uuidv4(),
+                    icon: faRunning,
+                    text: 'Python',
+                    data: { language: 'Python' },
+                    eventType: 'clearLogsNode',
+                },
+                {
+                    id: uuidv4(),
+                    icon: faRunning,
+                    data: { language: 'Bash' },
+                    text: 'Bash',
+                    eventType: 'clearLogsNode',
+                },
+            ],
+        },
+        {
+            id: 3,
+            parent: 'Checkpoints',
+            content: [
+                {
+                    id: uuidv4(),
+                    icon: faMapMarkedAlt,
+                    text: 'Checkpoint',
+                    eventType: 'checkpointNode',
+                },
+            ],
+        },
+    ];
 
     return (
         <Box
