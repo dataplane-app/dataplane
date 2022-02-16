@@ -56,6 +56,8 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 		StartDT:       time.Now().UTC(),
 		Status:        statusUpdate,
 	}
+
+	UpdateWorkerTasks(TaskUpdate)
 	var response TaskResponse
 	_, errnats := messageq.MsgReply("taskupdate", TaskUpdate, &response)
 
@@ -231,6 +233,7 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 		Reason:        TasksStatus[taskID],
 		EndDT:         time.Now().UTC(),
 	}
+	UpdateWorkerTasks(TaskFinal)
 
 	_, errnats = messageq.MsgReply("taskupdate", TaskFinal, &response)
 

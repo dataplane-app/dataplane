@@ -39,6 +39,8 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 		logging.PrintSecretsRedact(errnats)
 	}
 
+	UpdateWorkerTasks(TaskFinal)
+
 	/* Look up chosen workers -
 	if none, keep trying for 10 x 2 seconds
 	before failing */
@@ -150,6 +152,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 			Reason:        "No workers",
 		}
 
+		UpdateWorkerTasks(TaskFinal)
 		response := runtask.TaskResponse{R: "ok"}
 		_, errnats := messageq.MsgReply("taskupdate", TaskFinal, &response)
 		if errnats != nil {
