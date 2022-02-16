@@ -63,6 +63,7 @@ func Migrate() {
 		&models.PermissionsAccessGUsers{},
 		&models.Pipelines{},
 		&models.PipelineNodes{},
+		&models.PipelineEdges{},
 		&models.ResourceTypeStruct{},
 		&models.Secrets{},
 		&models.WorkerGroups{},

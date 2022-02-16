@@ -54,11 +54,58 @@ type ChangePasswordInput struct {
 	UserID   string `json:"user_id"`
 }
 
+type Data struct {
+	Language string `json:"language"`
+}
+
+type PipelineEdgesInput struct {
+	EdgeID        string                  `json:"edgeID"`
+	PipelineID    string                  `json:"pipelineID"`
+	From          string                  `json:"from"`
+	To            string                  `json:"to"`
+	EnvironmentID string                  `json:"environmentID"`
+	Meta          *PipelineEdgesMetaInput `json:"meta"`
+	Active        bool                    `json:"active"`
+}
+
+type PipelineEdgesMetaInput struct {
+	SourceHandle  string `json:"sourceHandle"`
+	TargetHandle  string `json:"targetHandle"`
+	Type          string `json:"type"`
+	ArrowHeadType string `json:"arrowHeadType"`
+}
+
+type PipelineFlowInput struct {
+	NodesInput *PipelineNodesInput `json:"nodesInput"`
+	EdgesInput *PipelineEdgesInput `json:"edgesInput"`
+}
+
+type PipelineNodesInput struct {
+	NodeID        string                  `json:"nodeID"`
+	PipelineID    string                  `json:"pipelineID"`
+	Name          string                  `json:"name"`
+	EnvironmentID string                  `json:"environmentID"`
+	NodeType      string                  `json:"nodeType"`
+	Description   string                  `json:"description"`
+	Meta          *PipelineNodesMetaInput `json:"meta"`
+	Active        bool                    `json:"active"`
+}
+
+type PipelineNodesMetaInput struct {
+	Position *Position `json:"position"`
+	Data     *Data     `json:"data"`
+}
+
 type Platform struct {
 	ID           string `json:"id"`
 	BusinessName string `json:"business_name"`
 	Timezone     string `json:"timezone"`
 	Complete     bool   `json:"complete"`
+}
+
+type Position struct {
+	X int `json:"x"`
+	Y int `json:"y"`
 }
 
 type Preferences struct {

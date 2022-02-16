@@ -10,8 +10,10 @@ import (
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -59,6 +61,60 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	rtn := "success"
 
 	return rtn, nil
+}
+
+func (r *mutationResolver) AddPipelineFlow(ctx context.Context, input *privategraphql.PipelineFlowInput) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: input.NodesInput.EnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: input.NodesInput.EnvironmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	edgeMeta, err := json.Marshal(input.EdgesInput.Meta)
+	if err != nil {
+		panic(err)
+	}
+
+	edges := models.PipelineEdges{
+		EdgeID:        input.EdgesInput.EdgeID,
+		PipelineID:    input.EdgesInput.PipelineID,
+		From:          input.EdgesInput.From,
+		To:            input.EdgesInput.To,
+		EnvironmentID: input.EdgesInput.EnvironmentID,
+		Meta:          edgeMeta,
+		Active:        input.EdgesInput.Active,
+	}
+
+	nodeMeta, err := json.Marshal(input.NodesInput.Meta)
+	if err != nil {
+		panic(err)
+	}
+
+	nodes := models.PipelineNodes{
+		NodeID:        input.NodesInput.NodeID,
+		PipelineID:    input.NodesInput.PipelineID,
+		Name:          input.NodesInput.Name,
+		EnvironmentID: input.NodesInput.EnvironmentID,
+		NodeType:      input.NodesInput.NodeType,
+		Description:   input.NodesInput.Description,
+		Meta:          nodeMeta,
+		Active:        input.NodesInput.Active,
+	}
+
+	log.Println(edges, "!!!!!!!!!!!!!!!!!1")
+	log.Println(nodes, "!!!!!!!!!!!!!!!!!1")
+
+	return "success", nil
 }
 
 func (r *pipelinesResolver) Version(ctx context.Context, obj *models.Pipelines) (string, error) {

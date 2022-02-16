@@ -72,6 +72,7 @@ type ComplexityRoot struct {
 		ActivateAccessGroup           func(childComplexity int, accessGroupID string, environmentID string) int
 		AddEnvironment                func(childComplexity int, input *AddEnvironmentInput) int
 		AddPipeline                   func(childComplexity int, name string, environmentID string, description string) int
+		AddPipelineFlow               func(childComplexity int, input *PipelineFlowInput) int
 		AddSecretToWorkerGroup        func(childComplexity int, environmentName string, workerGroup string, secret string) int
 		AddUserToEnvironment          func(childComplexity int, userID string, environmentID string) int
 		CreateAccessGroup             func(childComplexity int, environmentID string, name string, description *string) int
@@ -265,6 +266,7 @@ type MutationResolver interface {
 	UpdatePermissionToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string) (string, error)
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
 	AddPipeline(ctx context.Context, name string, environmentID string, description string) (string, error)
+	AddPipelineFlow(ctx context.Context, input *PipelineFlowInput) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	CreateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
 	UpdateSecret(ctx context.Context, input *UpdateSecretsInput) (*models.Secrets, error)
@@ -462,6 +464,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddPipeline(childComplexity, args["name"].(string), args["environmentID"].(string), args["description"].(string)), true
+
+	case "Mutation.addPipelineFlow":
+		if e.complexity.Mutation.AddPipelineFlow == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addPipelineFlow_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddPipelineFlow(childComplexity, args["input"].(*PipelineFlowInput)), true
 
 	case "Mutation.addSecretToWorkerGroup":
 		if e.complexity.Mutation.AddSecretToWorkerGroup == nil {
@@ -2030,6 +2044,53 @@ extend type Mutation {
   scheduleType: String!
 }
 
+input Position {
+  x: Int!
+  y: Int!
+}
+
+input Data {
+  language: String!
+}
+
+input PipelineNodesMetaInput {
+  position:  Position!         
+	data:      Data      
+}
+
+input PipelineNodesInput {
+  nodeID:        String!         
+	pipelineID:    String!         
+	name:          String!         
+	environmentID: String!         
+	nodeType:      String!         
+	description:   String!         
+	meta:          PipelineNodesMetaInput
+	active:        Boolean!        
+}
+
+input PipelineEdgesMetaInput {
+  sourceHandle:  String!
+  targetHandle:  String!
+  type:          String!
+  arrowHeadType: String!
+}
+
+input PipelineEdgesInput {
+  edgeID:        String!         
+	pipelineID:    String!         
+	from:          String!         
+	to:            String!         
+	environmentID: String!         
+	meta:          PipelineEdgesMetaInput
+	active:        Boolean!        
+}
+
+input PipelineFlowInput {
+  nodesInput: PipelineNodesInput!
+  edgesInput: PipelineEdgesInput
+}
+
 extend type Query {
   """
   Get pipelines.
@@ -2046,6 +2107,13 @@ extend type Mutation {
   + **Permissions**: admin_platform, platform_environment
   """
   addPipeline(name: String!, environmentID: String!, description: String! ): String!
+
+  """
+  Add pipeline flow.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment
+  """
+  addPipelineFlow( input: PipelineFlowInput ): String!
 }
 `, BuiltIn: false},
 	{Name: "resolvers/preferences.graphqls", Input: `input AddPreferencesInput {
@@ -2375,6 +2443,21 @@ func (ec *executionContext) field_Mutation_addEnvironment_args(ctx context.Conte
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOAddEnvironmentInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddEnvironmentInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_addPipelineFlow_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *PipelineFlowInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOPipelineFlowInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineFlowInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4839,6 +4922,48 @@ func (ec *executionContext) _Mutation_addPipeline(ctx context.Context, field gra
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().AddPipeline(rctx, args["name"].(string), args["environmentID"].(string), args["description"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_addPipelineFlow(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_addPipelineFlow_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddPipelineFlow(rctx, args["input"].(*PipelineFlowInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10452,6 +10577,319 @@ func (ec *executionContext) unmarshalInputChangePasswordInput(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputData(ctx context.Context, obj interface{}) (Data, error) {
+	var it Data
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "language":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("language"))
+			it.Language, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPipelineEdgesInput(ctx context.Context, obj interface{}) (PipelineEdgesInput, error) {
+	var it PipelineEdgesInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "edgeID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edgeID"))
+			it.EdgeID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "pipelineID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+			it.PipelineID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "from":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+			it.From, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "to":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			it.To, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "environmentID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+			it.EnvironmentID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "meta":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meta"))
+			it.Meta, err = ec.unmarshalOPipelineEdgesMetaInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesMetaInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "active":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("active"))
+			it.Active, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPipelineEdgesMetaInput(ctx context.Context, obj interface{}) (PipelineEdgesMetaInput, error) {
+	var it PipelineEdgesMetaInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "sourceHandle":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceHandle"))
+			it.SourceHandle, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "targetHandle":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetHandle"))
+			it.TargetHandle, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "type":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			it.Type, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "arrowHeadType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("arrowHeadType"))
+			it.ArrowHeadType, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPipelineFlowInput(ctx context.Context, obj interface{}) (PipelineFlowInput, error) {
+	var it PipelineFlowInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "nodesInput":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodesInput"))
+			it.NodesInput, err = ec.unmarshalNPipelineNodesInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "edgesInput":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edgesInput"))
+			it.EdgesInput, err = ec.unmarshalOPipelineEdgesInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPipelineNodesInput(ctx context.Context, obj interface{}) (PipelineNodesInput, error) {
+	var it PipelineNodesInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "nodeID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeID"))
+			it.NodeID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "pipelineID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+			it.PipelineID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "environmentID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+			it.EnvironmentID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nodeType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeType"))
+			it.NodeType, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "meta":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meta"))
+			it.Meta, err = ec.unmarshalOPipelineNodesMetaInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesMetaInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "active":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("active"))
+			it.Active, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPipelineNodesMetaInput(ctx context.Context, obj interface{}) (PipelineNodesMetaInput, error) {
+	var it PipelineNodesMetaInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "position":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("position"))
+			it.Position, err = ec.unmarshalNPosition2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPosition(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "data":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("data"))
+			it.Data, err = ec.unmarshalOData2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐData(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPosition(ctx context.Context, obj interface{}) (Position, error) {
+	var it Position
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "x":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("x"))
+			it.X, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "y":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("y"))
+			it.Y, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateEnvironment(ctx context.Context, obj interface{}) (UpdateEnvironment, error) {
 	var it UpdateEnvironment
 	asMap := map[string]interface{}{}
@@ -10870,6 +11308,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "addPipeline":
 			out.Values[i] = ec._Mutation_addPipeline(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "addPipelineFlow":
+			out.Values[i] = ec._Mutation_addPipelineFlow(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -12156,6 +12599,16 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) unmarshalNPipelineNodesInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesInput(ctx context.Context, v interface{}) (*PipelineNodesInput, error) {
+	res, err := ec.unmarshalInputPipelineNodesInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNPosition2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPosition(ctx context.Context, v interface{}) (*Position, error) {
+	res, err := ec.unmarshalInputPosition(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -12640,6 +13093,14 @@ func (ec *executionContext) unmarshalOChangePasswordInput2ᚖdataplaneᚋmainapp
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalOData2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐData(ctx context.Context, v interface{}) (*Data, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputData(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalOEnvironments2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx context.Context, sel ast.SelectionSet, v []*models.Environment) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -12782,6 +13243,38 @@ func (ec *executionContext) marshalOPermissionsOutput2ᚖdataplaneᚋmainappᚋd
 		return graphql.Null
 	}
 	return ec._PermissionsOutput(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOPipelineEdgesInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesInput(ctx context.Context, v interface{}) (*PipelineEdgesInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPipelineEdgesInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOPipelineEdgesMetaInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesMetaInput(ctx context.Context, v interface{}) (*PipelineEdgesMetaInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPipelineEdgesMetaInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOPipelineFlowInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineFlowInput(ctx context.Context, v interface{}) (*PipelineFlowInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPipelineFlowInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOPipelineNodesMetaInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesMetaInput(ctx context.Context, v interface{}) (*PipelineNodesMetaInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPipelineNodesMetaInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx context.Context, sel ast.SelectionSet, v []*models.Pipelines) graphql.Marshaler {

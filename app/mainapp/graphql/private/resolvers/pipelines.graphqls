@@ -12,6 +12,53 @@ type Pipelines {
   scheduleType: String!
 }
 
+input Position {
+  x: Int!
+  y: Int!
+}
+
+input Data {
+  language: String!
+}
+
+input PipelineNodesMetaInput {
+  position:  Position!         
+	data:      Data      
+}
+
+input PipelineNodesInput {
+  nodeID:        String!         
+	pipelineID:    String!         
+	name:          String!         
+	environmentID: String!         
+	nodeType:      String!         
+	description:   String!         
+	meta:          PipelineNodesMetaInput
+	active:        Boolean!        
+}
+
+input PipelineEdgesMetaInput {
+  sourceHandle:  String!
+  targetHandle:  String!
+  type:          String!
+  arrowHeadType: String!
+}
+
+input PipelineEdgesInput {
+  edgeID:        String!         
+	pipelineID:    String!         
+	from:          String!         
+	to:            String!         
+	environmentID: String!         
+	meta:          PipelineEdgesMetaInput
+	active:        Boolean!        
+}
+
+input PipelineFlowInput {
+  nodesInput: PipelineNodesInput!
+  edgesInput: PipelineEdgesInput
+}
+
 extend type Query {
   """
   Get pipelines.
@@ -28,4 +75,11 @@ extend type Mutation {
   + **Permissions**: admin_platform, platform_environment
   """
   addPipeline(name: String!, environmentID: String!, description: String! ): String!
+
+  """
+  Add pipeline flow.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment
+  """
+  addPipelineFlow( input: PipelineFlowInput ): String!
 }
