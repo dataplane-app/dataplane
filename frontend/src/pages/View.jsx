@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Drawer, Grid, IconButton, MenuItem, TextField, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, Controls } from 'react-flow-renderer';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import CustomChip from '../components/CustomChip';
 import CustomLine from '../components/CustomNodesContent/CustomLine';
 import PublishPipelineDrawer from '../components/DrawerContent/PublishPipelineDrawer';
@@ -13,13 +13,17 @@ import MoreInfoMenu from '../components/MoreInfoMenu';
 import { edgeTypes, nodeTypes, useGlobalFlowState } from './Flow';
 
 const View = () => {
+    // Hooks
     const theme = useTheme();
     const history = useHistory();
+
+    // URI parameter
+    const { pipelineId } = useParams();
 
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
     const [isRunning, setIsRunning] = useState(false);
-    const [isLoadingFlow, setIsLoadingFlow] = useState(true);
+    const [, setIsLoadingFlow] = useState(true);
 
     // Global states
     const FlowState = useGlobalFlowState();
@@ -34,10 +38,8 @@ const View = () => {
 
     // Flow states
     const reactFlowWrapper = useRef(null);
-    const [reactFlowInstance, setReactFlowInstance] = useState(null);
+    const [, setReactFlowInstance] = useState(null);
     const [elements, setElements] = useState([]);
-
-    console.log(reactFlowInstance);
 
     // Fetch previous elements
     useEffect(() => {
@@ -51,7 +53,7 @@ const View = () => {
     // Handle edit button
     const handleGoToEditorPage = () => {
         FlowState.isEditorPage.set(true);
-        history.push('/pipelines/flow/123');
+        history.push(`/pipelines/flow/${pipelineId}`);
     };
 
     //Flow methods

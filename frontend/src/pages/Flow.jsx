@@ -1,7 +1,7 @@
 import { useTheme } from '@emotion/react';
 import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import ReactFlow, { addEdge, ControlButton, Controls, getConnectedEdges, isEdge, removeElements } from 'react-flow-renderer';
+import ReactFlow, { addEdge, Controls, getConnectedEdges, isEdge, removeElements } from 'react-flow-renderer';
 import { useHistory } from 'react-router-dom';
 import ApiNode from '../components/CustomNodesContent/ApiNode';
 import ClearLogsNode from '../components/CustomNodesContent/ClearLogsNode';
@@ -11,11 +11,12 @@ import PlayNode from '../components/CustomNodesContent/PlayNode';
 import ScheduleNode from '../components/CustomNodesContent/ScheduleNode';
 import AddCommandDrawer from '../components/DrawerContent/EditorDrawers/AddCommandDrawer';
 import EditorSidebar from '../components/EditorSidebar';
-import { createState, useState as useHookState } from '@hookstate/core';
+import { createState, useState as useHookState, Downgraded } from '@hookstate/core';
 import ConfigureLogsDrawer from '../components/DrawerContent/ConfigureLogsDrawer';
 import ScheduleDrawer from '../components/DrawerContent/SchedulerDrawer';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import CheckpointNode from '../components/CustomNodesContent/CheckpointNode';
+import { useSnackbar } from 'notistack';
+import APITRiggerDrawer from '../components/DrawerContent/EditorDrawers/APITriggerDrawer';
 
 export const INITIAL_NODE_X_POSITION = 30;
 export const nodeTypes = {
@@ -23,6 +24,7 @@ export const nodeTypes = {
     playNode: PlayNode,
     apiNode: ApiNode,
     clearLogsNode: ClearLogsNode,
+    checkpointNode: CheckpointNode,
 };
 export const edgeTypes = {
     custom: CustomEdge,
@@ -36,8 +38,9 @@ export const globalFlowState = createState({
     isOpenCommandDrawer: false,
     isOpenAPIDrawer: false,
     isEditorPage: false,
-    selectedElementId: null,
+    selectedElement: null,
     elements: [],
+    triggerDelete: 1,
 });
 export const useGlobalFlowState = () => useHookState(globalFlowState);
 
@@ -45,9 +48,10 @@ const Flow = () => {
     // Hooks
     const theme = useTheme();
     const history = useHistory();
+    const { enqueueSnackbar } = useSnackbar();
 
     // Page states
-    const [isLoadingFlow, setIsLoadingFlow] = useState(true);
+    const [, setIsLoadingFlow] = useState(true);
 
     // Global states
     const FlowState = useGlobalFlowState();
@@ -60,9 +64,16 @@ const Flow = () => {
         setOffsetHeight(offsetRef.current.clientHeight);
     }, [offsetRef]);
 
+    useEffect(() => {
+        if (selectedElement && FlowState.triggerDelete.get() !== 1) {
+            onClickElementDelete();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [FlowState.triggerDelete.get()]);
+
     // Fetch previous elements
     useEffect(() => {
-        const prevElements = FlowState.elements.get();
+        const prevElements = FlowState.elements.attach(Downgraded).get();
         FlowState.isEditorPage.set(true);
 
         setElements([...prevElements]);
@@ -79,7 +90,7 @@ const Flow = () => {
     //Flow methods
     const onElementsRemove = (elementsToRemove) => setElements((els) => removeElements(elementsToRemove, els));
     const onClickElement = useCallback((event, element) => {
-        FlowState.selectedElementId.set(element.id);
+        FlowState.selectedElement.set(element);
         // Set the clicked element in local state
         setSelectedElement([element]);
 
@@ -93,20 +104,20 @@ const Flow = () => {
         onElementsRemove([...selectedElement, ...edgesToRemove]);
 
         setSelectedElement(null);
-        FlowState.selectedElementId.set(null);
+        FlowState.selectedElement.set(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [elements, selectedElement]);
 
     const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
     const onConnect = (params) => {
-        setElements((els) => addEdge({ ...params, type: 'custom' }, els));
+        setElements((els) => addEdge({ ...params, type: 'custom', arrowHeadType: 'arrowclosed' }, els));
     };
     const handleSave = useCallback(() => {
         if (reactFlowInstance) {
             const flowElements = reactFlowInstance.toObject();
             FlowState.elements.set([...flowElements.elements]);
             FlowState.isEditorPage.set(false);
-            FlowState.selectedElementId.set(null);
+            FlowState.selectedElement.set(null);
             history.goBack();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -124,14 +135,21 @@ const Flow = () => {
             x: event.clientX - reactFlowBounds.left,
             y: event.clientY - reactFlowBounds.top,
         });
-        const newNode = {
-            id: type.id,
-            type: type.nodeType,
-            position,
-            data: { label: `${type} node` },
-        };
 
-        setElements((es) => es.concat(newNode));
+        if (elements.filter((el) => el.type === type.nodeType).length > 0 && (type.nodeType === 'playNode' || type.nodeType === 'scheduleNode' || type.nodeType === 'apiNode')) {
+            enqueueSnackbar('Only one instance of this element is possible.', { variant: 'error' });
+            return;
+        } else {
+            const newNode = {
+                id: `${type.id}`,
+                type: type.nodeType,
+                position,
+                data: type.nodeData,
+            };
+
+            setElements((es) => es.concat(newNode));
+            return;
+        }
     };
 
     return (
@@ -168,13 +186,7 @@ const Flow = () => {
                     arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
                     snapToGrid={true}
                     snapGrid={[15, 15]}>
-                    <Controls style={{ left: 'auto', right: 155 }}>
-                        {selectedElement && (
-                            <ControlButton>
-                                <Box component={FontAwesomeIcon} sx={{ color: 'error.main' }} onClick={onClickElementDelete} icon={faTrash} />
-                            </ControlButton>
-                        )}
-                    </Controls>
+                    <Controls style={{ left: 'auto', right: 155 }} />
                     {elements.length <= 0 ? (
                         <Box sx={{ position: 'absolute', top: '40%', left: -100, right: 0, textAlign: 'center' }}>
                             <Typography>Create a pipeline by dragging the components here.</Typography>
@@ -196,7 +208,7 @@ const Flow = () => {
             </Drawer>
 
             <Drawer anchor="right" open={FlowState.isOpenAPIDrawer.get()} onClose={() => FlowState.isOpenAPIDrawer.set(false)}>
-                <ConfigureLogsDrawer handleClose={() => FlowState.isOpenAPIDrawer.set(false)} />
+                <APITRiggerDrawer handleClose={() => FlowState.isOpenAPIDrawer.set(false)} />
             </Drawer>
         </Box>
     );

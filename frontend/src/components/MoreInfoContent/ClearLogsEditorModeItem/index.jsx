@@ -15,6 +15,11 @@ const ClearLogsEditorModeItem = (props) => {
         FlowState.isOpenCommandDrawer.set(true);
     };
 
+    const handleDeleteElement = () => {
+        FlowState.triggerDelete.set(FlowState.triggerDelete.get() + 1);
+        props.handleCloseMenu();
+    };
+
     return (
         <>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleOpenConfigure}>
@@ -22,6 +27,9 @@ const ClearLogsEditorModeItem = (props) => {
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleOpenCommand}>
                 Command
+            </MenuItem>
+            <MenuItem sx={{ color: 'error.main' }} onClick={handleDeleteElement}>
+                Delete
             </MenuItem>
         </>
     );

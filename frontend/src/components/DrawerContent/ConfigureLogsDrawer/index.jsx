@@ -1,10 +1,21 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Grid, TextField, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useGlobalFlowState } from '../../../pages/Flow';
 
 const ConfigureLogsDrawer = ({ handleClose, refreshData }) => {
+    const [processorName, setProcessorName] = useState('-');
     const { register, handleSubmit } = useForm();
+
+    const FlowState = useGlobalFlowState();
+
+    useEffect(() => {
+        setProcessorName(FlowState.selectedElement.get()?.data?.language);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [FlowState.selectedElement.get()]);
 
     async function onSubmit(data) {
         console.log(data);
@@ -22,7 +33,7 @@ const ConfigureLogsDrawer = ({ handleClose, refreshData }) => {
 
                     <Box mt={3} width="212px">
                         <Typography component="h2" variant="h2">
-                            Processor - Python
+                            Processor - {processorName}
                         </Typography>
 
                         <TextField
