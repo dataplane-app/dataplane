@@ -72,3 +72,8 @@ code {
 .react-flow__node-output.selected {
     border-color: #0073c6 !important;
 }
+
+[draggable='true'] {
+    position: relative;
+    z-index: 1;
+}

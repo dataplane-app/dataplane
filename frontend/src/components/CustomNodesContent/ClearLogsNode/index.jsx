@@ -4,22 +4,22 @@ import { Grid, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 import { useEffect } from 'react';
 import { useState } from 'react';
-import { Handle } from 'react-flow-renderer';
+import { Handle, Position } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
 import ClearLogsEditorModeItem from '../../MoreInfoContent/ClearLogsEditorModeItem';
 import ClearLogsNodeItem from '../../MoreInfoContent/ClearLogsNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
 
-const ClearLogsNode = ({ data }) => {
+const ClearLogsNode = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
 
     const [isEditorPage, setIsEditorPage] = useState(false);
-    const [isSelected, setIsSelected] = useState(false);
+    const [, setIsSelected] = useState(false);
 
     useEffect(() => {
         setIsEditorPage(FlowState.isEditorPage.get());
-        setIsSelected(FlowState.selectedElementId.get() === 'djdsfjdf5');
+        setIsSelected(FlowState.selectedElement.get()?.id === props.id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -29,13 +29,14 @@ const ClearLogsNode = ({ data }) => {
     }, [FlowState.isEditorPage.get()]);
 
     useEffect(() => {
-        setIsSelected(FlowState.selectedElementId.get() === 'djdsfjdf5');
+        setIsSelected(FlowState.selectedElement.get()?.id === props.id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.selectedElementId.get()]);
+    }, [FlowState.selectedElement.get()]);
 
     return (
-        <Box sx={{ padding: '10px 15px', width: 160, borderRadius: '10px', border: `${isSelected ? '3px solid #FF5722' : '3px solid #0073C6'}` }}>
-            <Handle type="target" position="left" isConnectable id="clear" style={{ backgroundColor: 'red', left: -0.7 }} />
+        <Box sx={{ padding: '10px 15px', width: 160, borderRadius: '10px', border: '3px solid #c4c4c4' }}>
+            <Handle type="target" position={Position.Left} isConnectable id="clear" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
+            <Handle type="source" position={Position.Right} id="3" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
             <Grid container alignItems="flex-start" wrap="nowrap" pb={2}>
                 <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faRunning} />
                 <Grid item ml={1.5} textAlign="left">
@@ -51,12 +52,12 @@ const ClearLogsNode = ({ data }) => {
 
             <Grid position="absolute" bottom={2} left={9} right={9} container wrap="nowrap" width="auto" alignItems="center" justifyContent="space-between">
                 <Grid item>
-                    <Typography fontSize={8}>Python</Typography>
+                    <Typography fontSize={8}>{props.data.language}</Typography>
                 </Grid>
 
                 <Box mt={0}>
                     <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
-                        {isEditorPage ? <ClearLogsEditorModeItem openConfigure={data.setIsOpenConfigure} openCommand={data.setIsOpenCommand} /> : <ClearLogsNodeItem />}
+                        {isEditorPage ? <ClearLogsEditorModeItem /> : <ClearLogsNodeItem />}
                     </MoreInfoMenu>
                 </Box>
             </Grid>

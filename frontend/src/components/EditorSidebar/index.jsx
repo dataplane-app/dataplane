@@ -2,6 +2,8 @@ import { faClock } from '@fortawesome/free-regular-svg-icons';
 import { faGlobe, faMapMarkedAlt, faPlayCircle, faRunning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Typography } from '@mui/material';
+import { useMemo } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 const defaultTypographyStyle = {
     fontSize: 11,
@@ -22,14 +24,77 @@ const defaultParentStyle = {
     borderRadius: '9px',
     marginTop: 1.2,
     cursor: 'pointer',
+    backgroundColor: 'transparent',
 };
 
 const EditorSidebar = () => {
-    const onDragStart = (event, nodeType, id) => {
-        const data = { nodeType, id };
+    const onDragStart = (event, nodeType, id, nodeData) => {
+        const data = { nodeType, id, nodeData };
         event.dataTransfer.setData('application/reactflow', JSON.stringify(data));
         event.dataTransfer.effectAllowed = 'move';
     };
+
+    const inputs = useMemo(
+        () => [
+            {
+                id: 1,
+                parent: 'Triggers',
+                content: [
+                    {
+                        id: uuidv4(),
+                        icon: faPlayCircle,
+                        text: 'Play',
+                        eventType: 'playNode',
+                    },
+                    {
+                        id: uuidv4(),
+                        icon: faClock,
+                        text: 'Scheduler',
+                        eventType: 'scheduleNode',
+                    },
+                    {
+                        id: uuidv4(),
+                        icon: faGlobe,
+                        text: 'API',
+                        eventType: 'apiNode',
+                    },
+                ],
+            },
+            {
+                id: 2,
+                parent: 'Processors',
+                content: [
+                    {
+                        id: uuidv4(),
+                        icon: faRunning,
+                        text: 'Python',
+                        data: { language: 'Python' },
+                        eventType: 'clearLogsNode',
+                    },
+                    {
+                        id: uuidv4(),
+                        icon: faRunning,
+                        data: { language: 'Bash' },
+                        text: 'Bash',
+                        eventType: 'clearLogsNode',
+                    },
+                ],
+            },
+            {
+                id: 3,
+                parent: 'Checkpoints',
+                content: [
+                    {
+                        id: uuidv4(),
+                        icon: faMapMarkedAlt,
+                        text: 'Checkpoint',
+                        eventType: 'checkpointNode',
+                    },
+                ],
+            },
+        ],
+        []
+    );
 
     return (
         <Box
@@ -47,8 +112,8 @@ const EditorSidebar = () => {
             }}>
             <Box>
                 {inputs.map((inpt) => (
-                    <>
-                        <Typography fontWeight={700} fontSize={14} mt={2.5} key={inpt.id}>
+                    <Box key={inpt.id}>
+                        <Typography fontWeight={700} fontSize={14} mt={2.5}>
                             {inpt.parent}
                         </Typography>
                         {inpt.content.map((cont) => (
@@ -56,75 +121,18 @@ const EditorSidebar = () => {
                                 key={cont.id}
                                 container
                                 alignItems="center"
-                                sx={defaultParentStyle}
+                                sx={{ ...defaultParentStyle, '&:hover': { backgroundColor: 'sidebar.main' } }}
                                 draggable
-                                onDragStart={(event) => onDragStart(event, cont.eventType, cont.id)}>
+                                onDragStart={(event) => onDragStart(event, cont.eventType, cont.id, cont.data)}>
                                 <Box sx={defaultIconStyle} component={FontAwesomeIcon} icon={cont.icon} />
                                 <Typography sx={defaultTypographyStyle}>{cont.text}</Typography>
                             </Grid>
                         ))}
-                    </>
+                    </Box>
                 ))}
             </Box>
         </Box>
     );
 };
-
-const inputs = [
-    {
-        id: 1,
-        parent: 'Triggers',
-        content: [
-            {
-                id: 'djdsfjdf',
-                icon: faPlayCircle,
-                text: 'Play trigger',
-                eventType: 'playNode',
-            },
-            {
-                id: 'djdsfjdf3',
-                icon: faClock,
-                text: 'Scheduler',
-                eventType: 'scheduleNode',
-            },
-            {
-                id: 'djdsfjdf4',
-                icon: faGlobe,
-                text: 'API trigger',
-                eventType: 'apiNode',
-            },
-        ],
-    },
-    {
-        id: 2,
-        parent: 'Processors',
-        content: [
-            {
-                id: 'djdsfjdf5',
-                icon: faRunning,
-                text: 'Python',
-                eventType: 'clearLogsNode',
-            },
-            {
-                id: 'djdsfjdf6',
-                icon: faRunning,
-                text: 'Bash',
-                eventType: 'clearLogsNode',
-            },
-        ],
-    },
-    {
-        id: 3,
-        parent: 'Checkpoints',
-        content: [
-            {
-                id: 1,
-                icon: faMapMarkedAlt,
-                text: 'Checkpoint',
-                eventType: 'input',
-            },
-        ],
-    },
-];
 
 export default EditorSidebar;

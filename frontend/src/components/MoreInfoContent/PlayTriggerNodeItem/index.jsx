@@ -5,14 +5,14 @@ const PlayTriggerNodeItem = (props) => {
     const FlowState = useGlobalFlowState();
 
     const handleRemove = () => {
+        FlowState.triggerDelete.set(FlowState.triggerDelete.get() + 1);
         props.handleCloseMenu();
-        console.log(FlowState.elements.get());
     };
 
     return (
         <>
             <MenuItem sx={{ color: 'error.main' }} onClick={handleRemove}>
-                Remove
+                Delete
             </MenuItem>
         </>
     );
