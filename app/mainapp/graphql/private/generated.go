@@ -1094,7 +1094,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PipelineEdges.From(childComplexity), true
 
-	case "PipelineEdges.Meta":
+	case "PipelineEdges.meta":
 		if e.complexity.PipelineEdges.Meta == nil {
 			break
 		}
@@ -1178,7 +1178,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PipelineNodes.EnvironmentID(childComplexity), true
 
-	case "PipelineNodes.Meta":
+	case "PipelineNodes.meta":
 		if e.complexity.PipelineNodes.Meta == nil {
 			break
 		}
@@ -2353,7 +2353,7 @@ type PipelineNodes {
 	environmentID: String!         
 	nodeType:      String!         
 	description:   String!         
-	Meta:          PipelineNodesMeta! 
+	meta:          PipelineNodesMeta! 
 	active:        Boolean!           
 }
 
@@ -2370,7 +2370,7 @@ type PipelineEdges {
 	from:          String!         
 	to:            String!         
 	environmentID: String!         
-	Meta:          PipelineEdgesMeta! 
+	meta:          PipelineEdgesMeta! 
 	active:        Boolean!           
 }
 
@@ -6821,7 +6821,7 @@ func (ec *executionContext) _PipelineEdges_environmentID(ctx context.Context, fi
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PipelineEdges_Meta(ctx context.Context, field graphql.CollectedField, obj *PipelineEdges) (ret graphql.Marshaler) {
+func (ec *executionContext) _PipelineEdges_meta(ctx context.Context, field graphql.CollectedField, obj *PipelineEdges) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -7311,7 +7311,7 @@ func (ec *executionContext) _PipelineNodes_description(ctx context.Context, fiel
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PipelineNodes_Meta(ctx context.Context, field graphql.CollectedField, obj *PipelineNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _PipelineNodes_meta(ctx context.Context, field graphql.CollectedField, obj *PipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -12846,8 +12846,8 @@ func (ec *executionContext) _PipelineEdges(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Meta":
-			out.Values[i] = ec._PipelineEdges_Meta(ctx, field, obj)
+		case "meta":
+			out.Values[i] = ec._PipelineEdges_meta(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -12982,8 +12982,8 @@ func (ec *executionContext) _PipelineNodes(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Meta":
-			out.Values[i] = ec._PipelineNodes_Meta(ctx, field, obj)
+		case "meta":
+			out.Values[i] = ec._PipelineNodes_meta(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

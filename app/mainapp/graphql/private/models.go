@@ -68,7 +68,7 @@ type PipelineEdges struct {
 	From          string             `json:"from"`
 	To            string             `json:"to"`
 	EnvironmentID string             `json:"environmentID"`
-	Meta          *PipelineEdgesMeta `json:"Meta"`
+	Meta          *PipelineEdgesMeta `json:"meta"`
 	Active        bool               `json:"active"`
 }
 
@@ -112,7 +112,7 @@ type PipelineNodes struct {
 	EnvironmentID string             `json:"environmentID"`
 	NodeType      string             `json:"nodeType"`
 	Description   string             `json:"description"`
-	Meta          *PipelineNodesMeta `json:"Meta"`
+	Meta          *PipelineNodesMeta `json:"meta"`
 	Active        bool               `json:"active"`
 }
 

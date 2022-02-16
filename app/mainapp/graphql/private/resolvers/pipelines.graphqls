@@ -78,7 +78,7 @@ type PipelineNodes {
 	environmentID: String!         
 	nodeType:      String!         
 	description:   String!         
-	Meta:          PipelineNodesMeta! 
+	meta:          PipelineNodesMeta! 
 	active:        Boolean!           
 }
 
@@ -95,7 +95,7 @@ type PipelineEdges {
 	from:          String!         
 	to:            String!         
 	environmentID: String!         
-	Meta:          PipelineEdgesMeta! 
+	meta:          PipelineEdgesMeta! 
 	active:        Boolean!           
 }
 
