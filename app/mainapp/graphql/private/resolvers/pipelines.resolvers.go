@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -70,8 +69,8 @@ func (r *mutationResolver) AddPipelineFlow(ctx context.Context, input *privategr
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: input.NodesInput.EnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: input.NodesInput.EnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: input.NodesInput[0].EnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: input.NodesInput[0].EnvironmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -80,39 +79,74 @@ func (r *mutationResolver) AddPipelineFlow(ctx context.Context, input *privategr
 		return "", errors.New("Requires permissions.")
 	}
 
-	edgeMeta, err := json.Marshal(input.EdgesInput.Meta)
+	// ----- Add pipeline edges to database
+
+	edges := []*models.PipelineEdges{}
+
+	for _, p := range input.EdgesInput {
+		edgeMeta, err := json.Marshal(p.Meta)
+		if err != nil {
+			panic(err)
+		}
+
+		edges = append(edges, &models.PipelineEdges{
+			EdgeID:        p.EdgeID,
+			PipelineID:    p.PipelineID,
+			From:          p.From,
+			To:            p.To,
+			EnvironmentID: p.EnvironmentID,
+			Meta:          edgeMeta,
+			Active:        false,
+		})
+
+	}
+
+	err := database.DBConn.Create(&edges).Error
+
 	if err != nil {
-		panic(err)
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		if strings.Contains(err.Error(), "duplicate key") {
+			return "", errors.New("pipeline flow edge already exists")
+		}
+		return "", errors.New("add pipeline flow edge database error")
 	}
 
-	edges := models.PipelineEdges{
-		EdgeID:        input.EdgesInput.EdgeID,
-		PipelineID:    input.EdgesInput.PipelineID,
-		From:          input.EdgesInput.From,
-		To:            input.EdgesInput.To,
-		EnvironmentID: input.EdgesInput.EnvironmentID,
-		Meta:          edgeMeta,
-		Active:        input.EdgesInput.Active,
+	// ----- Add pipeline nodes to database
+
+	nodes := []*models.PipelineNodes{}
+
+	for _, p := range input.NodesInput {
+		nodeMeta, err := json.Marshal(p.Meta)
+		if err != nil {
+			panic(err)
+		}
+
+		nodes = append(nodes, &models.PipelineNodes{
+			NodeID:        p.NodeID,
+			PipelineID:    p.PipelineID,
+			Name:          p.Name,
+			EnvironmentID: p.EnvironmentID,
+			NodeType:      p.NodeType,
+			Description:   p.Description,
+			Meta:          nodeMeta,
+			Active:        false,
+		})
+
 	}
 
-	nodeMeta, err := json.Marshal(input.NodesInput.Meta)
+	err = database.DBConn.Create(&nodes).Error
+
 	if err != nil {
-		panic(err)
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		if strings.Contains(err.Error(), "duplicate key") {
+			return "", errors.New("pipeline flow node already exists")
+		}
+		return "", errors.New("add pipeline flow node database error")
 	}
-
-	nodes := models.PipelineNodes{
-		NodeID:        input.NodesInput.NodeID,
-		PipelineID:    input.NodesInput.PipelineID,
-		Name:          input.NodesInput.Name,
-		EnvironmentID: input.NodesInput.EnvironmentID,
-		NodeType:      input.NodesInput.NodeType,
-		Description:   input.NodesInput.Description,
-		Meta:          nodeMeta,
-		Active:        input.NodesInput.Active,
-	}
-
-	log.Println(edges, "!!!!!!!!!!!!!!!!!1")
-	log.Println(nodes, "!!!!!!!!!!!!!!!!!1")
 
 	return "success", nil
 }
@@ -161,6 +195,55 @@ func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) 
 		return nil, errors.New("Retrive pipelines database error.")
 	}
 	return p, nil
+}
+
+func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, environmentID string) (*privategraphql.PipelineFlow, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("requires permissions")
+	}
+
+	// ----- Get pipeline nodes
+	nodes := []*privategraphql.PipelineNodes{}
+
+	err := database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&nodes).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("retrive pipeline nodes database error")
+	}
+
+	// ----- Get pipeline edges
+	edges := []*privategraphql.PipelineEdges{}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&edges).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("retrive pipeline edges database error")
+	}
+
+	flow := privategraphql.PipelineFlow{
+		Edges: edges,
+		Nodes: nodes,
+	}
+
+	return &flow, nil
 }
 
 // Pipelines returns privategraphql.PipelinesResolver implementation.

@@ -12,18 +12,18 @@ type Pipelines {
   scheduleType: String!
 }
 
-input Position {
+input PositionInput {
   x: Int!
   y: Int!
 }
 
-input Data {
+input DataInput {
   language: String!
 }
 
 input PipelineNodesMetaInput {
-  position:  Position!         
-	data:      Data      
+  position:  PositionInput!         
+	data:      DataInput      
 }
 
 input PipelineNodesInput {
@@ -33,14 +33,13 @@ input PipelineNodesInput {
 	environmentID: String!         
 	nodeType:      String!         
 	description:   String!         
-	meta:          PipelineNodesMetaInput
-	active:        Boolean!        
+	meta:          PipelineNodesMetaInput!
 }
 
 input PipelineEdgesMetaInput {
   sourceHandle:  String!
   targetHandle:  String!
-  type:          String!
+  edgeType:      String!
   arrowHeadType: String!
 }
 
@@ -50,13 +49,59 @@ input PipelineEdgesInput {
 	from:          String!         
 	to:            String!         
 	environmentID: String!         
-	meta:          PipelineEdgesMetaInput
-	active:        Boolean!        
+	meta:          PipelineEdgesMetaInput!
 }
 
 input PipelineFlowInput {
-  nodesInput: PipelineNodesInput!
-  edgesInput: PipelineEdgesInput
+  nodesInput: [PipelineNodesInput!]!
+  edgesInput: [PipelineEdgesInput!]!
+}
+
+type Position {
+  x: Int!
+  y: Int!
+}
+
+type Data {
+  language: String!
+}
+
+type PipelineNodesMeta {
+  position:  Position!         
+	data:      Data
+}
+
+type PipelineNodes {
+	nodeID:        String!       
+	pipelineID:    String!         
+	name:          String!         
+	environmentID: String!         
+	nodeType:      String!         
+	description:   String!         
+	Meta:          PipelineNodesMeta! 
+	active:        Boolean!           
+}
+
+type PipelineEdgesMeta {
+  sourceHandle:  String!
+  targetHandle:  String!
+  edgeType:      String!
+  arrowHeadType: String!
+}
+
+type PipelineEdges {
+  edgeID:        String!       
+	pipelineID:    String!         
+	from:          String!         
+	to:            String!         
+	environmentID: String!         
+	Meta:          PipelineEdgesMeta! 
+	active:        Boolean!           
+}
+
+type PipelineFlow {
+  edges: [PipelineEdges!]!
+  nodes: [PipelineNodes!]!
 }
 
 extend type Query {
@@ -66,6 +111,13 @@ extend type Query {
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
   getPipelines(environmentID: String!): [Pipelines]
+
+  """
+  Get pipeline flows.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getPipelineFlow(pipelineID: String!, environmentID: String!): PipelineFlow
 }
 
 extend type Mutation {
