@@ -14,6 +14,7 @@ type Pipelines {
   scheduleType: String!
 }
 
+# ----- Add flow
 input PositionInput {
   x: Int!
   y: Int!
@@ -59,6 +60,7 @@ input PipelineFlowInput {
   edgesInput: [PipelineEdgesInput!]!
 }
 
+# ----- Get flow
 type PipelineNodes {
 	nodeID:        String!       
 	pipelineID:    String!         
@@ -83,6 +85,31 @@ type PipelineEdges {
 type PipelineFlow {
   edges: [PipelineEdges!]!
   nodes: [PipelineNodes!]!
+}
+
+# ----- Update flow
+input PipelineNodesUpdateInput {
+	nodeID:        String!       
+	name:          String!         
+	environmentID: String!         
+	nodeType:      String!         
+	description:   String!         
+	meta:          PipelineNodesMetaInput!
+  active:        Boolean!
+}
+
+input PipelineEdgesUpdateInput {
+  edgeID:        String!       
+	from:          String!         
+	to:            String!         
+	environmentID: String!         
+	meta:          PipelineEdgesMetaInput!
+  active:        Boolean!
+}
+
+input PipelineFlowUpdateInput {
+  nodesInput: [PipelineNodesUpdateInput!]!
+  edgesInput: [PipelineEdgesUpdateInput!]!
 }
 
 extend type Query {
@@ -115,4 +142,11 @@ extend type Mutation {
   + **Permissions**: admin_platform, platform_environment
   """
   addPipelineFlow( input: PipelineFlowInput ): String!
+
+  """
+  Update pipeline flow.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment
+  """
+  updatePipelineFlow( input: PipelineFlowUpdateInput ): String!
 }
