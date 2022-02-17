@@ -202,6 +202,10 @@ const useGetPipelineFlow_ = () => {
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
 
+    // React router
+    const history = useHistory();
+
+    // Global state
     const FlowState = useGlobalFlowState();
 
     // URI parameter
@@ -215,7 +219,7 @@ const useGetPipelineFlow_ = () => {
         const response = prepareInputForFrontend(rawResponse);
 
         if (response.length === 0) {
-            return;
+            history.push(`/pipelines/flow/${pipelineId}`);
         } else if (response.r === 'error') {
             closeSnackbar();
             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
