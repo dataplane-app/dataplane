@@ -1,3 +1,5 @@
+scalar Any
+
 type Pipelines {
   pipelineID: String!
 	name: String!
@@ -57,20 +59,6 @@ input PipelineFlowInput {
   edgesInput: [PipelineEdgesInput!]!
 }
 
-type Position {
-  x: Int!
-  y: Int!
-}
-
-type Data {
-  language: String!
-}
-
-type PipelineNodesMeta {
-  position:  Position!         
-	data:      Data
-}
-
 type PipelineNodes {
 	nodeID:        String!       
 	pipelineID:    String!         
@@ -78,15 +66,8 @@ type PipelineNodes {
 	environmentID: String!         
 	nodeType:      String!         
 	description:   String!         
-	meta:          PipelineNodesMeta! 
+	meta:          Any! 
 	active:        Boolean!           
-}
-
-type PipelineEdgesMeta {
-  sourceHandle:  String!
-  targetHandle:  String!
-  edgeType:      String!
-  arrowHeadType: String!
 }
 
 type PipelineEdges {
@@ -95,7 +76,7 @@ type PipelineEdges {
 	from:          String!         
 	to:            String!         
 	environmentID: String!         
-	meta:          PipelineEdgesMeta! 
+	meta:          Any! 
 	active:        Boolean!           
 }
 

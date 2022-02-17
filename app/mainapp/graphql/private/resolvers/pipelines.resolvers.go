@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
@@ -151,6 +151,14 @@ func (r *mutationResolver) AddPipelineFlow(ctx context.Context, input *privategr
 	return "success", nil
 }
 
+func (r *pipelineEdgesResolver) Meta(ctx context.Context, obj *models.PipelineEdges) (interface{}, error) {
+	return obj.Meta, nil
+}
+
+func (r *pipelineNodesResolver) Meta(ctx context.Context, obj *models.PipelineNodes) (interface{}, error) {
+	return obj.Meta, nil
+}
+
 func (r *pipelinesResolver) Version(ctx context.Context, obj *models.Pipelines) (string, error) {
 	panic(fmt.Errorf("not implemented"))
 }
@@ -215,7 +223,7 @@ func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, 
 	}
 
 	// ----- Get pipeline nodes
-	nodes := []*privategraphql.PipelineNodes{}
+	nodes := []*models.PipelineNodes{}
 
 	err := database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&nodes).Error
 
@@ -227,7 +235,7 @@ func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, 
 	}
 
 	// ----- Get pipeline edges
-	edges := []*privategraphql.PipelineEdges{}
+	edges := []*models.PipelineEdges{}
 
 	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&edges).Error
 
@@ -246,7 +254,19 @@ func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, 
 	return &flow, nil
 }
 
+// PipelineEdges returns privategraphql.PipelineEdgesResolver implementation.
+func (r *Resolver) PipelineEdges() privategraphql.PipelineEdgesResolver {
+	return &pipelineEdgesResolver{r}
+}
+
+// PipelineNodes returns privategraphql.PipelineNodesResolver implementation.
+func (r *Resolver) PipelineNodes() privategraphql.PipelineNodesResolver {
+	return &pipelineNodesResolver{r}
+}
+
 // Pipelines returns privategraphql.PipelinesResolver implementation.
 func (r *Resolver) Pipelines() privategraphql.PipelinesResolver { return &pipelinesResolver{r} }
 
+type pipelineEdgesResolver struct{ *Resolver }
+type pipelineNodesResolver struct{ *Resolver }
 type pipelinesResolver struct{ *Resolver }

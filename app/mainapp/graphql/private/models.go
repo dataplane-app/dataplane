@@ -3,6 +3,7 @@
 package privategraphql
 
 import (
+	"dataplane/mainapp/database/models"
 	"time"
 )
 
@@ -62,16 +63,6 @@ type DataInput struct {
 	Language string `json:"language"`
 }
 
-type PipelineEdges struct {
-	EdgeID        string             `json:"edgeID"`
-	PipelineID    string             `json:"pipelineID"`
-	From          string             `json:"from"`
-	To            string             `json:"to"`
-	EnvironmentID string             `json:"environmentID"`
-	Meta          *PipelineEdgesMeta `json:"meta"`
-	Active        bool               `json:"active"`
-}
-
 type PipelineEdgesInput struct {
 	EdgeID        string                  `json:"edgeID"`
 	PipelineID    string                  `json:"pipelineID"`
@@ -96,24 +87,13 @@ type PipelineEdgesMetaInput struct {
 }
 
 type PipelineFlow struct {
-	Edges []*PipelineEdges `json:"edges"`
-	Nodes []*PipelineNodes `json:"nodes"`
+	Edges []*models.PipelineEdges `json:"edges"`
+	Nodes []*models.PipelineNodes `json:"nodes"`
 }
 
 type PipelineFlowInput struct {
 	NodesInput []*PipelineNodesInput `json:"nodesInput"`
 	EdgesInput []*PipelineEdgesInput `json:"edgesInput"`
-}
-
-type PipelineNodes struct {
-	NodeID        string             `json:"nodeID"`
-	PipelineID    string             `json:"pipelineID"`
-	Name          string             `json:"name"`
-	EnvironmentID string             `json:"environmentID"`
-	NodeType      string             `json:"nodeType"`
-	Description   string             `json:"description"`
-	Meta          *PipelineNodesMeta `json:"meta"`
-	Active        bool               `json:"active"`
 }
 
 type PipelineNodesInput struct {
