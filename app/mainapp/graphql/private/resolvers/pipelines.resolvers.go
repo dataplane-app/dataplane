@@ -86,7 +86,7 @@ func (r *mutationResolver) AddPipelineFlow(ctx context.Context, input *privategr
 	for _, p := range input.EdgesInput {
 		edgeMeta, err := json.Marshal(p.Meta)
 		if err != nil {
-			panic(err)
+			logging.PrintSecretsRedact(err)
 		}
 
 		edges = append(edges, &models.PipelineEdges{
@@ -120,7 +120,7 @@ func (r *mutationResolver) AddPipelineFlow(ctx context.Context, input *privategr
 	for _, p := range input.NodesInput {
 		nodeMeta, err := json.Marshal(p.Meta)
 		if err != nil {
-			panic(err)
+			logging.PrintSecretsRedact(err)
 		}
 
 		nodes = append(nodes, &models.PipelineNodes{
@@ -175,7 +175,7 @@ func (r *mutationResolver) UpdatePipelineFlow(ctx context.Context, input *privat
 	for _, p := range input.EdgesInput {
 		edgeMeta, err := json.Marshal(p.Meta)
 		if err != nil {
-			panic(err)
+			logging.PrintSecretsRedact(err)
 		}
 
 		edge = models.PipelineEdges{
@@ -205,7 +205,7 @@ func (r *mutationResolver) UpdatePipelineFlow(ctx context.Context, input *privat
 	for _, p := range input.NodesInput {
 		nodeMeta, err := json.Marshal(p.Meta)
 		if err != nil {
-			panic(err)
+			logging.PrintSecretsRedact(err)
 		}
 
 		node = models.PipelineNodes{
