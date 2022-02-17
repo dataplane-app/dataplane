@@ -2,6 +2,7 @@ import { useTheme } from '@emotion/react';
 import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Drawer, Grid, IconButton, MenuItem, TextField, Typography } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, Controls } from 'react-flow-renderer';
 import { useHistory, useParams } from 'react-router-dom';
@@ -10,12 +11,15 @@ import CustomLine from '../components/CustomNodesContent/CustomLine';
 import PublishPipelineDrawer from '../components/DrawerContent/PublishPipelineDrawer';
 import RemoveLogsPageItem from '../components/MoreInfoContent/RemoveLogsPageItem';
 import MoreInfoMenu from '../components/MoreInfoMenu';
+import { useGetPipelineFlow } from '../graphql/getPipelineFlow';
 import { edgeTypes, nodeTypes, useGlobalFlowState } from './Flow';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 const View = () => {
     // Hooks
     const theme = useTheme();
     const history = useHistory();
+    const getPipelineFlow = useGetPipelineFlow_();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -27,6 +31,7 @@ const View = () => {
 
     // Global states
     const FlowState = useGlobalFlowState();
+    const Environment = useGlobalEnvironmentState();
 
     //Offset states and refs
     const [offsetHeight, setOffsetHeight] = useState(0);
@@ -43,9 +48,10 @@ const View = () => {
 
     // Fetch previous elements
     useEffect(() => {
-        const prevElements = FlowState.elements.get();
+        // const prevElements = FlowState.elements.get();
+        // setElements([...prevElements]);
 
-        setElements([...prevElements]);
+        getPipelineFlow(Environment.id.get(), setElements);
         setIsLoadingFlow(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -190,3 +196,66 @@ const LOGS_MOCK = {
 };
 
 export default View;
+
+// ------ Custom hook
+const useGetPipelineFlow_ = () => {
+    // GraphQL hook
+    const getPipelineFlow = useGetPipelineFlow();
+
+    const FlowState = useGlobalFlowState();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get members
+    return async (environmentID, setElements) => {
+        const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
+        const response = prepareInputForFrontend(rawResponse);
+
+        if (response.length === 0) {
+            return;
+        } else if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get flow', { variant: 'error' }));
+        } else {
+            setElements(response);
+            FlowState.elements.set(response);
+        }
+    };
+};
+
+// ----- Utility function
+function prepareInputForFrontend(input) {
+    const edgesInput = [];
+    const nodesInput = [];
+
+    for (const iterator of input.edges) {
+        edgesInput.push({
+            source: iterator.from,
+            sourceHandle: iterator.meta.sourceHandle,
+            target: iterator.to,
+            targetHandle: iterator.meta.targetHandle,
+            type: iterator.meta.edgeType,
+            arrowHeadType: iterator.meta.arrowHeadType,
+            id: iterator.edgeID,
+        });
+    }
+
+    for (const iterator of input.nodes) {
+        nodesInput.push({
+            id: iterator.nodeID,
+            type: iterator.nodeType,
+            position: {
+                x: iterator.meta.position.x,
+                y: iterator.meta.position.y,
+            },
+            data: iterator.meta?.data,
+        });
+    }
+
+    return [...edgesInput, ...nodesInput];
+}

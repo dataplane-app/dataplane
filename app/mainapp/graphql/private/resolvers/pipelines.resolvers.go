@@ -62,21 +62,33 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	return rtn, nil
 }
 
-func (r *mutationResolver) AddPipelineFlow(ctx context.Context, input *privategraphql.PipelineFlowInput) (string, error) {
+func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *privategraphql.PipelineFlowInput, environmentID string, pipelineID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: input.NodesInput[0].EnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: input.NodesInput[0].EnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
 		return "", errors.New("Requires permissions.")
+	}
+
+	// ----- Delete old edges
+	edge := models.PipelineEdges{}
+
+	err := database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&edge).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("update pipeline flow edge database error")
 	}
 
 	// ----- Add pipeline edges to database
@@ -91,17 +103,19 @@ func (r *mutationResolver) AddPipelineFlow(ctx context.Context, input *privategr
 
 		edges = append(edges, &models.PipelineEdges{
 			EdgeID:        p.EdgeID,
-			PipelineID:    p.PipelineID,
+			PipelineID:    pipelineID,
 			From:          p.From,
 			To:            p.To,
-			EnvironmentID: p.EnvironmentID,
+			EnvironmentID: environmentID,
 			Meta:          edgeMeta,
-			Active:        false,
+			Active:        p.Active,
 		})
 
 	}
 
-	err := database.DBConn.Create(&edges).Error
+	if len(edges) > 0 {
+		err = database.DBConn.Create(&edges).Error
+	}
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -111,6 +125,18 @@ func (r *mutationResolver) AddPipelineFlow(ctx context.Context, input *privategr
 			return "", errors.New("pipeline flow edge already exists")
 		}
 		return "", errors.New("add pipeline flow edge database error")
+	}
+
+	// ----- Delete old nodes
+	node := models.PipelineNodes{}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&node).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("update pipeline flow edge database error")
 	}
 
 	// ----- Add pipeline nodes to database
@@ -125,18 +151,20 @@ func (r *mutationResolver) AddPipelineFlow(ctx context.Context, input *privategr
 
 		nodes = append(nodes, &models.PipelineNodes{
 			NodeID:        p.NodeID,
-			PipelineID:    p.PipelineID,
+			PipelineID:    pipelineID,
 			Name:          p.Name,
-			EnvironmentID: p.EnvironmentID,
+			EnvironmentID: environmentID,
 			NodeType:      p.NodeType,
 			Description:   p.Description,
 			Meta:          nodeMeta,
-			Active:        false,
+			Active:        p.Active,
 		})
 
 	}
 
-	err = database.DBConn.Create(&nodes).Error
+	if len(nodes) > 0 {
+		err = database.DBConn.Create(&nodes).Error
+	}
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -146,86 +174,6 @@ func (r *mutationResolver) AddPipelineFlow(ctx context.Context, input *privategr
 			return "", errors.New("pipeline flow node already exists")
 		}
 		return "", errors.New("add pipeline flow node database error")
-	}
-
-	return "success", nil
-}
-
-func (r *mutationResolver) UpdatePipelineFlow(ctx context.Context, input *privategraphql.PipelineFlowUpdateInput) (string, error) {
-	currentUser := ctx.Value("currentUser").(string)
-	platformID := ctx.Value("platformID").(string)
-
-	// ----- Permissions
-	perms := []models.Permissions{
-		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: input.NodesInput[0].EnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: input.NodesInput[0].EnvironmentID},
-	}
-
-	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
-
-	if permOutcome == "denied" {
-		return "", errors.New("Requires permissions.")
-	}
-
-	// ----- Update pipeline edges
-
-	edge := models.PipelineEdges{}
-
-	for _, p := range input.EdgesInput {
-		edgeMeta, err := json.Marshal(p.Meta)
-		if err != nil {
-			logging.PrintSecretsRedact(err)
-		}
-
-		edge = models.PipelineEdges{
-			EdgeID:        p.EdgeID,
-			From:          p.From,
-			To:            p.To,
-			EnvironmentID: p.EnvironmentID,
-			Meta:          edgeMeta,
-			Active:        p.Active,
-		}
-
-		err = database.DBConn.Where("edge_id = ?", p.EdgeID).Updates(&edge).Error
-
-		if err != nil {
-			if os.Getenv("debug") == "true" {
-				logging.PrintSecretsRedact(err)
-			}
-
-			return "", errors.New("update pipeline flow edge database error")
-		}
-	}
-
-	// ----- Update pipeline nodes
-
-	node := models.PipelineNodes{}
-
-	for _, p := range input.NodesInput {
-		nodeMeta, err := json.Marshal(p.Meta)
-		if err != nil {
-			logging.PrintSecretsRedact(err)
-		}
-
-		node = models.PipelineNodes{
-			NodeID:        p.NodeID,
-			Name:          p.Name,
-			EnvironmentID: p.EnvironmentID,
-			NodeType:      p.NodeType,
-			Description:   p.Description,
-			Meta:          nodeMeta,
-			Active:        p.Active,
-		}
-
-		err = database.DBConn.Where("node_id = ?", p.NodeID).Updates(&node).Error
-
-		if err != nil {
-			if os.Getenv("debug") == "true" {
-				logging.PrintSecretsRedact(err)
-			}
-			return "", errors.New("update pipeline flow node database error")
-		}
 	}
 
 	return "success", nil

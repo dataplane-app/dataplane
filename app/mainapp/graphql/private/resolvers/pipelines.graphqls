@@ -14,7 +14,7 @@ type Pipelines {
   scheduleType: String!
 }
 
-# ----- Add flow
+# ----- Add/Update flow
 input PositionInput {
   x: Int!
   y: Int!
@@ -31,12 +31,11 @@ input PipelineNodesMetaInput {
 
 input PipelineNodesInput {
   nodeID:        String!         
-	pipelineID:    String!         
 	name:          String!         
-	environmentID: String!         
 	nodeType:      String!         
 	description:   String!         
 	meta:          PipelineNodesMetaInput!
+	active:        Boolean!           
 }
 
 input PipelineEdgesMetaInput {
@@ -48,11 +47,10 @@ input PipelineEdgesMetaInput {
 
 input PipelineEdgesInput {
   edgeID:        String!         
-	pipelineID:    String!         
 	from:          String!         
 	to:            String!         
-	environmentID: String!         
 	meta:          PipelineEdgesMetaInput!
+	active:        Boolean!           
 }
 
 input PipelineFlowInput {
@@ -87,30 +85,6 @@ type PipelineFlow {
   nodes: [PipelineNodes!]!
 }
 
-# ----- Update flow
-input PipelineNodesUpdateInput {
-	nodeID:        String!       
-	name:          String!         
-	environmentID: String!         
-	nodeType:      String!         
-	description:   String!         
-	meta:          PipelineNodesMetaInput!
-  active:        Boolean!
-}
-
-input PipelineEdgesUpdateInput {
-  edgeID:        String!       
-	from:          String!         
-	to:            String!         
-	environmentID: String!         
-	meta:          PipelineEdgesMetaInput!
-  active:        Boolean!
-}
-
-input PipelineFlowUpdateInput {
-  nodesInput: [PipelineNodesUpdateInput!]!
-  edgesInput: [PipelineEdgesUpdateInput!]!
-}
 
 extend type Query {
   """
@@ -137,16 +111,9 @@ extend type Mutation {
   addPipeline(name: String!, environmentID: String!, description: String! ): String!
 
   """
-  Add pipeline flow.
-  + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment
-  """
-  addPipelineFlow( input: PipelineFlowInput ): String!
-
-  """
   Update pipeline flow.
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment
   """
-  updatePipelineFlow( input: PipelineFlowUpdateInput ): String!
+  addUpdatePipelineFlow( input: PipelineFlowInput, environmentID: String!, pipelineID: String! ): String!
 }

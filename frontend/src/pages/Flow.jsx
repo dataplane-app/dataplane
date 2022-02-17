@@ -2,7 +2,7 @@ import { useTheme } from '@emotion/react';
 import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, Controls, getConnectedEdges, isEdge, removeElements } from 'react-flow-renderer';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import ApiNode from '../components/CustomNodesContent/ApiNode';
 import ClearLogsNode from '../components/CustomNodesContent/ClearLogsNode';
 import CustomEdge from '../components/CustomNodesContent/CustomEdge';
@@ -17,6 +17,8 @@ import ScheduleDrawer from '../components/DrawerContent/SchedulerDrawer';
 import CheckpointNode from '../components/CustomNodesContent/CheckpointNode';
 import { useSnackbar } from 'notistack';
 import APITRiggerDrawer from '../components/DrawerContent/EditorDrawers/APITriggerDrawer';
+import { useAddUpdatePipelineFlow } from '../graphql/addUpdatePipelineFlow';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 export const INITIAL_NODE_X_POSITION = 30;
 export const nodeTypes = {
@@ -49,12 +51,14 @@ const Flow = () => {
     const theme = useTheme();
     const history = useHistory();
     const { enqueueSnackbar } = useSnackbar();
+    const updatePipelineFlow = useAddUpdatePipelineFlow_();
 
     // Page states
     const [, setIsLoadingFlow] = useState(true);
 
     // Global states
     const FlowState = useGlobalFlowState();
+    const Environment = useGlobalEnvironmentState();
 
     //Offset states and refs
     const [offsetHeight, setOffsetHeight] = useState(0);
@@ -116,6 +120,7 @@ const Flow = () => {
         if (reactFlowInstance) {
             const flowElements = reactFlowInstance.toObject();
             FlowState.elements.set([...flowElements.elements]);
+            updatePipelineFlow(flowElements.elements, Environment.id.get());
             FlowState.isEditorPage.set(false);
             FlowState.selectedElement.set(null);
             history.goBack();
@@ -215,3 +220,70 @@ const Flow = () => {
 };
 
 export default Flow;
+
+const useAddUpdatePipelineFlow_ = () => {
+    // GraphQL hook
+    const addUpdatePipelineFlow = useAddUpdatePipelineFlow();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Update pipeline flow
+    return async (rawInput, environmentID) => {
+        // Prepare input to match the structure in the backend
+        const input = prepareInputForBackend(rawInput);
+
+        const response = await addUpdatePipelineFlow({ input, pipelineID: pipelineId, environmentID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't update flow: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+        }
+    };
+};
+
+// ----- Utility function
+function prepareInputForBackend(input) {
+    const nodesInput = [];
+    const edgesInput = [];
+
+    for (const iterator of input) {
+        if (iterator.type !== 'custom') {
+            nodesInput.push({
+                nodeID: iterator.id,
+                name: '',
+                nodeType: iterator.type,
+                description: '',
+                meta: {
+                    position: {
+                        x: iterator.position.x,
+                        y: iterator.position.y,
+                    },
+                    data: iterator?.data,
+                },
+                active: false,
+            });
+        } else {
+            edgesInput.push({
+                edgeID: iterator.id,
+                from: iterator.source,
+                to: iterator.target,
+                meta: {
+                    edgeType: iterator.type,
+                    sourceHandle: iterator.sourceHandle,
+                    targetHandle: iterator.targetHandle,
+                    arrowHeadType: iterator.arrowHeadType,
+                },
+                active: false,
+            });
+        }
+    }
+
+    return { nodesInput, edgesInput };
+}

@@ -60,12 +60,11 @@ type DataInput struct {
 }
 
 type PipelineEdgesInput struct {
-	EdgeID        string                  `json:"edgeID"`
-	PipelineID    string                  `json:"pipelineID"`
-	From          string                  `json:"from"`
-	To            string                  `json:"to"`
-	EnvironmentID string                  `json:"environmentID"`
-	Meta          *PipelineEdgesMetaInput `json:"meta"`
+	EdgeID string                  `json:"edgeID"`
+	From   string                  `json:"from"`
+	To     string                  `json:"to"`
+	Meta   *PipelineEdgesMetaInput `json:"meta"`
+	Active bool                    `json:"active"`
 }
 
 type PipelineEdgesMetaInput struct {
@@ -73,15 +72,6 @@ type PipelineEdgesMetaInput struct {
 	TargetHandle  string `json:"targetHandle"`
 	EdgeType      string `json:"edgeType"`
 	ArrowHeadType string `json:"arrowHeadType"`
-}
-
-type PipelineEdgesUpdateInput struct {
-	EdgeID        string                  `json:"edgeID"`
-	From          string                  `json:"from"`
-	To            string                  `json:"to"`
-	EnvironmentID string                  `json:"environmentID"`
-	Meta          *PipelineEdgesMetaInput `json:"meta"`
-	Active        bool                    `json:"active"`
 }
 
 type PipelineFlow struct {
@@ -94,34 +84,18 @@ type PipelineFlowInput struct {
 	EdgesInput []*PipelineEdgesInput `json:"edgesInput"`
 }
 
-type PipelineFlowUpdateInput struct {
-	NodesInput []*PipelineNodesUpdateInput `json:"nodesInput"`
-	EdgesInput []*PipelineEdgesUpdateInput `json:"edgesInput"`
-}
-
 type PipelineNodesInput struct {
-	NodeID        string                  `json:"nodeID"`
-	PipelineID    string                  `json:"pipelineID"`
-	Name          string                  `json:"name"`
-	EnvironmentID string                  `json:"environmentID"`
-	NodeType      string                  `json:"nodeType"`
-	Description   string                  `json:"description"`
-	Meta          *PipelineNodesMetaInput `json:"meta"`
+	NodeID      string                  `json:"nodeID"`
+	Name        string                  `json:"name"`
+	NodeType    string                  `json:"nodeType"`
+	Description string                  `json:"description"`
+	Meta        *PipelineNodesMetaInput `json:"meta"`
+	Active      bool                    `json:"active"`
 }
 
 type PipelineNodesMetaInput struct {
 	Position *PositionInput `json:"position"`
 	Data     *DataInput     `json:"data"`
-}
-
-type PipelineNodesUpdateInput struct {
-	NodeID        string                  `json:"nodeID"`
-	Name          string                  `json:"name"`
-	EnvironmentID string                  `json:"environmentID"`
-	NodeType      string                  `json:"nodeType"`
-	Description   string                  `json:"description"`
-	Meta          *PipelineNodesMetaInput `json:"meta"`
-	Active        bool                    `json:"active"`
 }
 
 type Platform struct {
