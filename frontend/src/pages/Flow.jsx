@@ -2,7 +2,7 @@ import { useTheme } from '@emotion/react';
 import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, Controls, getConnectedEdges, isEdge, removeElements } from 'react-flow-renderer';
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory, useLocation, useParams } from 'react-router-dom';
 import ApiNode from '../components/CustomNodesContent/ApiNode';
 import ClearLogsNode from '../components/CustomNodesContent/ClearLogsNode';
 import CustomEdge from '../components/CustomNodesContent/CustomEdge';
@@ -50,6 +50,7 @@ const Flow = () => {
     // Hooks
     const theme = useTheme();
     const history = useHistory();
+    const { state: pipelineName } = useLocation();
     const { enqueueSnackbar } = useSnackbar();
     const updatePipelineFlow = useAddUpdatePipelineFlow_();
 
@@ -163,7 +164,7 @@ const Flow = () => {
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex">
                         <Typography component="h2" variant="h2" color="text.primary">
-                            Pipelines {'>'} Remove logs
+                            Pipelines {'>'} {pipelineName}
                         </Typography>
 
                         <Grid display="flex" alignItems="flex-start">

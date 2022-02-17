@@ -5,7 +5,7 @@ import { Box, Button, Drawer, Grid, IconButton, MenuItem, TextField, Typography 
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, Controls } from 'react-flow-renderer';
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory, useParams, useLocation } from 'react-router-dom';
 import CustomChip from '../components/CustomChip';
 import CustomLine from '../components/CustomNodesContent/CustomLine';
 import PublishPipelineDrawer from '../components/DrawerContent/PublishPipelineDrawer';
@@ -19,6 +19,7 @@ const View = () => {
     // Hooks
     const theme = useTheme();
     const history = useHistory();
+    const { state: pipeline } = useLocation();
     const getPipelineFlow = useGetPipelineFlow_();
 
     // URI parameter
@@ -59,7 +60,7 @@ const View = () => {
     // Handle edit button
     const handleGoToEditorPage = () => {
         FlowState.isEditorPage.set(true);
-        history.push(`/pipelines/flow/${pipelineId}`);
+        history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipeline.name });
     };
 
     //Flow methods
@@ -74,14 +75,14 @@ const View = () => {
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex">
                         <Typography component="h2" variant="h2" color="text.primary">
-                            Pipelines {'>'} Remove logs
+                            Pipelines {'>'} {pipeline.name}
                         </Typography>
 
                         <Grid display="flex" alignItems="flex-start">
                             <Box display="flex" alignItems="center" ml={4} mr={4}>
-                                <Box height={16} width={16} backgroundColor="rgba(114, 184, 66, 1)" borderRadius="100%"></Box>
-                                <Typography ml={1} fontSize={16} color="#2E6707">
-                                    Online
+                                <Box height={16} width={16} backgroundColor={pipeline.online ? 'status.pipelineOnlineText' : 'error.main'} borderRadius="100%"></Box>
+                                <Typography ml={1} fontSize={16} color={pipeline.online ? 'status.pipelineOnlineText' : 'error.main'}>
+                                    {pipeline.online ? 'Online' : 'Offline'}
                                 </Typography>
                             </Box>
 
