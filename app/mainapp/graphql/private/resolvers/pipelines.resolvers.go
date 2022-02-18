@@ -66,6 +66,9 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
+	var destinations = make(map[string][]string)
+	var dependencies = make(map[string][]string)
+
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
@@ -122,6 +125,10 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			Active:        p.Active,
 		})
 
+		// map out dependencies and destinations
+		destinations[p.From] = append(destinations[p.From], p.To)
+		dependencies[p.To] = append(dependencies[p.To], p.From)
+
 	}
 
 	if len(edges) > 0 {
@@ -160,6 +167,16 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			logging.PrintSecretsRedact(err)
 		}
 
+		dependJSON, err := json.Marshal(dependencies[p.NodeID])
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
+		destinationJSON, err := json.Marshal(destinations[p.NodeID])
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
 		nodes = append(nodes, &models.PipelineNodes{
 			NodeID:        p.NodeID,
 			PipelineID:    pipelineID,
@@ -168,6 +185,8 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			NodeType:      p.NodeType,
 			Description:   p.Description,
 			Meta:          nodeMeta,
+			Dependency:    dependJSON,
+			Destination:   destinationJSON,
 			Active:        p.Active,
 		})
 

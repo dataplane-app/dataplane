@@ -46,6 +46,8 @@ type PipelineNodes struct {
 	NodeType      string         `json:"node_type"`
 	Description   string         `json:"description"`
 	Meta          datatypes.JSON `json:"meta"`
+	Dependency    datatypes.JSON `json:"dependency"`
+	Destination   datatypes.JSON `json:"destination"`
 	Active        bool           `json:"active"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     *time.Time     `json:"updated_at"`
