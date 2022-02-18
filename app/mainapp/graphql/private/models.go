@@ -3,6 +3,7 @@
 package privategraphql
 
 import (
+	"dataplane/mainapp/database/models"
 	"time"
 )
 
@@ -54,11 +55,59 @@ type ChangePasswordInput struct {
 	UserID   string `json:"user_id"`
 }
 
+type DataInput struct {
+	Language string `json:"language"`
+}
+
+type PipelineEdgesInput struct {
+	EdgeID string                  `json:"edgeID"`
+	From   string                  `json:"from"`
+	To     string                  `json:"to"`
+	Meta   *PipelineEdgesMetaInput `json:"meta"`
+	Active bool                    `json:"active"`
+}
+
+type PipelineEdgesMetaInput struct {
+	SourceHandle  string `json:"sourceHandle"`
+	TargetHandle  string `json:"targetHandle"`
+	EdgeType      string `json:"edgeType"`
+	ArrowHeadType string `json:"arrowHeadType"`
+}
+
+type PipelineFlow struct {
+	Edges []*models.PipelineEdges `json:"edges"`
+	Nodes []*models.PipelineNodes `json:"nodes"`
+}
+
+type PipelineFlowInput struct {
+	NodesInput []*PipelineNodesInput `json:"nodesInput"`
+	EdgesInput []*PipelineEdgesInput `json:"edgesInput"`
+}
+
+type PipelineNodesInput struct {
+	NodeID      string                  `json:"nodeID"`
+	Name        string                  `json:"name"`
+	NodeType    string                  `json:"nodeType"`
+	Description string                  `json:"description"`
+	Meta        *PipelineNodesMetaInput `json:"meta"`
+	Active      bool                    `json:"active"`
+}
+
+type PipelineNodesMetaInput struct {
+	Position *PositionInput `json:"position"`
+	Data     *DataInput     `json:"data"`
+}
+
 type Platform struct {
 	ID           string `json:"id"`
 	BusinessName string `json:"business_name"`
 	Timezone     string `json:"timezone"`
 	Complete     bool   `json:"complete"`
+}
+
+type PositionInput struct {
+	X int `json:"x"`
+	Y int `json:"y"`
 }
 
 type Preferences struct {

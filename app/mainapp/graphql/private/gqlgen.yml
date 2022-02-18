@@ -33,6 +33,10 @@ models:
    model: dataplane/mainapp/database/models.WorkerSecrets
  Pipelines:
    model: dataplane/mainapp/database/models.Pipelines
+ PipelineEdges:
+   model: dataplane/mainapp/database/models.PipelineEdges
+ PipelineNodes:
+   model: dataplane/mainapp/database/models.PipelineNodes
 
 resolver:
   layout: follow-schema

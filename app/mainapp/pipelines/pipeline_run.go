@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
-	"strings"
+	"time"
 )
 
 // Cycle:
 // node1 > [node2, node3, node4] > node5 > node6 > node1
+
+var messages = make(chan string)
 
 func main() {
 	fmt.Println("GoLang, Graph DFS and BFS implementation")
@@ -30,12 +32,17 @@ func main() {
 	g.AddEdge("node3", "node5")
 	g.AddEdge("node4", "node5")
 	g.AddEdge("node5", "node6")
-	g.AddEdge("node6", "node1")
+	// g.AddEdge("node6", "node1")
 
 	// g.BFS("node1")
 	// g.createVisited()
-	g.DFS("node1")
+	// g.BFS("node1")
+	g.Destinations("node1")
+	g.Destinations("node6")
 	log.Println(g)
+
+	// msg := <-messages
+	// fmt.Println(msg)
 }
 
 func NewGraph() Graph {
@@ -71,6 +78,40 @@ func (g *Graph) AddEdge(vertex, node string) bool {
 	return true
 }
 
+func RunTask(node string) {
+
+	log.Println("go routine: " + node)
+	messages <- node
+	time.Sleep(1 * time.Second)
+
+}
+
+func (g Graph) Destinations(startingNode string) {
+	// g.adjacency[startingNode]
+	// var q []string
+	// curre
+	// g.adjacency["node1"]
+	for _, node := range g.adjacency[startingNode] {
+
+		log.Println("Connected:", node)
+
+	}
+
+}
+
+func (g Graph) Sources(startingNode string) {
+	// g.adjacency[startingNode]
+	// var q []string
+	// curre
+	// g.adjacency["node1"]
+	for _, node := range g.adjacency[startingNode] {
+
+		log.Println("Connected:", node)
+
+	}
+
+}
+
 func (g Graph) BFS(startingNode string) {
 	visited := g.createVisited()
 	var q []string
@@ -81,8 +122,13 @@ func (g Graph) BFS(startingNode string) {
 	for len(q) > 0 {
 		var current string
 		current, q = q[0], q[1:]
-		fmt.Println("BFS", current)
+		fmt.Println("BFS", current, q)
+
+		// Loop through the destinations
 		for _, node := range g.adjacency[current] {
+
+			go RunTask(node)
+
 			if !visited[node] {
 				q = append(q, node)
 				visited[node] = true
@@ -110,37 +156,6 @@ func (g Graph) dfsRecursive(startingNode string, visited map[string]bool) {
 			// log.Println("Show:", node, startingNode)
 		}
 	}
-}
-
-func (g Graph) CreatePath(firstNode, secondNode string) bool {
-	visited := g.createVisited()
-	var (
-		path []string
-		q    []string
-	)
-	q = append(q, firstNode)
-	visited[firstNode] = true
-
-	for len(q) > 0 {
-		var currentNode string
-		currentNode, q = q[0], q[1:]
-		path = append(path, currentNode)
-		edges := g.adjacency[currentNode]
-		if contains(edges, secondNode) {
-			path = append(path, secondNode)
-			fmt.Println(strings.Join(path, "->"))
-			return true
-		}
-
-		for _, node := range g.adjacency[currentNode] {
-			if !visited[node] {
-				visited[node] = true
-				q = append(q, node)
-			}
-		}
-	}
-	fmt.Println("no link found")
-	return false
 }
 
 func (g Graph) createVisited() map[string]bool {

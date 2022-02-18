@@ -25,10 +25,11 @@ type Pipelines struct {
 	// Schedule      string         `json:"schedule"`      //rrule, manual
 	// ScheduleType  string         `json:"schedule_type"` //schedule, trigger
 	// FileJSON      datatypes.JSON `json:"file_json"`
-	Meta      datatypes.JSON `json:"meta"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt *time.Time     `json:"updated_at"`
-	DeletedAt *time.Time     `json:"deleted_at,omitempty"`
+	Meta       datatypes.JSON `json:"meta"`
+	UpdateLock bool           `gorm:"default:false;" json:"name"`
+	CreatedAt  time.Time      `json:"created_at"`
+	UpdatedAt  *time.Time     `json:"updated_at"`
+	DeletedAt  *time.Time     `json:"deleted_at,omitempty"`
 }
 
 func (PipelineNodes) IsEntity() {}
@@ -38,7 +39,7 @@ func (PipelineNodes) TableName() string {
 }
 
 type PipelineNodes struct {
-	NodeID        string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"node_id"`
+	NodeID        string         `gorm:"PRIMARY_KEY;type:varchar(128);" json:"node_id"`
 	PipelineID    string         `gorm:"index:idx_pipelineid_nodes;" json:"pipeline_id"`
 	Name          string         `gorm:"type:varchar(255);" json:"name"`
 	EnvironmentID string         `json:"environment_id"`
@@ -58,7 +59,7 @@ func (PipelineEdges) TableName() string {
 }
 
 type PipelineEdges struct {
-	EdgeID        string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"edge_id"`
+	EdgeID        string         `gorm:"PRIMARY_KEY;type:varchar(128);" json:"edge_id"`
 	PipelineID    string         `gorm:"index:idx_pipelineid_nodes_edges;" json:"pipeline_id"`
 	From          string         `gorm:"index:idx_pipelineid_edge;" json:"from"`
 	To            string         `gorm:"index:idx_pipelineid_edge;" json:"to"`

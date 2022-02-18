@@ -2,20 +2,25 @@ import { useTheme } from '@emotion/react';
 import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Drawer, Grid, IconButton, MenuItem, TextField, Typography } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, Controls } from 'react-flow-renderer';
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory, useParams, useLocation } from 'react-router-dom';
 import CustomChip from '../components/CustomChip';
 import CustomLine from '../components/CustomNodesContent/CustomLine';
 import PublishPipelineDrawer from '../components/DrawerContent/PublishPipelineDrawer';
 import RemoveLogsPageItem from '../components/MoreInfoContent/RemoveLogsPageItem';
 import MoreInfoMenu from '../components/MoreInfoMenu';
+import { useGetPipelineFlow } from '../graphql/getPipelineFlow';
 import { edgeTypes, nodeTypes, useGlobalFlowState } from './Flow';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 const View = () => {
     // Hooks
     const theme = useTheme();
     const history = useHistory();
+    const { state: pipeline } = useLocation();
+    const getPipelineFlow = useGetPipelineFlow_();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -27,6 +32,7 @@ const View = () => {
 
     // Global states
     const FlowState = useGlobalFlowState();
+    const Environment = useGlobalEnvironmentState();
 
     //Offset states and refs
     const [offsetHeight, setOffsetHeight] = useState(0);
@@ -43,9 +49,10 @@ const View = () => {
 
     // Fetch previous elements
     useEffect(() => {
-        const prevElements = FlowState.elements.get();
+        // const prevElements = FlowState.elements.get();
+        // setElements([...prevElements]);
 
-        setElements([...prevElements]);
+        getPipelineFlow(Environment.id.get(), setElements);
         setIsLoadingFlow(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -53,7 +60,7 @@ const View = () => {
     // Handle edit button
     const handleGoToEditorPage = () => {
         FlowState.isEditorPage.set(true);
-        history.push(`/pipelines/flow/${pipelineId}`);
+        history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipeline.name });
     };
 
     //Flow methods
@@ -68,14 +75,14 @@ const View = () => {
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex">
                         <Typography component="h2" variant="h2" color="text.primary">
-                            Pipelines {'>'} Remove logs
+                            Pipelines {'>'} {pipeline.name}
                         </Typography>
 
                         <Grid display="flex" alignItems="flex-start">
                             <Box display="flex" alignItems="center" ml={4} mr={4}>
-                                <Box height={16} width={16} backgroundColor="rgba(114, 184, 66, 1)" borderRadius="100%"></Box>
-                                <Typography ml={1} fontSize={16} color="#2E6707">
-                                    Online
+                                <Box height={16} width={16} backgroundColor={pipeline.online ? 'status.pipelineOnlineText' : 'error.main'} borderRadius="100%"></Box>
+                                <Typography ml={1} fontSize={16} color={pipeline.online ? 'status.pipelineOnlineText' : 'error.main'}>
+                                    {pipeline.online ? 'Online' : 'Offline'}
                                 </Typography>
                             </Box>
 
@@ -190,3 +197,70 @@ const LOGS_MOCK = {
 };
 
 export default View;
+
+// ------ Custom hook
+const useGetPipelineFlow_ = () => {
+    // GraphQL hook
+    const getPipelineFlow = useGetPipelineFlow();
+
+    // React router
+    const history = useHistory();
+
+    // Global state
+    const FlowState = useGlobalFlowState();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get members
+    return async (environmentID, setElements) => {
+        const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
+        const response = prepareInputForFrontend(rawResponse);
+
+        if (response.length === 0) {
+            history.push(`/pipelines/flow/${pipelineId}`);
+        } else if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get flow', { variant: 'error' }));
+        } else {
+            setElements(response);
+            FlowState.elements.set(response);
+        }
+    };
+};
+
+// ----- Utility function
+function prepareInputForFrontend(input) {
+    const edgesInput = [];
+    const nodesInput = [];
+
+    for (const iterator of input.edges) {
+        edgesInput.push({
+            source: iterator.from,
+            sourceHandle: iterator.meta.sourceHandle,
+            target: iterator.to,
+            targetHandle: iterator.meta.targetHandle,
+            type: iterator.meta.edgeType,
+            arrowHeadType: iterator.meta.arrowHeadType,
+            id: iterator.edgeID,
+        });
+    }
+
+    for (const iterator of input.nodes) {
+        nodesInput.push({
+            id: iterator.nodeID,
+            type: iterator.nodeType,
+            position: {
+                x: iterator.meta.position.x,
+                y: iterator.meta.position.y,
+            },
+            data: iterator.meta?.data,
+        });
+    }
+
+    return [...edgesInput, ...nodesInput];
+}

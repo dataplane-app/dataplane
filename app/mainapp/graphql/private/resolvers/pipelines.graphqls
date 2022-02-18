@@ -1,16 +1,86 @@
+scalar Any
+
 type Pipelines {
   pipelineID: String!
 	name: String!
-  version: String!
   environmentID: String!
-  YAMLHash: String!
   description: String!
   active: Boolean!
   online: Boolean!
   current: String!
-  schedule: String!
-  scheduleType: String!
 }
+
+# ----- Add/Update flow
+input PositionInput {
+  x: Int!
+  y: Int!
+}
+
+input DataInput {
+  language: String!
+}
+
+input PipelineNodesMetaInput {
+  position:  PositionInput!         
+	data:      DataInput      
+}
+
+input PipelineNodesInput {
+  nodeID:        String!         
+	name:          String!         
+	nodeType:      String!         
+	description:   String!         
+	meta:          PipelineNodesMetaInput!
+	active:        Boolean!           
+}
+
+input PipelineEdgesMetaInput {
+  sourceHandle:  String!
+  targetHandle:  String!
+  edgeType:      String!
+  arrowHeadType: String!
+}
+
+input PipelineEdgesInput {
+  edgeID:        String!         
+	from:          String!         
+	to:            String!         
+	meta:          PipelineEdgesMetaInput!
+	active:        Boolean!           
+}
+
+input PipelineFlowInput {
+  nodesInput: [PipelineNodesInput!]!
+  edgesInput: [PipelineEdgesInput!]!
+}
+
+# ----- Get flow
+type PipelineNodes {
+	nodeID:        String!       
+	pipelineID:    String!         
+	name:          String!         
+	environmentID: String!         
+	nodeType:      String!         
+	description:   String!         
+	meta:          Any! 
+	active:        Boolean!           
+}
+
+type PipelineEdges {
+  edgeID:        String!       
+	pipelineID:    String!         
+	from:          String!         
+	to:            String!         
+	environmentID: String!         
+	meta:          Any! 
+	active:        Boolean!           
+}
+
+type PipelineFlow {
+  edges: [PipelineEdges!]!
+  nodes: [PipelineNodes!]!
+}
+
 
 extend type Query {
   """
@@ -19,6 +89,13 @@ extend type Query {
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
   getPipelines(environmentID: String!): [Pipelines]
+
+  """
+  Get pipeline flows.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getPipelineFlow(pipelineID: String!, environmentID: String!): PipelineFlow
 }
 
 extend type Mutation {
@@ -28,4 +105,11 @@ extend type Mutation {
   + **Permissions**: admin_platform, platform_environment
   """
   addPipeline(name: String!, environmentID: String!, description: String! ): String!
+
+  """
+  Update pipeline flow.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment
+  """
+  addUpdatePipelineFlow( input: PipelineFlowInput, environmentID: String!, pipelineID: String! ): String!
 }
