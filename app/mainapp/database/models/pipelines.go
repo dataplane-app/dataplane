@@ -25,10 +25,11 @@ type Pipelines struct {
 	// Schedule      string         `json:"schedule"`      //rrule, manual
 	// ScheduleType  string         `json:"schedule_type"` //schedule, trigger
 	// FileJSON      datatypes.JSON `json:"file_json"`
-	Meta      datatypes.JSON `json:"meta"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt *time.Time     `json:"updated_at"`
-	DeletedAt *time.Time     `json:"deleted_at,omitempty"`
+	Meta       datatypes.JSON `json:"meta"`
+	UpdateLock bool           `gorm:"default:false;" json:"name"`
+	CreatedAt  time.Time      `json:"created_at"`
+	UpdatedAt  *time.Time     `json:"updated_at"`
+	DeletedAt  *time.Time     `json:"deleted_at,omitempty"`
 }
 
 func (PipelineNodes) IsEntity() {}

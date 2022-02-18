@@ -5,14 +5,13 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
 
@@ -43,6 +42,7 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 		EnvironmentID: environmentID,
 		Active:        true,
 		Online:        false,
+		UpdateLock:    true,
 	}
 
 	err := database.DBConn.Create(&e).Error
@@ -79,10 +79,20 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 		return "", errors.New("Requires permissions.")
 	}
 
+	// ----- lock the pipeline
+	err := database.DBConn.Model(&models.Pipelines{}).Where("pipeline_id = ?", pipelineID).Update("update_lock", true).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("Update pipeline flow edge database error - failed to lock pipeline")
+	}
+
 	// ----- Delete old edges
 	edge := models.PipelineEdges{}
 
-	err := database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&edge).Error
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&edge).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
@@ -176,6 +186,16 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 		return "", errors.New("add pipeline flow node database error")
 	}
 
+	// ----- unlock the pipeline
+	err = database.DBConn.Model(&models.Pipelines{}).Where("pipeline_id = ?", pipelineID).Update("update_lock", false).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("Update pipeline flow edge database error - failed to unlock pipeline")
+	}
+
 	return "success", nil
 }
 
@@ -185,22 +205,6 @@ func (r *pipelineEdgesResolver) Meta(ctx context.Context, obj *models.PipelineEd
 
 func (r *pipelineNodesResolver) Meta(ctx context.Context, obj *models.PipelineNodes) (interface{}, error) {
 	return obj.Meta, nil
-}
-
-func (r *pipelinesResolver) Version(ctx context.Context, obj *models.Pipelines) (string, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *pipelinesResolver) YAMLHash(ctx context.Context, obj *models.Pipelines) (string, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *pipelinesResolver) Schedule(ctx context.Context, obj *models.Pipelines) (string, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *pipelinesResolver) ScheduleType(ctx context.Context, obj *models.Pipelines) (string, error) {
-	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) ([]*models.Pipelines, error) {
@@ -292,9 +296,5 @@ func (r *Resolver) PipelineNodes() privategraphql.PipelineNodesResolver {
 	return &pipelineNodesResolver{r}
 }
 
-// Pipelines returns privategraphql.PipelinesResolver implementation.
-func (r *Resolver) Pipelines() privategraphql.PipelinesResolver { return &pipelinesResolver{r} }
-
 type pipelineEdgesResolver struct{ *Resolver }
 type pipelineNodesResolver struct{ *Resolver }
-type pipelinesResolver struct{ *Resolver }

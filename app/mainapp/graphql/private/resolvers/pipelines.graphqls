@@ -3,15 +3,11 @@ scalar Any
 type Pipelines {
   pipelineID: String!
 	name: String!
-  version: String!
   environmentID: String!
-  YAMLHash: String!
   description: String!
   active: Boolean!
   online: Boolean!
   current: String!
-  schedule: String!
-  scheduleType: String!
 }
 
 # ----- Add/Update flow
