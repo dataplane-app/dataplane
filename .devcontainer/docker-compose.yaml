@@ -85,6 +85,8 @@ services:
       worker_type: "vm"
       worker_lb: "roundrobin"
       worker_env: "Development"
+      dp_cleantasks_days: "60"
+      dp_removelogs_days: "60"
 
 networks:
   default:

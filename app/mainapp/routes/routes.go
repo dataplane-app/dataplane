@@ -2,11 +2,13 @@ package routes
 
 import (
 	"dataplane/mainapp/auth"
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/logme"
 	"dataplane/mainapp/messageq"
+	"dataplane/mainapp/scheduler/routinetasks"
 	"dataplane/mainapp/worker"
 	"fmt"
 	"log"
@@ -16,6 +18,7 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-co-op/gocron"
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -32,6 +35,8 @@ var MainAppID string
 func Setup(port string) *fiber.App {
 
 	app := fiber.New()
+
+	config.LoadConfig()
 
 	// go runHub()
 	MainAppID = uuid.NewString()
@@ -230,6 +235,10 @@ func Setup(port string) *fiber.App {
 	worker.LoadWorkers(MainAppID)
 	worker.UpdateTasks(MainAppID)
 	log.Println("👷 Queue and worker subscriptions")
+
+	/* --- Run the scheduler ---- */
+	s := gocron.NewScheduler(time.UTC)
+	routinetasks.CleanTasks(s)
 
 	stop := time.Now()
 	// Do something with response
