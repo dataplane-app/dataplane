@@ -198,7 +198,7 @@ const PipelineTable = ({ data, filter, setPipelineCount }) => {
 
                                         <Grid item sx={{ flex: 1 }} display="flex" alignItems="center" justifyContent="center">
                                             <MoreInfoMenu>
-                                                <PipelineItemTable id={row.original.id} handleOpenYaml={() => setIsOpenYAML(!isOpenYAML)} />
+                                                <PipelineItemTable id={row.original.pipelineID} handleOpenYaml={() => setIsOpenYAML(!isOpenYAML)} />
                                             </MoreInfoMenu>
                                         </Grid>
                                     </Grid>

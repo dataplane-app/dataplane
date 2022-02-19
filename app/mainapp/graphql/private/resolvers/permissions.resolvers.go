@@ -5,11 +5,12 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"errors"
+	"log"
 	"os"
 
 	"gorm.io/gorm"
@@ -60,6 +61,124 @@ func (r *mutationResolver) UpdatePermissionToUser(ctx context.Context, environme
 	}
 
 	return perm.ID, nil
+}
+
+func (r *mutationResolver) PipelinePermissionsToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string, checked string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: resourceID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	if checked == "no" {
+		err := database.DBConn.Where("subject_id = ? and resource = ? and resource_id = ? and access = ? and environment_id = ?",
+			userID, resource, resourceID, access, environmentID).Delete(&models.Permissions{})
+
+		// Fix below!!!
+		log.Println(err)
+		// if err != nil {
+		// 	if os.Getenv("debug") == "true" {
+		// 		logging.PrintSecretsRedact(err)
+		// 	}
+		// 	return "", errors.New("Delete pipelines permission to user database error.")
+		// }
+
+		return "Permission deleted.", nil
+	}
+
+	if checked == "yes" {
+
+		perm, err := permissions.CreatePermission(
+			"user",
+			userID,
+			resource,
+			resourceID,
+			access,
+			environmentID,
+			false,
+		)
+
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Add permission to user database error.")
+		}
+
+		return perm.ID, nil
+	}
+
+	return "", errors.New("Check must be yes or no")
+}
+
+func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context, environmentID string, resource string, resourceID string, access string, accessGroupID string, checked string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: resourceID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	if checked == "no" {
+		err := database.DBConn.Where("subject_id = ? and resource = ? and resource_id = ? and access = ?",
+			accessGroupID, resource, resourceID, access).Delete(&models.Permissions{})
+
+		// Fix below!!!
+		log.Println(err)
+		// if err != nil {
+		// 	if os.Getenv("debug") == "true" {
+		// 		logging.PrintSecretsRedact(err)
+		// 	}
+		// 	return "", errors.New("Delete pipelines permission to user database error.")
+		// }
+
+		return "Permission deleted.", nil
+	}
+
+	if checked == "yes" {
+
+		perm, err := permissions.CreatePermission(
+			"access_group",
+			accessGroupID,
+			resource,
+			resourceID,
+			access,
+			environmentID,
+			false,
+		)
+
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Add permission to user database error.")
+		}
+
+		return perm.ID, nil
+	}
+
+	return "", errors.New("Check must be yes or no")
 }
 
 func (r *mutationResolver) DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error) {
