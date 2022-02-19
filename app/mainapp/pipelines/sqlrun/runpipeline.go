@@ -75,8 +75,31 @@ func main() {
 	}
 
 	var course []*models.WorkerTasks
+	var trigger []string
+	var triggerID string
+	var status string
 
 	for _, s := range nodesdata {
+
+		status = "Queue"
+
+		if s.Commands == nil {
+			log.Println("no commands")
+		}
+
+		// Get the first trigger and route
+		log.Println("node type", s.NodeType, s.Destination)
+		if s.NodeType == "playNode" {
+
+			err = json.Unmarshal(s.Destination, &trigger)
+			if err != nil {
+				if config.Debug == "true" {
+					logging.PrintSecretsRedact(err)
+				}
+			}
+			status = "Complete"
+			triggerID = s.NodeID
+		}
 
 		course = append(course, &models.WorkerTasks{
 			TaskID:        uuid.NewString(),
@@ -86,7 +109,7 @@ func main() {
 			WorkerGroup:   s.WorkerGroup,
 			PipelineID:    s.PipelineID,
 			NodeID:        s.NodeID,
-			Status:        "Queue",
+			Status:        status,
 		})
 
 	}
@@ -98,11 +121,19 @@ func main() {
 		}
 	}
 
-	log.Println(" -> ", destinations)
-	log.Println(" -> ", dependencies)
+	// --- Run the first set of tasks
+	log.Println("trigger: ", trigger, triggerID)
+	for _, s := range trigger {
 
-	jsonString, err := json.Marshal(destinations)
-	fmt.Println(string(jsonString), err)
+		log.Println("First:", s)
+
+	}
+
+	// log.Println(" -> ", destinations)
+	// log.Println(" -> ", dependencies)
+
+	// jsonString, err := json.Marshal(destinations)
+	// fmt.Println(string(jsonString), err)
 
 	stop := time.Now()
 	// Do something with response

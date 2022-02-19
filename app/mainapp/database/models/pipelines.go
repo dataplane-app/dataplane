@@ -43,6 +43,7 @@ type PipelineNodes struct {
 	EnvironmentID string         `json:"environment_id"`
 	NodeType      string         `json:"node_type"`
 	Description   string         `json:"description"`
+	Commands      datatypes.JSON `json:"commands"`
 	Meta          datatypes.JSON `json:"meta"`
 	Dependency    datatypes.JSON `json:"dependency"`
 	Destination   datatypes.JSON `json:"destination"`

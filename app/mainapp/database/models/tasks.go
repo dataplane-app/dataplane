@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 func (WorkerTasks) IsEntity() {}
 
