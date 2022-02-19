@@ -220,6 +220,7 @@ const useGetPipelineFlow_ = () => {
         const response = prepareInputForFrontend(rawResponse);
 
         if (response.length === 0) {
+            FlowState.elements.set([]);
             history.push(`/pipelines/flow/${pipelineId}`);
         } else if (response.r === 'error') {
             closeSnackbar();
