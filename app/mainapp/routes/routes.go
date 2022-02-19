@@ -238,7 +238,9 @@ func Setup(port string) *fiber.App {
 
 	/* --- Run the scheduler ---- */
 	s := gocron.NewScheduler(time.UTC)
-	routinetasks.CleanTasks(s)
+	routinetasks.CleanTasks(s, database.DBConn)
+	routinetasks.CleanWorkerLogs(s, database.DBConn)
+	s.StartAsync()
 
 	stop := time.Now()
 	// Do something with response
