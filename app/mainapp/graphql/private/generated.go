@@ -72,7 +72,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		ActivateAccessGroup           func(childComplexity int, accessGroupID string, environmentID string) int
 		AddEnvironment                func(childComplexity int, input *AddEnvironmentInput) int
-		AddPipeline                   func(childComplexity int, name string, environmentID string, description string) int
+		AddPipeline                   func(childComplexity int, name string, environmentID string, description string, workerGroup string) int
 		AddSecretToWorkerGroup        func(childComplexity int, environmentName string, workerGroup string, secret string) int
 		AddUpdatePipelineFlow         func(childComplexity int, input *PipelineFlowInput, environmentID string, pipelineID string) int
 		AddUserToEnvironment          func(childComplexity int, userID string, environmentID string) int
@@ -289,7 +289,7 @@ type MutationResolver interface {
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 	UpdatePermissionToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string) (string, error)
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
-	AddPipeline(ctx context.Context, name string, environmentID string, description string) (string, error)
+	AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error)
 	AddUpdatePipelineFlow(ctx context.Context, input *PipelineFlowInput, environmentID string, pipelineID string) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	CreateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
@@ -486,7 +486,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddPipeline(childComplexity, args["name"].(string), args["environmentID"].(string), args["description"].(string)), true
+		return e.complexity.Mutation.AddPipeline(childComplexity, args["name"].(string), args["environmentID"].(string), args["description"].(string), args["workerGroup"].(string)), true
 
 	case "Mutation.addSecretToWorkerGroup":
 		if e.complexity.Mutation.AddSecretToWorkerGroup == nil {
@@ -2262,7 +2262,7 @@ extend type Mutation {
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment
   """
-  addPipeline(name: String!, environmentID: String!, description: String! ): String!
+  addPipeline(name: String!, environmentID: String!, description: String!, workerGroup: String! ): String!
 
   """
   Update pipeline flow.
@@ -2637,6 +2637,15 @@ func (ec *executionContext) field_Mutation_addPipeline_args(ctx context.Context,
 		}
 	}
 	args["description"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["workerGroup"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workerGroup"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workerGroup"] = arg3
 	return args, nil
 }
 
@@ -5119,7 +5128,7 @@ func (ec *executionContext) _Mutation_addPipeline(ctx context.Context, field gra
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddPipeline(rctx, args["name"].(string), args["environmentID"].(string), args["description"].(string))
+		return ec.resolvers.Mutation().AddPipeline(rctx, args["name"].(string), args["environmentID"].(string), args["description"].(string), args["workerGroup"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

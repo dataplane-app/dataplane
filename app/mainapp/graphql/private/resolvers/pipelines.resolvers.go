@@ -18,7 +18,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environmentID string, description string) (string, error) {
+func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -40,6 +40,7 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 		Name:          name,
 		Description:   description,
 		EnvironmentID: environmentID,
+		WorkerGroup:   workerGroup,
 		Active:        true,
 		Online:        false,
 		UpdateLock:    true,
