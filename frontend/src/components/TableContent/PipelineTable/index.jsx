@@ -127,11 +127,10 @@ const PipelineTable = ({ data, filter, setPipelineCount }) => {
                                 flexDirection="column"
                                 borderRadius="5px"
                                 backgroundColor="background.secondary"
-                                sx={{ border: 1, borderColor: 'divider', padding: 3, cursor: 'pointer', '&:hover': { background: 'background.hoverSecondary' }, mt: 2 }}
-                                onClick={() => history.push({ pathname: `/pipelines/view/${row.original.pipelineID}`, state: row.original })}>
+                                sx={{ border: 1, borderColor: 'divider', padding: 3, cursor: 'pointer', '&:hover': { background: 'background.hoverSecondary' }, mt: 2 }}>
                                 <Box component="td">
                                     <Grid display="flex" alignItems="flex-start" justifyContent="space-between">
-                                        <Grid item>
+                                        <Grid item onClick={() => history.push({ pathname: `/pipelines/view/${row.original.pipelineID}`, state: row.original })}>
                                             <Typography variant="h3" color="cyan.main">
                                                 {row.original.name}
                                             </Typography>
