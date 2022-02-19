@@ -18,18 +18,16 @@ type Pipelines struct {
 	// Version       string         `gorm:"type:varchar(125);index:idx_pipelines,unique;" json:"version"`
 	EnvironmentID string `json:"environment_id"`
 	// YAMLHash      string         `json:"yaml_hash"`
-	Description string `json:"description"`
-	Active      bool   `json:"active"`
-	Online      bool   `json:"online"`
-	Current     string `json:"current"` //current history
-	// Schedule      string         `json:"schedule"`      //rrule, manual
-	// ScheduleType  string         `json:"schedule_type"` //schedule, trigger
-	// FileJSON      datatypes.JSON `json:"file_json"`
-	Meta       datatypes.JSON `json:"meta"`
-	UpdateLock bool           `gorm:"default:false;" json:"name"`
-	CreatedAt  time.Time      `json:"created_at"`
-	UpdatedAt  *time.Time     `json:"updated_at"`
-	DeletedAt  *time.Time     `json:"deleted_at,omitempty"`
+	Description string         `json:"description"`
+	Active      bool           `json:"active"`
+	Online      bool           `json:"online"`
+	Current     string         `json:"current"` //current history
+	WorkerGroup string         `json:"worker_group"`
+	Meta        datatypes.JSON `json:"meta"`
+	UpdateLock  bool           `gorm:"default:false;" json:"name"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   *time.Time     `json:"updated_at"`
+	DeletedAt   *time.Time     `json:"deleted_at,omitempty"`
 }
 
 func (PipelineNodes) IsEntity() {}
@@ -48,6 +46,7 @@ type PipelineNodes struct {
 	Meta          datatypes.JSON `json:"meta"`
 	Dependency    datatypes.JSON `json:"dependency"`
 	Destination   datatypes.JSON `json:"destination"`
+	WorkerGroup   string         `json:"worker_group"` //Inherits Pipeline workergroup unless specified
 	Active        bool           `json:"active"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     *time.Time     `json:"updated_at"`
@@ -71,6 +70,22 @@ type PipelineEdges struct {
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     *time.Time     `json:"updated_at"`
 	DeletedAt     *time.Time     `json:"deleted_at,omitempty"`
+}
+
+func (PipelineRuns) IsEntity() {}
+
+func (PipelineRuns) TableName() string {
+	return "pipeline_runs"
+}
+
+type PipelineRuns struct {
+	RunID         string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"run_id"`
+	PipelineID    string     `gorm:"index:idx_pipelineid_runs;" json:"pipeline_id"`
+	Status        string     `json:"status"`
+	EnvironmentID string     `json:"environment_id"`
+	CreatedAt     time.Time  `json:"created_at"`
+	EndedAt       time.Time  `json:"ended_at"`
+	UpdatedAt     *time.Time `json:"updated_at"`
 }
 
 // func (PipelinesArchive) IsEntity() {}

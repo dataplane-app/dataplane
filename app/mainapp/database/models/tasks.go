@@ -15,6 +15,8 @@ type WorkerTasks struct {
 	RunID         string    `json:"run_id"`
 	WorkerGroup   string    `json:"worker_group"`
 	WorkerID      string    `json:"worker_id"`
+	PipelineID    string    `json:"pipeline_id"`
+	NodeID        string    `json:"node_id"`
 	StartDT       time.Time `json:"start_dt"`
 	EndDT         time.Time `json:"end_dt"`
 	Status        string    `json:"status"`
