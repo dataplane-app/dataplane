@@ -1,38 +1,35 @@
-package main
+package utilities
 
 import (
+	"dataplane/mainapp/config"
+	"dataplane/mainapp/database/models"
+	"dataplane/mainapp/logging"
 	"fmt"
-	"log"
 	"strings"
 )
 
-func main() {
-	// Initialize the graph.
+func GraphCycleCheck(edges []*models.PipelineEdges, node string) bool {
+
 	graph := NewGraph()
 
 	// // Add edges.
-	// graph.AddEdge("A", "B")
-	// graph.AddEdge("B", "C")
-
-	graph.AddEdge("node1", "node2")
-	graph.AddEdge("node1", "node3")
-	graph.AddEdge("node1", "node4")
-	graph.AddEdge("node2", "node5")
-	graph.AddEdge("node3", "node5")
-	graph.AddEdge("node4", "node5")
-	graph.AddEdge("node5", "node6")
-	graph.AddEdge("node6", "node1")
-
-	log.Println(graph)
-
-	// Topologically sort node A.
-	x, err := graph.TopSort("node1")
-	if err != nil {
-		log.Println("Error: ", err)
-	} else {
-		log.Println(x)
+	for _, s := range edges {
+		// log.Println("Edge: ", s.From, " -> ", s.To)
+		graph.AddEdge(s.From, s.To)
 	}
-	// log.Println(graph.TopSort("node1")) // => [C, B, A]
+
+	// log.Println(graph)
+
+	// Topologically sort nodes.
+	_, err := graph.TopSort(node)
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return true
+	}
+
+	return false
 }
 
 type Graph struct {

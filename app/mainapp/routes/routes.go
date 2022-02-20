@@ -8,6 +8,7 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/logme"
 	"dataplane/mainapp/messageq"
+	"dataplane/mainapp/pipelines/sqlrun"
 	"dataplane/mainapp/scheduler/routinetasks"
 	"dataplane/mainapp/worker"
 	"fmt"
@@ -218,6 +219,20 @@ func Setup(port string) *fiber.App {
 
 		taskID := string(c.Query("taskid"))
 		err := worker.WorkerCancelTask(taskID)
+		if err != nil {
+			return c.SendString(err.Error())
+		} else {
+			return c.SendString("Success: " + taskID)
+		}
+
+	})
+
+	app.Post("/runpipeline", func(c *fiber.Ctx) error {
+
+		pipelineID := "b55032a5-c8a1-4e70-93cb-d76b9370b75a"
+
+		taskID := string(c.Query("taskid"))
+		err := sqlrun.RunPipeline(pipelineID)
 		if err != nil {
 			return c.SendString(err.Error())
 		} else {

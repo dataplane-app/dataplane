@@ -6,10 +6,12 @@ package privateresolvers
 import (
 	"context"
 	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
 	"os"
@@ -130,20 +132,10 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 		destinations[p.From] = append(destinations[p.From], p.To)
 		dependencies[p.To] = append(dependencies[p.To], p.From)
 
-	}
+		// if dependencies[p.To] == []{
 
-	if len(edges) > 0 {
-		err = database.DBConn.Create(&edges).Error
-	}
+		// }
 
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		if strings.Contains(err.Error(), "duplicate key") {
-			return "", errors.New("pipeline flow edge already exists")
-		}
-		return "", errors.New("add pipeline flow edge database error")
 	}
 
 	// ----- Delete old nodes
@@ -191,6 +183,45 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			Active:        p.Active,
 		})
 
+	}
+
+	// Record edges and nodes in database
+
+	var startNode string
+
+	if len(edges) > 0 {
+
+		// ---- test for cycle -----
+		// Obtain the first node in the graph
+		for _, p := range input.NodesInput {
+
+			if _, ok := dependencies[p.NodeID]; ok {
+				//do something here
+			} else {
+				startNode = p.NodeID
+				break
+			}
+		}
+
+		cycle := utilities.GraphCycleCheck(edges, startNode)
+		if cycle == true {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact("Cycle detected. Only acyclical pipelines allowed.")
+			}
+			return "", errors.New("Cycle detected. Only acyclical pipelines allowed.")
+		}
+
+		err = database.DBConn.Create(&edges).Error
+	}
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		if strings.Contains(err.Error(), "duplicate key") {
+			return "", errors.New("pipeline flow edge already exists")
+		}
+		return "", errors.New("add pipeline flow edge database error")
 	}
 
 	if len(nodes) > 0 {
