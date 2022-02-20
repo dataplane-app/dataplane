@@ -1,6 +1,6 @@
 import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory, useLocation, useParams } from 'react-router-dom';
 import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../components/CustomChip';
 import AddPipelinesPermissionDrawer from '../components/DrawerContent/AddPipelinesPermissionDrawer';
@@ -13,6 +13,7 @@ import { useGlobalMeState } from '../components/Navbar';
 const PipelinesPermission = () => {
     // React router
     const history = useHistory();
+    const { state: name } = useLocation();
 
     // Ref for scroll to top
     const scrollRef = useRef(null);
@@ -76,13 +77,13 @@ const PipelinesPermission = () => {
     return (
         <Box className="page" ref={scrollRef}>
             <Typography component="h2" variant="h2" color="text.primary">
-                Pipeline permissions {'>'} Remove Logs
+                Pipeline permissions {'>'} {name}
             </Typography>
 
             <Box mt={4} sx={{ width: { md: '630px' } }}>
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
-                        <CustomChip amount={2} label="Permissions" margin={2} customColor="orange" />
+                        <CustomChip amount={permissions.length} label="Permissions" margin={2} customColor="orange" />
                     </Grid>
 
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center', flex: 1 }}>
@@ -150,7 +151,13 @@ const PipelinesPermission = () => {
                 </Box>
             </Box>
 
-            <Drawer anchor="right" open={isOpenAddPermissions} onClose={() => setIsOpenAddPermissions(!isOpenAddPermissions)}>
+            <Drawer
+                anchor="right"
+                open={isOpenAddPermissions}
+                onClose={() => {
+                    setIsOpenAddPermissions(!isOpenAddPermissions);
+                    pipelinePermissions();
+                }}>
                 <AddPipelinesPermissionDrawer
                     typeToAdd={type}
                     handleClose={() => {
@@ -207,7 +214,7 @@ const usePipelinePermissions_ = (environmentID, setPermissions, userID) => {
         const response = await pipelinePermissions({ userID, environmentID, pipelineID: pipelineId });
 
         if (response === null) {
-            return;
+            setPermissions([]);
         } else if (response.r === 'error') {
             closeSnackbar();
             enqueueSnackbar("Can't get permissions: " + response.msg, { variant: 'error' });

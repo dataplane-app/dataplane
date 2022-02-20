@@ -6,7 +6,7 @@ const PipelineItemTable = (props) => {
     const history = useHistory();
 
     //Props
-    const { handleCloseMenu, handleOpenYaml, id } = props;
+    const { handleCloseMenu, handleOpenYaml, id, name } = props;
 
     const yamlClick = () => {
         handleCloseMenu();
@@ -15,7 +15,8 @@ const PipelineItemTable = (props) => {
 
     const permissionClick = () => {
         handleCloseMenu();
-        history.push(`/pipelines/permissions/${id}`);
+        history.push({ pathname: `/pipelines/permissions/${id}`, state: name });
+        // history.push(`/pipelines/permissions/${id}`);
     };
 
     return (
