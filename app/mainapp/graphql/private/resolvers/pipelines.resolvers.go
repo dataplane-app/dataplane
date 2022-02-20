@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -37,8 +37,10 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 		return "", errors.New("Requires permissions.")
 	}
 
+	pipelineID := uuid.New().String()
+
 	e := models.Pipelines{
-		PipelineID:    uuid.New().String(),
+		PipelineID:    pipelineID,
 		Name:          name,
 		Description:   description,
 		EnvironmentID: environmentID,
@@ -58,6 +60,29 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 			return "", errors.New("Pipeline already exists.")
 		}
 		return "", errors.New("Add pipeline database error.")
+	}
+
+	// Give access permissions for the user who added the pipeline
+	AccessTypes := [4]string{"read", "write", "run", "assign_pipeline_permission"}
+
+	for _, access := range AccessTypes {
+		_, err := permissions.CreatePermission(
+			"user",
+			currentUser,
+			"specific_pipeline",
+			pipelineID,
+			access,
+			environmentID,
+			false,
+		)
+
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Add permission to user database error.")
+		}
+
 	}
 
 	rtn := "success"
