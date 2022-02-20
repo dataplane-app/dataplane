@@ -5,6 +5,9 @@ import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../components/CustomChip';
 import AddPipelinesPermissionDrawer from '../components/DrawerContent/AddPipelinesPermissionDrawer';
 import Search from '../components/Search';
+import { useGetUserPermissions } from '../graphql/getUserPermissions';
+import { useSnackbar } from 'notistack';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 const PipelinesPermission = () => {
     // React router
@@ -13,9 +16,18 @@ const PipelinesPermission = () => {
     // Ref for scroll to top
     const scrollRef = useRef(null);
 
+    // Global state
+    const Environment = useGlobalEnvironmentState();
+
+    // Local state
+    const [permissions, setPermissions] = useState([]);
+
     // Drawer state
     const [isOpenAddPermissions, setIsOpenAddPermissions] = useState(false);
     const [type, setType] = useState('User');
+
+    // Custom GraphQL hooks
+    const getUserPermissions = useGetUserPermissions_(Environment.id.get(), setPermissions);
 
     useEffect(() => {
         // Scroll to top on load
@@ -199,3 +211,41 @@ const PIPELINE_MOCK_DATA = [
 ];
 
 export default PipelinesPermission;
+
+// ------ Custom Hook
+const useGetUserPermissions_ = (environmentID, setPermissions) => {
+    // GraphQL hook
+    const getUserPermissions = useGetUserPermissions();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    const accessDictionary = {
+        read: 'view',
+        write: 'edit',
+        run: 'run',
+        assign_pipeline_permission: 'assign_permissions',
+    };
+
+    // Get permissions
+    return async (userID, clearStates) => {
+        const response = await getUserPermissions({ userID, environmentID });
+
+        if (response === null) {
+            clearStates();
+        } else if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get permissions: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get permissions', { variant: 'error' }));
+        } else {
+            const permissions = response.filter((a) => a.Resource === 'specific_pipeline');
+
+            // Create an object and add Access types that are set to true. Pass it to state
+            const incomingPermissions = {};
+            permissions.map((a) => (incomingPermissions[accessDictionary[a.Access]] = true));
+
+            // setIncomingPermissionsState({ ...DEFAULT_OPTIONS, ...incomingPermissions });
+            // setOutgoingPermissionsState({ ...DEFAULT_OPTIONS, ...incomingPermissions });
+        }
+    };
+};

@@ -20,7 +20,7 @@ const View = () => {
     const theme = useTheme();
     const history = useHistory();
     const { state: pipeline } = useLocation();
-    const getPipelineFlow = useGetPipelineFlow_();
+    const getPipelineFlow = useGetPipelineFlow_(pipeline.name);
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -199,7 +199,7 @@ const LOGS_MOCK = {
 export default View;
 
 // ------ Custom hook
-const useGetPipelineFlow_ = () => {
+const useGetPipelineFlow_ = (pipelineName) => {
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
 
@@ -221,7 +221,7 @@ const useGetPipelineFlow_ = () => {
 
         if (response.length === 0) {
             FlowState.elements.set([]);
-            history.push(`/pipelines/flow/${pipelineId}`);
+            history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipelineName });
         } else if (response.r === 'error') {
             closeSnackbar();
             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
