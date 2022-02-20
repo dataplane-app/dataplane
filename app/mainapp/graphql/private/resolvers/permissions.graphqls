@@ -30,6 +30,23 @@ type PermissionsOutput {
     Label: String!
 }
 
+type PipelinePermissionsOutput {
+    ID: String!
+    Subject: String!
+    SubjectID: String!
+    Resource: String!
+    ResourceID: String!
+    Access: String!
+    Active: Boolean!
+    EnvironmentID: String!
+    Level: String!
+    Label: String!
+    FirstName: String!
+    LastName: String!
+    Email: String!
+    JobTitle: String!
+}
+
 extend type Query {
     """
     Retrieve available permissions.
@@ -49,6 +66,13 @@ extend type Query {
     + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
     """
     userPermissions(userID: String!, environmentID: String!): [PermissionsOutput]
+
+    """
+    Retrieve pipeline's permissions.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
+    """
+    pipelinePermissions(userID: String!, environmentID: String!, pipelineID: String!): [PipelinePermissionsOutput]
 
 }
 

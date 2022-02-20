@@ -98,6 +98,23 @@ type PipelineNodesMetaInput struct {
 	Data     *DataInput     `json:"data"`
 }
 
+type PipelinePermissionsOutput struct {
+	ID            string `json:"ID"`
+	Subject       string `json:"Subject"`
+	SubjectID     string `json:"SubjectID"`
+	Resource      string `json:"Resource"`
+	ResourceID    string `json:"ResourceID"`
+	Access        string `json:"Access"`
+	Active        bool   `json:"Active"`
+	EnvironmentID string `json:"EnvironmentID"`
+	Level         string `json:"Level"`
+	Label         string `json:"Label"`
+	FirstName     string `json:"FirstName"`
+	LastName      string `json:"LastName"`
+	Email         string `json:"Email"`
+	JobTitle      string `json:"JobTitle"`
+}
+
 type Platform struct {
 	ID           string `json:"id"`
 	BusinessName string `json:"business_name"`

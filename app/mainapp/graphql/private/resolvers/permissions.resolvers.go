@@ -5,9 +5,10 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"errors"
 	"log"
@@ -385,6 +386,93 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		//direct
 		userID,
 		userID,
+	).Scan(
+		&PermissionsOutput,
+	).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Error retrieving permissions")
+	}
+
+	return PermissionsOutput, nil
+}
+
+func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string) ([]*privategraphql.PipelinePermissionsOutput, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	var PermissionsOutput []*privategraphql.PipelinePermissionsOutput
+
+	err := database.DBConn.Raw(
+		`
+	(select 
+		p.id,
+		p.access,
+		p.subject,
+		p.subject_id,
+		p.resource,
+		p.resource_id,
+		p.environment_id,
+		p.active,
+		pt.level,
+		pt.label,
+    	users.first_name,
+    	users.last_name,
+    	users.email,
+		users.job_title
+		from 
+		permissions p, permissions_resource_types pt, users
+		where 
+		p.resource = pt.code and
+		p.subject = 'user' and 
+		p.resource_id = ? and
+    	p.subject_id = users.user_id and
+		p.active = true	
+		)
+		union
+		(
+	select
+		p.id,
+		p.access,
+		p.subject,
+		p.subject_id,
+		p.resource,
+		p.resource_id,
+		p.environment_id,
+		p.active,
+		pt.level,
+		pt.label,
+		pag.name,
+    	'',
+    	'',
+		''
+		from 
+		permissions p, permissions_resource_types pt, permissions_access_groups pag
+		where 
+		p.resource = pt.code and
+    	pag.access_group_id = p.subject_id and
+		p.subject = 'access_group' and 
+		p.resource_id = ? and
+		p.active = true		
+		)
+`,
+		//direct
+		pipelineID,
+		pipelineID,
 	).Scan(
 		&PermissionsOutput,
 	).Error
