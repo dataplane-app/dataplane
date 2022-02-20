@@ -70,43 +70,41 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		ActivateAccessGroup              func(childComplexity int, accessGroupID string, environmentID string) int
-		AddEnvironment                   func(childComplexity int, input *AddEnvironmentInput) int
-		AddPipeline                      func(childComplexity int, name string, environmentID string, description string) int
-		AddSecretToWorkerGroup           func(childComplexity int, environmentName string, workerGroup string, secret string) int
-		AddUpdatePipelineFlow            func(childComplexity int, input *PipelineFlowInput, environmentID string, pipelineID string) int
-		AddUserToEnvironment             func(childComplexity int, userID string, environmentID string) int
-		CreateAccessGroup                func(childComplexity int, environmentID string, name string, description *string) int
-		CreateSecret                     func(childComplexity int, input *AddSecretsInput) int
-		CreateUser                       func(childComplexity int, input *AddUsersInput) int
-		DeactivateAccessGroup            func(childComplexity int, accessGroupID string, environmentID string) int
-		DeleteAccessGroup                func(childComplexity int, accessGroupID string, environmentID string) int
-		DeletePermissionToUser           func(childComplexity int, userID string, permissionID string, environmentID string) int
-		DeleteSecretFromWorkerGroup      func(childComplexity int, environmentName string, workerGroup string, secret string) int
-		PipelinePermissionsToAccessGroup func(childComplexity int, environmentID string, resource string, resourceID string, access string, accessGroupID string, checked string) int
-		PipelinePermissionsToUser        func(childComplexity int, environmentID string, resource string, resourceID string, access string, userID string, checked string) int
-		RemoveUserFromAccessGroup        func(childComplexity int, userID string, accessGroupID string, environmentID string) int
-		RemoveUserFromEnvironment        func(childComplexity int, userID string, environmentID string) int
-		UpdateAccessGroup                func(childComplexity int, input *AccessGroupsInput) int
-		UpdateActivateEnvironment        func(childComplexity int, environmentID string) int
-		UpdateActivateUser               func(childComplexity int, userid string) int
-		UpdateChangeMyPassword           func(childComplexity int, password string) int
-		UpdateChangePassword             func(childComplexity int, input *ChangePasswordInput) int
-		UpdateDeactivateEnvironment      func(childComplexity int, environmentID string) int
-		UpdateDeactivateUser             func(childComplexity int, userid string) int
-		UpdateDeleteEnvironment          func(childComplexity int, environmentID string) int
-		UpdateDeleteSecret               func(childComplexity int, secret string, environmentID string) int
-		UpdateDeleteUser                 func(childComplexity int, userid string) int
-		UpdateEnvironment                func(childComplexity int, input *UpdateEnvironment) int
-		UpdateMe                         func(childComplexity int, input *AddUpdateMeInput) int
-		UpdatePermissionToAccessGroup    func(childComplexity int, environmentID string, resource string, resourceID string, access string, accessGroupID string) int
-		UpdatePermissionToUser           func(childComplexity int, environmentID string, resource string, resourceID string, access string, userID string) int
-		UpdatePlatform                   func(childComplexity int, input *UpdatePlatformInput) int
-		UpdatePreferences                func(childComplexity int, input *AddPreferencesInput) int
-		UpdateSecret                     func(childComplexity int, input *UpdateSecretsInput) int
-		UpdateSecretValue                func(childComplexity int, secret string, value string, environmentID string) int
-		UpdateUser                       func(childComplexity int, input *UpdateUsersInput) int
-		UpdateUserToAccessGroup          func(childComplexity int, environmentID string, userID string, accessGroupID string) int
+		ActivateAccessGroup           func(childComplexity int, accessGroupID string, environmentID string) int
+		AddEnvironment                func(childComplexity int, input *AddEnvironmentInput) int
+		AddPipeline                   func(childComplexity int, name string, environmentID string, description string, workerGroup string) int
+		AddSecretToWorkerGroup        func(childComplexity int, environmentName string, workerGroup string, secret string) int
+		AddUpdatePipelineFlow         func(childComplexity int, input *PipelineFlowInput, environmentID string, pipelineID string) int
+		AddUserToEnvironment          func(childComplexity int, userID string, environmentID string) int
+		CreateAccessGroup             func(childComplexity int, environmentID string, name string, description *string) int
+		CreateSecret                  func(childComplexity int, input *AddSecretsInput) int
+		CreateUser                    func(childComplexity int, input *AddUsersInput) int
+		DeactivateAccessGroup         func(childComplexity int, accessGroupID string, environmentID string) int
+		DeleteAccessGroup             func(childComplexity int, accessGroupID string, environmentID string) int
+		DeletePermissionToUser        func(childComplexity int, userID string, permissionID string, environmentID string) int
+		DeleteSecretFromWorkerGroup   func(childComplexity int, environmentName string, workerGroup string, secret string) int
+		RemoveUserFromAccessGroup     func(childComplexity int, userID string, accessGroupID string, environmentID string) int
+		RemoveUserFromEnvironment     func(childComplexity int, userID string, environmentID string) int
+		UpdateAccessGroup             func(childComplexity int, input *AccessGroupsInput) int
+		UpdateActivateEnvironment     func(childComplexity int, environmentID string) int
+		UpdateActivateUser            func(childComplexity int, userid string) int
+		UpdateChangeMyPassword        func(childComplexity int, password string) int
+		UpdateChangePassword          func(childComplexity int, input *ChangePasswordInput) int
+		UpdateDeactivateEnvironment   func(childComplexity int, environmentID string) int
+		UpdateDeactivateUser          func(childComplexity int, userid string) int
+		UpdateDeleteEnvironment       func(childComplexity int, environmentID string) int
+		UpdateDeleteSecret            func(childComplexity int, secret string, environmentID string) int
+		UpdateDeleteUser              func(childComplexity int, userid string) int
+		UpdateEnvironment             func(childComplexity int, input *UpdateEnvironment) int
+		UpdateMe                      func(childComplexity int, input *AddUpdateMeInput) int
+		UpdatePermissionToAccessGroup func(childComplexity int, environmentID string, resource string, resourceID string, access string, accessGroupID string) int
+		UpdatePermissionToUser        func(childComplexity int, environmentID string, resource string, resourceID string, access string, userID string) int
+		UpdatePlatform                func(childComplexity int, input *UpdatePlatformInput) int
+		UpdatePreferences             func(childComplexity int, input *AddPreferencesInput) int
+		UpdateSecret                  func(childComplexity int, input *UpdateSecretsInput) int
+		UpdateSecretValue             func(childComplexity int, secret string, value string, environmentID string) int
+		UpdateUser                    func(childComplexity int, input *UpdateUsersInput) int
+		UpdateUserToAccessGroup       func(childComplexity int, environmentID string, userID string, accessGroupID string) int
 	}
 
 	Permissions struct {
@@ -293,7 +291,7 @@ type MutationResolver interface {
 	PipelinePermissionsToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string, checked string) (string, error)
 	PipelinePermissionsToAccessGroup(ctx context.Context, environmentID string, resource string, resourceID string, access string, accessGroupID string, checked string) (string, error)
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
-	AddPipeline(ctx context.Context, name string, environmentID string, description string) (string, error)
+	AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error)
 	AddUpdatePipelineFlow(ctx context.Context, input *PipelineFlowInput, environmentID string, pipelineID string) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	CreateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
@@ -490,7 +488,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddPipeline(childComplexity, args["name"].(string), args["environmentID"].(string), args["description"].(string)), true
+		return e.complexity.Mutation.AddPipeline(childComplexity, args["name"].(string), args["environmentID"].(string), args["description"].(string), args["workerGroup"].(string)), true
 
 	case "Mutation.addSecretToWorkerGroup":
 		if e.complexity.Mutation.AddSecretToWorkerGroup == nil {
@@ -2304,7 +2302,7 @@ extend type Mutation {
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment
   """
-  addPipeline(name: String!, environmentID: String!, description: String! ): String!
+  addPipeline(name: String!, environmentID: String!, description: String!, workerGroup: String! ): String!
 
   """
   Update pipeline flow.
@@ -2679,6 +2677,15 @@ func (ec *executionContext) field_Mutation_addPipeline_args(ctx context.Context,
 		}
 	}
 	args["description"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["workerGroup"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workerGroup"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workerGroup"] = arg3
 	return args, nil
 }
 
@@ -5365,7 +5372,7 @@ func (ec *executionContext) _Mutation_addPipeline(ctx context.Context, field gra
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddPipeline(rctx, args["name"].(string), args["environmentID"].(string), args["description"].(string))
+		return ec.resolvers.Mutation().AddPipeline(rctx, args["name"].(string), args["environmentID"].(string), args["description"].(string), args["workerGroup"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

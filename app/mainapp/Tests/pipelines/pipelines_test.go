@@ -76,7 +76,8 @@ func TestPipelines(t *testing.T) {
 		addPipeline(
 			name: "test_` + pipelineId + `",
 			environmentID: "` + envID + `",
-			description: "Test"
+			description: "Test",
+			workerGroup: "python_1"
 			)
 		}`
 

@@ -104,7 +104,7 @@ extend type Mutation {
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment
   """
-  addPipeline(name: String!, environmentID: String!, description: String! ): String!
+  addPipeline(name: String!, environmentID: String!, description: String!, workerGroup: String! ): String!
 
   """
   Update pipeline flow.

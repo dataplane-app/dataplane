@@ -64,6 +64,7 @@ func Migrate() {
 		&models.Pipelines{},
 		&models.PipelineNodes{},
 		&models.PipelineEdges{},
+		&models.PipelineRuns{},
 		&models.ResourceTypeStruct{},
 		&models.Secrets{},
 		&models.WorkerGroups{},
