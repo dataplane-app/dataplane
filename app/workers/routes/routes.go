@@ -23,6 +23,8 @@ func Setup(port string) *fiber.App {
 
 	app := fiber.New()
 
+	config.LoadConfig()
+
 	// ------- LOAD secrets ------
 	secrets.MapSecrets()
 

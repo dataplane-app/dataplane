@@ -1,4 +1,4 @@
-package sqlrun
+package pipelines
 
 import (
 	"dataplane/mainapp/config"
@@ -102,6 +102,16 @@ func RunPipeline(pipelineID string) error {
 			triggerID = s.NodeID
 		}
 
+		dependJSON, err := json.Marshal(dependencies[s.NodeID])
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
+		destinationJSON, err := json.Marshal(destinations[s.NodeID])
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
 		addTask := &models.WorkerTasks{
 			TaskID:        uuid.NewString(),
 			CreatedAt:     time.Now().UTC(),
@@ -111,6 +121,8 @@ func RunPipeline(pipelineID string) error {
 			PipelineID:    s.PipelineID,
 			NodeID:        s.NodeID,
 			Status:        status,
+			Dependency:    dependJSON,
+			Destination:   destinationJSON,
 		}
 
 		triggerData[s.NodeID] = addTask
@@ -132,7 +144,7 @@ func RunPipeline(pipelineID string) error {
 	for _, s := range trigger {
 
 		log.Println("First:", s)
-		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, []string{"echo " + s})
+		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s})
 		if err != nil {
 			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)

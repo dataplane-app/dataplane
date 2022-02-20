@@ -8,7 +8,7 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/logme"
 	"dataplane/mainapp/messageq"
-	"dataplane/mainapp/pipelines/sqlrun"
+	"dataplane/mainapp/pipelines"
 	"dataplane/mainapp/scheduler/routinetasks"
 	"dataplane/mainapp/worker"
 	"fmt"
@@ -58,6 +58,7 @@ func Setup(port string) *fiber.App {
 
 	// ------- RUN MIGRATIONS ------
 	database.Migrate()
+
 	logme.PlatformLogger(models.LogsPlatform{
 		EnvironmentID: "d_platform",
 		Category:      "platform",
@@ -190,7 +191,7 @@ func Setup(port string) *fiber.App {
 		database.DBConn.First(&e, "name = ?", "Development")
 
 		taskID := uuid.NewString()
-		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), e.ID, []string{`for((i=1;i<=10; i+=1)); do echo "1st run $i times"; sleep 0.5; done`, `for((i=1;i<=10; i+=1)); do echo "2nd run $i times"; sleep 0.5; done`})
+		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), e.ID, "", "", []string{`for((i=1;i<=10; i+=1)); do echo "1st run $i times"; sleep 0.5; done`, `for((i=1;i<=10; i+=1)); do echo "2nd run $i times"; sleep 0.5; done`})
 		if err != nil {
 			return c.SendString(err.Error())
 		} else {
@@ -206,7 +207,7 @@ func Setup(port string) *fiber.App {
 
 		taskID := uuid.NewString()
 		cmd := string(c.Query("command"))
-		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), e.ID, []string{cmd})
+		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), e.ID, "", "", []string{cmd})
 		if err != nil {
 			return c.SendString(err.Error())
 		} else {
@@ -232,7 +233,7 @@ func Setup(port string) *fiber.App {
 		pipelineID := "b55032a5-c8a1-4e70-93cb-d76b9370b75a"
 
 		taskID := string(c.Query("taskid"))
-		err := sqlrun.RunPipeline(pipelineID)
+		err := pipelines.RunPipeline(pipelineID)
 		if err != nil {
 			return c.SendString(err.Error())
 		} else {

@@ -21,11 +21,11 @@ func GoDBConnect() {
 	GoDBQueue, _ = buntdb.Open(":memory:")
 	GoDBQueue.CreateIndex("environment", "*", buntdb.IndexJSON("Env"))
 
-	GoDBNodes, _ = buntdb.Open(":memory:")
-	GoDBNodes.CreateIndex("env_pipeline", "*", buntdb.IndexJSON("Env"), buntdb.IndexJSON("Pipeline"))
+	// GoDBNodes, _ = buntdb.Open(":memory:")
+	// GoDBNodes.CreateIndex("env_pipeline", "*", buntdb.IndexJSON("Env"), buntdb.IndexJSON("Pipeline"))
 
-	GoDBEdges, _ = buntdb.Open(":memory:")
-	GoDBEdges.CreateIndex("from_to", "*", buntdb.IndexJSON("From"), buntdb.IndexJSON("To"))
-	GoDBEdges.CreateIndex("env_pipeline", "*", buntdb.IndexJSON("Env"), buntdb.IndexJSON("Pipeline"))
+	// GoDBEdges, _ = buntdb.Open(":memory:")
+	// GoDBEdges.CreateIndex("from_to", "*", buntdb.IndexJSON("From"), buntdb.IndexJSON("To"))
+	// GoDBEdges.CreateIndex("env_pipeline", "*", buntdb.IndexJSON("Env"), buntdb.IndexJSON("Pipeline"))
 
 }
