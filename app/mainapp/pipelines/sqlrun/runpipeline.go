@@ -1,10 +1,11 @@
-package main
+package sqlrun
 
 import (
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/worker"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -13,16 +14,14 @@ import (
 	"github.com/google/uuid"
 )
 
-func main() {
-
-	database.DBConnect()
+func RunPipeline(pipelineID string) error {
 
 	start := time.Now().UTC()
 
 	var destinations = make(map[string][]string)
 	var dependencies = make(map[string][]string)
+	var triggerData = make(map[string]*models.WorkerTasks)
 
-	pipelineID := "b55032a5-c8a1-4e70-93cb-d76b9370b75a"
 	environmentID := "Testing"
 
 	// Create a run
@@ -36,9 +35,11 @@ func main() {
 
 	err := database.DBConn.Create(&run).Error
 	if err != nil {
+
 		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
+		return err
 	}
 
 	// Chart a course
@@ -58,7 +59,7 @@ func main() {
 	}()
 
 	// Start at trigger
-	RunID := uuid.NewString()
+	RunID := run.RunID
 
 	log.Println("Run ID:", RunID)
 
@@ -97,11 +98,11 @@ func main() {
 					logging.PrintSecretsRedact(err)
 				}
 			}
-			status = "Complete"
+			status = "Success"
 			triggerID = s.NodeID
 		}
 
-		course = append(course, &models.WorkerTasks{
+		addTask := &models.WorkerTasks{
 			TaskID:        uuid.NewString(),
 			CreatedAt:     time.Now().UTC(),
 			EnvironmentID: environmentID,
@@ -110,7 +111,11 @@ func main() {
 			PipelineID:    s.PipelineID,
 			NodeID:        s.NodeID,
 			Status:        status,
-		})
+		}
+
+		triggerData[s.NodeID] = addTask
+
+		course = append(course, addTask)
 
 	}
 
@@ -119,6 +124,7 @@ func main() {
 		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
+		return err
 	}
 
 	// --- Run the first set of tasks
@@ -126,6 +132,17 @@ func main() {
 	for _, s := range trigger {
 
 		log.Println("First:", s)
+		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, []string{"echo " + s})
+		if err != nil {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return err
+		} else {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(triggerData[s].TaskID)
+			}
+		}
 
 	}
 
@@ -138,5 +155,7 @@ func main() {
 	stop := time.Now()
 	// Do something with response
 	log.Println("🐆 Run time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
+
+	return nil
 
 }
