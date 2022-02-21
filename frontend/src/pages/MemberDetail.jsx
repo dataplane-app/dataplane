@@ -9,6 +9,7 @@ import { useUpdateMe } from '../graphql/updateMe';
 import { useGetUserPermissions } from '../graphql/getUserPermissions';
 import { useGetUserEnvironments } from '../graphql/getUserEnvironments';
 import { useGetUserAccessGroups } from '../graphql/getUserAccessGroups';
+import { useGetMyPipelinePermissions } from '../graphql/getMyPipelinePermissions';
 import { EnvironmentContext } from '../App';
 import ct from 'countries-and-timezones';
 import { useForm } from 'react-hook-form';
@@ -29,6 +30,7 @@ const MemberDetail = () => {
     const [isActive, setIsActive] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [userPermissions, setUserPermissions] = useState([]);
+    const [userSpecificPermissions, setUserSpecificPermissions] = useState([]);
     const [userEnvironments, setUserEnvironments] = useState([]);
     const [accessGroups, setAccessGroups] = useState([]);
 
@@ -41,6 +43,7 @@ const MemberDetail = () => {
     const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
     const getUserEnvironments = useGetUserEnvironments_(setUserEnvironments, user.user_id, globalEnvironment?.id);
     const getAccessGroups = useGetUserAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
+    const getMyPipelinePermissions = useGetMyPipelinePermissions_(setUserSpecificPermissions);
 
     // Get me data on load
     useEffect(() => {
@@ -51,11 +54,11 @@ const MemberDetail = () => {
 
     // Data to be retrieved after the user data is retrieved
     useEffect(() => {
-        getUserPermissions();
-        getUserEnvironments();
-
         if (globalEnvironment?.id && user.user_id) {
             getAccessGroups();
+            getUserPermissions();
+            getUserEnvironments();
+            getMyPipelinePermissions();
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -146,6 +149,8 @@ const MemberDetail = () => {
                                     Platform permissions
                                 </Typography>
                             </Box>
+
+                            {/* Platform permissions */}
                             <Box mt={2}>
                                 {userPermissions
                                     ?.filter((permission) => permission.Level === 'platform')
@@ -157,7 +162,9 @@ const MemberDetail = () => {
                                         </Grid>
                                     ))}
                             </Box>
-                            {userPermissions.filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === globalEnvironment.id).length ? (
+
+                            {/* Environment permissions */}
+                            {userPermissions.filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === globalEnvironment.id).length ? (
                                 <Box mt="2.31rem">
                                     <Typography component="h3" variant="h3" color="text.primary">
                                         Environment permissions
@@ -173,6 +180,27 @@ const MemberDetail = () => {
                                                 <Grid display="flex" alignItems="center" key={permission.ID} mt={1.5} mb={1.5}>
                                                     <Typography variant="subtitle2" lineHeight="15.23px">
                                                         {permission.Label}
+                                                    </Typography>
+                                                </Grid>
+                                            ))}
+                                    </Box>
+                                </Box>
+                            ) : null}
+
+                            {/* Specific permissions */}
+                            {userSpecificPermissions.length ? (
+                                <Box mt="2.31rem">
+                                    <Typography component="h3" variant="h3" color="text.primary">
+                                        Specific permissions
+                                    </Typography>
+
+                                    <Box mt={2}>
+                                        {userSpecificPermissions
+                                            ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
+                                            .map((permission) => (
+                                                <Grid display="flex" alignItems="center" key={permission.ID} mt={1.5} mb={1.5}>
+                                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                                        Pipeline {permission.PipelineName + ' ' + permission.Access}
                                                     </Typography>
                                                 </Grid>
                                             ))}
@@ -349,6 +377,29 @@ const useGetUserPermissions_ = (setUserPermissions, userID, environmentID) => {
             } else {
                 setUserPermissions(response);
             }
+        }
+    };
+};
+
+const useGetMyPipelinePermissions_ = (setUserSpecificPermissions) => {
+    // GraphQL hook
+    const getMyPipelinePermissions = useGetMyPipelinePermissions();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get specific permissions
+    return async () => {
+        const response = await getMyPipelinePermissions();
+
+        if (response === null) {
+            setUserSpecificPermissions([]);
+        } else if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get specific permissions: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': gets specific permissions', { variant: 'error' }));
+        } else {
+            setUserSpecificPermissions(response);
         }
     };
 };
