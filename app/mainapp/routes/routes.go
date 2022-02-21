@@ -250,6 +250,7 @@ func Setup(port string) *fiber.App {
 	/* Worker Load Subscriptions activate */
 	worker.LoadWorkers(MainAppID)
 	worker.UpdateTasks(MainAppID)
+	pipelines.RunNextPipeline()
 	log.Println("👷 Queue and worker subscriptions")
 
 	/* --- Run the scheduler ---- */

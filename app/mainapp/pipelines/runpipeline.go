@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -61,7 +62,7 @@ func RunPipeline(pipelineID string) error {
 	// Start at trigger
 	RunID := run.RunID
 
-	log.Println("Run ID:", RunID)
+	// log.Println("Run ID:", RunID)
 
 	// Return go routines
 	nodesdata = <-nodes
@@ -85,11 +86,11 @@ func RunPipeline(pipelineID string) error {
 		status = "Queue"
 
 		if s.Commands == nil {
-			log.Println("no commands")
+			// log.Println("no commands")
 		}
 
 		// Get the first trigger and route
-		log.Println("node type", s.NodeType, s.Destination)
+		// log.Println("node type", s.NodeType, s.Destination)
 		if s.NodeType == "playNode" {
 
 			err = json.Unmarshal(s.Destination, &trigger)
@@ -140,11 +141,18 @@ func RunPipeline(pipelineID string) error {
 	}
 
 	// --- Run the first set of tasks
-	log.Println("trigger: ", trigger, triggerID)
+	if config.Debug == "true" {
+		log.Println("trigger: ", trigger, triggerID)
+	}
+
+	x := 0
 	for _, s := range trigger {
 
+		x = x + 3
+
 		log.Println("First:", s)
-		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s})
+		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
+		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s})
 		if err != nil {
 			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)

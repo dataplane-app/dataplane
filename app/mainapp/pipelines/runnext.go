@@ -2,9 +2,12 @@ package pipelines
 
 import (
 	"dataplane/mainapp/config"
+	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
+	"encoding/json"
+	"fmt"
 	"log"
 )
 
@@ -12,10 +15,78 @@ func RunNextPipeline() {
 
 	_, err := messageq.NATSencoded.QueueSubscribe("pipeline-run-next", "runnext", func(subj, reply string, msg models.WorkerTaskSend) {
 
-		log.Println(msg)
+		currentNode := models.WorkerTasks{}
+
+		// Get the current node
+		err := database.DBConn.Select("node_id", "destination", "dependency", "status").Where("node_id =? and pipeline_id =? and run_id=?", msg.NodeID, msg.PipelineID, msg.RunID).First(&currentNode).Error
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
+		log.Println("Current node:", msg.NodeID, currentNode.Status)
+		// fmt.Printf("%+v\n", currentNode)
+
 		// Retrieve all destinations
+		var destinations []string
+		var uniquedependencies = make(map[string]bool)
+		var uniquedependenciesarray []string
+		destinationNodes := []*models.WorkerTasks{}
+		dependencyCheck := []*models.WorkerTasks{}
+
+		json.Unmarshal(currentNode.Destination, &destinations)
+		// log.Println(currentNode.Destination, destinations)
+		err = database.DBConn.Where("node_id in (?) and pipeline_id =? and run_id=?", destinations, msg.PipelineID, msg.RunID).Find(&destinationNodes).Error
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
+		for _, s := range destinationNodes {
+
+			// log.Println("Dependencies:", s.Dependency)
+			var dependencies []string
+			json.Unmarshal(s.Dependency, &dependencies)
+			for _, v := range dependencies {
+
+				uniquedependencies[v] = true
+			}
+
+			for k, _ := range uniquedependencies {
+				uniquedependenciesarray = append(uniquedependenciesarray, k)
+			}
+
+			log.Println("Node: ", s.NodeID, " - Dependencies to check:", uniquedependencies, uniquedependenciesarray)
+
+			/*
+				Check that destination isnt already running -
+				say you have 3 dependencies but 1 destination
+				this can trigger it 3 times if dependencies marked as success faster than reaching this point
+				each run needs to ensure that the destination isnt already running - must be queue status to run
+			*/
+
+			err = database.DBConn.Select("node_id", "status").Where("node_id in (?) and pipeline_id =? and run_id=? and status<>?", uniquedependenciesarray, msg.PipelineID, msg.RunID, "Success").Find(&dependencyCheck).Error
+			if err != nil {
+				logging.PrintSecretsRedact(err)
+			}
+
+			// if err == gorm.ErrRecordNotFound {
+			// 	log.Println("Dependencies check:", err)
+			// }
+
+			if len(dependencyCheck) == 0 {
+				log.Println("No dependencies")
+
+				// ------ run the destination -------
+			} else {
+				fmt.Printf("Dependencies: %+v\n", dependencyCheck)
+			}
+
+			// fmt.Printf("%+v\n", dependencyCheck)
+
+		}
 
 		// Retrieve all dependencies
+		// var dependencies []string
+		// json.Unmarshal(currentNode.Dependency, &dependencies)
 
 	})
 
@@ -25,147 +96,5 @@ func RunNextPipeline() {
 		}
 
 	}
-
-	// start := time.Now().UTC()
-
-	// var destinations = make(map[string][]string)
-	// var dependencies = make(map[string][]string)
-	// var triggerData = make(map[string]*models.WorkerTasks)
-
-	// environmentID := "Testing"
-
-	// // Create a run
-	// run := models.PipelineRuns{
-	// 	RunID:         uuid.NewString(),
-	// 	PipelineID:    pipelineID,
-	// 	Status:        "Running",
-	// 	EnvironmentID: environmentID,
-	// 	CreatedAt:     time.Now().UTC(),
-	// }
-
-	// err := database.DBConn.Create(&run).Error
-	// if err != nil {
-
-	// 	if config.Debug == "true" {
-	// 		logging.PrintSecretsRedact(err)
-	// 	}
-	// 	return err
-	// }
-
-	// // Chart a course
-	// nodes := make(chan []*models.PipelineNodes)
-	// nodesdata := []*models.PipelineNodes{}
-
-	// go func() {
-	// 	database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&nodesdata)
-	// 	nodes <- nodesdata
-	// }()
-
-	// edges := make(chan []*models.PipelineEdges)
-	// edgesdata := []*models.PipelineEdges{}
-	// go func() {
-	// 	database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&edgesdata)
-	// 	edges <- edgesdata
-	// }()
-
-	// // Start at trigger
-	// RunID := run.RunID
-
-	// log.Println("Run ID:", RunID)
-
-	// // Return go routines
-	// nodesdata = <-nodes
-	// edgesdata = <-edges
-
-	// // Map children
-	// for _, s := range edgesdata {
-
-	// 	destinations[s.From] = append(destinations[s.From], s.To)
-	// 	dependencies[s.To] = append(dependencies[s.To], s.From)
-
-	// }
-
-	// var course []*models.WorkerTasks
-	// var trigger []string
-	// var triggerID string
-	// var status string
-
-	// for _, s := range nodesdata {
-
-	// 	status = "Queue"
-
-	// 	if s.Commands == nil {
-	// 		log.Println("no commands")
-	// 	}
-
-	// 	// Get the first trigger and route
-	// 	log.Println("node type", s.NodeType, s.Destination)
-	// 	if s.NodeType == "playNode" {
-
-	// 		err = json.Unmarshal(s.Destination, &trigger)
-	// 		if err != nil {
-	// 			if config.Debug == "true" {
-	// 				logging.PrintSecretsRedact(err)
-	// 			}
-	// 		}
-	// 		status = "Success"
-	// 		triggerID = s.NodeID
-	// 	}
-
-	// 	addTask := &models.WorkerTasks{
-	// 		TaskID:        uuid.NewString(),
-	// 		CreatedAt:     time.Now().UTC(),
-	// 		EnvironmentID: environmentID,
-	// 		RunID:         RunID,
-	// 		WorkerGroup:   s.WorkerGroup,
-	// 		PipelineID:    s.PipelineID,
-	// 		NodeID:        s.NodeID,
-	// 		Status:        status,
-	// 	}
-
-	// 	triggerData[s.NodeID] = addTask
-
-	// 	course = append(course, addTask)
-
-	// }
-
-	// err = database.DBConn.Create(&course).Error
-	// if err != nil {
-	// 	if config.Debug == "true" {
-	// 		logging.PrintSecretsRedact(err)
-	// 	}
-	// 	return err
-	// }
-
-	// // --- Run the first set of tasks
-	// log.Println("trigger: ", trigger, triggerID)
-	// for _, s := range trigger {
-
-	// 	log.Println("First:", s)
-	// 	err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, "", "", []string{"echo " + s})
-	// 	if err != nil {
-	// 		if config.Debug == "true" {
-	// 			logging.PrintSecretsRedact(err)
-	// 		}
-	// 		return err
-	// 	} else {
-	// 		if config.Debug == "true" {
-	// 			logging.PrintSecretsRedact(triggerData[s].TaskID)
-	// 		}
-	// 	}
-
-	// }
-
-	// // log.Println(" -> ", destinations)
-	// // log.Println(" -> ", dependencies)
-
-	// // jsonString, err := json.Marshal(destinations)
-	// // fmt.Println(string(jsonString), err)
-
-	// stop := time.Now()
-	// // Do something with response
-	// log.Println("🐆 Run time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
-
-	// return nil
 
 }
