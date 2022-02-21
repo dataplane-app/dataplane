@@ -27,6 +27,7 @@ import { useGetAccessGroups } from '../graphql/getAccessGroups';
 import { useUpdateUserToAccessGroup } from '../graphql/updateUserToAccessGroup';
 import { useGetUserAccessGroups } from '../graphql/getUserAccessGroups';
 import { useRemoveUserFromAccessGroup } from '../graphql/removeUserFromAccessGroup';
+import { useGetUserPipelinePermissions } from '../graphql/getUserPipelinePermissions';
 import { EnvironmentContext } from '../App';
 
 export default function TeamDetail() {
@@ -51,6 +52,7 @@ export default function TeamDetail() {
     const [availablePermissions, setAvailablePermissions] = useState([]);
     const [selectedPermission, setSelectedPermission] = useState(null);
     const [userPermissions, setUserPermissions] = useState([]);
+    const [specificPermissions, setSpecificPermissions] = useState([]);
     const [accessGroup, setAccessGroup] = useState('');
     const [accessGroups, setAccessGroups] = useState([]);
     const [userAccessGroups, setUserAccessGroups] = useState([]);
@@ -72,6 +74,7 @@ export default function TeamDetail() {
     const addUserToEnv = useAddUserToEnv(getUserEnvironments);
     const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, globalEnvironment?.id);
     const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
+    const getUserPipelinePermissions = useGetUserPipelinePermissions_(setSpecificPermissions, user.user_id, globalEnvironment?.id);
     const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
     const deletePermission = useDeletePermission(getUserPermissions);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
@@ -98,6 +101,7 @@ export default function TeamDetail() {
         // Get all available permissions when user environment and id are available and if empty
         if (globalEnvironment && user) {
             getAvailablePermissions();
+            getUserPipelinePermissions();
         }
 
         // Get all available environments when user environment and id are available and if empty
@@ -338,7 +342,7 @@ export default function TeamDetail() {
 
                             {/* Specific permissions */}
                             {/* Check if there are any permissions. If not, hide the box */}
-                            {userPermissions.filter((env) => env.Level === 'specific').length ? (
+                            {specificPermissions.length ? (
                                 <Box mt={4}>
                                     <Box>
                                         <Typography component="h3" variant="h3" color="text.primary">
@@ -347,8 +351,8 @@ export default function TeamDetail() {
                                     </Box>
 
                                     <Box mt={2}>
-                                        {userPermissions
-                                            .filter((permission) => permission.Level === 'specific')
+                                        {specificPermissions
+                                            ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
                                             .map((permission) => (
                                                 <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
                                                     <Box
@@ -358,7 +362,7 @@ export default function TeamDetail() {
                                                         icon={faTrashAlt}
                                                     />
                                                     <Typography variant="subtitle2" lineHeight="15.23px">
-                                                        {permission.Label}
+                                                        Pipeline {permission.PipelineName + ' ' + permission.Access}
                                                     </Typography>
                                                 </Grid>
                                             ))}
@@ -724,6 +728,31 @@ const useGetUserPermissions_ = (setUserPermissions, userID, environmentID) => {
                 response.errors.map((err) => enqueueSnackbar(err.message + ': get user permissions failed', { variant: 'error' }));
             } else {
                 setUserPermissions(response);
+            }
+        }
+    };
+};
+
+const useGetUserPipelinePermissions_ = (setSpecificPermissions, userID, environmentID) => {
+    // GraphQL hook
+    const getUserPipelinePermissions = useGetUserPipelinePermissions();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get specific permissions
+    return async () => {
+        if (userID !== undefined && environmentID !== null) {
+            const response = await getUserPipelinePermissions({ userID, environmentID });
+
+            if (response === null) {
+                setSpecificPermissions([]);
+            } else if (response.r === 'error') {
+                closeSnackbar();
+                enqueueSnackbar("Can't get specific permissions: " + response.msg, { variant: 'error' });
+            } else if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message + ': get specific permissions failed', { variant: 'error' }));
+            } else {
+                setSpecificPermissions(response);
             }
         }
     };
