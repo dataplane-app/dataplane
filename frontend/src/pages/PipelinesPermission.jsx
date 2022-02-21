@@ -83,7 +83,7 @@ const PipelinesPermission = () => {
             <Box mt={4} sx={{ width: { md: '630px' } }}>
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
-                        <CustomChip amount={permissions.length} label="Permissions" margin={2} customColor="orange" />
+                        <CustomChip amount={rows.length} label="Permissions" margin={2} customColor="orange" />
                     </Grid>
 
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center', flex: 1 }}>
