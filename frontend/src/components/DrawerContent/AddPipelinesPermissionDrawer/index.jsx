@@ -154,6 +154,10 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd }) => {
                             label="Run"
                         />
                         <FormControlLabel
+                            control={<Checkbox sx={{ color: 'cyan.main' }} checked={outgoingPermissionsState.deploy} name="deploy" onChange={handleOptionsChange} />}
+                            label="Deploy"
+                        />
+                        <FormControlLabel
                             control={
                                 <Checkbox
                                     sx={{ color: 'cyan.main' }}
