@@ -206,32 +206,34 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		AvailablePermissions  func(childComplexity int, environmentID string) int
-		GetAccessGroup        func(childComplexity int, userID string, environmentID string, accessGroupID string) int
-		GetAccessGroupUsers   func(childComplexity int, environmentID string, accessGroupID string) int
-		GetAccessGroups       func(childComplexity int, userID string, environmentID string) int
-		GetAllPreferences     func(childComplexity int) int
-		GetEnvironment        func(childComplexity int, environmentID string) int
-		GetEnvironments       func(childComplexity int) int
-		GetOnePreference      func(childComplexity int, preference string) int
-		GetPipelineFlow       func(childComplexity int, pipelineID string, environmentID string) int
-		GetPipelines          func(childComplexity int, environmentID string) int
-		GetPlatform           func(childComplexity int) int
-		GetSecret             func(childComplexity int, secret string, environmentID string) int
-		GetSecretGroups       func(childComplexity int, environmentName string, secret string) int
-		GetSecrets            func(childComplexity int, environmentID string) int
-		GetUser               func(childComplexity int, userID string) int
-		GetUserAccessGroups   func(childComplexity int, userID string, environmentID string) int
-		GetUserEnvironments   func(childComplexity int, userID string, environmentID string) int
-		GetUsers              func(childComplexity int) int
-		GetWorkerGroupSecrets func(childComplexity int, environmentName string, workerGroup string) int
-		GetWorkerGroups       func(childComplexity int, environmentName string) int
-		GetWorkers            func(childComplexity int, environmentName string) int
-		LogoutUser            func(childComplexity int) int
-		Me                    func(childComplexity int) int
-		MyPermissions         func(childComplexity int) int
-		PipelinePermissions   func(childComplexity int, userID string, environmentID string, pipelineID string) int
-		UserPermissions       func(childComplexity int, userID string, environmentID string) int
+		AvailablePermissions    func(childComplexity int, environmentID string) int
+		GetAccessGroup          func(childComplexity int, userID string, environmentID string, accessGroupID string) int
+		GetAccessGroupUsers     func(childComplexity int, environmentID string, accessGroupID string) int
+		GetAccessGroups         func(childComplexity int, userID string, environmentID string) int
+		GetAllPreferences       func(childComplexity int) int
+		GetEnvironment          func(childComplexity int, environmentID string) int
+		GetEnvironments         func(childComplexity int) int
+		GetOnePreference        func(childComplexity int, preference string) int
+		GetPipelineFlow         func(childComplexity int, pipelineID string, environmentID string) int
+		GetPipelines            func(childComplexity int, environmentID string) int
+		GetPlatform             func(childComplexity int) int
+		GetSecret               func(childComplexity int, secret string, environmentID string) int
+		GetSecretGroups         func(childComplexity int, environmentName string, secret string) int
+		GetSecrets              func(childComplexity int, environmentID string) int
+		GetUser                 func(childComplexity int, userID string) int
+		GetUserAccessGroups     func(childComplexity int, userID string, environmentID string) int
+		GetUserEnvironments     func(childComplexity int, userID string, environmentID string) int
+		GetUsers                func(childComplexity int) int
+		GetWorkerGroupSecrets   func(childComplexity int, environmentName string, workerGroup string) int
+		GetWorkerGroups         func(childComplexity int, environmentName string) int
+		GetWorkers              func(childComplexity int, environmentName string) int
+		LogoutUser              func(childComplexity int) int
+		Me                      func(childComplexity int) int
+		MyPermissions           func(childComplexity int) int
+		MyPipelinePermissions   func(childComplexity int) int
+		PipelinePermissions     func(childComplexity int, userID string, environmentID string, pipelineID string) int
+		UserPermissions         func(childComplexity int, userID string, environmentID string) int
+		UserPipelinePermissions func(childComplexity int, userID string, environmentID string) int
 	}
 
 	SecretWorkerGroups struct {
@@ -306,9 +308,9 @@ type MutationResolver interface {
 	RemoveUserFromAccessGroup(ctx context.Context, userID string, accessGroupID string, environmentID string) (string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
-	UpdatePermissionToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string) (string, error)
 	PipelinePermissionsToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string, checked string) (string, error)
 	PipelinePermissionsToAccessGroup(ctx context.Context, environmentID string, resource string, resourceID string, access string, accessGroupID string, checked string) (string, error)
+	UpdatePermissionToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string) (string, error)
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
 	AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error)
 	AddUpdatePipelineFlow(ctx context.Context, input *PipelineFlowInput, environmentID string, pipelineID string) (string, error)
@@ -342,10 +344,12 @@ type QueryResolver interface {
 	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error)
 	GetAccessGroupUsers(ctx context.Context, environmentID string, accessGroupID string) ([]*models.Users, error)
 	Me(ctx context.Context) (*models.Users, error)
+	MyPipelinePermissions(ctx context.Context) ([]*models.PermissionsOutput, error)
+	UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error)
+	PipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string) ([]*PipelinePermissionsOutput, error)
 	AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error)
 	MyPermissions(ctx context.Context) ([]*models.PermissionsOutput, error)
 	UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error)
-	PipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string) ([]*PipelinePermissionsOutput, error)
 	GetPipelines(ctx context.Context, environmentID string) ([]*models.Pipelines, error)
 	GetPipelineFlow(ctx context.Context, pipelineID string, environmentID string) (*PipelineFlow, error)
 	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
@@ -1633,6 +1637,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.MyPermissions(childComplexity), true
 
+	case "Query.myPipelinePermissions":
+		if e.complexity.Query.MyPipelinePermissions == nil {
+			break
+		}
+
+		return e.complexity.Query.MyPipelinePermissions(childComplexity), true
+
 	case "Query.pipelinePermissions":
 		if e.complexity.Query.PipelinePermissions == nil {
 			break
@@ -1656,6 +1667,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.UserPermissions(childComplexity, args["userID"].(string), args["environmentID"].(string)), true
+
+	case "Query.userPipelinePermissions":
+		if e.complexity.Query.UserPipelinePermissions == nil {
+			break
+		}
+
+		args, err := ec.field_Query_userPipelinePermissions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UserPipelinePermissions(childComplexity, args["userID"].(string), args["environmentID"].(string)), true
 
 	case "SecretWorkerGroups.Active":
 		if e.complexity.SecretWorkerGroups.Active == nil {
@@ -2233,6 +2256,48 @@ extend type Mutation {
 	updateChangeMyPassword(password: String!): String
 }
 `, BuiltIn: false},
+	{Name: "resolvers/permissions-pipelines.graphqls", Input: `
+extend type Query {
+    """
+    Retrieve my pipeline permissions.
+    + **Route**: Private
+    + **Permissions**: logged in user
+    """
+    myPipelinePermissions: [PermissionsOutput]
+    """
+    Retrieve user's pipeline permissions.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
+    """
+    userPipelinePermissions(userID: String!, environmentID: String!): [PermissionsOutput]
+
+    """
+    Retrieve pipeline's permissions.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
+    """
+    pipelinePermissions(userID: String!, environmentID: String!, pipelineID: String!): [PipelinePermissionsOutput]
+
+}
+
+extend type Mutation {
+
+    """
+    Grant Pipeline Specific Permission to User.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
+    """
+    pipelinePermissionsToUser(environmentID: String!, resource: String!, resourceID: String!, access: String!, user_id: String!, checked: String!): String!
+
+    """
+    Grant Pipeline Specific Permission to User.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
+    """
+    pipelinePermissionsToAccessGroup(environmentID: String!, resource: String!, resourceID: String!, access: String!, access_group_id: String!, checked: String!): String!
+
+}
+`, BuiltIn: false},
 	{Name: "resolvers/permissions.graphqls", Input: `type AvailablePermissions {
     Code: String!
     Level: String!
@@ -2269,8 +2334,8 @@ type PipelinePermissionsOutput {
     Access: [String!]!
     Subject: String!
     SubjectID: String!
-    ResourceID: String!
     PipelineName: String!
+    ResourceID: String!
     EnvironmentID: String!
     Active: Boolean!
     Level: String!
@@ -2301,13 +2366,6 @@ extend type Query {
     """
     userPermissions(userID: String!, environmentID: String!): [PermissionsOutput]
 
-    """
-    Retrieve pipeline's permissions.
-    + **Route**: Private
-    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
-    """
-    pipelinePermissions(userID: String!, environmentID: String!, pipelineID: String!): [PipelinePermissionsOutput]
-
 }
 
 extend type Mutation {
@@ -2319,19 +2377,6 @@ extend type Mutation {
     """
     updatePermissionToUser(environmentID: String!, resource: String!, resourceID: String!, access: String!, user_id: String!): String!
 
-    """
-    Grant Pipeline Specific Permission to User.
-    + **Route**: Private
-    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
-    """
-    pipelinePermissionsToUser(environmentID: String!, resource: String!, resourceID: String!, access: String!, user_id: String!, checked: String!): String!
-
-    """
-    Grant Pipeline Specific Permission to User.
-    + **Route**: Private
-    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
-    """
-    pipelinePermissionsToAccessGroup(environmentID: String!, resource: String!, resourceID: String!, access: String!, access_group_id: String!, checked: String!): String!
 
     """
     Revoke Permission from User.
@@ -4113,6 +4158,30 @@ func (ec *executionContext) field_Query_userPermissions_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_userPipelinePermissions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["userID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -5358,48 +5427,6 @@ func (ec *executionContext) _Mutation_updateChangeMyPassword(ctx context.Context
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_updatePermissionToUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_updatePermissionToUser_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdatePermissionToUser(rctx, args["environmentID"].(string), args["resource"].(string), args["resourceID"].(string), args["access"].(string), args["user_id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Mutation_pipelinePermissionsToUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5468,6 +5495,48 @@ func (ec *executionContext) _Mutation_pipelinePermissionsToAccessGroup(ctx conte
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().PipelinePermissionsToAccessGroup(rctx, args["environmentID"].(string), args["resource"].(string), args["resourceID"].(string), args["access"].(string), args["access_group_id"].(string), args["checked"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updatePermissionToUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updatePermissionToUser_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdatePermissionToUser(rctx, args["environmentID"].(string), args["resource"].(string), args["resourceID"].(string), args["access"].(string), args["user_id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7622,41 +7691,6 @@ func (ec *executionContext) _PipelinePermissionsOutput_SubjectID(ctx context.Con
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PipelinePermissionsOutput_ResourceID(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PipelinePermissionsOutput",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ResourceID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _PipelinePermissionsOutput_PipelineName(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7676,6 +7710,41 @@ func (ec *executionContext) _PipelinePermissionsOutput_PipelineName(ctx context.
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.PipelineName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PipelinePermissionsOutput_ResourceID(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PipelinePermissionsOutput",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ResourceID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8757,6 +8826,116 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 	return ec.marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_myPipelinePermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MyPipelinePermissions(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.PermissionsOutput)
+	fc.Result = res
+	return ec.marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_userPipelinePermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_userPipelinePermissions_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().UserPipelinePermissions(rctx, args["userID"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.PermissionsOutput)
+	fc.Result = res
+	return ec.marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_pipelinePermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_pipelinePermissions_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PipelinePermissions(rctx, args["userID"].(string), args["environmentID"].(string), args["pipelineID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*PipelinePermissionsOutput)
+	fc.Result = res
+	return ec.marshalOPipelinePermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_availablePermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -8865,45 +9044,6 @@ func (ec *executionContext) _Query_userPermissions(ctx context.Context, field gr
 	res := resTmp.([]*models.PermissionsOutput)
 	fc.Result = res
 	return ec.marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_pipelinePermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_pipelinePermissions_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().PipelinePermissions(rctx, args["userID"].(string), args["environmentID"].(string), args["pipelineID"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*PipelinePermissionsOutput)
-	fc.Result = res
-	return ec.marshalOPipelinePermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -12882,11 +13022,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_updateMe(ctx, field)
 		case "updateChangeMyPassword":
 			out.Values[i] = ec._Mutation_updateChangeMyPassword(ctx, field)
-		case "updatePermissionToUser":
-			out.Values[i] = ec._Mutation_updatePermissionToUser(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "pipelinePermissionsToUser":
 			out.Values[i] = ec._Mutation_pipelinePermissionsToUser(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -12894,6 +13029,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "pipelinePermissionsToAccessGroup":
 			out.Values[i] = ec._Mutation_pipelinePermissionsToAccessGroup(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updatePermissionToUser":
+			out.Values[i] = ec._Mutation_updatePermissionToUser(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -13325,13 +13465,13 @@ func (ec *executionContext) _PipelinePermissionsOutput(ctx context.Context, sel 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "ResourceID":
-			out.Values[i] = ec._PipelinePermissionsOutput_ResourceID(ctx, field, obj)
+		case "PipelineName":
+			out.Values[i] = ec._PipelinePermissionsOutput_PipelineName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "PipelineName":
-			out.Values[i] = ec._PipelinePermissionsOutput_PipelineName(ctx, field, obj)
+		case "ResourceID":
+			out.Values[i] = ec._PipelinePermissionsOutput_ResourceID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -13631,6 +13771,39 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_me(ctx, field)
 				return res
 			})
+		case "myPipelinePermissions":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myPipelinePermissions(ctx, field)
+				return res
+			})
+		case "userPipelinePermissions":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_userPipelinePermissions(ctx, field)
+				return res
+			})
+		case "pipelinePermissions":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_pipelinePermissions(ctx, field)
+				return res
+			})
 		case "availablePermissions":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -13662,17 +13835,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_userPermissions(ctx, field)
-				return res
-			})
-		case "pipelinePermissions":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_pipelinePermissions(ctx, field)
 				return res
 			})
 		case "getPipelines":

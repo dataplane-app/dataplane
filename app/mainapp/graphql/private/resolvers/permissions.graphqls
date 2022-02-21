@@ -66,13 +66,6 @@ extend type Query {
     """
     userPermissions(userID: String!, environmentID: String!): [PermissionsOutput]
 
-    """
-    Retrieve pipeline's permissions.
-    + **Route**: Private
-    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
-    """
-    pipelinePermissions(userID: String!, environmentID: String!, pipelineID: String!): [PipelinePermissionsOutput]
-
 }
 
 extend type Mutation {
@@ -84,19 +77,6 @@ extend type Mutation {
     """
     updatePermissionToUser(environmentID: String!, resource: String!, resourceID: String!, access: String!, user_id: String!): String!
 
-    """
-    Grant Pipeline Specific Permission to User.
-    + **Route**: Private
-    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
-    """
-    pipelinePermissionsToUser(environmentID: String!, resource: String!, resourceID: String!, access: String!, user_id: String!, checked: String!): String!
-
-    """
-    Grant Pipeline Specific Permission to User.
-    + **Route**: Private
-    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
-    """
-    pipelinePermissionsToAccessGroup(environmentID: String!, resource: String!, resourceID: String!, access: String!, access_group_id: String!, checked: String!): String!
 
     """
     Revoke Permission from User.

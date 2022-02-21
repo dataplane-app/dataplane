@@ -102,8 +102,8 @@ type PipelinePermissionsOutput struct {
 	Access        []string `json:"Access"`
 	Subject       string   `json:"Subject"`
 	SubjectID     string   `json:"SubjectID"`
-	ResourceID    string   `json:"ResourceID"`
 	PipelineName  string   `json:"PipelineName"`
+	ResourceID    string   `json:"ResourceID"`
 	EnvironmentID string   `json:"EnvironmentID"`
 	Active        bool     `json:"Active"`
 	Level         string   `json:"Level"`
