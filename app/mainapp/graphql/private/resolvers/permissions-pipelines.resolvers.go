@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
@@ -54,7 +54,7 @@ func (r *mutationResolver) PipelinePermissionsToUser(ctx context.Context, enviro
 
 	if checked == "yes" {
 
-		perm, err := permissions.CreatePermission(
+		perm, err := permissions.UpsertSpecificPermission(
 			"user",
 			userID,
 			resource,
@@ -113,7 +113,7 @@ func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context,
 
 	if checked == "yes" {
 
-		perm, err := permissions.CreatePermission(
+		perm, err := permissions.UpsertSpecificPermission(
 			"access_group",
 			accessGroupID,
 			resource,
