@@ -8,7 +8,7 @@ import { useGetAccessGroups } from '../../../graphql/getAccessGroups';
 import { useGetUsers } from '../../../graphql/getUsers';
 import { usePipelinePermissionsToUser } from '../../../graphql/pipelinePermissionsToUser';
 import { usePipelinePermissionsToAccessGroup } from '../../../graphql/pipelinePermissionsToAccessGroup';
-import { useGetUserPermissions } from '../../../graphql/getUserPermissions';
+import { useGetUserPipelinePermissions } from '../../../graphql/getUserPipelinePermissions';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGlobalMeState } from '../../Navbar';
 
@@ -44,7 +44,7 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd }) => {
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, Environment.id.get(), MeData.user_id.get());
     const pipelinePermissionsToUser = usePipelinePermissionsToUser_(incomingPermissionsState, outgoingPermissionsState, setIncomingPermissionsState);
     const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup_(incomingPermissionsState, outgoingPermissionsState, setIncomingPermissionsState);
-    const getUserPermissions = useGetUserPermissions_(Environment.id.get(), setIncomingPermissionsState, setOutgoingPermissionsState);
+    const getUserPipelinePermissions = useGetUserPipelinePermissions_(Environment.id.get(), setIncomingPermissionsState, setOutgoingPermissionsState);
 
     // Get members on load
     useEffect(() => {
@@ -108,7 +108,7 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd }) => {
                             key={clear} //Changing this value on submit clears the input field
                             onChange={(event, newValue) => {
                                 setSelectedUser(newValue);
-                                getUserPermissions(newValue.user_id, clearStates);
+                                getUserPipelinePermissions(newValue.user_id, clearStates);
                             }}
                             onInputChange={(e, v, reason) => {
                                 if (reason === 'clear') {
@@ -125,7 +125,7 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd }) => {
                             key={clear} //Changing this value on submit clears the input field
                             onChange={(event, newValue) => {
                                 setSelectedAccessGroup(newValue);
-                                getUserPermissions(newValue.AccessGroupID, clearStates);
+                                getUserPipelinePermissions(newValue.AccessGroupID, clearStates);
                             }}
                             onInputChange={(e, v, reason) => {
                                 if (reason === 'clear') {
@@ -275,9 +275,12 @@ const usePipelinePermissionsToUser_ = (incomingPermissionsState, outgoingPermiss
     };
 };
 
-const useGetUserPermissions_ = (environmentID, setIncomingPermissionsState, setOutgoingPermissionsState) => {
+const useGetUserPipelinePermissions_ = (environmentID, setIncomingPermissionsState, setOutgoingPermissionsState) => {
     // GraphQL hook
-    const getUserPermissions = useGetUserPermissions();
+    const getUserPipelinePermissions = useGetUserPipelinePermissions();
+
+    // URI parameter
+    const { pipelineId } = useParams();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -290,7 +293,7 @@ const useGetUserPermissions_ = (environmentID, setIncomingPermissionsState, setO
 
     // Get permissions
     return async (userID, clearStates) => {
-        const response = await getUserPermissions({ userID, environmentID });
+        const response = await getUserPipelinePermissions({ userID, environmentID });
 
         if (response === null) {
             clearStates();
@@ -300,11 +303,15 @@ const useGetUserPermissions_ = (environmentID, setIncomingPermissionsState, setO
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': get permissions', { variant: 'error' }));
         } else {
-            const permissions = response.filter((a) => a.Resource === 'specific_pipeline');
+            // Get permission for the current pipeline
+            const permissions = response.filter((a) => a.ResourceID === pipelineId);
+
+            // Create an array with access permissions
+            const accessArr = permissions[0].Access.split(',');
 
             // Create an object and add Access types that are set to true. Pass it to state
             const incomingPermissions = {};
-            permissions.map((a) => (incomingPermissions[accessDictionary[a.Access]] = true));
+            accessArr.map((a) => (incomingPermissions[accessDictionary[a]] = true));
 
             setIncomingPermissionsState({ ...DEFAULT_OPTIONS, ...incomingPermissions });
             setOutgoingPermissionsState({ ...DEFAULT_OPTIONS, ...incomingPermissions });
