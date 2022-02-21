@@ -16,6 +16,7 @@ const DEFAULT_OPTIONS = {
     view: false,
     edit: false,
     run: false,
+    deploy: false,
     assign_permissions: false,
 };
 
@@ -243,6 +244,7 @@ const usePipelinePermissionsToUser_ = (incomingPermissionsState, outgoingPermiss
         view: 'read',
         edit: 'write',
         run: 'run',
+        deploy: 'deploy',
         assign_permissions: 'assign_pipeline_permission',
     };
 
@@ -288,6 +290,7 @@ const useGetUserPipelinePermissions_ = (environmentID, setIncomingPermissionsSta
         read: 'view',
         write: 'edit',
         run: 'run',
+        deploy: 'deploy',
         assign_pipeline_permission: 'assign_permissions',
     };
 
@@ -332,6 +335,7 @@ const usePipelinePermissionsToAccessGroup_ = (incomingPermissionsState, outgoing
         view: 'read',
         edit: 'write',
         run: 'run',
+        deploy: 'deploy',
         assign_permissions: 'assign_pipeline_permission',
     };
 

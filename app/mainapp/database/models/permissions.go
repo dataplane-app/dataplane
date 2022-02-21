@@ -54,7 +54,7 @@ var ResourceType = []*ResourceTypeStruct{
 }
 
 /* Access: what type of access does the user have to the resource - read, write */
-var AccessTypes = []string{"read", "write", "run", "assign_pipeline_permission"}
+var AccessTypes = []string{"read", "write", "run", "deploy", "assign_pipeline_permission"}
 
 // -------------- Permissions
 

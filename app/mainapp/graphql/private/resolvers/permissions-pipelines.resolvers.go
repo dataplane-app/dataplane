@@ -11,7 +11,6 @@ import (
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"errors"
-	"fmt"
 	"log"
 	"os"
 
@@ -137,7 +136,71 @@ func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context,
 }
 
 func (r *queryResolver) MyPipelinePermissions(ctx context.Context) ([]*privategraphql.PipelinePermissionsOutput, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser := ctx.Value("currentUser").(string)
+
+	// Permissions - as logged in user
+
+	var PermissionsOutput []*privategraphql.PipelinePermissionsOutput
+
+	err := database.DBConn.Raw(
+		`
+			select
+			  string_agg(p.access, ',') as access,
+			  p.subject,
+			  p.subject_id,
+			  pipelines.name as pipeline_name,
+			  p.resource_id,
+			  p.environment_id,
+			  p.active,
+			  pt.level,
+			  pt.label,
+			  users.first_name,
+			  users.last_name,
+			  users.email,
+			  users.job_title
+			from
+			  permissions p,
+			  permissions_resource_types pt,
+			  users,
+			  pipelines
+			where
+			  p.resource = pt.code
+			  and pt.level = 'specific'
+		  
+			  and p.subject = 'user'
+			  and p.subject_id = users.user_id
+			  and p.subject_id = ?
+		  
+			  and p.resource_id = pipelines.pipeline_id
+		  
+			  and p.active = true
+		  
+			GROUP BY
+			  p.subject,
+			  p.subject_id,
+			  pipelines.name,
+			  p.resource_id,
+			  p.environment_id,
+			  p.active,
+			  p.subject_id,
+			  pt.level,
+			  pt.label,
+			  users.first_name,
+			  users.last_name,
+			  users.email,
+			  users.job_title
+		  
+`,
+		//direct
+		currentUser,
+	).Scan(
+		&PermissionsOutput,
+	).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Error retrieving permissions")
+	}
+
+	return PermissionsOutput, nil
 }
 
 func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*privategraphql.PipelinePermissionsOutput, error) {
