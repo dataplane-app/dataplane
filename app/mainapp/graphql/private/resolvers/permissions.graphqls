@@ -30,22 +30,6 @@ type PermissionsOutput {
     Label: String!
 }
 
-type PipelinePermissionsOutput {
-    Access: [String!]!
-    Subject: String!
-    SubjectID: String!
-    PipelineName: String!
-    ResourceID: String!
-    EnvironmentID: String!
-    Active: Boolean!
-    Level: String!
-    Label: String!
-    FirstName: String!
-    LastName: String!
-    Email: String!
-    JobTitle: String!
-}
-
 extend type Query {
     """
     Retrieve available permissions.

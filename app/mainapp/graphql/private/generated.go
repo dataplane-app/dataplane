@@ -344,8 +344,8 @@ type QueryResolver interface {
 	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error)
 	GetAccessGroupUsers(ctx context.Context, environmentID string, accessGroupID string) ([]*models.Users, error)
 	Me(ctx context.Context) (*models.Users, error)
-	MyPipelinePermissions(ctx context.Context) ([]*models.PermissionsOutput, error)
-	UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error)
+	MyPipelinePermissions(ctx context.Context) ([]*PipelinePermissionsOutput, error)
+	UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*PipelinePermissionsOutput, error)
 	PipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string) ([]*PipelinePermissionsOutput, error)
 	AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error)
 	MyPermissions(ctx context.Context) ([]*models.PermissionsOutput, error)
@@ -2256,20 +2256,36 @@ extend type Mutation {
 	updateChangeMyPassword(password: String!): String
 }
 `, BuiltIn: false},
-	{Name: "resolvers/permissions-pipelines.graphqls", Input: `
+	{Name: "resolvers/permissions-pipelines.graphqls", Input: `type PipelinePermissionsOutput {
+    Access: String!
+    Subject: String!
+    SubjectID: String!
+    PipelineName: String!
+    ResourceID: String!
+    EnvironmentID: String!
+    Active: Boolean!
+    Level: String!
+    Label: String!
+    FirstName: String!
+    LastName: String!
+    Email: String!
+    JobTitle: String!
+}
+
+
 extend type Query {
     """
     Retrieve my pipeline permissions.
     + **Route**: Private
     + **Permissions**: logged in user
     """
-    myPipelinePermissions: [PermissionsOutput]
+    myPipelinePermissions: [PipelinePermissionsOutput]
     """
     Retrieve user's pipeline permissions.
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
     """
-    userPipelinePermissions(userID: String!, environmentID: String!): [PermissionsOutput]
+    userPipelinePermissions(userID: String!, environmentID: String!): [PipelinePermissionsOutput]
 
     """
     Retrieve pipeline's permissions.
@@ -2328,22 +2344,6 @@ type PermissionsOutput {
     EnvironmentID: String!
     Level: String!
     Label: String!
-}
-
-type PipelinePermissionsOutput {
-    Access: [String!]!
-    Subject: String!
-    SubjectID: String!
-    PipelineName: String!
-    ResourceID: String!
-    EnvironmentID: String!
-    Active: Boolean!
-    Level: String!
-    Label: String!
-    FirstName: String!
-    LastName: String!
-    Email: String!
-    JobTitle: String!
 }
 
 extend type Query {
@@ -7616,9 +7616,9 @@ func (ec *executionContext) _PipelinePermissionsOutput_Access(ctx context.Contex
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PipelinePermissionsOutput_Subject(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
@@ -8853,9 +8853,9 @@ func (ec *executionContext) _Query_myPipelinePermissions(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*models.PermissionsOutput)
+	res := resTmp.([]*PipelinePermissionsOutput)
 	fc.Result = res
-	return ec.marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalOPipelinePermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_userPipelinePermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -8892,9 +8892,9 @@ func (ec *executionContext) _Query_userPipelinePermissions(ctx context.Context, 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*models.PermissionsOutput)
+	res := resTmp.([]*PipelinePermissionsOutput)
 	fc.Result = res
-	return ec.marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalOPipelinePermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_pipelinePermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -14788,42 +14788,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {

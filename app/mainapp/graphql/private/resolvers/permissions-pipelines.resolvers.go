@@ -136,11 +136,11 @@ func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context,
 	return "", errors.New("Check must be yes or no")
 }
 
-func (r *queryResolver) MyPipelinePermissions(ctx context.Context) ([]*models.PermissionsOutput, error) {
+func (r *queryResolver) MyPipelinePermissions(ctx context.Context) ([]*privategraphql.PipelinePermissionsOutput, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error) {
+func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*privategraphql.PipelinePermissionsOutput, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
@@ -171,9 +171,9 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 	err := database.DBConn.Raw(
 		`
 		(select 
-		  ARRAY_AGG(
+			string_agg(
 		  p.access
-		  ) as access,
+		  ,',') as access,
 		  p.subject,
 		  p.subject_id,
           pipelines.name as pipeline_name,
@@ -214,9 +214,9 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 		UNION
 		(
 		select 
-		  ARRAY_AGG(
-		  p.access
-		  ) as access,
+		string_agg(
+			p.access
+			,',') as access,
 		  p.subject,
 		  p.subject_id,
 		  pipelines.name,
