@@ -419,55 +419,85 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 
 	err := database.DBConn.Raw(
 		`
-	(select 
-		p.id,
-		p.access,
-		p.subject,
-		p.subject_id,
-		p.resource,
-		p.resource_id,
-		p.environment_id,
-		p.active,
-		pt.level,
-		pt.label,
-    	users.first_name,
-    	users.last_name,
-    	users.email,
-		users.job_title
-		from 
-		permissions p, permissions_resource_types pt, users
-		where 
-		p.resource = pt.code and
-		p.subject = 'user' and 
-		p.resource_id = ? and
-    	p.subject_id = users.user_id and
-		p.active = true	
+		(select 
+		  ARRAY_AGG(
+		  p.access
+		  ) as access,
+		  p.subject,
+		  p.subject_id,
+          pipelines.name as pipeline_name,
+		  p.resource_id,
+		  p.environment_id,
+		  p.active,
+		  pt.level,
+		  pt.label,
+		  users.first_name,
+		  users.last_name,
+		  users.email,
+		  users.job_title
+		  from 
+		  permissions p, permissions_resource_types pt, users, pipelines
+		  where 
+		  p.resource = pt.code and
+		  p.subject = 'user' and 
+		  p.subject_id = users.user_id and
+		  pt.level = 'specific'and
+		  p.resource_id = pipelines.pipeline_id and
+		  p.resource_id = ? and
+		  p.active = true	
+		  GROUP BY 
+		  p.subject,
+		  p.subject_id,
+		  pipelines.name,
+		  p.resource_id,
+		  p.environment_id,
+		  p.active,
+		  p.subject_id,
+		  pt.level,
+		  pt.label,
+		  users.first_name,
+		  users.last_name,
+		  users.email,
+		  users.job_title
 		)
-		union
+		UNION
 		(
-	select
-		p.id,
-		p.access,
-		p.subject,
-		p.subject_id,
-		p.resource,
-		p.resource_id,
-		p.environment_id,
-		p.active,
-		pt.level,
-		pt.label,
-		pag.name,
-    	'',
-    	'',
-		''
-		from 
-		permissions p, permissions_resource_types pt, permissions_access_groups pag
-		where 
-		p.resource = pt.code and
-    	pag.access_group_id = p.subject_id and
-		p.subject = 'access_group' and 
-		p.resource_id = ? and
-		p.active = true		
+		select 
+		  ARRAY_AGG(
+		  p.access
+		  ) as access,
+		  p.subject,
+		  p.subject_id,
+		  pipelines.name,
+		  p.resource_id,
+		  p.environment_id,
+		  p.active,
+		  pt.level,
+		  pt.label,
+		  pag.name,
+		  '',
+		  '',
+		  ''
+	  
+		  from 
+		  permissions p, permissions_resource_types pt,    	permissions_access_groups pag, pipelines
+		  where 
+		  p.resource = pt.code and
+		  pag.access_group_id = p.subject_id and
+		  p.subject = 'access_group' and 
+		  p.resource_id = pipelines.pipeline_id and
+		  p.resource_id = ? and
+		  p.active = true	
+		  GROUP BY 
+		  p.subject,
+		  p.subject_id,
+		  pipelines.name,
+		  p.resource_id,
+		  p.environment_id,
+		  p.active,
+		  pt.level,
+		  pt.label,
+		  pag.name
 		)
 `,
 		//direct

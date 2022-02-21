@@ -173,12 +173,11 @@ type ComplexityRoot struct {
 		Email         func(childComplexity int) int
 		EnvironmentID func(childComplexity int) int
 		FirstName     func(childComplexity int) int
-		ID            func(childComplexity int) int
 		JobTitle      func(childComplexity int) int
 		Label         func(childComplexity int) int
 		LastName      func(childComplexity int) int
 		Level         func(childComplexity int) int
-		Resource      func(childComplexity int) int
+		PipelineName  func(childComplexity int) int
 		ResourceID    func(childComplexity int) int
 		Subject       func(childComplexity int) int
 		SubjectID     func(childComplexity int) int
@@ -1234,13 +1233,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PipelinePermissionsOutput.FirstName(childComplexity), true
 
-	case "PipelinePermissionsOutput.ID":
-		if e.complexity.PipelinePermissionsOutput.ID == nil {
-			break
-		}
-
-		return e.complexity.PipelinePermissionsOutput.ID(childComplexity), true
-
 	case "PipelinePermissionsOutput.JobTitle":
 		if e.complexity.PipelinePermissionsOutput.JobTitle == nil {
 			break
@@ -1269,12 +1261,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PipelinePermissionsOutput.Level(childComplexity), true
 
-	case "PipelinePermissionsOutput.Resource":
-		if e.complexity.PipelinePermissionsOutput.Resource == nil {
+	case "PipelinePermissionsOutput.PipelineName":
+		if e.complexity.PipelinePermissionsOutput.PipelineName == nil {
 			break
 		}
 
-		return e.complexity.PipelinePermissionsOutput.Resource(childComplexity), true
+		return e.complexity.PipelinePermissionsOutput.PipelineName(childComplexity), true
 
 	case "PipelinePermissionsOutput.ResourceID":
 		if e.complexity.PipelinePermissionsOutput.ResourceID == nil {
@@ -2274,14 +2266,13 @@ type PermissionsOutput {
 }
 
 type PipelinePermissionsOutput {
-    ID: String!
+    Access: [String!]!
     Subject: String!
     SubjectID: String!
-    Resource: String!
     ResourceID: String!
-    Access: String!
-    Active: Boolean!
+    PipelineName: String!
     EnvironmentID: String!
+    Active: Boolean!
     Level: String!
     Label: String!
     FirstName: String!
@@ -7526,7 +7517,7 @@ func (ec *executionContext) _PipelineNodes_active(ctx context.Context, field gra
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PipelinePermissionsOutput_ID(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
+func (ec *executionContext) _PipelinePermissionsOutput_Access(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -7544,7 +7535,7 @@ func (ec *executionContext) _PipelinePermissionsOutput_ID(ctx context.Context, f
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.Access, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7556,9 +7547,9 @@ func (ec *executionContext) _PipelinePermissionsOutput_ID(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PipelinePermissionsOutput_Subject(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
@@ -7631,41 +7622,6 @@ func (ec *executionContext) _PipelinePermissionsOutput_SubjectID(ctx context.Con
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PipelinePermissionsOutput_Resource(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PipelinePermissionsOutput",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Resource, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _PipelinePermissionsOutput_ResourceID(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7701,7 +7657,7 @@ func (ec *executionContext) _PipelinePermissionsOutput_ResourceID(ctx context.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PipelinePermissionsOutput_Access(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
+func (ec *executionContext) _PipelinePermissionsOutput_PipelineName(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -7719,7 +7675,42 @@ func (ec *executionContext) _PipelinePermissionsOutput_Access(ctx context.Contex
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Access, nil
+		return obj.PipelineName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PipelinePermissionsOutput_EnvironmentID(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PipelinePermissionsOutput",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvironmentID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7769,41 +7760,6 @@ func (ec *executionContext) _PipelinePermissionsOutput_Active(ctx context.Contex
 	res := resTmp.(bool)
 	fc.Result = res
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PipelinePermissionsOutput_EnvironmentID(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PipelinePermissionsOutput",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.EnvironmentID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PipelinePermissionsOutput_Level(ctx context.Context, field graphql.CollectedField, obj *PipelinePermissionsOutput) (ret graphql.Marshaler) {
@@ -13354,8 +13310,8 @@ func (ec *executionContext) _PipelinePermissionsOutput(ctx context.Context, sel 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("PipelinePermissionsOutput")
-		case "ID":
-			out.Values[i] = ec._PipelinePermissionsOutput_ID(ctx, field, obj)
+		case "Access":
+			out.Values[i] = ec._PipelinePermissionsOutput_Access(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -13369,28 +13325,23 @@ func (ec *executionContext) _PipelinePermissionsOutput(ctx context.Context, sel 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Resource":
-			out.Values[i] = ec._PipelinePermissionsOutput_Resource(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "ResourceID":
 			out.Values[i] = ec._PipelinePermissionsOutput_ResourceID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Access":
-			out.Values[i] = ec._PipelinePermissionsOutput_Access(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "Active":
-			out.Values[i] = ec._PipelinePermissionsOutput_Active(ctx, field, obj)
+		case "PipelineName":
+			out.Values[i] = ec._PipelinePermissionsOutput_PipelineName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "EnvironmentID":
 			out.Values[i] = ec._PipelinePermissionsOutput_EnvironmentID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Active":
+			out.Values[i] = ec._PipelinePermissionsOutput_Active(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -14675,6 +14626,42 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {

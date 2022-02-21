@@ -99,20 +99,19 @@ type PipelineNodesMetaInput struct {
 }
 
 type PipelinePermissionsOutput struct {
-	ID            string `json:"ID"`
-	Subject       string `json:"Subject"`
-	SubjectID     string `json:"SubjectID"`
-	Resource      string `json:"Resource"`
-	ResourceID    string `json:"ResourceID"`
-	Access        string `json:"Access"`
-	Active        bool   `json:"Active"`
-	EnvironmentID string `json:"EnvironmentID"`
-	Level         string `json:"Level"`
-	Label         string `json:"Label"`
-	FirstName     string `json:"FirstName"`
-	LastName      string `json:"LastName"`
-	Email         string `json:"Email"`
-	JobTitle      string `json:"JobTitle"`
+	Access        []string `json:"Access"`
+	Subject       string   `json:"Subject"`
+	SubjectID     string   `json:"SubjectID"`
+	ResourceID    string   `json:"ResourceID"`
+	PipelineName  string   `json:"PipelineName"`
+	EnvironmentID string   `json:"EnvironmentID"`
+	Active        bool     `json:"Active"`
+	Level         string   `json:"Level"`
+	Label         string   `json:"Label"`
+	FirstName     string   `json:"FirstName"`
+	LastName      string   `json:"LastName"`
+	Email         string   `json:"Email"`
+	JobTitle      string   `json:"JobTitle"`
 }
 
 type Platform struct {

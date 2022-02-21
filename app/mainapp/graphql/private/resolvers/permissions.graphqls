@@ -31,14 +31,13 @@ type PermissionsOutput {
 }
 
 type PipelinePermissionsOutput {
-    ID: String!
+    Access: [String!]!
     Subject: String!
     SubjectID: String!
-    Resource: String!
+    PipelineName: String!
     ResourceID: String!
-    Access: String!
-    Active: Boolean!
     EnvironmentID: String!
+    Active: Boolean!
     Level: String!
     Label: String!
     FirstName: String!
