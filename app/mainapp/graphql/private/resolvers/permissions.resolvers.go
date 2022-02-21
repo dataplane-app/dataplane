@@ -375,7 +375,7 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		pt.level,
 		pt.label
 		from 
-		permissions p, permissions_accessg_users agu, permissions_resource_types pt
+		permissions p, permissions_resource_types pt
 		where 
 		p.resource = pt.code and
 		p.subject = 'access_group' and 

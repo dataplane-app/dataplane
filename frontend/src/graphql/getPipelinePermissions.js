@@ -6,14 +6,13 @@ const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 const query = gql`
     query pipelinePermissions($userID: String!, $environmentID: String!, $pipelineID: String!) {
         pipelinePermissions(userID: $userID, environmentID: $environmentID, pipelineID: $pipelineID) {
-            ID
+            Access
             Subject
             SubjectID
-            Resource
+            PipelineName
             ResourceID
-            Access
-            Active
             EnvironmentID
+            Active
             Level
             Label
             FirstName
