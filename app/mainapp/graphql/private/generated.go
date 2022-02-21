@@ -206,34 +206,35 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		AvailablePermissions    func(childComplexity int, environmentID string) int
-		GetAccessGroup          func(childComplexity int, userID string, environmentID string, accessGroupID string) int
-		GetAccessGroupUsers     func(childComplexity int, environmentID string, accessGroupID string) int
-		GetAccessGroups         func(childComplexity int, userID string, environmentID string) int
-		GetAllPreferences       func(childComplexity int) int
-		GetEnvironment          func(childComplexity int, environmentID string) int
-		GetEnvironments         func(childComplexity int) int
-		GetOnePreference        func(childComplexity int, preference string) int
-		GetPipelineFlow         func(childComplexity int, pipelineID string, environmentID string) int
-		GetPipelines            func(childComplexity int, environmentID string) int
-		GetPlatform             func(childComplexity int) int
-		GetSecret               func(childComplexity int, secret string, environmentID string) int
-		GetSecretGroups         func(childComplexity int, environmentName string, secret string) int
-		GetSecrets              func(childComplexity int, environmentID string) int
-		GetUser                 func(childComplexity int, userID string) int
-		GetUserAccessGroups     func(childComplexity int, userID string, environmentID string) int
-		GetUserEnvironments     func(childComplexity int, userID string, environmentID string) int
-		GetUsers                func(childComplexity int) int
-		GetWorkerGroupSecrets   func(childComplexity int, environmentName string, workerGroup string) int
-		GetWorkerGroups         func(childComplexity int, environmentName string) int
-		GetWorkers              func(childComplexity int, environmentName string) int
-		LogoutUser              func(childComplexity int) int
-		Me                      func(childComplexity int) int
-		MyPermissions           func(childComplexity int) int
-		MyPipelinePermissions   func(childComplexity int) int
-		PipelinePermissions     func(childComplexity int, userID string, environmentID string, pipelineID string) int
-		UserPermissions         func(childComplexity int, userID string, environmentID string) int
-		UserPipelinePermissions func(childComplexity int, userID string, environmentID string) int
+		AvailablePermissions          func(childComplexity int, environmentID string) int
+		GetAccessGroup                func(childComplexity int, userID string, environmentID string, accessGroupID string) int
+		GetAccessGroupUsers           func(childComplexity int, environmentID string, accessGroupID string) int
+		GetAccessGroups               func(childComplexity int, userID string, environmentID string) int
+		GetAllPreferences             func(childComplexity int) int
+		GetEnvironment                func(childComplexity int, environmentID string) int
+		GetEnvironments               func(childComplexity int) int
+		GetOnePreference              func(childComplexity int, preference string) int
+		GetPipelineFlow               func(childComplexity int, pipelineID string, environmentID string) int
+		GetPipelines                  func(childComplexity int, environmentID string) int
+		GetPlatform                   func(childComplexity int) int
+		GetSecret                     func(childComplexity int, secret string, environmentID string) int
+		GetSecretGroups               func(childComplexity int, environmentName string, secret string) int
+		GetSecrets                    func(childComplexity int, environmentID string) int
+		GetUser                       func(childComplexity int, userID string) int
+		GetUserAccessGroups           func(childComplexity int, userID string, environmentID string) int
+		GetUserEnvironments           func(childComplexity int, userID string, environmentID string) int
+		GetUsers                      func(childComplexity int) int
+		GetWorkerGroupSecrets         func(childComplexity int, environmentName string, workerGroup string) int
+		GetWorkerGroups               func(childComplexity int, environmentName string) int
+		GetWorkers                    func(childComplexity int, environmentName string) int
+		LogoutUser                    func(childComplexity int) int
+		Me                            func(childComplexity int) int
+		MyPermissions                 func(childComplexity int) int
+		MyPipelinePermissions         func(childComplexity int) int
+		PipelinePermissions           func(childComplexity int, userID string, environmentID string, pipelineID string) int
+		UserPermissions               func(childComplexity int, userID string, environmentID string) int
+		UserPipelinePermissions       func(childComplexity int, userID string, environmentID string) int
+		UserSinglePipelinePermissions func(childComplexity int, userID string, environmentID string, pipelineID string) int
 	}
 
 	SecretWorkerGroups struct {
@@ -346,6 +347,7 @@ type QueryResolver interface {
 	Me(ctx context.Context) (*models.Users, error)
 	MyPipelinePermissions(ctx context.Context) ([]*PipelinePermissionsOutput, error)
 	UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*PipelinePermissionsOutput, error)
+	UserSinglePipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string) (*PipelinePermissionsOutput, error)
 	PipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string) ([]*PipelinePermissionsOutput, error)
 	AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error)
 	MyPermissions(ctx context.Context) ([]*models.PermissionsOutput, error)
@@ -1680,6 +1682,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.UserPipelinePermissions(childComplexity, args["userID"].(string), args["environmentID"].(string)), true
 
+	case "Query.userSinglePipelinePermissions":
+		if e.complexity.Query.UserSinglePipelinePermissions == nil {
+			break
+		}
+
+		args, err := ec.field_Query_userSinglePipelinePermissions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UserSinglePipelinePermissions(childComplexity, args["userID"].(string), args["environmentID"].(string), args["pipelineID"].(string)), true
+
 	case "SecretWorkerGroups.Active":
 		if e.complexity.SecretWorkerGroups.Active == nil {
 			break
@@ -2280,12 +2294,20 @@ extend type Query {
     + **Permissions**: logged in user
     """
     myPipelinePermissions: [PipelinePermissionsOutput]
+
     """
     Retrieve user's pipeline permissions.
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
     """
     userPipelinePermissions(userID: String!, environmentID: String!): [PipelinePermissionsOutput]
+
+    """
+    Retrieve user's pipeline permissions.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
+    """
+    userSinglePipelinePermissions(userID: String!, environmentID: String!, pipelineID: String!): PipelinePermissionsOutput
 
     """
     Retrieve pipeline's permissions.
@@ -4179,6 +4201,39 @@ func (ec *executionContext) field_Query_userPipelinePermissions_args(ctx context
 		}
 	}
 	args["environmentID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_userSinglePipelinePermissions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["userID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg2
 	return args, nil
 }
 
@@ -8895,6 +8950,45 @@ func (ec *executionContext) _Query_userPipelinePermissions(ctx context.Context, 
 	res := resTmp.([]*PipelinePermissionsOutput)
 	fc.Result = res
 	return ec.marshalOPipelinePermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_userSinglePipelinePermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_userSinglePipelinePermissions_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().UserSinglePipelinePermissions(rctx, args["userID"].(string), args["environmentID"].(string), args["pipelineID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*PipelinePermissionsOutput)
+	fc.Result = res
+	return ec.marshalOPipelinePermissionsOutput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_pipelinePermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -13791,6 +13885,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_userPipelinePermissions(ctx, field)
+				return res
+			})
+		case "userSinglePipelinePermissions":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_userSinglePipelinePermissions(ctx, field)
 				return res
 			})
 		case "pipelinePermissions":

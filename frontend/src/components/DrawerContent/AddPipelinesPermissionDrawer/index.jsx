@@ -8,7 +8,7 @@ import { useGetAccessGroups } from '../../../graphql/getAccessGroups';
 import { useGetUsers } from '../../../graphql/getUsers';
 import { usePipelinePermissionsToUser } from '../../../graphql/pipelinePermissionsToUser';
 import { usePipelinePermissionsToAccessGroup } from '../../../graphql/pipelinePermissionsToAccessGroup';
-import { useGetUserPipelinePermissions } from '../../../graphql/getUserPipelinePermissions';
+import { useGetUserSinglePipelinePermissions } from '../../../graphql/getUserSinglePipelinePermissions';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGlobalMeState } from '../../Navbar';
 
@@ -20,7 +20,7 @@ const DEFAULT_OPTIONS = {
     assign_permissions: false,
 };
 
-const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd }) => {
+const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissions }) => {
     const [selectedTypeToAdd, setSelectedTypeToAdd] = useState(typeToAdd);
 
     // Global state
@@ -43,9 +43,14 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd }) => {
     // Custom GraphQL hooks
     const getUsers = useGetUsers_(setUsers);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, Environment.id.get(), MeData.user_id.get());
-    const pipelinePermissionsToUser = usePipelinePermissionsToUser_(incomingPermissionsState, outgoingPermissionsState, setIncomingPermissionsState);
-    const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup_(incomingPermissionsState, outgoingPermissionsState, setIncomingPermissionsState);
-    const getUserPipelinePermissions = useGetUserPipelinePermissions_(Environment.id.get(), setIncomingPermissionsState, setOutgoingPermissionsState);
+    const pipelinePermissionsToUser = usePipelinePermissionsToUser_(incomingPermissionsState, outgoingPermissionsState, setIncomingPermissionsState, refreshPermissions);
+    const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup_(
+        incomingPermissionsState,
+        outgoingPermissionsState,
+        setIncomingPermissionsState,
+        refreshPermissions
+    );
+    const getUserPipelinePermissions = useGetUserSinglePipelinePermissions_(Environment.id.get(), setIncomingPermissionsState, setOutgoingPermissionsState);
 
     // Get members on load
     useEffect(() => {
@@ -237,7 +242,7 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
     };
 };
 
-const usePipelinePermissionsToUser_ = (incomingPermissionsState, outgoingPermissionsState, setIncomingPermissionsState) => {
+const usePipelinePermissionsToUser_ = (incomingPermissionsState, outgoingPermissionsState, setIncomingPermissionsState, refreshPermissions) => {
     // GraphQL hook
     const pipelinePermissionsToUser = usePipelinePermissionsToUser();
 
@@ -276,14 +281,15 @@ const usePipelinePermissionsToUser_ = (incomingPermissionsState, outgoingPermiss
             } else {
                 enqueueSnackbar('Success', { variant: 'success' });
                 setIncomingPermissionsState(outgoingPermissionsState);
+                refreshPermissions();
             }
         }
     };
 };
 
-const useGetUserPipelinePermissions_ = (environmentID, setIncomingPermissionsState, setOutgoingPermissionsState) => {
+const useGetUserSinglePipelinePermissions_ = (environmentID, setIncomingPermissionsState, setOutgoingPermissionsState) => {
     // GraphQL hook
-    const getUserPipelinePermissions = useGetUserPipelinePermissions();
+    const getUserSinglePipelinePermissions = useGetUserSinglePipelinePermissions();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -300,7 +306,7 @@ const useGetUserPipelinePermissions_ = (environmentID, setIncomingPermissionsSta
 
     // Get permissions
     return async (userID, clearStates) => {
-        const response = await getUserPipelinePermissions({ userID, environmentID });
+        const response = await getUserSinglePipelinePermissions({ userID, environmentID, pipelineID: pipelineId });
 
         if (response === null) {
             clearStates();
@@ -310,11 +316,8 @@ const useGetUserPipelinePermissions_ = (environmentID, setIncomingPermissionsSta
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': get permissions', { variant: 'error' }));
         } else {
-            // Get permission for the current pipeline
-            const permissions = response.filter((a) => a.ResourceID === pipelineId);
-
             // Create an array with access permissions
-            const accessArr = permissions[0].Access.split(',');
+            const accessArr = response.Access.split(',');
 
             // Create an object and add Access types that are set to true. Pass it to state
             const incomingPermissions = {};
@@ -328,7 +331,7 @@ const useGetUserPipelinePermissions_ = (environmentID, setIncomingPermissionsSta
 
 // ----- Access group
 
-const usePipelinePermissionsToAccessGroup_ = (incomingPermissionsState, outgoingPermissionsState, setIncomingPermissionsState) => {
+const usePipelinePermissionsToAccessGroup_ = (incomingPermissionsState, outgoingPermissionsState, setIncomingPermissionsState, refreshPermissions) => {
     // GraphQL hook
     const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup();
 
@@ -367,6 +370,7 @@ const usePipelinePermissionsToAccessGroup_ = (incomingPermissionsState, outgoing
             } else {
                 enqueueSnackbar('Success', { variant: 'success' });
                 setIncomingPermissionsState(outgoingPermissionsState);
+                refreshPermissions();
             }
         }
     };

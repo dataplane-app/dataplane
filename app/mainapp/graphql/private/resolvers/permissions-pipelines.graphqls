@@ -22,12 +22,20 @@ extend type Query {
     + **Permissions**: logged in user
     """
     myPipelinePermissions: [PipelinePermissionsOutput]
+
     """
     Retrieve user's pipeline permissions.
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
     """
     userPipelinePermissions(userID: String!, environmentID: String!): [PipelinePermissionsOutput]
+
+    """
+    Retrieve user's pipeline permissions.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
+    """
+    userSinglePipelinePermissions(userID: String!, environmentID: String!, pipelineID: String!): PipelinePermissionsOutput
 
     """
     Retrieve pipeline's permissions.

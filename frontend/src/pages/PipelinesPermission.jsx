@@ -156,13 +156,13 @@ const PipelinesPermission = () => {
                 open={isOpenAddPermissions}
                 onClose={() => {
                     setIsOpenAddPermissions(!isOpenAddPermissions);
-                    pipelinePermissions();
                 }}>
                 <AddPipelinesPermissionDrawer
                     typeToAdd={type}
                     handleClose={() => {
                         setIsOpenAddPermissions(false);
                     }}
+                    refreshPermissions={pipelinePermissions}
                 />
             </Drawer>
         </Box>
