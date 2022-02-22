@@ -33,11 +33,8 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
     // Local state
     const [users, setUsers] = useState([]);
     const [selectedUser, setSelectedUser] = useState(selectedSubject);
-    console.log('🚀 ~ file: index.jsx ~ line 36 ~ AddPipelinesPermissionDrawer ~ selectedUser', selectedUser);
     const [accessGroups, setAccessGroups] = useState([]);
-    console.log('🚀 ~ file: index.jsx ~ line 38 ~ AddPipelinesPermissionDrawer ~ accessGroups', accessGroups);
     const [selectedAccessGroup, setSelectedAccessGroup] = useState({ ...selectedSubject, AccessGroupID: selectedSubject.user_id });
-    console.log('🚀 ~ file: index.jsx ~ line 40 ~ AddPipelinesPermissionDrawer ~ selectedAccessGroup', selectedAccessGroup);
 
     // Options state
     const [permissionsState, setPermissionsState] = useState({ ...DEFAULT_OPTIONS });
@@ -57,7 +54,7 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Get default user's permissions on drawer open.
+    // Get default user or access groups's permissions on drawer open.
     useEffect(() => {
         getUserPipelinePermissions(selectedSubject.user_id, clearOptions);
 
@@ -92,10 +89,9 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
                     <Box mt={1.5} ml={-2} mb={2}>
                         <Button
                             onClick={() => {
-                                setSelectedUser(null);
-                                // setSelectedAccessGroup(null);
                                 setSelectedTypeToAdd('User');
                                 clearOptions();
+                                setSelectedUser(null);
                                 setClear(clear * -1);
                             }}
                             sx={{ fontWeight: 400, fontSize: '1.0625rem' }}>
@@ -103,10 +99,9 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
                         </Button>
                         <Button
                             onClick={() => {
-                                // setSelectedUser(null);
-                                setSelectedAccessGroup(null);
                                 setSelectedTypeToAdd('Access group');
                                 clearOptions();
+                                setSelectedAccessGroup(null);
                                 setClear(clear * -1);
                             }}
                             sx={{ fontWeight: 400, fontSize: '1.0625rem', marginLeft: 1 }}>
