@@ -32,9 +32,9 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
 
     // Local state
     const [users, setUsers] = useState([]);
-    const [selectedUser, setSelectedUser] = useState(selectedSubject);
+    const [selectedUser, setSelectedUser] = useState(null);
     const [accessGroups, setAccessGroups] = useState([]);
-    const [selectedAccessGroup, setSelectedAccessGroup] = useState({ ...selectedSubject, AccessGroupID: selectedSubject.user_id });
+    const [selectedAccessGroup, setSelectedAccessGroup] = useState(null);
 
     // Options state
     const [permissionsState, setPermissionsState] = useState({ ...DEFAULT_OPTIONS });
@@ -46,10 +46,21 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
     const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup_(permissionsState, refreshPermissions);
     const getUserPipelinePermissions = useGetUserSinglePipelinePermissions_(Environment.id.get(), setPermissionsState);
 
-    // Get members on load
+    // Get all users and access groups on load
     useEffect(() => {
         getUsers();
         getAccessGroups();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Set input default value
+    useEffect(() => {
+        if (selectedSubject.first_name && selectedSubject.email) {
+            setSelectedUser(selectedSubject);
+        } else if (selectedSubject.first_name && !selectedSubject.email) {
+            setSelectedAccessGroup({ AccessGroupID: selectedSubject.user_id, Name: selectedSubject.first_name });
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
