@@ -31,11 +31,12 @@ go test -p 1 -v -count=1 -run TestSpecificPipelines dataplane/Tests/pipelines
 * Set pipeline permissions to user
 * Get User pipeline permissions
 * Get User single pipeline permissions
-* Create Temporary access group
+* Create temporary access group
 * Set pipeline permissions to access group
 * Get Pipeline permissions
 * Remove pipeline permissions from user
 * Remove pipeline permissions from access group
+* Remove temporary access group
 */
 func TestSpecificPipelines(t *testing.T) {
 
@@ -259,7 +260,6 @@ func TestSpecificPipelines(t *testing.T) {
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 	accessgroup := jsoniter.Get(response, "data", "createAccessGroup").ToString()
 
-	log.Println(accessgroup, "access gorup!!!!!!!!!!!!!!!!!!11")
 	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
@@ -365,4 +365,19 @@ func TestSpecificPipelines(t *testing.T) {
 	}
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Remove pipeline permissions from access group 200 status code")
+
+	// ------ Delete temporary access group
+	ag := models.PermissionsAccessGroups{}
+
+	err = database.DBConn.Where("access_group_id = ?", accessgroup).Delete(&ag).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		log.Println(errors.New("Retrive pipelines database error."))
+	}
+
+	log.Println("Access group deleted")
+
 }
