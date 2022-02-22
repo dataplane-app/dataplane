@@ -12,7 +12,6 @@ import { useGlobalMeState } from '../components/Navbar';
 
 const PipelinesPermission = () => {
     // React router
-    const history = useHistory();
     const { state: name } = useLocation();
 
     // Ref for scroll to top
@@ -24,6 +23,12 @@ const PipelinesPermission = () => {
 
     // Local state
     const [permissions, setPermissions] = useState([]);
+    const [selectedSubject, setSelectedSubject] = useState({
+        user_id: '',
+        first_name: '',
+        last_name: '',
+        email: '',
+    });
 
     // Drawer state
     const [isOpenAddPermissions, setIsOpenAddPermissions] = useState(false);
@@ -34,13 +39,27 @@ const PipelinesPermission = () => {
 
     useEffect(() => {
         // Scroll to top on load
-        // scrollRef.current.parentElement.scrollIntoView();
         if (Environment.id.get() && MeData.user_id.get()) {
+            scrollRef.current.parentElement.scrollIntoView();
             pipelinePermissions();
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get(), MeData.user_id.get()]);
+
+    const handleClick = (permission) => {
+        console.log('🚀 ~ file: PipelinesPermission.jsx ~ line 55 ~ handleClick ~ permission', permission);
+        permission.Subject === 'user' ? setType('User') : setType('Access group');
+        setSelectedSubject({
+            ...selectedSubject,
+            user_id: permission.SubjectID,
+            first_name: permission.FirstName,
+            last_name: permission.LastName,
+            email: permission.Email,
+        });
+
+        setIsOpenAddPermissions(true);
+    };
 
     // table
     const columns = useMemo(
@@ -48,7 +67,7 @@ const PipelinesPermission = () => {
             {
                 Header: 'Member',
                 accessor: (row) => [row.FirstName + ' ' + row.LastName, row.JobTitle],
-                Cell: (row) => <CustomName row={row} onClick={() => history.push(`/${row.row.original.Email ? 'teams' : 'teams/access'}/${row.row.original.SubjectID}`)} />,
+                Cell: (row) => <CustomName row={row} onClick={() => handleClick(row.row.original)} />,
             },
             {
                 Header: 'Email',
@@ -159,6 +178,7 @@ const PipelinesPermission = () => {
                 }}>
                 <AddPipelinesPermissionDrawer
                     typeToAdd={type}
+                    selectedSubject={selectedSubject}
                     handleClose={() => {
                         setIsOpenAddPermissions(false);
                     }}

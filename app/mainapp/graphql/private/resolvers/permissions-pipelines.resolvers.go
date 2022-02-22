@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *mutationResolver) PipelinePermissionsToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string, checked string) (string, error) {
+func (r *mutationResolver) PipelinePermissionsToUser(ctx context.Context, environmentID string, resourceID string, access []string, userID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -35,30 +35,28 @@ func (r *mutationResolver) PipelinePermissionsToUser(ctx context.Context, enviro
 		return "", errors.New("Requires permissions.")
 	}
 
-	if checked == "no" {
-		err := database.DBConn.Where("subject_id = ? and resource = ? and resource_id = ? and access = ? and environment_id = ?",
-			userID, resource, resourceID, access, environmentID).Delete(&models.Permissions{})
+	// --- First delete all permissions
+	err := database.DBConn.Where("subject_id = ? and resource_id = ? and environment_id = ?",
+		userID, resourceID, environmentID).Delete(&models.Permissions{})
 
-		// Fix below!!!
-		log.Println(err)
-		// if err != nil {
-		// 	if os.Getenv("debug") == "true" {
-		// 		logging.PrintSecretsRedact(err)
-		// 	}
-		// 	return "", errors.New("Delete pipelines permission to user database error.")
-		// }
+	// Fix this!!! GORM is returning an error on successful deletion. Ignoring error until fixed.
+	log.Println(err)
+	// if err != nil {
+	// 	if os.Getenv("debug") == "true" {
+	// 		logging.PrintSecretsRedact(err)
+	// 	}
+	// 	return "", errors.New("Delete pipelines permission to user database error.")
+	// }
 
-		return "Permission deleted.", nil
-	}
+	// --- Next, add selected permissions
+	for _, accessType := range access {
 
-	if checked == "yes" {
-
-		perm, err := permissions.UpsertSpecificPermission(
+		_, err := permissions.UpsertSpecificPermission(
 			"user",
 			userID,
-			resource,
+			"specific_pipeline",
 			resourceID,
-			access,
+			accessType,
 			environmentID,
 			false,
 		)
@@ -69,14 +67,12 @@ func (r *mutationResolver) PipelinePermissionsToUser(ctx context.Context, enviro
 			}
 			return "", errors.New("Add permission to user database error.")
 		}
-
-		return perm.ID, nil
 	}
 
-	return "", errors.New("Check must be yes or no")
+	return "Access permissions updated.", nil
 }
 
-func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context, environmentID string, resource string, resourceID string, access string, accessGroupID string, checked string) (string, error) {
+func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context, environmentID string, resourceID string, access []string, accessGroupID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -94,30 +90,28 @@ func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context,
 		return "", errors.New("Requires permissions.")
 	}
 
-	if checked == "no" {
-		err := database.DBConn.Where("subject_id = ? and resource = ? and resource_id = ? and access = ?",
-			accessGroupID, resource, resourceID, access).Delete(&models.Permissions{})
+	// --- First delete all permissions
+	err := database.DBConn.Where("subject_id = ? and resource_id = ? and environment_id = ?",
+		accessGroupID, resourceID, environmentID).Delete(&models.Permissions{})
 
-		// Fix below!!!
-		log.Println(err)
-		// if err != nil {
-		// 	if os.Getenv("debug") == "true" {
-		// 		logging.PrintSecretsRedact(err)
-		// 	}
-		// 	return "", errors.New("Delete pipelines permission to user database error.")
-		// }
+	// Fix this!!! GORM is returning an error on successful deletion. Ignoring error until fixed.
+	log.Println(err)
+	// if err != nil {
+	// 	if os.Getenv("debug") == "true" {
+	// 		logging.PrintSecretsRedact(err)
+	// 	}
+	// 	return "", errors.New("Delete pipelines permission to user database error.")
+	// }
 
-		return "Permission deleted.", nil
-	}
+	// --- Next, add selected permissions
+	for _, accessType := range access {
 
-	if checked == "yes" {
-
-		perm, err := permissions.UpsertSpecificPermission(
+		_, err := permissions.UpsertSpecificPermission(
 			"access_group",
 			accessGroupID,
-			resource,
+			"specific_pipeline",
 			resourceID,
-			access,
+			accessType,
 			environmentID,
 			false,
 		)
@@ -128,11 +122,9 @@ func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context,
 			}
 			return "", errors.New("Add permission to user database error.")
 		}
-
-		return perm.ID, nil
 	}
 
-	return "", errors.New("Check must be yes or no")
+	return "Access permissions updated.", nil
 }
 
 func (r *queryResolver) MyPipelinePermissions(ctx context.Context) ([]*privategraphql.PipelinePermissionsOutput, error) {

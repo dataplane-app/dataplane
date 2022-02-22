@@ -20,7 +20,7 @@ const DEFAULT_OPTIONS = {
     assign_permissions: false,
 };
 
-const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissions }) => {
+const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissions, selectedSubject }) => {
     const [selectedTypeToAdd, setSelectedTypeToAdd] = useState(typeToAdd);
 
     // Global state
@@ -32,9 +32,12 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
 
     // Local state
     const [users, setUsers] = useState([]);
-    const [selectedUser, setSelectedUser] = useState([]);
+    const [selectedUser, setSelectedUser] = useState(selectedSubject);
+    console.log('🚀 ~ file: index.jsx ~ line 36 ~ AddPipelinesPermissionDrawer ~ selectedUser', selectedUser);
     const [accessGroups, setAccessGroups] = useState([]);
-    const [selectedAccessGroup, setSelectedAccessGroup] = useState([]);
+    console.log('🚀 ~ file: index.jsx ~ line 38 ~ AddPipelinesPermissionDrawer ~ accessGroups', accessGroups);
+    const [selectedAccessGroup, setSelectedAccessGroup] = useState({ ...selectedSubject, AccessGroupID: selectedSubject.user_id });
+    console.log('🚀 ~ file: index.jsx ~ line 40 ~ AddPipelinesPermissionDrawer ~ selectedAccessGroup', selectedAccessGroup);
 
     // Options state
     const [permissionsState, setPermissionsState] = useState({ ...DEFAULT_OPTIONS });
@@ -54,6 +57,13 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Get default user's permissions on drawer open.
+    useEffect(() => {
+        getUserPipelinePermissions(selectedSubject.user_id, clearOptions);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     function handleOptionsChange(event) {
         setPermissionsState({
             ...permissionsState,
@@ -61,7 +71,7 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
         });
     }
 
-    function clearStates() {
+    function clearOptions() {
         setPermissionsState({ ...DEFAULT_OPTIONS });
     }
 
@@ -82,9 +92,10 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
                     <Box mt={1.5} ml={-2} mb={2}>
                         <Button
                             onClick={() => {
+                                setSelectedUser(null);
+                                // setSelectedAccessGroup(null);
                                 setSelectedTypeToAdd('User');
-                                clearStates();
-                                setSelectedUser([]);
+                                clearOptions();
                                 setClear(clear * -1);
                             }}
                             sx={{ fontWeight: 400, fontSize: '1.0625rem' }}>
@@ -92,9 +103,10 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
                         </Button>
                         <Button
                             onClick={() => {
+                                // setSelectedUser(null);
+                                setSelectedAccessGroup(null);
                                 setSelectedTypeToAdd('Access group');
-                                clearStates();
-                                setSelectedUser([]);
+                                clearOptions();
                                 setClear(clear * -1);
                             }}
                             sx={{ fontWeight: 400, fontSize: '1.0625rem', marginLeft: 1 }}>
@@ -107,16 +119,23 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
                             key={clear} //Changing this value on submit clears the input field
                             onChange={(event, newValue) => {
                                 setSelectedUser(newValue);
-                                getUserPipelinePermissions(newValue.user_id, clearStates);
+                                newValue && getUserPipelinePermissions(newValue.user_id, clearOptions);
                             }}
                             onInputChange={(e, v, reason) => {
                                 if (reason === 'clear') {
-                                    clearStates();
+                                    clearOptions();
                                     setClear(clear * -1);
                                 }
                             }}
+                            value={selectedUser}
                             options={users}
-                            getOptionLabel={(option) => option.first_name + ' ' + option.last_name}
+                            getOptionLabel={(option) => option.first_name + ' ' + option.last_name || ''}
+                            isOptionEqualToValue={(option, value) =>
+                                option.user_id === value.user_id && //
+                                option.first_name === value.first_name &&
+                                option.last_name === value.last_name &&
+                                option.email === value.email
+                            }
                             renderInput={(params) => <TextField {...params} label="User" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                         />
                     ) : (
@@ -124,16 +143,21 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
                             key={clear} //Changing this value on submit clears the input field
                             onChange={(event, newValue) => {
                                 setSelectedAccessGroup(newValue);
-                                getUserPipelinePermissions(newValue.AccessGroupID, clearStates);
+                                newValue && getUserPipelinePermissions(newValue.AccessGroupID, clearOptions);
                             }}
                             onInputChange={(e, v, reason) => {
                                 if (reason === 'clear') {
-                                    clearStates();
+                                    clearOptions();
                                     setClear(clear * -1);
                                 }
                             }}
+                            value={selectedAccessGroup}
                             options={accessGroups}
-                            getOptionLabel={(option) => option.Name || ''}
+                            getOptionLabel={(option) => option.Name || option.first_name}
+                            isOptionEqualToValue={(option, value) =>
+                                option.Name === (value.first_name || value.Name) && //
+                                option.AccessGroupID === (value.AccessGroupID || value.user_id)
+                            }
                             renderInput={(params) => <TextField {...params} label="Access group" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                         />
                     )}
@@ -288,11 +312,11 @@ const useGetUserSinglePipelinePermissions_ = (environmentID, setpermissionsState
     };
 
     // Get permissions
-    return async (userID, clearStates) => {
+    return async (userID, clearOptions) => {
         const response = await getUserSinglePipelinePermissions({ userID, environmentID, pipelineID: pipelineId });
 
         if (response === null) {
-            clearStates();
+            clearOptions();
         } else if (response.r === 'error') {
             closeSnackbar();
             enqueueSnackbar("Can't get permissions: " + response.msg, { variant: 'error' });
@@ -337,7 +361,6 @@ const usePipelinePermissionsToAccessGroup_ = (permissionsState, refreshPermissio
     return async (environmentID, access_group_id) => {
         const response = await pipelinePermissionsToAccessGroup({
             environmentID,
-            resource: 'specific_pipeline',
             resourceID: pipelineId,
             access_group_id,
             access: accessArray.map((a) => accessDictionary[a]),
