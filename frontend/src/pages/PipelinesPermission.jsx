@@ -1,6 +1,6 @@
 import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useHistory, useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useGlobalFilter, useTable } from 'react-table';
@@ -16,7 +16,6 @@ import { DEFAULT_OPTIONS } from '../components/DrawerContent/AddPipelinesPermiss
 const PipelinesPermission = () => {
     // React router
     const { state: name } = useLocation();
-    const history = useHistory();
 
     // Ref for scroll to top
     const scrollRef = useRef(null);
@@ -70,8 +69,7 @@ const PipelinesPermission = () => {
             {
                 Header: 'Member',
                 accessor: (row) => [row.FirstName + ' ' + row.LastName, row.JobTitle],
-                // Cell: (row) => <CustomName row={row} onClick={() => handleClick(row.row.original)} />,
-                Cell: (row) => <CustomName row={row} onClick={() => history.push(`/${row.row.original.Email ? 'teams' : 'teams/access'}/${row.row.original.SubjectID}`)} />,
+                Cell: (row) => <CustomName row={row} onClick={() => handleClick(row.row.original)} />,
             },
             {
                 Header: 'Email',
