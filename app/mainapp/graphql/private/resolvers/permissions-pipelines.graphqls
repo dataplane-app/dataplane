@@ -53,13 +53,13 @@ extend type Mutation {
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
     """
-    pipelinePermissionsToUser(environmentID: String!, resource: String!, resourceID: String!, access: String!, user_id: String!, checked: String!): String!
+    pipelinePermissionsToUser(environmentID: String!, resourceID: String!, access: [String!]!, user_id: String!): String!
 
     """
     Grant Pipeline Specific Permission to User.
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
     """
-    pipelinePermissionsToAccessGroup(environmentID: String!, resource: String!, resourceID: String!, access: String!, access_group_id: String!, checked: String!): String!
+    pipelinePermissionsToAccessGroup(environmentID: String!, resourceID: String!, access: [String!]!, access_group_id: String!): String!
 
 }

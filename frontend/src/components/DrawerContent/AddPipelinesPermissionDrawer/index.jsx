@@ -37,20 +37,14 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
     const [selectedAccessGroup, setSelectedAccessGroup] = useState([]);
 
     // Options state
-    const [incomingPermissionsState, setIncomingPermissionsState] = useState({ ...DEFAULT_OPTIONS });
-    const [outgoingPermissionsState, setOutgoingPermissionsState] = useState({ ...DEFAULT_OPTIONS });
+    const [permissionsState, setPermissionsState] = useState({ ...DEFAULT_OPTIONS });
 
     // Custom GraphQL hooks
     const getUsers = useGetUsers_(setUsers);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, Environment.id.get(), MeData.user_id.get());
-    const pipelinePermissionsToUser = usePipelinePermissionsToUser_(incomingPermissionsState, outgoingPermissionsState, setIncomingPermissionsState, refreshPermissions);
-    const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup_(
-        incomingPermissionsState,
-        outgoingPermissionsState,
-        setIncomingPermissionsState,
-        refreshPermissions
-    );
-    const getUserPipelinePermissions = useGetUserSinglePipelinePermissions_(Environment.id.get(), setIncomingPermissionsState, setOutgoingPermissionsState);
+    const pipelinePermissionsToUser = usePipelinePermissionsToUser_(permissionsState, refreshPermissions);
+    const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup_(permissionsState, refreshPermissions);
+    const getUserPipelinePermissions = useGetUserSinglePipelinePermissions_(Environment.id.get(), setPermissionsState);
 
     // Get members on load
     useEffect(() => {
@@ -61,15 +55,14 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
     }, []);
 
     function handleOptionsChange(event) {
-        setOutgoingPermissionsState({
-            ...outgoingPermissionsState,
+        setPermissionsState({
+            ...permissionsState,
             [event.target.name]: event.target.checked,
         });
     }
 
     function clearStates() {
-        setIncomingPermissionsState({ ...DEFAULT_OPTIONS });
-        setOutgoingPermissionsState({ ...DEFAULT_OPTIONS });
+        setPermissionsState({ ...DEFAULT_OPTIONS });
     }
 
     return (
@@ -147,29 +140,21 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
 
                     <FormGroup sx={{ mt: 2 }}>
                         <FormControlLabel
-                            control={<Checkbox sx={{ color: 'cyan.main' }} checked={outgoingPermissionsState.view} name="view" onChange={handleOptionsChange} />}
+                            control={<Checkbox sx={{ color: 'cyan.main' }} checked={permissionsState.view} name="view" onChange={handleOptionsChange} />}
                             label="View"
                         />
                         <FormControlLabel
-                            control={<Checkbox sx={{ color: 'cyan.main' }} checked={outgoingPermissionsState.edit} name="edit" onChange={handleOptionsChange} />}
+                            control={<Checkbox sx={{ color: 'cyan.main' }} checked={permissionsState.edit} name="edit" onChange={handleOptionsChange} />}
                             label="Edit"
                         />
+                        <FormControlLabel control={<Checkbox sx={{ color: 'cyan.main' }} checked={permissionsState.run} name="run" onChange={handleOptionsChange} />} label="Run" />
                         <FormControlLabel
-                            control={<Checkbox sx={{ color: 'cyan.main' }} checked={outgoingPermissionsState.run} name="run" onChange={handleOptionsChange} />}
-                            label="Run"
-                        />
-                        <FormControlLabel
-                            control={<Checkbox sx={{ color: 'cyan.main' }} checked={outgoingPermissionsState.deploy} name="deploy" onChange={handleOptionsChange} />}
+                            control={<Checkbox sx={{ color: 'cyan.main' }} checked={permissionsState.deploy} name="deploy" onChange={handleOptionsChange} />}
                             label="Deploy"
                         />
                         <FormControlLabel
                             control={
-                                <Checkbox
-                                    sx={{ color: 'cyan.main' }}
-                                    checked={outgoingPermissionsState.assign_permissions}
-                                    name="assign_permissions"
-                                    onChange={handleOptionsChange}
-                                />
+                                <Checkbox sx={{ color: 'cyan.main' }} checked={permissionsState.assign_permissions} name="assign_permissions" onChange={handleOptionsChange} />
                             }
                             label="Assign permissions"
                         />
@@ -242,7 +227,8 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
     };
 };
 
-const usePipelinePermissionsToUser_ = (incomingPermissionsState, outgoingPermissionsState, setIncomingPermissionsState, refreshPermissions) => {
+// Update pipeline permissions to user
+const usePipelinePermissionsToUser_ = (permissionsState, refreshPermissions) => {
     // GraphQL hook
     const pipelinePermissionsToUser = usePipelinePermissionsToUser();
 
@@ -259,35 +245,32 @@ const usePipelinePermissionsToUser_ = (incomingPermissionsState, outgoingPermiss
 
     const { enqueueSnackbar } = useSnackbar();
 
-    const changedPermissions = getDiff(incomingPermissionsState, outgoingPermissionsState);
+    // Make an array of selected permissions. Ex, ==> ["read", "write"]
+    const accessArray = Object.keys(permissionsState).filter((a) => permissionsState[a] === true);
 
     // Update permissions
     return async (environmentID, user_id) => {
-        for (const access of Object.keys(changedPermissions)) {
-            const response = await pipelinePermissionsToUser({
-                environmentID,
-                resource: 'specific_pipeline',
-                resourceID: pipelineId,
-                user_id,
-                access: accessDictionary[access],
-                checked: changedPermissions[access] ? 'yes' : 'no',
+        const response = await pipelinePermissionsToUser({
+            environmentID,
+            resourceID: pipelineId,
+            user_id,
+            access: accessArray.map((a) => accessDictionary[a]),
+        });
+        if (response.r === 'error') {
+            enqueueSnackbar("Can't update permissions: " + response.msg, {
+                variant: 'error',
             });
-            if (response.r === 'error') {
-                enqueueSnackbar("Can't update permissions: " + response.msg, {
-                    variant: 'error',
-                });
-            } else if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message + ': update permissions', { variant: 'error' }));
-            } else {
-                enqueueSnackbar('Success', { variant: 'success' });
-                setIncomingPermissionsState(outgoingPermissionsState);
-                refreshPermissions();
-            }
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': update permissions', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            refreshPermissions();
         }
     };
 };
 
-const useGetUserSinglePipelinePermissions_ = (environmentID, setIncomingPermissionsState, setOutgoingPermissionsState) => {
+// Get pipeline permissions to user or access group
+const useGetUserSinglePipelinePermissions_ = (environmentID, setpermissionsState) => {
     // GraphQL hook
     const getUserSinglePipelinePermissions = useGetUserSinglePipelinePermissions();
 
@@ -323,15 +306,14 @@ const useGetUserSinglePipelinePermissions_ = (environmentID, setIncomingPermissi
             const incomingPermissions = {};
             accessArr.map((a) => (incomingPermissions[accessDictionary[a]] = true));
 
-            setIncomingPermissionsState({ ...DEFAULT_OPTIONS, ...incomingPermissions });
-            setOutgoingPermissionsState({ ...DEFAULT_OPTIONS, ...incomingPermissions });
+            setpermissionsState({ ...DEFAULT_OPTIONS, ...incomingPermissions });
         }
     };
 };
 
 // ----- Access group
-
-const usePipelinePermissionsToAccessGroup_ = (incomingPermissionsState, outgoingPermissionsState, setIncomingPermissionsState, refreshPermissions) => {
+// Update pipeline permissions to user
+const usePipelinePermissionsToAccessGroup_ = (permissionsState, refreshPermissions) => {
     // GraphQL hook
     const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup();
 
@@ -348,44 +330,27 @@ const usePipelinePermissionsToAccessGroup_ = (incomingPermissionsState, outgoing
 
     const { enqueueSnackbar } = useSnackbar();
 
-    const changedPermissions = getDiff(incomingPermissionsState, outgoingPermissionsState);
+    // Make an array of selected permissions. Ex, ==> ["read", "write"]
+    const accessArray = Object.keys(permissionsState).filter((a) => permissionsState[a] === true);
 
     // Update permissions
     return async (environmentID, access_group_id) => {
-        for (const access of Object.keys(changedPermissions)) {
-            const response = await pipelinePermissionsToAccessGroup({
-                environmentID,
-                resource: 'specific_pipeline',
-                resourceID: pipelineId,
-                access_group_id,
-                access: accessDictionary[access],
-                checked: changedPermissions[access] ? 'yes' : 'no',
+        const response = await pipelinePermissionsToAccessGroup({
+            environmentID,
+            resource: 'specific_pipeline',
+            resourceID: pipelineId,
+            access_group_id,
+            access: accessArray.map((a) => accessDictionary[a]),
+        });
+        if (response.r === 'error') {
+            enqueueSnackbar("Can't update permissions: " + response.msg, {
+                variant: 'error',
             });
-            if (response.r === 'error') {
-                enqueueSnackbar("Can't update permissions: " + response.msg, {
-                    variant: 'error',
-                });
-            } else if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message + ': update permissions', { variant: 'error' }));
-            } else {
-                enqueueSnackbar('Success', { variant: 'success' });
-                setIncomingPermissionsState(outgoingPermissionsState);
-                refreshPermissions();
-            }
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': update permissions', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            refreshPermissions();
         }
     };
 };
-
-// ----- Utility function
-/**
- * Takes two permission objects, returns the difference
- * @example
- * incoming = { view: false, edit: false, run: false, assign_permissions: false }
- * outgoing = { view: true,  edit: false, run: false, assign_permissions: false }
- * returns ==> { view: true }
- */
-function getDiff(incoming, outgoing) {
-    const change = {};
-    Object.keys(incoming).map((key) => outgoing[key] !== incoming[key] && (change[key] = outgoing[key]));
-    return change;
-}

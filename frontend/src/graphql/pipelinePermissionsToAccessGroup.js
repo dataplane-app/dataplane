@@ -4,15 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation pipelinePermissionsToAccessGroup($environmentID: String!, $resource: String!, $resourceID: String!, $access_group_id: String!, $access: String!, $checked: String!) {
-        pipelinePermissionsToAccessGroup(
-            environmentID: $environmentID
-            resource: $resource
-            resourceID: $resourceID
-            access_group_id: $access_group_id
-            access: $access
-            checked: $checked
-        )
+    mutation pipelinePermissionsToAccessGroup($environmentID: String!, $resourceID: String!, $access_group_id: String!, $access: [String!]!) {
+        pipelinePermissionsToAccessGroup(environmentID: $environmentID, resourceID: $resourceID, access_group_id: $access_group_id, access: $access)
     }
 `;
 

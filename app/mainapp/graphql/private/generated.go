@@ -83,8 +83,8 @@ type ComplexityRoot struct {
 		DeleteAccessGroup                func(childComplexity int, accessGroupID string, environmentID string) int
 		DeletePermissionToUser           func(childComplexity int, userID string, permissionID string, environmentID string) int
 		DeleteSecretFromWorkerGroup      func(childComplexity int, environmentName string, workerGroup string, secret string) int
-		PipelinePermissionsToAccessGroup func(childComplexity int, environmentID string, resource string, resourceID string, access string, accessGroupID string, checked string) int
-		PipelinePermissionsToUser        func(childComplexity int, environmentID string, resource string, resourceID string, access string, userID string, checked string) int
+		PipelinePermissionsToAccessGroup func(childComplexity int, environmentID string, resourceID string, access []string, accessGroupID string) int
+		PipelinePermissionsToUser        func(childComplexity int, environmentID string, resourceID string, access []string, userID string) int
 		RemoveUserFromAccessGroup        func(childComplexity int, userID string, accessGroupID string, environmentID string) int
 		RemoveUserFromEnvironment        func(childComplexity int, userID string, environmentID string) int
 		UpdateAccessGroup                func(childComplexity int, input *AccessGroupsInput) int
@@ -309,8 +309,8 @@ type MutationResolver interface {
 	RemoveUserFromAccessGroup(ctx context.Context, userID string, accessGroupID string, environmentID string) (string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
-	PipelinePermissionsToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string, checked string) (string, error)
-	PipelinePermissionsToAccessGroup(ctx context.Context, environmentID string, resource string, resourceID string, access string, accessGroupID string, checked string) (string, error)
+	PipelinePermissionsToUser(ctx context.Context, environmentID string, resourceID string, access []string, userID string) (string, error)
+	PipelinePermissionsToAccessGroup(ctx context.Context, environmentID string, resourceID string, access []string, accessGroupID string) (string, error)
 	UpdatePermissionToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string) (string, error)
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
 	AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error)
@@ -646,7 +646,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.PipelinePermissionsToAccessGroup(childComplexity, args["environmentID"].(string), args["resource"].(string), args["resourceID"].(string), args["access"].(string), args["access_group_id"].(string), args["checked"].(string)), true
+		return e.complexity.Mutation.PipelinePermissionsToAccessGroup(childComplexity, args["environmentID"].(string), args["resourceID"].(string), args["access"].([]string), args["access_group_id"].(string)), true
 
 	case "Mutation.pipelinePermissionsToUser":
 		if e.complexity.Mutation.PipelinePermissionsToUser == nil {
@@ -658,7 +658,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.PipelinePermissionsToUser(childComplexity, args["environmentID"].(string), args["resource"].(string), args["resourceID"].(string), args["access"].(string), args["user_id"].(string), args["checked"].(string)), true
+		return e.complexity.Mutation.PipelinePermissionsToUser(childComplexity, args["environmentID"].(string), args["resourceID"].(string), args["access"].([]string), args["user_id"].(string)), true
 
 	case "Mutation.removeUserFromAccessGroup":
 		if e.complexity.Mutation.RemoveUserFromAccessGroup == nil {
@@ -2325,14 +2325,14 @@ extend type Mutation {
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
     """
-    pipelinePermissionsToUser(environmentID: String!, resource: String!, resourceID: String!, access: String!, user_id: String!, checked: String!): String!
+    pipelinePermissionsToUser(environmentID: String!, resourceID: String!, access: [String!]!, user_id: String!): String!
 
     """
     Grant Pipeline Specific Permission to User.
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
     """
-    pipelinePermissionsToAccessGroup(environmentID: String!, resource: String!, resourceID: String!, access: String!, access_group_id: String!, checked: String!): String!
+    pipelinePermissionsToAccessGroup(environmentID: String!, resourceID: String!, access: [String!]!, access_group_id: String!): String!
 
 }
 `, BuiltIn: false},
@@ -3182,50 +3182,32 @@ func (ec *executionContext) field_Mutation_pipelinePermissionsToAccessGroup_args
 	}
 	args["environmentID"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["resource"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resource"))
+	if tmp, ok := rawArgs["resourceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["resource"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["resourceID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
-		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+	args["resourceID"] = arg1
+	var arg2 []string
+	if tmp, ok := rawArgs["access"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("access"))
+		arg2, err = ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["resourceID"] = arg2
+	args["access"] = arg2
 	var arg3 string
-	if tmp, ok := rawArgs["access"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("access"))
+	if tmp, ok := rawArgs["access_group_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("access_group_id"))
 		arg3, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["access"] = arg3
-	var arg4 string
-	if tmp, ok := rawArgs["access_group_id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("access_group_id"))
-		arg4, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["access_group_id"] = arg4
-	var arg5 string
-	if tmp, ok := rawArgs["checked"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("checked"))
-		arg5, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["checked"] = arg5
+	args["access_group_id"] = arg3
 	return args, nil
 }
 
@@ -3242,50 +3224,32 @@ func (ec *executionContext) field_Mutation_pipelinePermissionsToUser_args(ctx co
 	}
 	args["environmentID"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["resource"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resource"))
+	if tmp, ok := rawArgs["resourceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["resource"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["resourceID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
-		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+	args["resourceID"] = arg1
+	var arg2 []string
+	if tmp, ok := rawArgs["access"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("access"))
+		arg2, err = ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["resourceID"] = arg2
+	args["access"] = arg2
 	var arg3 string
-	if tmp, ok := rawArgs["access"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("access"))
+	if tmp, ok := rawArgs["user_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user_id"))
 		arg3, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["access"] = arg3
-	var arg4 string
-	if tmp, ok := rawArgs["user_id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user_id"))
-		arg4, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["user_id"] = arg4
-	var arg5 string
-	if tmp, ok := rawArgs["checked"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("checked"))
-		arg5, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["checked"] = arg5
+	args["user_id"] = arg3
 	return args, nil
 }
 
@@ -5507,7 +5471,7 @@ func (ec *executionContext) _Mutation_pipelinePermissionsToUser(ctx context.Cont
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().PipelinePermissionsToUser(rctx, args["environmentID"].(string), args["resource"].(string), args["resourceID"].(string), args["access"].(string), args["user_id"].(string), args["checked"].(string))
+		return ec.resolvers.Mutation().PipelinePermissionsToUser(rctx, args["environmentID"].(string), args["resourceID"].(string), args["access"].([]string), args["user_id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5549,7 +5513,7 @@ func (ec *executionContext) _Mutation_pipelinePermissionsToAccessGroup(ctx conte
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().PipelinePermissionsToAccessGroup(rctx, args["environmentID"].(string), args["resource"].(string), args["resourceID"].(string), args["access"].(string), args["access_group_id"].(string), args["checked"].(string))
+		return ec.resolvers.Mutation().PipelinePermissionsToAccessGroup(rctx, args["environmentID"].(string), args["resourceID"].(string), args["access"].([]string), args["access_group_id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -14893,6 +14857,42 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
