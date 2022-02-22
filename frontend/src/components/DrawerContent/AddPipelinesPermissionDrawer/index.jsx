@@ -12,7 +12,7 @@ import { useGetUserSinglePipelinePermissions } from '../../../graphql/getUserSin
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGlobalMeState } from '../../Navbar';
 
-const DEFAULT_OPTIONS = {
+export const DEFAULT_OPTIONS = {
     view: false,
     edit: false,
     run: false,

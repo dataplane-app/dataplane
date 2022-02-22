@@ -198,7 +198,7 @@ const MemberDetail = () => {
                                         {userSpecificPermissions
                                             ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
                                             .map((permission) => (
-                                                <Grid display="flex" alignItems="center" key={permission.ID} mt={1.5} mb={1.5}>
+                                                <Grid display="flex" alignItems="center" key={permission.PipelineName} mt={1.5} mb={1.5}>
                                                     <Typography variant="subtitle2" lineHeight="15.23px">
                                                         Pipeline {permission.PipelineName + ' ' + permission.Access}
                                                     </Typography>
