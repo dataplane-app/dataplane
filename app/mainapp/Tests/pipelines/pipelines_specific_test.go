@@ -115,6 +115,18 @@ func TestSpecificPipelines(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create pipeline 200 status code")
 
+	p := models.Pipelines{}
+
+	// Get pipeline's id by its name
+	err := database.DBConn.Where("name = ?", `test_`+pipelineId).Find(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		log.Println(errors.New("Retrive pipelines database error."))
+	}
+
 	// -------- My pipeline permissions -------------
 	query := `query {
 		myPipelinePermissions{
@@ -149,7 +161,7 @@ func TestSpecificPipelines(t *testing.T) {
 	mutation = `mutation {
 		pipelinePermissionsToUser(
 			environmentID: "` + envID + `",
-			resourceID: "test_` + pipelineId + `",
+			resourceID: "` + p.PipelineID + `",
 			user_id: "` + userId + `",
 			access: ["read", "write", "run"]
 			)
@@ -206,7 +218,7 @@ func TestSpecificPipelines(t *testing.T) {
 		userSinglePipelinePermissions(
 			userID: "` + userId + `",
 			environmentID: "` + envID + `",
-			pipelineID: "test_` + pipelineId + `",
+			pipelineID: "` + p.PipelineID + `",
 			){
 				Access
 				Subject
@@ -260,7 +272,7 @@ func TestSpecificPipelines(t *testing.T) {
 	mutation = `mutation {
 		pipelinePermissionsToAccessGroup(
 	environmentID: "` + envID + `",
-	resourceID: "test_` + pipelineId + `",
+	resourceID: "` + p.PipelineID + `",
 	access_group_id: "` + accessgroup + `",
 	access: ["read", "write", "run"]
 	)
@@ -278,17 +290,6 @@ func TestSpecificPipelines(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Pipeline permissions to access group 200 status code")
 
 	// -------- Get Pipeline permissions -------------
-	p := models.Pipelines{}
-
-	// Get pipeline's id by its name
-	err := database.DBConn.Where("name = ?", `test_`+pipelineId).Find(&p).Error
-
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		log.Println(errors.New("Retrive pipelines database error."))
-	}
 
 	query = `query {
 		pipelinePermissions(
@@ -327,7 +328,7 @@ func TestSpecificPipelines(t *testing.T) {
 	mutation = `mutation {
 		pipelinePermissionsToUser(
 			environmentID: "` + envID + `",
-			resourceID: "test_` + pipelineId + `",
+			resourceID: "` + p.PipelineID + `",
 			user_id: "` + userId + `",
 			access: []
 			)
@@ -348,7 +349,7 @@ func TestSpecificPipelines(t *testing.T) {
 	mutation = `mutation {
 		pipelinePermissionsToAccessGroup(
 	environmentID: "` + envID + `",
-	resourceID: "test_` + pipelineId + `",
+	resourceID: "` + p.PipelineID + `",
 	access_group_id: "` + accessgroup + `",
 	access: ["read", "write", "run"]
 	)
