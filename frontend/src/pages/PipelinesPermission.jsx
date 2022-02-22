@@ -246,9 +246,14 @@ const CustomAccess = ({ row, onClick }) => {
             {Object.keys(DEFAULT_OPTIONS).map((option) => (
                 <Box key={option} display="flex" flexDirection="row" alignItems="center" onClick={onClick}>
                     <Box
-                        // onClick={() => !(user.user_id === meData.user_id && permission.Label === 'Admin') && deletePermission(permission)}
                         component={FontAwesomeIcon}
-                        sx={{ fontSize: '0.6875rem', fontWeight: 900, paddingY: '2px', pr: '10px', color: access.includes(accessDictionary[option]) ? '#72B842' : '#F80000' }}
+                        sx={{
+                            fontSize: '0.6875rem',
+                            fontWeight: 900,
+                            paddingY: '2px',
+                            pr: '10px',
+                            color: access.includes(accessDictionary[option]) ? 'status.pipelineOnline' : '#F80000',
+                        }}
                         icon={access.includes(accessDictionary[option]) ? faCheck : faTimes}
                     />
                     <Typography variant="subtitle1" lineHeight="16px" ml={3} position="absolute">
