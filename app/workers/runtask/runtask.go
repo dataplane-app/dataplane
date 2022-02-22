@@ -10,7 +10,6 @@ import (
 	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"syscall"
@@ -41,7 +40,20 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	var statusUpdate string
 
 	if os.Getenv("debug") == "true" {
-		fmt.Printf("starting task with id %s\n", msg.TaskID)
+		fmt.Printf("starting task with id %s - node: %s run: %s\n", msg.TaskID, msg.NodeID, msg.RunID)
+	}
+
+	// --- Check if this task is already running
+	var lockCheck modelmain.WorkerTasks
+	err2 := database.DBConn.Select("task_id", "status").Where("task_id = ?", msg.TaskID).First(&lockCheck).Error
+	if err2 != nil {
+		logging.PrintSecretsRedact(err2.Error())
+		return
+	}
+
+	if lockCheck.Status != "Queue" {
+		logging.PrintSecretsRedact("Skipping not in queue", msg.RunID, msg.NodeID)
+		return
 	}
 
 	statusUpdate = "Run"
@@ -65,7 +77,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		logging.PrintSecretsRedact("Update task error nats:", errnats)
 	}
 
-	for i, v := range msg.Commands {
+	for _, v := range msg.Commands {
 		// Print the log timestamps
 		clog.PrintTimestamp = true
 
@@ -185,16 +197,16 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		TasksStatus[msg.TaskID] = "run"
 
 		if os.Getenv("debug") == "true" {
-			log.Println("tasks before pid:", Tasks)
+			// log.Println("tasks before pid:", Tasks)
 		}
 		err := cmd.Start()
 		task.PID = cmd.Process.Pid
 		Tasks[msg.TaskID] = task
 
 		if os.Getenv("debug") == "true" {
-			fmt.Println("PID ", cmd.Process.Pid)
-			log.Println("tasks after pid:", Tasks)
-			log.Println(err)
+			// fmt.Println("PID ", cmd.Process.Pid)
+			// log.Println("tasks after pid:", Tasks)
+			// log.Println(err)
 		}
 
 		// Wait for all output to be processed
@@ -214,12 +226,12 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			statusUpdate = "Success"
 		}
 		if os.Getenv("debug") == "true" {
-			log.Println(i, err)
+			// log.Println(i, err)
 		}
 	}
 
 	if os.Getenv("debug") == "true" {
-		log.Println("Update task as " + statusUpdate + " - " + msg.TaskID)
+		// log.Println("Update task as " + statusUpdate + " - " + msg.TaskID)
 	}
 	TaskFinal := modelmain.WorkerTasks{
 		TaskID:        msg.TaskID,
@@ -238,8 +250,8 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	_, errnats = messageq.MsgReply("taskupdate", TaskFinal, &response)
 
 	if config.Debug == "true" {
-		log.Println("tasks delete:", msg.TaskID)
-		log.Println("tasks before del:", Tasks)
+		// log.Println("tasks delete:", msg.TaskID)
+		// log.Println("tasks before del:", Tasks)
 	}
 
 	// Queue the next set of tasks
@@ -265,7 +277,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	delete(Tasks, msg.TaskID)
 
 	if config.Debug == "true" {
-		log.Println("tasks after del:", Tasks)
+		// log.Println("tasks after del:", Tasks)
 	}
 
 	<-ctx.Done()

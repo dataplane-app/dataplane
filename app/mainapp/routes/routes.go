@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"dataplane/mainapp/auth"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -19,6 +20,7 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql/playground"
+	pglock "github.com/allisson/go-pglock/v2"
 	"github.com/go-co-op/gocron"
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
@@ -47,6 +49,25 @@ func Setup(port string) *fiber.App {
 	logging.MapSecrets()
 
 	// ------- DATABASE CONNECT ------
+	db1, err := database.NewLockDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer database.CloseLockDB(db1)
+
+	ctx := context.Background()
+	id := int64(1)
+	lock1, err := pglock.NewLock(ctx, id, db1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ok, err := lock1.Lock(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("lock1.Lock()==%v\n", ok)
+
 	database.DBConnect()
 	database.GoDBConnect()
 	log.Println("🏃 Running on: ", os.Getenv("env"))

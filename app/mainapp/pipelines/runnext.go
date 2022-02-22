@@ -6,6 +6,7 @@ import (
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
+	"dataplane/mainapp/worker"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -35,7 +36,7 @@ func RunNextPipeline() {
 
 		json.Unmarshal(currentNode.Destination, &destinations)
 		// log.Println(currentNode.Destination, destinations)
-		err = database.DBConn.Where("node_id in (?) and pipeline_id =? and run_id=?", destinations, msg.PipelineID, msg.RunID).Find(&destinationNodes).Error
+		err = database.DBConn.Where("node_id in (?) and pipeline_id =? and run_id=? and status= ?", destinations, msg.PipelineID, msg.RunID, "Queue").Find(&destinationNodes).Error
 		if err != nil {
 			logging.PrintSecretsRedact(err)
 		}
@@ -54,7 +55,7 @@ func RunNextPipeline() {
 				uniquedependenciesarray = append(uniquedependenciesarray, k)
 			}
 
-			log.Println("Node: ", s.NodeID, " - Dependencies to check:", uniquedependencies, uniquedependenciesarray)
+			// log.Println("Node: ", s.NodeID, " - Dependencies to check:", uniquedependencies, uniquedependenciesarray)
 
 			/*
 				Check that destination isnt already running -
@@ -76,8 +77,21 @@ func RunNextPipeline() {
 				log.Println("No dependencies")
 
 				// ------ run the destination -------
+				err = worker.WorkerRunTask("python_1", s.TaskID, s.RunID, s.EnvironmentID, s.PipelineID, s.NodeID, []string{"echo " + s.NodeID})
+				// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s})
+				if err != nil {
+					if config.Debug == "true" {
+						logging.PrintSecretsRedact(err)
+					}
+
+				} else {
+					if config.Debug == "true" {
+						logging.PrintSecretsRedact(s.TaskID)
+					}
+				}
+
 			} else {
-				fmt.Printf("Dependencies: %+v\n", dependencyCheck)
+				fmt.Printf("Dependencies: %+v\n", &dependencyCheck)
 			}
 
 			// fmt.Printf("%+v\n", dependencyCheck)

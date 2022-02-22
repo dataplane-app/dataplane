@@ -151,7 +151,7 @@ func WorkerHealthStart() {
 			logging.PrintSecretsRedact("NATS error:", err)
 		}
 
-		if os.Getenv("messagedebug") == "true" {
+		if os.Getenv("metricdebug") == "true" {
 			// log.Println("Worker health: ", time.Now())
 			log.Printf("cpu perc:%v | mem percent:%v | mem used :%v | load:%v \n", percentCPUsend, percentMemorysend, memoryused, loadsend)
 			// log.Printf("Memory used:%v total:%v | Swap total: %v | Swap free: %v\n",
