@@ -49,7 +49,7 @@ func TestSpecificPipelines(t *testing.T) {
 	testPassword := testutils.AdminPassword
 
 	//--------- Login ------------
-
+	log.Println("📢 - Login")
 	loginUser := `{
 		loginUser(
 		  username: "` + testUser + `",
@@ -95,7 +95,7 @@ func TestSpecificPipelines(t *testing.T) {
 	var responsePretty bytes.Buffer
 
 	// -------- Create pipeline -------------
-
+	log.Println("📢 - Create pipeline")
 	mutation := `mutation {
 		addPipeline(
 			name: "test_` + pipelineId + `",
@@ -109,6 +109,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	json.Indent(&responsePretty, []byte(response), "", "\t")
 	log.Println(responsePretty.String())
+	responsePretty.Reset()
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -129,6 +130,8 @@ func TestSpecificPipelines(t *testing.T) {
 	}
 
 	// -------- My pipeline permissions -------------
+	log.Println("📢 - My pipeline permissions")
+
 	query := `query {
 		myPipelinePermissions{
 			Access
@@ -151,6 +154,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	json.Indent(&responsePretty, []byte(response), "", "\t")
 	log.Println(responsePretty.String())
+	responsePretty.Reset()
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -159,6 +163,8 @@ func TestSpecificPipelines(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get my pipeline permissions 200 status code")
 
 	// -------- Set pipeline permissions to user -------------
+	log.Println("📢 - Set pipeline permissions to user")
+
 	mutation = `mutation {
 		pipelinePermissionsToUser(
 			environmentID: "` + envID + `",
@@ -172,6 +178,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	json.Indent(&responsePretty, []byte(response), "", "\t")
 	log.Println(responsePretty.String())
+	responsePretty.Reset()
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -180,6 +187,7 @@ func TestSpecificPipelines(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Pipeline permissions to user 200 status code")
 
 	// -------- Get User pipeline permissions -------------
+	log.Println("📢 - Get User pipeline permissions")
 
 	query = `query {
 		userPipelinePermissions(
@@ -206,6 +214,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	json.Indent(&responsePretty, []byte(response), "", "\t")
 	log.Println(responsePretty.String())
+	responsePretty.Reset()
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -214,6 +223,7 @@ func TestSpecificPipelines(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get user pipeline permissions 200 status code")
 
 	// -------- Get User single pipeline permissions -------------
+	log.Println("📢 - Get User single pipeline permissions")
 
 	query = `query {
 		userSinglePipelinePermissions(
@@ -241,6 +251,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	json.Indent(&responsePretty, []byte(response), "", "\t")
 	log.Println(responsePretty.String())
+	responsePretty.Reset()
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -249,6 +260,8 @@ func TestSpecificPipelines(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get user single pipeline permissions 200 status code")
 
 	// -------- Create Access Group  -------------
+	log.Println("📢 - Create Access Group")
+
 	mutation = `mutation {
 	createAccessGroup(
 		environmentID: "` + envID + `",
@@ -269,6 +282,8 @@ func TestSpecificPipelines(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create access group environments 200 status code")
 
 	// -------- Set pipeline permissions to access group -------------
+	log.Println("📢 - Set pipeline permissions to access group")
+
 	mutation = `mutation {
 		pipelinePermissionsToAccessGroup(
 	environmentID: "` + envID + `",
@@ -282,6 +297,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	json.Indent(&responsePretty, []byte(response), "", "\t")
 	log.Println(responsePretty.String())
+	responsePretty.Reset()
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -290,6 +306,7 @@ func TestSpecificPipelines(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Pipeline permissions to access group 200 status code")
 
 	// -------- Get Pipeline permissions -------------
+	log.Println("📢 - Get Pipeline permissions")
 
 	query = `query {
 		pipelinePermissions(
@@ -317,6 +334,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	json.Indent(&responsePretty, []byte(response), "", "\t")
 	log.Println(responsePretty.String())
+	responsePretty.Reset()
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -325,6 +343,8 @@ func TestSpecificPipelines(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get pipeline permissions 200 status code")
 
 	// -------- Remove pipeline permissions to user -------------
+	log.Println("📢 - Remove pipeline permissions to user")
+
 	mutation = `mutation {
 		pipelinePermissionsToUser(
 			environmentID: "` + envID + `",
@@ -338,6 +358,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	json.Indent(&responsePretty, []byte(response), "", "\t")
 	log.Println(responsePretty.String())
+	responsePretty.Reset()
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -346,6 +367,8 @@ func TestSpecificPipelines(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Remove pipeline permissions from user 200 status code")
 
 	// -------- Remove pipeline permissions from access group -------------
+	log.Println("📢 - Remove pipeline permissions from access group")
+
 	mutation = `mutation {
 		pipelinePermissionsToAccessGroup(
 	environmentID: "` + envID + `",
@@ -359,6 +382,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	json.Indent(&responsePretty, []byte(response), "", "\t")
 	log.Println(responsePretty.String())
+	responsePretty.Reset()
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -367,6 +391,8 @@ func TestSpecificPipelines(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Remove pipeline permissions from access group 200 status code")
 
 	// ------ Delete temporary access group
+	log.Println("📢 - Delete temporary access group")
+
 	ag := models.PermissionsAccessGroups{}
 
 	err = database.DBConn.Where("access_group_id = ?", accessgroup).Delete(&ag).Error
