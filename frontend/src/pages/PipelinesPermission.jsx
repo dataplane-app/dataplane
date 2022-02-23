@@ -256,7 +256,7 @@ const CustomAccess = ({ row, onClick }) => {
                         }}
                         icon={access.includes(accessDictionary[option]) ? faCheck : faTimes}
                     />
-                    <Typography variant="subtitle1" lineHeight="16px" ml={3} position="absolute">
+                    <Typography variant="subtitle1" lineHeight="16px" ml={1}>
                         {prettyAccess(option)}
                     </Typography>
                 </Box>
