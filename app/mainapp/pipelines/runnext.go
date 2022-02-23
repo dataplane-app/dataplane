@@ -8,7 +8,6 @@ import (
 	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/worker"
 	"encoding/json"
-	"log"
 	"time"
 
 	"gorm.io/gorm/clause"
@@ -48,11 +47,11 @@ func RunNextPipeline() {
 		point [1, 2, 3] > 4 - this will arrive 3 times but only the first will run as destination 4 will be success or at run status.
 
 		the first destination will run the */
-		log.Println("Current node:", msg.NodeID, currentNode.Status, currentNode.Destination, len(destinationNodes))
+		// log.Println("Current node:", msg.NodeID, currentNode.Status, currentNode.Destination, len(destinationNodes))
 
 		if string(currentNode.Destination) == "null" && currentNode.Status == "Success" {
 
-			log.Println("Graph successfully run")
+			// log.Println("Graph successfully run")
 
 			run := models.PipelineRuns{
 				RunID:   msg.RunID,
@@ -74,7 +73,7 @@ func RunNextPipeline() {
 
 			for _, s := range destinationNodes {
 
-				log.Println("Destination:", s.RunID, " -> ", s.NodeID)
+				// log.Println("Destination:", s.RunID, " -> ", s.NodeID)
 
 				var dependencies []string
 				json.Unmarshal(s.Dependency, &dependencies)
