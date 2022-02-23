@@ -17,10 +17,9 @@ const AddPipelineDrawer = ({ handleClose, environmentID, getPipelines }) => {
 
     // Local state
     const [workerGroups, setWorkerGroups] = useState([]);
-    const [selectedWorkerGroup, setSelectedWorkerGroup] = useState([]);
 
     // Custom GraphQL hook
-    const addPipeline = useAddPipeline_(environmentID, handleClose, getPipelines, selectedWorkerGroup);
+    const addPipeline = useAddPipeline_(environmentID, handleClose, getPipelines);
     const getWorkerGroups = useGetWorkerGroups_(Environment.name.get(), setWorkerGroups);
 
     // Get workers on load
@@ -32,7 +31,7 @@ const AddPipelineDrawer = ({ handleClose, environmentID, getPipelines }) => {
 
     return (
         <form onSubmit={handleSubmit(addPipeline)}>
-            <Box position="relative" style={{ maxWidth: '400px', margin: 'auto' }}>
+            <Box position="relative">
                 <Box sx={{ p: '4.125rem' }}>
                     <Box position="absolute" top="26px" right="39px" display="flex" alignItems="center">
                         <Button onClick={handleClose} style={{ paddingLeft: '16px', paddingRight: '16px' }} variant="text" startIcon={<FontAwesomeIcon icon={faTimes} />}>
@@ -40,7 +39,7 @@ const AddPipelineDrawer = ({ handleClose, environmentID, getPipelines }) => {
                         </Button>
                     </Box>
 
-                    <Box mt={3}>
+                    <Box mt={3} width="212px">
                         <Typography component="h2" variant="h2">
                             Create pipeline
                         </Typography>
@@ -56,14 +55,18 @@ const AddPipelineDrawer = ({ handleClose, environmentID, getPipelines }) => {
                         <TextField label="Description" id="description" size="small" sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
 
                         <Autocomplete
-                            // key={clear} //Changing this value on submit clears the input field
-                            onChange={(event, newValue) => {
-                                setSelectedWorkerGroup(newValue);
-                                // getUserPermissions(newValue.user_id, clearStates);
-                            }}
                             options={workerGroups}
                             getOptionLabel={(option) => option.WorkerGroup}
-                            renderInput={(params) => <TextField {...params} id="worker_group" label="Worker group" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params} //
+                                    label="Worker group"
+                                    required
+                                    size="small"
+                                    sx={{ fontSize: '.75rem', display: 'flex' }}
+                                    {...register('workerGroup', { required: true })}
+                                />
+                            )}
                         />
 
                         <Grid mt={4} display="flex" alignItems="center">
@@ -82,16 +85,16 @@ export default AddPipelineDrawer;
 
 // ---------- Custom Hook
 
-const useAddPipeline_ = (environmentID, handleClose, getPipelines, selectedWorkerGroup) => {
+const useAddPipeline_ = (environmentID, handleClose, getPipelines) => {
     // GraphQL hook
     const addPipeline = useAddPipeline();
 
     const { enqueueSnackbar } = useSnackbar();
 
-    const { WorkerGroup } = selectedWorkerGroup;
     // Create pipeline
     return async (data) => {
-        const response = await addPipeline({ name: data.name, description: data.description, environmentID, workerGroup: WorkerGroup });
+        const { name, description, workerGroup } = data;
+        const response = await addPipeline({ name, description, environmentID, workerGroup });
 
         if (response.r === 'error') {
             enqueueSnackbar("Can't create pipeline: " + response.msg, { variant: 'error' });
