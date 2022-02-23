@@ -19,7 +19,7 @@ import (
 /*
 Task status: Queue, Allocated, Started, Failed, Success
 */
-func WorkerRunTask(workerGroup string, taskid string, runid string, envID string, commands []string) error {
+func WorkerRunTask(workerGroup string, taskid string, runid string, envID string, pipelineID string, nodeID string, commands []string) error {
 
 	// log.Println("task accepted")
 
@@ -112,6 +112,8 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 				CreatedAt:     time.Now().UTC(),
 				EnvironmentID: onlineWorkers[0].Env,
 				RunID:         runid,
+				PipelineID:    pipelineID,
+				NodeID:        nodeID,
 				WorkerGroup:   workerGroup,
 				WorkerID:      loadbalanceNext,
 				Commands:      commands,

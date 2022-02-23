@@ -5,14 +5,13 @@ import (
 	"dataplane/mainapp/messageq"
 	"dataplane/workers/runtask"
 	"encoding/json"
-	"log"
 )
 
 func UpdateTasks(MainAppID string) {
 
 	messageq.NATSencoded.Subscribe("taskupdate", func(subj, reply string, msg models.WorkerTasks) {
 
-		log.Println("update task:", msg.WorkerID, msg.EnvironmentID)
+		// log.Println("update task:", msg.WorkerID, msg.EnvironmentID)
 
 		// Update database --- moved to worker node for better resilience
 

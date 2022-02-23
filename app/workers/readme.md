@@ -14,7 +14,7 @@ nats sub js.out.testing --ack
 nats sub "workertask.*"
 ```
 
-### Measure execution time in milliseconds in Postgresql
+### Measure task execution time in milliseconds in Postgresql
 ```sql
 SELECT
   task_id,
@@ -25,5 +25,19 @@ SELECT
   Extract(epoch FROM (end_dt - start_dt)) AS seconds
 FROM worker_tasks 
 where end_dt >'0001-01-01'
+order by created_at desc;
+```
+
+### Measure pipeline execution time
+```sql
+SELECT
+  run_id,
+  "status",
+  created_at,
+  ended_at,
+  Extract(epoch FROM (ended_at - created_at))*1000 AS milliseconds,
+  Extract(epoch FROM (ended_at - created_at)) AS seconds
+FROM pipeline_runs 
+where ended_at >'0001-01-01'
 order by created_at desc;
 ```

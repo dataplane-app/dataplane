@@ -21,6 +21,8 @@ func NATSConnect() {
 		nats.MaxReconnects(10),
 		nats.ReconnectWait(3*time.Second))
 
+	// log.Println(NATS)
+
 	if err != nil {
 		logging.PrintSecretsRedact(err.Error())
 		log.Fatal("Failed to connect to NATS")

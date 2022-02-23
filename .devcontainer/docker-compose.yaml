@@ -74,7 +74,7 @@ services:
       secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
       database: "timescaledb"
       dataplane_port: "9000"
-      dataplane_nats: nats://nats:4222
+      dataplane_nats: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
       mode: "development"
       debug: "true"
       dbdebug: "false"

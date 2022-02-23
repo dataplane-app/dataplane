@@ -49,7 +49,7 @@ func WorkerLoad(s *gocron.Scheduler) {
 			WorkerType:  os.Getenv("worker_type"),
 		}
 		messageq.NATSencoded.Publish("workerload", send)
-		if os.Getenv("messagedebug") == "true" {
+		if os.Getenv("workerdebug") == "true" {
 			log.Println("sending:", send)
 		}
 

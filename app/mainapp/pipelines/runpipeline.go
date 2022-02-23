@@ -1,4 +1,4 @@
-package sqlrun
+package pipelines
 
 import (
 	"dataplane/mainapp/config"
@@ -61,7 +61,7 @@ func RunPipeline(pipelineID string) error {
 	// Start at trigger
 	RunID := run.RunID
 
-	log.Println("Run ID:", RunID)
+	// log.Println("Run ID:", RunID)
 
 	// Return go routines
 	nodesdata = <-nodes
@@ -79,18 +79,23 @@ func RunPipeline(pipelineID string) error {
 	var trigger []string
 	var triggerID string
 	var status string
+	var nodeType string
 
 	for _, s := range nodesdata {
 
 		status = "Queue"
+		nodeType = "normal"
 
 		if s.Commands == nil {
-			log.Println("no commands")
+			// log.Println("no commands")
 		}
 
-		// Get the first trigger and route
-		log.Println("node type", s.NodeType, s.Destination)
 		if s.NodeType == "playNode" {
+			nodeType = "start"
+		}
+		// Get the first trigger and route
+		// log.Println("node type", s.NodeType, s.Destination)
+		if nodeType == "start" {
 
 			err = json.Unmarshal(s.Destination, &trigger)
 			if err != nil {
@@ -102,6 +107,16 @@ func RunPipeline(pipelineID string) error {
 			triggerID = s.NodeID
 		}
 
+		dependJSON, err := json.Marshal(dependencies[s.NodeID])
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
+		destinationJSON, err := json.Marshal(destinations[s.NodeID])
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
 		addTask := &models.WorkerTasks{
 			TaskID:        uuid.NewString(),
 			CreatedAt:     time.Now().UTC(),
@@ -111,6 +126,15 @@ func RunPipeline(pipelineID string) error {
 			PipelineID:    s.PipelineID,
 			NodeID:        s.NodeID,
 			Status:        status,
+			Dependency:    dependJSON,
+			Destination:   destinationJSON,
+		}
+
+		if nodeType == "start" {
+
+			addTask.StartDT = time.Now().UTC()
+			addTask.EndDT = time.Now().UTC()
+
 		}
 
 		triggerData[s.NodeID] = addTask
@@ -128,11 +152,18 @@ func RunPipeline(pipelineID string) error {
 	}
 
 	// --- Run the first set of tasks
-	log.Println("trigger: ", trigger, triggerID)
+	if config.Debug == "true" {
+		log.Println("trigger: ", trigger, triggerID)
+	}
+
+	x := 0
 	for _, s := range trigger {
 
+		x = x + 3
+
 		log.Println("First:", s)
-		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, []string{"echo " + s})
+		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
+		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s})
 		if err != nil {
 			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)

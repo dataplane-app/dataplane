@@ -43,7 +43,7 @@ func ListenTasks() {
 			Tasks[task.ID] = task
 			// command := `for((i=1;i<=10000; i+=1)); do echo "Welcome $i times"; sleep 1; done`
 			// command := `find . | sed -e "s/[^ ][^\/]*\// |/g" -e "s/|\([^ ]\)/| \1/"`
-			go worker(ctx, msg.RunID, TaskID, msg.Commands)
+			go worker(ctx, msg)
 		}
 	})
 	if os.Getenv("debug") == "true" {

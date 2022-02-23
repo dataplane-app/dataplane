@@ -10,7 +10,6 @@ import (
 	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"syscall"
@@ -36,21 +35,34 @@ var Tasks = make(map[string]Task)
 var TasksStatus = make(map[string]string)
 
 // Worker function to run task
-func worker(ctx context.Context, runID string, taskID string, command []string) {
+func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 	var statusUpdate string
 
 	if os.Getenv("debug") == "true" {
-		fmt.Printf("starting task with id %s\n", taskID)
+		fmt.Printf("starting task with id %s - node: %s run: %s\n", msg.TaskID, msg.NodeID, msg.RunID)
+	}
+
+	// --- Check if this task is already running
+	var lockCheck modelmain.WorkerTasks
+	err2 := database.DBConn.Select("task_id", "status").Where("task_id = ?", msg.TaskID).First(&lockCheck).Error
+	if err2 != nil {
+		logging.PrintSecretsRedact(err2.Error())
+		return
+	}
+
+	if lockCheck.Status != "Queue" {
+		logging.PrintSecretsRedact("Skipping not in queue", msg.RunID, msg.NodeID)
+		return
 	}
 
 	statusUpdate = "Run"
 
 	TaskUpdate := modelmain.WorkerTasks{
-		TaskID:        taskID,
+		TaskID:        msg.TaskID,
 		CreatedAt:     time.Now().UTC(),
 		EnvironmentID: config.EnvID,
-		RunID:         runID,
+		RunID:         msg.RunID,
 		WorkerGroup:   os.Getenv("worker_group"),
 		WorkerID:      config.WorkerID,
 		StartDT:       time.Now().UTC(),
@@ -65,17 +77,17 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 		logging.PrintSecretsRedact("Update task error nats:", errnats)
 	}
 
-	for i, v := range command {
+	for _, v := range msg.Commands {
 		// Print the log timestamps
 		clog.PrintTimestamp = true
 
-		if TasksStatus[taskID] == "cancel" {
-			delete(TasksStatus, taskID)
+		if TasksStatus[msg.TaskID] == "cancel" {
+			delete(TasksStatus, msg.TaskID)
 			break
 		}
 
-		if TasksStatus[taskID] == "error" {
-			delete(TasksStatus, taskID)
+		if TasksStatus[msg.TaskID] == "error" {
+			delete(TasksStatus, msg.TaskID)
 			break
 		}
 
@@ -110,8 +122,8 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 				logmsg := models.LogsWorkers{
 					CreatedAt:     time.Now().UTC(),
 					EnvironmentID: os.Getenv("worker_env"),
-					RunID:         runID,
-					TaskID:        taskID,
+					RunID:         msg.RunID,
+					TaskID:        msg.TaskID,
 					Category:      "task",
 					Log:           line,
 					LogType:       "info",
@@ -121,7 +133,7 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 				// if err != nil {
 				// 	logging.PrintSecretsRedact(err)
 				// }
-				messageq.MsgSend("workertask."+taskID, logmsg)
+				messageq.MsgSend("workertask."+msg.TaskID, logmsg)
 				database.DBConn.Create(&logmsg)
 				if os.Getenv("debug") == "true" {
 					clog.Info(line)
@@ -153,8 +165,8 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 				logmsg := models.LogsWorkers{
 					CreatedAt:     time.Now().UTC(),
 					EnvironmentID: os.Getenv("worker_env"),
-					RunID:         runID,
-					TaskID:        taskID,
+					RunID:         msg.RunID,
+					TaskID:        msg.TaskID,
 					Category:      "task",
 					Log:           line,
 					LogType:       "error",
@@ -164,7 +176,7 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 				// if err != nil {
 				// 	logging.PrintSecretsRedact(err)
 				// }
-				messageq.MsgSend("workertask."+taskID, logmsg)
+				messageq.MsgSend("workertask."+msg.TaskID, logmsg)
 				database.DBConn.Create(&logmsg)
 				if os.Getenv("debug") == "true" {
 					clog.Error(line)
@@ -179,22 +191,22 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 		// Start the command and check for errors
 		var task Task
 
-		task.ID = taskID
-		task.Context = Tasks[taskID].Context
-		task.Cancel = Tasks[taskID].Cancel
-		TasksStatus[taskID] = "run"
+		task.ID = msg.TaskID
+		task.Context = Tasks[msg.TaskID].Context
+		task.Cancel = Tasks[msg.TaskID].Cancel
+		TasksStatus[msg.TaskID] = "run"
 
 		if os.Getenv("debug") == "true" {
-			log.Println("tasks before pid:", Tasks)
+			// log.Println("tasks before pid:", Tasks)
 		}
 		err := cmd.Start()
 		task.PID = cmd.Process.Pid
-		Tasks[taskID] = task
+		Tasks[msg.TaskID] = task
 
 		if os.Getenv("debug") == "true" {
-			fmt.Println("PID ", cmd.Process.Pid)
-			log.Println("tasks after pid:", Tasks)
-			log.Println(err)
+			// fmt.Println("PID ", cmd.Process.Pid)
+			// log.Println("tasks after pid:", Tasks)
+			// log.Println(err)
 		}
 
 		// Wait for all output to be processed
@@ -206,47 +218,66 @@ func worker(ctx context.Context, runID string, taskID string, command []string) 
 
 		if err != nil {
 			statusUpdate = "Fail"
-			if TasksStatus[taskID] != "cancel" {
-				TasksStatus[taskID] = "error"
+			if TasksStatus[msg.TaskID] != "cancel" {
+				TasksStatus[msg.TaskID] = "error"
 			}
 			break
 		} else {
 			statusUpdate = "Success"
 		}
 		if os.Getenv("debug") == "true" {
-			log.Println(i, err)
+			// log.Println(i, err)
 		}
 	}
 
 	if os.Getenv("debug") == "true" {
-		log.Println("Update task as " + statusUpdate + " - " + taskID)
+		// log.Println("Update task as " + statusUpdate + " - " + msg.TaskID)
 	}
 	TaskFinal := modelmain.WorkerTasks{
-		TaskID:        taskID,
+		TaskID:        msg.TaskID,
 		CreatedAt:     TaskUpdate.CreatedAt,
 		EnvironmentID: config.EnvID,
-		RunID:         runID,
+		RunID:         msg.RunID,
 		WorkerGroup:   TaskUpdate.WorkerGroup,
 		WorkerID:      config.WorkerID,
 		StartDT:       TaskUpdate.StartDT,
 		Status:        statusUpdate,
-		Reason:        TasksStatus[taskID],
+		Reason:        TasksStatus[msg.TaskID],
 		EndDT:         time.Now().UTC(),
 	}
 	UpdateWorkerTasks(TaskFinal)
 
 	_, errnats = messageq.MsgReply("taskupdate", TaskFinal, &response)
 
-	if os.Getenv("debug") == "true" {
-		log.Println("tasks delete:", taskID)
-		log.Println("tasks before del:", Tasks)
+	if config.Debug == "true" {
+		// log.Println("tasks delete:", msg.TaskID)
+		// log.Println("tasks before del:", Tasks)
 	}
 
-	delete(TasksStatus, taskID)
-	delete(Tasks, taskID)
+	// Queue the next set of tasks
+	RunNext := modelmain.WorkerPipelineNext{
+		TaskID:        msg.TaskID,
+		CreatedAt:     TaskUpdate.CreatedAt,
+		EnvironmentID: config.EnvID,
+		PipelineID:    msg.PipelineID,
+		RunID:         msg.RunID,
+		NodeID:        msg.NodeID,
+		Status:        statusUpdate,
+	}
 
-	if os.Getenv("debug") == "true" {
-		log.Println("tasks after del:", Tasks)
+	errnat := messageq.MsgSend("pipeline-run-next", RunNext)
+	if errnat != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(errnat)
+		}
+
+	}
+
+	delete(TasksStatus, msg.TaskID)
+	delete(Tasks, msg.TaskID)
+
+	if config.Debug == "true" {
+		// log.Println("tasks after del:", Tasks)
 	}
 
 	<-ctx.Done()
