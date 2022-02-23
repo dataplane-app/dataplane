@@ -9,6 +9,9 @@ import (
 	"dataplane/mainapp/worker"
 	"encoding/json"
 	"log"
+	"time"
+
+	"gorm.io/gorm/clause"
 )
 
 func RunNextPipeline() {
@@ -23,7 +26,6 @@ func RunNextPipeline() {
 			logging.PrintSecretsRedact(err)
 		}
 
-		log.Println("Current node:", msg.NodeID, currentNode.Status)
 		// fmt.Printf("%+v\n", currentNode)
 
 		// Retrieve all destinations
@@ -38,6 +40,42 @@ func RunNextPipeline() {
 		err = database.DBConn.Where("node_id in (?) and pipeline_id =? and run_id=? and status= ?", destinations, msg.PipelineID, msg.RunID, "Queue").Find(&destinationNodes).Error
 		if err != nil {
 			logging.PrintSecretsRedact(err)
+		}
+
+		// if there are no destinations and the last run was a success, then close off the run
+
+		/* The above query pulls out all the destinations data at queue status so say the the last 3 dependencies come to a single
+		point [1, 2, 3] > 4 - this will arrive 3 times but only the first will run as destination 4 will be success or at run status.
+
+		the first destination will run the */
+		log.Println("Current node:", msg.NodeID, currentNode.Status, currentNode.Destination, len(destinationNodes))
+
+		if string(currentNode.Destination) == "null" && currentNode.Status == "Success" {
+
+			log.Println("Graph successfully run")
+
+			run := models.PipelineRuns{
+				RunID:   msg.RunID,
+				Status:  "Success",
+				EndedAt: time.Now().UTC(),
+			}
+
+			err2 := database.DBConn.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "run_id"}},
+				DoUpdates: clause.AssignmentColumns([]string{"ended_at", "status"}),
+			}).Create(&run)
+			if err2.Error != nil {
+				logging.PrintSecretsRedact(err2.Error.Error())
+			}
+
+			// 	err := database.DBConn.Save(&run).Error
+			// 	if err != nil {
+
+			// 		if config.Debug == "true" {
+			// 			logging.PrintSecretsRedact(err)
+			// 		}
+			// 	}
+
 		}
 
 		for _, s := range destinationNodes {
