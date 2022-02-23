@@ -1,47 +1,93 @@
 import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../components/CustomChip';
 import AddPipelinesPermissionDrawer from '../components/DrawerContent/AddPipelinesPermissionDrawer';
 import Search from '../components/Search';
+import { usePipelinePermissions } from '../graphql/getPipelinePermissions';
+import { useSnackbar } from 'notistack';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
+import { useGlobalMeState } from '../components/Navbar';
+import { DEFAULT_OPTIONS } from '../components/DrawerContent/AddPipelinesPermissionDrawer';
 
 const PipelinesPermission = () => {
     // React router
-    const history = useHistory();
+    const { state: name } = useLocation();
 
     // Ref for scroll to top
     const scrollRef = useRef(null);
+
+    // Global state
+    const Environment = useGlobalEnvironmentState();
+    const MeData = useGlobalMeState();
+
+    // Local state
+    const [permissions, setPermissions] = useState([]);
+    const [selectedSubject, setSelectedSubject] = useState({
+        user_id: '',
+        first_name: '',
+        last_name: '',
+        email: '',
+    });
 
     // Drawer state
     const [isOpenAddPermissions, setIsOpenAddPermissions] = useState(false);
     const [type, setType] = useState('User');
 
+    // Custom GraphQL hooks
+    const pipelinePermissions = usePipelinePermissions_(Environment.id.get(), setPermissions, MeData.user_id.get());
+
     useEffect(() => {
         // Scroll to top on load
-        scrollRef.current.parentElement.scrollIntoView();
+        if (Environment.id.get() && MeData.user_id.get()) {
+            scrollRef.current.parentElement.scrollIntoView();
+            pipelinePermissions();
+        }
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [Environment.id.get(), MeData.user_id.get()]);
+
+    const handleClick = (permission) => {
+        permission.Subject === 'user' ? setType('User') : setType('Access group');
+        setSelectedSubject({
+            ...selectedSubject,
+            user_id: permission.SubjectID,
+            first_name: permission.FirstName,
+            last_name: permission.LastName,
+            email: permission.Email,
+        });
+
+        setIsOpenAddPermissions(true);
+    };
 
     // table
     const columns = useMemo(
         () => [
             {
                 Header: 'Member',
-                accessor: (row) => [row.info.name, row.info.job_title],
-                Cell: (row) => <CustomName row={row} onClick={() => history.push(`/teams/${row.row.original.user_id}`)} />,
+                accessor: (row) => [row.FirstName + ' ' + row.LastName, row.JobTitle],
+                Cell: (row) => <CustomName row={row} onClick={() => handleClick(row.row.original)} />,
             },
             {
                 Header: 'Email',
-                accessor: (row) => [row.type.title, row.type.email],
+                accessor: (row) => [row.Subject, row.Email],
                 Cell: (row) => <CustomEmail row={row} />,
             },
             {
+                Header: 'Access',
+                accessor: 'Access',
+                Cell: (row) => <CustomAccess row={row} onClick={() => handleClick(row.row.original)} />,
+            },
+            {
                 Header: 'Active',
-                accessor: 'active',
+                accessor: 'Active',
                 Cell: (row) => (row.value === true ? <CustomChip label="Active" customColor="green" /> : <CustomChip label="Inactive" customColor="red" />),
             },
         ],
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []
     );
@@ -49,7 +95,7 @@ const PipelinesPermission = () => {
     const { getTableProps, getTableBodyProps, rows, prepareRow, setGlobalFilter } = useTable(
         {
             columns,
-            data: PIPELINE_MOCK_DATA,
+            data: permissions,
         },
         useGlobalFilter
     );
@@ -57,13 +103,13 @@ const PipelinesPermission = () => {
     return (
         <Box className="page" ref={scrollRef}>
             <Typography component="h2" variant="h2" color="text.primary">
-                Pipeline permissions {'>'} Remove Logs
+                Pipeline permissions {'>'} {name}
             </Typography>
 
-            <Box mt={4} sx={{ width: { md: '630px' } }}>
+            <Box mt={4} sx={{ width: { md: '800px' } }}>
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
-                        <CustomChip amount={2} label="Permissions" margin={2} customColor="orange" />
+                        <CustomChip amount={rows.length} label="Permissions" margin={2} customColor="orange" />
                     </Grid>
 
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center', flex: 1 }}>
@@ -105,7 +151,7 @@ const PipelinesPermission = () => {
                                     component="tr"
                                     {...row.getRowProps()}
                                     display="grid"
-                                    gridTemplateColumns="1fr 1fr .4fr"
+                                    gridTemplateColumns="1fr 1fr 1fr .4fr"
                                     alignItems="center"
                                     borderRadius="5px"
                                     backgroundColor="background.secondary"
@@ -131,23 +177,36 @@ const PipelinesPermission = () => {
                 </Box>
             </Box>
 
-            <Drawer anchor="right" open={isOpenAddPermissions} onClose={() => setIsOpenAddPermissions(!isOpenAddPermissions)}>
+            <Drawer
+                anchor="right"
+                open={isOpenAddPermissions}
+                onClose={() => {
+                    setIsOpenAddPermissions(!isOpenAddPermissions);
+                    setSelectedSubject({
+                        user_id: '',
+                        first_name: '',
+                        last_name: '',
+                        email: '',
+                    });
+                }}>
                 <AddPipelinesPermissionDrawer
                     typeToAdd={type}
+                    selectedSubject={selectedSubject}
                     handleClose={() => {
                         setIsOpenAddPermissions(false);
                     }}
+                    refreshPermissions={pipelinePermissions}
                 />
             </Drawer>
         </Box>
     );
 };
 
-const CustomName = ({ row }) => {
+const CustomName = ({ row, onClick }) => {
     const [name, job_title] = row.value;
 
     return (
-        <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
+        <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start" onClick={onClick}>
             <Typography component="h4" variant="h3" sx={{ color: 'cyan.main' }}>
                 {name}
             </Typography>
@@ -159,11 +218,11 @@ const CustomName = ({ row }) => {
 };
 
 const CustomEmail = ({ row }) => {
-    const [title, email] = row.value;
+    const [subject, email] = row.value;
 
     return (
         <Box>
-            <CustomChip label={title} customColor={title === 'User' ? 'purple' : 'orange'} />
+            <CustomChip label={subject === 'user' ? 'User' : 'Access group'} customColor={subject === 'user' ? 'purple' : 'orange'} />
             <Typography component="h5" variant="subtitle1" mt={0.5}>
                 {email}
             </Typography>
@@ -171,31 +230,73 @@ const CustomEmail = ({ row }) => {
     );
 };
 
-const PIPELINE_MOCK_DATA = [
-    {
-        id: 1,
-        info: {
-            name: 'Saul Frank',
-            job_title: 'Data Engineer',
-        },
-        type: {
-            title: 'User',
-            email: 'saulfrank@email.com',
-        },
-        active: true,
-    },
-    {
-        id: 2,
-        info: {
-            name: 'Run team',
-            job_title: '',
-        },
-        type: {
-            title: 'Access group',
-            email: '',
-        },
-        active: true,
-    },
-];
+const CustomAccess = ({ row, onClick }) => {
+    const access = row.value.split(','); //["read", "write"]
+
+    const accessDictionary = {
+        view: 'read',
+        edit: 'write',
+        run: 'run',
+        deploy: 'deploy',
+        assign_permissions: 'assign_pipeline_permission',
+    };
+
+    return (
+        <Box display="flex" flexDirection="column">
+            {Object.keys(DEFAULT_OPTIONS).map((option) => (
+                <Box key={option} display="flex" flexDirection="row" alignItems="center" onClick={onClick}>
+                    {/* <Box
+                        component={FontAwesomeIcon}
+                        sx={{
+                            fontSize: '0.6875rem',
+                            fontWeight: 900,
+                            paddingY: '2px',
+                            pr: '10px',
+                            color: access.includes(accessDictionary[option]) ? 'status.pipelineOnline' : '#F80000',
+                        }}
+                        icon={access.includes(accessDictionary[option]) ? faCheck : faTimes}
+                    /> */}
+                    <Typography variant="subtitle1" lineHeight="16px" ml={1}>
+                        {prettyAccess(option)}
+                    </Typography>
+                </Box>
+            ))}
+        </Box>
+    );
+};
 
 export default PipelinesPermission;
+
+// ------ Custom Hook
+const usePipelinePermissions_ = (environmentID, setPermissions, userID) => {
+    // GraphQL hook
+    const pipelinePermissions = usePipelinePermissions();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    // Get permissions
+    return async () => {
+        const response = await pipelinePermissions({ userID, environmentID, pipelineID: pipelineId });
+
+        if (response === null) {
+            setPermissions([]);
+        } else if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get permissions: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get permissions', { variant: 'error' }));
+        } else {
+            setPermissions(response);
+        }
+    };
+};
+
+// Utility function
+function prettyAccess(access) {
+    access = access[0].toUpperCase() + access.slice(1);
+    access = access.replace('_', ' ');
+    return access;
+}

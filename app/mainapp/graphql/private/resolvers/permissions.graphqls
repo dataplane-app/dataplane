@@ -61,6 +61,7 @@ extend type Mutation {
     """
     updatePermissionToUser(environmentID: String!, resource: String!, resourceID: String!, access: String!, user_id: String!): String!
 
+
     """
     Revoke Permission from User.
     + **Route**: Private

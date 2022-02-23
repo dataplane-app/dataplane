@@ -27,6 +27,7 @@ import { useGetAccessGroups } from '../graphql/getAccessGroups';
 import { useUpdateUserToAccessGroup } from '../graphql/updateUserToAccessGroup';
 import { useGetUserAccessGroups } from '../graphql/getUserAccessGroups';
 import { useRemoveUserFromAccessGroup } from '../graphql/removeUserFromAccessGroup';
+import { useGetUserPipelinePermissions } from '../graphql/getUserPipelinePermissions';
 import { EnvironmentContext } from '../App';
 
 export default function TeamDetail() {
@@ -51,6 +52,7 @@ export default function TeamDetail() {
     const [availablePermissions, setAvailablePermissions] = useState([]);
     const [selectedPermission, setSelectedPermission] = useState(null);
     const [userPermissions, setUserPermissions] = useState([]);
+    const [specificPermissions, setSpecificPermissions] = useState([]);
     const [accessGroup, setAccessGroup] = useState('');
     const [accessGroups, setAccessGroups] = useState([]);
     const [userAccessGroups, setUserAccessGroups] = useState([]);
@@ -72,6 +74,7 @@ export default function TeamDetail() {
     const addUserToEnv = useAddUserToEnv(getUserEnvironments);
     const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, globalEnvironment?.id);
     const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
+    const getUserPipelinePermissions = useGetUserPipelinePermissions_(setSpecificPermissions, user.user_id, globalEnvironment?.id);
     const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
     const deletePermission = useDeletePermission(getUserPermissions);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
@@ -98,6 +101,7 @@ export default function TeamDetail() {
         // Get all available permissions when user environment and id are available and if empty
         if (globalEnvironment && user) {
             getAvailablePermissions();
+            getUserPipelinePermissions();
         }
 
         // Get all available environments when user environment and id are available and if empty
@@ -270,8 +274,9 @@ export default function TeamDetail() {
                                 </Button>
                             </Grid>
 
+                            {/* Platform permissions */}
                             {/* Check if there are any permissions. If not, hide the box */}
-                            {userPermissions.filter((plat) => plat.Level === 'platform').length ? (
+                            {userPermissions.filter((permission) => permission.Level === 'platform').length ? (
                                 <Box mt={4}>
                                     <Box>
                                         <Typography component="h3" variant="h3" color="text.primary">
@@ -281,22 +286,22 @@ export default function TeamDetail() {
 
                                     <Box mt={2}>
                                         {userPermissions
-                                            .filter((plat) => plat.Resource.includes('platform'))
-                                            .map((plat) => (
-                                                <Grid display="flex" alignItems="center" key={plat.Label} mt={1.5} mb={1.5}>
+                                            .filter((permission) => permission.Level === 'platform')
+                                            .map((permission) => (
+                                                <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
                                                     <Box
-                                                        onClick={() => !(user.user_id === meData.user_id && plat.Label === 'Admin') && deletePermission(plat)}
+                                                        onClick={() => !(user.user_id === meData.user_id && permission.Label === 'Admin') && deletePermission(permission)}
                                                         component={FontAwesomeIcon}
                                                         sx={{
                                                             fontSize: '17px',
                                                             mr: '7px',
-                                                            color: user.user_id === meData.user_id && plat.Label === 'Admin' ? 'rgba(0, 0, 0, 0.26)' : 'rgba(248, 0, 0, 1)',
-                                                            cursor: !(user.user_id === meData.user_id && plat.Label === 'Admin') && 'pointer',
+                                                            color: user.user_id === meData.user_id && permission.Label === 'Admin' ? 'rgba(0, 0, 0, 0.26)' : 'rgba(248, 0, 0, 1)',
+                                                            cursor: !(user.user_id === meData.user_id && permission.Label === 'Admin') && 'pointer',
                                                         }}
                                                         icon={faTrashAlt}
                                                     />
                                                     <Typography variant="subtitle2" lineHeight="15.23px">
-                                                        {plat.Label}
+                                                        {permission.Label}
                                                     </Typography>
                                                 </Grid>
                                             ))}
@@ -304,8 +309,9 @@ export default function TeamDetail() {
                                 </Box>
                             ) : null}
 
+                            {/* Environment permissions */}
                             {/* Check if there are any permissions. If not, hide the box */}
-                            {userPermissions.filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === globalEnvironment.id).length ? (
+                            {userPermissions.filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === globalEnvironment.id).length ? (
                                 <Box mt="2.31rem">
                                     <Typography component="h3" variant="h3" color="text.primary">
                                         Environment permissions
@@ -316,17 +322,47 @@ export default function TeamDetail() {
 
                                     <Box mt={2}>
                                         {userPermissions
-                                            .filter((env) => !env.Resource.includes('platform') && env.EnvironmentID === globalEnvironment.id)
-                                            .map((env) => (
-                                                <Grid display="flex" alignItems="center" key={env.Label} mt={1.5} mb={1.5}>
+                                            .filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === globalEnvironment.id)
+                                            .map((permission) => (
+                                                <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
                                                     <Box
-                                                        onClick={() => deletePermission(env)}
+                                                        onClick={() => deletePermission(permission)}
                                                         component={FontAwesomeIcon}
                                                         sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
                                                         icon={faTrashAlt}
                                                     />
                                                     <Typography variant="subtitle2" lineHeight="15.23px">
-                                                        {env.Label}
+                                                        {permission.Label}
+                                                    </Typography>
+                                                </Grid>
+                                            ))}
+                                    </Box>
+                                </Box>
+                            ) : null}
+
+                            {/* Specific permissions */}
+                            {/* Check if there are any permissions. If not, hide the box */}
+                            {specificPermissions.length ? (
+                                <Box mt={4}>
+                                    <Box>
+                                        <Typography component="h3" variant="h3" color="text.primary">
+                                            Specific permissions
+                                        </Typography>
+                                    </Box>
+
+                                    <Box mt={2}>
+                                        {specificPermissions
+                                            ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
+                                            .map((permission) => (
+                                                <Grid display="flex" alignItems="center" key={permission.PipelineName} mt={1.5} mb={1.5}>
+                                                    <Box
+                                                        onClick={() => deletePermission(permission)}
+                                                        component={FontAwesomeIcon}
+                                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                                        icon={faTrashAlt}
+                                                    />
+                                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                                        Pipeline {permission.PipelineName + ' ' + permission.Access}
                                                     </Typography>
                                                 </Grid>
                                             ))}
@@ -697,6 +733,31 @@ const useGetUserPermissions_ = (setUserPermissions, userID, environmentID) => {
     };
 };
 
+const useGetUserPipelinePermissions_ = (setSpecificPermissions, userID, environmentID) => {
+    // GraphQL hook
+    const getUserPipelinePermissions = useGetUserPipelinePermissions();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get specific permissions
+    return async () => {
+        if (userID !== undefined && environmentID !== null) {
+            const response = await getUserPipelinePermissions({ userID, environmentID });
+
+            if (response === null) {
+                setSpecificPermissions([]);
+            } else if (response.r === 'error') {
+                closeSnackbar();
+                enqueueSnackbar("Can't get specific permissions: " + response.msg, { variant: 'error' });
+            } else if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message + ': get specific permissions failed', { variant: 'error' }));
+            } else {
+                setSpecificPermissions(response);
+            }
+        }
+    };
+};
+
 const useUpdatePermissions = (getUserPermissions, selectedPermission, environmentID, user_id) => {
     // GraphQL hook
     const updatePermissionToUser = useUpdatePermissionToUser();
@@ -866,7 +927,7 @@ function filterPermissionsDropdown(availablePermissions, userPermissions, global
         // Filter environment permissions
         ...availablePermissions.filter(
             (row) =>
-                row.Level !== 'platform' &&
+                row.Level === 'environment' &&
                 !userPermissions
                     .filter((a) => a.ResourceID === globalEnvironmentId)
                     .map((a) => a.Resource)
