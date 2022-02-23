@@ -157,13 +157,17 @@ func RunPipeline(pipelineID string) error {
 	}
 
 	x := 0
+	ex := ""
 	for _, s := range trigger {
 
-		x = x + 3
+		x = x + 1
 
 		log.Println("First:", s)
+		if x == 2 {
+			ex = "exit 1;"
+		}
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
-		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s})
+		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s + ";" + ex})
 		if err != nil {
 			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)

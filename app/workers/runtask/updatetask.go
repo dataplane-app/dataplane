@@ -1,9 +1,11 @@
 package runtask
 
 import (
+	"dataplane/mainapp/database/models"
 	modelmain "dataplane/mainapp/database/models"
 	"dataplane/workers/database"
 	"dataplane/workers/logging"
+	"time"
 
 	"gorm.io/gorm/clause"
 )
@@ -21,6 +23,31 @@ func UpdateWorkerTasks(msg modelmain.WorkerTasks) {
 	}).Create(&msg)
 	if err2.Error != nil {
 		logging.PrintSecretsRedact(err2.Error.Error())
+	}
+
+	if msg.Status == "Fail" {
+
+		// Update pipeline as failed
+		run := models.PipelineRuns{
+			RunID:   msg.RunID,
+			Status:  "Fail",
+			EndedAt: time.Now().UTC(),
+		}
+
+		err2 := database.DBConn.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "run_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"ended_at", "status"}),
+		}).Create(&run)
+		if err2.Error != nil {
+			logging.PrintSecretsRedact(err2.Error.Error())
+		}
+
+		// Update all the future tasks
+		err3 := database.DBConn.Model(&modelmain.WorkerTasks{}).Where("run_id = ? and status=?", msg.RunID, "Queue").Updates(map[string]interface{}{"status": "Fail", "reason": "Upstream fail"}).Error
+		if err3 != nil {
+			logging.PrintSecretsRedact(err3.Error())
+		}
+
 	}
 
 	// }()
