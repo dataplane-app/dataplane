@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/database/models"
@@ -14,7 +13,6 @@ import (
 	"os"
 	"time"
 
-	pglock "github.com/allisson/go-pglock/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -34,24 +32,6 @@ func Setup(port string) *fiber.App {
 	messageq.NATSConnect()
 
 	// ------- DATABASE CONNECT ------
-	db1, err := database.NewLockDB()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer database.CloseLockDB(db1)
-
-	ctx := context.Background()
-	id := int64(1)
-	lock1, err := pglock.NewLock(ctx, id, db1)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ok, err := lock1.Lock(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("lock1.Lock()==%v\n", ok)
 
 	database.DBConnect()
 	log.Println("🏃 ======== DATAPLANE WORKER ======== running on: ", os.Getenv("env"))
