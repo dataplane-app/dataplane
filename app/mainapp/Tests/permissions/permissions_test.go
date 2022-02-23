@@ -161,11 +161,9 @@ func TestPermissions(t *testing.T) {
 	mutation = `mutation {
 		pipelinePermissionsToUser(
 				environmentID: "` + envID + `",
-				resource: "specific_pipeline",
 				resourceID: "` + resourceID + `"
 				user_id: "` + usertoaddperm + `",
-				access: "read",
-				checked: "yes"
+				access: "read"
 			)
 		}`
 
@@ -181,11 +179,9 @@ func TestPermissions(t *testing.T) {
 	mutation = `mutation {
 		pipelinePermissionsToAccessGroup(
 				environmentID: "` + envID + `",
-				resource: "specific_pipeline",
 				resourceID: "` + resourceID + `"
 				access_group_id: "` + usertoaddperm + `",
-				access: "read",
-				checked: "yes"
+				access: "read"
 			)
 		}`
 
@@ -204,10 +200,8 @@ func TestPermissions(t *testing.T) {
 					environmentID: "` + envID + `",
 					pipelineID: "` + resourceID + `"
 				){
-					ID
 					Subject
 					SubjectID
-					Resource
 					ResourceID
 					Access
 					Active
@@ -235,11 +229,9 @@ func TestPermissions(t *testing.T) {
 	mutation = `mutation {
 			pipelinePermissionsToUser(
 					environmentID: "` + envID + `",
-					resource: "specific_pipeline",
 					resourceID: "` + resourceID + `"
 					user_id: "` + usertoaddperm + `",
-					access: "read",
-					checked: "no"
+					access: "read"
 				)
 			}`
 
@@ -255,11 +247,9 @@ func TestPermissions(t *testing.T) {
 	mutation = `mutation {
 		pipelinePermissionsToAccessGroup(
 				environmentID: "` + envID + `",
-				resource: "specific_pipeline",
 				resourceID: "` + resourceID + `"
 				access_group_id: "` + usertoaddperm + `",
-				access: "read",
-				checked: "no"
+				access: "read"
 			)
 		}`
 

@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
@@ -414,7 +414,7 @@ func (r *queryResolver) GetAccessGroups(ctx context.Context, userID string, envi
 
 	e := []*models.PermissionsAccessGroups{}
 
-	err := database.DBConn.Find(&e).Error
+	err := database.DBConn.Where("environment_id = ?", environmentID).Find(&e).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
@@ -443,7 +443,7 @@ func (r *queryResolver) GetAccessGroup(ctx context.Context, userID string, envir
 
 	e := &models.PermissionsAccessGroups{}
 
-	err := database.DBConn.Where("access_group_id = ?", accessGroupID).First(&e).Error
+	err := database.DBConn.Where("access_group_id = ? and environment_id =?", accessGroupID, environmentID).First(&e).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
@@ -484,8 +484,8 @@ func (r *queryResolver) GetUserAccessGroups(ctx context.Context, userID string, 
 		FROM permissions_accessg_users pagu
 		JOIN permissions_access_groups pag
 		ON pagu.access_group_id = pag.access_group_id
-		WHERE pagu.user_id = ?
-		`, userID).Scan(&e).Error
+		WHERE pagu.user_id = ? and pag.environment_id =? 
+		`, userID, environmentID).Scan(&e).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -531,8 +531,8 @@ func (r *queryResolver) GetAccessGroupUsers(ctx context.Context, environmentID s
 		FROM users u
 		JOIN permissions_accessg_users
 		ON u.user_id = permissions_accessg_users.user_id
-		WHERE permissions_accessg_users.access_group_id = ?		
-		`, accessGroupID).Scan(&e).Error
+		WHERE permissions_accessg_users.access_group_id = ?	and permissions_accessg_users.environment_id =?	
+		`, accessGroupID, environmentID).Scan(&e).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {

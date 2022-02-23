@@ -11,7 +11,6 @@ import (
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"errors"
-	"log"
 	"os"
 
 	"gorm.io/gorm"
@@ -36,17 +35,15 @@ func (r *mutationResolver) PipelinePermissionsToUser(ctx context.Context, enviro
 	}
 
 	// --- First delete all permissions
-	err := database.DBConn.Where("subject_id = ? and resource_id = ? and environment_id = ?",
-		userID, resourceID, environmentID).Delete(&models.Permissions{})
+	err := database.DBConn.Where("subject_id = ? and resource=? and resource_id = ? and environment_id = ?",
+		userID, "specific_pipeline", resourceID, environmentID).Delete(&models.Permissions{}).Error
 
-	// Fix this!!! GORM is returning an error on successful deletion. Ignoring error until fixed.
-	log.Println(err)
-	// if err != nil {
-	// 	if os.Getenv("debug") == "true" {
-	// 		logging.PrintSecretsRedact(err)
-	// 	}
-	// 	return "", errors.New("Delete pipelines permission to user database error.")
-	// }
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete pipelines permission to user database error.")
+	}
 
 	// --- Next, add selected permissions
 	for _, accessType := range access {
@@ -91,17 +88,15 @@ func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context,
 	}
 
 	// --- First delete all permissions
-	err := database.DBConn.Where("subject_id = ? and resource_id = ? and environment_id = ?",
-		accessGroupID, resourceID, environmentID).Delete(&models.Permissions{})
+	err := database.DBConn.Where("subject_id = ? and resource=? and resource_id = ? and environment_id = ?",
+		accessGroupID, "specific_pipeline", resourceID, environmentID).Delete(&models.Permissions{}).Error
 
-	// Fix this!!! GORM is returning an error on successful deletion. Ignoring error until fixed.
-	log.Println(err)
-	// if err != nil {
-	// 	if os.Getenv("debug") == "true" {
-	// 		logging.PrintSecretsRedact(err)
-	// 	}
-	// 	return "", errors.New("Delete pipelines permission to user database error.")
-	// }
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete pipelines permission to user database error.")
+	}
 
 	// --- Next, add selected permissions
 	for _, accessType := range access {
@@ -205,10 +200,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
-		// {Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "assign_pipeline_permission", EnvironmentID: environmentID},
-		// {Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
-		// {Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
-		// {Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: platformID, Access: "read", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -336,10 +328,7 @@ func (r *queryResolver) UserSinglePipelinePermissions(ctx context.Context, userI
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
-		// {Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "assign_pipeline_permission", EnvironmentID: environmentID},
-		// {Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
-		// {Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
-		// {Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: platformID, Access: "read", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
