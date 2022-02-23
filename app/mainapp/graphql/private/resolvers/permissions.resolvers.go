@@ -161,7 +161,8 @@ func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permission
 		p.resource = pt.code and
 		p.subject = 'user' and 
 		p.subject_id = ? and
-		p.active = true
+		p.active = true and
+		pt.level <> 'specific'
 		)
 		union
 		(
@@ -183,7 +184,8 @@ func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permission
 		p.subject = 'access_group' and 
 		p.subject_id = agu.user_id and
 		p.subject_id = ? and
-		p.active = true
+		p.active = true and
+		pt.level <> 'specific'
 		)
 `,
 		//direct
@@ -239,7 +241,8 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		p.resource = pt.code and
 		p.subject = 'user' and 
 		p.subject_id = ? and
-		p.active = true		
+		p.active = true	and
+		pt.level <> 'specific'
 		)
 		union
 		(
@@ -255,12 +258,13 @@ func (r *queryResolver) UserPermissions(ctx context.Context, userID string, envi
 		pt.level,
 		pt.label
 		from 
-		permissions p, permissions_accessg_users agu, permissions_resource_types pt
+		permissions p, permissions_resource_types pt
 		where 
 		p.resource = pt.code and
 		p.subject = 'access_group' and 
 		p.subject_id = ? and
-		p.active = true		
+		p.active = true	and
+		pt.level <> 'specific'
 		)
 `,
 		//direct

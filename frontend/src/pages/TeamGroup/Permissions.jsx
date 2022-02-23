@@ -78,27 +78,60 @@ export default function Permissions({ environmentId }) {
                 </Button>
             </Grid>
 
+            {/* Environment permissions */}
             {/* Check if there are any permissions. If not, hide the box */}
-            {permissions.length ? (
+            {permissions.filter((env) => env.Level === 'environment').length ? (
                 <Box mt="2.31rem">
                     <Typography component="h3" variant="h3" color="text.primary">
                         Environment permissions
                     </Typography>
 
                     <Box mt={2}>
-                        {permissions.map((env) => (
-                            <Grid display="flex" alignItems="center" key={env.Label} mt={1.5} mb={1.5}>
-                                <Box
-                                    onClick={() => deletePermission(env)}
-                                    component={FontAwesomeIcon}
-                                    sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
-                                    icon={faTrashAlt}
-                                />
-                                <Typography variant="subtitle2" lineHeight="15.23px">
-                                    {env.Label}
-                                </Typography>
-                            </Grid>
-                        ))}
+                        {permissions
+                            .filter((permission) => permission.Level === 'environment')
+                            .map((env) => (
+                                <Grid display="flex" alignItems="center" key={env.Label} mt={1.5} mb={1.5}>
+                                    <Box
+                                        onClick={() => deletePermission(env)}
+                                        component={FontAwesomeIcon}
+                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                        icon={faTrashAlt}
+                                    />
+                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                        {env.Label}
+                                    </Typography>
+                                </Grid>
+                            ))}
+                    </Box>
+                </Box>
+            ) : null}
+
+            {/* Specific permissions */}
+            {/* Check if there are any permissions. If not, hide the box */}
+            {permissions.filter((env) => env.Level === 'specific').length ? (
+                <Box mt={4}>
+                    <Box>
+                        <Typography component="h3" variant="h3" color="text.primary">
+                            Specific permissions
+                        </Typography>
+                    </Box>
+
+                    <Box mt={2}>
+                        {permissions
+                            .filter((permission) => permission.Level === 'specific')
+                            .map((permission) => (
+                                <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
+                                    <Box
+                                        onClick={() => deletePermission(permission)}
+                                        component={FontAwesomeIcon}
+                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                        icon={faTrashAlt}
+                                    />
+                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                        {permission.Label}
+                                    </Typography>
+                                </Grid>
+                            ))}
                     </Box>
                 </Box>
             ) : null}
@@ -223,7 +256,7 @@ function filterPermissionsDropdown(availablePermissions, userPermissions, global
         // Filter environment permissions
         ...availablePermissions.filter(
             (permission) =>
-                permission.Level !== 'platform' &&
+                permission.Level === 'environment' &&
                 !userPermissions
                     .filter((a) => a.ResourceID === globalEnvironmentId)
                     .map((a) => a.Resource)

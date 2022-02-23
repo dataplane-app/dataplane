@@ -17,7 +17,15 @@ import (
 For individual tests - in separate window run: go run server.go
 go test -p 1 -v -count=1 -run TestPermissions dataplane/Tests/permissions
 * Login
-* Get environments
+* Grant permissions to user
+* Get my permissions
+* Get user permissions
+* Revoke permissions from user
+* Give pipeline permission to user
+* Give pipeline permissions to access group
+* Retrieve pipeline permissions
+* Revoke pipeline permission from user
+* Revoke pipeline permission from access group
 */
 func TestPermissions(t *testing.T) {
 
@@ -137,6 +145,111 @@ func TestPermissions(t *testing.T) {
 				environmentID: "` + envID + `",
 				user_id: "` + usertoaddperm + `",
 				permission_id: "` + permid + `",
+			)
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	// -------- Give pipeline permissions to user  -------------
+	resourceID := uuid.NewString()
+	mutation = `mutation {
+		pipelinePermissionsToUser(
+				environmentID: "` + envID + `",
+				resourceID: "` + resourceID + `"
+				user_id: "` + usertoaddperm + `",
+				access: "read"
+			)
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	// -------- Give pipeline permissions to access group  -------------
+	mutation = `mutation {
+		pipelinePermissionsToAccessGroup(
+				environmentID: "` + envID + `",
+				resourceID: "` + resourceID + `"
+				access_group_id: "` + usertoaddperm + `",
+				access: "read"
+			)
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	// -------- Retrieve pipeline permissions  -------------
+	query = `query {
+		pipelinePermissions(
+					userID: "` + usertoaddperm + `",
+					environmentID: "` + envID + `",
+					pipelineID: "` + resourceID + `"
+				){
+					Subject
+					SubjectID
+					ResourceID
+					Access
+					Active
+					EnvironmentID
+					Level
+					Label
+					FirstName
+					LastName
+					Email
+					JobTitle
+				}
+			}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
+
+	// -------- Revoke pipeline permissions to user  -------------
+	mutation = `mutation {
+			pipelinePermissionsToUser(
+					environmentID: "` + envID + `",
+					resourceID: "` + resourceID + `"
+					user_id: "` + usertoaddperm + `",
+					access: "read"
+				)
+			}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	// -------- Revoke pipeline permissions to access group  -------------
+	mutation = `mutation {
+		pipelinePermissionsToAccessGroup(
+				environmentID: "` + envID + `",
+				resourceID: "` + resourceID + `"
+				access_group_id: "` + usertoaddperm + `",
+				access: "read"
 			)
 		}`
 
