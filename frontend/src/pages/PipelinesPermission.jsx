@@ -245,17 +245,17 @@ const CustomAccess = ({ row, onClick }) => {
         <Box display="flex" flexDirection="column">
             {Object.keys(DEFAULT_OPTIONS).map((option) => (
                 <Box key={option} display="flex" flexDirection="row" alignItems="center" onClick={onClick}>
-                    {/* <Box
+                    <Box
                         component={FontAwesomeIcon}
                         sx={{
                             fontSize: '0.6875rem',
                             fontWeight: 900,
                             paddingY: '2px',
-                            pr: '10px',
+                            mr: '10px',
                             color: access.includes(accessDictionary[option]) ? 'status.pipelineOnline' : '#F80000',
                         }}
                         icon={access.includes(accessDictionary[option]) ? faCheck : faTimes}
-                    /> */}
+                    />
                     <Typography variant="subtitle1" lineHeight="16px" ml={1}>
                         {prettyAccess(option)}
                     </Typography>
