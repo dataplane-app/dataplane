@@ -8,7 +8,6 @@ import (
 	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/worker"
 	"encoding/json"
-	"fmt"
 	"log"
 )
 
@@ -43,7 +42,8 @@ func RunNextPipeline() {
 
 		for _, s := range destinationNodes {
 
-			// log.Println("Dependencies:", s.Dependency)
+			log.Println("Destination:", s.RunID, " -> ", s.NodeID)
+
 			var dependencies []string
 			json.Unmarshal(s.Dependency, &dependencies)
 			for _, v := range dependencies {
@@ -62,6 +62,9 @@ func RunNextPipeline() {
 				say you have 3 dependencies but 1 destination
 				this can trigger it 3 times if dependencies marked as success faster than reaching this point
 				each run needs to ensure that the destination isnt already running - must be queue status to run
+
+				All dependencies need to be marked as success to continue. The below look for any non-successful nodes.
+				If any return then there are still outstanding dependencies.
 			*/
 
 			err = database.DBConn.Select("node_id", "status").Where("node_id in (?) and pipeline_id =? and run_id=? and status<>?", uniquedependenciesarray, msg.PipelineID, msg.RunID, "Success").Find(&dependencyCheck).Error
@@ -74,7 +77,8 @@ func RunNextPipeline() {
 			// }
 
 			if len(dependencyCheck) == 0 {
-				log.Println("No dependencies")
+
+				// log.Println("All dependencies are successful")
 
 				// ------ run the destination -------
 				err = worker.WorkerRunTask("python_1", s.TaskID, s.RunID, s.EnvironmentID, s.PipelineID, s.NodeID, []string{"echo " + s.NodeID})
@@ -86,12 +90,14 @@ func RunNextPipeline() {
 
 				} else {
 					if config.Debug == "true" {
-						logging.PrintSecretsRedact(s.TaskID)
+						logging.PrintSecretsRedact("Next step:", s.RunID, " -> ", s.TaskID)
 					}
 				}
 
 			} else {
-				fmt.Printf("Dependencies: %+v\n", &dependencyCheck)
+
+				// These dependencies are either failed or not yet complete.
+				// fmt.Printf("Dependencies: %+v\n", &dependencyCheck)
 			}
 
 			// fmt.Printf("%+v\n", dependencyCheck)

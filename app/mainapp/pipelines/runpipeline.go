@@ -79,18 +79,23 @@ func RunPipeline(pipelineID string) error {
 	var trigger []string
 	var triggerID string
 	var status string
+	var nodeType string
 
 	for _, s := range nodesdata {
 
 		status = "Queue"
+		nodeType = "normal"
 
 		if s.Commands == nil {
 			// log.Println("no commands")
 		}
 
+		if s.NodeType == "playNode" {
+			nodeType = "start"
+		}
 		// Get the first trigger and route
 		// log.Println("node type", s.NodeType, s.Destination)
-		if s.NodeType == "playNode" {
+		if nodeType == "start" {
 
 			err = json.Unmarshal(s.Destination, &trigger)
 			if err != nil {
@@ -123,6 +128,13 @@ func RunPipeline(pipelineID string) error {
 			Status:        status,
 			Dependency:    dependJSON,
 			Destination:   destinationJSON,
+		}
+
+		if nodeType == "start" {
+
+			addTask.StartDT = time.Now().UTC()
+			addTask.EndDT = time.Now().UTC()
+
 		}
 
 		triggerData[s.NodeID] = addTask
