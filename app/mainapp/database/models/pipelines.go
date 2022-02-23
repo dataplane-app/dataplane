@@ -41,7 +41,8 @@ type PipelineNodes struct {
 	PipelineID    string         `gorm:"index:idx_pipelineid_nodes;" json:"pipeline_id"`
 	Name          string         `gorm:"type:varchar(255);" json:"name"`
 	EnvironmentID string         `json:"environment_id"`
-	NodeType      string         `json:"node_type"`
+	NodeType      string         `json:"node_type"`      //trigger, process, checkpoint
+	NodeTypeDesc  string         `json:"node_type_desc"` //python, bash, play, scheduler, checkpoint, api
 	Description   string         `json:"description"`
 	Commands      datatypes.JSON `json:"commands"`
 	Meta          datatypes.JSON `json:"meta"`
