@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, Controls, getConnectedEdges, isEdge, removeElements } from 'react-flow-renderer';
 import { useHistory, useLocation, useParams } from 'react-router-dom';
 import ApiNode from '../components/CustomNodesContent/ApiNode';
-import ClearLogsNode from '../components/CustomNodesContent/ClearLogsNode';
+import PythonNode from '../components/CustomNodesContent/PythonNode';
+import BashNode from '../components/CustomNodesContent/BashNode';
 import CustomEdge from '../components/CustomNodesContent/CustomEdge';
 import CustomLine from '../components/CustomNodesContent/CustomLine';
 import PlayNode from '../components/CustomNodesContent/PlayNode';
@@ -12,7 +13,7 @@ import ScheduleNode from '../components/CustomNodesContent/ScheduleNode';
 import AddCommandDrawer from '../components/DrawerContent/EditorDrawers/AddCommandDrawer';
 import EditorSidebar from '../components/EditorSidebar';
 import { createState, useState as useHookState, Downgraded } from '@hookstate/core';
-import ConfigureLogsDrawer from '../components/DrawerContent/ConfigureLogsDrawer';
+import ProcessTypeDrawer from '../components/DrawerContent/ProcessTypeDrawer';
 import ScheduleDrawer from '../components/DrawerContent/SchedulerDrawer';
 import CheckpointNode from '../components/CustomNodesContent/CheckpointNode';
 import { useSnackbar } from 'notistack';
@@ -25,7 +26,8 @@ export const nodeTypes = {
     scheduleNode: ScheduleNode,
     playNode: PlayNode,
     apiNode: ApiNode,
-    clearLogsNode: ClearLogsNode,
+    pythonNode: PythonNode,
+    bashNode: BashNode,
     checkpointNode: CheckpointNode,
 };
 export const edgeTypes = {
@@ -50,7 +52,7 @@ const Flow = () => {
     // Hooks
     const theme = useTheme();
     const history = useHistory();
-    const { state: pipelineName } = useLocation();
+    const { state: pipeline } = useLocation();
     const { enqueueSnackbar } = useSnackbar();
     const updatePipelineFlow = useAddUpdatePipelineFlow_();
 
@@ -154,6 +156,12 @@ const Flow = () => {
             };
 
             setElements((es) => es.concat(newNode));
+
+            if (type.nodeType === 'pythonNode' || type.nodeType === 'bashNode') {
+                FlowState.selectedElement.set(newNode);
+                setSelectedElement(newNode);
+                FlowState.isOpenConfigureDrawer.set(true);
+            }
             return;
         }
     };
@@ -164,7 +172,7 @@ const Flow = () => {
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex">
                         <Typography component="h2" variant="h2" color="text.primary">
-                            Pipelines {'>'} {pipelineName}
+                            Pipelines {'>'} {pipeline.name}
                         </Typography>
 
                         <Grid display="flex" alignItems="flex-start">
@@ -206,7 +214,12 @@ const Flow = () => {
             </Drawer>
 
             <Drawer anchor="right" open={FlowState.isOpenConfigureDrawer.get()} onClose={() => FlowState.isOpenConfigureDrawer.set(false)}>
-                <ConfigureLogsDrawer handleClose={() => FlowState.isOpenConfigureDrawer.set(false)} />
+                <ProcessTypeDrawer
+                    setElements={setElements}
+                    environmentName={Environment.name.get()}
+                    handleClose={() => FlowState.isOpenConfigureDrawer.set(false)}
+                    workerGroup={pipeline.workerGroup}
+                />
             </Drawer>
 
             <Drawer anchor="right" open={FlowState.isOpenSchedulerDrawer.get()} onClose={() => FlowState.isOpenSchedulerDrawer.set(false)}>
@@ -225,7 +238,6 @@ export default Flow;
 const useAddUpdatePipelineFlow_ = () => {
     // GraphQL hook
     const addUpdatePipelineFlow = useAddUpdatePipelineFlow();
-
     // URI parameter
     const { pipelineId } = useParams();
 
@@ -254,23 +266,35 @@ function prepareInputForBackend(input) {
     const nodesInput = [];
     const edgesInput = [];
 
+    const nodeDictionary = {
+        playNode: 'trigger',
+        scheduleNode: 'trigger',
+        apiNode: 'trigger',
+        pythonNode: 'process',
+        bashNode: 'process',
+        checkpointNode: 'checkpoint',
+    };
+
     for (const iterator of input) {
-        if (iterator.type !== 'custom') {
+        if (iterator.type === 'pythonNode' || iterator.type === 'bashNode') {
+            const { name, description, workerGroup, ...data } = iterator.data;
             nodesInput.push({
                 nodeID: iterator.id,
-                name: '',
-                nodeType: iterator.type,
-                description: '',
+                name,
+                nodeType: nodeDictionary[iterator.type],
+                nodeTypeDesc: iterator.type.replace('Node', ''),
+                workerGroup,
+                description,
                 meta: {
                     position: {
                         x: iterator.position.x,
                         y: iterator.position.y,
                     },
-                    data: iterator?.data,
+                    data,
                 },
                 active: false,
             });
-        } else {
+        } else if (iterator.type === 'custom') {
             edgesInput.push({
                 edgeID: iterator.id,
                 from: iterator.source,
@@ -280,6 +304,23 @@ function prepareInputForBackend(input) {
                     sourceHandle: iterator.sourceHandle,
                     targetHandle: iterator.targetHandle,
                     arrowHeadType: iterator.arrowHeadType,
+                },
+                active: false,
+            });
+        } else {
+            nodesInput.push({
+                nodeID: iterator.id,
+                name: '',
+                nodeType: nodeDictionary[iterator.type],
+                nodeTypeDesc: iterator.type.replace('Node', ''),
+                description: '',
+                workerGroup: '',
+                meta: {
+                    position: {
+                        x: iterator.position.x,
+                        y: iterator.position.y,
+                    },
+                    data: null,
                 },
                 active: false,
             });

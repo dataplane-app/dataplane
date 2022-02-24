@@ -85,12 +85,14 @@ type PipelineFlowInput struct {
 }
 
 type PipelineNodesInput struct {
-	NodeID      string                  `json:"nodeID"`
-	Name        string                  `json:"name"`
-	NodeType    string                  `json:"nodeType"`
-	Description string                  `json:"description"`
-	Meta        *PipelineNodesMetaInput `json:"meta"`
-	Active      bool                    `json:"active"`
+	NodeID       string                  `json:"nodeID"`
+	Name         string                  `json:"name"`
+	NodeType     string                  `json:"nodeType"`
+	NodeTypeDesc string                  `json:"nodeTypeDesc"`
+	Description  string                  `json:"description"`
+	WorkerGroup  string                  `json:"workerGroup"`
+	Meta         *PipelineNodesMetaInput `json:"meta"`
+	Active       bool                    `json:"active"`
 }
 
 type PipelineNodesMetaInput struct {

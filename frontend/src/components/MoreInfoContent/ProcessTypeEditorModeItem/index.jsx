@@ -1,7 +1,7 @@
 import { MenuItem } from '@mui/material';
 import { useGlobalFlowState } from '../../../pages/Flow';
 
-const ClearLogsEditorModeItem = (props) => {
+const ProcessTypeEditorModeItem = (props) => {
     // Flow global state
     const FlowState = useGlobalFlowState();
 
@@ -35,4 +35,4 @@ const ClearLogsEditorModeItem = (props) => {
     );
 };
 
-export default ClearLogsEditorModeItem;
+export default ProcessTypeEditorModeItem;
