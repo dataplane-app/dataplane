@@ -105,6 +105,7 @@ func Setup(port string) *fiber.App {
 		// Host:${host}
 		// Header:${header}
 		// Query:${query}
+		// Header: ${reqHeaders} Query: ${body}
 	}
 
 	// CORS
@@ -178,11 +179,14 @@ func Setup(port string) *fiber.App {
 		worker.WorkerStatsWs(c, "workerstats."+c.Params("workergroup"))
 	}))
 
-	app.Get("/app/ws/rooms/:room", websocket.New(func(c *websocket.Conn) {
+	app.Get("/app/ws/rooms/:environment", websocket.New(func(c *websocket.Conn) {
 
 		// log.Println(c.Query("token"))
-		// "taskupdates."+c.Params("runid")
-		worker.TaskUpdatesWs(c, "taskupdates")
+		// room := string(c.Params("room"))
+		environment := string(c.Params("environment"))
+		subject := string(c.Query("subject"))
+		id := string(c.Query("id"))
+		worker.RoomUpdates(c, environment, subject, id)
 	}))
 
 	// Run Task

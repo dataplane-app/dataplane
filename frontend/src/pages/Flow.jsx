@@ -20,6 +20,7 @@ import { useSnackbar } from 'notistack';
 import APITRiggerDrawer from '../components/DrawerContent/EditorDrawers/APITriggerDrawer';
 import { useAddUpdatePipelineFlow } from '../graphql/addUpdatePipelineFlow';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
+import { useGlobalAuthState } from '../Auth/UserAuth';
 
 export const INITIAL_NODE_X_POSITION = 30;
 export const nodeTypes = {
@@ -82,6 +83,8 @@ const Flow = () => {
     const { enqueueSnackbar } = useSnackbar();
 
     const updatePipelineFlow = useAddUpdatePipelineFlowfunc();
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
 
     // Page states
     const [, setIsLoadingFlow] = useState(true);
@@ -146,19 +149,9 @@ const Flow = () => {
     const onConnect = (params) => {
         setElements((els) => addEdge({ ...params, type: 'custom', arrowHeadType: 'arrowclosed' }, els));
     };
-    // const handleSave = useCallback(() => {
-    //     if (reactFlowInstance) {
-    //         const flowElements = reactFlowInstance.toObject();
-    //         FlowState.elements.set([...flowElements.elements]);
-    //         updatePipelineFlow(flowElements.elements, Environment.id.get());
-    //         FlowState.isEditorPage.set(false);
-    //         FlowState.selectedElement.set(null);
-    //         history.goBack();
-    //     }
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, [reactFlowInstance]);
 
-    const handleSave = () => {
+
+    const handleSave = useCallback(() => {
         if (reactFlowInstance) {
             const flowElements = reactFlowInstance.toObject();
             FlowState.elements.set([...flowElements.elements]);
@@ -168,7 +161,19 @@ const Flow = () => {
             history.goBack();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    };
+    }, [reactFlowInstance, jwt]);
+
+    // const handleSave = () => {
+    //     if (reactFlowInstance) {
+    //         const flowElements = reactFlowInstance.toObject();
+    //         FlowState.elements.set([...flowElements.elements]);
+    //         updatePipelineFlow(flowElements.elements, Environment.id.get());
+    //         FlowState.isEditorPage.set(false);
+    //         FlowState.selectedElement.set(null);
+    //         history.goBack();
+    //     }
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // };
 
     const onDragOver = (event) => {
         event.preventDefault();

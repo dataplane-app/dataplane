@@ -247,7 +247,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	}
 	UpdateWorkerTasks(TaskFinal)
 
-	_, errnats = messageq.MsgReply("taskupdate", TaskFinal, &response)
+	// _, errnats = messageq.MsgReply("taskupdate", TaskFinal, &response)
 
 	if config.Debug == "true" {
 		// log.Println("tasks delete:", msg.TaskID)
