@@ -252,6 +252,7 @@ function prepareInputForFrontend(input) {
     }
 
     for (const iterator of input.nodes) {
+        let data = { ...iterator.meta?.data, name: iterator.name, description: iterator.description };
         nodesInput.push({
             id: iterator.nodeID,
             type: iterator.nodeTypeDesc + 'Node',
@@ -259,7 +260,7 @@ function prepareInputForFrontend(input) {
                 x: iterator.meta.position.x,
                 y: iterator.meta.position.y,
             },
-            data: iterator.meta?.data,
+            data,
         });
     }
 

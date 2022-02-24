@@ -41,12 +41,12 @@ const PythonNode = (props) => {
                 <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faRunning} />
                 <Grid item ml={1.5} textAlign="left">
                     <Typography fontSize={11} fontWeight={900}>
-                        Python
+                        {props.data.name}
                     </Typography>
 
-                    {/* <Typography fontSize={9} mt={0.4}>
-                        This process cleans down the logs
-                    </Typography> */}
+                    <Typography fontSize={9} mt={0.4}>
+                        {props.data.description}
+                    </Typography>
                 </Grid>
             </Grid>
 

@@ -4,21 +4,38 @@ import { Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useGlobalFlowState } from '../../../pages/Flow';
+import { Downgraded } from '@hookstate/core';
 
-const ConfigureLogsDrawer = ({ handleClose, refreshData }) => {
-    const [processorName, setProcessorName] = useState('-');
-    const { register, handleSubmit } = useForm();
+const ProcessTypeDrawer = ({ handleClose, setElements }) => {
+    const [selectedElement, setSelectedElement] = useState('-');
+    const { register, handleSubmit, reset } = useForm();
 
     const FlowState = useGlobalFlowState();
 
     useEffect(() => {
-        setProcessorName(FlowState.selectedElement.get()?.data?.language);
+        setSelectedElement(FlowState.selectedElement.attach(Downgraded).get());
+        reset({
+            name: FlowState.selectedElement.data?.name.get(),
+            description: FlowState.selectedElement.data?.description.get(),
+        });
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.selectedElement.get()]);
+    }, [FlowState.selectedElement?.data?.name.get()]);
 
     async function onSubmit(data) {
-        console.log(data);
+        setElements((els) =>
+            els.map((el) => {
+                if (el.id === selectedElement.id) {
+                    el.data = {
+                        ...el.data,
+                        name: data.name,
+                        description: data.description,
+                    };
+                }
+                return el;
+            })
+        );
+        handleClose();
     }
 
     return (
@@ -33,7 +50,7 @@ const ConfigureLogsDrawer = ({ handleClose, refreshData }) => {
 
                     <Box mt={3} width="212px">
                         <Typography component="h2" variant="h2">
-                            Processor - {processorName}
+                            Processor - {selectedElement?.data?.name}
                         </Typography>
 
                         <TextField
@@ -42,16 +59,9 @@ const ConfigureLogsDrawer = ({ handleClose, refreshData }) => {
                             size="small"
                             required
                             sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }}
-                            {...register('title', { required: true })}
+                            {...register('name', { required: true })}
                         />
-                        <TextField
-                            label="Description"
-                            id="description"
-                            size="small"
-                            required
-                            sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }}
-                            {...register('description', { required: true })}
-                        />
+                        <TextField label="Description" id="description" size="small" sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
 
                         <Grid mt={4} display="flex" alignItems="center">
                             <Button type="submit" variant="contained" color="primary" style={{ width: '100%' }}>
@@ -65,4 +75,4 @@ const ConfigureLogsDrawer = ({ handleClose, refreshData }) => {
     );
 };
 
-export default ConfigureLogsDrawer;
+export default ProcessTypeDrawer;
