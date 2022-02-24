@@ -3,8 +3,10 @@ package runtask
 import (
 	"dataplane/mainapp/database/models"
 	modelmain "dataplane/mainapp/database/models"
+	"dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/logging"
+	"dataplane/workers/messageq"
 	"time"
 
 	"gorm.io/gorm/clause"
@@ -46,6 +48,14 @@ func UpdateWorkerTasks(msg modelmain.WorkerTasks) {
 		err3 := database.DBConn.Model(&modelmain.WorkerTasks{}).Where("run_id = ? and status=?", msg.RunID, "Queue").Updates(map[string]interface{}{"status": "Fail", "reason": "Upstream fail"}).Error
 		if err3 != nil {
 			logging.PrintSecretsRedact(err3.Error())
+		}
+
+	}
+
+	errnat := messageq.MsgSend("taskupdate", msg)
+	if errnat != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(errnat)
 		}
 
 	}

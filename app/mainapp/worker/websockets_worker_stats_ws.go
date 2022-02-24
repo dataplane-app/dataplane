@@ -2,36 +2,45 @@ package worker
 
 import (
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/messageq"
 	"log"
 	"os"
 
 	"github.com/gofiber/websocket/v2"
+	"github.com/nats-io/nats.go"
 )
 
-var Broadcast1 = make(chan []byte)
+// var Broadcast = make(chan []byte)
 
-type MsgResult1 struct {
+type MsgResult struct {
 	Message []byte
 	Err     error
 }
 
-var messagereceive1 = make(chan MsgResult)
-var disconnectConn1 = make(chan string)
+var messagereceive = make(chan MsgResult)
+var disconnectConn = make(chan string)
 
 // https://github.com/gorilla/websocket/blob/master/examples/chat/client.go
 
 // https://github.com/marcelo-tm/testws/blob/master/main.go
-func TaskUpdatesWs(conn *websocket.Conn, room string) {
+func WorkerStatsWs(conn *websocket.Conn, subject string) {
+
+	// Subscribe to a specific worker group when the connection is open
+	sub, _ := messageq.NATSencoded.Subscribe(subject, func(m *nats.Msg) {
+
+		broadcast <- m.Data
+
+	})
 
 	// When the function returns, unregister the client and close the connection
 	defer func() {
-		unregisterq <- subscription{conn: conn, room: room}
+		unregister <- conn
 		conn.Close()
-		// sub.Unsubscribe()
+		sub.Unsubscribe()
 	}()
 
 	// Register the client
-	registerq <- subscription{conn: conn, room: room}
+	register <- conn
 
 	// go SecureTimeout()
 
