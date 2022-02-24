@@ -48,13 +48,39 @@ export const globalFlowState = createState({
 });
 export const useGlobalFlowState = () => useHookState(globalFlowState);
 
+const useAddUpdatePipelineFlowfunc = () => {
+    // GraphQL hook
+    const addUpdatePipelineFlow = useAddUpdatePipelineFlow();
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Update pipeline flow
+    return async (rawInput, environmentID) => {
+        // Prepare input to match the structure in the backend
+        const input = prepareInputForBackend(rawInput);
+
+        const response = await addUpdatePipelineFlow({ input, pipelineID: pipelineId, environmentID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't update flow: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+        }
+    };
+};
+
 const Flow = () => {
     // Hooks
     const theme = useTheme();
     const history = useHistory();
     const { state: pipeline } = useLocation();
     const { enqueueSnackbar } = useSnackbar();
-    const updatePipelineFlow = useAddUpdatePipelineFlow_();
+    const updatePipelineFlow = useAddUpdatePipelineFlowfunc();
 
     // Page states
     const [, setIsLoadingFlow] = useState(true);
@@ -235,31 +261,7 @@ const Flow = () => {
 
 export default Flow;
 
-const useAddUpdatePipelineFlow_ = () => {
-    // GraphQL hook
-    const addUpdatePipelineFlow = useAddUpdatePipelineFlow();
-    // URI parameter
-    const { pipelineId } = useParams();
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Update pipeline flow
-    return async (rawInput, environmentID) => {
-        // Prepare input to match the structure in the backend
-        const input = prepareInputForBackend(rawInput);
-
-        const response = await addUpdatePipelineFlow({ input, pipelineID: pipelineId, environmentID });
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't update flow: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
-        } else {
-            enqueueSnackbar('Success', { variant: 'success' });
-        }
-    };
-};
 
 // ----- Utility function
 function prepareInputForBackend(input) {
