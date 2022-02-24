@@ -8,6 +8,7 @@ type Pipelines {
   active: Boolean!
   online: Boolean!
   current: String!
+  workerGroup: String!
 }
 
 # ----- Add/Update flow
@@ -30,7 +31,8 @@ input PipelineNodesInput {
 	name:          String!         
 	nodeType:      String!      
   nodeTypeDesc:  String!   
-	description:   String!         
+	description:   String!  
+  workerGroup:   String!
 	meta:          PipelineNodesMetaInput!
 	active:        Boolean!           
 }
@@ -63,6 +65,7 @@ type PipelineNodes {
 	environmentID: String!         
 	nodeType:      String!   
   nodeTypeDesc:  String!   
+  workerGroup: String!
 	description:   String!         
 	meta:          Any! 
 	active:        Boolean!           

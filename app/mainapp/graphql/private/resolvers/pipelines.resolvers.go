@@ -202,6 +202,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			EnvironmentID: environmentID,
 			NodeType:      p.NodeType,
 			NodeTypeDesc:  p.NodeTypeDesc,
+			WorkerGroup:   p.WorkerGroup,
 			Description:   p.Description,
 			Meta:          nodeMeta,
 			Dependency:    dependJSON,

@@ -23,6 +23,7 @@ const query = gql`
                 nodeType
                 nodeTypeDesc
                 description
+                workerGroup
                 active
                 meta
             }

@@ -90,6 +90,7 @@ type PipelineNodesInput struct {
 	NodeType     string                  `json:"nodeType"`
 	NodeTypeDesc string                  `json:"nodeTypeDesc"`
 	Description  string                  `json:"description"`
+	WorkerGroup  string                  `json:"workerGroup"`
 	Meta         *PipelineNodesMetaInput `json:"meta"`
 	Active       bool                    `json:"active"`
 }

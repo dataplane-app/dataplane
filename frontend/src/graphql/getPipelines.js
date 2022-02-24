@@ -13,6 +13,7 @@ const query = gql`
             active
             online
             current
+            workerGroup
         }
     }
 `;

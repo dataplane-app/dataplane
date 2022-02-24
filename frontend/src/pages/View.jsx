@@ -20,7 +20,7 @@ const View = () => {
     const theme = useTheme();
     const history = useHistory();
     const { state: pipeline } = useLocation();
-    const getPipelineFlow = useGetPipelineFlow_(pipeline.name);
+    const getPipelineFlow = useGetPipelineFlow_(pipeline);
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -60,7 +60,7 @@ const View = () => {
     // Handle edit button
     const handleGoToEditorPage = () => {
         FlowState.isEditorPage.set(true);
-        history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipeline.name });
+        history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipeline });
     };
 
     //Flow methods
@@ -199,7 +199,7 @@ const LOGS_MOCK = {
 export default View;
 
 // ------ Custom hook
-const useGetPipelineFlow_ = (pipelineName) => {
+const useGetPipelineFlow_ = (pipeline) => {
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
 
@@ -221,7 +221,7 @@ const useGetPipelineFlow_ = (pipelineName) => {
 
         if (response.length === 0) {
             FlowState.elements.set([]);
-            history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipelineName });
+            history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipeline });
         } else if (response.r === 'error') {
             closeSnackbar();
             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
@@ -252,7 +252,7 @@ function prepareInputForFrontend(input) {
     }
 
     for (const iterator of input.nodes) {
-        let data = { ...iterator.meta?.data, name: iterator.name, description: iterator.description };
+        let data = { ...iterator.meta?.data, name: iterator.name, description: iterator.description, workerGroup: iterator.workerGroup };
         nodesInput.push({
             id: iterator.nodeID,
             type: iterator.nodeTypeDesc + 'Node',

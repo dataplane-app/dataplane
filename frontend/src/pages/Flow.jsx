@@ -52,7 +52,7 @@ const Flow = () => {
     // Hooks
     const theme = useTheme();
     const history = useHistory();
-    const { state: pipelineName } = useLocation();
+    const { state: pipeline } = useLocation();
     const { enqueueSnackbar } = useSnackbar();
     const updatePipelineFlow = useAddUpdatePipelineFlow_();
 
@@ -172,7 +172,7 @@ const Flow = () => {
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex">
                         <Typography component="h2" variant="h2" color="text.primary">
-                            Pipelines {'>'} {pipelineName}
+                            Pipelines {'>'} {pipeline.name}
                         </Typography>
 
                         <Grid display="flex" alignItems="flex-start">
@@ -214,7 +214,12 @@ const Flow = () => {
             </Drawer>
 
             <Drawer anchor="right" open={FlowState.isOpenConfigureDrawer.get()} onClose={() => FlowState.isOpenConfigureDrawer.set(false)}>
-                <ProcessTypeDrawer setElements={setElements} handleClose={() => FlowState.isOpenConfigureDrawer.set(false)} />
+                <ProcessTypeDrawer
+                    setElements={setElements}
+                    environmentName={Environment.name.get()}
+                    handleClose={() => FlowState.isOpenConfigureDrawer.set(false)}
+                    workerGroup={pipeline.workerGroup}
+                />
             </Drawer>
 
             <Drawer anchor="right" open={FlowState.isOpenSchedulerDrawer.get()} onClose={() => FlowState.isOpenSchedulerDrawer.set(false)}>
@@ -272,12 +277,13 @@ function prepareInputForBackend(input) {
 
     for (const iterator of input) {
         if (iterator.type === 'pythonNode' || iterator.type === 'bashNode') {
-            const { name, description, ...data } = iterator.data;
+            const { name, description, workerGroup, ...data } = iterator.data;
             nodesInput.push({
                 nodeID: iterator.id,
                 name,
                 nodeType: nodeDictionary[iterator.type],
                 nodeTypeDesc: iterator.type.replace('Node', ''),
+                workerGroup,
                 description,
                 meta: {
                     position: {
@@ -308,6 +314,7 @@ function prepareInputForBackend(input) {
                 nodeType: nodeDictionary[iterator.type],
                 nodeTypeDesc: iterator.type.replace('Node', ''),
                 description: '',
+                workerGroup: '',
                 meta: {
                     position: {
                         x: iterator.position.x,
