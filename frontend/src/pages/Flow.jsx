@@ -80,6 +80,7 @@ const Flow = () => {
     const history = useHistory();
     const { state: pipeline } = useLocation();
     const { enqueueSnackbar } = useSnackbar();
+
     const updatePipelineFlow = useAddUpdatePipelineFlowfunc();
 
     // Page states
@@ -145,7 +146,19 @@ const Flow = () => {
     const onConnect = (params) => {
         setElements((els) => addEdge({ ...params, type: 'custom', arrowHeadType: 'arrowclosed' }, els));
     };
-    const handleSave = useCallback(() => {
+    // const handleSave = useCallback(() => {
+    //     if (reactFlowInstance) {
+    //         const flowElements = reactFlowInstance.toObject();
+    //         FlowState.elements.set([...flowElements.elements]);
+    //         updatePipelineFlow(flowElements.elements, Environment.id.get());
+    //         FlowState.isEditorPage.set(false);
+    //         FlowState.selectedElement.set(null);
+    //         history.goBack();
+    //     }
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, [reactFlowInstance]);
+
+    const handleSave = () => {
         if (reactFlowInstance) {
             const flowElements = reactFlowInstance.toObject();
             FlowState.elements.set([...flowElements.elements]);
@@ -155,7 +168,8 @@ const Flow = () => {
             history.goBack();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [reactFlowInstance]);
+    };
+
     const onDragOver = (event) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
@@ -198,7 +212,7 @@ const Flow = () => {
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex">
                         <Typography component="h2" variant="h2" color="text.primary">
-                            Pipelines {'>'} {pipeline.name}
+                            Pipelines {'>'} {pipeline.name} 
                         </Typography>
 
                         <Grid display="flex" alignItems="flex-start">

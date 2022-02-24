@@ -16,6 +16,7 @@ import { edgeTypes, nodeTypes, useGlobalFlowState } from './Flow';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 const View = () => {
+
     // Hooks
     const theme = useTheme();
     const history = useHistory();
