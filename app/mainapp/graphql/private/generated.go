@@ -164,6 +164,7 @@ type ComplexityRoot struct {
 		Name          func(childComplexity int) int
 		NodeID        func(childComplexity int) int
 		NodeType      func(childComplexity int) int
+		NodeTypeDesc  func(childComplexity int) int
 		PipelineID    func(childComplexity int) int
 	}
 
@@ -1196,6 +1197,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PipelineNodes.NodeType(childComplexity), true
+
+	case "PipelineNodes.nodeTypeDesc":
+		if e.complexity.PipelineNodes.NodeTypeDesc == nil {
+			break
+		}
+
+		return e.complexity.PipelineNodes.NodeTypeDesc(childComplexity), true
 
 	case "PipelineNodes.pipelineID":
 		if e.complexity.PipelineNodes.PipelineID == nil {
@@ -2439,7 +2447,8 @@ input PipelineNodesMetaInput {
 input PipelineNodesInput {
   nodeID:        String!         
 	name:          String!         
-	nodeType:      String!         
+	nodeType:      String!      
+  nodeTypeDesc:  String!   
 	description:   String!         
 	meta:          PipelineNodesMetaInput!
 	active:        Boolean!           
@@ -2471,7 +2480,8 @@ type PipelineNodes {
 	pipelineID:    String!         
 	name:          String!         
 	environmentID: String!         
-	nodeType:      String!         
+	nodeType:      String!   
+  nodeTypeDesc:  String!   
 	description:   String!         
 	meta:          Any! 
 	active:        Boolean!           
@@ -7484,6 +7494,41 @@ func (ec *executionContext) _PipelineNodes_nodeType(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.NodeType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PipelineNodes_nodeTypeDesc(ctx context.Context, field graphql.CollectedField, obj *models.PipelineNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PipelineNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NodeTypeDesc, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12582,6 +12627,14 @@ func (ec *executionContext) unmarshalInputPipelineNodesInput(ctx context.Context
 			if err != nil {
 				return it, err
 			}
+		case "nodeTypeDesc":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeTypeDesc"))
+			it.NodeTypeDesc, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "description":
 			var err error
 
@@ -13459,6 +13512,11 @@ func (ec *executionContext) _PipelineNodes(ctx context.Context, sel ast.Selectio
 			}
 		case "nodeType":
 			out.Values[i] = ec._PipelineNodes_nodeType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "nodeTypeDesc":
+			out.Values[i] = ec._PipelineNodes_nodeTypeDesc(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}

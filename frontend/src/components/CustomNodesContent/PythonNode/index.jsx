@@ -6,11 +6,11 @@ import { useEffect } from 'react';
 import { useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
-import ClearLogsEditorModeItem from '../../MoreInfoContent/ClearLogsEditorModeItem';
-import ClearLogsNodeItem from '../../MoreInfoContent/ClearLogsNodeItem';
+import ProcessTypeEditorModeItem from '../../MoreInfoContent/ProcessTypeEditorModeItem';
+import ProcessTypeNodeItem from '../../MoreInfoContent/ProcessTypeNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
 
-const ClearLogsNode = (props) => {
+const PythonNode = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
 
@@ -41,12 +41,12 @@ const ClearLogsNode = (props) => {
                 <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faRunning} />
                 <Grid item ml={1.5} textAlign="left">
                     <Typography fontSize={11} fontWeight={900}>
-                        Clear the logs
+                        Python
                     </Typography>
 
-                    <Typography fontSize={9} mt={0.4}>
+                    {/* <Typography fontSize={9} mt={0.4}>
                         This process cleans down the logs
-                    </Typography>
+                    </Typography> */}
                 </Grid>
             </Grid>
 
@@ -57,7 +57,7 @@ const ClearLogsNode = (props) => {
 
                 <Box mt={0}>
                     <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
-                        {isEditorPage ? <ClearLogsEditorModeItem /> : <ClearLogsNodeItem />}
+                        {isEditorPage ? <ProcessTypeEditorModeItem /> : <ProcessTypeNodeItem />}
                     </MoreInfoMenu>
                 </Box>
             </Grid>
@@ -65,4 +65,4 @@ const ClearLogsNode = (props) => {
     );
 };
 
-export default ClearLogsNode;
+export default PythonNode;

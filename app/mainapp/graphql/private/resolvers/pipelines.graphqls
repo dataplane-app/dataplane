@@ -28,7 +28,8 @@ input PipelineNodesMetaInput {
 input PipelineNodesInput {
   nodeID:        String!         
 	name:          String!         
-	nodeType:      String!         
+	nodeType:      String!      
+  nodeTypeDesc:  String!   
 	description:   String!         
 	meta:          PipelineNodesMetaInput!
 	active:        Boolean!           
@@ -60,7 +61,8 @@ type PipelineNodes {
 	pipelineID:    String!         
 	name:          String!         
 	environmentID: String!         
-	nodeType:      String!         
+	nodeType:      String!   
+  nodeTypeDesc:  String!   
 	description:   String!         
 	meta:          Any! 
 	active:        Boolean!           

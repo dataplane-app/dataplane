@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, Controls, getConnectedEdges, isEdge, removeElements } from 'react-flow-renderer';
 import { useHistory, useLocation, useParams } from 'react-router-dom';
 import ApiNode from '../components/CustomNodesContent/ApiNode';
-import ClearLogsNode from '../components/CustomNodesContent/ClearLogsNode';
+import PythonNode from '../components/CustomNodesContent/PythonNode';
+import BashNode from '../components/CustomNodesContent/BashNode';
 import CustomEdge from '../components/CustomNodesContent/CustomEdge';
 import CustomLine from '../components/CustomNodesContent/CustomLine';
 import PlayNode from '../components/CustomNodesContent/PlayNode';
@@ -25,7 +26,8 @@ export const nodeTypes = {
     scheduleNode: ScheduleNode,
     playNode: PlayNode,
     apiNode: ApiNode,
-    clearLogsNode: ClearLogsNode,
+    pythonNode: PythonNode,
+    bashNode: BashNode,
     checkpointNode: CheckpointNode,
 };
 export const edgeTypes = {
@@ -254,12 +256,22 @@ function prepareInputForBackend(input) {
     const nodesInput = [];
     const edgesInput = [];
 
+    const nodeDictionary = {
+        playNode: 'trigger',
+        scheduleNode: 'trigger',
+        apiNode: 'trigger',
+        pythonNode: 'process',
+        bashNode: 'process',
+        checkpointNode: 'checkpoint',
+    };
+
     for (const iterator of input) {
         if (iterator.type !== 'custom') {
             nodesInput.push({
                 nodeID: iterator.id,
                 name: '',
-                nodeType: iterator.type,
+                nodeType: nodeDictionary[iterator.type],
+                nodeTypeDesc: iterator.type.replace('Node', ''),
                 description: '',
                 meta: {
                     position: {

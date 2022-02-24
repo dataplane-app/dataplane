@@ -254,7 +254,7 @@ function prepareInputForFrontend(input) {
     for (const iterator of input.nodes) {
         nodesInput.push({
             id: iterator.nodeID,
-            type: iterator.nodeType,
+            type: iterator.nodeTypeDesc + 'Node',
             position: {
                 x: iterator.meta.position.x,
                 y: iterator.meta.position.y,

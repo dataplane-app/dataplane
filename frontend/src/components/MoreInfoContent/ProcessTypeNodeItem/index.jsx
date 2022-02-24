@@ -1,6 +1,6 @@
 import { MenuItem } from '@mui/material';
 
-const ClearLogsNodeItem = (props) => {
+const ProcessTypeNodeItem = (props) => {
     return (
         <>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
@@ -22,4 +22,4 @@ const ClearLogsNodeItem = (props) => {
     );
 };
 
-export default ClearLogsNodeItem;
+export default ProcessTypeNodeItem;

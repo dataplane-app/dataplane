@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -201,6 +201,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			Name:          p.Name,
 			EnvironmentID: environmentID,
 			NodeType:      p.NodeType,
+			NodeTypeDesc:  p.NodeTypeDesc,
 			Description:   p.Description,
 			Meta:          nodeMeta,
 			Dependency:    dependJSON,

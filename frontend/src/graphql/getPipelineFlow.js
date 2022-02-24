@@ -21,6 +21,7 @@ const query = gql`
                 name
                 environmentID
                 nodeType
+                nodeTypeDesc
                 description
                 active
                 meta
