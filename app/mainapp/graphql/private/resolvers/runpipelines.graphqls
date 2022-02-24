@@ -1,0 +1,16 @@
+
+extend type Mutation {
+  """
+  Run pipeline flow.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines, specific_pipeline
+  """
+  runPipelines(pipelineID: String!, environmentID: String!): String!
+
+  """
+  Stop pipeline flow.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines, specific_pipeline
+  """
+  stopPipelines(pipelineID: String!, environmentID: String!): String!
+}

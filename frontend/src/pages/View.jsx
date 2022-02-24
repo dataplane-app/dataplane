@@ -12,16 +12,19 @@ import PublishPipelineDrawer from '../components/DrawerContent/PublishPipelineDr
 import RemoveLogsPageItem from '../components/MoreInfoContent/RemoveLogsPageItem';
 import MoreInfoMenu from '../components/MoreInfoMenu';
 import { useGetPipelineFlow } from '../graphql/getPipelineFlow';
+import { useRunPipelines } from '../graphql/runPipelines';
+import { useStopPipelines } from '../graphql/stopPipelines';
 import { edgeTypes, nodeTypes, useGlobalFlowState } from './Flow';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 const View = () => {
-
     // Hooks
     const theme = useTheme();
     const history = useHistory();
     const { state: pipeline } = useLocation();
     const getPipelineFlow = useGetPipelineFlow_(pipeline);
+    const runPipelines = useRunPipelines_();
+    const stopPipelines = useStopPipelines_();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -134,6 +137,7 @@ const View = () => {
                                     onClick={() => {
                                         FlowState.isRunning.set(false);
                                         setIsRunning(false);
+                                        stopPipelines(Environment.id.get());
                                     }}
                                     variant="outlined"
                                     color="error"
@@ -154,6 +158,7 @@ const View = () => {
                                 onClick={() => {
                                     FlowState.isRunning.set(true);
                                     setIsRunning(true);
+                                    runPipelines(Environment.id.get());
                                 }}>
                                 <Box component={FontAwesomeIcon} fontSize={30} sx={{ color: 'cyan.main' }} icon={faPlayCircle} />
                             </IconButton>
@@ -199,7 +204,7 @@ const LOGS_MOCK = {
 
 export default View;
 
-// ------ Custom hook
+// ------ Custom hooks
 const useGetPipelineFlow_ = (pipeline) => {
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
@@ -231,6 +236,54 @@ const useGetPipelineFlow_ = (pipeline) => {
         } else {
             setElements(response);
             FlowState.elements.set(response);
+        }
+    };
+};
+
+const useRunPipelines_ = () => {
+    // GraphQL hook
+    const runPipelines = useRunPipelines();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Run pipeline flow
+    return async (environmentID) => {
+        const response = await runPipelines({ pipelineID: pipelineId, environmentID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't run flow: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': run flow', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+        }
+    };
+};
+
+const useStopPipelines_ = () => {
+    // GraphQL hook
+    const stopPipelines = useStopPipelines();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Stop pipeline flow
+    return async (environmentID) => {
+        const response = await stopPipelines({ pipelineID: pipelineId, environmentID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't stop flow: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': stop flow', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
         }
     };
 };
