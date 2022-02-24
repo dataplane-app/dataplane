@@ -51,9 +51,7 @@ func TestPipelines(t *testing.T) {
 	loginUserResponse, httpLoginResponse := testutils.GraphQLRequestPublic(loginUser, "{}", graphQLUrl, t)
 	accessToken := jsoniter.Get(loginUserResponse, "data", "loginUser", "access_token").ToString()
 
-	// var loginUserResponsePretty bytes.Buffer
-	// json.Indent(&loginUserResponsePretty, []byte(loginUserResponse), "", "\t")
-	// log.Println(loginUserResponsePretty.String())
+	log.Println(string(loginUserResponse))
 
 	if strings.Contains(string(loginUserResponse), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -83,8 +81,7 @@ func TestPipelines(t *testing.T) {
 
 	response, httpResponse := testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -110,8 +107,7 @@ func TestPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -129,7 +125,9 @@ func TestPipelines(t *testing.T) {
 					nodeID: "nodeID",
 					name: "Name",
 					nodeType: "type",
+					nodeTypeDesc: "nodeTypeDesc",
 					description: "desc",
+					workerGroup: "python_1",
 					meta: {
 					  position: {
 						x: 75,
@@ -145,7 +143,9 @@ func TestPipelines(t *testing.T) {
 					nodeID: "nodeID2",
 					name: "Name",
 					nodeType: "type",
+					nodeTypeDesc: "nodeTypeDesc",
 					description: "desc",
+					workerGroup: "python_1",
 					meta: {
 					  position: {
 						x: 75,
@@ -177,8 +177,7 @@ func TestPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -197,6 +196,8 @@ func TestPipelines(t *testing.T) {
 					name: "Name2",
 					nodeType: "type",
 					description: "desc",
+					nodeTypeDesc: "nodeTypeDesc",
+					workerGroup: "",
 					meta: {
 					  position: {
 						x: 75,
@@ -213,6 +214,8 @@ func TestPipelines(t *testing.T) {
 					name: "Name2",
 					nodeType: "type",
 					description: "desc",
+					nodeTypeDesc: "nodeTypeDesc",
+					workerGroup: "",
 					meta: {
 					  position: {
 						x: 75,
@@ -244,8 +247,7 @@ func TestPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -275,6 +277,8 @@ func TestPipelines(t *testing.T) {
 					name
 					environmentID
 					nodeType
+					nodeTypeDesc
+					workerGroup
 					description
 					active
 					meta
@@ -284,8 +288,7 @@ func TestPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")

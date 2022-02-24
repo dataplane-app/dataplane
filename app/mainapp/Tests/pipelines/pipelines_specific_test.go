@@ -73,9 +73,7 @@ func TestSpecificPipelines(t *testing.T) {
 		}
 	}
 
-	// var loginUserResponsePretty bytes.Buffer
-	// json.Indent(&loginUserResponsePretty, []byte(loginUserResponse), "", "\t")
-	// log.Println(loginUserResponsePretty.String())
+	log.Println(string(loginUserResponse))
 
 	if strings.Contains(string(loginUserResponse), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -105,9 +103,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	response, httpResponse := testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
-	// responsePretty.Reset()
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -150,9 +146,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
-	// responsePretty.Reset()
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -174,9 +168,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
-	// responsePretty.Reset()
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -210,9 +202,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
-	// responsePretty.Reset()
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -247,9 +237,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
-	// responsePretty.Reset()
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -293,9 +281,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
-	// responsePretty.Reset()
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -330,9 +316,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
-	// responsePretty.Reset()
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -354,9 +338,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
-	// responsePretty.Reset()
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -378,9 +360,7 @@ func TestSpecificPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 
-	// json.Indent(&responsePretty, []byte(response), "", "\t")
-	// log.Println(responsePretty.String())
-	// responsePretty.Reset()
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
