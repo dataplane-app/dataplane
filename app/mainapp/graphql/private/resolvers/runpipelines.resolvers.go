@@ -5,12 +5,17 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/config"
+	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	"dataplane/mainapp/logging"
+	"dataplane/mainapp/pipelines"
 	"errors"
+	"time"
 )
 
-func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, environmentID string) (string, error) {
+func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, environmentID string) (*models.PipelineRuns, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -18,21 +23,29 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return &models.PipelineRuns{}, errors.New("requires permissions")
 	}
 
-	return "runPipelines endpoint, not yet implemented.", nil
+	resp, err := pipelines.RunPipeline(pipelineID, environmentID)
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return &models.PipelineRuns{}, errors.New("Run pipeline error")
+	}
+
+	return &resp, nil
 }
 
-func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string, environmentID string) (string, error) {
+func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string, runID string, environmentID string) (*models.PipelineRuns, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -40,16 +53,50 @@ func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string,
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return &models.PipelineRuns{}, errors.New("requires permissions")
 	}
 
-	return "stopPipelines endpoint, not yet implemented.", nil
+	// Get the run
+	var currentRun *models.PipelineRuns
+	err3 := database.DBConn.Where("run_id = ? and environment_id = ?", runID, environmentID, "Queue").First(&currentRun).Error
+	if err3 != nil {
+		logging.PrintSecretsRedact(err3.Error())
+	}
+
+	// Cancel all future tasks
+	err := database.DBConn.Model(&models.WorkerTasks{}).Where("run_id = ? and environment_id = ? and status=?", runID, environmentID, "Queue").Updates(map[string]interface{}{"status": "Fail", "reason": "Upstream fail"}).Error
+	if err3 != nil {
+		logging.PrintSecretsRedact(err3.Error())
+	}
+
+	// Get any current running tasks and cancel those tasks
+
+	// Update pipeline as cancelled
+	// Create a run
+	run := models.PipelineRuns{
+		RunID:         runID,
+		PipelineID:    pipelineID,
+		Status:        "Fail",
+		EnvironmentID: environmentID,
+		CreatedAt:     currentRun.CreatedAt,
+		EndedAt:       time.Now().UTC(),
+	}
+
+	err = database.DBConn.Updates(&run).Error
+	if err != nil {
+
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return &models.PipelineRuns{}, err
+	}
+
+	return &run, nil
 }

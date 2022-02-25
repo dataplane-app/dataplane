@@ -37,6 +37,8 @@ models:
    model: dataplane/mainapp/database/models.PipelineEdges
  PipelineNodes:
    model: dataplane/mainapp/database/models.PipelineNodes
+ PipelineRuns:
+   model: dataplane/mainapp/database/models.PipelineRuns
 
 resolver:
   layout: follow-schema

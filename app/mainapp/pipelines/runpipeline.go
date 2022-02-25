@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func RunPipeline(pipelineID string, environmentID string) error {
+func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, error) {
 
 	start := time.Now().UTC()
 
@@ -37,7 +37,7 @@ func RunPipeline(pipelineID string, environmentID string) error {
 		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return err
+		return models.PipelineRuns{}, err
 	}
 
 	// Chart a course
@@ -146,7 +146,7 @@ func RunPipeline(pipelineID string, environmentID string) error {
 		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return err
+		return models.PipelineRuns{}, err
 	}
 
 	// --- Run the first set of tasks
@@ -160,7 +160,7 @@ func RunPipeline(pipelineID string, environmentID string) error {
 
 		x = x + 1
 
-		log.Println("First:", s)
+		// log.Println("First:", s)
 		// if x == 2 {
 		// 	ex = "exit 1;"
 		// }
@@ -170,7 +170,7 @@ func RunPipeline(pipelineID string, environmentID string) error {
 			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
-			return err
+			return run, err
 		} else {
 			if config.Debug == "true" {
 				logging.PrintSecretsRedact(triggerData[s].TaskID)
@@ -189,6 +189,6 @@ func RunPipeline(pipelineID string, environmentID string) error {
 	// Do something with response
 	log.Println("🐆 Run time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
 
-	return nil
+	return run, nil
 
 }
