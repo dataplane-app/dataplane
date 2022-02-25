@@ -72,7 +72,7 @@ const EditorSidebar = () => {
                 {
                     id: uuidv4(),
                     icon: faRunning,
-                    data: { language: 'Bash', name: 'Bash', description: '' },
+                    data: { language: 'Bash', name: 'Bash', description: '', commands: [{ command_1: 'echo -c \'print("Node <node id>")\'' }] },
                     text: 'Bash',
                     eventType: 'bashNode',
                 },
