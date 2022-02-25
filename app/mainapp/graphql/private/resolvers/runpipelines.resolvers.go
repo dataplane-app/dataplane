@@ -66,7 +66,7 @@ func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string,
 
 	// Get the run
 	var currentRun *models.PipelineRuns
-	err3 := database.DBConn.Where("run_id = ? and environment_id = ?", runID, environmentID, "Queue").First(&currentRun).Error
+	err3 := database.DBConn.Where("run_id = ? and environment_id = ?", runID, environmentID).First(&currentRun).Error
 	if err3 != nil {
 		logging.PrintSecretsRedact(err3.Error())
 	}
