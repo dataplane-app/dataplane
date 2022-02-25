@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
@@ -363,9 +363,9 @@ func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environm
 
 	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
 
-	if os.Getenv("debug") == "true" {
-		logging.PrintSecretsRedact("Permissions admin: ", admin, adminEnv)
-	}
+	// if os.Getenv("debug") == "true" {
+	// 	logging.PrintSecretsRedact("Permissions admin: ", admin, adminEnv)
+	// }
 
 	e := []*models.Environment{}
 	if admin == "yes" || adminEnv == "yes" {
@@ -419,9 +419,9 @@ func (r *queryResolver) GetEnvironment(ctx context.Context, environmentID string
 
 	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
 
-	if os.Getenv("debug") == "true" {
-		logging.PrintSecretsRedact("Permissions admin: ", admin, adminEnv)
-	}
+	// if os.Getenv("debug") == "true" {
+	// 	logging.PrintSecretsRedact("Permissions admin: ", admin, adminEnv)
+	// }
 
 	e := models.Environment{}
 	if admin == "yes" || adminEnv == "yes" {

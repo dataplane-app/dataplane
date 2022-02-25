@@ -14,15 +14,13 @@ import (
 	"github.com/google/uuid"
 )
 
-func RunPipeline(pipelineID string) error {
+func RunPipeline(pipelineID string, environmentID string) error {
 
 	start := time.Now().UTC()
 
 	var destinations = make(map[string][]string)
 	var dependencies = make(map[string][]string)
 	var triggerData = make(map[string]*models.WorkerTasks)
-
-	environmentID := "Testing"
 
 	// Create a run
 	run := models.PipelineRuns{
@@ -47,14 +45,14 @@ func RunPipeline(pipelineID string) error {
 	nodesdata := []*models.PipelineNodes{}
 
 	go func() {
-		database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&nodesdata)
+		database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Find(&nodesdata)
 		nodes <- nodesdata
 	}()
 
 	edges := make(chan []*models.PipelineEdges)
 	edgesdata := []*models.PipelineEdges{}
 	go func() {
-		database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&edgesdata)
+		database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Find(&edgesdata)
 		edges <- edgesdata
 	}()
 
@@ -90,7 +88,7 @@ func RunPipeline(pipelineID string) error {
 			// log.Println("no commands")
 		}
 
-		if s.NodeType == "playNode" {
+		if s.NodeType == "trigger" {
 			nodeType = "start"
 		}
 		// Get the first trigger and route
@@ -163,9 +161,9 @@ func RunPipeline(pipelineID string) error {
 		x = x + 1
 
 		log.Println("First:", s)
-		if x == 2 {
-			ex = "exit 1;"
-		}
+		// if x == 2 {
+		// 	ex = "exit 1;"
+		// }
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
 		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s + ";" + ex})
 		if err != nil {

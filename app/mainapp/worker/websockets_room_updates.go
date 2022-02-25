@@ -1,8 +1,6 @@
 package worker
 
 import (
-	permissions "dataplane/mainapp/auth_permissions"
-	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"fmt"
@@ -30,33 +28,35 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 
 	// ---- Permissions and security checks
 
-	currentUser := conn.Locals("currentUser").(string)
-	platformID := conn.Locals("platformID").(string)
+	// currentUser := conn.Locals("currentUser")
+	// platformID := conn.Locals("platformID")
 	room := ""
+	subjectmsg := ""
 
 	// ----- Permissions
-	perms := []models.Permissions{
-		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
-		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
-	}
+	// perms := []models.Permissions{
+	// 	{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+	// 	{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	// }
 
 	switch subject {
 	case "taskupdate." + environmentID + "." + id:
 		fmt.Println("one")
 		room = "pipeline-run-updates"
+		subjectmsg = "taskupdate." + environmentID + "." + id
 	default:
 		log.Println("subject not found")
 		return
 	}
 
-	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+	// permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
-	if permOutcome == "denied" {
-		logging.PrintSecretsRedact("Requires permissions")
-		return
-	}
+	// if permOutcome == "denied" {
+	// 	logging.PrintSecretsRedact("Requires permissions")
+	// 	// return
+	// }
 
-	sub, _ := messageq.NATSencoded.Subscribe(subject, func(m *nats.Msg) {
+	sub, _ := messageq.NATSencoded.Subscribe(subjectmsg, func(m *nats.Msg) {
 
 		broadcastq <- message{room: room, data: m.Data}
 

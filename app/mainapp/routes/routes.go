@@ -235,10 +235,11 @@ func Setup(port string) *fiber.App {
 
 	app.Post("/runpipeline", func(c *fiber.Ctx) error {
 
-		pipelineID := "b55032a5-c8a1-4e70-93cb-d76b9370b75a"
+		pipelineID := "3453f0f1-4525-4337-a689-8f142c39f94a"
+		environmentID := "0e2cd75f-1514-44a0-b57d-fae236896cb4"
 
 		taskID := string(c.Query("taskid"))
-		err := pipelines.RunPipeline(pipelineID)
+		err := pipelines.RunPipeline(pipelineID, environmentID)
 		if err != nil {
 			return c.SendString(err.Error())
 		} else {
