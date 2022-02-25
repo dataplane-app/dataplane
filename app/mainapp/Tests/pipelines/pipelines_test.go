@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"dataplane/mainapp/Tests/testutils"
 	"dataplane/mainapp/database"
+	"dataplane/mainapp/database/models"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -51,7 +52,7 @@ func TestPipelines(t *testing.T) {
 	loginUserResponse, httpLoginResponse := testutils.GraphQLRequestPublic(loginUser, "{}", graphQLUrl, t)
 	accessToken := jsoniter.Get(loginUserResponse, "data", "loginUser", "access_token").ToString()
 
-	log.Println(string(loginUserResponse))
+	// log.Println(string(loginUserResponse))
 
 	if strings.Contains(string(loginUserResponse), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -68,6 +69,10 @@ func TestPipelines(t *testing.T) {
 
 	var responsePretty bytes.Buffer
 
+	// -------- clean data -------
+	database.DBConn.Where("environment_id =?", envID).Delete(&models.PipelineNodes{})
+	database.DBConn.Where("environment_id =?", envID).Delete(&models.PipelineEdges{})
+	database.DBConn.Where("environment_id =?", envID).Delete(&models.Pipelines{})
 	// -------- Create pipeline -------------
 
 	mutation := `mutation {
@@ -127,8 +132,8 @@ func TestPipelines(t *testing.T) {
 					nodeType: "type",
 					nodeTypeDesc: "nodeTypeDesc",
 					description: "desc",
+					commands: [""],
 					workerGroup: "python_1",
-					commands : [],
 					meta: {
 					  position: {
 						x: 75,
@@ -146,6 +151,7 @@ func TestPipelines(t *testing.T) {
 					nodeType: "type",
 					nodeTypeDesc: "nodeTypeDesc",
 					description: "desc",
+					commands: [""],
 					workerGroup: "python_1",
 					meta: {
 					  position: {
@@ -197,6 +203,7 @@ func TestPipelines(t *testing.T) {
 					name: "Name2",
 					nodeType: "type",
 					description: "desc",
+					commands: [""],
 					nodeTypeDesc: "nodeTypeDesc",
 					workerGroup: "",
 					meta: {
@@ -215,6 +222,7 @@ func TestPipelines(t *testing.T) {
 					name: "Name2",
 					nodeType: "type",
 					description: "desc",
+					commands: [""],
 					nodeTypeDesc: "nodeTypeDesc",
 					workerGroup: "",
 					meta: {
