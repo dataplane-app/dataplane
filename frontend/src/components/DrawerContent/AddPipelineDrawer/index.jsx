@@ -7,8 +7,9 @@ import { useForm } from 'react-hook-form';
 import { useAddPipeline } from '../../../graphql/addPipeline';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
+import { useHistory } from 'react-router-dom';
 
-const AddPipelineDrawer = ({ handleClose, environmentID, getPipelines }) => {
+const AddPipelineDrawer = ({ handleClose, environmentID }) => {
     // React hook form
     const { register, handleSubmit } = useForm();
 
@@ -19,7 +20,7 @@ const AddPipelineDrawer = ({ handleClose, environmentID, getPipelines }) => {
     const [workerGroups, setWorkerGroups] = useState([]);
 
     // Custom GraphQL hook
-    const addPipeline = useAddPipeline_(environmentID, handleClose, getPipelines);
+    const addPipeline = useAddPipeline_(environmentID);
     const getWorkerGroups = useGetWorkerGroups_(Environment.name.get(), setWorkerGroups);
 
     // Get workers on load
@@ -85,9 +86,12 @@ export default AddPipelineDrawer;
 
 // ---------- Custom Hook
 
-const useAddPipeline_ = (environmentID, handleClose, getPipelines) => {
+const useAddPipeline_ = (environmentID) => {
     // GraphQL hook
     const addPipeline = useAddPipeline();
+
+    // React router
+    const history = useHistory();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -102,8 +106,7 @@ const useAddPipeline_ = (environmentID, handleClose, getPipelines) => {
             response.errors.map((err) => enqueueSnackbar(err.message + ': add pipeline', { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
-            handleClose();
-            getPipelines();
+            history.push({ pathname: `/pipelines/flow/${response}`, state: data });
         }
     };
 };

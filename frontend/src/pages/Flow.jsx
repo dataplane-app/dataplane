@@ -64,9 +64,9 @@ const useAddUpdatePipelineFlowfunc = () => {
 
         const response = await addUpdatePipelineFlow({ input, pipelineID: pipelineId, environmentID });
 
-        if (response.r === 'error') {
+        if (response.r === 'Unauthorized') {
             closeSnackbar();
-            enqueueSnackbar("Can't update flow: " + response.msg, { variant: 'error' });
+            enqueueSnackbar(`Can't update flow: ${response.r}`, { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
         } else {
@@ -85,6 +85,9 @@ const Flow = () => {
     const updatePipelineFlow = useAddUpdatePipelineFlowfunc();
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
+
+    // URI parameter
+    const { pipelineId } = useParams();
 
     // Page states
     const [, setIsLoadingFlow] = useState(true);
@@ -157,7 +160,7 @@ const Flow = () => {
             updatePipelineFlow(flowElements.elements, Environment.id.get());
             FlowState.isEditorPage.set(false);
             FlowState.selectedElement.set(null);
-            history.goBack();
+            history.push({ pathname: `/pipelines/view/${pipelineId}`, state: pipeline });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [reactFlowInstance, jwt]);
@@ -222,6 +225,14 @@ const Flow = () => {
                         <Grid display="flex" alignItems="flex-start">
                             <Button sx={{ ml: 4 }} onClick={handleSave} variant="contained">
                                 Save
+                            </Button>
+                            <Button
+                                sx={{ ml: 2 }}
+                                onClick={() => {
+                                    history.push('/');
+                                }}
+                                variant="contained">
+                                Close
                             </Button>
                         </Grid>
                     </Box>
