@@ -231,9 +231,18 @@ const Flow = () => {
                                 onClick={() => {
                                     history.push('/');
                                 }}
-                                variant="contained">
+                                variant="text">
                                 Close
                             </Button>
+                            {/* <Button
+                                onClick={() => {
+                                    history.push('/');
+                                }}
+                                style={{ paddingLeft: '16px', paddingRight: '16px' }}
+                                variant="text"
+                                startIcon={<FontAwesomeIcon icon={faTimes} />}>
+                                Close
+                            </Button> */}
                         </Grid>
                     </Box>
                 </Grid>
@@ -265,7 +274,7 @@ const Flow = () => {
             </Box>
 
             <Drawer anchor="right" open={FlowState.isOpenCommandDrawer.get()} onClose={() => FlowState.isOpenCommandDrawer.set(false)}>
-                <AddCommandDrawer handleClose={() => FlowState.isOpenCommandDrawer.set(false)} />
+                <AddCommandDrawer setElements={setElements} handleClose={() => FlowState.isOpenCommandDrawer.set(false)} />
             </Drawer>
 
             <Drawer anchor="right" open={FlowState.isOpenConfigureDrawer.get()} onClose={() => FlowState.isOpenConfigureDrawer.set(false)}>
@@ -306,7 +315,7 @@ function prepareInputForBackend(input) {
 
     for (const iterator of input) {
         if (iterator.type === 'pythonNode' || iterator.type === 'bashNode') {
-            const { name, description, workerGroup, ...data } = iterator.data;
+            const { name, description, workerGroup, commands, ...data } = iterator.data;
             nodesInput.push({
                 nodeID: iterator.id,
                 name,
@@ -314,6 +323,7 @@ function prepareInputForBackend(input) {
                 nodeTypeDesc: iterator.type.replace('Node', ''),
                 workerGroup,
                 description,
+                commands: commands || [],
                 meta: {
                     position: {
                         x: iterator.position.x,
@@ -344,6 +354,7 @@ function prepareInputForBackend(input) {
                 nodeTypeDesc: iterator.type.replace('Node', ''),
                 description: '',
                 workerGroup: '',
+                commands: [],
                 meta: {
                     position: {
                         x: iterator.position.x,

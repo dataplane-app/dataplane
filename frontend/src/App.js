@@ -91,7 +91,7 @@ function App() {
                                 <Box component={FontAwesomeIcon} color="white" icon={faTimesCircle} />
                             </Button>
                         )}
-                        autoHideDuration={8000}>
+                        autoHideDuration={3000}>
                         <Box className="app" backgroundColor="background.main">
                             <UserAuth refreshTokenUrl="/app/refreshtoken" LogincallbackUrl="/loginCallback" loginUrl="/webapp/login" logoutUrl="/webapp/logout">
                                 <CssBaseline />
