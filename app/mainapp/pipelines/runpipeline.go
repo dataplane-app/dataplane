@@ -7,16 +7,19 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/worker"
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/google/uuid"
 )
 
+type Commands struct {
+	Command string `json:command`
+}
+
 func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, error) {
 
-	start := time.Now().UTC()
+	// start := time.Now().UTC()
 
 	var destinations = make(map[string][]string)
 	var dependencies = make(map[string][]string)
@@ -125,6 +128,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 			NodeID:        s.NodeID,
 			Status:        status,
 			Dependency:    dependJSON,
+			Commands:      s.Commands,
 			Destination:   destinationJSON,
 		}
 
@@ -154,18 +158,24 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		log.Println("trigger: ", trigger, triggerID)
 	}
 
-	x := 0
-	ex := ""
+	// ---------- Run the first set of dependencies ----------
+	var commandsJson []*Commands
+	var commandsend []string
 	for _, s := range trigger {
 
-		x = x + 1
+		json.Unmarshal(triggerData[s].Commands, commandsJson)
+
+		// x = x + 1
+		for _, c := range commandsJson {
+			commandsend = append(commandsend, c.Command)
+		}
 
 		// log.Println("First:", s)
 		// if x == 2 {
 		// 	ex = "exit 1;"
 		// }
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
-		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s + ";" + ex})
+		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend)
 		if err != nil {
 			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)
@@ -185,9 +195,9 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	// jsonString, err := json.Marshal(destinations)
 	// fmt.Println(string(jsonString), err)
 
-	stop := time.Now()
+	// stop := time.Now()
 	// Do something with response
-	log.Println("🐆 Run time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
+	// log.Println("🐆 Run time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
 
 	return run, nil
 
