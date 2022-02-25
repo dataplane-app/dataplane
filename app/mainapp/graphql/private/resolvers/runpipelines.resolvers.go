@@ -65,15 +65,15 @@ func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string,
 
 	// Get the run
 	var currentRun *models.PipelineRuns
-	err3 := database.DBConn.Where("run_id = ? and environment_id = ? and status = ?", runID, environmentID, "Queue").First(&currentRun).Error
+	err3 := database.DBConn.Where("run_id = ? and environment_id = ?", runID, environmentID, "Queue").First(&currentRun).Error
 	if err3 != nil {
 		logging.PrintSecretsRedact(err3.Error())
 	}
 
 	// Cancel all future tasks
 	err := database.DBConn.Model(&models.WorkerTasks{}).Where("run_id = ? and environment_id = ? and status=?", runID, environmentID, "Queue").Updates(map[string]interface{}{"status": "Fail", "reason": "Upstream fail"}).Error
-	if err != nil {
-		logging.PrintSecretsRedact(err.Error())
+	if err3 != nil {
+		logging.PrintSecretsRedact(err3.Error())
 	}
 
 	// Get any current running tasks and cancel those tasks
