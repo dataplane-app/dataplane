@@ -293,26 +293,32 @@ function prepareInputForFrontend(input) {
     const edgesInput = [];
     const nodesInput = [];
 
-    for (const iterator of input.edges) {
+    for (const edge of input.edges) {
         edgesInput.push({
-            source: iterator.from,
-            sourceHandle: iterator.meta.sourceHandle,
-            target: iterator.to,
-            targetHandle: iterator.meta.targetHandle,
-            type: iterator.meta.edgeType,
-            arrowHeadType: iterator.meta.arrowHeadType,
-            id: iterator.edgeID,
+            source: edge.from,
+            sourceHandle: edge.meta.sourceHandle,
+            target: edge.to,
+            targetHandle: edge.meta.targetHandle,
+            type: edge.meta.edgeType,
+            arrowHeadType: edge.meta.arrowHeadType,
+            id: edge.edgeID,
         });
     }
 
-    for (const iterator of input.nodes) {
-        let data = { ...iterator.meta?.data, name: iterator.name, description: iterator.description, workerGroup: iterator.workerGroup };
+    for (const node of input.nodes) {
+        let data = {
+            ...node.meta?.data,
+            name: node.name,
+            description: node.description,
+            workerGroup: node.workerGroup,
+            commands: node.commands,
+        };
         nodesInput.push({
-            id: iterator.nodeID,
-            type: iterator.nodeTypeDesc + 'Node',
+            id: node.nodeID,
+            type: node.nodeTypeDesc + 'Node',
             position: {
-                x: iterator.meta.position.x,
-                y: iterator.meta.position.y,
+                x: node.meta.position.x,
+                y: node.meta.position.y,
             },
             data,
         });

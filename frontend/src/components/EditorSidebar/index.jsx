@@ -27,6 +27,9 @@ const defaultParentStyle = {
 };
 
 const EditorSidebar = () => {
+    const pythonUUID = uuidv4();
+    const bashUUID = uuidv4();
+
     const onDragStart = (event, nodeType, id, nodeData) => {
         const data = { nodeType, id, nodeData };
         event.dataTransfer.setData('application/reactflow', JSON.stringify(data));
@@ -50,12 +53,12 @@ const EditorSidebar = () => {
                     text: 'Scheduler',
                     eventType: 'scheduleNode',
                 },
-                {
-                    id: uuidv4(),
-                    icon: faGlobe,
-                    text: 'API',
-                    eventType: 'apiNode',
-                },
+                // {
+                //     id: uuidv4(),
+                //     icon: faGlobe,
+                //     text: 'API',
+                //     eventType: 'apiNode',
+                // },
             ],
         },
         {
@@ -63,16 +66,16 @@ const EditorSidebar = () => {
             parent: 'Processors',
             content: [
                 {
-                    id: uuidv4(),
+                    id: pythonUUID,
                     icon: faRunning,
                     text: 'Python',
-                    data: { language: 'Python', name: 'Python', description: '' },
+                    data: { language: 'Python', name: 'Python', description: '', workerGroup: '', commands: [{ command: `python -c 'print("Node ${pythonUUID}")'` }] },
                     eventType: 'pythonNode',
                 },
                 {
-                    id: uuidv4(),
+                    id: bashUUID,
                     icon: faRunning,
-                    data: { language: 'Bash', name: 'Bash', description: '' },
+                    data: { language: 'Bash', name: 'Bash', description: '', workerGroup: '', commands: [{ command: `echo "Node ${bashUUID}"` }] },
                     text: 'Bash',
                     eventType: 'bashNode',
                 },
