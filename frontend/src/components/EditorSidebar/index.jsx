@@ -75,7 +75,7 @@ const EditorSidebar = () => {
                 {
                     id: bashUUID,
                     icon: faRunning,
-                    data: { language: 'Bash', name: 'Bash', description: '', workerGroup: '', commands: [{ command: `echo -c 'print("Node ${bashUUID}")'` }] },
+                    data: { language: 'Bash', name: 'Bash', description: '', workerGroup: '', commands: [{ command: `echo "Node ${bashUUID}"` }] },
                     text: 'Bash',
                     eventType: 'bashNode',
                 },
