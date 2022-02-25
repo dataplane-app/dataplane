@@ -128,6 +128,7 @@ func TestPipelines(t *testing.T) {
 					nodeTypeDesc: "nodeTypeDesc",
 					description: "desc",
 					workerGroup: "python_1",
+					"commands" : [],
 					meta: {
 					  position: {
 						x: 75,
