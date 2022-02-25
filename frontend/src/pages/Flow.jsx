@@ -226,6 +226,14 @@ const Flow = () => {
                             <Button sx={{ ml: 4 }} onClick={handleSave} variant="contained">
                                 Save
                             </Button>
+                            <Button
+                                sx={{ ml: 2 }}
+                                onClick={() => {
+                                    history.push('/');
+                                }}
+                                variant="contained">
+                                Close
+                            </Button>
                         </Grid>
                     </Box>
                 </Grid>
