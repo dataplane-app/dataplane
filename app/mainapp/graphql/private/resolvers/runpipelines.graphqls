@@ -4,8 +4,8 @@ type PipelineRuns {
   pipeline_id: String!
   status: String!
   environment_id: String!
-  created_at: Time!
-  ended_at: Time!
+  created_at: Time
+  ended_at: Time
   updated_at: Time!
 }
 
