@@ -18,19 +18,25 @@ const AddCommandDrawer = ({ handleClose, setElements, refreshData }) => {
     // Fill the form with selected element information
     useEffect(() => {
         const commands = FlowState.selectedElement?.data?.commands.get();
-        const command_1 = commands.filter((a) => a.command_1).map((a) => a.command_1)[0];
-        reset({ command_1 });
+        setCommandInputs(commands.length);
 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.selectedElement?.data?.command_1.get()]);
+        let resetObj = {};
+        for (let i in Object.keys(commands)) {
+            resetObj[`command_${Number(i) + 1}`] = Object.values(commands[i])[0];
+        }
+
+        reset(resetObj);
+    }, [FlowState.selectedElement?.data?.commands[0]?.command.get()]);
 
     async function onSubmit(data) {
+        const commands = Object.values(data).map((a) => ({ command: a }));
+
         setElements((els) =>
             els.map((el) => {
                 if (el.id === FlowState.selectedElement.id.get()) {
                     el.data = {
                         ...el.data,
-                        commands: [{ command_1: data.command_1 }],
+                        commands,
                     };
                 }
                 return el;

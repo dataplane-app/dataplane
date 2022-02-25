@@ -231,9 +231,18 @@ const Flow = () => {
                                 onClick={() => {
                                     history.push('/');
                                 }}
-                                variant="contained">
+                                variant="text">
                                 Close
                             </Button>
+                            {/* <Button
+                                onClick={() => {
+                                    history.push('/');
+                                }}
+                                style={{ paddingLeft: '16px', paddingRight: '16px' }}
+                                variant="text"
+                                startIcon={<FontAwesomeIcon icon={faTimes} />}>
+                                Close
+                            </Button> */}
                         </Grid>
                     </Box>
                 </Grid>
