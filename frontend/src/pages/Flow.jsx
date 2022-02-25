@@ -86,6 +86,9 @@ const Flow = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
+    // URI parameter
+    const { pipelineId } = useParams();
+
     // Page states
     const [, setIsLoadingFlow] = useState(true);
 
@@ -150,7 +153,6 @@ const Flow = () => {
         setElements((els) => addEdge({ ...params, type: 'custom', arrowHeadType: 'arrowclosed' }, els));
     };
 
-
     const handleSave = useCallback(() => {
         if (reactFlowInstance) {
             const flowElements = reactFlowInstance.toObject();
@@ -158,7 +160,7 @@ const Flow = () => {
             updatePipelineFlow(flowElements.elements, Environment.id.get());
             FlowState.isEditorPage.set(false);
             FlowState.selectedElement.set(null);
-            history.goBack();
+            history.push({ pathname: `/pipelines/view/${pipelineId}`, state: pipeline });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [reactFlowInstance, jwt]);
@@ -217,7 +219,7 @@ const Flow = () => {
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex">
                         <Typography component="h2" variant="h2" color="text.primary">
-                            Pipelines {'>'} {pipeline.name} 
+                            Pipelines {'>'} {pipeline.name}
                         </Typography>
 
                         <Grid display="flex" alignItems="flex-start">
@@ -279,8 +281,6 @@ const Flow = () => {
 };
 
 export default Flow;
-
-
 
 // ----- Utility function
 function prepareInputForBackend(input) {

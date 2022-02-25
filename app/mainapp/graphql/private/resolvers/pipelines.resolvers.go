@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -85,9 +85,7 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 
 	}
 
-	rtn := "success"
-
-	return rtn, nil
+	return pipelineID, nil
 }
 
 func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *privategraphql.PipelineFlowInput, environmentID string, pipelineID string) (string, error) {
