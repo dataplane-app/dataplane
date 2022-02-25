@@ -50,12 +50,12 @@ const EditorSidebar = () => {
                     text: 'Scheduler',
                     eventType: 'scheduleNode',
                 },
-                {
-                    id: uuidv4(),
-                    icon: faGlobe,
-                    text: 'API',
-                    eventType: 'apiNode',
-                },
+                // {
+                //     id: uuidv4(),
+                //     icon: faGlobe,
+                //     text: 'API',
+                //     eventType: 'apiNode',
+                // },
             ],
         },
         {
