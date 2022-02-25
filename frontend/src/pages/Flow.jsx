@@ -64,9 +64,9 @@ const useAddUpdatePipelineFlowfunc = () => {
 
         const response = await addUpdatePipelineFlow({ input, pipelineID: pipelineId, environmentID });
 
-        if (response.r === 'error') {
+        if (response.r === 'Unauthorized') {
             closeSnackbar();
-            enqueueSnackbar("Can't update flow: " + response.msg, { variant: 'error' });
+            enqueueSnackbar(`Can't update flow: ${response.r}`, { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
         } else {
