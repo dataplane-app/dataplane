@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useGlobalFlowState } from '../../../pages/Flow';
 import { Downgraded } from '@hookstate/core';
-import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useSnackbar } from 'notistack';
 

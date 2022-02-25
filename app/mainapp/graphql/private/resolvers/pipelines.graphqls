@@ -32,8 +32,9 @@ input PipelineNodesInput {
 	nodeType:      String!      
   nodeTypeDesc:  String!   
 	description:   String!  
-  workerGroup:   String!
+  commands:      Any!
 	meta:          PipelineNodesMetaInput!
+  workerGroup:   String!
 	active:        Boolean!           
 }
 
@@ -65,9 +66,10 @@ type PipelineNodes {
 	environmentID: String!         
 	nodeType:      String!   
   nodeTypeDesc:  String!   
-  workerGroup: String!
 	description:   String!         
+  commands:      Any!
 	meta:          Any! 
+  workerGroup:   String!
 	active:        Boolean!           
 }
 

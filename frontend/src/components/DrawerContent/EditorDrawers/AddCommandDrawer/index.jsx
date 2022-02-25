@@ -1,16 +1,42 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Grid, TextField, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useGlobalFlowState } from '../../../../pages/Flow';
 
-const AddCommandDrawer = ({ handleClose, refreshData }) => {
-    const [commandInputs, setCommandInputs] = useState(2);
+const AddCommandDrawer = ({ handleClose, setElements, refreshData }) => {
+    // Local state
+    const [commandInputs, setCommandInputs] = useState(1);
 
-    const { register, handleSubmit } = useForm();
+    // Flow state
+    const FlowState = useGlobalFlowState();
+
+    // React hook form
+    const { register, handleSubmit, reset } = useForm();
+
+    // Fill the form with selected element information
+    useEffect(() => {
+        const commands = FlowState.selectedElement?.data?.commands.get();
+        const command_1 = commands.filter((a) => a.command_1).map((a) => a.command_1)[0];
+        reset({ command_1 });
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [FlowState.selectedElement?.data?.command_1.get()]);
 
     async function onSubmit(data) {
-        console.log(data);
+        setElements((els) =>
+            els.map((el) => {
+                if (el.id === FlowState.selectedElement.id.get()) {
+                    el.data = {
+                        ...el.data,
+                        commands: [{ command_1: data.command_1 }],
+                    };
+                }
+                return el;
+            })
+        );
+        handleClose();
     }
 
     return (

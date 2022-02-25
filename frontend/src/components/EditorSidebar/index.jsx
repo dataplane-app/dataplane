@@ -66,7 +66,7 @@ const EditorSidebar = () => {
                     id: uuidv4(),
                     icon: faRunning,
                     text: 'Python',
-                    data: { language: 'Python', name: 'Python', description: '' },
+                    data: { language: 'Python', name: 'Python', description: '', commands: [{ command_1: 'python -c \'print("Node <node id>")\'' }] },
                     eventType: 'pythonNode',
                 },
                 {

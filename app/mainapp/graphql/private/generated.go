@@ -160,6 +160,7 @@ type ComplexityRoot struct {
 
 	PipelineNodes struct {
 		Active        func(childComplexity int) int
+		Commands      func(childComplexity int) int
 		Description   func(childComplexity int) int
 		EnvironmentID func(childComplexity int) int
 		Meta          func(childComplexity int) int
@@ -350,6 +351,7 @@ type PipelineEdgesResolver interface {
 	Meta(ctx context.Context, obj *models.PipelineEdges) (interface{}, error)
 }
 type PipelineNodesResolver interface {
+	Commands(ctx context.Context, obj *models.PipelineNodes) (interface{}, error)
 	Meta(ctx context.Context, obj *models.PipelineNodes) (interface{}, error)
 }
 type QueryResolver interface {
@@ -1195,6 +1197,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PipelineNodes.Active(childComplexity), true
+
+	case "PipelineNodes.commands":
+		if e.complexity.PipelineNodes.Commands == nil {
+			break
+		}
+
+		return e.complexity.PipelineNodes.Commands(childComplexity), true
 
 	case "PipelineNodes.description":
 		if e.complexity.PipelineNodes.Description == nil {
@@ -2554,8 +2563,9 @@ input PipelineNodesInput {
 	nodeType:      String!      
   nodeTypeDesc:  String!   
 	description:   String!  
-  workerGroup:   String!
+  commands:      Any!
 	meta:          PipelineNodesMetaInput!
+  workerGroup:   String!
 	active:        Boolean!           
 }
 
@@ -2587,9 +2597,10 @@ type PipelineNodes {
 	environmentID: String!         
 	nodeType:      String!   
   nodeTypeDesc:  String!   
-  workerGroup: String!
 	description:   String!         
+  commands:      Any!
 	meta:          Any! 
+  workerGroup:   String!
 	active:        Boolean!           
 }
 
@@ -7819,41 +7830,6 @@ func (ec *executionContext) _PipelineNodes_nodeTypeDesc(ctx context.Context, fie
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PipelineNodes_workerGroup(ctx context.Context, field graphql.CollectedField, obj *models.PipelineNodes) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PipelineNodes",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.WorkerGroup, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _PipelineNodes_description(ctx context.Context, field graphql.CollectedField, obj *models.PipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7889,6 +7865,41 @@ func (ec *executionContext) _PipelineNodes_description(ctx context.Context, fiel
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _PipelineNodes_commands(ctx context.Context, field graphql.CollectedField, obj *models.PipelineNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PipelineNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PipelineNodes().Commands(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalNAny2interface(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _PipelineNodes_meta(ctx context.Context, field graphql.CollectedField, obj *models.PipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7922,6 +7933,41 @@ func (ec *executionContext) _PipelineNodes_meta(ctx context.Context, field graph
 	res := resTmp.(interface{})
 	fc.Result = res
 	return ec.marshalNAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PipelineNodes_workerGroup(ctx context.Context, field graphql.CollectedField, obj *models.PipelineNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PipelineNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkerGroup, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PipelineNodes_active(ctx context.Context, field graphql.CollectedField, obj *models.PipelineNodes) (ret graphql.Marshaler) {
@@ -13232,11 +13278,11 @@ func (ec *executionContext) unmarshalInputPipelineNodesInput(ctx context.Context
 			if err != nil {
 				return it, err
 			}
-		case "workerGroup":
+		case "commands":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workerGroup"))
-			it.WorkerGroup, err = ec.unmarshalNString2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commands"))
+			it.Commands, err = ec.unmarshalNAny2interface(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -13245,6 +13291,14 @@ func (ec *executionContext) unmarshalInputPipelineNodesInput(ctx context.Context
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meta"))
 			it.Meta, err = ec.unmarshalNPipelineNodesMetaInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesMetaInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "workerGroup":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workerGroup"))
+			it.WorkerGroup, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -14127,16 +14181,25 @@ func (ec *executionContext) _PipelineNodes(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "workerGroup":
-			out.Values[i] = ec._PipelineNodes_workerGroup(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "description":
 			out.Values[i] = ec._PipelineNodes_description(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "commands":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PipelineNodes_commands(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "meta":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -14151,6 +14214,11 @@ func (ec *executionContext) _PipelineNodes(ctx context.Context, sel ast.Selectio
 				}
 				return res
 			})
+		case "workerGroup":
+			out.Values[i] = ec._PipelineNodes_workerGroup(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "active":
 			out.Values[i] = ec._PipelineNodes_active(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
