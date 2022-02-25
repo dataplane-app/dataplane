@@ -11,6 +11,7 @@ import (
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/pipelines"
+	"dataplane/mainapp/worker"
 	"errors"
 	"time"
 )
@@ -77,13 +78,27 @@ func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string,
 	}
 
 	// Get any current running tasks and cancel those tasks
+	currentTask := []*models.WorkerTasks{}
+	err = database.DBConn.Where("run_id = ? and environment_id = ? and status=?", runID, environmentID, "Run").Find(&currentTask).Error
+	if err3 != nil {
+		logging.PrintSecretsRedact(err3.Error())
+	}
 
+	if len(currentTask) > 0 {
+		for _, t := range currentTask {
+			errt := worker.WorkerCancelTask(t.TaskID)
+			if errt != nil {
+				logging.PrintSecretsRedact(errt.Error())
+			}
+		}
+	}
 	// Update pipeline as cancelled
 	// Create a run
 	run := models.PipelineRuns{
 		RunID:         runID,
 		PipelineID:    pipelineID,
 		Status:        "Fail",
+		Reason:        "Cancelled by user",
 		EnvironmentID: environmentID,
 		CreatedAt:     currentRun.CreatedAt,
 		EndedAt:       time.Now().UTC(),
