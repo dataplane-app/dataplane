@@ -9,10 +9,12 @@ import AddPipelineDrawer from '../components/DrawerContent/AddPipelineDrawer';
 import { useGetPipelines } from '../graphql/getPipelines';
 import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
+import { useGlobalFlowState } from './Flow';
 
 const Pipelines = () => {
-    // Global user states with hookstate
+    // Global states
     const Environment = useGlobalEnvironmentState();
+    const FlowState = useGlobalFlowState();
 
     // Drawer state
     const [isOpenCreatePipeline, setIsOpenCreatePipeline] = useState(false);
@@ -25,10 +27,21 @@ const Pipelines = () => {
     // Custom GraphQL hook
     const getPipelines = useGetPipelines_(setPipelines, Environment.id.get());
 
-    // Get pipelines on load and when environment changes
+    // Get pipelines and clear flow state on load and when environment changes
     useEffect(() => {
         if (Environment.id.get() === '') return;
         getPipelines();
+        FlowState.set({
+            isRunning: false,
+            isOpenSchedulerDrawer: false,
+            isOpenConfigureDrawer: false,
+            isOpenCommandDrawer: false,
+            isOpenAPIDrawer: false,
+            isEditorPage: false,
+            selectedElement: null,
+            elements: [],
+            triggerDelete: 1,
+        });
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
@@ -83,7 +96,6 @@ const Pipelines = () => {
 
             <Drawer anchor="right" open={isOpenCreatePipeline} onClose={() => setIsOpenCreatePipeline(!isOpenCreatePipeline)}>
                 <AddPipelineDrawer
-                    getPipelines={getPipelines}
                     environmentID={Environment.id.get()}
                     handleClose={() => {
                         setIsOpenCreatePipeline(false);
