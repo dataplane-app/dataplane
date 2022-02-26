@@ -59,7 +59,7 @@ func init() {
 
 	p, err := process.NewProcess(int32(CurrentPID))
 	if err != nil {
-		log.Fatal(err, "Fail to new process when initializing system metric", "pid", CurrentPID)
+		log.Println(err, "Fail to new process when initializing system metric", "pid", CurrentPID)
 		return
 	}
 	currentProcessOnce.Do(func() {
@@ -80,7 +80,7 @@ func init() {
 		cpuCount, err = getContainerCpuCount()
 		// log.Println("environment is  container - cpus: ", cpuCount)
 		if err != nil {
-			log.Fatal(err, "Fail to getContainerCpuCount when initializing system metric")
+			log.Println(err, "Fail to getContainerCpuCount when initializing system metric")
 			return
 		}
 	}
@@ -91,6 +91,7 @@ func init() {
 func isContainerRunning() bool {
 	f, err := os.Open(CGroupPath)
 	if err != nil {
+		log.Println("Hello")
 		return false
 	}
 	defer f.Close()
