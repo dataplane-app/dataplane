@@ -5,8 +5,8 @@ type PipelineRuns {
   status: String!
   environment_id: String!
   created_at: Time!
-  ended_at: Time!
-  updated_at: Time!
+  ended_at: Time
+  updated_at: Time
 }
 
 extend type Mutation {
