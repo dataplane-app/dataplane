@@ -57,7 +57,7 @@ const PythonNode = (props) => {
                 style={
                     FlowState.isDragging.get()
                         ? customSourceHandleDragging
-                        : FlowState.elementsWithConnection.get().includes(props.id)
+                        : FlowState.elementsWithConnection.get()?.includes(props.id)
                         ? customSourceConnected(theme.palette.mode)
                         : customSourceHandle(theme.palette.mode)
                 }
