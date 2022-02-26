@@ -1,15 +1,24 @@
 import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Grid, Typography } from '@mui/material';
+import { Grid, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
-import { Handle } from 'react-flow-renderer';
+import { Handle, useUpdateNodeInternals } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
 import customNodeStyle from '../../../utils/customNodeStyle';
+import { customSourceConnected, customSourceHandle, customSourceHandleDragging } from '../../../utils/handleStyles';
 import PlayTriggerNodeItem from '../../MoreInfoContent/PlayTriggerNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
+import { Downgraded } from '@hookstate/core';
 
 const PlayNode = (props) => {
+    // Theme hook
+    const theme = useTheme();
+
+    // Update node hook
+    // (This will fix the line not having the right size when the node connects to other nodes)
+    const updateNodeInternals = useUpdateNodeInternals();
+
     // Global state
     const FlowState = useGlobalFlowState();
 
@@ -32,9 +41,32 @@ const PlayNode = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedElement.get()]);
 
+    const onConnect = (params) => {
+        // Check if element is already connected to some node
+        if (!FlowState.elementsWithConnection.attach(Downgraded).get().includes(props.id)) {
+            FlowState.elementsWithConnection.set([...FlowState.elementsWithConnection.attach(Downgraded).get(), params.source]);
+            console.log('ADDING TO ARRAY', FlowState.elementsWithConnection.attach(Downgraded).get());
+        }
+
+        // Update node
+        updateNodeInternals(props.id);
+    };
+
     return (
         <Box sx={{ ...customNodeStyle }}>
-            <Handle type="source" position="right" id="play" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
+            <Handle
+                onConnect={onConnect}
+                type="source"
+                position="right"
+                id="play"
+                style={
+                    FlowState.isDragging.get()
+                        ? customSourceHandleDragging
+                        : FlowState.elementsWithConnection.get().includes(props.id)
+                        ? customSourceConnected(theme.palette.mode)
+                        : customSourceHandle(theme.palette.mode)
+                }
+            />
             <Grid container alignItems="flex-start" wrap="nowrap">
                 <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faPlayCircle} />
                 <Grid item ml={1.5} textAlign="left">

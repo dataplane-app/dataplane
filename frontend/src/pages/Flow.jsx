@@ -1,7 +1,7 @@
 import { useTheme } from '@emotion/react';
 import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import ReactFlow, { addEdge, Controls, getConnectedEdges, isEdge, removeElements } from 'react-flow-renderer';
+import ReactFlow, { addEdge, ControlButton, Controls, getConnectedEdges, isEdge, removeElements } from 'react-flow-renderer';
 import { useHistory, useLocation, useParams } from 'react-router-dom';
 import ApiNode from '../components/CustomNodesContent/ApiNode';
 import PythonNode from '../components/CustomNodesContent/PythonNode';
@@ -21,6 +21,8 @@ import APITRiggerDrawer from '../components/DrawerContent/EditorDrawers/APITrigg
 import { useAddUpdatePipelineFlow } from '../graphql/addUpdatePipelineFlow';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { useGlobalAuthState } from '../Auth/UserAuth';
+import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 export const INITIAL_NODE_X_POSITION = 30;
 export const nodeTypes = {
@@ -46,6 +48,10 @@ export const globalFlowState = createState({
     selectedElement: null,
     elements: [],
     triggerDelete: 1,
+    isDragging: false,
+    elementsWithConnection: [],
+    scale: 1,
+    isPanEnable: false,
 });
 export const useGlobalFlowState = () => useHookState(globalFlowState);
 
@@ -63,6 +69,8 @@ const useAddUpdatePipelineFlowfunc = () => {
         const input = prepareInputForBackend(rawInput);
 
         const response = await addUpdatePipelineFlow({ input, pipelineID: pipelineId, environmentID });
+
+        console.log('RESPONSE', response);
 
         if (response.r === 'Unauthorized') {
             closeSnackbar();
@@ -88,6 +96,15 @@ const Flow = () => {
 
     // URI parameter
     const { pipelineId } = useParams();
+
+    useEffect(() => {
+        if (!pipeline || Object.keys(pipeline).length === 0) {
+            history.push('/');
+            return null;
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Page states
     const [, setIsLoadingFlow] = useState(true);
@@ -121,11 +138,33 @@ const Flow = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Trigger the scale button on keyboard 's' key click
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const handleKeyDown = (e) => {
+        if (e.keyCode === 83) {
+            onZoomActive();
+        }
+    };
+
     // Flow states
     const reactFlowWrapper = useRef(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const [elements, setElements] = useState([]);
     const [selectedElement, setSelectedElement] = useState(null);
+    const [zoomOnScroll, setZoomOnScroll] = useState(FlowState.isPanEnable.get());
+
+    useEffect(() => {
+        setZoomOnScroll(FlowState.isPanEnable.get());
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [FlowState.isPanEnable.get()]);
 
     //Flow methods
     const onElementsRemove = (elementsToRemove) => setElements((els) => removeElements(elementsToRemove, els));
@@ -143,6 +182,18 @@ const Flow = () => {
         const edgesToRemove = getConnectedEdges(selectedElement, edges);
         onElementsRemove([...selectedElement, ...edgesToRemove]);
 
+        if (edgesToRemove.length !== 0) {
+            // Array of all the sources connected to the deleted element
+            const sourcesID = edgesToRemove.map((edge) => edge.source);
+
+            const remaingElements = FlowState.elementsWithConnection
+                .attach(Downgraded)
+                .get()
+                ?.filter((el) => !sourcesID.includes(el));
+
+            FlowState.elementsWithConnection.set(remaingElements);
+        }
+
         setSelectedElement(null);
         FlowState.selectedElement.set(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -151,6 +202,29 @@ const Flow = () => {
     const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
     const onConnect = (params) => {
         setElements((els) => addEdge({ ...params, type: 'custom', arrowHeadType: 'arrowclosed' }, els));
+    };
+    const onConnectStart = () => {
+        FlowState.isDragging.set(true);
+        document.body.style.cursor = 'grabbing';
+    };
+    const onConnectEnd = () => {
+        FlowState.isDragging.set(false);
+        document.body.style.cursor = 'default';
+    };
+    const onMoveStart = (flow) => {
+        FlowState.scale.set(flow.zoom);
+    };
+    const onMoveEnd = (flow) => {
+        FlowState.scale.set(flow.zoom);
+    };
+    const onZoomActive = () => {
+        FlowState.isPanEnable.set(!zoomOnScroll);
+
+        if (zoomOnScroll) {
+            document.body.style.cursor = 'default';
+        } else {
+            document.body.style.cursor = 'move';
+        }
     };
 
     const handleSave = useCallback(() => {
@@ -219,7 +293,7 @@ const Flow = () => {
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex">
                         <Typography component="h2" variant="h2" color="text.primary">
-                            Pipelines {'>'} {pipeline.name}
+                            Pipelines {'>'} {pipeline?.name}
                         </Typography>
 
                         <Grid display="flex" alignItems="flex-start">
@@ -252,19 +326,31 @@ const Flow = () => {
 
             <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
                 <ReactFlow
+                    zoomOnScroll={zoomOnScroll}
+                    zoomOnPinch={zoomOnScroll}
+                    paneMoveable={zoomOnScroll}
+                    onMoveStart={onMoveStart}
+                    onMoveEnd={onMoveEnd}
+                    defaultZoom={FlowState.scale.get()}
                     nodeTypes={nodeTypes}
                     elements={elements}
                     onLoad={onLoad}
                     onDrop={onDrop}
                     onDragOver={onDragOver}
                     onConnect={onConnect}
+                    onConnectStart={onConnectStart}
+                    onConnectEnd={onConnectEnd}
                     connectionLineComponent={CustomLine}
                     edgeTypes={edgeTypes}
                     onElementClick={onClickElement}
                     arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
                     snapToGrid={true}
                     snapGrid={[15, 15]}>
-                    <Controls style={{ left: 'auto', right: 155 }} />
+                    <Controls style={{ left: 'auto', right: 155, bottom: 20 }}>
+                        <ControlButton onClick={onZoomActive} style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
+                            <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} sx={{ color: FlowState.isPanEnable.get() ? '#72B842' : '' }} />
+                        </ControlButton>
+                    </Controls>
                     {elements.length <= 0 ? (
                         <Box sx={{ position: 'absolute', top: '40%', left: -100, right: 0, textAlign: 'center' }}>
                             <Typography>Create a pipeline by dragging the components here.</Typography>
@@ -282,7 +368,7 @@ const Flow = () => {
                     setElements={setElements}
                     environmentName={Environment.name.get()}
                     handleClose={() => FlowState.isOpenConfigureDrawer.set(false)}
-                    workerGroup={pipeline.workerGroup}
+                    workerGroup={pipeline?.workerGroup}
                 />
             </Drawer>
 

@@ -1,15 +1,18 @@
 import { faMapMarkedAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Grid, Typography } from '@mui/material';
-import { Box } from '@mui/system';
+import { Grid, Typography, useTheme, Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
 import customNodeStyle from '../../../utils/customNodeStyle';
+import { customTargetHandle } from '../../../utils/handleStyles';
 import PlayTriggerNodeItem from '../../MoreInfoContent/PlayTriggerNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
 
 const CheckpointNode = (props) => {
+    // Theme hook
+    const theme = useTheme();
+
     // Global state
     const FlowState = useGlobalFlowState();
 
@@ -34,8 +37,8 @@ const CheckpointNode = (props) => {
 
     return (
         <Box sx={{ ...customNodeStyle }}>
-            <Handle type="source" position={Position.Right} id="checkpoint_source" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
-            <Handle type="target" position={Position.Left} id="checkpoint_target" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
+            <Handle type="source" position={Position.Right} id="checkpoint_source" style={customTargetHandle(theme.palette.mode)} />
+            <Handle type="target" position={Position.Left} id="checkpoint_target" className="handlePulseAnimation" style={customTargetHandle(theme.palette.mode)} />
             <Grid container alignItems="flex-start" wrap="nowrap">
                 <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faMapMarkedAlt} />
                 <Grid item ml={1.5} textAlign="left">

@@ -1,11 +1,12 @@
 import { faClock } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Grid, Typography } from '@mui/material';
+import { Grid, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
-import { Handle } from 'react-flow-renderer';
+import { Handle, useUpdateNodeInternals } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
 import customNodeStyle from '../../../utils/customNodeStyle';
+import { customSourceConnected, customSourceHandle, customSourceHandleDragging } from '../../../utils/handleStyles';
 import ScheduleTriggerNodeItem from '../../MoreInfoContent/ScheduleTriggerNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
 
@@ -13,6 +14,13 @@ const ScheduleNode = (props) => {
     const [isRunning, setIsRunning] = useState(false);
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
+
+    // Theme hook
+    const theme = useTheme();
+
+    // Update node hook
+    // (This will fix the line not having the right size when the node connects to other nodes)
+    const updateNodeInternals = useUpdateNodeInternals();
 
     const FlowState = useGlobalFlowState();
 
@@ -37,9 +45,26 @@ const ScheduleNode = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedElement.get()]);
 
+    const onConnect = (params) => {
+        FlowState.elementsWithConnection.set([...FlowState.elementsWithConnection.get(), params.source]);
+        updateNodeInternals(props.id);
+    };
+
     return (
         <Box sx={{ ...customNodeStyle, border: isRunning ? '3px solid #76A853' : '3px solid #c4c4c4' }}>
-            <Handle type="source" position="right" id="schedule" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
+            <Handle
+                onConnect={onConnect}
+                type="source"
+                position="right"
+                id="schedule"
+                style={
+                    FlowState.isDragging.get()
+                        ? customSourceHandleDragging
+                        : FlowState.elementsWithConnection.get().includes(props.id)
+                        ? customSourceConnected(theme.palette.mode)
+                        : customSourceHandle(theme.palette.mode)
+                }
+            />
             <Grid container alignItems="flex-start" wrap="nowrap">
                 <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faClock} />
                 <Grid item ml={1.5} textAlign="left">

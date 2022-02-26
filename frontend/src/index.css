@@ -55,6 +55,10 @@ code {
     top: 90px !important;
 }
 
+.react-flow__controls > button {
+    border: 1px solid transparent;
+}
+
 .react-flow__node-output {
     border-color: #0073c6 !important;
     border-width: 3px !important;
@@ -76,4 +80,31 @@ code {
 [draggable='true'] {
     position: relative;
     z-index: 1;
+}
+
+.handlePulseAnimation::before {
+    content: '';
+    width: 40px;
+    height: 20px;
+    position: absolute;
+    left: -30px;
+    top: -5px;
+}
+
+.handlePulseAnimation:hover {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    }
 }
