@@ -70,8 +70,6 @@ func RunNextPipeline() {
 		}
 
 		// If not at the end then continue with pipeline
-		var commandsJson []*Commands
-		var commandsend []string
 
 		for _, s := range destinationNodes {
 
@@ -111,8 +109,11 @@ func RunNextPipeline() {
 
 			if len(dependencyCheck) == 0 {
 
+				commandsJson := []Command{}
+				commandsend := []string{}
+
 				// log.Println("All dependencies are successful")
-				json.Unmarshal(s.Commands, commandsJson)
+				json.Unmarshal(s.Commands, &commandsJson)
 
 				for _, c := range commandsJson {
 					commandsend = append(commandsend, c.Command)

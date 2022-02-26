@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Commands struct {
+type Command struct {
 	Command string `json:command`
 }
 
@@ -176,19 +176,20 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	}
 
 	// ---------- Run the first set of dependencies ----------
-	var commandsJson []*Commands
-	var commandsend []string
 
 	for _, s := range trigger {
 
-		json.Unmarshal(triggerData[s].Commands, commandsJson)
+		commandsJson := []Command{}
+		commandsend := []string{}
+
+		json.Unmarshal(triggerData[s].Commands, &commandsJson)
 
 		// x = x + 1
 		for _, c := range commandsJson {
 			commandsend = append(commandsend, c.Command)
 		}
 
-		log.Println("Commands:", commandsend, commandsJson)
+		// log.Println("Commands:", commandsend)
 
 		// log.Println("First:", s)
 		// if x == 2 {

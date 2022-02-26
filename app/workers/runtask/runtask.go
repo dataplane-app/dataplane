@@ -232,7 +232,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	}
 
 	if os.Getenv("debug") == "true" {
-		log.Println("Update task as " + statusUpdate + " - " + msg.TaskID)
+		// log.Println("Update task as " + statusUpdate + " - " + msg.TaskID)
 	}
 
 	// if there are empty commands simply move on as success.
