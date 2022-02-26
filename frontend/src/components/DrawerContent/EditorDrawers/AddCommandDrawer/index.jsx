@@ -1,16 +1,48 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Grid, TextField, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useGlobalFlowState } from '../../../../pages/Flow';
 
-const AddCommandDrawer = ({ handleClose, refreshData }) => {
-    const [commandInputs, setCommandInputs] = useState(2);
+const AddCommandDrawer = ({ handleClose, setElements, refreshData }) => {
+    // Local state
+    const [commandInputs, setCommandInputs] = useState(1);
 
-    const { register, handleSubmit } = useForm();
+    // Flow state
+    const FlowState = useGlobalFlowState();
+
+    // React hook form
+    const { register, handleSubmit, reset } = useForm();
+
+    // Fill the form with selected element information
+    useEffect(() => {
+        const commands = FlowState.selectedElement?.data?.commands.get();
+        setCommandInputs(commands.length);
+
+        let resetObj = {};
+        for (let i in Object.keys(commands)) {
+            resetObj[`command_${Number(i) + 1}`] = Object.values(commands[i])[0];
+        }
+
+        reset(resetObj);
+    }, [FlowState.selectedElement?.data?.commands[0]?.command.get()]);
 
     async function onSubmit(data) {
-        console.log(data);
+        const commands = Object.values(data).map((a) => ({ command: a }));
+
+        setElements((els) =>
+            els.map((el) => {
+                if (el.id === FlowState.selectedElement.id.get()) {
+                    el.data = {
+                        ...el.data,
+                        commands,
+                    };
+                }
+                return el;
+            })
+        );
+        handleClose();
     }
 
     return (

@@ -5,7 +5,15 @@ const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
     mutation stopPipelines($pipelineID: String!, $environmentID: String!) {
-        stopPipelines(pipelineID: $pipelineID, environmentID: $environmentID)
+        stopPipelines(pipelineID: $pipelineID, environmentID: $environmentID){
+            run_id
+            pipeline_id
+            status
+            environment_id
+            created_at
+            ended_at
+            updated_at
+      }
     }
 `;
 

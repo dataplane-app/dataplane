@@ -67,73 +67,80 @@ func RunNextPipeline() {
 				logging.PrintSecretsRedact(err2.Error.Error())
 			}
 
-		} else {
+		}
 
-			// If not at the end then continue with pipeline
+		// If not at the end then continue with pipeline
 
-			for _, s := range destinationNodes {
+		for _, s := range destinationNodes {
 
-				// log.Println("Destination:", s.RunID, " -> ", s.NodeID)
+			// log.Println("Destination:", s.RunID, " -> ", s.NodeID)
 
-				var dependencies []string
-				json.Unmarshal(s.Dependency, &dependencies)
-				for _, v := range dependencies {
+			var dependencies []string
+			json.Unmarshal(s.Dependency, &dependencies)
+			for _, v := range dependencies {
 
-					uniquedependencies[v] = true
+				uniquedependencies[v] = true
+			}
+
+			for k, _ := range uniquedependencies {
+				uniquedependenciesarray = append(uniquedependenciesarray, k)
+			}
+
+			// log.Println("Node: ", s.NodeID, " - Dependencies to check:", uniquedependencies, uniquedependenciesarray)
+
+			/*
+				Check that destination isnt already running -
+				say you have 3 dependencies but 1 destination
+				this can trigger it 3 times if dependencies marked as success faster than reaching this point
+				each run needs to ensure that the destination isnt already running - must be queue status to run
+
+				All dependencies need to be marked as success to continue. The below look for any non-successful nodes.
+				If any return then there are still outstanding dependencies.
+			*/
+
+			err = database.DBConn.Select("node_id", "status").Where("node_id in (?) and pipeline_id =? and run_id=? and status<>?", uniquedependenciesarray, msg.PipelineID, msg.RunID, "Success").Find(&dependencyCheck).Error
+			if err != nil {
+				logging.PrintSecretsRedact(err)
+			}
+
+			// if err == gorm.ErrRecordNotFound {
+			// 	log.Println("Dependencies check:", err)
+			// }
+
+			if len(dependencyCheck) == 0 {
+
+				commandsJson := []Command{}
+				commandsend := []string{}
+
+				// log.Println("All dependencies are successful")
+				json.Unmarshal(s.Commands, &commandsJson)
+
+				for _, c := range commandsJson {
+					commandsend = append(commandsend, c.Command)
 				}
 
-				for k, _ := range uniquedependencies {
-					uniquedependenciesarray = append(uniquedependenciesarray, k)
-				}
-
-				// log.Println("Node: ", s.NodeID, " - Dependencies to check:", uniquedependencies, uniquedependenciesarray)
-
-				/*
-					Check that destination isnt already running -
-					say you have 3 dependencies but 1 destination
-					this can trigger it 3 times if dependencies marked as success faster than reaching this point
-					each run needs to ensure that the destination isnt already running - must be queue status to run
-
-					All dependencies need to be marked as success to continue. The below look for any non-successful nodes.
-					If any return then there are still outstanding dependencies.
-				*/
-
-				err = database.DBConn.Select("node_id", "status").Where("node_id in (?) and pipeline_id =? and run_id=? and status<>?", uniquedependenciesarray, msg.PipelineID, msg.RunID, "Success").Find(&dependencyCheck).Error
+				// ------ run the destination -------
+				err = worker.WorkerRunTask(s.WorkerGroup, s.TaskID, s.RunID, s.EnvironmentID, s.PipelineID, s.NodeID, commandsend)
+				// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s})
 				if err != nil {
-					logging.PrintSecretsRedact(err)
-				}
-
-				// if err == gorm.ErrRecordNotFound {
-				// 	log.Println("Dependencies check:", err)
-				// }
-
-				if len(dependencyCheck) == 0 {
-
-					// log.Println("All dependencies are successful")
-
-					// ------ run the destination -------
-					err = worker.WorkerRunTask("python_1", s.TaskID, s.RunID, s.EnvironmentID, s.PipelineID, s.NodeID, []string{"echo " + s.NodeID})
-					// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s})
-					if err != nil {
-						if config.Debug == "true" {
-							logging.PrintSecretsRedact(err)
-						}
-
-					} else {
-						if config.Debug == "true" {
-							logging.PrintSecretsRedact("Next step:", s.RunID, " -> ", s.TaskID)
-						}
+					if config.Debug == "true" {
+						logging.PrintSecretsRedact(err)
 					}
 
 				} else {
-
-					// These dependencies are either failed or not yet complete.
-					// fmt.Printf("Dependencies: %+v\n", &dependencyCheck)
+					if config.Debug == "true" {
+						logging.PrintSecretsRedact("Next step:", s.RunID, " -> ", s.TaskID)
+					}
 				}
 
-				// fmt.Printf("%+v\n", dependencyCheck)
+			} else {
 
+				// These dependencies are either failed or not yet complete.
+				// fmt.Printf("Dependencies: %+v\n", &dependencyCheck)
 			}
+
+			// fmt.Printf("%+v\n", dependencyCheck)
+
 		}
 
 		// Retrieve all dependencies

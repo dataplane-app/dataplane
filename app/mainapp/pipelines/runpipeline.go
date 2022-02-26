@@ -7,20 +7,25 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/worker"
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/google/uuid"
 )
 
+type Command struct {
+	Command string `json:command`
+}
+
 func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, error) {
 
-	start := time.Now().UTC()
+	// start := time.Now().UTC()
 
 	var destinations = make(map[string][]string)
 	var dependencies = make(map[string][]string)
 	var triggerData = make(map[string]*models.WorkerTasks)
+
+	// Retrieve pipeline details
 
 	// Create a run
 	run := models.PipelineRuns{
@@ -56,6 +61,13 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		edges <- edgesdata
 	}()
 
+	pipeline := make(chan models.Pipelines)
+	pipelinedata := models.Pipelines{}
+	go func() {
+		database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).First(&pipelinedata)
+		pipeline <- pipelinedata
+	}()
+
 	// Start at trigger
 	RunID := run.RunID
 
@@ -64,6 +76,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	// Return go routines
 	nodesdata = <-nodes
 	edgesdata = <-edges
+	pipelinedata = <-pipeline
 
 	// Map children
 	for _, s := range edgesdata {
@@ -78,6 +91,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	var triggerID string
 	var status string
 	var nodeType string
+	var workergroup string
 
 	for _, s := range nodesdata {
 
@@ -86,6 +100,12 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 
 		if s.Commands == nil {
 			// log.Println("no commands")
+		}
+
+		if s.WorkerGroup == "" {
+			workergroup = pipelinedata.WorkerGroup
+		} else {
+			workergroup = s.WorkerGroup
 		}
 
 		if s.NodeType == "trigger" {
@@ -120,11 +140,12 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 			CreatedAt:     time.Now().UTC(),
 			EnvironmentID: environmentID,
 			RunID:         RunID,
-			WorkerGroup:   s.WorkerGroup,
+			WorkerGroup:   workergroup,
 			PipelineID:    s.PipelineID,
 			NodeID:        s.NodeID,
 			Status:        status,
 			Dependency:    dependJSON,
+			Commands:      s.Commands,
 			Destination:   destinationJSON,
 		}
 
@@ -154,18 +175,28 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		log.Println("trigger: ", trigger, triggerID)
 	}
 
-	x := 0
-	ex := ""
+	// ---------- Run the first set of dependencies ----------
+
 	for _, s := range trigger {
 
-		x = x + 1
+		commandsJson := []Command{}
+		commandsend := []string{}
+
+		json.Unmarshal(triggerData[s].Commands, &commandsJson)
+
+		// x = x + 1
+		for _, c := range commandsJson {
+			commandsend = append(commandsend, c.Command)
+		}
+
+		// log.Println("Commands:", commandsend)
 
 		// log.Println("First:", s)
 		// if x == 2 {
 		// 	ex = "exit 1;"
 		// }
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
-		err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s + ";" + ex})
+		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend)
 		if err != nil {
 			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)
@@ -185,9 +216,9 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	// jsonString, err := json.Marshal(destinations)
 	// fmt.Println(string(jsonString), err)
 
-	stop := time.Now()
+	// stop := time.Now()
 	// Do something with response
-	log.Println("🐆 Run time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
+	// log.Println("🐆 Run time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
 
 	return run, nil
 

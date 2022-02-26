@@ -10,6 +10,7 @@ import (
 	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"syscall"
@@ -91,7 +92,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			break
 		}
 
-		// log.Println("command:", i, v)
+		log.Println("command:", v)
 
 		cmd := exec.Command("/bin/bash", "-c", v)
 
@@ -233,6 +234,12 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	if os.Getenv("debug") == "true" {
 		// log.Println("Update task as " + statusUpdate + " - " + msg.TaskID)
 	}
+
+	// if there are empty commands simply move on as success.
+	if statusUpdate == "Run" {
+		statusUpdate = "Success"
+	}
+
 	TaskFinal := modelmain.WorkerTasks{
 		TaskID:        msg.TaskID,
 		CreatedAt:     TaskUpdate.CreatedAt,

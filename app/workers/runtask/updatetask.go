@@ -7,7 +7,6 @@ import (
 	"dataplane/workers/database"
 	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
-	"log"
 	"time"
 
 	"gorm.io/gorm/clause"
@@ -52,7 +51,8 @@ func UpdateWorkerTasks(msg modelmain.WorkerTasks) {
 		}
 
 	}
-	log.Println("msg: ", "taskupdate."+msg.EnvironmentID+"."+msg.RunID)
+
+	// log.Println("msg: ", "taskupdate."+msg.EnvironmentID+"."+msg.RunID)
 	errnat := messageq.MsgSend("taskupdate."+msg.EnvironmentID+"."+msg.RunID, msg)
 	if errnat != nil {
 		if config.Debug == "true" {

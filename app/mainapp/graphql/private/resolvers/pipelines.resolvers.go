@@ -183,6 +183,11 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			logging.PrintSecretsRedact(err)
 		}
 
+		commandJSON, err := json.Marshal(p.Commands)
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
 		dependJSON, err := json.Marshal(dependencies[p.NodeID])
 		if err != nil {
 			logging.PrintSecretsRedact(err)
@@ -202,6 +207,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			NodeTypeDesc:  p.NodeTypeDesc,
 			WorkerGroup:   p.WorkerGroup,
 			Description:   p.Description,
+			Commands:      commandJSON,
 			Meta:          nodeMeta,
 			Dependency:    dependJSON,
 			Destination:   destinationJSON,
@@ -278,6 +284,10 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 func (r *pipelineEdgesResolver) Meta(ctx context.Context, obj *models.PipelineEdges) (interface{}, error) {
 	return obj.Meta, nil
+}
+
+func (r *pipelineNodesResolver) Commands(ctx context.Context, obj *models.PipelineNodes) (interface{}, error) {
+	return obj.Commands, nil
 }
 
 func (r *pipelineNodesResolver) Meta(ctx context.Context, obj *models.PipelineNodes) (interface{}, error) {
