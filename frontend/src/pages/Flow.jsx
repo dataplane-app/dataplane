@@ -70,8 +70,6 @@ const useAddUpdatePipelineFlowfunc = () => {
 
         const response = await addUpdatePipelineFlow({ input, pipelineID: pipelineId, environmentID });
 
-        console.log('RESPONSE', response);
-
         if (response.r === 'Unauthorized') {
             closeSnackbar();
             enqueueSnackbar(`Can't update flow: ${response.r}`, { variant: 'error' });
@@ -102,7 +100,6 @@ const Flow = () => {
             history.push('/');
             return null;
         }
-
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

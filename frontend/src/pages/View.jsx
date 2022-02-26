@@ -67,11 +67,9 @@ const View = () => {
         getPipelineFlow(Environment.id.get(), setElements);
         setIsLoadingFlow(false);
 
-        if (!pipeline) {
-            console.log(pipeline);
+        if (!pipeline || Object.keys(pipeline).length === 0) {
             history.push('/');
-
-            return;
+            return null;
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

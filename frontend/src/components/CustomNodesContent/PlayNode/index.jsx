@@ -45,7 +45,6 @@ const PlayNode = (props) => {
         // Check if element is already connected to some node
         if (!FlowState.elementsWithConnection.attach(Downgraded).get().includes(props.id)) {
             FlowState.elementsWithConnection.set([...FlowState.elementsWithConnection.attach(Downgraded).get(), params.source]);
-            console.log('ADDING TO ARRAY', FlowState.elementsWithConnection.attach(Downgraded).get());
         }
 
         // Update node
@@ -62,7 +61,7 @@ const PlayNode = (props) => {
                 style={
                     FlowState.isDragging.get()
                         ? customSourceHandleDragging
-                        : FlowState.elementsWithConnection.get().includes(props.id)
+                        : FlowState.elementsWithConnection.get()?.includes(props.id)
                         ? customSourceConnected(theme.palette.mode)
                         : customSourceHandle(theme.palette.mode)
                 }
