@@ -2691,31 +2691,30 @@ extend type Mutation {
     """
   updatePreferences(input: AddPreferencesInput): String
 }`, BuiltIn: false},
-	{Name: "resolvers/runpipelines.graphqls", Input: `
-type PipelineRuns {
-  run_id: String!
-  pipeline_id: String!
-  status: String!
-  environment_id: String!
-  created_at: Time!
-  ended_at: Time
-  updated_at: Time
+	{Name: "resolvers/runpipelines.graphqls", Input: `type PipelineRuns {
+    run_id: String!
+    pipeline_id: String!
+    status: String!
+    environment_id: String!
+    created_at: Time!
+    ended_at: Time
+    updated_at: Time
 }
 
 extend type Mutation {
-  """
-  Run pipeline flow.
-  + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
-  """
-  runPipelines(pipelineID: String!, environmentID: String!): PipelineRuns!
+    """
+    Run pipeline flow.
+    + **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    runPipelines(pipelineID: String!, environmentID: String!): PipelineRuns!
 
-  """
-  Stop pipeline flow.
-  + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
-  """
-  stopPipelines(pipelineID: String!, runID: String!, environmentID: String!): PipelineRuns!
+    """
+    Stop pipeline flow.
+    + **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    stopPipelines(pipelineID: String!, runID: String!, environmentID: String!): PipelineRuns!
 }
 `, BuiltIn: false},
 	{Name: "resolvers/secrets.graphqls", Input: `scalar Time
