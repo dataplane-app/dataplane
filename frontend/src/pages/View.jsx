@@ -32,6 +32,7 @@ const View = () => {
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
     const [isRunning, setIsRunning] = useState(false);
+    const [runID, setRunID] = useState('');
     const [, setIsLoadingFlow] = useState(true);
 
     // Global states
@@ -127,6 +128,11 @@ const View = () => {
                     <Grid item alignItems="center" display="flex" flex={1}>
                         <Typography variant="h3">Run</Typography>
                         <TextField label="Live" id="last" select size="small" sx={{ ml: 2, mr: 2, flex: 1 }}>
+                            {FlowState.isRunning.get() ? (
+                                <MenuItem value="live">
+                                    {formatDate(new Date())} - {runID}
+                                </MenuItem>
+                            ) : null}
                             <MenuItem value="24">Last 24 hours</MenuItem>
                         </TextField>
                     </Grid>
@@ -137,7 +143,7 @@ const View = () => {
                                     onClick={() => {
                                         FlowState.isRunning.set(false);
                                         setIsRunning(false);
-                                        stopPipelines(Environment.id.get());
+                                        stopPipelines(Environment.id.get(), runID);
                                     }}
                                     variant="outlined"
                                     color="error"
@@ -158,7 +164,7 @@ const View = () => {
                                 onClick={() => {
                                     FlowState.isRunning.set(true);
                                     setIsRunning(true);
-                                    runPipelines(Environment.id.get());
+                                    runPipelines(Environment.id.get(), setRunID);
                                 }}>
                                 <Box component={FontAwesomeIcon} fontSize={30} sx={{ color: 'cyan.main' }} icon={faPlayCircle} />
                             </IconButton>
@@ -250,7 +256,7 @@ const useRunPipelines_ = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Run pipeline flow
-    return async (environmentID) => {
+    return async (environmentID, setRunID) => {
         const response = await runPipelines({ pipelineID: pipelineId, environmentID });
 
         if (response.r === 'error') {
@@ -259,6 +265,7 @@ const useRunPipelines_ = () => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': run flow', { variant: 'error' }));
         } else {
+            setRunID(response.run_id);
             enqueueSnackbar('Success', { variant: 'success' });
         }
     };
@@ -274,8 +281,8 @@ const useStopPipelines_ = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Stop pipeline flow
-    return async (environmentID) => {
-        const response = await stopPipelines({ pipelineID: pipelineId, environmentID });
+    return async (environmentID, runID) => {
+        const response = await stopPipelines({ pipelineID: pipelineId, environmentID, runID });
 
         if (response.r === 'error') {
             closeSnackbar();
@@ -288,7 +295,7 @@ const useStopPipelines_ = () => {
     };
 };
 
-// ----- Utility function
+// ----- Utility functions
 function prepareInputForFrontend(input) {
     const edgesInput = [];
     const nodesInput = [];
@@ -325,4 +332,11 @@ function prepareInputForFrontend(input) {
     }
 
     return [...edgesInput, ...nodesInput];
+}
+
+export function formatDate(date) {
+    let day = new Intl.DateTimeFormat('en', { day: 'numeric' }).format(date);
+    let monthYear = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short' }).format(date);
+    let time = new Intl.DateTimeFormat('en', { hourCycle: 'h23', hour: '2-digit', minute: 'numeric', second: 'numeric' }).format(date);
+    return `${day} ${monthYear} ${time}`;
 }
