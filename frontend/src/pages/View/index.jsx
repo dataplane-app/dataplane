@@ -4,7 +4,6 @@ import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, Controls } from 'react-flow-renderer';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
-import CustomChip from '../../components/CustomChip';
 import CustomLine from '../../components/CustomNodesContent/CustomLine';
 import PublishPipelineDrawer from '../../components/DrawerContent/PublishPipelineDrawer';
 import RemoveLogsPageItem from '../../components/MoreInfoContent/RemoveLogsPageItem';
@@ -14,6 +13,7 @@ import { edgeTypes, nodeTypes, useGlobalFlowState } from '../Flow';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import RunsDropdown from './RunsDropdown';
 import Timer from './Timer';
+import StatusChips from './StatusChips';
 
 const View = () => {
     // Hooks
@@ -112,13 +112,8 @@ const View = () => {
                 </Grid>
 
                 <Grid mt={4} container alignItems="center" sx={{ width: { xl: '88%' }, flexWrap: 'nowrap' }}>
-                    <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }} flex={1.2}>
-                        <CustomChip amount={2} label="Steps" margin={2} customColor="orange" />
-                        <CustomChip amount={2} label="Running" margin={2} customColor="blue" />
-                        <CustomChip amount={2} label="Succeeded" margin={2} customColor="green" />
-                        <CustomChip amount={2} label="Failed" margin={2} customColor="red" />
-                        <CustomChip amount={2} label="Workers online" margin={2} customColor="purple" />
-                    </Grid>
+                    {/* Status Chips */}
+                    <StatusChips />
 
                     {/* Runs dropdown */}
                     <RunsDropdown />
