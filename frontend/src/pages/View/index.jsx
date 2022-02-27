@@ -31,9 +31,6 @@ const View = () => {
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
     const [, setIsLoadingFlow] = useState(true);
-    // // const [timeElapsed, setTimeElapsed] = useState(Math.floor((new Date() - FlowState.startedRunningAt.attach(Downgraded).get()) / 1000));
-    // const [timeElapsed, setTimeElapsed] = useState(0);
-    // const [tasks, setTasks] = useState();
 
     const Environment = useGlobalEnvironmentState();
 
@@ -71,21 +68,6 @@ const View = () => {
     const onConnect = (params) => {
         setElements((els) => addEdge({ ...params, type: 'custom' }, els));
     };
-
-    // // Updates timer every second
-    // useEffect(() => {
-    //     let secTimer;
-    //     if (FlowState.isRunning.get()) {
-    //         secTimer = setInterval(() => {
-    //             setTimeElapsed(Math.floor((new Date() - FlowState.startedRunningAt.attach(Downgraded).get()) / 1000));
-    //         }, 1000);
-    //     }
-
-    //     return () => {
-    //         clearInterval(secTimer);
-    //         setTimeElapsed(0);
-    //     };
-    // }, [FlowState.isRunning.get()]);
 
     return (
         <Box className="page" height="calc(100vh - 100px)" minHeight="min-content">
