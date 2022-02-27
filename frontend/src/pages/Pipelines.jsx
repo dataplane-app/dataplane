@@ -10,11 +10,13 @@ import { useGetPipelines } from '../graphql/getPipelines';
 import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
 import { useGlobalFlowState } from './Flow';
+import { useGlobalRunState } from './View/useWebSocket';
 
 const Pipelines = () => {
     // Global states
     const Environment = useGlobalEnvironmentState();
     const FlowState = useGlobalFlowState();
+    const RunState = useGlobalRunState();
 
     // Drawer state
     const [isOpenCreatePipeline, setIsOpenCreatePipeline] = useState(false);
@@ -42,6 +44,7 @@ const Pipelines = () => {
             elements: [],
             triggerDelete: 1,
         });
+        RunState.set({});
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);

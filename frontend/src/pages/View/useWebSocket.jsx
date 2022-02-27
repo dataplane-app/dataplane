@@ -2,18 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { createState, useState as useHookState } from '@hookstate/core';
+import { useGlobalFlowState } from '../Flow';
+import { usePipelineTasksRunHook } from './Timer';
 
 const websocketEndpoint = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
 
-// Global flow states
+// Global run state
 export const globalRunState = createState({});
-
 export const useGlobalRunState = () => useHookState(globalRunState);
 
 export default function useWebSocket(environmentId, runId) {
     const RunState = useGlobalRunState();
+    const FlowState = useGlobalFlowState();
 
-    const [socketResponse, setSocketResponse] = useState([]);
+    const getPipelineTasksRun = usePipelineTasksRunHook();
+
     const reconnectOnClose = useRef(true);
     const ws = useRef(null);
 
@@ -38,25 +41,30 @@ export default function useWebSocket(environmentId, runId) {
             };
 
             ws.current.onmessage = (e) => {
-                setSocketResponse(JSON.parse(e.data));
-                RunState[JSON.parse(e.data).node_id].set(JSON.parse(e.data).status);
+                const response = JSON.parse(e.data);
+
+                // Add only if a node message, not MSG.
+                if (response.node_id) {
+                    RunState[response.node_id].set(response.status);
+                    RunState.run_id.set(response.run_id);
+                }
+
+                if (response.status === 'Fail') {
+                    getPipelineTasksRun(response.run_id, response.environment_id);
+                }
+                if (response.MSG) {
+                    FlowState.isRunning.set(false);
+                }
             };
         }
 
-        // if (runId !== '') {
         connect();
-        // }
 
         return () => {
             reconnectOnClose.current = false;
             ws.current.close();
         };
-    }, [runId]);
 
-    // Make sure socket response is matching the worked id requested.
-    if (socketResponse.WorkerGroup === runId) {
-        return socketResponse;
-    } else {
-        return [];
-    }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [runId]);
 }
