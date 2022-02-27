@@ -1,7 +1,5 @@
 import { useTheme } from '@emotion/react';
-import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Drawer, Grid, IconButton, MenuItem, TextField, Typography } from '@mui/material';
+import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, ControlButton, Controls } from 'react-flow-renderer';
@@ -17,26 +15,28 @@ import { useStopPipelines } from '../graphql/stopPipelines';
 import { edgeTypes, nodeTypes, useGlobalFlowState } from './Flow';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
+import RunsDropdown from './RunsDropdown';
+import Timer from './Timer';
+import StatusChips from './StatusChips';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const View = () => {
     // Hooks
     const theme = useTheme();
     const history = useHistory();
     const { state: pipeline } = useLocation();
-    const getPipelineFlow = useGetPipelineFlow_(pipeline);
-    const runPipelines = useRunPipelines_();
-    const stopPipelines = useStopPipelines_();
+    const getPipelineFlow = useGetPipelineFlowHook(pipeline);
 
     // URI parameter
     const { pipelineId } = useParams();
 
-    // Page states
-    const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
-    const [isRunning, setIsRunning] = useState(false);
-    const [, setIsLoadingFlow] = useState(true);
-
     // Global states
     const FlowState = useGlobalFlowState();
+
+    // Page states
+    const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
+    const [, setIsLoadingFlow] = useState(true);
+
     const Environment = useGlobalEnvironmentState();
 
     //Offset states and refs
@@ -167,54 +167,14 @@ const View = () => {
                 </Grid>
 
                 <Grid mt={4} container alignItems="center" sx={{ width: { xl: '88%' }, flexWrap: 'nowrap' }}>
-                    <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }} flex={1.2}>
-                        <CustomChip amount={2} label="Steps" margin={2} customColor="orange" />
-                        <CustomChip amount={2} label="Running" margin={2} customColor="blue" />
-                        <CustomChip amount={2} label="Succeeded" margin={2} customColor="green" />
-                        <CustomChip amount={2} label="Failed" margin={2} customColor="red" />
-                        <CustomChip amount={2} label="Workers online" margin={2} customColor="purple" />
-                    </Grid>
+                    {/* Status Chips */}
+                    <StatusChips />
 
-                    <Grid item alignItems="center" display="flex" flex={1}>
-                        <Typography variant="h3">Run</Typography>
-                        <TextField label="Live" id="last" select size="small" sx={{ ml: 2, mr: 2, flex: 1 }}>
-                            <MenuItem value="24">Last 24 hours</MenuItem>
-                        </TextField>
-                    </Grid>
-                    <Grid item flex={0.6}>
-                        {isRunning ? (
-                            <Box display="flex" alignItems="center" ml={2}>
-                                <Button
-                                    onClick={() => {
-                                        FlowState.isRunning.set(false);
-                                        setIsRunning(false);
-                                        stopPipelines(Environment.id.get());
-                                    }}
-                                    variant="outlined"
-                                    color="error"
-                                    sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                                    Stop
-                                </Button>
+                    {/* Runs dropdown */}
+                    <RunsDropdown />
 
-                                <Typography variant="h3" ml={2}>
-                                    00:00:01
-                                </Typography>
-                            </Box>
-                        ) : (
-                            <IconButton
-                                sx={{ margin: 0, height: 40, width: 40 }}
-                                aria-label="play"
-                                id="play-button"
-                                aria-haspopup="true"
-                                onClick={() => {
-                                    FlowState.isRunning.set(true);
-                                    setIsRunning(true);
-                                    runPipelines(Environment.id.get());
-                                }}>
-                                <Box component={FontAwesomeIcon} fontSize={30} sx={{ color: 'cyan.main' }} icon={faPlayCircle} />
-                            </IconButton>
-                        )}
-                    </Grid>
+                    {/* Timer */}
+                    <Timer environmentID={Environment.id.get()} />
                 </Grid>
             </Box>
 
@@ -267,7 +227,7 @@ const LOGS_MOCK = {
 export default View;
 
 // ------ Custom hooks
-const useGetPipelineFlow_ = (pipeline) => {
+const useGetPipelineFlowHook = (pipeline) => {
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
 
@@ -302,55 +262,7 @@ const useGetPipelineFlow_ = (pipeline) => {
     };
 };
 
-const useRunPipelines_ = () => {
-    // GraphQL hook
-    const runPipelines = useRunPipelines();
-
-    // URI parameter
-    const { pipelineId } = useParams();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Run pipeline flow
-    return async (environmentID) => {
-        const response = await runPipelines({ pipelineID: pipelineId, environmentID });
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't run flow: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': run flow', { variant: 'error' }));
-        } else {
-            enqueueSnackbar('Success', { variant: 'success' });
-        }
-    };
-};
-
-const useStopPipelines_ = () => {
-    // GraphQL hook
-    const stopPipelines = useStopPipelines();
-
-    // URI parameter
-    const { pipelineId } = useParams();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Stop pipeline flow
-    return async (environmentID) => {
-        const response = await stopPipelines({ pipelineID: pipelineId, environmentID });
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't stop flow: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': stop flow', { variant: 'error' }));
-        } else {
-            enqueueSnackbar('Success', { variant: 'success' });
-        }
-    };
-};
-
-// ----- Utility function
+// ----- Utility functions
 function prepareInputForFrontend(input) {
     const edgesInput = [];
     const nodesInput = [];

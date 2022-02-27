@@ -64,6 +64,8 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		CreatedAt:     time.Now().UTC(),
 		EnvironmentID: config.EnvID,
 		RunID:         msg.RunID,
+		NodeID:        msg.NodeID,
+		PipelineID:    msg.PipelineID,
 		WorkerGroup:   os.Getenv("worker_group"),
 		WorkerID:      config.WorkerID,
 		StartDT:       time.Now().UTC(),
@@ -71,12 +73,12 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	}
 
 	UpdateWorkerTasks(TaskUpdate)
-	var response TaskResponse
-	_, errnats := messageq.MsgReply("taskupdate", TaskUpdate, &response)
+	// var response TaskResponse
+	// _, errnats := messageq.MsgReply("taskupdate", TaskUpdate, &response)
 
-	if errnats != nil {
-		logging.PrintSecretsRedact("Update task error nats:", errnats)
-	}
+	// if errnats != nil {
+	// 	logging.PrintSecretsRedact("Update task error nats:", errnats)
+	// }
 
 	for _, v := range msg.Commands {
 		// Print the log timestamps
@@ -247,6 +249,8 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		RunID:         msg.RunID,
 		WorkerGroup:   TaskUpdate.WorkerGroup,
 		WorkerID:      config.WorkerID,
+		NodeID:        msg.NodeID,
+		PipelineID:    msg.PipelineID,
 		StartDT:       TaskUpdate.StartDT,
 		Status:        statusUpdate,
 		Reason:        TasksStatus[msg.TaskID],

@@ -3,7 +3,6 @@ package worker
 import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
-	"fmt"
 	"log"
 	"os"
 
@@ -39,9 +38,14 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 	// 	{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
 	// }
 
+	if environmentID == "*" {
+		log.Println("Environment wildcard not allowed")
+		return
+	}
+
 	switch subject {
 	case "taskupdate." + environmentID + "." + id:
-		fmt.Println("one")
+		// fmt.Println("one")
 		room = "pipeline-run-updates"
 		subjectmsg = "taskupdate." + environmentID + "." + id
 	default:

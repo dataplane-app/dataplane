@@ -5,10 +5,11 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/pipelines"
 	"dataplane/mainapp/worker"
@@ -73,8 +74,8 @@ func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string,
 
 	// Cancel all future tasks
 	err := database.DBConn.Model(&models.WorkerTasks{}).Where("run_id = ? and environment_id = ? and status=?", runID, environmentID, "Queue").Updates(map[string]interface{}{"status": "Fail", "reason": "Upstream fail"}).Error
-	if err3 != nil {
-		logging.PrintSecretsRedact(err3.Error())
+	if err != nil {
+		logging.PrintSecretsRedact(err.Error())
 	}
 
 	// Get any current running tasks and cancel those tasks
@@ -114,4 +115,32 @@ func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string,
 	}
 
 	return &run, nil
+}
+
+func (r *queryResolver) PipelineTasksRun(ctx context.Context, pipelineID string, runID string, environmentID string) ([]*privategraphql.WorkerTasks, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("requires permissions")
+	}
+
+	// Get the run
+	var currentRun []*privategraphql.WorkerTasks
+	err := database.DBConn.Where("run_id = ? and environment_id = ?", runID, environmentID).Find(&currentRun).Error
+	if err != nil {
+		logging.PrintSecretsRedact(err.Error())
+	}
+
+	return currentRun, nil
 }
