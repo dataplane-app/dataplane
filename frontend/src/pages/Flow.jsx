@@ -1,7 +1,7 @@
 import { useTheme } from '@emotion/react';
 import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import ReactFlow, { addEdge, ControlButton, Controls, getConnectedEdges, isEdge, removeElements } from 'react-flow-renderer';
+import ReactFlow, { addEdge, ControlButton, Controls, getConnectedEdges, isEdge, ReactFlowProvider, removeElements } from 'react-flow-renderer';
 import { useHistory, useLocation, useParams } from 'react-router-dom';
 import ApiNode from '../components/CustomNodesContent/ApiNode';
 import PythonNode from '../components/CustomNodesContent/PythonNode';
@@ -12,7 +12,7 @@ import PlayNode from '../components/CustomNodesContent/PlayNode';
 import ScheduleNode from '../components/CustomNodesContent/ScheduleNode';
 import AddCommandDrawer from '../components/DrawerContent/EditorDrawers/AddCommandDrawer';
 import EditorSidebar from '../components/EditorSidebar';
-import { createState, useState as useHookState, Downgraded } from '@hookstate/core';
+import { Downgraded } from '@hookstate/core';
 import ProcessTypeDrawer from '../components/DrawerContent/ProcessTypeDrawer';
 import ScheduleDrawer from '../components/DrawerContent/SchedulerDrawer';
 import CheckpointNode from '../components/CustomNodesContent/CheckpointNode';
@@ -20,9 +20,27 @@ import { useSnackbar } from 'notistack';
 import APITRiggerDrawer from '../components/DrawerContent/EditorDrawers/APITriggerDrawer';
 import { useAddUpdatePipelineFlow } from '../graphql/addUpdatePipelineFlow';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
-import { useGlobalAuthState } from '../Auth/UserAuth';
 import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { createState, useState as useHookState } from '@hookstate/core';
+import { useGlobalAuthState } from '../Auth/UserAuth';
+
+export const globalFlowState = createState({
+    isRunning: false,
+    isOpenSchedulerDrawer: false,
+    isOpenConfigureDrawer: false,
+    isOpenCommandDrawer: false,
+    isOpenAPIDrawer: false,
+    isEditorPage: false,
+    selectedElement: null,
+    elements: [],
+    triggerDelete: 1,
+    isDragging: false,
+    isPanEnable: false,
+    scale: 1,
+});
+
+export const useGlobalFlowState = () => useHookState(globalFlowState);
 
 export const INITIAL_NODE_X_POSITION = 30;
 export const nodeTypes = {
@@ -36,24 +54,6 @@ export const nodeTypes = {
 export const edgeTypes = {
     custom: CustomEdge,
 };
-
-// Global flow states
-export const globalFlowState = createState({
-    isRunning: false,
-    isOpenSchedulerDrawer: false,
-    isOpenConfigureDrawer: false,
-    isOpenCommandDrawer: false,
-    isOpenAPIDrawer: false,
-    isEditorPage: false,
-    selectedElement: null,
-    elements: [],
-    triggerDelete: 1,
-    isDragging: false,
-    elementsWithConnection: [],
-    scale: 1,
-    isPanEnable: false,
-});
-export const useGlobalFlowState = () => useHookState(globalFlowState);
 
 const useAddUpdatePipelineFlowfunc = () => {
     // GraphQL hook
@@ -130,6 +130,8 @@ const Flow = () => {
         const prevElements = FlowState.elements.attach(Downgraded).get();
         FlowState.isEditorPage.set(true);
 
+        console.log('FLOWWW: ', FlowState.attach(Downgraded).get());
+
         setElements([...prevElements]);
         setIsLoadingFlow(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -146,7 +148,7 @@ const Flow = () => {
 
     const handleKeyDown = (e) => {
         if (e.keyCode === 83) {
-            onZoomActive();
+            onPanActive();
         }
     };
 
@@ -155,11 +157,14 @@ const Flow = () => {
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const [elements, setElements] = useState([]);
     const [selectedElement, setSelectedElement] = useState(null);
-    const [zoomOnScroll, setZoomOnScroll] = useState(FlowState.isPanEnable.get());
+    const [panOnDrag, setPanOnDrag] = useState(FlowState.isPanEnable.get());
 
     useEffect(() => {
-        setZoomOnScroll(FlowState.isPanEnable.get());
-
+        if (!FlowState.isPanEnable.get()) {
+            setPanOnDrag(false);
+        } else {
+            setPanOnDrag(FlowState.isPanEnable.get());
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.isPanEnable.get()]);
 
@@ -214,10 +219,10 @@ const Flow = () => {
     const onMoveEnd = (flow) => {
         FlowState.scale.set(flow.zoom);
     };
-    const onZoomActive = () => {
-        FlowState.isPanEnable.set(!zoomOnScroll);
+    const onPanActive = () => {
+        FlowState.isPanEnable.set(!panOnDrag);
 
-        if (zoomOnScroll) {
+        if (panOnDrag) {
             document.body.style.cursor = 'default';
         } else {
             document.body.style.cursor = 'move';
@@ -322,38 +327,40 @@ const Flow = () => {
             <EditorSidebar />
 
             <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
-                <ReactFlow
-                    zoomOnScroll={zoomOnScroll}
-                    zoomOnPinch={zoomOnScroll}
-                    paneMoveable={zoomOnScroll}
-                    onMoveStart={onMoveStart}
-                    onMoveEnd={onMoveEnd}
-                    defaultZoom={FlowState.scale.get()}
-                    nodeTypes={nodeTypes}
-                    elements={elements}
-                    onLoad={onLoad}
-                    onDrop={onDrop}
-                    onDragOver={onDragOver}
-                    onConnect={onConnect}
-                    onConnectStart={onConnectStart}
-                    onConnectEnd={onConnectEnd}
-                    connectionLineComponent={CustomLine}
-                    edgeTypes={edgeTypes}
-                    onElementClick={onClickElement}
-                    arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
-                    snapToGrid={true}
-                    snapGrid={[15, 15]}>
-                    <Controls style={{ left: 'auto', right: 155, bottom: 20 }}>
-                        <ControlButton onClick={onZoomActive} style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
-                            <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} sx={{ color: FlowState.isPanEnable.get() ? '#72B842' : '' }} />
-                        </ControlButton>
-                    </Controls>
-                    {elements.length <= 0 ? (
-                        <Box sx={{ position: 'absolute', top: '40%', left: -100, right: 0, textAlign: 'center' }}>
-                            <Typography>Create a pipeline by dragging the components here.</Typography>
-                        </Box>
-                    ) : null}
-                </ReactFlow>
+                <ReactFlowProvider>
+                    <ReactFlow
+                        zoomOnScroll={false}
+                        zoomOnPinch={false}
+                        paneMoveable={panOnDrag || false}
+                        onMoveStart={onMoveStart}
+                        onMoveEnd={onMoveEnd}
+                        defaultZoom={FlowState.scale.get()}
+                        nodeTypes={nodeTypes}
+                        elements={elements}
+                        onLoad={onLoad}
+                        onDrop={onDrop}
+                        onDragOver={onDragOver}
+                        onConnect={onConnect}
+                        onConnectStart={onConnectStart}
+                        onConnectEnd={onConnectEnd}
+                        connectionLineComponent={CustomLine}
+                        edgeTypes={edgeTypes}
+                        onElementClick={onClickElement}
+                        arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
+                        snapToGrid={true}
+                        snapGrid={[15, 15]}>
+                        <Controls style={{ left: 'auto', right: 155, bottom: 20 }}>
+                            <ControlButton onClick={onPanActive} style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
+                                <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} sx={{ color: FlowState.isPanEnable.get() ? '#72B842' : '' }} />
+                            </ControlButton>
+                        </Controls>
+                        {elements.length <= 0 ? (
+                            <Box sx={{ position: 'absolute', top: '40%', left: -100, right: 0, textAlign: 'center' }}>
+                                <Typography>Create a pipeline by dragging the components here.</Typography>
+                            </Box>
+                        ) : null}
+                    </ReactFlow>
+                </ReactFlowProvider>
             </Box>
 
             <Drawer anchor="right" open={FlowState.isOpenCommandDrawer.get()} onClose={() => FlowState.isOpenCommandDrawer.set(false)}>
@@ -386,6 +393,8 @@ export default Flow;
 function prepareInputForBackend(input) {
     const nodesInput = [];
     const edgesInput = [];
+
+    console.log('INOUTTTTT: ', input);
 
     const nodeDictionary = {
         playNode: 'trigger',

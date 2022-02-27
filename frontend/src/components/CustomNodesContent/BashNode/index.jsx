@@ -2,12 +2,11 @@ import { faRunning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Grid, Tooltip, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
-import { useEffect } from 'react';
-import { useState } from 'react';
-import { Handle, Position, useUpdateNodeInternals } from 'react-flow-renderer';
+import { useEffect, useState } from 'react';
+import { Handle, Position } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
-import { customSourceConnected, customSourceHandle, customSourceHandleDragging, customTargetHandle } from '../../../utils/handleStyles';
 import { useGlobalRunState } from '../../../pages/View/useWebSocket';
+import { customSourceHandle, customSourceHandleDragging, customTargetHandle } from '../../../utils/handleStyles';
 import ProcessTypeEditorModeItem from '../../MoreInfoContent/ProcessTypeEditorModeItem';
 import ProcessTypeNodeItem from '../../MoreInfoContent/ProcessTypeNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
@@ -16,10 +15,6 @@ import { getColor } from '../utils';
 const BashNode = (props) => {
     // Theme hook
     const theme = useTheme();
-
-    // Update node hook
-    // (This will fix the line not having the right size when the node connects to other nodes)
-    const updateNodeInternals = useUpdateNodeInternals();
 
     // Global state
     const FlowState = useGlobalFlowState();
@@ -55,7 +50,7 @@ const BashNode = (props) => {
     return (
         <Tooltip title={'Node ID: ' + props.id} placement="top">
             <Box sx={{ padding: '10px 15px', width: 160, borderRadius: '10px', border: `3px solid ${borderColor}` }}>
-                <Handle type="target" position={Position.Left} isConnectable id="clear" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
+                <Handle type="target" position={Position.Left} isConnectable id="clear" className="handlePulseAnimation" style={customTargetHandle(theme.palette.mode)} />
                 <Handle type="source" position={Position.Right} id="3" style={FlowState.isDragging.get() ? customSourceHandleDragging : customSourceHandle(theme.palette.mode)} />
                 <Grid container alignItems="flex-start" wrap="nowrap" pb={2}>
                     <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faRunning} />

@@ -49,8 +49,8 @@ const CheckpointNode = (props) => {
     return (
         <Tooltip title={'Node ID: ' + props.id} placement="top">
             <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>
-                <Handle type="source" position={Position.Right} id="checkpoint_source" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
-                <Handle type="target" position={Position.Left} id="checkpoint_target" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
+                <Handle type="source" position={Position.Right} id="checkpoint_source" style={customTargetHandle(theme.palette.mode)} />
+                <Handle type="target" position={Position.Left} id="checkpoint_target" className="handlePulseAnimation" style={customTargetHandle(theme.palette.mode)} />
                 <Grid container alignItems="flex-start" wrap="nowrap">
                     <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faMapMarkedAlt} />
                     <Grid item ml={1.5} textAlign="left">
