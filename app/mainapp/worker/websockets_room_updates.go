@@ -3,7 +3,6 @@ package worker
 import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
-	"fmt"
 	"log"
 	"os"
 
@@ -41,7 +40,7 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 
 	switch subject {
 	case "taskupdate." + environmentID + "." + id:
-		fmt.Println("one")
+		// fmt.Println("one")
 		room = "pipeline-run-updates"
 		subjectmsg = "taskupdate." + environmentID + "." + id
 	default:

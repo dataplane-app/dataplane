@@ -73,12 +73,12 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	}
 
 	UpdateWorkerTasks(TaskUpdate)
-	var response TaskResponse
-	_, errnats := messageq.MsgReply("taskupdate", TaskUpdate, &response)
+	// var response TaskResponse
+	// _, errnats := messageq.MsgReply("taskupdate", TaskUpdate, &response)
 
-	if errnats != nil {
-		logging.PrintSecretsRedact("Update task error nats:", errnats)
-	}
+	// if errnats != nil {
+	// 	logging.PrintSecretsRedact("Update task error nats:", errnats)
+	// }
 
 	for _, v := range msg.Commands {
 		// Print the log timestamps

@@ -67,6 +67,20 @@ func RunNextPipeline() {
 				logging.PrintSecretsRedact(err2.Error.Error())
 			}
 
+			// send message that trigger node has run - for websockets
+			errnat := messageq.MsgSend("taskupdate."+msg.EnvironmentID+"."+msg.RunID, map[string]interface{}{
+				"MSG":        "pipeline_complete",
+				"run_id":     msg.RunID,
+				"started_at": run.CreatedAt,
+				"status":     "Success",
+				"ended_at":   run.EndedAt})
+			if errnat != nil {
+				if config.Debug == "true" {
+					logging.PrintSecretsRedact(errnat)
+				}
+
+			}
+
 		}
 
 		// If not at the end then continue with pipeline

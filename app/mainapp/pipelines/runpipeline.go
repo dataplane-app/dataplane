@@ -5,6 +5,7 @@ import (
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/worker"
 	"encoding/json"
 	"log"
@@ -92,6 +93,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	var status string
 	var nodeType string
 	var workergroup string
+	var startTask *models.WorkerTasks
 
 	for _, s := range nodesdata {
 
@@ -153,6 +155,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 
 			addTask.StartDT = time.Now().UTC()
 			addTask.EndDT = time.Now().UTC()
+			startTask = addTask
 
 		}
 
@@ -176,6 +179,15 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	}
 
 	// ---------- Run the first set of dependencies ----------
+
+	// send message that trigger node has run - for websockets
+	errnat := messageq.MsgSend("taskupdate."+environmentID+"."+RunID, startTask)
+	if errnat != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(errnat)
+		}
+
+	}
 
 	for _, s := range trigger {
 
