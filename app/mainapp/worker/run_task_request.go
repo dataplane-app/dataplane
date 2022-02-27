@@ -33,11 +33,11 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 		Status:        "Queue",
 	}
 
-	response := runtask.TaskResponse{R: "ok"}
-	_, errnats := messageq.MsgReply("taskupdate", TaskFinal, &response)
-	if errnats != nil {
-		logging.PrintSecretsRedact(errnats)
-	}
+	// response := runtask.TaskResponse{R: "ok"}
+	// _, errnats := messageq.MsgReply("taskupdate", TaskFinal, &response)
+	// if errnats != nil {
+	// 	logging.PrintSecretsRedact(errnats)
+	// }
 
 	UpdateWorkerTasks(TaskFinal)
 
