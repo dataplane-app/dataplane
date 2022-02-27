@@ -1,6 +1,4 @@
-import { faPlayCircle } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Grid, IconButton, Typography } from '@mui/material';
+import { Box, Button, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -13,6 +11,7 @@ import useWebSocket, { useGlobalRunState } from './useWebSocket';
 export default function Timer({ environmentID }) {
     // Global state
     const FlowState = useGlobalFlowState();
+    const RunState = useGlobalRunState();
 
     // GraphQL hooks
     const runPipelines = useRunPipelinesHook();
@@ -21,6 +20,7 @@ export default function Timer({ environmentID }) {
 
     // Local state
     const [runID, setRunID] = useState('');
+    const [elapsed, setElapsed] = useState();
 
     // Instantiate websocket connection
     useWebSocket(environmentID, runID);
@@ -41,8 +41,26 @@ export default function Timer({ environmentID }) {
 
     const handleTimerStop = () => {
         FlowState.isRunning.set(false);
+        RunState.start_dt.set();
         stopPipelines(environmentID, runID);
     };
+
+    // Updates timer every second
+    useEffect(() => {
+        let secTimer;
+        if (FlowState.isRunning.get()) {
+            secTimer = setInterval(() => {
+                setElapsed(displayTimer(RunState.start_dt.get()));
+            }, 1000);
+        }
+
+        return () => {
+            clearInterval(secTimer);
+            setElapsed(0);
+        };
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [RunState.start_dt.get()]);
 
     return (
         <Grid item flex={0.6}>
@@ -57,8 +75,7 @@ export default function Timer({ environmentID }) {
                     </Button>
 
                     <Typography variant="h3" ml={2}>
-                        00:00:00
-                        {/* 00:00:{timeElapsed} */}
+                        {elapsed ? elapsed : '00:00:00'}
                     </Typography>
                 </Box>
             ) : (
@@ -91,6 +108,7 @@ const useRunPipelinesHook = () => {
             response.errors.map((err) => enqueueSnackbar(err.message + ': run flow', { variant: 'error' }));
         } else {
             setRunID(response.run_id);
+            closeSnackbar();
             enqueueSnackbar('Success', { variant: 'success' });
         }
     };
@@ -115,6 +133,7 @@ const useStopPipelinesHook = () => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': stop flow', { variant: 'error' }));
         } else {
+            closeSnackbar();
             enqueueSnackbar('Success', { variant: 'success' });
         }
     };
@@ -145,6 +164,22 @@ export const usePipelineTasksRunHook = () => {
         } else {
             response.map((a) => RunState[a.node_id].set(a.status));
             RunState.run_id.set(response.map((a) => a.run_id)[0]);
+            RunState.start_dt.set(response.map((a) => a.start_dt)[0]);
         }
     };
 };
+
+// Utility function
+function displayTimer(date) {
+    var ticks = Math.floor((new Date() - new Date(date)) / 1000);
+    var hh = Math.floor(ticks / 3600);
+    var mm = Math.floor((ticks % 3600) / 60);
+    var ss = ticks % 60;
+
+    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(ss, 2);
+}
+
+function pad(n, width) {
+    const num = n + '';
+    return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
+}
