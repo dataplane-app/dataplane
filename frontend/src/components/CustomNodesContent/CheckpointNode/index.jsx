@@ -5,16 +5,20 @@ import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 import customNodeStyle from '../../../utils/customNodeStyle';
 import PlayTriggerNodeItem from '../../MoreInfoContent/PlayTriggerNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
+import { getColor } from '../utils';
 
 const CheckpointNode = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
+    const RunState = useGlobalRunState();
 
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
+    const [borderColor, setBorderColor] = useState('#c4c4c4');
 
     useEffect(() => {
         setIsEditorPage(FlowState.isEditorPage.get());
@@ -32,8 +36,15 @@ const CheckpointNode = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedElement.get()]);
 
+    // Set border color on node status change
+    useEffect(() => {
+        setBorderColor(getColor(RunState[props.id]?.get()));
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [RunState[props.id].get()]);
+
     return (
-        <Box sx={{ ...customNodeStyle }}>
+        <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>
             <Handle type="source" position={Position.Right} id="checkpoint_source" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
             <Handle type="target" position={Position.Left} id="checkpoint_target" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
             <Grid container alignItems="flex-start" wrap="nowrap">

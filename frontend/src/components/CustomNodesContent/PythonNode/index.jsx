@@ -6,16 +6,20 @@ import { useEffect } from 'react';
 import { useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 import ProcessTypeEditorModeItem from '../../MoreInfoContent/ProcessTypeEditorModeItem';
 import ProcessTypeNodeItem from '../../MoreInfoContent/ProcessTypeNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
+import { getColor } from '../utils';
 
 const PythonNode = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
+    const RunState = useGlobalRunState();
 
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
+    const [borderColor, setBorderColor] = useState('#c4c4c4');
 
     useEffect(() => {
         setIsEditorPage(FlowState.isEditorPage.get());
@@ -33,8 +37,15 @@ const PythonNode = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedElement.get()]);
 
+    // Set border color on node status change
+    useEffect(() => {
+        setBorderColor(getColor(RunState[props.id]?.get()));
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [RunState[props.id].get()]);
+
     return (
-        <Box sx={{ padding: '10px 15px', width: 160, borderRadius: '10px', border: '3px solid #c4c4c4' }}>
+        <Box sx={{ padding: '10px 15px', width: 160, borderRadius: '10px', border: `3px solid ${borderColor}` }}>
             <Handle type="target" position={Position.Left} isConnectable id="clear" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
             <Handle type="source" position={Position.Right} id="3" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
             <Grid container alignItems="flex-start" wrap="nowrap" pb={2}>

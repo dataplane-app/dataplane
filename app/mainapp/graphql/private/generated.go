@@ -248,6 +248,7 @@ type ComplexityRoot struct {
 		MyPermissions                 func(childComplexity int) int
 		MyPipelinePermissions         func(childComplexity int) int
 		PipelinePermissions           func(childComplexity int, userID string, environmentID string, pipelineID string) int
+		PipelineTasksRun              func(childComplexity int, pipelineID string, runID string, environmentID string) int
 		UserPermissions               func(childComplexity int, userID string, environmentID string) int
 		UserPipelinePermissions       func(childComplexity int, userID string, environmentID string) int
 		UserSinglePipelinePermissions func(childComplexity int, userID string, environmentID string, pipelineID string) int
@@ -288,6 +289,20 @@ type ComplexityRoot struct {
 		T           func(childComplexity int) int
 		WorkerGroup func(childComplexity int) int
 		WorkerType  func(childComplexity int) int
+	}
+
+	WorkerTasks struct {
+		EndDt         func(childComplexity int) int
+		EnvironmentID func(childComplexity int) int
+		NodeID        func(childComplexity int) int
+		PipelineID    func(childComplexity int) int
+		Reason        func(childComplexity int) int
+		RunID         func(childComplexity int) int
+		StartDt       func(childComplexity int) int
+		Status        func(childComplexity int) int
+		TaskID        func(childComplexity int) int
+		WorkerGroup   func(childComplexity int) int
+		WorkerID      func(childComplexity int) int
 	}
 
 	Workers struct {
@@ -375,6 +390,7 @@ type QueryResolver interface {
 	GetPipelineFlow(ctx context.Context, pipelineID string, environmentID string) (*PipelineFlow, error)
 	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
 	GetOnePreference(ctx context.Context, preference string) (*Preferences, error)
+	PipelineTasksRun(ctx context.Context, pipelineID string, runID string, environmentID string) ([]*WorkerTasks, error)
 	GetSecret(ctx context.Context, secret string, environmentID string) (*models.Secrets, error)
 	GetSecrets(ctx context.Context, environmentID string) ([]*models.Secrets, error)
 	LogoutUser(ctx context.Context) (*string, error)
@@ -1778,6 +1794,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.PipelinePermissions(childComplexity, args["userID"].(string), args["environmentID"].(string), args["pipelineID"].(string)), true
 
+	case "Query.pipelineTasksRun":
+		if e.complexity.Query.PipelineTasksRun == nil {
+			break
+		}
+
+		args, err := ec.field_Query_pipelineTasksRun_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PipelineTasksRun(childComplexity, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string)), true
+
 	case "Query.userPermissions":
 		if e.complexity.Query.UserPermissions == nil {
 			break
@@ -1988,6 +2016,83 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.WorkerGroup.WorkerType(childComplexity), true
+
+	case "WorkerTasks.end_dt":
+		if e.complexity.WorkerTasks.EndDt == nil {
+			break
+		}
+
+		return e.complexity.WorkerTasks.EndDt(childComplexity), true
+
+	case "WorkerTasks.environment_id":
+		if e.complexity.WorkerTasks.EnvironmentID == nil {
+			break
+		}
+
+		return e.complexity.WorkerTasks.EnvironmentID(childComplexity), true
+
+	case "WorkerTasks.node_id":
+		if e.complexity.WorkerTasks.NodeID == nil {
+			break
+		}
+
+		return e.complexity.WorkerTasks.NodeID(childComplexity), true
+
+	case "WorkerTasks.pipeline_id":
+		if e.complexity.WorkerTasks.PipelineID == nil {
+			break
+		}
+
+		return e.complexity.WorkerTasks.PipelineID(childComplexity), true
+
+	case "WorkerTasks.reason":
+		if e.complexity.WorkerTasks.Reason == nil {
+			break
+		}
+
+		return e.complexity.WorkerTasks.Reason(childComplexity), true
+
+	case "WorkerTasks.run_id":
+		if e.complexity.WorkerTasks.RunID == nil {
+			break
+		}
+
+		return e.complexity.WorkerTasks.RunID(childComplexity), true
+
+	case "WorkerTasks.start_dt":
+		if e.complexity.WorkerTasks.StartDt == nil {
+			break
+		}
+
+		return e.complexity.WorkerTasks.StartDt(childComplexity), true
+
+	case "WorkerTasks.status":
+		if e.complexity.WorkerTasks.Status == nil {
+			break
+		}
+
+		return e.complexity.WorkerTasks.Status(childComplexity), true
+
+	case "WorkerTasks.task_id":
+		if e.complexity.WorkerTasks.TaskID == nil {
+			break
+		}
+
+		return e.complexity.WorkerTasks.TaskID(childComplexity), true
+
+	case "WorkerTasks.worker_group":
+		if e.complexity.WorkerTasks.WorkerGroup == nil {
+			break
+		}
+
+		return e.complexity.WorkerTasks.WorkerGroup(childComplexity), true
+
+	case "WorkerTasks.worker_id":
+		if e.complexity.WorkerTasks.WorkerID == nil {
+			break
+		}
+
+		return e.complexity.WorkerTasks.WorkerID(childComplexity), true
 
 	case "Workers.CPUPerc":
 		if e.complexity.Workers.CPUPerc == nil {
@@ -2700,6 +2805,30 @@ extend type Mutation {
     ended_at: Time
     updated_at: Time
 }
+
+type WorkerTasks {
+    task_id:        String!
+    environment_id: String!
+    run_id:         String!
+    worker_group:   String!
+    worker_id:      String!
+    pipeline_id:    String!
+    node_id:        String!
+    start_dt:       Time
+    end_dt:         Time
+    status:         String!
+    reason:         String!
+}
+
+extend type Query {
+    """
+    Get a single pipeline tasks run.
+    + **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    pipelineTasksRun(pipelineID: String!, runID: String!, environmentID: String!): [WorkerTasks!]!
+}
+
 
 extend type Mutation {
     """
@@ -4327,6 +4456,39 @@ func (ec *executionContext) field_Query_pipelinePermissions_args(ctx context.Con
 		}
 	}
 	args["pipelineID"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_pipelineTasksRun_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["runID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["runID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg2
 	return args, nil
 }
 
@@ -9926,6 +10088,48 @@ func (ec *executionContext) _Query_getOnePreference(ctx context.Context, field g
 	return ec.marshalOPreferences2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_pipelineTasksRun(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_pipelineTasksRun_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PipelineTasksRun(rctx, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*WorkerTasks)
+	fc.Result = res
+	return ec.marshalNWorkerTasks2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerTasksᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_getSecret(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -11187,6 +11391,385 @@ func (ec *executionContext) _WorkerGroup_WorkerType(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.WorkerType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkerTasks_task_id(ctx context.Context, field graphql.CollectedField, obj *WorkerTasks) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "WorkerTasks",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TaskID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkerTasks_environment_id(ctx context.Context, field graphql.CollectedField, obj *WorkerTasks) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "WorkerTasks",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvironmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkerTasks_run_id(ctx context.Context, field graphql.CollectedField, obj *WorkerTasks) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "WorkerTasks",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RunID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkerTasks_worker_group(ctx context.Context, field graphql.CollectedField, obj *WorkerTasks) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "WorkerTasks",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkerGroup, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkerTasks_worker_id(ctx context.Context, field graphql.CollectedField, obj *WorkerTasks) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "WorkerTasks",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkerID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkerTasks_pipeline_id(ctx context.Context, field graphql.CollectedField, obj *WorkerTasks) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "WorkerTasks",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PipelineID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkerTasks_node_id(ctx context.Context, field graphql.CollectedField, obj *WorkerTasks) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "WorkerTasks",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NodeID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkerTasks_start_dt(ctx context.Context, field graphql.CollectedField, obj *WorkerTasks) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "WorkerTasks",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartDt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkerTasks_end_dt(ctx context.Context, field graphql.CollectedField, obj *WorkerTasks) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "WorkerTasks",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndDt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkerTasks_status(ctx context.Context, field graphql.CollectedField, obj *WorkerTasks) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "WorkerTasks",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkerTasks_reason(ctx context.Context, field graphql.CollectedField, obj *WorkerTasks) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "WorkerTasks",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Reason, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -14737,6 +15320,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_getOnePreference(ctx, field)
 				return res
 			})
+		case "pipelineTasksRun":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_pipelineTasksRun(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "getSecret":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -15044,6 +15641,77 @@ func (ec *executionContext) _WorkerGroup(ctx context.Context, sel ast.SelectionS
 			}
 		case "WorkerType":
 			out.Values[i] = ec._WorkerGroup_WorkerType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var workerTasksImplementors = []string{"WorkerTasks"}
+
+func (ec *executionContext) _WorkerTasks(ctx context.Context, sel ast.SelectionSet, obj *WorkerTasks) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, workerTasksImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("WorkerTasks")
+		case "task_id":
+			out.Values[i] = ec._WorkerTasks_task_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "environment_id":
+			out.Values[i] = ec._WorkerTasks_environment_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "run_id":
+			out.Values[i] = ec._WorkerTasks_run_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "worker_group":
+			out.Values[i] = ec._WorkerTasks_worker_group(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "worker_id":
+			out.Values[i] = ec._WorkerTasks_worker_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pipeline_id":
+			out.Values[i] = ec._WorkerTasks_pipeline_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "node_id":
+			out.Values[i] = ec._WorkerTasks_node_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "start_dt":
+			out.Values[i] = ec._WorkerTasks_start_dt(ctx, field, obj)
+		case "end_dt":
+			out.Values[i] = ec._WorkerTasks_end_dt(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._WorkerTasks_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "reason":
+			out.Values[i] = ec._WorkerTasks_reason(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -15730,6 +16398,60 @@ func (ec *executionContext) marshalNTime2ᚖtimeᚐTime(ctx context.Context, sel
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNWorkerTasks2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerTasksᚄ(ctx context.Context, sel ast.SelectionSet, v []*WorkerTasks) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNWorkerTasks2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerTasks(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNWorkerTasks2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerTasks(ctx context.Context, sel ast.SelectionSet, v *WorkerTasks) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._WorkerTasks(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

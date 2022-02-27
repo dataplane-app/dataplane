@@ -166,6 +166,20 @@ type WorkerGroup struct {
 	WorkerType  string    `json:"WorkerType"`
 }
 
+type WorkerTasks struct {
+	TaskID        string     `json:"task_id"`
+	EnvironmentID string     `json:"environment_id"`
+	RunID         string     `json:"run_id"`
+	WorkerGroup   string     `json:"worker_group"`
+	WorkerID      string     `json:"worker_id"`
+	PipelineID    string     `json:"pipeline_id"`
+	NodeID        string     `json:"node_id"`
+	StartDt       *time.Time `json:"start_dt"`
+	EndDt         *time.Time `json:"end_dt"`
+	Status        string     `json:"status"`
+	Reason        string     `json:"reason"`
+}
+
 type Workers struct {
 	WorkerGroup string    `json:"WorkerGroup"`
 	WorkerID    string    `json:"WorkerID"`

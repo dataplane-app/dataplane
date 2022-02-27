@@ -5,21 +5,20 @@ import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 import customNodeStyle from '../../../utils/customNodeStyle';
 import ScheduleTriggerNodeItem from '../../MoreInfoContent/ScheduleTriggerNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
+import { getColor } from '../utils';
 
 const ScheduleNode = (props) => {
-    const [isRunning, setIsRunning] = useState(false);
+    // Global state
+    const FlowState = useGlobalFlowState();
+    const RunState = useGlobalRunState();
+
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
-
-    const FlowState = useGlobalFlowState();
-
-    useEffect(() => {
-        setIsRunning(FlowState.isRunning.get());
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isRunning.get()]);
+    const [borderColor, setBorderColor] = useState('#c4c4c4');
 
     useEffect(() => {
         setIsEditorPage(FlowState.isEditorPage.get());
@@ -37,8 +36,15 @@ const ScheduleNode = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedElement.get()]);
 
+    // Set border color on node status change
+    useEffect(() => {
+        setBorderColor(getColor(RunState[props.id]?.get()));
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [RunState[props.id].get()]);
+
     return (
-        <Box sx={{ ...customNodeStyle, border: isRunning ? '3px solid #76A853' : '3px solid #c4c4c4' }}>
+        <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>
             <Handle type="source" position="right" id="schedule" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
             <Grid container alignItems="flex-start" wrap="nowrap">
                 <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faClock} />

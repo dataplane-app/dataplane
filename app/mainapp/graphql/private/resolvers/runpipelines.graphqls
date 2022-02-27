@@ -8,6 +8,30 @@ type PipelineRuns {
     updated_at: Time
 }
 
+type WorkerTasks {
+    task_id:        String!
+    environment_id: String!
+    run_id:         String!
+    worker_group:   String!
+    worker_id:      String!
+    pipeline_id:    String!
+    node_id:        String!
+    start_dt:       Time
+    end_dt:         Time
+    status:         String!
+    reason:         String!
+}
+
+extend type Query {
+    """
+    Get a single pipeline tasks run.
+    + **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    pipelineTasksRun(pipelineID: String!, runID: String!, environmentID: String!): [WorkerTasks!]!
+}
+
+
 extend type Mutation {
     """
     Run pipeline flow.

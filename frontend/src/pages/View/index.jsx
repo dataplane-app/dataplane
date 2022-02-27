@@ -1,0 +1,404 @@
+import { useTheme } from '@emotion/react';
+import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, Button, Drawer, Grid, IconButton, MenuItem, TextField, Typography } from '@mui/material';
+import { useSnackbar } from 'notistack';
+import { useEffect, useRef, useState } from 'react';
+import ReactFlow, { addEdge, Controls } from 'react-flow-renderer';
+import { useHistory, useParams, useLocation } from 'react-router-dom';
+import { Downgraded } from '@hookstate/core';
+import CustomChip from '../../components/CustomChip';
+import CustomLine from '../../components/CustomNodesContent/CustomLine';
+import PublishPipelineDrawer from '../../components/DrawerContent/PublishPipelineDrawer';
+import RemoveLogsPageItem from '../../components/MoreInfoContent/RemoveLogsPageItem';
+import MoreInfoMenu from '../../components/MoreInfoMenu';
+import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
+import { useRunPipelines } from '../../graphql/runPipelines';
+import { useStopPipelines } from '../../graphql/stopPipelines';
+import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
+import { edgeTypes, nodeTypes, useGlobalFlowState } from '../Flow';
+import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
+import useWebSocket, { useGlobalRunState } from './useWebSocket';
+
+const View = () => {
+    // Hooks
+    const theme = useTheme();
+    const history = useHistory();
+    const { state: pipeline } = useLocation();
+    const getPipelineFlow = useGetPipelineFlow_(pipeline);
+    const runPipelines = useRunPipelines_();
+    const stopPipelines = useStopPipelines_();
+    const getPipelineTasksRun = usePipelineTasksRunHook();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    // Global states
+    const FlowState = useGlobalFlowState();
+
+    // Page states
+    const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
+    const [isRunning, setIsRunning] = useState(false);
+    const [runID, setRunID] = useState('');
+    const [, setIsLoadingFlow] = useState(true);
+    // const [timeElapsed, setTimeElapsed] = useState(Math.floor((new Date() - FlowState.startedRunningAt.attach(Downgraded).get()) / 1000));
+    const [timeElapsed, setTimeElapsed] = useState(0);
+    const [tasks, setTasks] = useState();
+
+    const Environment = useGlobalEnvironmentState();
+
+    //Offset states and refs
+    const [offsetHeight, setOffsetHeight] = useState(0);
+    const offsetRef = useRef(null);
+
+    useEffect(() => {
+        setOffsetHeight(offsetRef.current.clientHeight);
+    }, [offsetRef]);
+
+    // Flow states
+    const reactFlowWrapper = useRef(null);
+    const [, setReactFlowInstance] = useState(null);
+    const [elements, setElements] = useState([]);
+
+    // Fetch previous elements
+    useEffect(() => {
+        // const prevElements = FlowState.elements.get();
+        // setElements([...prevElements]);
+
+        getPipelineFlow(Environment.id.get(), setElements);
+        setIsLoadingFlow(false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Get current runs status
+    useEffect(() => {
+        if (isRunning && runID !== '') {
+            getPipelineTasksRun(runID, Environment.id.get());
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isRunning, runID]);
+
+    // Handle edit button
+    const handleGoToEditorPage = () => {
+        FlowState.isEditorPage.set(true);
+        history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipeline });
+    };
+
+    //Flow methods
+    const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
+    const onConnect = (params) => {
+        setElements((els) => addEdge({ ...params, type: 'custom' }, els));
+    };
+
+    // Instantiate websocket connection
+    const socketResponse = useWebSocket(Environment.id.get(), runID);
+
+    const handleTimerStart = () => {
+        FlowState.isRunning.set(true);
+        setIsRunning(true);
+        runPipelines(Environment.id.get(), setRunID);
+    };
+
+    // // Updates timer every second
+    // useEffect(() => {
+    //     let secTimer;
+    //     if (FlowState.isRunning.get()) {
+    //         secTimer = setInterval(() => {
+    //             setTimeElapsed(Math.floor((new Date() - FlowState.startedRunningAt.attach(Downgraded).get()) / 1000));
+    //         }, 1000);
+    //     }
+
+    //     return () => {
+    //         clearInterval(secTimer);
+    //         setTimeElapsed(0);
+    //     };
+    // }, [FlowState.isRunning.get()]);
+
+    return (
+        <Box className="page" height="calc(100vh - 100px)" minHeight="min-content">
+            <Box ref={offsetRef}>
+                <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
+                    <Box display="flex">
+                        <Typography component="h2" variant="h2" color="text.primary">
+                            Pipelines {'>'} {pipeline.name}
+                        </Typography>
+
+                        <Grid display="flex" alignItems="flex-start">
+                            <Box display="flex" alignItems="center" ml={4} mr={4}>
+                                <Box height={16} width={16} backgroundColor={pipeline.online ? 'status.pipelineOnlineText' : 'error.main'} borderRadius="100%"></Box>
+                                <Typography ml={1} fontSize={16} color={pipeline.online ? 'status.pipelineOnlineText' : 'error.main'}>
+                                    {pipeline.online ? 'Online' : 'Offline'}
+                                </Typography>
+                            </Box>
+
+                            <Box mr={3} textAlign="right">
+                                <Typography variant="h3">{LOGS_MOCK.last_run}</Typography>
+                                <Typography fontSize={17}>Last run</Typography>
+                            </Box>
+
+                            <Box ml={3} mr={4.5} textAlign="right">
+                                <Typography variant="h3">{LOGS_MOCK.version}</Typography>
+                                <Typography fontSize={17}>Version</Typography>
+                            </Box>
+
+                            <Button variant="contained" onClick={handleGoToEditorPage}>
+                                Edit
+                            </Button>
+                            <Button variant="contained" sx={{ ml: 2.4 }} onClick={() => setIsOpenPublishDrawer(true)}>
+                                Publish
+                            </Button>
+                            <Box sx={{ position: { xxs: 'relative', xl: 'absolute' }, ml: { xxs: 2, xl: 0 }, top: '0', right: '0' }}>
+                                <MoreInfoMenu>
+                                    <RemoveLogsPageItem />
+                                </MoreInfoMenu>
+                            </Box>
+                        </Grid>
+                    </Box>
+                </Grid>
+
+                <Grid mt={4} container alignItems="center" sx={{ width: { xl: '88%' }, flexWrap: 'nowrap' }}>
+                    <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }} flex={1.2}>
+                        <CustomChip amount={2} label="Steps" margin={2} customColor="orange" />
+                        <CustomChip amount={2} label="Running" margin={2} customColor="blue" />
+                        <CustomChip amount={2} label="Succeeded" margin={2} customColor="green" />
+                        <CustomChip amount={2} label="Failed" margin={2} customColor="red" />
+                        <CustomChip amount={2} label="Workers online" margin={2} customColor="purple" />
+                    </Grid>
+
+                    <Grid item alignItems="center" display="flex" flex={1}>
+                        <Typography variant="h3">Run</Typography>
+                        <TextField label="Live" id="last" select size="small" sx={{ ml: 2, mr: 2, flex: 1 }}>
+                            {FlowState.isRunning.get() ? (
+                                <MenuItem value="live">
+                                    {formatDate(FlowState.startedRunningAt.attach(Downgraded).get())} - {runID}
+                                </MenuItem>
+                            ) : null}
+                            <MenuItem value="24">Last 24 hours</MenuItem>
+                        </TextField>
+                    </Grid>
+                    <Grid item flex={0.6}>
+                        {isRunning ? (
+                            <Box display="flex" alignItems="center" ml={2}>
+                                <Button
+                                    onClick={() => {
+                                        FlowState.isRunning.set(false);
+                                        setIsRunning(false);
+                                        stopPipelines(Environment.id.get(), runID);
+                                    }}
+                                    variant="outlined"
+                                    color="error"
+                                    sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                                    Stop
+                                </Button>
+
+                                <Typography variant="h3" ml={2}>
+                                    00:00:00
+                                    {/* 00:00:{timeElapsed} */}
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <IconButton sx={{ margin: 0, height: 40, width: 40 }} aria-label="play" id="play-button" aria-haspopup="true" onClick={handleTimerStart}>
+                                <Box component={FontAwesomeIcon} fontSize={30} sx={{ color: 'cyan.main' }} icon={faPlayCircle} />
+                            </IconButton>
+                        )}
+                    </Grid>
+                </Grid>
+            </Box>
+
+            <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
+                {elements && elements.length > 0 ? (
+                    <ReactFlow
+                        nodeTypes={nodeTypes}
+                        elements={elements}
+                        onLoad={onLoad}
+                        onConnect={onConnect}
+                        connectionLineComponent={CustomLine}
+                        edgeTypes={edgeTypes}
+                        arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
+                        snapToGrid={true}
+                        snapGrid={[15, 15]}>
+                        <Controls style={{ left: 'auto', right: 10 }} />
+                    </ReactFlow>
+                ) : (
+                    <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Typography>Create a pipeline by dragging the components here</Typography>
+                    </Box>
+                )}
+            </Box>
+
+            <Drawer anchor="right" open={isOpenPublishDrawer} onClose={() => setIsOpenPublishDrawer(!isOpenPublishDrawer)}>
+                <PublishPipelineDrawer handleClose={() => setIsOpenPublishDrawer(false)} />
+            </Drawer>
+        </Box>
+    );
+};
+
+const LOGS_MOCK = {
+    id: 1,
+    online: true,
+    last_run: '22 Nov 2021 08:00',
+    version: '0.0.1',
+};
+
+export default View;
+
+// ------ Custom hooks
+const useGetPipelineFlow_ = (pipeline) => {
+    // GraphQL hook
+    const getPipelineFlow = useGetPipelineFlow();
+
+    // React router
+    const history = useHistory();
+
+    // Global state
+    const FlowState = useGlobalFlowState();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get members
+    return async (environmentID, setElements) => {
+        const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
+        const response = prepareInputForFrontend(rawResponse);
+
+        if (response.length === 0) {
+            FlowState.elements.set([]);
+            history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipeline });
+        } else if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': get flow', { variant: 'error' }));
+        } else {
+            setElements(response);
+            FlowState.elements.set(response);
+        }
+    };
+};
+
+const useRunPipelines_ = () => {
+    // GraphQL hook
+    const runPipelines = useRunPipelines();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Run pipeline flow
+    return async (environmentID, setRunID) => {
+        const response = await runPipelines({ pipelineID: pipelineId, environmentID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't run flow: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': run flow', { variant: 'error' }));
+        } else {
+            setRunID(response.run_id);
+            enqueueSnackbar('Success', { variant: 'success' });
+        }
+    };
+};
+
+const useStopPipelines_ = () => {
+    // GraphQL hook
+    const stopPipelines = useStopPipelines();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Stop pipeline flow
+    return async (environmentID, runID) => {
+        const response = await stopPipelines({ pipelineID: pipelineId, environmentID, runID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't stop flow: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': stop flow', { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+        }
+    };
+};
+
+const usePipelineTasksRunHook = () => {
+    // GraphQL hook
+    const getPipelineTasksRun = usePipelineTasksRun();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const RunState = useGlobalRunState();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Update pipeline flow
+    return async (runID, environmentID) => {
+        // Prepare input to match the structure in the backend
+
+        const response = await getPipelineTasksRun({ pipelineID: pipelineId, runID, environmentID });
+
+        if (response.r === 'Unauthorized') {
+            closeSnackbar();
+            enqueueSnackbar(`Can't update flow: ${response.r}`, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
+        } else {
+            response.map((a) => RunState[a.node_id].set(a.status));
+            // enqueueSnackbar('Success', { variant: 'success' });
+        }
+    };
+};
+
+// ----- Utility functions
+function prepareInputForFrontend(input) {
+    const edgesInput = [];
+    const nodesInput = [];
+
+    for (const edge of input.edges) {
+        edgesInput.push({
+            source: edge.from,
+            sourceHandle: edge.meta.sourceHandle,
+            target: edge.to,
+            targetHandle: edge.meta.targetHandle,
+            type: edge.meta.edgeType,
+            arrowHeadType: edge.meta.arrowHeadType,
+            id: edge.edgeID,
+        });
+    }
+
+    for (const node of input.nodes) {
+        let data = {
+            ...node.meta?.data,
+            name: node.name,
+            description: node.description,
+            workerGroup: node.workerGroup,
+            commands: node.commands,
+        };
+        nodesInput.push({
+            id: node.nodeID,
+            type: node.nodeTypeDesc + 'Node',
+            position: {
+                x: node.meta.position.x,
+                y: node.meta.position.y,
+            },
+            data,
+        });
+    }
+
+    return [...edgesInput, ...nodesInput];
+}
+
+export function formatDate(date) {
+    let day = new Intl.DateTimeFormat('en', { day: 'numeric' }).format(date);
+    let monthYear = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short' }).format(date);
+    let time = new Intl.DateTimeFormat('en', { hourCycle: 'h23', hour: '2-digit', minute: 'numeric', second: 'numeric' }).format(date);
+    return `${day} ${monthYear} ${time}`;
+}
