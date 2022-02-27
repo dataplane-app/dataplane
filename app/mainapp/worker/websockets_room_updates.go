@@ -38,6 +38,11 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 	// 	{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
 	// }
 
+	if environmentID == "*" {
+		log.Println("Environment wildcard not allowed")
+		return
+	}
+
 	switch subject {
 	case "taskupdate." + environmentID + "." + id:
 		// fmt.Println("one")
