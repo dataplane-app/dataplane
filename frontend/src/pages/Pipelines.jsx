@@ -11,6 +11,8 @@ import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
 import { useGlobalFlowState } from './Flow';
 import { useGlobalRunState } from './View/useWebSocket';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 
 const Pipelines = () => {
     // Global states
@@ -64,10 +66,6 @@ const Pipelines = () => {
                     </Box>
 
                     <Box display="flex" alignItems="center">
-                        <Button variant="contained" onClick={() => setIsOpenCreatePipeline(true)}>
-                            Create
-                        </Button>
-
                         <Box sx={{ position: { xxs: 'relative', xl: 'absolute' }, ml: { xxs: 2, xl: 0 }, top: '0', right: '0' }}>
                             <MoreInfoMenu>
                                 <PipelinePageItem handleRefresh={() => {}} />
@@ -77,20 +75,16 @@ const Pipelines = () => {
                 </Grid>
 
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
-                    <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
-                        <CustomChip amount={pipelineCount} label="Pipelines" margin={1} customColor="orange" />
-                        <CustomChip amount={2} label="Succeeded" margin={1} customColor="green" />
-                        <CustomChip amount={2} label="Failed" margin={1} customColor="red" />
-                        <CustomChip amount={2} label="Workers online" margin={2} customColor="purple" />
-                    </Grid>
+                    <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center', width: '100%' }}>
+                        <CustomChip amount={pipelineCount || '0'} label="Pipelines" margin={1} customColor="orange" />
 
-                    <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center', flex: 1 }}>
-                        <Box flex={1.2} width="100%" flexGrow={1.2}>
-                            <Search placeholder="Find a pipeline" width="100%" onChange={(e) => setFilter(e)} />
-                        </Box>
-                        <TextField label="Last 48 hours" id="last" select size="small" required sx={{ ml: 2, flex: 1 }}>
-                            <MenuItem value="24">Last 24 hours</MenuItem>
-                        </TextField>
+                        <FontAwesomeIcon icon={faSearch} style={{ marginRight: 10, marginLeft: 25 }} color="#0000006B" size="xs" />
+
+                        <Search placeholder="Find a pipeline" onChange={(e) => setFilter(e)} width="290px" />
+
+                        <Button variant="contained" sx={{ marginLeft: 'auto' }} onClick={() => setIsOpenCreatePipeline(true)}>
+                            Create
+                        </Button>
                     </Grid>
 
                     <PipelineTable data={pipelines} filter={filter} setPipelineCount={setPipelineCount} />
