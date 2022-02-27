@@ -26,6 +26,8 @@ const AddCommandDrawer = ({ handleClose, setElements, refreshData }) => {
         }
 
         reset(resetObj);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedElement?.data?.commands[0]?.command.get()]);
 
     async function onSubmit(data) {

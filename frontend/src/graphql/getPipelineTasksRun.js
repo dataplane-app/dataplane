@@ -4,20 +4,23 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation stopPipelines($pipelineID: String!, $runID: String!, $environmentID: String!) {
-        stopPipelines(pipelineID: $pipelineID, runID: $runID, environmentID: $environmentID) {
-            run_id
-            pipeline_id
-            status
+    query pipelineTasksRun($pipelineID: String!, $runID: String!, $environmentID: String!) {
+        pipelineTasksRun(pipelineID: $pipelineID, runID: $runID, environmentID: $environmentID) {
             environment_id
-            created_at
-            ended_at
-            updated_at
+            run_id
+            worker_group
+            worker_id
+            pipeline_id
+            node_id
+            start_dt
+            end_dt
+            status
+            reason
         }
     }
 `;
 
-export const useStopPipelines = () => {
+export const usePipelineTasksRun = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -32,7 +35,7 @@ export const useStopPipelines = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.stopPipelines;
+            return res?.pipelineTasksRun;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }
