@@ -2692,6 +2692,7 @@ input PipelineEdgesInput {
 input PipelineFlowInput {
   nodesInput: [PipelineNodesInput!]!
   edgesInput: [PipelineEdgesInput!]!
+  json: Any!
 }
 
 # ----- Get flow
@@ -13796,6 +13797,14 @@ func (ec *executionContext) unmarshalInputPipelineFlowInput(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edgesInput"))
 			it.EdgesInput, err = ec.unmarshalNPipelineEdgesInput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "json":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("json"))
+			it.JSON, err = ec.unmarshalNAny2interface(ctx, v)
 			if err != nil {
 				return it, err
 			}

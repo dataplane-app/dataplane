@@ -24,7 +24,8 @@ type Pipelines struct {
 	Current     string         `json:"current"` //current history
 	WorkerGroup string         `json:"worker_group"`
 	Meta        datatypes.JSON `json:"meta"`
-	UpdateLock  bool           `gorm:"default:false;" json:"name"`
+	Json        datatypes.JSON `json:"json"`
+	UpdateLock  bool           `gorm:"default:false;" json:"update_lock"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   *time.Time     `json:"updated_at"`
 	DeletedAt   *time.Time     `json:"deleted_at,omitempty"`

@@ -82,6 +82,7 @@ type PipelineFlow struct {
 type PipelineFlowInput struct {
 	NodesInput []*PipelineNodesInput `json:"nodesInput"`
 	EdgesInput []*PipelineEdgesInput `json:"edgesInput"`
+	JSON       interface{}           `json:"json"`
 }
 
 type PipelineNodesInput struct {
