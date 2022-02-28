@@ -6,23 +6,22 @@ const PipelineItemTable = (props) => {
     const history = useHistory();
 
     //Props
-    const { handleCloseMenu, handleOpenYaml, id, name } = props;
+    const { handleCloseMenu, handleOpenManage, id, name } = props;
 
-    const yamlClick = () => {
+    const manageClick = () => {
         handleCloseMenu();
-        handleOpenYaml();
+        handleOpenManage();
     };
 
     const permissionClick = () => {
         handleCloseMenu();
         history.push({ pathname: `/pipelines/permissions/${id}`, state: name });
-        // history.push(`/pipelines/permissions/${id}`);
     };
 
     return (
         <>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={yamlClick}>
-                View YAML
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={manageClick}>
+                Edit
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
                 Turn off
