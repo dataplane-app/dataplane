@@ -108,8 +108,6 @@ const useRunPipelinesHook = () => {
             response.errors.map((err) => enqueueSnackbar(err.message + ': run flow', { variant: 'error' }));
         } else {
             setRunID(response.run_id);
-            closeSnackbar();
-            enqueueSnackbar('Success', { variant: 'success' });
         }
     };
 };
@@ -132,9 +130,6 @@ const useStopPipelinesHook = () => {
             enqueueSnackbar("Can't stop flow: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': stop flow', { variant: 'error' }));
-        } else {
-            closeSnackbar();
-            enqueueSnackbar('Success', { variant: 'success' });
         }
     };
 };
