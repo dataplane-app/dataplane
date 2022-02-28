@@ -367,5 +367,5 @@ function prepareInputForBackend(input) {
         }
     }
 
-    return { nodesInput, edgesInput };
+    return { nodesInput, edgesInput, json: input };
 }

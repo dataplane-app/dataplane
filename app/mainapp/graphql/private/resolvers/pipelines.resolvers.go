@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -267,6 +267,25 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			return "", errors.New("pipeline flow node already exists")
 		}
 		return "", errors.New("add pipeline flow node database error")
+	}
+
+	// Records original JSON information in database
+	JSON, err := json.Marshal(input.JSON)
+	if err != nil {
+		logging.PrintSecretsRedact(err)
+	}
+
+	e := models.Pipelines{
+		Json: JSON,
+	}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Updates(&e).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Update pipeline database error.")
 	}
 
 	// ----- unlock the pipeline
