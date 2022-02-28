@@ -1,17 +1,20 @@
 import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Grid, Tooltip, Typography } from '@mui/material';
-import { Box } from '@mui/system';
+import { Box, Grid, Tooltip, Typography, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Handle } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
 import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 import customNodeStyle from '../../../utils/customNodeStyle';
+import { customSourceHandle, customSourceHandleDragging } from '../../../utils/handleStyles';
 import PlayTriggerNodeItem from '../../MoreInfoContent/PlayTriggerNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
 import { getColor } from '../utils';
 
 const PlayNode = (props) => {
+    // Theme hook
+    const theme = useTheme();
+
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
@@ -46,7 +49,7 @@ const PlayNode = (props) => {
     return (
         <Tooltip title={'Node ID: ' + props.id} placement="top">
             <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>
-                <Handle type="source" position="right" id="play" style={{ backgroundColor: 'red', height: 10, width: 10 }} />
+                <Handle type="source" position="right" id="play" style={FlowState.isDragging.get() ? customSourceHandleDragging : customSourceHandle(theme.palette.mode)} />
                 <Grid container alignItems="flex-start" wrap="nowrap">
                     <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faPlayCircle} />
                     <Grid item ml={1.5} textAlign="left">

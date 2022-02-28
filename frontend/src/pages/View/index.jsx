@@ -1,19 +1,21 @@
 import { useTheme } from '@emotion/react';
+import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
-import ReactFlow, { addEdge, Controls } from 'react-flow-renderer';
-import { useHistory, useParams, useLocation } from 'react-router-dom';
+import ReactFlow, { addEdge, ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
+import { useHistory, useLocation, useParams } from 'react-router-dom';
 import CustomLine from '../../components/CustomNodesContent/CustomLine';
 import PublishPipelineDrawer from '../../components/DrawerContent/PublishPipelineDrawer';
+import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import RemoveLogsPageItem from '../../components/MoreInfoContent/RemoveLogsPageItem';
 import MoreInfoMenu from '../../components/MoreInfoMenu';
 import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
 import { edgeTypes, nodeTypes, useGlobalFlowState } from '../Flow';
-import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import RunsDropdown from './RunsDropdown';
-import Timer from './Timer';
 import StatusChips from './StatusChips';
+import Timer from './Timer';
 
 const View = () => {
     // Hooks
@@ -46,6 +48,13 @@ const View = () => {
     const reactFlowWrapper = useRef(null);
     const [, setReactFlowInstance] = useState(null);
     const [elements, setElements] = useState([]);
+    const [panOnDrag, setPanOnDrag] = useState(FlowState.isPanEnable.get());
+
+    useEffect(() => {
+        setPanOnDrag(FlowState.isPanEnable.get());
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [FlowState.isPanEnable.get()]);
 
     // Fetch previous elements
     useEffect(() => {
@@ -54,8 +63,33 @@ const View = () => {
 
         getPipelineFlow(Environment.id.get(), setElements);
         setIsLoadingFlow(false);
+
+        if (!pipeline || Object.keys(pipeline).length === 0) {
+            history.push('/');
+            return null;
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        getPipelineFlow(Environment.id.get(), setElements);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [FlowState.isEditorPage.get()]);
+
+    // Trigger the scale button on keyboard 's' key click
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const handleKeyDown = (e) => {
+        if (e.keyCode === 83) {
+            onZoomActive();
+        }
+    };
 
     // Handle edit button
     const handleGoToEditorPage = () => {
@@ -68,6 +102,29 @@ const View = () => {
     const onConnect = (params) => {
         setElements((els) => addEdge({ ...params, type: 'custom' }, els));
     };
+    const onConnectStart = () => {
+        FlowState.isDragging.set(true);
+        document.body.style.cursor = 'grabbing';
+    };
+    const onConnectEnd = () => {
+        FlowState.isDragging.set(false);
+        document.body.style.cursor = 'default';
+    };
+    const onMoveStart = (flow) => {
+        FlowState.scale.set(flow.zoom);
+    };
+    const onMoveEnd = (flow) => {
+        FlowState.scale.set(flow.zoom);
+    };
+    const onZoomActive = () => {
+        FlowState.isPanEnable.set(!panOnDrag);
+
+        if (panOnDrag) {
+            document.body.style.cursor = 'default';
+        } else {
+            document.body.style.cursor = 'move';
+        }
+    };
 
     return (
         <Box className="page" height="calc(100vh - 100px)" minHeight="min-content">
@@ -75,14 +132,14 @@ const View = () => {
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex">
                         <Typography component="h2" variant="h2" color="text.primary">
-                            Pipelines {'>'} {pipeline.name}
+                            Pipelines {'>'} {pipeline?.name}
                         </Typography>
 
                         <Grid display="flex" alignItems="flex-start">
                             <Box display="flex" alignItems="center" ml={4} mr={4}>
-                                <Box height={16} width={16} backgroundColor={pipeline.online ? 'status.pipelineOnlineText' : 'error.main'} borderRadius="100%"></Box>
-                                <Typography ml={1} fontSize={16} color={pipeline.online ? 'status.pipelineOnlineText' : 'error.main'}>
-                                    {pipeline.online ? 'Online' : 'Offline'}
+                                <Box height={16} width={16} backgroundColor={pipeline?.online ? 'status.pipelineOnlineText' : 'error.main'} borderRadius="100%"></Box>
+                                <Typography ml={1} fontSize={16} color={pipeline?.online ? 'status.pipelineOnlineText' : 'error.main'}>
+                                    {pipeline?.online ? 'Online' : 'Offline'}
                                 </Typography>
                             </Box>
 
@@ -125,18 +182,31 @@ const View = () => {
 
             <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
                 {elements && elements.length > 0 ? (
-                    <ReactFlow
-                        nodeTypes={nodeTypes}
-                        elements={elements}
-                        onLoad={onLoad}
-                        onConnect={onConnect}
-                        connectionLineComponent={CustomLine}
-                        edgeTypes={edgeTypes}
-                        arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
-                        snapToGrid={true}
-                        snapGrid={[15, 15]}>
-                        <Controls style={{ left: 'auto', right: 10 }} />
-                    </ReactFlow>
+                    <ReactFlowProvider>
+                        <ReactFlow
+                            zoomOnScroll={false}
+                            zoomOnPinch={false}
+                            paneMoveable={panOnDrag || false}
+                            onMoveStart={onMoveStart}
+                            onMoveEnd={onMoveEnd}
+                            nodeTypes={nodeTypes}
+                            elements={elements}
+                            onLoad={onLoad}
+                            onConnect={onConnect}
+                            onConnectStart={onConnectStart}
+                            onConnectEnd={onConnectEnd}
+                            connectionLineComponent={CustomLine}
+                            edgeTypes={edgeTypes}
+                            arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
+                            snapToGrid={true}
+                            snapGrid={[15, 15]}>
+                            <Controls style={{ left: 'auto', right: 10 }}>
+                                <ControlButton onClick={onZoomActive} style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
+                                    <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} sx={{ color: FlowState.isPanEnable.get() ? '#72B842' : '' }} />
+                                </ControlButton>
+                            </Controls>
+                        </ReactFlow>
+                    </ReactFlowProvider>
                 ) : (
                     <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Typography>Create a pipeline by dragging the components here</Typography>
@@ -201,35 +271,37 @@ function prepareInputForFrontend(input) {
     const edgesInput = [];
     const nodesInput = [];
 
-    for (const edge of input.edges) {
-        edgesInput.push({
-            source: edge.from,
-            sourceHandle: edge.meta.sourceHandle,
-            target: edge.to,
-            targetHandle: edge.meta.targetHandle,
-            type: edge.meta.edgeType,
-            arrowHeadType: edge.meta.arrowHeadType,
-            id: edge.edgeID,
-        });
-    }
+    if (input && Object.keys(input).length > 0) {
+        for (const edge of input.edges) {
+            edgesInput.push({
+                source: edge.from,
+                sourceHandle: edge.meta.sourceHandle,
+                target: edge.to,
+                targetHandle: edge.meta.targetHandle,
+                type: edge.meta.edgeType,
+                arrowHeadType: edge.meta.arrowHeadType,
+                id: edge.edgeID,
+            });
+        }
 
-    for (const node of input.nodes) {
-        let data = {
-            ...node.meta?.data,
-            name: node.name,
-            description: node.description,
-            workerGroup: node.workerGroup,
-            commands: node.commands,
-        };
-        nodesInput.push({
-            id: node.nodeID,
-            type: node.nodeTypeDesc + 'Node',
-            position: {
-                x: node.meta.position.x,
-                y: node.meta.position.y,
-            },
-            data,
-        });
+        for (const node of input.nodes) {
+            let data = {
+                ...node.meta?.data,
+                name: node.name,
+                description: node.description,
+                workerGroup: node.workerGroup,
+                commands: node.commands,
+            };
+            nodesInput.push({
+                id: node.nodeID,
+                type: node.nodeTypeDesc + 'Node',
+                position: {
+                    x: node.meta.position.x,
+                    y: node.meta.position.y,
+                },
+                data,
+            });
+        }
     }
 
     return [...edgesInput, ...nodesInput];

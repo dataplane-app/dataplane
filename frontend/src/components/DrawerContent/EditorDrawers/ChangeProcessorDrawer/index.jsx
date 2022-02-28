@@ -4,7 +4,7 @@ import { Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useEffect } from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useGlobalFlowState } from '../../../../pages/Flow';
+import { useGlobalFlowState } from '../../../../pages/View';
 
 const ChangeProcessorDrawer = ({ handleClose, refreshData }) => {
     const [processorName, setProcessorName] = useState('-');
