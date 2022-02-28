@@ -41,10 +41,10 @@ const CheckpointNode = (props) => {
 
     // Set border color on node status change
     useEffect(() => {
-        setBorderColor(getColor(RunState[props.id]?.get()));
+        setBorderColor(getColor(RunState[props.id]?.status?.get()));
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState[props.id].get()]);
+    }, [RunState[props.id].status?.get()]);
 
     return (
         <Tooltip title={'Node ID: ' + props.id} placement="top">

@@ -42,10 +42,10 @@ const BashNode = (props) => {
 
     // Set border color on node status change
     useEffect(() => {
-        setBorderColor(getColor(RunState[props.id]?.get()));
+        setBorderColor(getColor(RunState[props.id]?.status?.get()));
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState[props.id].get()]);
+    }, [RunState[props.id].status?.get()]);
 
     return (
         <Tooltip title={'Node ID: ' + props.id} placement="top">
@@ -70,6 +70,12 @@ const BashNode = (props) => {
                         <Typography fontSize={8}>{props.data.language}</Typography>
                     </Grid>
 
+                    <Grid item>
+                        <Typography fontSize={8}>
+                            {RunState[props.id].status?.get() === 'Success' && displayTimer(RunState[props.id].end_dt?.get(), RunState[props.id].start_dt?.get())}
+                        </Typography>
+                    </Grid>
+
                     <Box mt={0}>
                         <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
                             {isEditorPage ? <ProcessTypeEditorModeItem /> : <ProcessTypeNodeItem />}
@@ -82,3 +88,20 @@ const BashNode = (props) => {
 };
 
 export default BashNode;
+
+// Utility function
+function displayTimer(end, start) {
+    if (!end || !start) return null;
+    var ticks = Math.floor((new Date(end) - new Date(start)) / 1000);
+    var hh = Math.floor(ticks / 3600);
+    var mm = Math.floor((ticks % 3600) / 60);
+    var ss = ticks % 60;
+    var ms = (new Date(end) - new Date(start)) % 1000;
+
+    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(ss, 2) + '.' + pad(ms, 3);
+}
+
+function pad(n, width) {
+    const num = n + '';
+    return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
+}
