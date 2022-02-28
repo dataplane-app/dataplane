@@ -45,7 +45,7 @@ export default function useWebSocket(environmentId, runId) {
 
                 // Add only if a node message, not MSG.
                 if (response.node_id) {
-                    RunState[response.node_id].set(response.status);
+                    RunState[response.node_id].set({ status: response.status, start_dt: response.start_dt, end_dt: response.end_dt });
                     RunState.run_id.set(response.run_id);
                 }
 

@@ -162,7 +162,7 @@ export const usePipelineTasksRunHook = () => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
         } else {
-            response.map((a) => RunState[a.node_id].set(a.status));
+            response.map((a) => RunState[a.node_id].set({ status: a.status }));
             RunState.run_id.set(response.map((a) => a.run_id)[0]);
             RunState.start_dt.set(response.map((a) => a.start_dt)[0]);
         }
