@@ -24,10 +24,9 @@ export default function RunsDropdown() {
 
     return (
         <Grid item alignItems="center" display="flex" flex={1}>
-            <Typography variant="h3">Run</Typography>
-            <TextField label="Live" id="last" select size="small" sx={{ ml: 2, mr: 2, flex: 1 }}>
+            <TextField label="Run" id="last" select size="small" sx={{ ml: 2, mr: 2, flex: 1 }}>
                 {runId ? (
-                    <MenuItem value="live">
+                    <MenuItem value="run">
                         {startedAt} - {runId}
                     </MenuItem>
                 ) : null}

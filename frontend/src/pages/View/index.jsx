@@ -143,22 +143,10 @@ const View = () => {
                                 </Typography>
                             </Box>
 
-                            <Box mr={3} textAlign="right">
-                                <Typography variant="h3">{LOGS_MOCK.last_run}</Typography>
-                                <Typography fontSize={17}>Last run</Typography>
-                            </Box>
-
-                            <Box ml={3} mr={4.5} textAlign="right">
-                                <Typography variant="h3">{LOGS_MOCK.version}</Typography>
-                                <Typography fontSize={17}>Version</Typography>
-                            </Box>
-
                             <Button variant="contained" onClick={handleGoToEditorPage}>
                                 Edit
                             </Button>
-                            <Button variant="contained" sx={{ ml: 2.4 }} onClick={() => setIsOpenPublishDrawer(true)}>
-                                Publish
-                            </Button>
+
                             <Box sx={{ position: { xxs: 'relative', xl: 'absolute' }, ml: { xxs: 2, xl: 0 }, top: '0', right: '0' }}>
                                 <MoreInfoMenu>
                                     <RemoveLogsPageItem />
