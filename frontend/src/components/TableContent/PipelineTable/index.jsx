@@ -83,7 +83,9 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
                 },
             },
         ],
-        []
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [environmentID]
     );
 
     // Use the state and functions returned from useTable to build your UI
