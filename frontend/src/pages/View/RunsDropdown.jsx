@@ -1,52 +1,49 @@
 import { Autocomplete, Grid, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { useGlobalFlowState } from '../Flow';
-import { Downgraded } from '@hookstate/core';
 import { useGlobalRunState } from './useWebSocket';
 import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
 import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
+import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
 
-export default function RunsDropdown({ environmentID }) {
+export default function RunsDropdown({ environmentID, setElements }) {
     // Global states
-    const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
 
     // Local state
-    const [run, setRun] = useState();
-    console.log('🚀 ~ file: RunsDropdown.jsx ~ line 17 ~ RunsDropdown ~ run', run);
+    const [selectedRun, setSelectedRun] = useState();
     const [runs, setRuns] = useState([]);
-    console.log('🚀 ~ file: RunsDropdown.jsx ~ line 18 ~ RunsDropdown ~ runs', runs);
 
-    // GraphQL hook
+    // GraphQL hooks
     const getPipelineRuns = useGetPipelineRunsHook();
+    const getPipelineTasksRun = usePipelineTasksRunHook();
 
+    // Get pipeline runs on load and environment change and after each run.
     useEffect(() => {
-        if (RunState.run_id.get()) {
-            setRun([formatDate(FlowState.startedRunningAt.attach(Downgraded).get()) + ' - ' + RunState.run_id.get()]);
-        }
+        getPipelineRuns(environmentID, setRuns, setSelectedRun);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.run_id.get()]);
+    }, [environmentID, RunState.run_id.get()]);
 
-    // Get pipeline runs on load and environment change
+    // Update elements on run dropdown change
     useEffect(() => {
-        getPipelineRuns(environmentID, setRuns, setRun);
-
+        if (!selectedRun) return;
+        setElements(selectedRun.run_json);
+        getPipelineTasksRun(selectedRun.run_id, environmentID);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [environmentID]);
+    }, [selectedRun]);
 
     return (
-        <Grid item alignItems="center" display="flex" width={510}>
-            {run ? (
+        <Grid item alignItems="center" display="flex" width={520}>
+            {selectedRun ? (
                 <Autocomplete
                     id="run_autocomplete"
                     onChange={(event, newValue) => {
-                        setRun(newValue);
+                        setSelectedRun(newValue);
                     }}
-                    value={run}
+                    value={selectedRun}
                     disableClearable
-                    sx={{ minWidth: '510px' }}
+                    sx={{ minWidth: '520px' }}
                     options={runs}
                     getOptionLabel={(a) => formatDate(a.created_at) + ' - ' + a.run_id}
                     renderInput={(params) => <TextField {...params} label="Run" id="run" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
@@ -78,8 +75,38 @@ const useGetPipelineRunsHook = () => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': get flow', { variant: 'error' }));
         } else {
-            setRuns(response);
+            setRuns(response.sort((a, b) => a.created_at.localeCompare(b.created_at)));
             setRun(response[response.length - 1]);
+        }
+    };
+};
+
+export const usePipelineTasksRunHook = () => {
+    // GraphQL hook
+    const getPipelineTasksRun = usePipelineTasksRun();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const RunState = useGlobalRunState();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Update pipeline flow
+    return async (runID, environmentID) => {
+        if (!runID) return;
+
+        const response = await getPipelineTasksRun({ pipelineID: pipelineId, runID, environmentID });
+
+        if (response.r === 'Unauthorized') {
+            closeSnackbar();
+            enqueueSnackbar(`Can't update flow: ${response.r}`, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
+        } else {
+            RunState.set({});
+            response.map((a) => RunState[a.node_id].set({ status: a.status, end_dt: a.end_dt, start_dt: a.start_dt }));
+            // RunState.start_dt.set(response.map((a) => a.start_dt)[0]);
         }
     };
 };

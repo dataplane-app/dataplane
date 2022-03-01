@@ -39,8 +39,7 @@ export default function Timer({ environmentID }) {
 
     const handleTimerStart = () => {
         FlowState.isRunning.set(true);
-        RunState.start_dt.set(undefined);
-        RunState.run_id.set(undefined);
+        RunState.set({});
         runPipelines(environmentID, pipelineId);
     };
 

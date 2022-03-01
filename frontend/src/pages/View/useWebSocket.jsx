@@ -23,6 +23,7 @@ export default function useWebSocket(environmentId, runId) {
     const { authToken } = useGlobalAuthState();
 
     useEffect(() => {
+        if (!FlowState.isRunning.get()) return;
         function connect() {
             ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=taskupdate.${environmentId}.${runId}&id=${runId}&token=${authToken.get()}`);
 

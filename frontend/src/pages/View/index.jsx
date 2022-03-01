@@ -156,7 +156,7 @@ const View = () => {
                     <StatusChips />
 
                     {/* Runs dropdown */}
-                    <RunsDropdown environmentID={Environment.id.get()} />
+                    <RunsDropdown environmentID={Environment.id.get()} setElements={setElements} />
 
                     <Button variant="contained" onClick={handleGoToEditorPage} sx={{ ml: 2, mr: 2 }}>
                         Edit

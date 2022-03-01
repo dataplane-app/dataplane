@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -176,7 +176,7 @@ func (r *queryResolver) GetPipelineRuns(ctx context.Context, pipelineID string, 
 
 	// Get pipeline runs
 	var pipelineRuns []*models.PipelineRuns
-	err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&pipelineRuns).Error
+	err := database.DBConn.Order("created_at desc").Limit(20).Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&pipelineRuns).Error
 	if err != nil {
 		logging.PrintSecretsRedact(err.Error())
 	}
