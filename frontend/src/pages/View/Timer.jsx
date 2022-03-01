@@ -2,6 +2,7 @@ import { Box, Button, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Downgraded } from '@hookstate/core';
 import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
 import { useRunPipelines } from '../../graphql/runPipelines';
 import { useStopPipelines } from '../../graphql/stopPipelines';
@@ -103,12 +104,19 @@ export const useRunPipelinesHook = () => {
     const runPipelines = useRunPipelines();
 
     const RunState = useGlobalRunState();
+    const FlowState = useGlobalFlowState();
+
+    FlowState.elements.get();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Run pipeline flow
     return async (environmentID, pipelineId) => {
-        const response = await runPipelines({ pipelineID: pipelineId, environmentID });
+        const response = await runPipelines({
+            pipelineID: pipelineId,
+            environmentID,
+            run_json: FlowState.elements.attach(Downgraded).get(),
+        });
 
         if (response.r === 'error') {
             closeSnackbar();

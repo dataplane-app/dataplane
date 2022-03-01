@@ -39,6 +39,7 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	PipelineEdges() PipelineEdgesResolver
 	PipelineNodes() PipelineNodesResolver
+	PipelineRuns() PipelineRunsResolver
 	Query() QueryResolver
 }
 
@@ -87,7 +88,7 @@ type ComplexityRoot struct {
 		PipelinePermissionsToUser        func(childComplexity int, environmentID string, resourceID string, access []string, userID string) int
 		RemoveUserFromAccessGroup        func(childComplexity int, userID string, accessGroupID string, environmentID string) int
 		RemoveUserFromEnvironment        func(childComplexity int, userID string, environmentID string) int
-		RunPipelines                     func(childComplexity int, pipelineID string, environmentID string) int
+		RunPipelines                     func(childComplexity int, pipelineID string, environmentID string, runJSON interface{}) int
 		StopPipelines                    func(childComplexity int, pipelineID string, runID string, environmentID string) int
 		UpdateAccessGroup                func(childComplexity int, input *AccessGroupsInput) int
 		UpdateActivateEnvironment        func(childComplexity int, environmentID string) int
@@ -194,6 +195,7 @@ type ComplexityRoot struct {
 		EnvironmentID func(childComplexity int) int
 		PipelineID    func(childComplexity int) int
 		RunID         func(childComplexity int) int
+		RunJSON       func(childComplexity int) int
 		Status        func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 	}
@@ -347,7 +349,7 @@ type MutationResolver interface {
 	AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error)
 	AddUpdatePipelineFlow(ctx context.Context, input *PipelineFlowInput, environmentID string, pipelineID string) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
-	RunPipelines(ctx context.Context, pipelineID string, environmentID string) (*models.PipelineRuns, error)
+	RunPipelines(ctx context.Context, pipelineID string, environmentID string, runJSON interface{}) (*models.PipelineRuns, error)
 	StopPipelines(ctx context.Context, pipelineID string, runID string, environmentID string) (*models.PipelineRuns, error)
 	CreateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
 	UpdateSecret(ctx context.Context, input *UpdateSecretsInput) (*models.Secrets, error)
@@ -368,6 +370,9 @@ type PipelineEdgesResolver interface {
 type PipelineNodesResolver interface {
 	Commands(ctx context.Context, obj *models.PipelineNodes) (interface{}, error)
 	Meta(ctx context.Context, obj *models.PipelineNodes) (interface{}, error)
+}
+type PipelineRunsResolver interface {
+	RunJSON(ctx context.Context, obj *models.PipelineRuns) (interface{}, error)
 }
 type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*models.Environment, error)
@@ -729,7 +734,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RunPipelines(childComplexity, args["pipelineID"].(string), args["environmentID"].(string)), true
+		return e.complexity.Mutation.RunPipelines(childComplexity, args["pipelineID"].(string), args["environmentID"].(string), args["run_json"].(interface{})), true
 
 	case "Mutation.stopPipelines":
 		if e.complexity.Mutation.StopPipelines == nil {
@@ -1409,6 +1414,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PipelineRuns.RunID(childComplexity), true
+
+	case "PipelineRuns.run_json":
+		if e.complexity.PipelineRuns.RunJSON == nil {
+			break
+		}
+
+		return e.complexity.PipelineRuns.RunJSON(childComplexity), true
 
 	case "PipelineRuns.status":
 		if e.complexity.PipelineRuns.Status == nil {
@@ -2802,6 +2814,7 @@ extend type Mutation {
     pipeline_id: String!
     status: String!
     environment_id: String!
+    run_json: Any!
     created_at: Time!
     ended_at: Time
     updated_at: Time
@@ -2837,7 +2850,7 @@ extend type Mutation {
     + **Route**: Private
     + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
-    runPipelines(pipelineID: String!, environmentID: String!): PipelineRuns!
+    runPipelines(pipelineID: String!, environmentID: String!, run_json: Any!): PipelineRuns!
 
     """
     Stop pipeline flow.
@@ -3614,6 +3627,15 @@ func (ec *executionContext) field_Mutation_runPipelines_args(ctx context.Context
 		}
 	}
 	args["environmentID"] = arg1
+	var arg2 interface{}
+	if tmp, ok := rawArgs["run_json"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("run_json"))
+		arg2, err = ec.unmarshalNAny2interface(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["run_json"] = arg2
 	return args, nil
 }
 
@@ -6135,7 +6157,7 @@ func (ec *executionContext) _Mutation_runPipelines(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RunPipelines(rctx, args["pipelineID"].(string), args["environmentID"].(string))
+		return ec.resolvers.Mutation().RunPipelines(rctx, args["pipelineID"].(string), args["environmentID"].(string), args["run_json"].(interface{}))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8760,6 +8782,41 @@ func (ec *executionContext) _PipelineRuns_environment_id(ctx context.Context, fi
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PipelineRuns_run_json(ctx context.Context, field graphql.CollectedField, obj *models.PipelineRuns) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PipelineRuns",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PipelineRuns().RunJSON(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalNAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PipelineRuns_created_at(ctx context.Context, field graphql.CollectedField, obj *models.PipelineRuns) (ret graphql.Marshaler) {
@@ -14921,27 +14978,41 @@ func (ec *executionContext) _PipelineRuns(ctx context.Context, sel ast.Selection
 		case "run_id":
 			out.Values[i] = ec._PipelineRuns_run_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "pipeline_id":
 			out.Values[i] = ec._PipelineRuns_pipeline_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "status":
 			out.Values[i] = ec._PipelineRuns_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "environment_id":
 			out.Values[i] = ec._PipelineRuns_environment_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "run_json":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PipelineRuns_run_json(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "created_at":
 			out.Values[i] = ec._PipelineRuns_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "ended_at":
 			out.Values[i] = ec._PipelineRuns_ended_at(ctx, field, obj)

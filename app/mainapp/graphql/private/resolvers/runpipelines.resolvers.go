@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -13,11 +13,13 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/pipelines"
 	"dataplane/mainapp/worker"
+	"encoding/json"
 	"errors"
+	"log"
 	"time"
 )
 
-func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, environmentID string) (*models.PipelineRuns, error) {
+func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, environmentID string, runJSON interface{}) (*models.PipelineRuns, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -35,7 +37,13 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 		return &models.PipelineRuns{}, errors.New("requires permissions")
 	}
 
-	resp, err := pipelines.RunPipeline(pipelineID, environmentID)
+	JSON, err := json.Marshal(runJSON)
+	if err != nil {
+		logging.PrintSecretsRedact(err)
+	}
+	log.Println(string(JSON), "json: !!!!!!!!!!!!!!!!!!")
+
+	resp, err := pipelines.RunPipeline(pipelineID, environmentID, JSON)
 	if err != nil {
 		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
@@ -117,6 +125,10 @@ func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string,
 	return &run, nil
 }
 
+func (r *pipelineRunsResolver) RunJSON(ctx context.Context, obj *models.PipelineRuns) (interface{}, error) {
+	return obj.RunJSON, nil
+}
+
 func (r *queryResolver) PipelineTasksRun(ctx context.Context, pipelineID string, runID string, environmentID string) ([]*privategraphql.WorkerTasks, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -144,3 +156,10 @@ func (r *queryResolver) PipelineTasksRun(ctx context.Context, pipelineID string,
 
 	return currentRun, nil
 }
+
+// PipelineRuns returns privategraphql.PipelineRunsResolver implementation.
+func (r *Resolver) PipelineRuns() privategraphql.PipelineRunsResolver {
+	return &pipelineRunsResolver{r}
+}
+
+type pipelineRunsResolver struct{ *Resolver }
