@@ -156,14 +156,14 @@ const View = () => {
                     <StatusChips />
 
                     {/* Runs dropdown */}
-                    <RunsDropdown />
+                    <RunsDropdown environmentID={Environment.id.get()} />
 
                     <Button variant="contained" onClick={handleGoToEditorPage} sx={{ ml: 2, mr: 2 }}>
                         Edit
                     </Button>
 
                     {/* Timer */}
-                    <Timer environmentID={Environment.id.get()} />
+                    {FlowState.elements.get().length > 0 ? <Timer environmentID={Environment.id.get()} /> : null}
                 </Grid>
             </Box>
 
@@ -208,13 +208,6 @@ const View = () => {
     );
 };
 
-const LOGS_MOCK = {
-    id: 1,
-    online: true,
-    last_run: '22 Nov 2021 08:00',
-    version: '0.0.1',
-};
-
 export default View;
 
 // ------ Custom hooks
@@ -254,7 +247,7 @@ const useGetPipelineFlowHook = (pipeline) => {
 };
 
 // ----- Utility functions
-function prepareInputForFrontend(input) {
+export function prepareInputForFrontend(input) {
     const edgesInput = [];
     const nodesInput = [];
 

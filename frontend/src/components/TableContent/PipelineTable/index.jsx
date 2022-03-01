@@ -6,20 +6,21 @@ import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
 import PipelineItemTable from '../../MoreInfoContent/PipelineTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenuPipeline from '../../MoreInfoMenuPipeline';
-import { useRunPipelinesHook } from '../../../pages/View/Timer';
 import { useGlobalFlowState } from '../../../pages/Flow';
+import { useRunPipelines } from '../../../graphql/runPipelines';
+import { useGlobalRunState } from '../../../pages/View/useWebSocket';
+import { useSnackbar } from 'notistack';
+import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
+import { prepareInputForFrontend } from '../../../pages/View';
 
 const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
     // React router
     const history = useHistory();
 
-    // Global state
-    const FlowState = useGlobalFlowState();
-
     // Table item states
     const [isOpenManage, setIsOpenManage] = useState(false);
 
-    // GraphQL hooks
+    // GraphQL hook
     const runPipelines = useRunPipelinesHook();
 
     useEffect(() => {
@@ -48,10 +49,10 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
                     <Grid container alignItems="flex-start" flexDirection="column" justifyContent="center">
                         <Button
                             variant="text"
+                            disabled={row.value.json.length === 0}
                             onClick={() => {
                                 history.push({ pathname: `/pipelines/view/${row.value.pipelineID}`, state: row.value });
                                 runPipelines(environmentID, row.value.pipelineID);
-                                FlowState.isRunning.set(true);
                             }}>
                             Run
                         </Button>
@@ -153,3 +154,41 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
 };
 
 export default PipelineTable;
+
+// Custom GraphQL hook
+export const useRunPipelinesHook = () => {
+    // GraphQL hooks
+    const getPipelineFlow = useGetPipelineFlow();
+    const runPipelines = useRunPipelines();
+
+    // Global state
+    const RunState = useGlobalRunState();
+    const FlowState = useGlobalFlowState();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Run pipeline flow
+    return async (environmentID, pipelineID) => {
+        // First get pipeline flow graph
+        const rawResponse = await getPipelineFlow({ pipelineID, environmentID });
+        const run_json = prepareInputForFrontend(rawResponse);
+        if (run_json.length === 0) return;
+
+        // Then run pipeline flow
+        const response = await runPipelines({
+            pipelineID,
+            environmentID,
+            run_json,
+        });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't run flow: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message + ': run flow', { variant: 'error' }));
+        } else {
+            RunState.run_id.set(response.run_id);
+            FlowState.isRunning.set(true);
+        }
+    };
+};

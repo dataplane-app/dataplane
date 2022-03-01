@@ -40,6 +40,7 @@ type ResolverRoot interface {
 	PipelineEdges() PipelineEdgesResolver
 	PipelineNodes() PipelineNodesResolver
 	PipelineRuns() PipelineRunsResolver
+	Pipelines() PipelinesResolver
 	Query() QueryResolver
 }
 
@@ -202,9 +203,11 @@ type ComplexityRoot struct {
 
 	Pipelines struct {
 		Active        func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
 		Current       func(childComplexity int) int
 		Description   func(childComplexity int) int
 		EnvironmentID func(childComplexity int) int
+		JSON          func(childComplexity int) int
 		Name          func(childComplexity int) int
 		Online        func(childComplexity int) int
 		PipelineID    func(childComplexity int) int
@@ -374,6 +377,9 @@ type PipelineNodesResolver interface {
 }
 type PipelineRunsResolver interface {
 	RunJSON(ctx context.Context, obj *models.PipelineRuns) (interface{}, error)
+}
+type PipelinesResolver interface {
+	JSON(ctx context.Context, obj *models.Pipelines) (interface{}, error)
 }
 type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*models.Environment, error)
@@ -1445,6 +1451,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Pipelines.Active(childComplexity), true
 
+	case "Pipelines.created_at":
+		if e.complexity.Pipelines.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.CreatedAt(childComplexity), true
+
 	case "Pipelines.current":
 		if e.complexity.Pipelines.Current == nil {
 			break
@@ -1465,6 +1478,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Pipelines.EnvironmentID(childComplexity), true
+
+	case "Pipelines.json":
+		if e.complexity.Pipelines.JSON == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.JSON(childComplexity), true
 
 	case "Pipelines.name":
 		if e.complexity.Pipelines.Name == nil {
@@ -2671,6 +2691,8 @@ type Pipelines {
   online: Boolean!
   current: String!
   workerGroup: String!
+  json: Any!
+  created_at: Time!
 }
 
 # ----- Add/Update flow
@@ -2857,7 +2879,7 @@ extend type Query {
     pipelineTasksRun(pipelineID: String!, runID: String!, environmentID: String!): [WorkerTasks!]!
 
     """
-    Get a single pipeline tasks run.
+    Get all runs for a specific pipeline.
     + **Route**: Private
     + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines
     """
@@ -9243,6 +9265,76 @@ func (ec *executionContext) _Pipelines_workerGroup(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Pipelines_json(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Pipelines().JSON(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalNAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_created_at(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Platform_id(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -15130,42 +15222,61 @@ func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet
 		case "pipelineID":
 			out.Values[i] = ec._Pipelines_pipelineID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Pipelines_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "environmentID":
 			out.Values[i] = ec._Pipelines_environmentID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "description":
 			out.Values[i] = ec._Pipelines_description(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "active":
 			out.Values[i] = ec._Pipelines_active(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "online":
 			out.Values[i] = ec._Pipelines_online(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "current":
 			out.Values[i] = ec._Pipelines_current(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "workerGroup":
 			out.Values[i] = ec._Pipelines_workerGroup(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "json":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Pipelines_json(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "created_at":
+			out.Values[i] = ec._Pipelines_created_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))

@@ -313,6 +313,10 @@ func (r *pipelineNodesResolver) Meta(ctx context.Context, obj *models.PipelineNo
 	return obj.Meta, nil
 }
 
+func (r *pipelinesResolver) JSON(ctx context.Context, obj *models.Pipelines) (interface{}, error) {
+	return obj.Json, nil
+}
+
 func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) ([]*models.Pipelines, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -404,5 +408,9 @@ func (r *Resolver) PipelineNodes() privategraphql.PipelineNodesResolver {
 	return &pipelineNodesResolver{r}
 }
 
+// Pipelines returns privategraphql.PipelinesResolver implementation.
+func (r *Resolver) Pipelines() privategraphql.PipelinesResolver { return &pipelinesResolver{r} }
+
 type pipelineEdgesResolver struct{ *Resolver }
 type pipelineNodesResolver struct{ *Resolver }
+type pipelinesResolver struct{ *Resolver }

@@ -106,8 +106,6 @@ export const useRunPipelinesHook = () => {
     const RunState = useGlobalRunState();
     const FlowState = useGlobalFlowState();
 
-    FlowState.elements.get();
-
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Run pipeline flow
