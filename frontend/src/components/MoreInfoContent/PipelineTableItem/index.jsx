@@ -23,14 +23,8 @@ const PipelineItemTable = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={manageClick}>
                 Edit
             </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
-                Turn off
-            </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={permissionClick}>
                 Permissions
-            </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
-                Reload
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
                 Deploy

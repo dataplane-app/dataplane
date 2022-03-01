@@ -7,12 +7,15 @@ const ITEM_HEIGHT = 48;
 
 const MoreInfoMenuPipeline = ({ children, iconSize = 22, iconHorizontal = false, iconColor = '#0000008a', iconColorDark = '#fff', noPadding = false, ...props }) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
+    const [fontWeight, setFontWeight] = React.useState(400);
     const open = Boolean(anchorEl);
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
+        setFontWeight(700);
     };
     const handleClose = () => {
         setAnchorEl(null);
+        setFontWeight(400);
     };
 
     const theme = useTheme();
@@ -25,6 +28,7 @@ const MoreInfoMenuPipeline = ({ children, iconSize = 22, iconHorizontal = false,
                 aria-controls={open ? 'long-menu' : undefined}
                 aria-expanded={open ? 'true' : undefined}
                 aria-haspopup="true"
+                sx={{ fontWeight }}
                 onClick={handleClick}>
                 Manage
             </Button>

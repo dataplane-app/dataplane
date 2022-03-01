@@ -1,4 +1,4 @@
-import { Grid, MenuItem, TextField, Typography } from '@mui/material';
+import { Autocomplete, Grid, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useGlobalFlowState } from '../Flow';
 import { Downgraded } from '@hookstate/core';
@@ -10,27 +10,29 @@ export default function RunsDropdown() {
     const RunState = useGlobalRunState();
 
     // Local state
-    const [runId, setRunId] = useState();
-    const [startedAt, setStartedAt] = useState();
+    const [run, setRun] = useState();
 
     useEffect(() => {
         if (RunState.run_id.get()) {
-            setRunId(RunState.run_id.get());
-            setStartedAt(formatDate(FlowState.startedRunningAt.attach(Downgraded).get()));
+            setRun([formatDate(FlowState.startedRunningAt.attach(Downgraded).get()) + ' - ' + RunState.run_id.get()]);
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [RunState.run_id.get()]);
 
     return (
-        <Grid item alignItems="center" display="flex" flex={1}>
-            <TextField label="Run" id="last" select size="small" sx={{ ml: 2, mr: 2, flex: 1 }}>
-                {runId ? (
-                    <MenuItem value="run">
-                        {startedAt} - {runId}
-                    </MenuItem>
-                ) : null}
-            </TextField>
+        <Grid item alignItems="center" display="flex" width={510}>
+            <Autocomplete
+                id="run_autocomplete"
+                onChange={(event, newValue) => {
+                    // setSelectedUserEnvironment(newValue);
+                }}
+                value={run || []}
+                disableClearable
+                sx={{ minWidth: '510px' }}
+                options={run || []}
+                renderInput={(params) => <TextField {...params} label="Run" id="run" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
+            />
         </Grid>
     );
 }
