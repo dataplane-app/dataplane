@@ -30,6 +30,13 @@ extend type Query {
     + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
     pipelineTasksRun(pipelineID: String!, runID: String!, environmentID: String!): [WorkerTasks!]!
+
+    """
+    Get all runs for a specific pipeline.
+    + **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines
+    """
+    getPipelineRuns(pipelineID: String!, environmentID: String!): [PipelineRuns!]!
 }
 
 

@@ -157,6 +157,33 @@ func (r *queryResolver) PipelineTasksRun(ctx context.Context, pipelineID string,
 	return currentRun, nil
 }
 
+func (r *queryResolver) GetPipelineRuns(ctx context.Context, pipelineID string, environmentID string) ([]*models.PipelineRuns, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("requires permissions")
+	}
+
+	// Get pipeline runs
+	var pipelineRuns []*models.PipelineRuns
+	err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&pipelineRuns).Error
+	if err != nil {
+		logging.PrintSecretsRedact(err.Error())
+	}
+
+	return pipelineRuns, nil
+}
+
 // PipelineRuns returns privategraphql.PipelineRunsResolver implementation.
 func (r *Resolver) PipelineRuns() privategraphql.PipelineRunsResolver {
 	return &pipelineRunsResolver{r}
