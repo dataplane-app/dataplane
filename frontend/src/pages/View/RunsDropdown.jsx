@@ -35,7 +35,7 @@ export default function RunsDropdown({ environmentID, setElements }) {
 
     return (
         <Grid item alignItems="center" display="flex" width={520}>
-            {selectedRun || runs.length === 0 ? (
+            {selectedRun || runs.length === 0 || RunState.run_id.get() === 0 ? (
                 <Autocomplete
                     id="run_autocomplete"
                     onChange={(event, newValue) => {
@@ -58,6 +58,8 @@ const useGetPipelineRunsHook = () => {
     // GraphQL hook
     const getPipelineRuns = useGetPipelineRuns();
 
+    const RunState = useGlobalRunState();
+
     // URI parameter
     const { pipelineId } = useParams();
 
@@ -76,7 +78,9 @@ const useGetPipelineRunsHook = () => {
             response.errors.map((err) => enqueueSnackbar(err.message + ': get flow', { variant: 'error' }));
         } else {
             setRuns(response.sort((a, b) => a.created_at.localeCompare(b.created_at)));
-            setRun(response[response.length - 1]);
+            if (RunState.run_id.get() !== 0) {
+                setRun(response[response.length - 1]);
+            }
         }
     };
 };
