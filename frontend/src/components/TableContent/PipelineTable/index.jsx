@@ -20,6 +20,8 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
     // Table item states
     const [isOpenManage, setIsOpenManage] = useState(false);
 
+    const FlowState = useGlobalFlowState();
+
     // GraphQL hook
     const runPipelines = useRunPipelinesHook();
 
@@ -52,6 +54,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
                             disabled={row.value.json.length === 0}
                             onClick={() => {
                                 history.push({ pathname: `/pipelines/view/${row.value.pipelineID}`, state: row.value });
+                                FlowState.isRunning.set(true);
                                 runPipelines(environmentID, row.value.pipelineID);
                             }}>
                             Run
@@ -163,7 +166,6 @@ export const useRunPipelinesHook = () => {
 
     // Global state
     const RunState = useGlobalRunState();
-    const FlowState = useGlobalFlowState();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -188,7 +190,6 @@ export const useRunPipelinesHook = () => {
             response.errors.map((err) => enqueueSnackbar(err.message + ': run flow', { variant: 'error' }));
         } else {
             RunState.run_id.set(response.run_id);
-            FlowState.isRunning.set(true);
         }
     };
 };
