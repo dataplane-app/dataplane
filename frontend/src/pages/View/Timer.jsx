@@ -78,12 +78,6 @@ export default function Timer({ environmentID }) {
     // Set isRunning state and start state for timer
     useEffect(() => {
         if (Object.values(RunState.get())?.some((a) => a?.status === 'Queue')) {
-            !start &&
-                setStart(
-                    Object.values(RunState.get())
-                        .map((a) => a?.start_dt)
-                        .sort((a, b) => a?.localeCompare(b))[0]
-                );
             setStart(
                 Object.values(RunState.get())
                     .map((a) => a?.start_dt)
