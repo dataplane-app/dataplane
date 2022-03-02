@@ -21,6 +21,7 @@ export default function Timer({ environmentID }) {
 
     // Local state
     const [elapsed, setElapsed] = useState();
+    const [isRunning, setIsRunning] = useState(false);
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -70,10 +71,21 @@ export default function Timer({ environmentID }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.isRunning.get()]);
 
+    // Set isRunning state for timer
+    useEffect(() => {
+        if (Object.values(RunState.get())?.some((a) => a?.status === 'Queue')) {
+            setIsRunning(true);
+        } else {
+            setIsRunning(false);
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [RunState.get()]);
+
     return (
         <>
             <Grid item>
-                {FlowState.isRunning.get() ? (
+                {isRunning ? (
                     <Box display="flex" alignItems="center">
                         <Button
                             onClick={handleTimerStop}
