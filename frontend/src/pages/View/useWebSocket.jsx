@@ -23,6 +23,7 @@ export default function useWebSocket(environmentId, runId) {
     const { authToken } = useGlobalAuthState();
 
     useEffect(() => {
+        if (!runId) return;
         if (!FlowState.isRunning.get()) return;
         function connect() {
             ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=taskupdate.${environmentId}.${runId}&id=${runId}&token=${authToken.get()}`);
@@ -55,6 +56,8 @@ export default function useWebSocket(environmentId, runId) {
                 }
                 if (response.MSG) {
                     FlowState.isRunning.set(false);
+                    reconnectOnClose.current = false;
+                    ws.current.close();
                 }
             };
         }
