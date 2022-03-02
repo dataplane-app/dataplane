@@ -69,6 +69,7 @@ export default function Timer({ environmentID }) {
             clearInterval(secTimer);
             setElapsed(0);
             setStart();
+            setIsRunning(false);
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,6 +84,11 @@ export default function Timer({ environmentID }) {
                         .map((a) => a?.start_dt)
                         .sort((a, b) => a?.localeCompare(b))[0]
                 );
+            setStart(
+                Object.values(RunState.get())
+                    .map((a) => a?.start_dt)
+                    .sort((a, b) => a?.localeCompare(b))[0]
+            );
             setIsRunning(true);
         } else {
             setIsRunning(false);
