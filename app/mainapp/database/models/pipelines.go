@@ -82,14 +82,15 @@ func (PipelineRuns) TableName() string {
 }
 
 type PipelineRuns struct {
-	RunID         string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"run_id"`
-	PipelineID    string     `gorm:"index:idx_pipelineid_runs;" json:"pipeline_id"`
-	Status        string     `json:"status"`
-	Reason        string     `json:"reason"`
-	EnvironmentID string     `json:"environment_id"`
-	CreatedAt     time.Time  `json:"created_at"`
-	EndedAt       time.Time  `json:"ended_at"`
-	UpdatedAt     *time.Time `json:"updated_at"`
+	RunID         string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"run_id"`
+	PipelineID    string         `gorm:"index:idx_pipelineid_runs;" json:"pipeline_id"`
+	Status        string         `json:"status"`
+	Reason        string         `json:"reason"`
+	EnvironmentID string         `json:"environment_id"`
+	RunJSON       datatypes.JSON `json:"run_json"`
+	CreatedAt     time.Time      `json:"created_at"`
+	EndedAt       time.Time      `json:"ended_at"`
+	UpdatedAt     *time.Time     `json:"updated_at"`
 }
 
 // func (PipelinesArchive) IsEntity() {}

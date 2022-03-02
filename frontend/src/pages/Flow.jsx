@@ -24,6 +24,7 @@ import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useGlobalAuthState } from '../Auth/UserAuth';
+import { useGlobalRunState } from './View/useWebSocket';
 
 export const globalFlowState = createState({
     isRunning: false,
@@ -108,6 +109,7 @@ const Flow = () => {
 
     // Global states
     const FlowState = useGlobalFlowState();
+    const RunState = useGlobalRunState();
     const Environment = useGlobalEnvironmentState();
 
     //Offset states and refs
@@ -134,6 +136,7 @@ const Flow = () => {
 
         setElements([...prevElements]);
         setIsLoadingFlow(false);
+        RunState.set({});
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -236,6 +239,7 @@ const Flow = () => {
             updatePipelineFlow(flowElements.elements, Environment.id.get());
             FlowState.isEditorPage.set(false);
             FlowState.selectedElement.set(null);
+            RunState.run_id.set(0);
             history.push({ pathname: `/pipelines/view/${pipelineId}`, state: pipeline });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -176,7 +176,16 @@ func TestPipelines(t *testing.T) {
 					  arrowHeadType: "arrowHeadType"
 					},
 					active: false
-				  }]
+				  }],
+				  json: {
+					position: {
+						x: 75,
+						y: 315
+					},
+					data: {
+						language: "Bash"
+					}
+				}
 				}
 			)
       		
@@ -248,7 +257,16 @@ func TestPipelines(t *testing.T) {
 					  arrowHeadType: "arrowHeadType"
 					},
 					active: false
-				  }]
+				  }],
+				  json: {
+					position: {
+						x: 75,
+						y: 315
+					},
+					data: {
+						language: "Bash"
+					}
+				}
 				}
 			)
       		
@@ -312,7 +330,8 @@ func TestPipelines(t *testing.T) {
 			pipelineID: "test_` + pipelineId + `",
 			input:{
 				nodesInput: [],
-				edgesInput: []
+				edgesInput: [],
+				json: {}
 				}
 			)
       		

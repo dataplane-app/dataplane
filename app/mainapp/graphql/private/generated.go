@@ -39,6 +39,8 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	PipelineEdges() PipelineEdgesResolver
 	PipelineNodes() PipelineNodesResolver
+	PipelineRuns() PipelineRunsResolver
+	Pipelines() PipelinesResolver
 	Query() QueryResolver
 }
 
@@ -87,7 +89,7 @@ type ComplexityRoot struct {
 		PipelinePermissionsToUser        func(childComplexity int, environmentID string, resourceID string, access []string, userID string) int
 		RemoveUserFromAccessGroup        func(childComplexity int, userID string, accessGroupID string, environmentID string) int
 		RemoveUserFromEnvironment        func(childComplexity int, userID string, environmentID string) int
-		RunPipelines                     func(childComplexity int, pipelineID string, environmentID string) int
+		RunPipelines                     func(childComplexity int, pipelineID string, environmentID string, runJSON interface{}) int
 		StopPipelines                    func(childComplexity int, pipelineID string, runID string, environmentID string) int
 		UpdateAccessGroup                func(childComplexity int, input *AccessGroupsInput) int
 		UpdateActivateEnvironment        func(childComplexity int, environmentID string) int
@@ -194,15 +196,18 @@ type ComplexityRoot struct {
 		EnvironmentID func(childComplexity int) int
 		PipelineID    func(childComplexity int) int
 		RunID         func(childComplexity int) int
+		RunJSON       func(childComplexity int) int
 		Status        func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 	}
 
 	Pipelines struct {
 		Active        func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
 		Current       func(childComplexity int) int
 		Description   func(childComplexity int) int
 		EnvironmentID func(childComplexity int) int
+		JSON          func(childComplexity int) int
 		Name          func(childComplexity int) int
 		Online        func(childComplexity int) int
 		PipelineID    func(childComplexity int) int
@@ -231,6 +236,7 @@ type ComplexityRoot struct {
 		GetEnvironments               func(childComplexity int) int
 		GetOnePreference              func(childComplexity int, preference string) int
 		GetPipelineFlow               func(childComplexity int, pipelineID string, environmentID string) int
+		GetPipelineRuns               func(childComplexity int, pipelineID string, environmentID string) int
 		GetPipelines                  func(childComplexity int, environmentID string) int
 		GetPlatform                   func(childComplexity int) int
 		GetSecret                     func(childComplexity int, secret string, environmentID string) int
@@ -347,7 +353,7 @@ type MutationResolver interface {
 	AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error)
 	AddUpdatePipelineFlow(ctx context.Context, input *PipelineFlowInput, environmentID string, pipelineID string) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
-	RunPipelines(ctx context.Context, pipelineID string, environmentID string) (*models.PipelineRuns, error)
+	RunPipelines(ctx context.Context, pipelineID string, environmentID string, runJSON interface{}) (*models.PipelineRuns, error)
 	StopPipelines(ctx context.Context, pipelineID string, runID string, environmentID string) (*models.PipelineRuns, error)
 	CreateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
 	UpdateSecret(ctx context.Context, input *UpdateSecretsInput) (*models.Secrets, error)
@@ -368,6 +374,12 @@ type PipelineEdgesResolver interface {
 type PipelineNodesResolver interface {
 	Commands(ctx context.Context, obj *models.PipelineNodes) (interface{}, error)
 	Meta(ctx context.Context, obj *models.PipelineNodes) (interface{}, error)
+}
+type PipelineRunsResolver interface {
+	RunJSON(ctx context.Context, obj *models.PipelineRuns) (interface{}, error)
+}
+type PipelinesResolver interface {
+	JSON(ctx context.Context, obj *models.Pipelines) (interface{}, error)
 }
 type QueryResolver interface {
 	GetEnvironments(ctx context.Context) ([]*models.Environment, error)
@@ -391,6 +403,7 @@ type QueryResolver interface {
 	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
 	GetOnePreference(ctx context.Context, preference string) (*Preferences, error)
 	PipelineTasksRun(ctx context.Context, pipelineID string, runID string, environmentID string) ([]*WorkerTasks, error)
+	GetPipelineRuns(ctx context.Context, pipelineID string, environmentID string) ([]*models.PipelineRuns, error)
 	GetSecret(ctx context.Context, secret string, environmentID string) (*models.Secrets, error)
 	GetSecrets(ctx context.Context, environmentID string) ([]*models.Secrets, error)
 	LogoutUser(ctx context.Context) (*string, error)
@@ -729,7 +742,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RunPipelines(childComplexity, args["pipelineID"].(string), args["environmentID"].(string)), true
+		return e.complexity.Mutation.RunPipelines(childComplexity, args["pipelineID"].(string), args["environmentID"].(string), args["run_json"].(interface{})), true
 
 	case "Mutation.stopPipelines":
 		if e.complexity.Mutation.StopPipelines == nil {
@@ -1410,6 +1423,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PipelineRuns.RunID(childComplexity), true
 
+	case "PipelineRuns.run_json":
+		if e.complexity.PipelineRuns.RunJSON == nil {
+			break
+		}
+
+		return e.complexity.PipelineRuns.RunJSON(childComplexity), true
+
 	case "PipelineRuns.status":
 		if e.complexity.PipelineRuns.Status == nil {
 			break
@@ -1431,6 +1451,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Pipelines.Active(childComplexity), true
 
+	case "Pipelines.created_at":
+		if e.complexity.Pipelines.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.CreatedAt(childComplexity), true
+
 	case "Pipelines.current":
 		if e.complexity.Pipelines.Current == nil {
 			break
@@ -1451,6 +1478,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Pipelines.EnvironmentID(childComplexity), true
+
+	case "Pipelines.json":
+		if e.complexity.Pipelines.JSON == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.JSON(childComplexity), true
 
 	case "Pipelines.name":
 		if e.complexity.Pipelines.Name == nil {
@@ -1619,6 +1653,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetPipelineFlow(childComplexity, args["pipelineID"].(string), args["environmentID"].(string)), true
+
+	case "Query.getPipelineRuns":
+		if e.complexity.Query.GetPipelineRuns == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getPipelineRuns_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetPipelineRuns(childComplexity, args["pipelineID"].(string), args["environmentID"].(string)), true
 
 	case "Query.getPipelines":
 		if e.complexity.Query.GetPipelines == nil {
@@ -2645,6 +2691,8 @@ type Pipelines {
   online: Boolean!
   current: String!
   workerGroup: String!
+  json: Any!
+  created_at: Time!
 }
 
 # ----- Add/Update flow
@@ -2802,6 +2850,7 @@ extend type Mutation {
     pipeline_id: String!
     status: String!
     environment_id: String!
+    run_json: Any!
     created_at: Time!
     ended_at: Time
     updated_at: Time
@@ -2828,6 +2877,13 @@ extend type Query {
     + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
     pipelineTasksRun(pipelineID: String!, runID: String!, environmentID: String!): [WorkerTasks!]!
+
+    """
+    Get all runs for a specific pipeline.
+    + **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines
+    """
+    getPipelineRuns(pipelineID: String!, environmentID: String!): [PipelineRuns!]!
 }
 
 
@@ -2837,7 +2893,7 @@ extend type Mutation {
     + **Route**: Private
     + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
-    runPipelines(pipelineID: String!, environmentID: String!): PipelineRuns!
+    runPipelines(pipelineID: String!, environmentID: String!, run_json: Any!): PipelineRuns!
 
     """
     Stop pipeline flow.
@@ -3614,6 +3670,15 @@ func (ec *executionContext) field_Mutation_runPipelines_args(ctx context.Context
 		}
 	}
 	args["environmentID"] = arg1
+	var arg2 interface{}
+	if tmp, ok := rawArgs["run_json"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("run_json"))
+		arg2, err = ec.unmarshalNAny2interface(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["run_json"] = arg2
 	return args, nil
 }
 
@@ -4209,6 +4274,30 @@ func (ec *executionContext) field_Query_getOnePreference_args(ctx context.Contex
 }
 
 func (ec *executionContext) field_Query_getPipelineFlow_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getPipelineRuns_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -6135,7 +6224,7 @@ func (ec *executionContext) _Mutation_runPipelines(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RunPipelines(rctx, args["pipelineID"].(string), args["environmentID"].(string))
+		return ec.resolvers.Mutation().RunPipelines(rctx, args["pipelineID"].(string), args["environmentID"].(string), args["run_json"].(interface{}))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8762,6 +8851,41 @@ func (ec *executionContext) _PipelineRuns_environment_id(ctx context.Context, fi
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _PipelineRuns_run_json(ctx context.Context, field graphql.CollectedField, obj *models.PipelineRuns) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PipelineRuns",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PipelineRuns().RunJSON(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalNAny2interface(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _PipelineRuns_created_at(ctx context.Context, field graphql.CollectedField, obj *models.PipelineRuns) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -9139,6 +9263,76 @@ func (ec *executionContext) _Pipelines_workerGroup(ctx context.Context, field gr
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_json(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Pipelines().JSON(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalNAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_created_at(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Platform_id(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
@@ -10129,6 +10323,48 @@ func (ec *executionContext) _Query_pipelineTasksRun(ctx context.Context, field g
 	res := resTmp.([]*WorkerTasks)
 	fc.Result = res
 	return ec.marshalNWorkerTasks2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerTasksᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getPipelineRuns(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getPipelineRuns_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetPipelineRuns(rctx, args["pipelineID"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.PipelineRuns)
+	fc.Result = res
+	return ec.marshalNPipelineRuns2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRunsᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getSecret(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -14921,27 +15157,41 @@ func (ec *executionContext) _PipelineRuns(ctx context.Context, sel ast.Selection
 		case "run_id":
 			out.Values[i] = ec._PipelineRuns_run_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "pipeline_id":
 			out.Values[i] = ec._PipelineRuns_pipeline_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "status":
 			out.Values[i] = ec._PipelineRuns_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "environment_id":
 			out.Values[i] = ec._PipelineRuns_environment_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "run_json":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PipelineRuns_run_json(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "created_at":
 			out.Values[i] = ec._PipelineRuns_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "ended_at":
 			out.Values[i] = ec._PipelineRuns_ended_at(ctx, field, obj)
@@ -14972,42 +15222,61 @@ func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet
 		case "pipelineID":
 			out.Values[i] = ec._Pipelines_pipelineID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Pipelines_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "environmentID":
 			out.Values[i] = ec._Pipelines_environmentID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "description":
 			out.Values[i] = ec._Pipelines_description(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "active":
 			out.Values[i] = ec._Pipelines_active(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "online":
 			out.Values[i] = ec._Pipelines_online(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "current":
 			out.Values[i] = ec._Pipelines_current(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "workerGroup":
 			out.Values[i] = ec._Pipelines_workerGroup(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "json":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Pipelines_json(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "created_at":
+			out.Values[i] = ec._Pipelines_created_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -15338,6 +15607,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_pipelineTasksRun(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "getPipelineRuns":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getPipelineRuns(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -16305,6 +16588,50 @@ func (ec *executionContext) unmarshalNPipelineNodesMetaInput2ᚖdataplaneᚋmain
 
 func (ec *executionContext) marshalNPipelineRuns2dataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx context.Context, sel ast.SelectionSet, v models.PipelineRuns) graphql.Marshaler {
 	return ec._PipelineRuns(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPipelineRuns2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRunsᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PipelineRuns) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPipelineRuns2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNPipelineRuns2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx context.Context, sel ast.SelectionSet, v *models.PipelineRuns) graphql.Marshaler {

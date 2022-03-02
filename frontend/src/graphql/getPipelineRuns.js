@@ -4,22 +4,19 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    query getPipelines($environmentID: String!) {
-        getPipelines(environmentID: $environmentID) {
-            pipelineID
-            name
-            environmentID
-            description
-            active
-            online
-            current
-            workerGroup
-            json
+    query getPipelineRuns($pipelineID: String!, $environmentID: String!) {
+        getPipelineRuns(pipelineID: $pipelineID, environmentID: $environmentID) {
+            run_id
+            pipeline_id
+            status
+            environment_id
+            run_json
+            created_at
         }
     }
 `;
 
-export const useGetPipelines = () => {
+export const useGetPipelineRuns = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -34,7 +31,7 @@ export const useGetPipelines = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.getPipelines;
+            return res?.getPipelineRuns;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }
