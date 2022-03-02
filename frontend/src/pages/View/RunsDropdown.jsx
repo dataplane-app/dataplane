@@ -77,9 +77,9 @@ const useGetPipelineRunsHook = () => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': get flow', { variant: 'error' }));
         } else {
-            setRuns(response.sort((a, b) => a.created_at.localeCompare(b.created_at)));
+            setRuns(response);
             if (RunState.run_id.get() !== 0) {
-                setRun(response[response.length - 1]);
+                setRun(response[0]);
             }
         }
     };
