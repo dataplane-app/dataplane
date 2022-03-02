@@ -3,11 +3,13 @@ package runtask
 import (
 	"context"
 	"dataplane/mainapp/database/models"
+	modelmain "dataplane/mainapp/database/models"
 	"dataplane/workers/config"
 	"dataplane/workers/messageq"
 	"log"
 	"os"
 	"syscall"
+	"time"
 )
 
 type TaskResponse struct {
@@ -23,9 +25,26 @@ func ListenTasks() {
 
 		response := "ok"
 		message := "ok"
-		if os.Getenv("worker_env") != msg.EnvironmentID {
+		// msg.EnvironmentID
+		if config.EnvID != msg.EnvironmentID {
 			response = "failed"
 			message = "Incorrect environment"
+			if config.Debug == "true" {
+				log.Println("response", response, message)
+			}
+
+			TaskFinal := modelmain.WorkerTasks{
+				TaskID:        msg.TaskID,
+				EnvironmentID: config.EnvID,
+				RunID:         msg.RunID,
+				WorkerID:      config.WorkerID,
+				NodeID:        msg.NodeID,
+				PipelineID:    msg.PipelineID,
+				Status:        "Fail",
+				Reason:        message,
+				EndDT:         time.Now().UTC(),
+			}
+			UpdateWorkerTasks(TaskFinal)
 		}
 
 		x := TaskResponse{R: response, M: message}
@@ -46,7 +65,7 @@ func ListenTasks() {
 			go worker(ctx, msg)
 		}
 	})
-	if os.Getenv("debug") == "true" {
+	if config.Debug == "true" {
 		log.Println("Listening for tasks on subject:", "task."+os.Getenv("worker_group")+"."+config.WorkerID)
 	}
 

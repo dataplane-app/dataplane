@@ -1,0 +1,17 @@
+    type LogsWorkers {
+	created_at: Time!
+	environment_id"`
+	category"`
+	run_id"`
+	task_id"`
+	Log           string    `json:"log"`
+	LogType       string    `json:"log_type"` //info, error, debug
+	// ErrorMsg      string    `json:"error_message"`
+}
+    
+    """
+    Get logs for node.
+    + **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    getNodeLogs(runID: String!, nodeID: String!, environmentID: String!): PipelineRuns!

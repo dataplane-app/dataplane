@@ -6,6 +6,7 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/utilities"
+	"dataplane/workers/config"
 	"dataplane/workers/runtask"
 	"encoding/json"
 	"log"
@@ -90,7 +91,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 			// for i := 0; i < maxRetiresAllowed; i++ {
 
 			if os.Getenv("debug") == "true" {
-				log.Println("Worker LB:", onlineWorkers[0].LB)
+				log.Println("Worker LB:", onlineWorkers[0].LB, onlineWorkers)
 			}
 
 			switch onlineWorkers[0].LB {
@@ -110,7 +111,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 			tasksend := models.WorkerTaskSend{
 				TaskID:        taskid,
 				CreatedAt:     time.Now().UTC(),
-				EnvironmentID: onlineWorkers[0].Env,
+				EnvironmentID: envID,
 				RunID:         runid,
 				PipelineID:    pipelineID,
 				NodeID:        nodeID,
@@ -120,6 +121,9 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 			}
 
 			var response runtask.TaskResponse
+
+			// log.Println("Task channel: ", "task."+workerGroup+"."+loadbalanceNext)
+
 			_, errnats := messageq.MsgReply("task."+workerGroup+"."+loadbalanceNext, tasksend, &response)
 
 			if errnats != nil {
@@ -131,15 +135,22 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 				markFail = false
 				break
 			}
+
+			if response.R != "ok" {
+				markFail = true
+				break
+			}
 			// } else {
 			// 	log.Println(loadbalanceNext + " not online, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
 			// }
-			if os.Getenv("debug") == "true" {
-				log.Println("Send to worker", response.R)
+			if config.Debug == "true" {
+				log.Println("Send to worker", response.R, response.M)
 			}
 		}
 		time.Sleep(2 * time.Second)
 	}
+
+	// log.Println("Mark as fail:", markFail)
 
 	// If task not successfully sent, mark as failed
 	if markFail {

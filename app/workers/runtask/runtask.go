@@ -6,11 +6,9 @@ import (
 	modelmain "dataplane/mainapp/database/models"
 	"dataplane/workers/config"
 	"dataplane/workers/database"
-	"dataplane/workers/database/models"
 	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"syscall"
@@ -62,7 +60,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	TaskUpdate := modelmain.WorkerTasks{
 		TaskID:        msg.TaskID,
 		CreatedAt:     time.Now().UTC(),
-		EnvironmentID: config.EnvID,
+		EnvironmentID: msg.EnvironmentID,
 		RunID:         msg.RunID,
 		NodeID:        msg.NodeID,
 		PipelineID:    msg.PipelineID,
@@ -94,7 +92,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			break
 		}
 
-		log.Println("command:", v)
+		// log.Println("command:", v)
 
 		cmd := exec.Command("/bin/bash", "-c", v)
 
@@ -122,10 +120,11 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			for scanner.Scan() {
 				line := config.Secrets.Replace(scanner.Text())
 
-				logmsg := models.LogsWorkers{
+				logmsg := modelmain.LogsWorkers{
 					CreatedAt:     time.Now().UTC(),
-					EnvironmentID: os.Getenv("worker_env"),
+					EnvironmentID: msg.EnvironmentID,
 					RunID:         msg.RunID,
+					NodeID:        msg.NodeID,
 					TaskID:        msg.TaskID,
 					Category:      "task",
 					Log:           line,
@@ -165,10 +164,11 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			for scannerErr.Scan() {
 				line := config.Secrets.Replace(scannerErr.Text())
 
-				logmsg := models.LogsWorkers{
+				logmsg := modelmain.LogsWorkers{
 					CreatedAt:     time.Now().UTC(),
-					EnvironmentID: os.Getenv("worker_env"),
+					EnvironmentID: msg.EnvironmentID,
 					RunID:         msg.RunID,
+					NodeID:        msg.NodeID,
 					TaskID:        msg.TaskID,
 					Category:      "task",
 					Log:           line,
