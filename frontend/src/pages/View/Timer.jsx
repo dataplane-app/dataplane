@@ -125,7 +125,6 @@ export const useRunPipelinesHook = () => {
     const runPipelines = useRunPipelines();
 
     const RunState = useGlobalRunState();
-    const FlowState = useGlobalFlowState();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -134,7 +133,6 @@ export const useRunPipelinesHook = () => {
         const response = await runPipelines({
             pipelineID: pipelineId,
             environmentID,
-            run_json: FlowState.elements.attach(Downgraded).get(),
         });
 
         if (response.r === 'error') {
