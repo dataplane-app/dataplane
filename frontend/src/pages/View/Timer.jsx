@@ -68,6 +68,7 @@ export default function Timer({ environmentID }) {
         return () => {
             clearInterval(secTimer);
             setElapsed(0);
+            setStart();
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
