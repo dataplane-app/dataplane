@@ -51,7 +51,6 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
                     <Grid container alignItems="flex-start" flexDirection="column" justifyContent="center">
                         <Button
                             variant="text"
-                            disabled={row.value.json.length === 0}
                             onClick={() => {
                                 history.push({ pathname: `/pipelines/view/${row.value.pipelineID}`, state: row.value });
                                 FlowState.isRunning.set(true);
