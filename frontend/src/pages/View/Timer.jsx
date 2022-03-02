@@ -21,6 +21,8 @@ export default function Timer({ environmentID }) {
 
     // Local state
     const [elapsed, setElapsed] = useState();
+    const [isRunning, setIsRunning] = useState(false);
+    const [start, setStart] = useState();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -51,29 +53,49 @@ export default function Timer({ environmentID }) {
 
     // Updates timer every second
     useEffect(() => {
+        if (!start) return;
         let secTimer;
-        if (FlowState.isRunning.get()) {
+        if (isRunning) {
             secTimer = setInterval(() => {
-                setElapsed(displayTimer(RunState.start_dt.get()));
-            }, 1000);
+                setElapsed(displayTimer(start));
+            }, 500);
         }
 
-        if (!FlowState.isRunning.get()) {
+        if (!isRunning) {
             clearInterval(secTimer);
         }
 
         return () => {
             clearInterval(secTimer);
             setElapsed(0);
+            setStart();
+            setIsRunning(false);
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isRunning.get()]);
+    }, [start]);
+
+    // Set isRunning state and start state for timer
+    useEffect(() => {
+        if (Object.values(RunState.get())?.some((a) => a?.status === 'Queue')) {
+            setStart(
+                Object.values(RunState.get())
+                    .map((a) => a?.start_dt)
+                    .sort((a, b) => a?.localeCompare(b))[0]
+            );
+            setIsRunning(true);
+        } else {
+            setIsRunning(false);
+            setStart();
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [RunState.get()]);
 
     return (
         <>
             <Grid item>
-                {FlowState.isRunning.get() ? (
+                {isRunning ? (
                     <Box display="flex" alignItems="center">
                         <Button
                             onClick={handleTimerStop}
@@ -84,7 +106,7 @@ export default function Timer({ environmentID }) {
                         </Button>
 
                         <Typography variant="h3" ml={2}>
-                            {elapsed ? elapsed : '00:00:00'}
+                            {elapsed ? elapsed : isRunning ? '' : '00:00:00'}
                         </Typography>
                     </Box>
                 ) : (
@@ -174,7 +196,7 @@ export const usePipelineTasksRunHook = () => {
         } else {
             response.map((a) => RunState[a.node_id].set({ status: a.status }));
             RunState.start_dt.set(response.map((a) => a.start_dt)[0]);
-            if (response.every((a) => a.end_dt)) {
+            if (response.every((a) => a.status === 'Fail' || a.status === 'Success')) {
                 FlowState.isRunning.set(false);
                 RunState.run_id.set(response[0].run_id);
             }
