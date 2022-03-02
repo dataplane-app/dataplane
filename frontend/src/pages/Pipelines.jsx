@@ -87,7 +87,7 @@ const Pipelines = () => {
                         </Button>
                     </Grid>
 
-                    <PipelineTable data={pipelines} filter={filter} setPipelineCount={setPipelineCount} />
+                    <PipelineTable data={pipelines} filter={filter} setPipelineCount={setPipelineCount} environmentID={Environment.id.get()} />
                 </Grid>
             </Box>
 

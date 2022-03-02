@@ -6,13 +6,21 @@ import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
 import PipelineItemTable from '../../MoreInfoContent/PipelineTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenuPipeline from '../../MoreInfoMenuPipeline';
+import { useRunPipelinesHook } from '../../../pages/View/Timer';
+import { useGlobalFlowState } from '../../../pages/Flow';
 
-const PipelineTable = ({ data, filter, setPipelineCount }) => {
+const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
     // React router
     const history = useHistory();
 
+    // Global state
+    const FlowState = useGlobalFlowState();
+
     // Table item states
     const [isOpenManage, setIsOpenManage] = useState(false);
+
+    // GraphQL hooks
+    const runPipelines = useRunPipelinesHook();
 
     useEffect(() => {
         setGlobalFilter(filter);
@@ -22,6 +30,45 @@ const PipelineTable = ({ data, filter, setPipelineCount }) => {
 
     const columns = useMemo(
         () => [
+            {
+                Header: 'Manage',
+                accessor: (row) => [row.pipelineID, row.name],
+                Cell: (row) => (
+                    <Grid item sx={{ flex: 1, ml: -1 }} display="flex" alignItems="center" justifyContent="center">
+                        <MoreInfoMenuPipeline>
+                            <PipelineItemTable id={row.value[0]} name={row.value[1]} handleOpenManage={() => setIsOpenManage(!isOpenManage)} />
+                        </MoreInfoMenuPipeline>
+                    </Grid>
+                ),
+            },
+            {
+                Header: 'Run',
+                accessor: (row) => row,
+                Cell: (row) => (
+                    <Grid container alignItems="flex-start" flexDirection="column" justifyContent="center">
+                        <Button
+                            variant="text"
+                            onClick={() => {
+                                history.push({ pathname: `/pipelines/view/${row.value.pipelineID}`, state: row.value });
+                                runPipelines(environmentID, row.value.pipelineID);
+                                FlowState.isRunning.set(true);
+                            }}>
+                            Run
+                        </Button>
+                    </Grid>
+                ),
+            },
+            {
+                accessor: 'trigger',
+                Cell: (row) => (
+                    <Box display="flex" alignItems="center">
+                        <Box component={FontAwesomeIcon} fontSize={19} sx={{ color: 'secondary.main' }} icon={faPlayCircle} mr={1.5} />
+                        <Typography color="secondary.main" variant="body2">
+                            Play trigger
+                        </Typography>
+                    </Box>
+                ),
+            },
             {
                 accessor: 'online',
                 Cell: (row) => {
@@ -35,36 +82,10 @@ const PipelineTable = ({ data, filter, setPipelineCount }) => {
                     );
                 },
             },
-            {
-                Header: 'Manage',
-                accessor: (row) => [row.pipelineID, row.name],
-                Cell: (row) => (
-                    <Grid item sx={{ flex: 1 }} display="flex" alignItems="center" justifyContent="center">
-                        <MoreInfoMenuPipeline>
-                            <PipelineItemTable id={row.value[0]} name={row.value[1]} handleOpenManage={() => setIsOpenManage(!isOpenManage)} />
-                        </MoreInfoMenuPipeline>
-                    </Grid>
-                ),
-            },
-            {
-                accessor: 'run',
-                Cell: (row) => (
-                    <Grid container alignItems="flex-start" flexDirection="column" justifyContent="center">
-                        <Button variant="text">Run</Button>
-                    </Grid>
-                ),
-            },
-            {
-                accessor: 'trigger',
-                Cell: (row) => (
-                    <Box display="flex" alignItems="center">
-                        <Box component={FontAwesomeIcon} fontSize={19} sx={{ color: 'secondary.main' }} icon={faPlayCircle} mr={1.5} />
-                        <Typography color="secondary.main">Play trigger</Typography>
-                    </Box>
-                ),
-            },
         ],
-        []
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [environmentID]
     );
 
     // Use the state and functions returned from useTable to build your UI

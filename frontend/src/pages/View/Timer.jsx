@@ -19,30 +19,34 @@ export default function Timer({ environmentID }) {
     const getPipelineTasksRun = usePipelineTasksRunHook();
 
     // Local state
-    const [runID, setRunID] = useState('');
     const [elapsed, setElapsed] = useState();
 
+    // URI parameter
+    const { pipelineId } = useParams();
+
     // Instantiate websocket connection
-    useWebSocket(environmentID, runID);
+    useWebSocket(environmentID, RunState.run_id.get());
 
     // Get current runs status
     useEffect(() => {
-        if (FlowState.isRunning.get() && runID !== '') {
-            getPipelineTasksRun(runID, environmentID);
+        if (FlowState.isRunning.get() && RunState.run_id.get() !== '') {
+            getPipelineTasksRun(RunState.run_id.get(), environmentID);
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isRunning.get(), runID]);
+    }, [FlowState.isRunning.get(), RunState.run_id.get()]);
 
     const handleTimerStart = () => {
         FlowState.isRunning.set(true);
-        runPipelines(environmentID, setRunID);
+        RunState.start_dt.set(undefined);
+        RunState.run_id.set(undefined);
+        runPipelines(environmentID, pipelineId);
     };
 
     const handleTimerStop = () => {
         FlowState.isRunning.set(false);
-        RunState.start_dt.set();
-        stopPipelines(environmentID, runID);
+        RunState.start_dt.set(undefined);
+        stopPipelines(environmentID, RunState.run_id.get());
     };
 
     // Updates timer every second
@@ -54,51 +58,56 @@ export default function Timer({ environmentID }) {
             }, 1000);
         }
 
+        if (!FlowState.isRunning.get()) {
+            clearInterval(secTimer);
+        }
+
         return () => {
             clearInterval(secTimer);
             setElapsed(0);
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.start_dt.get()]);
+    }, [FlowState.isRunning.get()]);
 
     return (
-        <Grid item flex={0.6}>
-            {FlowState.isRunning.get() ? (
-                <Box display="flex" alignItems="center">
-                    <Button
-                        onClick={handleTimerStop}
-                        variant="outlined"
-                        color="error"
-                        sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                        Stop
-                    </Button>
+        <>
+            <Grid item>
+                {FlowState.isRunning.get() ? (
+                    <Box display="flex" alignItems="center">
+                        <Button
+                            onClick={handleTimerStop}
+                            variant="outlined"
+                            color="error"
+                            sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                            Stop
+                        </Button>
 
-                    <Typography variant="h3" ml={2}>
-                        {elapsed ? elapsed : '00:00:00'}
-                    </Typography>
-                </Box>
-            ) : (
-                <Button onClick={handleTimerStart} variant="outlined" sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                    Run
-                </Button>
-            )}
-        </Grid>
+                        <Typography variant="h3" ml={2}>
+                            {elapsed ? elapsed : '00:00:00'}
+                        </Typography>
+                    </Box>
+                ) : (
+                    <Button onClick={handleTimerStart} variant="outlined" sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                        Run
+                    </Button>
+                )}
+            </Grid>
+        </>
     );
 }
 
 // Custom GraphQL hooks
-const useRunPipelinesHook = () => {
+export const useRunPipelinesHook = () => {
     // GraphQL hook
     const runPipelines = useRunPipelines();
 
-    // URI parameter
-    const { pipelineId } = useParams();
+    const RunState = useGlobalRunState();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Run pipeline flow
-    return async (environmentID, setRunID) => {
+    return async (environmentID, pipelineId) => {
         const response = await runPipelines({ pipelineID: pipelineId, environmentID });
 
         if (response.r === 'error') {
@@ -107,7 +116,7 @@ const useRunPipelinesHook = () => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': run flow', { variant: 'error' }));
         } else {
-            setRunID(response.run_id);
+            RunState.run_id.set(response.run_id);
         }
     };
 };
@@ -142,12 +151,13 @@ export const usePipelineTasksRunHook = () => {
     const { pipelineId } = useParams();
 
     const RunState = useGlobalRunState();
+    const FlowState = useGlobalFlowState();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Update pipeline flow
     return async (runID, environmentID) => {
-        // Prepare input to match the structure in the backend
+        if (!runID) return;
 
         const response = await getPipelineTasksRun({ pipelineID: pipelineId, runID, environmentID });
 
@@ -158,8 +168,11 @@ export const usePipelineTasksRunHook = () => {
             response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
         } else {
             response.map((a) => RunState[a.node_id].set({ status: a.status }));
-            RunState.run_id.set(response.map((a) => a.run_id)[0]);
             RunState.start_dt.set(response.map((a) => a.start_dt)[0]);
+            if (response.every((a) => a.end_dt)) {
+                FlowState.isRunning.set(false);
+                RunState.run_id.set(response[0].run_id);
+            }
         }
     };
 };

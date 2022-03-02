@@ -61,7 +61,6 @@ const View = () => {
         // const prevElements = FlowState.elements.get();
         // setElements([...prevElements]);
 
-        getPipelineFlow(Environment.id.get(), setElements);
         setIsLoadingFlow(false);
 
         if (!pipeline || Object.keys(pipeline).length === 0) {
@@ -130,37 +129,21 @@ const View = () => {
         <Box className="page" height="calc(100vh - 100px)" minHeight="min-content">
             <Box ref={offsetRef}>
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
-                    <Box display="flex">
+                    <Box display="flex" alignItems="center">
                         <Typography component="h2" variant="h2" color="text.primary">
                             Pipelines {'>'} {pipeline?.name}
                         </Typography>
 
-                        <Grid display="flex" alignItems="flex-start">
-                            <Box display="flex" alignItems="center" ml={4} mr={4}>
+                        <Grid display="flex">
+                            <Box display="flex" alignItems="center" ml={4} mr={2}>
                                 <Box height={16} width={16} backgroundColor={pipeline?.online ? 'status.pipelineOnlineText' : 'error.main'} borderRadius="100%"></Box>
                                 <Typography ml={1} fontSize={16} color={pipeline?.online ? 'status.pipelineOnlineText' : 'error.main'}>
                                     {pipeline?.online ? 'Online' : 'Offline'}
                                 </Typography>
                             </Box>
 
-                            <Box mr={3} textAlign="right">
-                                <Typography variant="h3">{LOGS_MOCK.last_run}</Typography>
-                                <Typography fontSize={17}>Last run</Typography>
-                            </Box>
-
-                            <Box ml={3} mr={4.5} textAlign="right">
-                                <Typography variant="h3">{LOGS_MOCK.version}</Typography>
-                                <Typography fontSize={17}>Version</Typography>
-                            </Box>
-
-                            <Button variant="contained" onClick={handleGoToEditorPage}>
-                                Edit
-                            </Button>
-                            <Button variant="contained" sx={{ ml: 2.4 }} onClick={() => setIsOpenPublishDrawer(true)}>
-                                Publish
-                            </Button>
-                            <Box sx={{ position: { xxs: 'relative', xl: 'absolute' }, ml: { xxs: 2, xl: 0 }, top: '0', right: '0' }}>
-                                <MoreInfoMenu>
+                            <Box sx={{ top: '0', right: '0' }}>
+                                <MoreInfoMenu iconHorizontal>
                                     <RemoveLogsPageItem />
                                 </MoreInfoMenu>
                             </Box>
@@ -174,6 +157,10 @@ const View = () => {
 
                     {/* Runs dropdown */}
                     <RunsDropdown />
+
+                    <Button variant="contained" onClick={handleGoToEditorPage} sx={{ ml: 2, mr: 2 }}>
+                        Edit
+                    </Button>
 
                     {/* Timer */}
                     <Timer environmentID={Environment.id.get()} />

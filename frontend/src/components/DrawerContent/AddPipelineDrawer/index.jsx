@@ -105,7 +105,6 @@ const useAddPipeline_ = (environmentID) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message + ': add pipeline', { variant: 'error' }));
         } else {
-            enqueueSnackbar('Success', { variant: 'success' });
             history.push({ pathname: `/pipelines/flow/${response}`, state: data });
         }
     };
