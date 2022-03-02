@@ -150,7 +150,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 		time.Sleep(2 * time.Second)
 	}
 
-	log.Println("Mark as fail:", markFail)
+	// log.Println("Mark as fail:", markFail)
 
 	// If task not successfully sent, mark as failed
 	if markFail {
