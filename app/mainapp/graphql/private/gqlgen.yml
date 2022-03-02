@@ -39,6 +39,8 @@ models:
    model: dataplane/mainapp/database/models.PipelineNodes
  PipelineRuns:
    model: dataplane/mainapp/database/models.PipelineRuns
+ LogsWorkers:
+   model: dataplane/mainapp/database/models.LogsWorkers
 
 resolver:
   layout: follow-schema

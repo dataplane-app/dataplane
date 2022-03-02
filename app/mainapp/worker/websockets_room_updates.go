@@ -48,6 +48,15 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 		// fmt.Println("one")
 		room = "pipeline-run-updates"
 		subjectmsg = "taskupdate." + environmentID + "." + id
+
+	case "workerlogs." + id:
+		room = "worker-logs"
+		subjectmsg = "workerlogs." + id
+
+		// if strings.Contains(id, "*") {
+		// 	log.Println("Wildcards not allowed")
+		// 	return
+		// }
 	default:
 		log.Println("subject not found")
 		return

@@ -135,7 +135,13 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 				// if err != nil {
 				// 	logging.PrintSecretsRedact(err)
 				// }
-				messageq.MsgSend("workertask."+msg.TaskID, logmsg)
+				sendmsg := modelmain.LogsSend{
+					CreatedAt: logmsg.CreatedAt,
+					Log:       line,
+					LogType:   "info",
+				}
+
+				messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
 				database.DBConn.Create(&logmsg)
 				if os.Getenv("debug") == "true" {
 					clog.Info(line)
@@ -179,9 +185,15 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 				// if err != nil {
 				// 	logging.PrintSecretsRedact(err)
 				// }
-				messageq.MsgSend("workertask."+msg.TaskID, logmsg)
+				sendmsg := modelmain.LogsSend{
+					CreatedAt: logmsg.CreatedAt,
+					Log:       line,
+					LogType:   "info",
+				}
+
+				messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
 				database.DBConn.Create(&logmsg)
-				if os.Getenv("debug") == "true" {
+				if config.Debug == "true" {
 					clog.Error(line)
 				}
 			}

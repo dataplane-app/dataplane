@@ -41,3 +41,8 @@ FROM pipeline_runs
 where ended_at >'0001-01-01'
 order by created_at desc;
 ```
+
+### Long running bash test for parallel runs
+```shell
+for((i=1;i<=10; i+=1)); do echo "2nd run $i times"; sleep 0.5; done
+```

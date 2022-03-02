@@ -27,6 +27,15 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	var triggerData = make(map[string]*models.WorkerTasks)
 
 	// Retrieve pipeline details
+	pipelinedata := models.Pipelines{}
+	err := database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).First(&pipelinedata).Error
+	if err != nil {
+
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return models.PipelineRuns{}, err
+	}
 
 	// Create a run
 	run := models.PipelineRuns{
@@ -35,9 +44,10 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		Status:        "Running",
 		EnvironmentID: environmentID,
 		CreatedAt:     time.Now().UTC(),
+		Json:          pipelinedata.Json,
 	}
 
-	err := database.DBConn.Create(&run).Error
+	err = database.DBConn.Create(&run).Error
 	if err != nil {
 
 		if config.Debug == "true" {
@@ -62,13 +72,6 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		edges <- edgesdata
 	}()
 
-	pipeline := make(chan models.Pipelines)
-	pipelinedata := models.Pipelines{}
-	go func() {
-		database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).First(&pipelinedata)
-		pipeline <- pipelinedata
-	}()
-
 	// Start at trigger
 	RunID := run.RunID
 
@@ -77,7 +80,6 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	// Return go routines
 	nodesdata = <-nodes
 	edgesdata = <-edges
-	pipelinedata = <-pipeline
 
 	// Map children
 	for _, s := range edgesdata {

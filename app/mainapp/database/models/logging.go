@@ -53,3 +53,9 @@ type LogsWorkers struct {
 	Log           string    `json:"log"`
 	LogType       string    `json:"log_type"` //info, error, debug
 }
+
+type LogsSend struct {
+	CreatedAt time.Time `json:"created_at"`
+	Log       string    `json:"log"`
+	LogType   string    `json:"log_type"` //info, error, debug
+}
