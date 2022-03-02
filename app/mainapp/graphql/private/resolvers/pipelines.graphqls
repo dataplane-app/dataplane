@@ -9,6 +9,8 @@ type Pipelines {
   online: Boolean!
   current: String!
   workerGroup: String!
+  json: Any!
+  created_at: Time!
 }
 
 # ----- Add/Update flow

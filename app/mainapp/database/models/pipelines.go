@@ -87,7 +87,7 @@ type PipelineRuns struct {
 	Status        string         `json:"status"`
 	Reason        string         `json:"reason"`
 	EnvironmentID string         `json:"environment_id"`
-	Json          datatypes.JSON `json:"json"`
+	RunJSON       datatypes.JSON `json:"run_json"`
 	CreatedAt     time.Time      `json:"created_at"`
 	EndedAt       time.Time      `json:"ended_at"`
 	UpdatedAt     *time.Time     `json:"updated_at"`
