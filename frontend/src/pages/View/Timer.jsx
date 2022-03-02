@@ -174,7 +174,7 @@ export const usePipelineTasksRunHook = () => {
         } else {
             response.map((a) => RunState[a.node_id].set({ status: a.status }));
             RunState.start_dt.set(response.map((a) => a.start_dt)[0]);
-            if (response.every((a) => a.end_dt)) {
+            if (response.every((a) => a.status === 'Fail' || a.status === 'Success')) {
                 FlowState.isRunning.set(false);
                 RunState.run_id.set(response[0].run_id);
             }
