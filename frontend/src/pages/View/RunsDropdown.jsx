@@ -35,7 +35,7 @@ export default function RunsDropdown({ environmentID, setElements }) {
 
     return (
         <Grid item alignItems="center" display="flex" width={520}>
-            {selectedRun ? (
+            {selectedRun || runs.length === 0 ? (
                 <Autocomplete
                     id="run_autocomplete"
                     onChange={(event, newValue) => {
@@ -106,7 +106,6 @@ export const usePipelineTasksRunHook = () => {
         } else {
             // RunState.set({});
             response.map((a) => RunState[a.node_id].set({ status: a.status, end_dt: a.end_dt, start_dt: a.start_dt }));
-            // RunState.start_dt.set(response.map((a) => a.start_dt)[0]);
         }
     };
 };
