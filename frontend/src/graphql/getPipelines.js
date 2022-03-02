@@ -14,7 +14,6 @@ const query = gql`
             online
             current
             workerGroup
-            json
         }
     }
 `;

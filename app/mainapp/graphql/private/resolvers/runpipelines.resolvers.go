@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -13,13 +13,11 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/pipelines"
 	"dataplane/mainapp/worker"
-	"encoding/json"
 	"errors"
-	"log"
 	"time"
 )
 
-func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, environmentID string, runJSON interface{}) (*models.PipelineRuns, error) {
+func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, environmentID string) (*models.PipelineRuns, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -37,13 +35,7 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 		return &models.PipelineRuns{}, errors.New("requires permissions")
 	}
 
-	JSON, err := json.Marshal(runJSON)
-	if err != nil {
-		logging.PrintSecretsRedact(err)
-	}
-	log.Println(string(JSON), "json: !!!!!!!!!!!!!!!!!!")
-
-	resp, err := pipelines.RunPipeline(pipelineID, environmentID, JSON)
+	resp, err := pipelines.RunPipeline(pipelineID, environmentID)
 	if err != nil {
 		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
