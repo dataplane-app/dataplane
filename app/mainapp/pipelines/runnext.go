@@ -33,6 +33,7 @@ func RunNextPipeline() {
 		var uniquedependenciesarray []string
 		destinationNodes := []*models.WorkerTasks{}
 		dependencyCheck := []*models.WorkerTasks{}
+		completeCheck := []*models.WorkerTasks{}
 
 		json.Unmarshal(currentNode.Destination, &destinations)
 		// log.Println(currentNode.Destination, destinations)
@@ -53,32 +54,40 @@ func RunNextPipeline() {
 
 			// log.Println("Graph successfully run")
 
-			run := models.PipelineRuns{
-				RunID:   msg.RunID,
-				Status:  "Success",
-				EndedAt: time.Now().UTC(),
+			/* Check that all nodes are completed */
+			err = database.DBConn.Select("node_id", "status").Where("pipeline_id =? and run_id=? and status<>?", msg.PipelineID, msg.RunID, "Success").Find(&completeCheck).Error
+			if err != nil {
+				logging.PrintSecretsRedact(err)
 			}
 
-			err2 := database.DBConn.Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "run_id"}},
-				DoUpdates: clause.AssignmentColumns([]string{"ended_at", "status"}),
-			}).Create(&run)
-			if err2.Error != nil {
-				logging.PrintSecretsRedact(err2.Error.Error())
-			}
-
-			// send message that trigger node has run - for websockets
-			errnat := messageq.MsgSend("taskupdate."+msg.EnvironmentID+"."+msg.RunID, map[string]interface{}{
-				"MSG":        "pipeline_complete",
-				"run_id":     msg.RunID,
-				"started_at": run.CreatedAt,
-				"status":     "Success",
-				"ended_at":   run.EndedAt})
-			if errnat != nil {
-				if config.Debug == "true" {
-					logging.PrintSecretsRedact(errnat)
+			if len(completeCheck) == 0 {
+				run := models.PipelineRuns{
+					RunID:   msg.RunID,
+					Status:  "Success",
+					EndedAt: time.Now().UTC(),
 				}
 
+				err2 := database.DBConn.Clauses(clause.OnConflict{
+					Columns:   []clause.Column{{Name: "run_id"}},
+					DoUpdates: clause.AssignmentColumns([]string{"ended_at", "status"}),
+				}).Create(&run)
+				if err2.Error != nil {
+					logging.PrintSecretsRedact(err2.Error.Error())
+				}
+
+				// send message that trigger node has run - for websockets
+				errnat := messageq.MsgSend("taskupdate."+msg.EnvironmentID+"."+msg.RunID, map[string]interface{}{
+					"MSG":        "pipeline_complete",
+					"run_id":     msg.RunID,
+					"started_at": run.CreatedAt,
+					"status":     "Success",
+					"ended_at":   run.EndedAt})
+				if errnat != nil {
+					if config.Debug == "true" {
+						logging.PrintSecretsRedact(errnat)
+					}
+
+				}
 			}
 
 		}
