@@ -51,12 +51,6 @@ func main() {
 		log.Println("Main app listening on 9000")
 		app.Listen("0.0.0.0:9000")
 	}()
-
-	appworker := workerroutes.Setup("9005")
-	go func() {
-		log.Println("Worker listening on 9005")
-		appworker.Listen("0.0.0.0:9005")
-	}()
 	// go MockingBird()
 	// mb.Start()
 
@@ -234,6 +228,13 @@ func main() {
 	}
 
 	// assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create user 200 status code")
+
+	log.Println("Stand up worker 👷")
+	appworker := workerroutes.Setup("9005")
+	go func() {
+		log.Println("Worker listening on 9005")
+		appworker.Listen("0.0.0.0:9005")
+	}()
 
 	// ----- create general user
 	log.Println("Main hello 😃")
