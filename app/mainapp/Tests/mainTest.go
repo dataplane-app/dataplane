@@ -6,6 +6,7 @@ import (
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/routes"
+	workerroutes "dataplane/workers/routes"
 	"log"
 	"net/http"
 	"os"
@@ -47,8 +48,14 @@ func main() {
 	// testutils.App = routes.Setup()
 	app := routes.Setup("9000")
 	go func() {
-		log.Println("Listening on 9000")
+		log.Println("Main app listening on 9000")
 		app.Listen("0.0.0.0:9000")
+	}()
+
+	appworker := workerroutes.Setup("9005")
+	go func() {
+		log.Println("Worker listening on 9005")
+		appworker.Listen("0.0.0.0:9005")
 	}()
 	// go MockingBird()
 	// mb.Start()
