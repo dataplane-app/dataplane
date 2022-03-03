@@ -5,6 +5,7 @@ import (
 	"dataplane/mainapp/messageq"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/gofiber/websocket/v2"
 	"github.com/nats-io/nats.go"
@@ -53,10 +54,10 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 		room = "worker-logs"
 		subjectmsg = "workerlogs." + id
 
-		// if strings.Contains(id, "*") {
-		// 	log.Println("Wildcards not allowed")
-		// 	return
-		// }
+		if strings.Contains(id, "*") {
+			log.Println("Wildcards not allowed")
+			return
+		}
 	default:
 		log.Println("subject not found")
 		return
