@@ -12,7 +12,6 @@ import (
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"errors"
-	"log"
 	"os"
 	"strings"
 
@@ -144,8 +143,6 @@ func (r *mutationResolver) UpdateChangePassword(ctx context.Context, input *priv
 	}
 
 	password, err := auth.Encrypt(input.Password)
-
-	log.Println("pwd:", input.UserID, "++"+input.Password+"++", password)
 
 	if err != nil {
 		return nil, errors.New("Password hash failed.")
