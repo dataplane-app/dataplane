@@ -34,7 +34,6 @@ jobs:
       nats:
         image: nats:2.7.0-scratch
         options: >-
-          --port 4222
           --http_port 8222
         ports:
           - 4222:4222
