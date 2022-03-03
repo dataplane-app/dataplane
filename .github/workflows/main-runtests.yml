@@ -86,7 +86,7 @@ jobs:
           worker_group: "python_1"
           worker_type: "vm"
           worker_lb: "roundrobin"
-          worker_env: "Staging_test"
+          worker_env: "Development"
           dp_cleantasks_days: "60"
           dp_removelogs_days: "60"
         run: cd app/mainapp && time go run Tests/mainTest.go
