@@ -180,6 +180,9 @@ const View = () => {
                             onMoveEnd={onMoveEnd}
                             nodeTypes={nodeTypes}
                             elements={elements}
+                            nodesDraggable={false}
+                            nodesConnectable={false}
+                            preventScrolling={false}
                             onLoad={onLoad}
                             onConnect={onConnect}
                             onConnectStart={onConnectStart}
