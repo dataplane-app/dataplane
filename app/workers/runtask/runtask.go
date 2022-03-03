@@ -95,6 +95,11 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		// log.Println("command:", v)
 
 		cmd := exec.Command("/bin/bash", "-c", v)
+		cmd.Env = os.Environ()
+		cmd.Env = append(cmd.Env, "DP_PIPELINEID="+msg.PipelineID)
+		cmd.Env = append(cmd.Env, "DP_NODEID="+msg.NodeID)
+		cmd.Env = append(cmd.Env, "DP_RUNID="+msg.RunID)
+		cmd.Env = append(cmd.Env, "DP_TASKID="+msg.TaskID)
 
 		// Request the OS to assign process group to the new process, to which all its children will belong
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
