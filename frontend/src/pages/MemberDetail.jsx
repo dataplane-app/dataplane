@@ -1,7 +1,7 @@
 import { Box, Grid, Typography, Button, TextField, Drawer, Autocomplete } from '@mui/material';
 import { useEffect, useState, useContext } from 'react';
 import CustomChip from '../components/CustomChip';
-import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
+import ChangeMyPasswordDrawer from '../components/DrawerContent/ChangeMyPasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import { useHistory } from 'react-router-dom';
 import { useMe } from '../graphql/me';
@@ -268,7 +268,7 @@ const MemberDetail = () => {
             </Box>
 
             <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)}>
-                <ChangePasswordDrawer handleClose={() => setIsOpenPassword(false)} />
+                <ChangeMyPasswordDrawer handleClose={() => setIsOpenPassword(false)} />
             </Drawer>
 
             <Drawer anchor="right" open={isOpenDeleteUser} onClose={() => setIsOpenDeleteUser(!isOpenDeleteUser)}>
