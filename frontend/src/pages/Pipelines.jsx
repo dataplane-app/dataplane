@@ -7,7 +7,7 @@ import PipelinePageItem from '../components/MoreInfoContent/PipelinePageItem';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import AddPipelineDrawer from '../components/DrawerContent/AddPipelineDrawer';
 import { useGetPipelines } from '../graphql/getPipelines';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSnackbar } from 'notistack';
 import { useGlobalFlowState } from './Flow';
 import { useGlobalRunState } from './View/useWebSocket';
@@ -28,6 +28,9 @@ const Pipelines = () => {
     const [filter, setFilter] = useState();
     const [pipelineCount, setPipelineCount] = useState();
 
+    // Ref for scroll to top
+    const scrollRef = useRef(null);
+
     // Custom GraphQL hook
     const getPipelines = useGetPipelines_(setPipelines, Environment.id.get());
 
@@ -47,12 +50,13 @@ const Pipelines = () => {
             triggerDelete: 1,
         });
         RunState.set({});
+        scrollRef.current.parentElement.scrollIntoView();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
 
     return (
-        <Box className="page" position="relative">
+        <Box className="page" position="relative" ref={scrollRef}>
             <Box sx={{ width: { xl: '85%' } }}>
                 <Grid container alignItems="center" justifyContent="space-between">
                     <Box>

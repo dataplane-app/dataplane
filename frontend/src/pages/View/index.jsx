@@ -39,6 +39,7 @@ const View = () => {
     //Offset states and refs
     const [offsetHeight, setOffsetHeight] = useState(0);
     const offsetRef = useRef(null);
+    const scrollRef = useRef(null);
 
     useEffect(() => {
         setOffsetHeight(offsetRef.current.clientHeight);
@@ -67,6 +68,7 @@ const View = () => {
             history.push('/');
             return null;
         }
+        scrollRef.current.parentElement.scrollIntoView();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -126,7 +128,7 @@ const View = () => {
     };
 
     return (
-        <Box className="page" height="calc(100vh - 100px)" minHeight="min-content">
+        <Box className="page" height="calc(100vh - 100px)" minHeight="min-content" ref={scrollRef}>
             <Box ref={offsetRef}>
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex" alignItems="center">
