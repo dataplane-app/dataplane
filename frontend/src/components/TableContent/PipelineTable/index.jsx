@@ -111,7 +111,6 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
             <Box component="table" mt={4} width="100%" {...getTableProps()}>
                 <Box component="tbody" display="flex" sx={{ flexDirection: 'column' }} {...getTableBodyProps()}>
                     {rows.map((row, i) => {
-                        console.log(row);
                         prepareRow(row);
                         return (
                             <Box
