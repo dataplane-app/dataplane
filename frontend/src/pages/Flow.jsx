@@ -93,9 +93,6 @@ const Flow = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
-    // Ref for scroll to top
-    const scrollRef = useRef(null);
-
     // URI parameter
     const { pipelineId } = useParams();
 
@@ -104,7 +101,7 @@ const Flow = () => {
             history.push('/');
             return null;
         }
-        scrollRef.current.parentElement.scrollIntoView();
+        document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -298,7 +295,7 @@ const Flow = () => {
     };
 
     return (
-        <Box className="page" height="calc(100vh - 100px)" minHeight="min-content" ref={scrollRef}>
+        <Box className="page" height="calc(100vh - 100px)" minHeight="min-content">
             <Box ref={offsetRef}>
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex">
