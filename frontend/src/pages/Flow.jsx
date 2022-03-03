@@ -59,13 +59,17 @@ export const edgeTypes = {
 const useAddUpdatePipelineFlowfunc = () => {
     // GraphQL hook
     const addUpdatePipelineFlow = useAddUpdatePipelineFlow();
+
     // URI parameter
     const { pipelineId } = useParams();
+
+    // React router
+    const history = useHistory();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Update pipeline flow
-    return async (rawInput, environmentID) => {
+    return async (rawInput, environmentID, pipeline) => {
         // Prepare input to match the structure in the backend
         const input = prepareInputForBackend(rawInput);
 
@@ -78,6 +82,7 @@ const useAddUpdatePipelineFlowfunc = () => {
             response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
+            history.push({ pathname: `/pipelines/view/${pipelineId}`, state: pipeline });
         }
     };
 };
@@ -92,9 +97,6 @@ const Flow = () => {
     const updatePipelineFlow = useAddUpdatePipelineFlowfunc();
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
-
-    // URI parameter
-    const { pipelineId } = useParams();
 
     useEffect(() => {
         if (!pipeline || Object.keys(pipeline).length === 0) {
@@ -237,11 +239,10 @@ const Flow = () => {
         if (reactFlowInstance) {
             const flowElements = reactFlowInstance.toObject();
             FlowState.elements.set([...flowElements.elements]);
-            updatePipelineFlow(flowElements.elements, Environment.id.get());
+            updatePipelineFlow(flowElements.elements, Environment.id.get(), pipeline);
             FlowState.isEditorPage.set(false);
             FlowState.selectedElement.set(null);
             RunState.run_id.set(0);
-            history.push({ pathname: `/pipelines/view/${pipelineId}`, state: pipeline });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [reactFlowInstance, jwt]);
