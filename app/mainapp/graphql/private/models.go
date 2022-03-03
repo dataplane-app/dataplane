@@ -118,6 +118,20 @@ type PipelinePermissionsOutput struct {
 	JobTitle      string `json:"JobTitle"`
 }
 
+type Pipelines struct {
+	PipelineID    string    `json:"pipelineID"`
+	Name          string    `json:"name"`
+	EnvironmentID string    `json:"environmentID"`
+	Description   string    `json:"description"`
+	Active        bool      `json:"active"`
+	Online        bool      `json:"online"`
+	Current       string    `json:"current"`
+	WorkerGroup   string    `json:"workerGroup"`
+	CreatedAt     time.Time `json:"created_at"`
+	NodeType      string    `json:"node_type"`
+	NodeTypeDesc  string    `json:"node_type_desc"`
+}
+
 type Platform struct {
 	ID           string `json:"id"`
 	BusinessName string `json:"business_name"`
