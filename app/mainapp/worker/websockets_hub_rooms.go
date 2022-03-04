@@ -28,7 +28,7 @@ type subscription struct {
 }
 
 func secureTimeoutq(room string, connection *websocket.Conn) {
-	time.Sleep(120 * time.Second)
+	time.Sleep(1 * time.Hour)
 	if _, ok := clientsq[room][connection]; ok {
 		unregisterq <- subscription{conn: connection, room: room}
 		cm := websocket.FormatCloseMessage(websocket.CloseTryAgainLater, "reconnect")

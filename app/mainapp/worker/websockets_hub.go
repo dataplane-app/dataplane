@@ -18,7 +18,7 @@ var unregister = make(chan *websocket.Conn)
 var Securetimeout = make(chan int)
 
 func SecureTimeout(connection *websocket.Conn) {
-	time.Sleep(120 * time.Second)
+	time.Sleep(1 * time.Hour)
 	if _, ok := clients[connection]; ok {
 		unregister <- connection
 		cm := websocket.FormatCloseMessage(websocket.CloseTryAgainLater, "reconnect")

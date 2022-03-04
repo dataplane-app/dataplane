@@ -14,6 +14,7 @@ import (
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 	"strings"
 
@@ -108,6 +109,24 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	if permOutcome == "denied" {
 		return "", errors.New("Requires permissions.")
+	}
+
+	// ---- check for duplicate triggers ------
+	var triggercount int
+	for _, p := range input.NodesInput {
+
+		if p.NodeType == "trigger" {
+			triggercount++
+		}
+
+	}
+
+	log.Println(triggercount)
+
+	if triggercount > 1 {
+
+		return "", errors.New("There can only be one trigger.")
+
 	}
 
 	// ----- lock the pipeline
