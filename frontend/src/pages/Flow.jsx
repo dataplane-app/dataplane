@@ -31,6 +31,7 @@ export const globalFlowState = createState({
     isOpenSchedulerDrawer: false,
     isOpenConfigureDrawer: false,
     isOpenCommandDrawer: false,
+    isOpenLogDrawer: false,
     isOpenAPIDrawer: false,
     isEditorPage: false,
     selectedElement: null,
