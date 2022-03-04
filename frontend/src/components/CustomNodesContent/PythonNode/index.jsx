@@ -47,9 +47,13 @@ const PythonNode = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [RunState[props.id].status?.get()]);
 
+    const onClick = () => {
+        RunState.node_id.set(props.id);
+    };
+
     return (
         <Tooltip title={'Node ID: ' + props.id} placement="top">
-            <Box sx={{ padding: '10px 15px', width: 160, borderRadius: '10px', border: `3px solid ${borderColor}` }}>
+            <Box sx={{ padding: '10px 15px', width: 160, borderRadius: '10px', border: `3px solid ${borderColor}` }} onClick={onClick}>
                 <Handle type="target" position={Position.Left} isConnectable id="clear" className="handlePulseAnimation" style={customTargetHandle(theme.palette.mode)} />
                 <Handle type="source" position={Position.Right} id="3" style={FlowState.isDragging.get() ? customSourceHandleDragging : customSourceHandle(theme.palette.mode)} />
                 <Grid container alignItems="flex-start" wrap="nowrap" pb={2}>
