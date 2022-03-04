@@ -1,10 +1,12 @@
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
 import { useParams } from 'react-router-dom';
 import { useGetNodeLogs } from '../../../graphql/getNodeLogs';
 import { useGlobalRunState } from '../../../pages/View/useWebSocket';
+import { faRunning, faBullseye } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const websocketEndpoint = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
 
@@ -37,6 +39,19 @@ const LogsDrawer = ({ environmentId }) => {
 
     return (
         <>
+            <Box sx={{ background: '#222', color: '#d6d6d6' }} display="flex" alignItems="center" pl={6} pr={4} pt={3}>
+                <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faRunning} mr={2} />
+                <Box>
+                    <Typography fontSize={11} fontWeight={900}>
+                        Clear the logs
+                    </Typography>
+                    <Typography fontSize={9}>This process cleans down the logs</Typography>
+                </Box>
+                <Box ml={'auto'} color="#65BEFF" display="flex" alignItems="center">
+                    <Box component={FontAwesomeIcon} fontSize={19} color="#65BEFF" icon={faBullseye} mr={2} />
+                    <Typography>Running</Typography>
+                </Box>
+            </Box>
             {url ? (
                 <Box height="100%" width="100%" bgcolor="#000">
                     <ScrollFollow
@@ -46,6 +61,7 @@ const LogsDrawer = ({ environmentId }) => {
                                 url={url}
                                 websocket
                                 stream
+                                enableSearch
                                 text={text}
                                 follow={follow}
                                 onScroll={onScroll}

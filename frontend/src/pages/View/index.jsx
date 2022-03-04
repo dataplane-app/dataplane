@@ -210,7 +210,11 @@ const View = () => {
                 <PublishPipelineDrawer handleClose={() => setIsOpenPublishDrawer(false)} />
             </Drawer>
 
-            <Drawer anchor="right" open={FlowState.isOpenLogDrawer.get()} onClose={() => FlowState.isOpenLogDrawer.set(false)}>
+            <Drawer
+                sx={{ width: 650, [`& .MuiDrawer-paper`]: { width: 650 } }}
+                anchor="right"
+                open={FlowState.isOpenLogDrawer.get()}
+                onClose={() => FlowState.isOpenLogDrawer.set(false)}>
                 <LogsDrawer handleClose={() => FlowState.isOpenLogDrawer.set(false)} environmentId={Environment.id.get()} />
             </Drawer>
         </Box>
