@@ -3,8 +3,6 @@ import { Box, Grid, Typography } from '@mui/material';
 import Search from '../../components/Search';
 import { useTable, useGlobalFilter } from 'react-table';
 import CustomChip from '../../components/CustomChip';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { formatDate } from '../../utils/formatDate';
 import { useSnackbar } from 'notistack';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
@@ -104,8 +102,6 @@ export default function WorkerDetail() {
                     </Grid>
 
                     <Grid item display="flex" alignItems="center" sx={{ marginLeft: 'auto', marginRight: '2px' }}>
-                        <FontAwesomeIcon icon={faSearch} style={{ marginRight: 10 }} color="#0000006B" size="xs" />
-
                         <Search placeholder="Find workers" onChange={setGlobalFilter} width="290px" />
                     </Grid>
                 </Grid>

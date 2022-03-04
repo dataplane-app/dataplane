@@ -2,8 +2,6 @@ import { Box, Grid, Typography, Button, Drawer } from '@mui/material';
 import Search from '../components/Search';
 import CustomChip from '../components/CustomChip';
 import PipelineTable from '../components/TableContent/PipelineTable';
-import MoreInfoMenu from '../components/MoreInfoMenu';
-import PipelinePageItem from '../components/MoreInfoContent/PipelinePageItem';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import AddPipelineDrawer from '../components/DrawerContent/AddPipelineDrawer';
 import { useGetPipelines } from '../graphql/getPipelines';
@@ -11,8 +9,6 @@ import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
 import { useGlobalFlowState } from './Flow';
 import { useGlobalRunState } from './View/useWebSocket';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
 
 const Pipelines = () => {
     // Global states
@@ -69,9 +65,7 @@ const Pipelines = () => {
 
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center', width: '100%' }}>
-                        <CustomChip amount={pipelineCount || '0'} label="Pipelines" margin={1} customColor="orange" />
-
-                        <FontAwesomeIcon icon={faSearch} style={{ marginRight: 10, marginLeft: 25 }} color="#0000006B" size="xs" />
+                        <CustomChip amount={pipelineCount || '0'} label="Pipelines" margin={1} customColor="orange" style={{ marginRight: 25 }} />
 
                         <Search placeholder="Find a pipeline" onChange={(e) => setFilter(e)} width="290px" />
 
