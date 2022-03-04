@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTable, useGlobalFilter } from 'react-table';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
+import { faClock } from '@fortawesome/free-regular-svg-icons';
 import PipelineItemTable from '../../MoreInfoContent/PipelineTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenuPipeline from '../../MoreInfoMenuPipeline';
@@ -63,12 +64,12 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
                 ),
             },
             {
-                accessor: 'trigger',
+                accessor: 'node_type_desc',
                 Cell: (row) => (
                     <Box display="flex" alignItems="center">
-                        <Box component={FontAwesomeIcon} fontSize={19} sx={{ color: 'secondary.main' }} icon={faPlayCircle} mr={1.5} />
+                        <Box component={FontAwesomeIcon} fontSize={19} sx={{ color: 'secondary.main' }} icon={row.value === 'play' ? faPlayCircle : faClock} mr={1.5} />
                         <Typography color="secondary.main" variant="body2">
-                            Play trigger
+                            {row.value[0].toUpperCase() + row.value.slice(1) + ' trigger'}
                         </Typography>
                     </Box>
                 ),
