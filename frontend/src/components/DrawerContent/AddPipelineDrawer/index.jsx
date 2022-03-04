@@ -86,7 +86,7 @@ export default AddPipelineDrawer;
 
 // ---------- Custom Hook
 
-const useAddPipeline_ = (environmentID) => {
+export const useAddPipeline_ = (environmentID) => {
     // GraphQL hook
     const addPipeline = useAddPipeline();
 
@@ -111,7 +111,7 @@ const useAddPipeline_ = (environmentID) => {
 };
 
 // ------- Custom Hooks
-const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
+export const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
     // GraphQL hook
     const getAccessGroupUsers = useGetWorkerGroups();
 

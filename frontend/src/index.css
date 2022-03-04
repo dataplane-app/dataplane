@@ -108,3 +108,14 @@ code {
         box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
     }
 }
+
+.oc-fm--file-navigator__toolbar {
+    display: none;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+    width: 20px !important;
+    height: 20px !important;
+    border-right: 5px solid rgba(0, 0, 0) !important;
+    border-bottom: 5px solid rgba(0, 0, 0) !important;
+}

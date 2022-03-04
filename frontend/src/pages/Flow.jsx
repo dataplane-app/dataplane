@@ -39,6 +39,7 @@ export const globalFlowState = createState({
     isDragging: false,
     isPanEnable: false,
     scale: 1,
+    pipelineInfo: null,
 });
 
 export const useGlobalFlowState = () => useHookState(globalFlowState);

@@ -67,6 +67,8 @@ const View = () => {
             history.push('/');
             return null;
         }
+
+        FlowState.pipelineInfo.set(pipeline);
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
