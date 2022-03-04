@@ -233,7 +233,7 @@ const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
         } else if (response.r === 'Unauthorized') {
             enqueueSnackbar('Idle: not polling', { variant: 'warning' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get worker groups failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setWorkerGroups(response);
         }

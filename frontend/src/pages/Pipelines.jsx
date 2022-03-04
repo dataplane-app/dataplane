@@ -107,7 +107,7 @@ function useGetPipelines_(setPipelines, environmentID) {
         if (response.r === 'error') {
             enqueueSnackbar("Can't get pipelines: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get pipelines', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setPipelines(response);
         }

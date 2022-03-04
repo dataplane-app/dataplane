@@ -227,7 +227,7 @@ const useGetUsers_ = (setUsers) => {
             closeSnackbar();
             enqueueSnackbar("Can't get members: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get members', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setUsers(response);
         }
@@ -250,7 +250,7 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get access groups failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setAccessGroups(response);
         }
@@ -291,7 +291,7 @@ const usePipelinePermissionsToUser_ = (permissionsState, refreshPermissions, han
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update permissions', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             refreshPermissions();
@@ -328,7 +328,7 @@ const useGetUserSinglePipelinePermissions_ = (environmentID, setpermissionsState
             closeSnackbar();
             enqueueSnackbar("Can't get permissions: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get permissions', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             // Create an array with access permissions
             const accessArr = response.Access.split(',');
@@ -377,7 +377,7 @@ const usePipelinePermissionsToAccessGroup_ = (permissionsState, refreshPermissio
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update permissions', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             refreshPermissions();

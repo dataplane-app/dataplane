@@ -18,19 +18,21 @@ const Teams = () => {
     // Sidebar states
     const [isOpenDeleteUser, setIsOpenDeleteUser] = useState(false);
 
+    // Custom GraphQL hooks
+    const getUsers = useGetUsersHook(setData);
+
     // Get users on load
-    const getUsers = useGetUsers();
     useEffect(() => {
-        retrieveUsers();
+        getUsers();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Get users
-    const retrieveUsers = async () => {
-        let users = await getUsers();
-        !users.errors ? setData(users) : enqueueSnackbar('Unable to retrieve users', { variant: 'error' });
-    };
+    // // Get users
+    // const retrieveUsers = async () => {
+    //     let users = await getUsers();
+    //     !users.errors ? setData(users) : enqueueSnackbar('Unable to retrieve users', { variant: 'error' });
+    // };
 
     const columns = useMemo(
         () => [
@@ -149,7 +151,7 @@ const Teams = () => {
                     user="Saul Frank"
                     handleClose={() => {
                         setIsOpenDeleteUser(false);
-                        retrieveUsers();
+                        getUsers();
                     }}
                 />
             </Drawer>
@@ -183,3 +185,27 @@ const CustomEmail = ({ row }) => {
 };
 
 export default Teams;
+
+// ----------- Custom Hooks --------------------------------
+const useGetUsersHook = (setUsers) => {
+    // GraphQL hook
+    const getUsers = useGetUsers();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get members
+    return async () => {
+        const response = await getUsers();
+
+        if (response === null) {
+            setUsers([]);
+        } else if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get members: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setUsers(response);
+        }
+    };
+};

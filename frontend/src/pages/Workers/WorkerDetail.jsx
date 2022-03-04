@@ -264,7 +264,7 @@ const useGetWorkers_ = (environmentName, setData, workerId) => {
         } else if (response.r === 'error') {
             enqueueSnackbar("Can't get workers: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get workers failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setData(response.filter((a) => a.WorkerGroup === workerId));
         }

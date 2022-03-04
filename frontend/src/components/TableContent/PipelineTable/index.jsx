@@ -187,7 +187,7 @@ export const useRunPipelinesHook = () => {
             closeSnackbar();
             enqueueSnackbar("Can't run flow: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': run flow', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             RunState.run_id.set(response.run_id);
         }

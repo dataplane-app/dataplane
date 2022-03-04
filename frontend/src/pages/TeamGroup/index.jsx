@@ -96,7 +96,7 @@ const useGetAccessGroup_ = (environmentID, userID, access_group_id, setAccessGro
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get access group data failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setAccessGroup(response);
 
@@ -109,7 +109,7 @@ const useGetAccessGroup_ = (environmentID, userID, access_group_id, setAccessGro
                     variant: 'error',
                 });
             } else if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message + ': get access group environment name failed', { variant: 'error' }));
+                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
             } else {
                 setAccessGroupEnvironmentName(response.name);
             }

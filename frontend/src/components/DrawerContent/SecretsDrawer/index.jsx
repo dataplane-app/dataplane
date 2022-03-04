@@ -86,7 +86,7 @@ const useGetWorkerGroupSecrets_ = (environmentName, WorkerGroup, setSecrets) => 
         } else if (response.r === 'error') {
             enqueueSnackbar("Can't get secrets: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get secrets failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setSecrets(response);
         }

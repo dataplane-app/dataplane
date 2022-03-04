@@ -114,7 +114,7 @@ const useGetUsers_ = (setUsers) => {
             closeSnackbar();
             enqueueSnackbar("Can't get members: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get members', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setUsers(response);
         }
@@ -140,7 +140,7 @@ const useGetAccessGroupUsers_ = (environmentID, setAccessGroupUsers) => {
             closeSnackbar();
             enqueueSnackbar("Can't get members: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get members failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setAccessGroupUsers(response);
         }
@@ -166,7 +166,7 @@ const useUpdateUserToAccessGroup_ = (environmentID, selectedUser, getAccessGroup
             closeSnackbar();
             enqueueSnackbar("Can't get members: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update member to access group', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getAccessGroupUsers();
@@ -191,7 +191,7 @@ const useRemoveUserFromAccessGroup_ = (environmentID, getAccessGroupUsers) => {
             closeSnackbar();
             enqueueSnackbar("Can't remove member: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': remove member failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getAccessGroupUsers();
