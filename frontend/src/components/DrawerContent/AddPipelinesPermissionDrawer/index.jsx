@@ -42,8 +42,8 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
     // Custom GraphQL hooks
     const getUsers = useGetUsers_(setUsers);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, Environment.id.get(), MeData.user_id.get());
-    const pipelinePermissionsToUser = usePipelinePermissionsToUser_(permissionsState, refreshPermissions);
-    const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup_(permissionsState, refreshPermissions);
+    const pipelinePermissionsToUser = usePipelinePermissionsToUser_(permissionsState, refreshPermissions, handleClose);
+    const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup_(permissionsState, refreshPermissions, handleClose);
     const getUserPipelinePermissions = useGetUserSinglePipelinePermissions_(Environment.id.get(), setPermissionsState);
 
     // Get all users and access groups on load
@@ -258,7 +258,7 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
 };
 
 // Update pipeline permissions to user
-const usePipelinePermissionsToUser_ = (permissionsState, refreshPermissions) => {
+const usePipelinePermissionsToUser_ = (permissionsState, refreshPermissions, handleClose) => {
     // GraphQL hook
     const pipelinePermissionsToUser = usePipelinePermissionsToUser();
 
@@ -295,6 +295,7 @@ const usePipelinePermissionsToUser_ = (permissionsState, refreshPermissions) => 
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             refreshPermissions();
+            handleClose();
         }
     };
 };
@@ -343,7 +344,7 @@ const useGetUserSinglePipelinePermissions_ = (environmentID, setpermissionsState
 
 // ----- Access group
 // Update pipeline permissions to user
-const usePipelinePermissionsToAccessGroup_ = (permissionsState, refreshPermissions) => {
+const usePipelinePermissionsToAccessGroup_ = (permissionsState, refreshPermissions, handleClose) => {
     // GraphQL hook
     const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup();
 
@@ -380,6 +381,7 @@ const usePipelinePermissionsToAccessGroup_ = (permissionsState, refreshPermissio
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             refreshPermissions();
+            handleClose();
         }
     };
 };
