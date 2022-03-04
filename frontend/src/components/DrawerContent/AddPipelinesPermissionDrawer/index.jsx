@@ -135,14 +135,14 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
                             }}
                             value={selectedUser}
                             options={users}
-                            getOptionLabel={(option) => option.first_name + ' ' + option.last_name || ''}
+                            getOptionLabel={(option) => option.first_name + ' ' + option.last_name + ' - ' + option.email || ''}
                             isOptionEqualToValue={(option, value) =>
                                 option.user_id === value.user_id && //
                                 option.first_name === value.first_name &&
                                 option.last_name === value.last_name &&
                                 option.email === value.email
                             }
-                            renderInput={(params) => <TextField {...params} label="User" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
+                            renderInput={(params) => <TextField {...params} label="User" size="small" sx={{ fontSize: '.75rem', display: 'flex', width: '300px' }} />}
                         />
                     ) : (
                         <Autocomplete
