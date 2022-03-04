@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useContext } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import CustomChip from '../components/CustomChip';
-import ChangePasswordDrawer from '../components/DrawerContent/ChangePasswordDrawer';
+import ChangeUserPasswordDrawer from '../components/DrawerContent/ChangeUserPasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import DeactivateUserDrawer from '../components/DrawerContent/DeactivateUserDrawer';
 import { useParams } from 'react-router-dom';
@@ -500,7 +500,7 @@ export default function TeamDetail() {
             </Box>
 
             <Drawer anchor="right" open={isOpenChangePassword} onClose={() => setIsOpenPassword(!isOpenChangePassword)}>
-                <ChangePasswordDrawer handleClose={() => setIsOpenPassword(false)} />
+                <ChangeUserPasswordDrawer handleClose={() => setIsOpenPassword(false)} user_id={user.user_id} />
             </Drawer>
 
             <Drawer anchor="right" open={isOpenDeactivateUser} onClose={() => setIsOpenDeactivateUser(!isOpenDeactivateUser)}>

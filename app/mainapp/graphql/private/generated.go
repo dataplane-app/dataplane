@@ -213,6 +213,8 @@ type ComplexityRoot struct {
 		Description   func(childComplexity int) int
 		EnvironmentID func(childComplexity int) int
 		Name          func(childComplexity int) int
+		NodeType      func(childComplexity int) int
+		NodeTypeDesc  func(childComplexity int) int
 		Online        func(childComplexity int) int
 		PipelineID    func(childComplexity int) int
 		WorkerGroup   func(childComplexity int) int
@@ -400,7 +402,7 @@ type QueryResolver interface {
 	AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error)
 	MyPermissions(ctx context.Context) ([]*models.PermissionsOutput, error)
 	UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error)
-	GetPipelines(ctx context.Context, environmentID string) ([]*models.Pipelines, error)
+	GetPipelines(ctx context.Context, environmentID string) ([]*Pipelines, error)
 	GetPipelineFlow(ctx context.Context, pipelineID string, environmentID string) (*PipelineFlow, error)
 	GetNodeLogs(ctx context.Context, runID string, pipelineID string, nodeID string, environmentID string) ([]*models.LogsWorkers, error)
 	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
@@ -1509,6 +1511,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Pipelines.Name(childComplexity), true
+
+	case "Pipelines.node_type":
+		if e.complexity.Pipelines.NodeType == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.NodeType(childComplexity), true
+
+	case "Pipelines.node_type_desc":
+		if e.complexity.Pipelines.NodeTypeDesc == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.NodeTypeDesc(childComplexity), true
 
 	case "Pipelines.online":
 		if e.complexity.Pipelines.Online == nil {
@@ -2721,6 +2737,8 @@ type Pipelines {
   current: String!
   workerGroup: String!
   created_at: Time!
+  node_type: String!
+  node_type_desc: String!
 }
 
 # ----- Add/Update flow
@@ -9165,7 +9183,7 @@ func (ec *executionContext) _PipelineRuns_updated_at(ctx context.Context, field 
 	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Pipelines_pipelineID(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pipelines_pipelineID(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9200,7 +9218,7 @@ func (ec *executionContext) _Pipelines_pipelineID(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Pipelines_name(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pipelines_name(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9235,7 +9253,7 @@ func (ec *executionContext) _Pipelines_name(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Pipelines_environmentID(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pipelines_environmentID(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9270,7 +9288,7 @@ func (ec *executionContext) _Pipelines_environmentID(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Pipelines_description(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pipelines_description(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9305,7 +9323,7 @@ func (ec *executionContext) _Pipelines_description(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Pipelines_active(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pipelines_active(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9340,7 +9358,7 @@ func (ec *executionContext) _Pipelines_active(ctx context.Context, field graphql
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Pipelines_online(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pipelines_online(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9375,7 +9393,7 @@ func (ec *executionContext) _Pipelines_online(ctx context.Context, field graphql
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Pipelines_current(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pipelines_current(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9410,7 +9428,7 @@ func (ec *executionContext) _Pipelines_current(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Pipelines_workerGroup(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pipelines_workerGroup(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9445,7 +9463,7 @@ func (ec *executionContext) _Pipelines_workerGroup(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Pipelines_created_at(ctx context.Context, field graphql.CollectedField, obj *models.Pipelines) (ret graphql.Marshaler) {
+func (ec *executionContext) _Pipelines_created_at(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9478,6 +9496,76 @@ func (ec *executionContext) _Pipelines_created_at(ctx context.Context, field gra
 	res := resTmp.(time.Time)
 	fc.Result = res
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_node_type(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NodeType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_node_type_desc(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NodeTypeDesc, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Platform_id(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
@@ -10313,9 +10401,9 @@ func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graph
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Pipelines)
+	res := resTmp.([]*Pipelines)
 	fc.Result = res
-	return ec.marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx, field.Selections, res)
+	return ec.marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getPipelineFlow(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -16091,7 +16179,7 @@ func (ec *executionContext) _PipelineRuns(ctx context.Context, sel ast.Selection
 
 var pipelinesImplementors = []string{"Pipelines"}
 
-func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet, obj *models.Pipelines) graphql.Marshaler {
+func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet, obj *Pipelines) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, pipelinesImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -16182,6 +16270,26 @@ func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet
 		case "created_at":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Pipelines_created_at(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "node_type":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Pipelines_node_type(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "node_type_desc":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Pipelines_node_type_desc(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -19140,7 +19248,7 @@ func (ec *executionContext) marshalOPipelinePermissionsOutput2ᚖdataplaneᚋmai
 	return ec._PipelinePermissionsOutput(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx context.Context, sel ast.SelectionSet, v []*models.Pipelines) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx context.Context, sel ast.SelectionSet, v []*Pipelines) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19167,7 +19275,7 @@ func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋdataba
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOPipelines2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx, sel, v[i])
+			ret[i] = ec.marshalOPipelines2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19181,7 +19289,7 @@ func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋdataba
 	return ret
 }
 
-func (ec *executionContext) marshalOPipelines2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelines(ctx context.Context, sel ast.SelectionSet, v *models.Pipelines) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelines2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx context.Context, sel ast.SelectionSet, v *Pipelines) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

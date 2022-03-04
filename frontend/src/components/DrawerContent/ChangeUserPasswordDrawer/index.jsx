@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { Box, Typography, Button, TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useUpdateChangeMyPassword } from '../../../graphql/updateChangeMyPassword';
+import { useUpdateChangePassword } from '../../../graphql/updateChangePassword';
 import { useSnackbar } from 'notistack';
 
-const ChangePasswordDrawer = ({ handleClose }) => {
+const ChangeUserPasswordDrawer = ({ handleClose, user_id }) => {
     // GraphQL hook
-    const updateChangeMyPassword = useUpdateChangeMyPassword();
+    const updateChangeUserPassword = useUpdateChangePassword();
 
     // State
     const [password, setPassword] = useState(null);
@@ -27,7 +27,7 @@ const ChangePasswordDrawer = ({ handleClose }) => {
         if (password !== confirmPassword) {
             enqueueSnackbar("Passwords don't match", { variant: 'error' });
         } else {
-            let response = await updateChangeMyPassword({ password });
+            let response = await updateChangeUserPassword({ input: { password, user_id } });
 
             if (response.r === 'error') {
                 closeSnackbar();
@@ -86,4 +86,4 @@ const ChangePasswordDrawer = ({ handleClose }) => {
     );
 };
 
-export default ChangePasswordDrawer;
+export default ChangeUserPasswordDrawer;

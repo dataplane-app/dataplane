@@ -31,8 +31,8 @@ models:
    model: dataplane/mainapp/database/models.Secrets
  SecretWorkerGroups:
    model: dataplane/mainapp/database/models.WorkerSecrets
- Pipelines:
-   model: dataplane/mainapp/database/models.Pipelines
+#  Pipelines:
+#    model: dataplane/mainapp/database/models.Pipelines
  PipelineEdges:
    model: dataplane/mainapp/database/models.PipelineEdges
  PipelineNodes:
