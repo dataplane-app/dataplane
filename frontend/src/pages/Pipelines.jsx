@@ -65,14 +65,6 @@ const Pipelines = () => {
                             Environment: {Environment.name.get()}
                         </Typography>
                     </Box>
-
-                    <Box display="flex" alignItems="center">
-                        <Box sx={{ position: { xxs: 'relative', xl: 'absolute' }, ml: { xxs: 2, xl: 0 }, top: '0', right: '0' }}>
-                            <MoreInfoMenu>
-                                <PipelinePageItem handleRefresh={() => {}} />
-                            </MoreInfoMenu>
-                        </Box>
-                    </Box>
                 </Grid>
 
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
