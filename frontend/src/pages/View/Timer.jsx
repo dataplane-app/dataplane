@@ -81,6 +81,7 @@ export default function Timer({ environmentID }) {
             setStart(
                 Object.values(RunState.get())
                     .map((a) => a?.start_dt)
+                    .filter((a) => a)
                     .sort((a, b) => a?.localeCompare(b))[0]
             );
             setIsRunning(true);
