@@ -47,6 +47,7 @@ type LogsWorkers struct {
 	CreatedAt     time.Time `json:"created_at"`
 	EnvironmentID string    `gorm:"index:idx_noderun;type:varchar(64);" json:"environment_id"`
 	Category      string    `json:"category"`
+	UID           string    `gorm:"type:varchar(64);" json:"uid"`
 	RunID         string    `gorm:"index:idx_noderun;type:varchar(64);" json:"run_id"`
 	NodeID        string    `gorm:"index:idx_noderun;type:varchar(64);" json:"node_id"`
 	TaskID        string    `gorm:"index:idx_logtasks;type:varchar(64);" json:"task_id"`
@@ -56,6 +57,7 @@ type LogsWorkers struct {
 
 type LogsSend struct {
 	CreatedAt time.Time `json:"created_at"`
+	UID       string    `json:"uid"`
 	Log       string    `json:"log"`
 	LogType   string    `json:"log_type"` //info, error, debug
 }

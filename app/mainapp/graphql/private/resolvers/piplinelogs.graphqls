@@ -1,5 +1,6 @@
     type LogsWorkers {
 	created_at: Time!
+    uid: String!
 	log: String!
 	log_type: String!
 }
