@@ -1,11 +1,11 @@
-import { Box, Typography } from '@mui/material';
+import { Box, SvgIcon, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
 import { useParams } from 'react-router-dom';
 import { useGetNodeLogs } from '../../../graphql/getNodeLogs';
 import { useGlobalRunState } from '../../../pages/View/useWebSocket';
-import { faRunning, faBullseye } from '@fortawesome/free-solid-svg-icons';
+import { faRunning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const websocketEndpoint = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
@@ -48,8 +48,14 @@ const LogsDrawer = ({ environmentId }) => {
                     <Typography fontSize={9}>This process cleans down the logs</Typography>
                 </Box>
                 <Box ml={'auto'} color="#65BEFF" display="flex" alignItems="center">
-                    <Box component={FontAwesomeIcon} fontSize={19} color="#65BEFF" icon={faBullseye} mr={2} />
-                    <Typography>Running</Typography>
+                    <SvgIcon width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ width: 15 }}>
+                        <circle cx="6.5" cy="6.5" r="6.5" fill="#65BEFF" />
+                        <circle cx="6.5" cy="6.5" r="4.875" fill="#222222" />
+                        <circle cx="6.5" cy="6.5" r="2.4375" fill="#65BEFF" />
+                    </SvgIcon>
+                    <Typography ml={1} fontWeight={700} fontSize={10}>
+                        Running
+                    </Typography>
                 </Box>
             </Box>
             {url ? (
@@ -57,7 +63,7 @@ const LogsDrawer = ({ environmentId }) => {
                     <ScrollFollow
                         startFollowing={true}
                         render={({ follow, onScroll }) => (
-                            <LazyLog //
+                            <LazyLog
                                 url={url}
                                 websocket
                                 stream
