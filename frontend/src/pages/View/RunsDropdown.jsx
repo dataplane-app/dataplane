@@ -75,7 +75,7 @@ const useGetPipelineRunsHook = () => {
             closeSnackbar();
             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get flow', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setRuns(response);
             if (RunState.run_id.get() !== 0) {
@@ -106,7 +106,7 @@ export const usePipelineTasksRunHook = () => {
             closeSnackbar();
             enqueueSnackbar(`Can't update flow: ${response.r}`, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             // Keeping only start_id and run_id and removing rest of the nodes before adding this run's nodes.
             const keep = { start_id: RunState.start_dt.get(), run_id: RunState.run_id.get() };

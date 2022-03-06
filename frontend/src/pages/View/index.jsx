@@ -242,7 +242,7 @@ const useGetPipelineFlowHook = (pipeline) => {
             closeSnackbar();
             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get flow', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setElements(response);
             FlowState.elements.set(response);

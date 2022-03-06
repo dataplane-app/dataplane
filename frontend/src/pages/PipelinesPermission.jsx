@@ -287,7 +287,7 @@ const usePipelinePermissions_ = (environmentID, setPermissions, userID) => {
             closeSnackbar();
             enqueueSnackbar("Can't get permissions: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get permissions', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setPermissions(response);
         }

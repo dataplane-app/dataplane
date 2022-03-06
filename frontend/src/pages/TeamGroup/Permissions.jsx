@@ -160,7 +160,7 @@ const useGetPermissions = (setUserPermissions, environmentID) => {
                 closeSnackbar();
                 enqueueSnackbar("Can't get permissions: " + response.msg, { variant: 'error' });
             } else if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message + ': get permissions', { variant: 'error' }));
+                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
             } else {
                 setUserPermissions(response);
             }
@@ -193,7 +193,7 @@ const useUpdatePermissions = (getUserPermissions, selectedPermission, environmen
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update permissions', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getUserPermissions();
@@ -214,7 +214,7 @@ const useGetAvailablePermissions = (setAvailablePermissions, environmentID) => {
         if (response.r === 'error') {
             enqueueSnackbar("Can't get permissions: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get available permissions', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setAvailablePermissions(response);
         }
@@ -241,7 +241,7 @@ const useDeletePermission = (getUserPermissions) => {
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': delete permission', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getUserPermissions();

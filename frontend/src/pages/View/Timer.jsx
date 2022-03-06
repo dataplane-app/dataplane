@@ -139,7 +139,7 @@ export const useRunPipelinesHook = () => {
             closeSnackbar();
             enqueueSnackbar("Can't run flow: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': run flow', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             RunState.run_id.set(response.run_id);
         }
@@ -163,7 +163,7 @@ const useStopPipelinesHook = () => {
             closeSnackbar();
             enqueueSnackbar("Can't stop flow: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': stop flow', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         }
     };
 };
@@ -190,7 +190,7 @@ export const usePipelineTasksRunHook = () => {
             closeSnackbar();
             enqueueSnackbar(`Can't update flow: ${response.r}`, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             response.map((a) => RunState[a.node_id].set({ status: a.status }));
             RunState.start_dt.set(response.map((a) => a.start_dt)[0]);

@@ -366,7 +366,7 @@ a.created_at,
 b.node_type,
 b.node_type_desc
 from pipelines a left join (
-	select node_type, node_type_desc, pipeline_id from pipeline_nodes where node_type='trigger' limit 1
+	select node_type, node_type_desc, pipeline_id from pipeline_nodes where node_type='trigger'
 ) b on a.pipeline_id=b.pipeline_id
 where a.environment_id = ?
 order by a.created_at desc
@@ -397,7 +397,7 @@ b.node_type,
 b.node_type_desc
 from pipelines a 
 left join (
-	select node_type, node_type_desc, pipeline_id from pipeline_nodes where node_type='trigger' limit 1
+	select node_type, node_type_desc, pipeline_id from pipeline_nodes where node_type='trigger'
 ) b on a.pipeline_id=b.pipeline_id
 inner join (
   select distinct resource_id, environment_id from (

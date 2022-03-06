@@ -69,7 +69,7 @@ const useUpdateSecretValue_ = (secret, environmentId, value, handleClose) => {
             closeSnackbar();
             enqueueSnackbar("Can't update secret value: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update secret value failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             handleClose();

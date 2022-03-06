@@ -135,7 +135,7 @@ const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
         } else if (response.r === 'error') {
             enqueueSnackbar("Can't get worker groups: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get worker groups failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setWorkerGroups(response);
         }
