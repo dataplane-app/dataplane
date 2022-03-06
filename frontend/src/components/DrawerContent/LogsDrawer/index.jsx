@@ -8,7 +8,7 @@ import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 import { faRunning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AdjustIcon } from './AdjustIcon';
-import useWebSocket from './useWebSocket';
+import useWebSocket, { formatDate } from './useWebSocket';
 
 const LogsDrawer = ({ environmentId }) => {
     const [websocketResp, setWebsocketResp] = useState('');
@@ -30,7 +30,7 @@ const LogsDrawer = ({ environmentId }) => {
         let text = '';
         graphQlResp.forEach((log) => {
             if (!websocketResp.includes(log.uid)) {
-                text += '\n' + JSON.stringify(log);
+                text += `\n${formatDate(log.created_at)} UID: ${log.uid} Log: ${log.log} Log Type: ${log.log_type}`;
             }
         });
         text = text.replace(/\n/, '');

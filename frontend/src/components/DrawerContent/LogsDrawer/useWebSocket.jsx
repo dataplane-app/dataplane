@@ -27,7 +27,9 @@ export default function useWebSocket(environmentId, run_id, node_id) {
             };
 
             ws.current.onmessage = (e) => {
-                setSocketResponse(e.data);
+                const resp = JSON.parse(e.data);
+                let text = `${formatDate(resp.created_at)} UID: ${resp.uid} Log: ${resp.log} Log Type: ${resp.log_type}`;
+                setSocketResponse(text);
             };
         }
 
@@ -42,4 +44,21 @@ export default function useWebSocket(environmentId, run_id, node_id) {
     }, [run_id]);
 
     return socketResponse;
+}
+
+export function formatDate(dateString) {
+    const date = new Date(dateString);
+    return (
+        date.getFullYear() +
+        '/' +
+        ('0' + (date.getMonth() + 1)) +
+        '/' +
+        ('0' + date.getDate()).slice(-2) +
+        ' ' +
+        ('0' + date.getHours()).slice(-2) +
+        ':' +
+        ('0' + date.getMinutes()).slice(-2) +
+        ':' +
+        ('0' + date.getSeconds()).slice(-2)
+    );
 }
