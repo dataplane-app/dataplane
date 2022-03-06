@@ -69,7 +69,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
                     <Box display="flex" alignItems="center">
                         <Box component={FontAwesomeIcon} fontSize={19} sx={{ color: 'secondary.main' }} icon={row.value === 'play' ? faPlayCircle : faClock} mr={1.5} />
                         <Typography color="secondary.main" variant="body2">
-                            {row.value[0].toUpperCase() + row.value.slice(1) + ' trigger'}
+                            {row.value[0]?.toUpperCase() + row.value?.slice(1) + ' trigger'}
                         </Typography>
                     </Box>
                 ),

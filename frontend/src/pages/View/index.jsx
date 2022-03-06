@@ -16,6 +16,7 @@ import { edgeTypes, nodeTypes, useGlobalFlowState } from '../Flow';
 import RunsDropdown from './RunsDropdown';
 import StatusChips from './StatusChips';
 import Timer from './Timer';
+import LogsDrawer from '../../components/DrawerContent/LogsDrawer';
 
 const View = () => {
     // Hooks
@@ -207,6 +208,15 @@ const View = () => {
 
             <Drawer anchor="right" open={isOpenPublishDrawer} onClose={() => setIsOpenPublishDrawer(!isOpenPublishDrawer)}>
                 <PublishPipelineDrawer handleClose={() => setIsOpenPublishDrawer(false)} />
+            </Drawer>
+
+            <Drawer
+                hideBackdrop
+                sx={{ width: 'calc(100% - 203px)', [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
+                anchor="right"
+                open={FlowState.isOpenLogDrawer.get()}
+                onClose={() => FlowState.isOpenLogDrawer.set(false)}>
+                <LogsDrawer handleClose={() => FlowState.isOpenLogDrawer.set(false)} environmentId={Environment.id.get()} />
             </Drawer>
         </Box>
     );
