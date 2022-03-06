@@ -3,7 +3,7 @@ import ConsoleLogHelper from '../../../Helper/logger';
 
 const websocketEndpoint = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
 
-export default function useWebSocket(environmentId, run_id, node_id) {
+export default function useWebSocketLog(environmentId, run_id, node_id) {
     const [socketResponse, setSocketResponse] = useState([]);
     const reconnectOnClose = useRef(true);
     const ws = useRef(null);
@@ -28,7 +28,7 @@ export default function useWebSocket(environmentId, run_id, node_id) {
 
             ws.current.onmessage = (e) => {
                 const resp = JSON.parse(e.data);
-                let text = `${formatDate(resp.created_at)} UID: ${resp.uid} Log: ${resp.log} Log Type: ${resp.log_type}`;
+                let text = `${formatDate(resp.created_at)} ${resp.log}`;
                 setSocketResponse(text);
             };
         }
