@@ -1,4 +1,4 @@
-import { Box, SvgIcon, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
@@ -7,35 +7,48 @@ import { useGetNodeLogs } from '../../../graphql/getNodeLogs';
 import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 import { faRunning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-const websocketEndpoint = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+import { AdjustIcon } from './AdjustIcon';
+import useWebSocket from './useWebSocket';
 
 const LogsDrawer = ({ environmentId }) => {
-    const [url, setUrl] = useState();
-    const [firstMessageReceived, setFirstMessageReceived] = useState(false);
-    const [text, setText] = useState('');
+    const [websocketResp, setWebsocketResp] = useState('');
+    const [filteredGraphqlResp, setFilteredGraphqlResp] = useState('');
+    const [graphQlResp, setGraphQlResp] = useState([]);
 
     // Global state
     const RunState = useGlobalRunState();
 
+    // Instantiate websocket
+    const webSocket = useWebSocket(environmentId, RunState.run_id.get(), RunState.node_id.get());
+
+    useEffect(() => {
+        setWebsocketResp((t) => t + webSocket + '\n');
+    }, [webSocket]);
+
+    // Prepare filtered graphQL response
+    useEffect(() => {
+        let text = '';
+        graphQlResp.forEach((log) => {
+            if (!websocketResp.includes(log.uid)) {
+                text += '\n' + JSON.stringify(log);
+            }
+        });
+        text = text.replace(/\n/, '');
+
+        setFilteredGraphqlResp(text);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [graphQlResp]);
+
     // Graphql Hook
-    const getNodeLogs = useGetNodeLogsHook(environmentId, RunState.run_id.get(), RunState.node_id.get(), setText);
+    const getNodeLogs = useGetNodeLogsHook(environmentId, RunState.run_id.get(), RunState.node_id.get(), setGraphQlResp);
 
     useEffect(() => {
-        if (!RunState.node_id.get() || !RunState.run_id.get()) return;
-        setUrl(`${websocketEndpoint}/${environmentId}?subject=workerlogs.${RunState.run_id.get()}.${RunState.node_id.get()}&id=${RunState.run_id.get()}.${RunState.node_id.get()}`);
+        if (!RunState.run_id.get() || !RunState.node_id.get()) return;
+        getNodeLogs();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.node_id.get(), RunState.run_id.get()]);
-
-    useEffect(() => {
-        if (firstMessageReceived) {
-            getNodeLogs();
-            setFirstMessageReceived();
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [firstMessageReceived]);
+    }, [RunState.run_id.get(), RunState.node_id.get()]);
 
     return (
         <>
@@ -48,40 +61,20 @@ const LogsDrawer = ({ environmentId }) => {
                     <Typography fontSize={9}>This process cleans down the logs</Typography>
                 </Box>
                 <Box ml={'auto'} color="#65BEFF" display="flex" alignItems="center">
-                    <SvgIcon width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ width: 15 }}>
-                        <circle cx="6.5" cy="6.5" r="6.5" fill="#65BEFF" />
-                        <circle cx="6.5" cy="6.5" r="4.875" fill="#222222" />
-                        <circle cx="6.5" cy="6.5" r="2.4375" fill="#65BEFF" />
-                    </SvgIcon>
+                    <AdjustIcon />
                     <Typography ml={1} fontWeight={700} fontSize={10}>
                         Running
                     </Typography>
                 </Box>
             </Box>
-            {url ? (
-                <Box height="100%" width="100%" bgcolor="#000">
-                    <ScrollFollow
-                        startFollowing={true}
-                        render={({ follow, onScroll }) => (
-                            <LazyLog
-                                url={url}
-                                websocket
-                                stream
-                                enableSearch
-                                text={text}
-                                follow={follow}
-                                onScroll={onScroll}
-                                websocketOptions={{
-                                    formatMessage: (e) => {
-                                        if (firstMessageReceived === false) setFirstMessageReceived(true);
-                                        return e;
-                                    },
-                                }}
-                            />
-                        )}
-                    />
-                </Box>
-            ) : null}
+
+            {/* LazyLog */}
+            <Box height="100%" width="100%" bgcolor="#000">
+                <ScrollFollow
+                    startFollowing={true}
+                    render={({ follow, onScroll }) => <LazyLog url={'http://'} enableSearch text={filteredGraphqlResp + websocketResp} follow={follow} onScroll={onScroll} />}
+                />
+            </Box>
         </>
     );
 };
@@ -89,7 +82,7 @@ const LogsDrawer = ({ environmentId }) => {
 export default LogsDrawer;
 
 // ----- Custom Hooks
-const useGetNodeLogsHook = (environmentID, runID, nodeID, setText) => {
+const useGetNodeLogsHook = (environmentID, runID, nodeID, setGraphQlResp) => {
     // GraphQL hook
     const getNodeLogs = useGetNodeLogs();
 
@@ -102,17 +95,13 @@ const useGetNodeLogsHook = (environmentID, runID, nodeID, setText) => {
     return async () => {
         const response = await getNodeLogs({ environmentID, pipelineID: pipelineId, nodeID, runID });
 
-        if (response === null) {
-            setText();
-        } else if (response.r === 'error') {
+        if (response.r === 'error') {
             closeSnackbar();
             enqueueSnackbar("Can't get logs: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            let text = '';
-            response.map((a) => (text += `${JSON.stringify(a)}\n`));
-            setText(text);
+            setGraphQlResp(response);
         }
     };
 };

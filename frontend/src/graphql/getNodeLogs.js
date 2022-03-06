@@ -7,6 +7,7 @@ const query = gql`
     query getNodeLogs($pipelineID: String!, $runID: String!, $environmentID: String!, $nodeID: String!) {
         getNodeLogs(pipelineID: $pipelineID, runID: $runID, nodeID: $nodeID, environmentID: $environmentID) {
             created_at
+            uid
             log
             log_type
         }
