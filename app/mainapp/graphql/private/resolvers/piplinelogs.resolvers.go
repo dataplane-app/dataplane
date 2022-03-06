@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
@@ -33,13 +33,13 @@ func (r *queryResolver) GetNodeLogs(ctx context.Context, runID string, pipelineI
 
 	p := []*models.LogsWorkers{}
 
-	err := database.DBConn.Select("created_at", "log", "log_type").Order("created_at asc").Where("environment_id = ? and run_id=? and node_id=?", environmentID, runID, nodeID).Find(&p).Error
+	err := database.DBConn.Select("created_at", "log", "uid", "log_type").Order("created_at asc").Where("environment_id = ? and run_id=? and node_id=?", environmentID, runID, nodeID).Find(&p).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return nil, errors.New("Retrive pipelines database error.")
+		return nil, errors.New("Retrive logs database error.")
 	}
 	return p, nil
 }

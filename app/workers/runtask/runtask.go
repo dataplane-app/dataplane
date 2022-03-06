@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/google/uuid"
 	clog "github.com/pieterclaerhout/go-log"
 )
 
@@ -123,10 +124,12 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 			// Read line by line and process it
 			for scanner.Scan() {
+				uid := uuid.NewString()
 				line := config.Secrets.Replace(scanner.Text())
 
 				logmsg := modelmain.LogsWorkers{
 					CreatedAt:     time.Now().UTC(),
+					UID:           uid,
 					EnvironmentID: msg.EnvironmentID,
 					RunID:         msg.RunID,
 					NodeID:        msg.NodeID,
@@ -142,6 +145,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 				// }
 				sendmsg := modelmain.LogsSend{
 					CreatedAt: logmsg.CreatedAt,
+					UID:       uid,
 					Log:       line,
 					LogType:   "info",
 				}
@@ -173,10 +177,12 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 			// Read line by line and process it
 			for scannerErr.Scan() {
+				uid := uuid.NewString()
 				line := config.Secrets.Replace(scannerErr.Text())
 
 				logmsg := modelmain.LogsWorkers{
 					CreatedAt:     time.Now().UTC(),
+					UID:           uid,
 					EnvironmentID: msg.EnvironmentID,
 					RunID:         msg.RunID,
 					NodeID:        msg.NodeID,
@@ -192,6 +198,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 				// }
 				sendmsg := modelmain.LogsSend{
 					CreatedAt: logmsg.CreatedAt,
+					UID:       uid,
 					Log:       line,
 					LogType:   "info",
 				}
