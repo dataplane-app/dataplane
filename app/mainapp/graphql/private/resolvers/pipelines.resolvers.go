@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -48,7 +48,6 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 		EnvironmentID: environmentID,
 		WorkerGroup:   workerGroup,
 		Active:        true,
-		Online:        false,
 		UpdateLock:    true,
 	}
 
@@ -360,13 +359,13 @@ a.name,
 a.environment_id,
 a.description,
 a.active,
-a.online,
 a.worker_group,
 a.created_at,
 b.node_type,
-b.node_type_desc
+b.node_type_desc,
+b.online
 from pipelines a left join (
-	select node_type, node_type_desc, pipeline_id from pipeline_nodes where node_type='trigger'
+	select node_type, node_type_desc, pipeline_id, true as online from pipeline_nodes where node_type='trigger'
 ) b on a.pipeline_id=b.pipeline_id
 where a.environment_id = ?
 order by a.created_at desc
@@ -390,14 +389,14 @@ a.name,
 a.environment_id,
 a.description,
 a.active,
-a.online,
 a.worker_group,
 a.created_at,
 b.node_type,
-b.node_type_desc
+b.node_type_desc,
+b.online
 from pipelines a 
 left join (
-	select node_type, node_type_desc, pipeline_id from pipeline_nodes where node_type='trigger'
+	select node_type, node_type_desc, pipeline_id, true as online from pipeline_nodes where node_type='trigger'
 ) b on a.pipeline_id=b.pipeline_id
 inner join (
   select distinct resource_id, environment_id from (

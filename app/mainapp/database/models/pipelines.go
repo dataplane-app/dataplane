@@ -20,8 +20,6 @@ type Pipelines struct {
 	// YAMLHash      string         `json:"yaml_hash"`
 	Description string         `json:"description"`
 	Active      bool           `json:"active"`
-	Online      bool           `json:"online"`
-	Current     string         `json:"current"` //current history
 	WorkerGroup string         `json:"worker_group"`
 	Meta        datatypes.JSON `json:"meta"`
 	Json        datatypes.JSON `json:"json"`
