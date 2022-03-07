@@ -1,3 +1,4 @@
+import { ActionLayer } from './ActionLayer';
 import { useTheme } from '@emotion/react';
 import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -9,7 +10,7 @@ import { useHistory, useLocation, useParams } from 'react-router-dom';
 import CustomLine from '../../components/CustomNodesContent/CustomLine';
 import PublishPipelineDrawer from '../../components/DrawerContent/PublishPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
-import RemoveLogsPageItem from '../../components/MoreInfoContent/RemoveLogsPageItem';
+import ViewPageItem from '../../components/MoreInfoContent/ViewPageItem';
 import MoreInfoMenu from '../../components/MoreInfoMenu';
 import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
 import { edgeTypes, nodeTypes, useGlobalFlowState } from '../Flow';
@@ -24,9 +25,6 @@ const View = () => {
     const history = useHistory();
     const { state: pipeline } = useLocation();
     const getPipelineFlow = useGetPipelineFlowHook(pipeline);
-
-    // URI parameter
-    const { pipelineId } = useParams();
 
     // Global states
     const FlowState = useGlobalFlowState();
@@ -92,12 +90,6 @@ const View = () => {
         }
     };
 
-    // Handle edit button
-    const handleGoToEditorPage = () => {
-        FlowState.isEditorPage.set(true);
-        history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipeline });
-    };
-
     //Flow methods
     const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
     const onConnect = (params) => {
@@ -146,27 +138,15 @@ const View = () => {
 
                             <Box sx={{ top: '0', right: '0' }}>
                                 <MoreInfoMenu iconHorizontal>
-                                    <RemoveLogsPageItem />
+                                    <ViewPageItem pipeline={pipeline} />
                                 </MoreInfoMenu>
                             </Box>
                         </Grid>
                     </Box>
                 </Grid>
 
-                <Grid mt={4} container alignItems="center" sx={{ width: { xl: '88%' }, flexWrap: 'nowrap' }}>
-                    {/* Status Chips */}
-                    <StatusChips />
-
-                    {/* Runs dropdown */}
-                    <RunsDropdown environmentID={Environment.id.get()} setElements={setElements} />
-
-                    <Button variant="contained" onClick={handleGoToEditorPage} sx={{ ml: 2, mr: 2 }}>
-                        Edit
-                    </Button>
-
-                    {/* Timer */}
-                    {FlowState.elements.get().length > 0 ? <Timer environmentID={Environment.id.get()} /> : null}
-                </Grid>
+                {/* Run/Stop button, Chips, Timer */}
+                <ActionLayer setElements={setElements} environmentId={Environment.id.get()} />
             </Box>
 
             <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>

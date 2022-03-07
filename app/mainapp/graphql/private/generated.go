@@ -90,6 +90,7 @@ type ComplexityRoot struct {
 		DeactivateAccessGroup            func(childComplexity int, accessGroupID string, environmentID string) int
 		DeleteAccessGroup                func(childComplexity int, accessGroupID string, environmentID string) int
 		DeletePermissionToUser           func(childComplexity int, userID string, permissionID string, environmentID string) int
+		DeletePipeline                   func(childComplexity int, environmentID string, pipelineID string) int
 		DeleteSecretFromWorkerGroup      func(childComplexity int, environmentName string, workerGroup string, secret string) int
 		PipelinePermissionsToAccessGroup func(childComplexity int, environmentID string, resourceID string, access []string, accessGroupID string) int
 		PipelinePermissionsToUser        func(childComplexity int, environmentID string, resourceID string, access []string, userID string) int
@@ -97,6 +98,7 @@ type ComplexityRoot struct {
 		RemoveUserFromEnvironment        func(childComplexity int, userID string, environmentID string) int
 		RunPipelines                     func(childComplexity int, pipelineID string, environmentID string) int
 		StopPipelines                    func(childComplexity int, pipelineID string, runID string, environmentID string) int
+		TurnOnOffPipeline                func(childComplexity int, environmentID string, pipelineID string, online bool) int
 		UpdateAccessGroup                func(childComplexity int, input *AccessGroupsInput) int
 		UpdateActivateEnvironment        func(childComplexity int, environmentID string) int
 		UpdateActivateUser               func(childComplexity int, userid string) int
@@ -360,6 +362,8 @@ type MutationResolver interface {
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
 	AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error)
 	AddUpdatePipelineFlow(ctx context.Context, input *PipelineFlowInput, environmentID string, pipelineID string) (string, error)
+	DeletePipeline(ctx context.Context, environmentID string, pipelineID string) (string, error)
+	TurnOnOffPipeline(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	RunPipelines(ctx context.Context, pipelineID string, environmentID string) (*models.PipelineRuns, error)
 	StopPipelines(ctx context.Context, pipelineID string, runID string, environmentID string) (*models.PipelineRuns, error)
@@ -706,6 +710,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeletePermissionToUser(childComplexity, args["user_id"].(string), args["permission_id"].(string), args["environmentID"].(string)), true
 
+	case "Mutation.deletePipeline":
+		if e.complexity.Mutation.DeletePipeline == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deletePipeline_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeletePipeline(childComplexity, args["environmentID"].(string), args["pipelineID"].(string)), true
+
 	case "Mutation.deleteSecretFromWorkerGroup":
 		if e.complexity.Mutation.DeleteSecretFromWorkerGroup == nil {
 			break
@@ -789,6 +805,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.StopPipelines(childComplexity, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string)), true
+
+	case "Mutation.turnOnOffPipeline":
+		if e.complexity.Mutation.TurnOnOffPipeline == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_turnOnOffPipeline_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TurnOnOffPipeline(childComplexity, args["environmentID"].(string), args["pipelineID"].(string), args["online"].(bool)), true
 
 	case "Mutation.updateAccessGroup":
 		if e.complexity.Mutation.UpdateAccessGroup == nil {
@@ -2848,16 +2876,30 @@ extend type Mutation {
   """
   Add a new pipeline.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment
+  + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines
   """
   addPipeline(name: String!, environmentID: String!, description: String!, workerGroup: String! ): String!
 
   """
   Update pipeline flow.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment
+  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
   """
   addUpdatePipelineFlow( input: PipelineFlowInput, environmentID: String!, pipelineID: String! ): String!
+
+  """
+  Delete pipeline.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  """
+  deletePipeline(environmentID: String!, pipelineID: String! ): String!
+
+  """
+  Turn on or off trigger node.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  """
+  turnOnOffPipeline(environmentID: String!, pipelineID: String!, online: Boolean!): String!
 }
 `, BuiltIn: false},
 	{Name: "resolvers/piplinelogs.graphqls", Input: `    type LogsWorkers {
@@ -3544,6 +3586,30 @@ func (ec *executionContext) field_Mutation_deletePermissionToUser_args(ctx conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deletePipeline_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteSecretFromWorkerGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -3772,6 +3838,39 @@ func (ec *executionContext) field_Mutation_stopPipelines_args(ctx context.Contex
 		}
 	}
 	args["environmentID"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_turnOnOffPipeline_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg1
+	var arg2 bool
+	if tmp, ok := rawArgs["online"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("online"))
+		arg2, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["online"] = arg2
 	return args, nil
 }
 
@@ -6386,6 +6485,90 @@ func (ec *executionContext) _Mutation_addUpdatePipelineFlow(ctx context.Context,
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().AddUpdatePipelineFlow(rctx, args["input"].(*PipelineFlowInput), args["environmentID"].(string), args["pipelineID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deletePipeline(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deletePipeline_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeletePipeline(rctx, args["environmentID"].(string), args["pipelineID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_turnOnOffPipeline(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_turnOnOffPipeline_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().TurnOnOffPipeline(rctx, args["environmentID"].(string), args["pipelineID"].(string), args["online"].(bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -15260,6 +15443,26 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "addUpdatePipelineFlow":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_addUpdatePipelineFlow(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deletePipeline":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deletePipeline(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "turnOnOffPipeline":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_turnOnOffPipeline(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)

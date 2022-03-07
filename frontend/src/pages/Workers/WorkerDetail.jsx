@@ -138,7 +138,7 @@ export default function WorkerDetail() {
                         </Grid>
                     </Grid>
 
-                    <Grid item display="flex" alignItems="center" sx={{ marginLeft: 'auto', marginRight: '2px' }}>
+                    {/* <Grid item display="flex" alignItems="center" sx={{ marginLeft: 'auto', marginRight: '2px' }}>
                         <div>
                             <Typography component="h2" variant="h2" align="right" sx={{ fontWeight: 900 }}>
                                 6
@@ -174,7 +174,7 @@ export default function WorkerDetail() {
                                 Failed
                             </Typography>
                         </div>
-                    </Grid>
+                    </Grid> */}
                 </Grid>
             </Box>
 
@@ -238,12 +238,12 @@ const CustomWorker = ({ row }) => {
             <Typography component="h5" mt={0.5} variant="subtitle1">
                 Last updated: {T}
             </Typography>
-            <Grid item display="flex" alignItems="center" mt={2} sx={{ alignSelf: 'flex-start' }}>
+            {/* <Grid item display="flex" alignItems="center" mt={2} sx={{ alignSelf: 'flex-start' }}>
                 <CustomChip amount={queue} label="Queue" margin={2} customColor="purple" />
                 <CustomChip amount={running} label="Running" margin={1} customColor="orange" />
                 <CustomChip amount={succeeded} label="Succeeded" margin={1} customColor="green" />
                 <CustomChip amount={failed} label="Failed" margin={1} customColor="red" />
-            </Grid>
+            </Grid> */}
         </Grid>
     );
 };

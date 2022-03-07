@@ -2,14 +2,15 @@ import { Box, Button, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Downgraded } from '@hookstate/core';
 import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
 import { useRunPipelines } from '../../graphql/runPipelines';
 import { useStopPipelines } from '../../graphql/stopPipelines';
 import { useGlobalFlowState } from '../Flow';
 import useWebSocket, { useGlobalRunState } from './useWebSocket';
+import StatusChips from './StatusChips';
+import RunsDropdown from './RunsDropdown';
 
-export default function Timer({ environmentID }) {
+export default function Timer({ environmentID, setElements }) {
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
@@ -94,29 +95,33 @@ export default function Timer({ environmentID }) {
     }, [RunState.get()]);
 
     return (
-        <>
-            <Grid item>
+        <Grid item>
+            <Box display="flex" alignItems="center">
                 {isRunning ? (
-                    <Box display="flex" alignItems="center">
-                        <Button
-                            onClick={handleTimerStop}
-                            variant="outlined"
-                            color="error"
-                            sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                            Stop
-                        </Button>
-
-                        <Typography variant="h3" ml={2}>
-                            {elapsed ? elapsed : isRunning ? '' : '00:00:00'}
-                        </Typography>
-                    </Box>
+                    <Button
+                        onClick={handleTimerStop}
+                        variant="outlined"
+                        color="error"
+                        sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                        Stop
+                    </Button>
                 ) : (
                     <Button onClick={handleTimerStart} variant="outlined" sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                         Run
                     </Button>
                 )}
-            </Grid>
-        </>
+
+                <StatusChips />
+
+                <RunsDropdown environmentID={environmentID} setElements={setElements} />
+
+                {isRunning ? (
+                    <Typography variant="h3" ml={2}>
+                        {elapsed ? elapsed : isRunning ? '' : '00:00:00'}
+                    </Typography>
+                ) : null}
+            </Box>
+        </Grid>
     );
 }
 

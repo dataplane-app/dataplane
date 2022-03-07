@@ -42,7 +42,7 @@ type PipelineNodes struct {
 	EnvironmentID string         `json:"environment_id"`
 	NodeType      string         `json:"node_type"`      //trigger, process, checkpoint
 	NodeTypeDesc  string         `json:"node_type_desc"` //python, bash, play, scheduler, checkpoint, api
-	TriggerOnline bool           `json:"trigger_online"`
+	TriggerOnline bool           `gorm:"default:false;" json:"trigger_online"`
 	Description   string         `json:"description"`
 	Commands      datatypes.JSON `json:"commands"`
 	Meta          datatypes.JSON `json:"meta"`

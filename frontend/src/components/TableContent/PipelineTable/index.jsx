@@ -14,7 +14,7 @@ import { useSnackbar } from 'notistack';
 import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from '../../../pages/View';
 
-const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
+const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
     // React router
     const history = useHistory();
 
@@ -40,7 +40,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
                 Cell: (row) => (
                     <Grid item sx={{ flex: 1, ml: -1 }} display="flex" alignItems="center" justifyContent="center">
                         <MoreInfoMenuPipeline>
-                            <PipelineItemTable id={row.value[0]} name={row.value[1]} handleOpenManage={() => setIsOpenManage(!isOpenManage)} />
+                            <PipelineItemTable id={row.value[0]} name={row.value[1]} handleOpenManage={() => setIsOpenManage(!isOpenManage)} getPipelines={getPipelines} />
                         </MoreInfoMenuPipeline>
                     </Grid>
                 ),
@@ -79,8 +79,8 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
                 Cell: (row) => {
                     return (
                         <Box display="flex" alignItems="center" pr={2} ml={1.2}>
-                            <Box height={16} width={16} backgroundColor={`${row.value ? 'status.pipelineOnline' : 'error.main'}`} borderRadius="100%"></Box>
-                            <Typography ml={1} fontSize={16} sx={{ color: row.value ? 'status.pipelineOnlineText' : 'error.main' }}>
+                            <Box height={12} width={12} backgroundColor={`${row.value ? 'status.pipelineOnline' : 'error.main'}`} borderRadius="100%"></Box>
+                            <Typography ml={1} variant="body2" sx={{ color: row.value ? 'status.pipelineOnlineText' : 'error.main' }}>
                                 {row.value ? 'Online' : 'Offline'}
                             </Typography>
                         </Box>
