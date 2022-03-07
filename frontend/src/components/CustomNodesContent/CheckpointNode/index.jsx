@@ -47,30 +47,30 @@ const CheckpointNode = (props) => {
     }, [RunState[props.id].status?.get()]);
 
     return (
-        <Tooltip title={'Node ID: ' + props.id} placement="top">
-            <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>
-                <Handle type="source" position={Position.Right} id="checkpoint_source" style={customTargetHandle(theme.palette.mode)} />
-                <Handle type="target" position={Position.Left} id="checkpoint_target" className="handlePulseAnimation" style={customTargetHandle(theme.palette.mode)} />
-                <Grid container alignItems="flex-start" wrap="nowrap">
-                    <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faMapMarkedAlt} />
+        <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>
+            <Handle type="source" position={Position.Right} id="checkpoint_source" style={customTargetHandle(theme.palette.mode)} />
+            <Handle type="target" position={Position.Left} id="checkpoint_target" className="handlePulseAnimation" style={customTargetHandle(theme.palette.mode)} />
+            <Grid container alignItems="flex-start" wrap="nowrap">
+                <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faMapMarkedAlt} />
+                <Tooltip title={'Node ID: ' + props.id} placement="top">
                     <Grid item ml={1.5} textAlign="left">
                         <Typography fontSize={11} fontWeight={900}>
                             Checkpoint
                         </Typography>
                     </Grid>
+                </Tooltip>
 
-                    {isEditorPage && (
-                        <Grid position="absolute" bottom={2} right={9} container wrap="nowrap" width="auto" alignItems="center" justifyContent="space-between">
-                            <Box mt={2}>
-                                <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
-                                    <PlayTriggerNodeItem />
-                                </MoreInfoMenu>
-                            </Box>
-                        </Grid>
-                    )}
-                </Grid>
-            </Box>
-        </Tooltip>
+                {isEditorPage && (
+                    <Grid position="absolute" bottom={2} right={9} container wrap="nowrap" width="auto" alignItems="center" justifyContent="space-between">
+                        <Box mt={2}>
+                            <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
+                                <PlayTriggerNodeItem />
+                            </MoreInfoMenu>
+                        </Box>
+                    </Grid>
+                )}
+            </Grid>
+        </Box>
     );
 };
 

@@ -54,10 +54,10 @@ const BashNode = (props) => {
     };
 
     return (
-        <Tooltip title={'Node ID: ' + props.id} placement="top">
-            <Box sx={{ padding: '10px 15px', width: 160, borderRadius: '10px', border: `3px solid ${borderColor}` }} onClick={onClick}>
-                <Handle type="target" position={Position.Left} isConnectable id="clear" className="handlePulseAnimation" style={customTargetHandle(theme.palette.mode)} />
-                <Handle type="source" position={Position.Right} id="3" style={FlowState.isDragging.get() ? customSourceHandleDragging : customSourceHandle(theme.palette.mode)} />
+        <Box sx={{ padding: '10px 15px', width: 160, borderRadius: '10px', border: `3px solid ${borderColor}` }} onClick={onClick}>
+            <Handle type="target" position={Position.Left} isConnectable id="clear" className="handlePulseAnimation" style={customTargetHandle(theme.palette.mode)} />
+            <Handle type="source" position={Position.Right} id="3" style={FlowState.isDragging.get() ? customSourceHandleDragging : customSourceHandle(theme.palette.mode)} />
+            <Tooltip title={'Node ID: ' + props.id} placement="top">
                 <Grid container alignItems="flex-start" wrap="nowrap" pb={2}>
                     <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faRunning} />
                     <Grid item ml={1.5} textAlign="left">
@@ -70,26 +70,26 @@ const BashNode = (props) => {
                         </Typography>
                     </Grid>
                 </Grid>
+            </Tooltip>
 
-                <Grid position="absolute" bottom={2} left={9} right={9} container wrap="nowrap" width="auto" alignItems="center" justifyContent="space-between">
-                    <Grid item>
-                        <Typography fontSize={8}>{props.data.language}</Typography>
-                    </Grid>
-
-                    <Grid item>
-                        <Typography fontSize={8}>
-                            {RunState[props.id].status?.get() === 'Success' && displayTimer(RunState[props.id].end_dt?.get(), RunState[props.id].start_dt?.get())}
-                        </Typography>
-                    </Grid>
-
-                    <Box mt={0}>
-                        <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
-                            {isEditorPage ? <ProcessTypeEditorModeItem /> : <ProcessTypeNodeItem />}
-                        </MoreInfoMenu>
-                    </Box>
+            <Grid position="absolute" bottom={2} left={9} right={9} container wrap="nowrap" width="auto" alignItems="center" justifyContent="space-between">
+                <Grid item>
+                    <Typography fontSize={8}>{props.data.language}</Typography>
                 </Grid>
-            </Box>
-        </Tooltip>
+
+                <Grid item>
+                    <Typography fontSize={8}>
+                        {RunState[props.id].status?.get() === 'Success' && displayTimer(RunState[props.id].end_dt?.get(), RunState[props.id].start_dt?.get())}
+                    </Typography>
+                </Grid>
+
+                <Box mt={0}>
+                    <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
+                        {isEditorPage ? <ProcessTypeEditorModeItem /> : <ProcessTypeNodeItem />}
+                    </MoreInfoMenu>
+                </Box>
+            </Grid>
+        </Box>
     );
 };
 

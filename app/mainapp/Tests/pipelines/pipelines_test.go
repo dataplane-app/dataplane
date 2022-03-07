@@ -1,11 +1,9 @@
 package pipelinetests
 
 import (
-	"bytes"
 	"dataplane/mainapp/Tests/testutils"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
-	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
@@ -26,6 +24,7 @@ go test -p 1 -v -count=1 -run TestPipelines dataplane/mainapp/Tests/pipelines
 * Update pipeline flow
 * Get pipeline flow
 * Delete pipeline flow
+* Delete pipeline
 */
 func TestPipelines(t *testing.T) {
 
@@ -66,8 +65,6 @@ func TestPipelines(t *testing.T) {
 	}
 
 	pipelineId := testutils.TextEscape(faker.UUIDHyphenated())
-
-	var responsePretty bytes.Buffer
 
 	// -------- clean data -------
 	database.DBConn.Where("environment_id =?", envID).Delete(&models.PipelineNodes{})
@@ -339,8 +336,7 @@ func TestPipelines(t *testing.T) {
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 
-	json.Indent(&responsePretty, []byte(response), "", "\t")
-	log.Println(responsePretty.String())
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -348,4 +344,21 @@ func TestPipelines(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete pipeline 200 status code")
 
+	// -------- Delete pipeline -------------
+	mutation = `mutation {
+		deletePipeline(
+				environmentID: "` + envID + `",
+				pipelineID: "test_` + pipelineId + `")
+				  
+			}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete pipeline 200 status code")
 }

@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -14,6 +14,7 @@ import (
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -318,6 +319,67 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	}
 
 	return "success", nil
+}
+
+func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID string, pipelineID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("requires permissions")
+	}
+
+	// Delete the pipeline
+	p := models.Pipelines{}
+
+	err := database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete pipeline database error.")
+	}
+
+	// Delete pipeline's nodes
+	n := models.PipelineNodes{}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&n).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete pipeline nodes database error.")
+	}
+
+	// Delete pipeline's edges
+	e := models.PipelineEdges{}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&e).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete pipeline edges database error.")
+	}
+
+	response := "Pipeline deleted"
+	return response, nil
+}
+
+func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *pipelineEdgesResolver) Meta(ctx context.Context, obj *models.PipelineEdges) (interface{}, error) {
