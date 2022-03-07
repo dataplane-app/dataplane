@@ -14,6 +14,7 @@ import { useSnackbar } from 'notistack';
 import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from '../../../pages/View';
 import DeletePipelineDrawer from '../../DrawerContent/DeletePipelineDrawer';
+import CustomChip from '../../CustomChip';
 
 const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
     // React router
@@ -92,14 +93,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
             {
                 accessor: 'online',
                 Cell: (row) => {
-                    return (
-                        <Box display="flex" alignItems="center" pr={2} ml={1.2}>
-                            <Box height={12} width={12} backgroundColor={`${row.value ? 'status.pipelineOnline' : 'error.main'}`} borderRadius="100%"></Box>
-                            <Typography ml={1} variant="body2" sx={{ color: row.value ? 'status.pipelineOnlineText' : 'error.main' }}>
-                                {row.value ? 'Online' : 'Offline'}
-                            </Typography>
-                        </Box>
-                    );
+                    return row.value ? <CustomChip label={'Online'} customColor="green" /> : <CustomChip label="Offline" customColor="red" />;
                 },
             },
         ],
