@@ -402,7 +402,11 @@ const Flow = () => {
             </Drawer>
 
             <Drawer anchor="right" open={FlowState.isOpenSchedulerDrawer.get()} onClose={() => FlowState.isOpenSchedulerDrawer.set(false)}>
-                <ScheduleDrawer handleClose={() => FlowState.isOpenSchedulerDrawer.set(false)} />
+                <ScheduleDrawer
+                    handleClose={() => FlowState.isOpenSchedulerDrawer.set(false)} //
+                    environmentID={Environment.id.get()}
+                    pipelineID={pipeline.pipelineID}
+                />
             </Drawer>
 
             <Drawer anchor="right" open={FlowState.isOpenAPIDrawer.get()} onClose={() => FlowState.isOpenAPIDrawer.set(false)}>
