@@ -74,7 +74,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                         Close
                     </Button>
                 </Box>
-                {false ? (
+                {true ? (
                     <Box color="#65BEFF" display="flex" alignItems="center" mt={0.5}>
                         <AdjustIcon />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
