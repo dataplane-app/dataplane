@@ -31,6 +31,7 @@ export const globalFlowState = createState({
     isOpenSchedulerDrawer: false,
     isOpenConfigureDrawer: false,
     isOpenCommandDrawer: false,
+    isOpenLogDrawer: false,
     isOpenAPIDrawer: false,
     isEditorPage: false,
     selectedElement: null,
@@ -80,7 +81,7 @@ const useAddUpdatePipelineFlowfunc = () => {
             closeSnackbar();
             enqueueSnackbar(`Can't update flow: ${response.r}`, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update flow failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             history.push({ pathname: `/pipelines/view/${pipelineId}`, state: pipeline });

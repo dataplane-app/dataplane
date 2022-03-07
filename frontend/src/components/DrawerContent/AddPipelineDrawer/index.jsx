@@ -103,7 +103,7 @@ export const useAddPipeline_ = (environmentID) => {
         if (response.r === 'error') {
             enqueueSnackbar("Can't create pipeline: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': add pipeline', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             history.push({ pathname: `/pipelines/flow/${response}`, state: data });
         }
@@ -128,7 +128,7 @@ export const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
         } else if (response.r === 'Unauthorized') {
             enqueueSnackbar('Idle: not polling', { variant: 'warning' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get worker groups failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setWorkerGroups(response);
         }

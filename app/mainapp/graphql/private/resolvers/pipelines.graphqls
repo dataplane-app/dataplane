@@ -113,14 +113,28 @@ extend type Mutation {
   """
   Add a new pipeline.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment
+  + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines
   """
   addPipeline(name: String!, environmentID: String!, description: String!, workerGroup: String! ): String!
 
   """
   Update pipeline flow.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment
+  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
   """
   addUpdatePipelineFlow( input: PipelineFlowInput, environmentID: String!, pipelineID: String! ): String!
+
+  """
+  Delete pipeline.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  """
+  deletePipeline(environmentID: String!, pipelineID: String! ): String!
+
+  """
+  Turn on or off trigger node.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  """
+  turnOnOffPipeline(environmentID: String!, pipelineID: String!, online: Boolean!): String!
 }

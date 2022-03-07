@@ -47,7 +47,7 @@ func (r *queryResolver) GetAllPreferences(ctx context.Context) ([]*privategraphq
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
+			logging.PrintSecretsRedact("Get all preferences:", err)
 		}
 		return nil, errors.New("Get preferences database error.")
 	}
@@ -65,7 +65,7 @@ func (r *queryResolver) GetOnePreference(ctx context.Context, preference string)
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
+			logging.PrintSecretsRedact("Get one preference:", err)
 		}
 		return nil, errors.New("Get preferences database error.")
 	}

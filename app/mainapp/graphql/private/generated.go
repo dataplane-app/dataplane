@@ -74,6 +74,7 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		Log       func(childComplexity int) int
 		LogType   func(childComplexity int) int
+		UID       func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -553,6 +554,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.LogsWorkers.LogType(childComplexity), true
+
+	case "LogsWorkers.uid":
+		if e.complexity.LogsWorkers.UID == nil {
+			break
+		}
+
+		return e.complexity.LogsWorkers.UID(childComplexity), true
 
 	case "Mutation.activateAccessGroup":
 		if e.complexity.Mutation.ActivateAccessGroup == nil {
@@ -2854,6 +2862,7 @@ extend type Mutation {
 `, BuiltIn: false},
 	{Name: "resolvers/piplinelogs.graphqls", Input: `    type LogsWorkers {
 	created_at: Time!
+    uid: String!
 	log: String!
 	log_type: String!
 }
@@ -5308,6 +5317,41 @@ func (ec *executionContext) _LogsWorkers_created_at(ctx context.Context, field g
 	res := resTmp.(time.Time)
 	fc.Result = res
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogsWorkers_uid(ctx context.Context, field graphql.CollectedField, obj *models.LogsWorkers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "LogsWorkers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LogsWorkers_log(ctx context.Context, field graphql.CollectedField, obj *models.LogsWorkers) (ret graphql.Marshaler) {
@@ -14946,6 +14990,16 @@ func (ec *executionContext) _LogsWorkers(ctx context.Context, sel ast.SelectionS
 		case "created_at":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._LogsWorkers_created_at(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "uid":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._LogsWorkers_uid(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

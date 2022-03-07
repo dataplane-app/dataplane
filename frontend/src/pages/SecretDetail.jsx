@@ -203,7 +203,7 @@ const useGetSecret_ = (secret, setSecret, Environment, reset) => {
             closeSnackbar();
             enqueueSnackbar("Can't get secrets: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get secrets failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setSecret(response);
 
@@ -239,7 +239,7 @@ const useUpdateSecret_ = (setSecrets, Environment, getSecret) => {
             closeSnackbar();
             enqueueSnackbar("Can't update secrets: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update secrets failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             setSecrets(response);
@@ -261,7 +261,7 @@ const useAddSecretToWorkerGroup_ = (environmentName, WorkerGroup, Secret, getSec
         if (response.r === 'error') {
             enqueueSnackbar("Can't update secrets: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update secrets failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getSecretWorkerGroups();
@@ -286,7 +286,7 @@ const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
         } else if (response.r === 'Unauthorized') {
             enqueueSnackbar('Idle: not polling', { variant: 'warning' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get worker groups failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setWorkerGroups(response);
         }
@@ -308,7 +308,7 @@ const useGetSecretGroups_ = (environmentName, Secret, setSecretWorkerGroups) => 
         } else if (response.r === 'error') {
             enqueueSnackbar("Can't get secret's worker groups: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ": get secret's worker groups failed", { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setSecretWorkerGroups(response);
         }
@@ -331,7 +331,7 @@ const useDeleteSecretFromWorkerGroup_ = (environmentName, Secret, getSecretWorke
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': remove worker group', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getSecretWorkerGroups();

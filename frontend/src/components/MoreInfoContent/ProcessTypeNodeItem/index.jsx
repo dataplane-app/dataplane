@@ -5,11 +5,16 @@ import { Downgraded } from '@hookstate/core';
 
 const ProcessTypeNodeItem = (props) => {
     const history = useHistory();
-    const Flow = useGlobalFlowState();
+    const FlowState = useGlobalFlowState();
 
     const handleCodeClick = () => {
-        history.push({ pathname: `/editor/${Flow.pipelineInfo.attach(Downgraded).get()?.pipelineID}`, state: Flow.pipelineInfo.attach(Downgraded).get() });
+        history.push({ pathname: `/editor/${FlowState.pipelineInfo.attach(Downgraded).get()?.pipelineID}`, state: FlowState.pipelineInfo.attach(Downgraded).get() });
         props.handleCloseMenu();
+    };
+
+    const handleOpenLog = () => {
+        props.handleCloseMenu();
+        FlowState.isOpenLogDrawer.set(true);
     };
 
     return (
@@ -26,9 +31,7 @@ const ProcessTypeNodeItem = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
                 Workers
             </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
-                Logs
-            </MenuItem>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleOpenLog}></MenuItem>
         </>
     );
 };

@@ -42,8 +42,8 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
     // Custom GraphQL hooks
     const getUsers = useGetUsers_(setUsers);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, Environment.id.get(), MeData.user_id.get());
-    const pipelinePermissionsToUser = usePipelinePermissionsToUser_(permissionsState, refreshPermissions);
-    const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup_(permissionsState, refreshPermissions);
+    const pipelinePermissionsToUser = usePipelinePermissionsToUser_(permissionsState, refreshPermissions, handleClose);
+    const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup_(permissionsState, refreshPermissions, handleClose);
     const getUserPipelinePermissions = useGetUserSinglePipelinePermissions_(Environment.id.get(), setPermissionsState);
 
     // Get all users and access groups on load
@@ -135,14 +135,14 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
                             }}
                             value={selectedUser}
                             options={users}
-                            getOptionLabel={(option) => option.first_name + ' ' + option.last_name || ''}
+                            getOptionLabel={(option) => option.first_name + ' ' + option.last_name + ' - ' + option.email || ''}
                             isOptionEqualToValue={(option, value) =>
                                 option.user_id === value.user_id && //
                                 option.first_name === value.first_name &&
                                 option.last_name === value.last_name &&
                                 option.email === value.email
                             }
-                            renderInput={(params) => <TextField {...params} label="User" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
+                            renderInput={(params) => <TextField {...params} label="User" size="small" sx={{ fontSize: '.75rem', display: 'flex', width: '300px' }} />}
                         />
                     ) : (
                         <Autocomplete
@@ -227,7 +227,7 @@ const useGetUsers_ = (setUsers) => {
             closeSnackbar();
             enqueueSnackbar("Can't get members: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get members', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setUsers(response);
         }
@@ -250,7 +250,7 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get access groups failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setAccessGroups(response);
         }
@@ -258,7 +258,7 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
 };
 
 // Update pipeline permissions to user
-const usePipelinePermissionsToUser_ = (permissionsState, refreshPermissions) => {
+const usePipelinePermissionsToUser_ = (permissionsState, refreshPermissions, handleClose) => {
     // GraphQL hook
     const pipelinePermissionsToUser = usePipelinePermissionsToUser();
 
@@ -291,10 +291,11 @@ const usePipelinePermissionsToUser_ = (permissionsState, refreshPermissions) => 
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update permissions', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             refreshPermissions();
+            handleClose();
         }
     };
 };
@@ -327,7 +328,7 @@ const useGetUserSinglePipelinePermissions_ = (environmentID, setpermissionsState
             closeSnackbar();
             enqueueSnackbar("Can't get permissions: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get permissions', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             // Create an array with access permissions
             const accessArr = response.Access.split(',');
@@ -343,7 +344,7 @@ const useGetUserSinglePipelinePermissions_ = (environmentID, setpermissionsState
 
 // ----- Access group
 // Update pipeline permissions to user
-const usePipelinePermissionsToAccessGroup_ = (permissionsState, refreshPermissions) => {
+const usePipelinePermissionsToAccessGroup_ = (permissionsState, refreshPermissions, handleClose) => {
     // GraphQL hook
     const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup();
 
@@ -376,10 +377,11 @@ const usePipelinePermissionsToAccessGroup_ = (permissionsState, refreshPermissio
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': update permissions', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             refreshPermissions();
+            handleClose();
         }
     };
 };

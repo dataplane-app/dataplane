@@ -373,7 +373,7 @@ const useGetUserPermissions_ = (setUserPermissions, userID, environmentID) => {
                 closeSnackbar();
                 enqueueSnackbar("Can't user permissions: " + response.msg, { variant: 'error' });
             } else if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message + ': get user permissions', { variant: 'error' }));
+                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
             } else {
                 setUserPermissions(response);
             }
@@ -397,7 +397,7 @@ const useGetMyPipelinePermissions_ = (setUserSpecificPermissions) => {
             closeSnackbar();
             enqueueSnackbar("Can't get specific permissions: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': gets specific permissions', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setUserSpecificPermissions(response);
         }
@@ -443,7 +443,7 @@ const useGetUserAccessGroups_ = (setAccessGroups, environmentID, userID) => {
                 variant: 'error',
             });
         } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message + ': get access groups failed', { variant: 'error' }));
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setAccessGroups(response);
         }
