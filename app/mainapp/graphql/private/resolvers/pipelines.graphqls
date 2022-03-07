@@ -132,7 +132,7 @@ extend type Mutation {
   deletePipeline(environmentID: String!, pipelineID: String! ): String!
 
   """
-  Delete pipeline.
+  Turn on or off trigger node.
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
   """

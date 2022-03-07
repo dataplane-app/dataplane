@@ -19,6 +19,8 @@ import (
 
 func Migrate() {
 
+	migrateVersion := "0.0.1"
+
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		os.Getenv("secret_db_user"),
@@ -49,39 +51,71 @@ func Migrate() {
 		panic(err)
 	}
 
+	// Always migrate platform table for migration versioning
 	err1 := dbConn.AutoMigrate(
-		&models.Pipelines{},
-		&models.Users{},
-		&models.LogsPlatform{},
-		&models.AuthRefreshTokens{},
-		&models.Environment{},
-		&models.EnvironmentUser{},
 		&models.Platform{},
-		&models.Preferences{},
-		&models.Permissions{},
-		&models.PermissionsAccessGroups{},
-		&models.PermissionsAccessGUsers{},
-		&models.Pipelines{},
-		&models.PipelineNodes{},
-		&models.PipelineEdges{},
-		&models.PipelineRuns{},
-		&models.ResourceTypeStruct{},
-		&models.Secrets{},
-		&models.WorkerGroups{},
-		&models.Workers{},
-		&models.WorkerSecrets{},
-		&models.LogsWorkers{},
-		&models.WorkerTasks{},
 	)
 	if err1 != nil {
 		panic(err1)
 	}
 
-	// ---- load in mcc
-	// dbConn.Clauses(clause.OnConflict{
-	// 	UpdateAll: true,
-	// }).Create(&dataingest.Mcctradeingest)
-	// log.Println("mcc loaded")
+	// ----- Test for migration version mismatch ----
+	var currentVersion models.Platform
+	if err := dbConn.Select("migration_version").First(&currentVersion).Error; err != nil {
+		panic("Could not retrieve migration version")
+	}
+
+	if currentVersion.MigrationVersion != migrateVersion {
+
+		err1 := dbConn.AutoMigrate(
+			&models.Users{},
+			&models.LogsPlatform{},
+			&models.AuthRefreshTokens{},
+			&models.Environment{},
+			&models.EnvironmentUser{},
+			&models.Preferences{},
+			&models.Permissions{},
+			&models.PermissionsAccessGroups{},
+			&models.PermissionsAccessGUsers{},
+			&models.Pipelines{},
+			&models.PipelineNodes{},
+			&models.PipelineEdges{},
+			&models.PipelineRuns{},
+			&models.ResourceTypeStruct{},
+			&models.Secrets{},
+			&models.WorkerGroups{},
+			&models.Workers{},
+			&models.WorkerSecrets{},
+			&models.LogsWorkers{},
+			&models.WorkerTasks{},
+		)
+		if err1 != nil {
+			panic(err1)
+		}
+
+		if err := dbConn.Model(&models.Platform{}).Select("migration_version").Where("1 = 1").Update("migration_version", migrateVersion).Error; err != nil {
+			panic("Could not retrieve migration version")
+		}
+
+		log.Println("💃 Migration updated to v" + migrateVersion)
+
+		hypertable := "SELECT create_hypertable('logs_platform', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
+
+		if hypertable != "" && os.Getenv("database") == "timescaledb" {
+			if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
+				panic(err)
+			}
+		}
+
+		hypertable = "SELECT create_hypertable('logs_workers', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
+
+		if hypertable != "" && os.Getenv("database") == "timescaledb" {
+			if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
+				panic(err)
+			}
+		}
+
+	}
 
 	// ---- load permissions data
 	dbConn.Clauses(clause.OnConflict{
@@ -109,20 +143,5 @@ func Migrate() {
 	}).Create(&secretsload)
 	log.Println("🐿  Secrets loaded")
 
-	hypertable := "SELECT create_hypertable('logs_platform', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
-
-	if hypertable != "" && os.Getenv("database") == "timescaledb" {
-		if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
-			panic(err)
-		}
-	}
-
-	hypertable = "SELECT create_hypertable('logs_workers', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
-
-	if hypertable != "" && os.Getenv("database") == "timescaledb" {
-		if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
-			panic(err)
-		}
-	}
 	log.Println("📦 Database migrated")
 }
