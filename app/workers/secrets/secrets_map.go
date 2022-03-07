@@ -2,6 +2,7 @@ package secrets
 
 import (
 	"dataplane/workers/config"
+	"log"
 	"os"
 	"strings"
 )
@@ -14,7 +15,6 @@ var Reset = "\033[0m"
 func MapSecrets() {
 
 	// Load the secrets attached to this worker group
-
 	for _, e := range os.Environ() {
 		pair := strings.SplitN(e, "=", 2)
 		if strings.Contains(pair[0], "secret") {
@@ -24,6 +24,10 @@ func MapSecrets() {
 
 	}
 
+	// Retrieve the secrets attached to this worker group
+
+	// The replacer is comma separated first is key then replacement - that is why append is twice above
 	config.Secrets = strings.NewReplacer(SecretsArray...)
+	log.Println("🐿  Secrets loaded")
 
 }

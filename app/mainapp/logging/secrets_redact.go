@@ -36,6 +36,7 @@ func MapSecrets() {
 
 	}
 
+	// The replacer is comma separated first is key then replacement - that is why append is twice above
 	Secrets = strings.NewReplacer(SecretsArray...)
 
 }

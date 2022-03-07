@@ -56,6 +56,35 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		return
 	}
 
+	// --- Check if pipeline has failed
+	var pipelineCheck modelmain.PipelineRuns
+	err2 = database.DBConn.Select("run_id", "status").Where("run_id = ?", msg.RunID).First(&pipelineCheck).Error
+	if err2 != nil {
+		logging.PrintSecretsRedact(err2.Error())
+		return
+	}
+
+	if pipelineCheck.Status != "Running" {
+
+		logging.PrintSecretsRedact("Skipping pipeline not in running state", msg.RunID, msg.NodeID)
+
+		TaskFinal := modelmain.WorkerTasks{
+			TaskID:        msg.TaskID,
+			EnvironmentID: config.EnvID,
+			RunID:         msg.RunID,
+			WorkerGroup:   msg.WorkerGroup,
+			WorkerID:      config.WorkerID,
+			NodeID:        msg.NodeID,
+			PipelineID:    msg.PipelineID,
+			Status:        "Fail",
+			Reason:        "Pipeline not running",
+			EndDT:         time.Now().UTC(),
+		}
+		UpdateWorkerTasks(TaskFinal)
+
+		return
+	}
+
 	statusUpdate = "Run"
 
 	TaskUpdate := modelmain.WorkerTasks{
