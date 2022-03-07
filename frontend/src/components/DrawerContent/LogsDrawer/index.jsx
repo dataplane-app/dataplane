@@ -5,7 +5,7 @@ import { LazyLog, ScrollFollow } from 'react-lazylog';
 import { useParams } from 'react-router-dom';
 import { useGetNodeLogs } from '../../../graphql/getNodeLogs';
 import { useGlobalRunState } from '../../../pages/View/useWebSocket';
-import { faRunning, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faRunning, faTimes, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AdjustIcon } from './AdjustIcon';
 import useWebSocketLog, { formatDate } from './useWebSocketLog';
@@ -53,34 +53,42 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
     return (
         <>
             <Box sx={{ background: '#222', color: '#d6d6d6' }} display="flex" alignItems="flex-start" flexDirection="column" pl={6} pr={4} pt={3}>
-                <Box display="flex" alignItems="center" width={'100%'}>
-                    <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faRunning} mr={2} />
+                <Box display="flex" alignItems="center" width={'100%'} mb={1}>
+                    <Box component={FontAwesomeIcon} fontSize={24} color="secondary.main" icon={faRunning} mr={2} />
                     <Box>
-                        <Typography fontSize={11} fontWeight={900}>
-                            Clear the logs
+                        <Typography fontSize="0.875rem" fontWeight={900}>
+                            {RunState.node_name.get()}
                         </Typography>
-                        <Typography fontSize={9}>This process cleans down the logs</Typography>
+                        <Typography fontSize="0.75rem">{RunState.node_description.get()}</Typography>
                     </Box>
                     <Button
                         onClick={handleClose}
                         style={{
                             paddingLeft: '16px',
                             paddingRight: '16px',
-                            fontSize: '0.75rem',
                             color: '#65BEFF',
                             marginLeft: 'auto',
                         }}
                         variant="text"
-                        startIcon={<FontAwesomeIcon style={{ fontSize: 15 }} icon={faTimes} />}>
+                        startIcon={<FontAwesomeIcon style={{ fontSize: 16 }} icon={faTimes} />}>
                         Close
                     </Button>
                 </Box>
-                <Box color="#65BEFF" display="flex" alignItems="center" mt={0.5}>
-                    <AdjustIcon />
-                    <Typography ml={1} fontWeight={700} fontSize={10}>
-                        Running
-                    </Typography>
-                </Box>
+                {false ? (
+                    <Box color="#65BEFF" display="flex" alignItems="center" mt={0.5}>
+                        <AdjustIcon />
+                        <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
+                            Running
+                        </Typography>
+                    </Box>
+                ) : (
+                    <Box color="status.pipelineOnline" display="flex" alignItems="center" mt={0.5}>
+                        <Box component={FontAwesomeIcon} fontSize={18} color="status.pipelineOnline" icon={faCheckCircle} />
+                        <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
+                            Complete
+                        </Typography>
+                    </Box>
+                )}
             </Box>
 
             {/* LazyLog */}
