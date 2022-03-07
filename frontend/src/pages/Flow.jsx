@@ -380,7 +380,7 @@ const Flow = () => {
                             </ControlButton>
                         </Controls>
                         <Box sx={{ position: 'absolute', left: 'auto', right: 155, bottom: 10 }}>
-                            <Typography fontWeight={700}>Scale {Math.floor((FlowState.scale.get() || 1) * 100)}%</Typography>
+                            <Typography fontSize={12}>Scale {Math.floor((FlowState.scale.get() || 1) * 100)}%</Typography>
                         </Box>
                         {elements.length <= 0 ? (
                             <Box sx={{ position: 'absolute', top: '40%', left: -100, right: 0, textAlign: 'center' }}>

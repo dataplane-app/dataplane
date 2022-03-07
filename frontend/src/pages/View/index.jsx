@@ -179,7 +179,7 @@ const View = () => {
                                 </ControlButton>
                             </Controls>
                             <Box sx={{ position: 'absolute', left: 'auto', right: 10, bottom: 10 }}>
-                                <Typography fontWeight={700}>Scale {Math.floor((FlowState.scale.get() || 1) * 100)}%</Typography>
+                                <Typography fontSize={12}>Scale {Math.floor((FlowState.scale.get() || 1) * 100)}%</Typography>
                             </Box>
                         </ReactFlow>
                     </ReactFlowProvider>
