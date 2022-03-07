@@ -131,9 +131,13 @@ const Flow = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.triggerDelete.get()]);
 
+    // Local state to detect unsaved changes
+    const [initialState, setInitialState] = useState();
+
     // Fetch previous elements
     useEffect(() => {
         const prevElements = FlowState.elements.attach(Downgraded).get();
+        setInitialState(JSON.stringify(FlowState.elements.get()));
         FlowState.isEditorPage.set(true);
 
         console.log('FLOWWW: ', FlowState.attach(Downgraded).get());
@@ -165,6 +169,7 @@ const Flow = () => {
     const [elements, setElements] = useState([]);
     const [selectedElement, setSelectedElement] = useState(null);
     const [panOnDrag, setPanOnDrag] = useState(FlowState.isPanEnable.get());
+    const [isUnsavedWithChanges, setIsUnsavedWithChanges] = useState(false);
 
     useEffect(() => {
         if (!FlowState.isPanEnable.get()) {
@@ -174,6 +179,17 @@ const Flow = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.isPanEnable.get()]);
+
+    // Check for unsaved changes
+    useEffect(() => {
+        if (!initialState) return;
+
+        if (JSON.stringify(elements) !== initialState) {
+            setIsUnsavedWithChanges(true);
+        } else {
+            setIsUnsavedWithChanges(false);
+        }
+    }, [elements, initialState]);
 
     //Flow methods
     const onElementsRemove = (elementsToRemove) => setElements((els) => removeElements(elementsToRemove, els));
@@ -300,12 +316,14 @@ const Flow = () => {
         <Box className="page" height="calc(100vh - 100px)" minHeight="min-content">
             <Box ref={offsetRef}>
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
-                    <Box display="flex">
+                    <Box display="flex" alignItems="center" width="calc(100% - 145px)">
                         <Typography component="h2" variant="h2" color="text.primary">
                             Pipelines {'>'} {pipeline?.name}
                         </Typography>
 
-                        <Grid display="flex" alignItems="flex-start">
+                        {isUnsavedWithChanges ? <UnsavedChangesIndicator /> : null}
+
+                        <Grid display="flex" alignItems="flex-start" marginLeft="auto">
                             <Button sx={{ ml: 4 }} onClick={handleSave} variant="contained">
                                 Save
                             </Button>
@@ -317,15 +335,6 @@ const Flow = () => {
                                 variant="text">
                                 Close
                             </Button>
-                            {/* <Button
-                                onClick={() => {
-                                    history.push('/');
-                                }}
-                                style={{ paddingLeft: '16px', paddingRight: '16px' }}
-                                variant="text"
-                                startIcon={<FontAwesomeIcon icon={faTimes} />}>
-                                Close
-                            </Button> */}
                         </Grid>
                     </Box>
                 </Grid>
@@ -467,4 +476,26 @@ function prepareInputForBackend(input) {
     }
 
     return { nodesInput, edgesInput, json: input };
+}
+
+// Custom component
+function UnsavedChangesIndicator() {
+    return (
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 13,
+                fontWeight: 700,
+                color: 'secondary.main',
+                background: '#F8860021',
+                width: 144,
+                height: 35,
+                borderRadius: '5px',
+                ml: 4,
+            }}>
+            Unsaved changes
+        </Box>
+    );
 }
