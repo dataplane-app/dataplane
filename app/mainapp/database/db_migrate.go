@@ -62,7 +62,9 @@ func Migrate() {
 	// ----- Test for migration version mismatch ----
 	var currentVersion models.Platform
 	if err := dbConn.Select("migration_version").First(&currentVersion).Error; err != nil {
-		panic("Could not retrieve migration version")
+		if err != gorm.ErrRecordNotFound {
+			panic("Could not retrieve migration version")
+		}
 	}
 
 	if currentVersion.MigrationVersion != migrateVersion {
