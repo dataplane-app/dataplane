@@ -120,7 +120,7 @@ const View = () => {
     };
 
     return (
-        <Box className="page" height="calc(100vh - 100px)" minHeight="min-content">
+        <Box className="page" height="calc(100vh - 136px)" minHeight="min-content">
             <Box ref={offsetRef}>
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex" alignItems="center">
@@ -160,6 +160,7 @@ const View = () => {
                             onMoveEnd={onMoveEnd}
                             nodeTypes={nodeTypes}
                             elements={elements}
+                            defaultZoom={FlowState.scale.get()}
                             nodesDraggable={false}
                             nodesConnectable={false}
                             preventScrolling={false}
@@ -172,11 +173,14 @@ const View = () => {
                             arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
                             snapToGrid={true}
                             snapGrid={[15, 15]}>
-                            <Controls style={{ left: 'auto', right: 10 }}>
+                            <Controls style={{ left: 'auto', right: 10, bottom: 50 }}>
                                 <ControlButton onClick={onZoomActive} style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
                                     <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} sx={{ color: FlowState.isPanEnable.get() ? '#72B842' : '' }} />
                                 </ControlButton>
                             </Controls>
+                            <Box sx={{ position: 'absolute', left: 'auto', right: 10, bottom: 10 }}>
+                                <Typography fontSize={12}>Scale {Math.floor((FlowState.scale.get() || 1) * 100)}%</Typography>
+                            </Box>
                         </ReactFlow>
                     </ReactFlowProvider>
                 ) : (
