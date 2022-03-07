@@ -137,7 +137,7 @@ const Flow = () => {
     // Fetch previous elements
     useEffect(() => {
         const prevElements = FlowState.elements.attach(Downgraded).get();
-        setInitialState(JSON.stringify(FlowState.elements.get()));
+        setInitialState(FlowState.elements.attach(Downgraded).get());
         FlowState.isEditorPage.set(true);
 
         console.log('FLOWWW: ', FlowState.attach(Downgraded).get());
@@ -184,10 +184,10 @@ const Flow = () => {
     useEffect(() => {
         if (!initialState) return;
 
-        if (JSON.stringify(elements) !== initialState) {
-            setIsUnsavedWithChanges(true);
-        } else {
+        if (object_equals(elements, initialState)) {
             setIsUnsavedWithChanges(false);
+        } else {
+            setIsUnsavedWithChanges(true);
         }
     }, [elements, initialState]);
 
@@ -233,8 +233,10 @@ const Flow = () => {
         document.body.style.cursor = 'grabbing';
     };
     const onConnectEnd = () => {
-        FlowState.isDragging.set(false);
+        FlowState.isDragging.set(false); //?
         document.body.style.cursor = 'default';
+        const flowElements = reactFlowInstance.toObject();
+        setElements([...flowElements.elements]);
     };
     const onMoveStart = (flow) => {
         FlowState.scale.set(flow.zoom);
@@ -242,6 +244,12 @@ const Flow = () => {
     const onMoveEnd = (flow) => {
         FlowState.scale.set(flow.zoom);
     };
+    const onNodeDragStop = (flow) => {
+        FlowState.scale.set(flow.zoom);
+        const flowElements = reactFlowInstance.toObject();
+        setElements([...flowElements.elements]);
+    };
+
     const onPanActive = () => {
         FlowState.isPanEnable.set(!panOnDrag);
 
@@ -356,6 +364,7 @@ const Flow = () => {
                         onLoad={onLoad}
                         onDrop={onDrop}
                         onDragOver={onDragOver}
+                        onNodeDragStop={onNodeDragStop}
                         onConnect={onConnect}
                         onConnectStart={onConnectStart}
                         onConnectEnd={onConnectEnd}
@@ -499,3 +508,21 @@ function UnsavedChangesIndicator() {
         </Box>
     );
 }
+
+// Checks if two objects are some
+const object_equals = (...objects) => objects.every((obj) => JSON.stringify(sortObj(obj)) === JSON.stringify(sortObj(objects[0])));
+
+// Sorts objects by id
+const sortObj = (obj) =>
+    obj.sort((a, b) => {
+        let fa = a.id,
+            fb = b.id;
+
+        if (fa < fb) {
+            return -1;
+        }
+        if (fa > fb) {
+            return 1;
+        }
+        return 0;
+    });
