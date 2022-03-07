@@ -137,6 +137,8 @@ function App() {
                                             '/pipelines/view/:pipelineId',
                                             '/pipelines/permissions/:pipelineId',
                                             '/pipelines/flow/:pipelineId',
+                                            '/support',
+                                            '/feedback',
                                         ]}>
                                         <Switch>
                                             <Layout>
@@ -188,6 +190,22 @@ function App() {
                                                 <Route exact path="/pipelines/flow/:pipelineId">
                                                     <Flow />
                                                 </Route>
+                                                <Route
+                                                    exact
+                                                    path="/support"
+                                                    component={() => {
+                                                        window.open('https://github.com/dataplane-app/dataplane/issues', '_blank');
+                                                        return null;
+                                                    }}
+                                                />
+                                                <Route
+                                                    exact
+                                                    path="/feedback"
+                                                    component={() => {
+                                                        window.open('https://github.com/dataplane-app/dataplane/discussions', '_blank');
+                                                        return null;
+                                                    }}
+                                                />
                                                 <Route exact path="/notfound">
                                                     <NotFound />
                                                 </Route>
