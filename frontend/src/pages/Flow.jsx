@@ -233,7 +233,7 @@ const Flow = () => {
         document.body.style.cursor = 'grabbing';
     };
     const onConnectEnd = () => {
-        FlowState.isDragging.set(false); //?
+        FlowState.isDragging.set(false);
         document.body.style.cursor = 'default';
         const flowElements = reactFlowInstance.toObject();
         setElements([...flowElements.elements]);
