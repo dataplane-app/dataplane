@@ -1,4 +1,4 @@
-import { Box, Typography, Grid, Button } from '@mui/material';
+import { Box, Typography, Grid, Button, Drawer } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import { useTable, useGlobalFilter } from 'react-table';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -13,6 +13,7 @@ import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 import { useSnackbar } from 'notistack';
 import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from '../../../pages/View';
+import DeletePipelineDrawer from '../../DrawerContent/DeletePipelineDrawer';
 
 const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
     // React router
@@ -22,6 +23,11 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
     const [isOpenManage, setIsOpenManage] = useState(false);
 
     const FlowState = useGlobalFlowState();
+
+    // Drawer state
+    const [isOpenDeletePipeline, setIsOpenDeletePipeline] = useState(false);
+    const [pipelineName, setPipelineName] = useState('');
+    const [pipelineId, setPipelineId] = useState('');
 
     // GraphQL hook
     const runPipelines = useRunPipelinesHook();
@@ -39,8 +45,17 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                 accessor: (row) => [row.pipelineID, row.name],
                 Cell: (row) => (
                     <Grid item sx={{ flex: 1, ml: -1 }} display="flex" alignItems="center" justifyContent="center">
-                        <MoreInfoMenuPipeline>
-                            <PipelineItemTable id={row.value[0]} name={row.value[1]} handleOpenManage={() => setIsOpenManage(!isOpenManage)} getPipelines={getPipelines} />
+                        <MoreInfoMenuPipeline
+                            onClick={() => {
+                                setPipelineName(row.value[1]);
+                                setPipelineId(row.value[0]);
+                            }}>
+                            <PipelineItemTable //
+                                id={row.value[0]}
+                                name={row.value[1]}
+                                handleOpenManage={() => setIsOpenManage(!isOpenManage)}
+                                setIsOpenDeletePipeline={setIsOpenDeletePipeline}
+                            />
                         </MoreInfoMenuPipeline>
                     </Grid>
                 ),
@@ -151,6 +166,16 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         );
                     })}
                 </Box>
+                <Drawer anchor="right" open={isOpenDeletePipeline} onClose={() => setIsOpenDeletePipeline(!isOpenDeletePipeline)}>
+                    <DeletePipelineDrawer
+                        pipelineName={pipelineName}
+                        handleClose={() => {
+                            setIsOpenDeletePipeline(false);
+                        }}
+                        getPipelines={getPipelines}
+                        pipelineID={pipelineId}
+                    />
+                </Drawer>
             </Box>
         </>
     );
