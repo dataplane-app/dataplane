@@ -14,7 +14,7 @@ import { useSnackbar } from 'notistack';
 import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from '../../../pages/View';
 
-const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
+const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
     // React router
     const history = useHistory();
 
@@ -40,7 +40,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID }) => {
                 Cell: (row) => (
                     <Grid item sx={{ flex: 1, ml: -1 }} display="flex" alignItems="center" justifyContent="center">
                         <MoreInfoMenuPipeline>
-                            <PipelineItemTable id={row.value[0]} name={row.value[1]} handleOpenManage={() => setIsOpenManage(!isOpenManage)} />
+                            <PipelineItemTable id={row.value[0]} name={row.value[1]} handleOpenManage={() => setIsOpenManage(!isOpenManage)} getPipelines={getPipelines} />
                         </MoreInfoMenuPipeline>
                     </Grid>
                 ),
