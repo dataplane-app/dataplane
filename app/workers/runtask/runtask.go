@@ -39,7 +39,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 	var statusUpdate string
 
-	if os.Getenv("debug") == "true" {
+	if config.Debug == "true" {
 		fmt.Printf("starting task with id %s - node: %s run: %s\n", msg.TaskID, msg.NodeID, msg.RunID)
 	}
 

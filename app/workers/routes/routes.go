@@ -26,9 +26,6 @@ func Setup(port string) *fiber.App {
 
 	config.LoadConfig()
 
-	// ------- LOAD secrets ------
-	secrets.MapSecrets()
-
 	// -------- NATS Connect -------
 	messageq.NATSConnect()
 
@@ -71,6 +68,9 @@ func Setup(port string) *fiber.App {
 	config.EnvID = e.ID
 
 	start := time.Now()
+
+	// ------- LOAD secrets ------
+	secrets.MapSecrets()
 
 	// ----- Load platformID ------
 	u := models.Platform{}
