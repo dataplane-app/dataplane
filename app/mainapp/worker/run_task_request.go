@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/tidwall/buntdb"
+	"gorm.io/gorm/clause"
 )
 
 /*
@@ -170,6 +171,44 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 		_, errnats := messageq.MsgReply("taskupdate", TaskFinal, &response)
 		if errnats != nil {
 			logging.PrintSecretsRedact(errnats)
+		}
+
+		// If worker recovers but part of the pipeline starts running - cancel any running jobs
+		// Get any current running tasks and cancel those tasks
+		currentTask := []*models.WorkerTasks{}
+		err := database.DBConn.Where("run_id = ? and environment_id = ? and status=?", runid, envID, "Run").Find(&currentTask).Error
+		if err != nil {
+			logging.PrintSecretsRedact(err.Error())
+		}
+
+		if len(currentTask) > 0 {
+			for _, t := range currentTask {
+				errt := WorkerCancelTask(t.TaskID)
+				if errt != nil {
+					logging.PrintSecretsRedact(errt.Error())
+				}
+			}
+		}
+
+		// Update all the future tasks
+		// Update pipeline as failed
+		run := models.PipelineRuns{
+			RunID:   runid,
+			Status:  "Fail",
+			EndedAt: time.Now().UTC(),
+		}
+
+		err2 := database.DBConn.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "run_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"ended_at", "status"}),
+		}).Create(&run)
+		if err2.Error != nil {
+			logging.PrintSecretsRedact(err2.Error.Error())
+		}
+
+		err3 := database.DBConn.Model(&models.WorkerTasks{}).Where("run_id = ? and status=?", runid, "Queue").Updates(map[string]interface{}{"status": "Fail", "reason": "Upstream no workers"}).Error
+		if err3 != nil {
+			logging.PrintSecretsRedact(err3.Error())
 		}
 
 	}

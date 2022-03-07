@@ -19,14 +19,14 @@ const ViewPageItem = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
                 Run
             </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
-                Turn off
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleGoToEditorPage}>
+                Edit
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
                 Deploy
             </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleGoToEditorPage}>
-                Edit
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
+                Turn off
             </MenuItem>
         </>
     );

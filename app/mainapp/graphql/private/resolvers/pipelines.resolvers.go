@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"fmt"
 	"os"
 	"strings"
 
@@ -120,7 +121,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	}
 
-	log.Println(triggercount)
+	// log.Println(triggercount)
 
 	if triggercount > 1 {
 
@@ -197,6 +198,22 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	nodes := []*models.PipelineNodes{}
 
 	for _, p := range input.NodesInput {
+
+		/* Trigger is online or offline
+		Play = online
+		Scheduler = based on user input
+		*/
+		var online bool
+		online = false
+		if p.NodeType == "trigger" {
+
+			switch p.NodeTypeDesc {
+			case "play":
+				online = true
+			}
+
+		}
+
 		nodeMeta, err := json.Marshal(p.Meta)
 		if err != nil {
 			logging.PrintSecretsRedact(err)
@@ -231,6 +248,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			Dependency:    dependJSON,
 			Destination:   destinationJSON,
 			Active:        p.Active,
+			TriggerOnline: online,
 		})
 
 	}
@@ -456,7 +474,7 @@ b.node_type,
 b.node_type_desc,
 b.online
 from pipelines a left join (
-	select node_type, node_type_desc, pipeline_id, true as online from pipeline_nodes where node_type='trigger'
+	select node_type, node_type_desc, pipeline_id, trigger_online as online from pipeline_nodes where node_type='trigger'
 ) b on a.pipeline_id=b.pipeline_id
 where a.environment_id = ?
 order by a.created_at desc
@@ -487,7 +505,7 @@ b.node_type_desc,
 b.online
 from pipelines a 
 left join (
-	select node_type, node_type_desc, pipeline_id, true as online from pipeline_nodes where node_type='trigger'
+	select node_type, node_type_desc, pipeline_id, trigger_online as online from pipeline_nodes where node_type='trigger'
 ) b on a.pipeline_id=b.pipeline_id
 inner join (
   select distinct resource_id, environment_id from (
