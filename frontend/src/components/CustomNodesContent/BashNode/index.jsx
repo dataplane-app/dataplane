@@ -49,6 +49,8 @@ const BashNode = (props) => {
 
     const onClick = () => {
         RunState.node_id.set(props.id);
+        RunState.node_name.set(props.data.name);
+        RunState.node_description.set(props.data.description);
     };
 
     return (
