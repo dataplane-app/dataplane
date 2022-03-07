@@ -119,3 +119,14 @@ code {
     border-right: 5px solid rgba(0, 0, 0) !important;
     border-bottom: 5px solid rgba(0, 0, 0) !important;
 }
+
+.tree_controls {
+    position: absolute;
+    top: 0;
+    right: 10px;
+    visibility: hidden;
+}
+
+.tree_parent:hover .tree_controls {
+    visibility: visible;
+}

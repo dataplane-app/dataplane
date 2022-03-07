@@ -8,6 +8,8 @@ import { useGlobalEditorState } from '../../../pages/Editor';
 import { useGetWorkerGroups_ } from '../../DrawerContent/AddPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { Downgraded } from '@hookstate/core';
+import { faFileAlt } from '@fortawesome/free-regular-svg-icons';
+import { v4 as uuidv4 } from 'uuid';
 
 const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Global environment state with hookstate
@@ -16,6 +18,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Local state
     const [workerGroups, setWorkerGroups] = useState([]);
+    const [selectedParentFolder, setSelectedParentFolder] = useState(null);
 
     // Custom GraphQL hook
     const getWorkerGroups = useGetWorkerGroups_(Environment.name.get(), setWorkerGroups);
@@ -28,8 +31,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     }, []);
 
     const handleFileClick = (file) => {
-        console.log(file);
-
         // Return if it's not a file
         if (file.children && file.children.length > 0) {
             return;
@@ -47,9 +48,53 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         Editor.tabs.set((prevTabs) => [...prevTabs, file]);
     };
 
+    const handleNewFile = () => {
+        // Check to see if there's a selected folder, otherwise create one file on the root directory
+        const newFileMock = {
+            id: uuidv4(),
+            name: 'file.py',
+            language: 'python',
+            content: `# New file`,
+            isEditing: false,
+            diffValue: `# New file`,
+        };
+
+        if (!selectedParentFolder) {
+            data.children.push(newFileMock);
+            setSelectedParentFolder('all');
+        } else if (selectedParentFolder === 'all') {
+            data.children.push(newFileMock);
+        } else {
+            data.children[selectedParentFolder]?.children.push(newFileMock);
+        }
+    };
+
     const renderTree = (nodes) => {
         return (
-            <TreeItem sx={{ mt: 0.5 }} key={nodes.id} nodeId={nodes.id} label={nodes.name} onClick={() => handleFileClick(nodes)}>
+            <TreeItem
+                className={`tree_parent tree-${nodes.id}`}
+                sx={{ mt: 0.5, position: 'relative' }}
+                icon={!nodes.children && <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.tabTextColorNotActive', fontSize: 5 }} />}
+                key={nodes.id}
+                nodeId={nodes.id}
+                label={nodes.name}
+                onClick={() => handleFileClick(nodes)}>
+                {/* {nodes.children && nodes.children.length > 0 ? (
+                    <Box className={`tree_controls  tree-${nodes.id}`}>
+                        <IconButton aria-label="New File">
+                            <Box component={FontAwesomeIcon} icon={faPencilAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
+                        </IconButton>
+                        <IconButton aria-label="New File">
+                            <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
+                        </IconButton>
+                        <IconButton aria-label="New File">
+                            <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
+                        </IconButton>
+                        <IconButton aria-label="New File">
+                            <Box component={FontAwesomeIcon} icon={faTimes} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
+                        </IconButton>
+                    </Box>
+                ) : null} */}
                 {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTree(node)) : null}
             </TreeItem>
         );
@@ -82,19 +127,21 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                         Files
                     </Typography>
                     <Grid item display="flex" alignItems="center">
-                        <IconButton aria-label="New File">
+                        <IconButton aria-label="New File" onClick={handleNewFile}>
                             <Box component={FontAwesomeIcon} icon={faFile} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
                         </IconButton>
-                        <IconButton aria-label="New File">
+                        <IconButton aria-label="New Folder">
                             <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
                         </IconButton>
                     </Grid>
                 </Grid>
 
                 <TreeView
-                    defaultCollapseIcon={<Box component={FontAwesomeIcon} icon={faChevronDown} sx={{ color: 'editorPage.tabTextColorNotActive', fontSize: 10 }} />}
-                    defaultExpandIcon={<Box component={FontAwesomeIcon} icon={faChevronRight} sx={{ color: 'editorPage.tabTextColorNotActive', fontSize: 10 }} />}
+                    defaultCollapseIcon={<Box component={FontAwesomeIcon} icon={faChevronDown} sx={{ color: 'editorPage.tabTextColorNotActive', fontSize: 5 }} />}
+                    defaultExpandIcon={<Box component={FontAwesomeIcon} icon={faChevronRight} sx={{ color: 'editorPage.tabTextColorNotActive', fontSize: 5 }} />}
                     aria-label=""
+                    selected={selectedParentFolder}
+                    onNodeSelect={(_, nodeIds) => setSelectedParentFolder(nodeIds)}
                     sx={{
                         height: '100%',
                         flexGrow: 1,
@@ -108,7 +155,13 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                             .attach(Downgraded)
                             .get()
                             ?.map((open) => (
-                                <TreeItem key={open.id} nodeId={open.id} label={open.name} onClick={() => handleFileClick(open)} />
+                                <TreeItem
+                                    icon={<Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.tabTextColorNotActive', fontSize: 5 }} />}
+                                    key={open.id}
+                                    nodeId={open.id}
+                                    label={open.name}
+                                    onClick={() => handleFileClick(open)}
+                                />
                             ))}
                     </TreeItem>
                     {renderTree(data)}
@@ -166,7 +219,7 @@ export const FILES_STRUCTURE_MOCK = [
                 name: 'monkey.py',
                 content: PYTHON_CODE_EXAMPLE,
                 isEditing: false,
-                diffValue: '',
+                diffValue: PYTHON_CODE_EXAMPLE,
             },
         ],
     },
@@ -180,7 +233,7 @@ export const FILES_STRUCTURE_MOCK = [
                 name: 'clear_the_logs.py',
                 content: PYTHON_CODE_EXAMPLE_2,
                 isEditing: false,
-                diffValue: '',
+                diffValue: PYTHON_CODE_EXAMPLE_2,
             },
         ],
     },

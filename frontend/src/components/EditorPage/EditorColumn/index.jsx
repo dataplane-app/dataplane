@@ -9,7 +9,7 @@ import { useState } from 'react';
 
 const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Editor state
-    const [editorInstance, setEditorInstance] = useState(null);
+    const [, setEditorInstance] = useState(null);
 
     // Theme hook
     const theme = useTheme();
@@ -23,6 +23,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     const handleEditorOnMount = (editor) => {
         editorRef.current = editor;
         setEditorInstance(editor);
+        EditorGlobal.editor.set(editor);
 
         const handler = editor.onDidChangeModelDecorations((_) => {
             handler.dispose();
@@ -45,13 +46,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             return;
         }
 
-        if (editorInstance) {
-            const handler = editorInstance.onDidChangeModelDecorations((_) => {
-                handler.dispose();
-                editorInstance.getAction('editor.action.formatDocument').run();
-            });
-        }
-
         EditorGlobal.selectedFile.set(tab);
     };
 
@@ -59,7 +53,10 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         const tabs = EditorGlobal.tabs.attach(Downgraded).get();
 
         // Check to see if it's unsaved
-        console.log('TABS CLOSING', tab);
+        if (tab?.isEditing) {
+            alert('Still editing');
+            return;
+        }
 
         const newTabs = tabs.filter((prevtab) => prevtab?.id !== tab?.id);
 
@@ -73,10 +70,11 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     };
 
     const handleEditorChange = (value) => {
-        const selected = EditorGlobal.selectedFile.attach(Downgraded).get();
-        if (selected) {
+        if (value !== EditorGlobal.selectedFile.get()?.content) {
             EditorGlobal.selectedFile.isEditing.set(true);
             EditorGlobal.selectedFile.diffValue.set(value);
+        } else {
+            EditorGlobal.selectedFile.isEditing.set(false);
         }
     };
 
@@ -100,8 +98,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         .attach(Downgraded)
                         .get()
                         ?.map((tabs) => {
-                            console.log('TABSSS', tabs);
-
                             return (
                                 <Box
                                     key={tabs.id}
@@ -118,7 +114,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                     <Typography onClick={() => handleTabClick(tabs)} sx={{ padding: '8px 11px' }} fontSize={15}>
                                         {tabs?.name}
                                     </Typography>
-                                    {tabs.isEditing && <Box sx={{ width: 8, height: 8, mt: 0.5, backgroundColor: 'red', borderRadius: '50%' }} />}
+                                    {tabs.isEditing && <Box sx={{ width: 8, height: 8, mt: 0.5, backgroundColor: 'secondary.main', borderRadius: '50%' }} />}
                                     <IconButton aria-label="close" sx={{ ml: 2 }} onClick={() => handleTabClose(tabs)}>
                                         <Box component={FontAwesomeIcon} icon={faTimes} sx={{ fontSize: 13 }} />
                                     </IconButton>
@@ -144,11 +140,12 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 {EditorGlobal.tabs.get().length > 0 ? (
                     <Editor
                         onMount={handleEditorOnMount}
-                        language={EditorGlobal.selectedFile.get()?.language}
+                        defaultLanguage={EditorGlobal.selectedFile.get()?.language}
                         path={EditorGlobal.selectedFile.get()?.name}
-                        value={EditorGlobal.selectedFile.get()?.content}
+                        defaultValue={EditorGlobal.selectedFile.get()?.content}
                         theme={theme.palette.mode === 'dark' ? 'vs-dark' : 'customTheme'}
                         height="100%"
+                        saveViewState
                         onChange={handleEditorChange}
                     />
                 ) : (

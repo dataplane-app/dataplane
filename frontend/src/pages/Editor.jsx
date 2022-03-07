@@ -10,6 +10,7 @@ import { createState, useState as useHookState } from '@hookstate/core';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
+import { Downgraded } from '@hookstate/core';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -18,6 +19,7 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 export const globalEditorState = createState({
     selectedFile: null,
     tabs: [],
+    editor: null,
 });
 
 export const useGlobalEditorState = () => useHookState(globalEditorState);
@@ -25,6 +27,7 @@ export const useGlobalEditorState = () => useHookState(globalEditorState);
 const PipelineEditor = () => {
     // Hooks
     const history = useHistory();
+    const EditorGlobal = useGlobalEditorState();
     const { state: pipeline } = useLocation();
 
     const layouts = {
@@ -50,6 +53,19 @@ const PipelineEditor = () => {
         return () => window.removeEventListener('beforeunload', handleUnload);
     }, [handleUnload]);
 
+    const handleSave = () => {
+        // Save code here
+        const tabs = EditorGlobal.tabs.attach(Downgraded).get();
+
+        if (tabs && tabs.length > 0) {
+            tabs.map((tab) => {
+                tab.content = tab.diffValue;
+                tab.isEditing = false;
+                return true;
+            });
+        }
+    };
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <AppBar
@@ -67,7 +83,9 @@ const PipelineEditor = () => {
                     Code {'>'} {pipeline?.name}
                 </Typography>
                 <Grid item sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
-                    <Button variant="contained">Save</Button>
+                    <Button variant="contained" onClick={handleSave}>
+                        Save
+                    </Button>
                     <Button variant="outlined" sx={{ ml: 2, backgroundColor: 'background.main' }}>
                         Close
                     </Button>
@@ -77,12 +95,15 @@ const PipelineEditor = () => {
             <Box sx={{ minHeight: 'calc(100vh - 150px)', position: 'relative' }}>
                 <Box>
                     <ResponsiveGridLayout
-                        onLayoutChange={(e, _) => console.log(e, _)}
-                        isDraggable={true}
-                        compactType="horizontal"
+                        onLayoutChange={(e, _) => console.log('Change layout', e, _)}
+                        isDraggable={false}
+                        verticalCompact
+                        measureBeforeMount={true}
+                        onResizeStop={(e, _) => console.log('Resize', e, _)}
+                        compactType="vertical"
                         layouts={layouts}
                         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-                        cols={{ lg: 12, md: 3, sm: 2, xs: 2, xxs: 2 }}>
+                        cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}>
                         <FileManagerColumn key="1" />
                         <PackageColumn key="2" />
                         <EditorColumn key="3" />
