@@ -39,7 +39,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 	var statusUpdate string
 
-	if os.Getenv("debug") == "true" {
+	if config.Debug == "true" {
 		fmt.Printf("starting task with id %s - node: %s run: %s\n", msg.TaskID, msg.NodeID, msg.RunID)
 	}
 
@@ -53,6 +53,35 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 	if lockCheck.Status != "Queue" {
 		logging.PrintSecretsRedact("Skipping not in queue", msg.RunID, msg.NodeID)
+		return
+	}
+
+	// --- Check if pipeline has failed
+	var pipelineCheck modelmain.PipelineRuns
+	err2 = database.DBConn.Select("run_id", "status").Where("run_id = ?", msg.RunID).First(&pipelineCheck).Error
+	if err2 != nil {
+		logging.PrintSecretsRedact(err2.Error())
+		return
+	}
+
+	if pipelineCheck.Status != "Running" {
+
+		logging.PrintSecretsRedact("Skipping pipeline not in running state", msg.RunID, msg.NodeID)
+
+		TaskFinal := modelmain.WorkerTasks{
+			TaskID:        msg.TaskID,
+			EnvironmentID: config.EnvID,
+			RunID:         msg.RunID,
+			WorkerGroup:   msg.WorkerGroup,
+			WorkerID:      config.WorkerID,
+			NodeID:        msg.NodeID,
+			PipelineID:    msg.PipelineID,
+			Status:        "Fail",
+			Reason:        "Pipeline not running",
+			EndDT:         time.Now().UTC(),
+		}
+		UpdateWorkerTasks(TaskFinal)
+
 		return
 	}
 

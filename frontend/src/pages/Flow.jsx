@@ -132,9 +132,13 @@ const Flow = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.triggerDelete.get()]);
 
+    // Local state to detect unsaved changes
+    const [initialState, setInitialState] = useState();
+
     // Fetch previous elements
     useEffect(() => {
         const prevElements = FlowState.elements.attach(Downgraded).get();
+        setInitialState(FlowState.elements.attach(Downgraded).get());
         FlowState.isEditorPage.set(true);
 
         console.log('FLOWWW: ', FlowState.attach(Downgraded).get());
@@ -166,6 +170,7 @@ const Flow = () => {
     const [elements, setElements] = useState([]);
     const [selectedElement, setSelectedElement] = useState(null);
     const [panOnDrag, setPanOnDrag] = useState(FlowState.isPanEnable.get());
+    const [isUnsavedWithChanges, setIsUnsavedWithChanges] = useState(false);
 
     useEffect(() => {
         if (!FlowState.isPanEnable.get()) {
@@ -175,6 +180,17 @@ const Flow = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.isPanEnable.get()]);
+
+    // Check for unsaved changes
+    useEffect(() => {
+        if (!initialState) return;
+
+        if (object_equals(elements, initialState)) {
+            setIsUnsavedWithChanges(false);
+        } else {
+            setIsUnsavedWithChanges(true);
+        }
+    }, [elements, initialState]);
 
     //Flow methods
     const onElementsRemove = (elementsToRemove) => setElements((els) => removeElements(elementsToRemove, els));
@@ -220,6 +236,8 @@ const Flow = () => {
     const onConnectEnd = () => {
         FlowState.isDragging.set(false);
         document.body.style.cursor = 'default';
+        const flowElements = reactFlowInstance.toObject();
+        setElements([...flowElements.elements]);
     };
     const onMoveStart = (flow) => {
         FlowState.scale.set(flow.zoom);
@@ -227,6 +245,12 @@ const Flow = () => {
     const onMoveEnd = (flow) => {
         FlowState.scale.set(flow.zoom);
     };
+    const onNodeDragStop = (flow) => {
+        FlowState.scale.set(flow.zoom);
+        const flowElements = reactFlowInstance.toObject();
+        setElements([...flowElements.elements]);
+    };
+
     const onPanActive = () => {
         FlowState.isPanEnable.set(!panOnDrag);
 
@@ -298,15 +322,17 @@ const Flow = () => {
     };
 
     return (
-        <Box className="page" height="calc(100vh - 100px)" minHeight="min-content">
+        <Box className="page" height="calc(100vh - 136px)" minHeight="min-content">
             <Box ref={offsetRef}>
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
-                    <Box display="flex">
+                    <Box display="flex" alignItems="center" width="calc(100% - 145px)">
                         <Typography component="h2" variant="h2" color="text.primary">
                             Pipelines {'>'} {pipeline?.name}
                         </Typography>
 
-                        <Grid display="flex" alignItems="flex-start">
+                        {isUnsavedWithChanges ? <UnsavedChangesIndicator /> : null}
+
+                        <Grid display="flex" alignItems="flex-start" marginLeft="auto">
                             <Button sx={{ ml: 4 }} onClick={handleSave} variant="contained">
                                 Save
                             </Button>
@@ -318,15 +344,6 @@ const Flow = () => {
                                 variant="text">
                                 Close
                             </Button>
-                            {/* <Button
-                                onClick={() => {
-                                    history.push('/');
-                                }}
-                                style={{ paddingLeft: '16px', paddingRight: '16px' }}
-                                variant="text"
-                                startIcon={<FontAwesomeIcon icon={faTimes} />}>
-                                Close
-                            </Button> */}
                         </Grid>
                     </Box>
                 </Grid>
@@ -348,6 +365,7 @@ const Flow = () => {
                         onLoad={onLoad}
                         onDrop={onDrop}
                         onDragOver={onDragOver}
+                        onNodeDragStop={onNodeDragStop}
                         onConnect={onConnect}
                         onConnectStart={onConnectStart}
                         onConnectEnd={onConnectEnd}
@@ -357,11 +375,14 @@ const Flow = () => {
                         arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
                         snapToGrid={true}
                         snapGrid={[15, 15]}>
-                        <Controls style={{ left: 'auto', right: 155, bottom: 20 }}>
+                        <Controls style={{ left: 'auto', right: 155, bottom: 50 }}>
                             <ControlButton onClick={onPanActive} style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
                                 <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} sx={{ color: FlowState.isPanEnable.get() ? '#72B842' : '' }} />
                             </ControlButton>
                         </Controls>
+                        <Box sx={{ position: 'absolute', left: 'auto', right: 155, bottom: 10 }}>
+                            <Typography fontSize={12}>Scale {Math.floor((FlowState.scale.get() || 1) * 100)}%</Typography>
+                        </Box>
                         {elements.length <= 0 ? (
                             <Box sx={{ position: 'absolute', top: '40%', left: -100, right: 0, textAlign: 'center' }}>
                                 <Typography>Create a pipeline by dragging the components here.</Typography>
@@ -469,3 +490,43 @@ function prepareInputForBackend(input) {
 
     return { nodesInput, edgesInput, json: input };
 }
+
+// Custom component
+function UnsavedChangesIndicator() {
+    return (
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 13,
+                fontWeight: 700,
+                color: 'secondary.main',
+                background: '#F8860021',
+                width: 144,
+                height: 35,
+                borderRadius: '5px',
+                ml: 4,
+            }}>
+            Unsaved changes
+        </Box>
+    );
+}
+
+// Checks if two objects are some
+const object_equals = (...objects) => objects.every((obj) => JSON.stringify(sortObj(obj)) === JSON.stringify(sortObj(objects[0])));
+
+// Sorts objects by id
+const sortObj = (obj) =>
+    obj.sort((a, b) => {
+        let fa = a.id,
+            fb = b.id;
+
+        if (fa < fb) {
+            return -1;
+        }
+        if (fa > fb) {
+            return 1;
+        }
+        return 0;
+    });

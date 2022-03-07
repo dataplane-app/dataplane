@@ -6,7 +6,7 @@ const PipelineItemTable = (props) => {
     const history = useHistory();
 
     //Props
-    const { handleCloseMenu, handleOpenManage, id, name } = props;
+    const { handleCloseMenu, handleOpenManage, id, name, setIsOpenDeletePipeline } = props;
 
     const manageClick = () => {
         handleCloseMenu();
@@ -16,6 +16,11 @@ const PipelineItemTable = (props) => {
     const permissionClick = () => {
         handleCloseMenu();
         history.push({ pathname: `/pipelines/permissions/${id}`, state: name });
+    };
+
+    const deleteClick = () => {
+        handleCloseMenu();
+        setIsOpenDeletePipeline(true);
     };
 
     return (
@@ -29,7 +34,10 @@ const PipelineItemTable = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
                 Deploy
             </MenuItem>
-            <MenuItem sx={{ color: 'error.main' }} onClick={() => props.handleCloseMenu()}>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
+                Turn off
+            </MenuItem>
+            <MenuItem sx={{ color: 'error.main' }} onClick={deleteClick}>
                 Delete
             </MenuItem>
         </>

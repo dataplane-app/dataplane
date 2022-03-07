@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -14,7 +14,7 @@ import (
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 	"os"
 	"strings"
 
@@ -120,7 +120,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	}
 
-	log.Println(triggercount)
+	// log.Println(triggercount)
 
 	if triggercount > 1 {
 
@@ -197,6 +197,22 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	nodes := []*models.PipelineNodes{}
 
 	for _, p := range input.NodesInput {
+
+		/* Trigger is online or offline
+		Play = online
+		Scheduler = based on user input
+		*/
+		var online bool
+		online = false
+		if p.NodeType == "trigger" {
+
+			switch p.NodeTypeDesc {
+			case "play":
+				online = true
+			}
+
+		}
+
 		nodeMeta, err := json.Marshal(p.Meta)
 		if err != nil {
 			logging.PrintSecretsRedact(err)
@@ -231,6 +247,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			Dependency:    dependJSON,
 			Destination:   destinationJSON,
 			Active:        p.Active,
+			TriggerOnline: online,
 		})
 
 	}
@@ -320,6 +337,67 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	return "success", nil
 }
 
+func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID string, pipelineID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("requires permissions")
+	}
+
+	// Delete the pipeline
+	p := models.Pipelines{}
+
+	err := database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete pipeline database error.")
+	}
+
+	// Delete pipeline's nodes
+	n := models.PipelineNodes{}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&n).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete pipeline nodes database error.")
+	}
+
+	// Delete pipeline's edges
+	e := models.PipelineEdges{}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&e).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete pipeline edges database error.")
+	}
+
+	response := "Pipeline deleted"
+	return response, nil
+}
+
+func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *pipelineEdgesResolver) Meta(ctx context.Context, obj *models.PipelineEdges) (interface{}, error) {
 	return obj.Meta, nil
 }
@@ -365,7 +443,7 @@ b.node_type,
 b.node_type_desc,
 b.online
 from pipelines a left join (
-	select node_type, node_type_desc, pipeline_id, true as online from pipeline_nodes where node_type='trigger'
+	select node_type, node_type_desc, pipeline_id, trigger_online as online from pipeline_nodes where node_type='trigger'
 ) b on a.pipeline_id=b.pipeline_id
 where a.environment_id = ?
 order by a.created_at desc
@@ -396,7 +474,7 @@ b.node_type_desc,
 b.online
 from pipelines a 
 left join (
-	select node_type, node_type_desc, pipeline_id, true as online from pipeline_nodes where node_type='trigger'
+	select node_type, node_type_desc, pipeline_id, trigger_online as online from pipeline_nodes where node_type='trigger'
 ) b on a.pipeline_id=b.pipeline_id
 inner join (
   select distinct resource_id, environment_id from (

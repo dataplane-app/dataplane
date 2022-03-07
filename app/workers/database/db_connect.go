@@ -2,7 +2,6 @@ package database
 
 import (
 	"dataplane/workers/config"
-	"dataplane/workers/logging"
 	"fmt"
 	"log"
 	"os"
@@ -22,7 +21,10 @@ func DBConnect() {
 	var err error
 	DBConn, err = DB()
 	if err != nil {
-		logging.PrintSecretsRedact(err.Error())
+		if config.Debug == "true" {
+			log.Println(err.Error())
+		}
+
 		log.Fatal("Failed to connect to database")
 	}
 	//DBConn.Config.PrepareStmt = true
