@@ -132,12 +132,11 @@ const Flow = () => {
     }, [FlowState.triggerDelete.get()]);
 
     // Local state to detect unsaved changes
-    const [initialState, setInitialState] = useState();
+    const [initialState] = useState(JSON.parse(JSON.stringify(FlowState.elements.get())));
 
     // Fetch previous elements
     useEffect(() => {
         const prevElements = FlowState.elements.attach(Downgraded).get();
-        setInitialState(FlowState.elements.attach(Downgraded).get());
         FlowState.isEditorPage.set(true);
 
         console.log('FLOWWW: ', FlowState.attach(Downgraded).get());
