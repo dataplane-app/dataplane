@@ -112,11 +112,9 @@ code {
 /* Pipeline flow log running spinner */
 @keyframes rotate-keyframes {
     100% {
-
         transform: rotate(360deg)
     }
 }
-
 .anim-rotate {
 animation: rotate-keyframes 1s linear infinite;
 }
