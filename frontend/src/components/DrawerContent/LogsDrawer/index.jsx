@@ -96,7 +96,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
             <Box height="100%" width="100%" bgcolor="#000">
                 <ScrollFollow
                     startFollowing={true}
-                    render={({ follow, onScroll }) => <LazyLog enableSearch text={filteredGraphqlResp + websocketResp} follow={follow} onScroll={onScroll} />}
+                    render={({ follow, onScroll }) => <LazyLog enableSearch text={filteredGraphqlResp + websocketResp} follow={follow} onScroll={onScroll} extraLines={2} />}
                 />
             </Box>
         </>
