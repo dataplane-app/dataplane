@@ -218,12 +218,12 @@ func (r *queryResolver) GetWorkerGroups(ctx context.Context, environmentID strin
 	return resp, nil
 }
 
-func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentName string, secret string) ([]*models.WorkerSecrets, error) {
+func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentID string, secret string) ([]*models.WorkerSecrets, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
 	e := models.Environment{}
-	database.DBConn.First(&e, "name = ?", environmentName)
+	database.DBConn.First(&e, "id = ?", environmentID)
 
 	// ----- Permissions
 	perms := []models.Permissions{

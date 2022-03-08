@@ -50,7 +50,7 @@ extend type Query {
 	+ **Permission**: admin_platform, admin_environment, environment_secrets
 	+ **Security**: Based on environment selected
 	"""
-  getSecretGroups(environmentName: String!, Secret: String!): [SecretWorkerGroups]
+  getSecretGroups(environmentID: String!, Secret: String!): [SecretWorkerGroups]
 
     """
 	Get a worker group's secrets.
