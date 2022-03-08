@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -127,30 +127,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	}
 
-	// ----- lock the pipeline
-	err := database.DBConn.Model(&models.Pipelines{}).Where("pipeline_id = ?", pipelineID).Update("update_lock", true).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-
-		return "", errors.New("Update pipeline flow edge database error - failed to lock pipeline")
-	}
-
-	// ----- Delete old edges
-	edge := models.PipelineEdges{}
-
-	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&edge).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-
-		return "", errors.New("update pipeline flow edge database error")
-	}
-
-	// ----- Add pipeline edges to database
-
+	// ---- test for cycle -----
 	edges := []*models.PipelineEdges{}
 
 	for _, p := range input.EdgesInput {
@@ -178,6 +155,51 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 		// }
 
 	}
+	// Obtain the first node in the graph
+	var startNode string
+	if len(edges) > 0 {
+		for _, p := range input.NodesInput {
+
+			if _, ok := dependencies[p.NodeID]; ok {
+				//do something here
+			} else {
+				startNode = p.NodeID
+				break
+			}
+		}
+
+		cycle := utilities.GraphCycleCheck(edges, startNode)
+		if cycle == true {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact("Cycle detected. Only acyclical pipelines allowed.")
+			}
+			return "", errors.New("Cycle detected. Only acyclical pipelines allowed.")
+		}
+	}
+
+	// ----- lock the pipeline
+	err := database.DBConn.Model(&models.Pipelines{}).Where("pipeline_id = ?", pipelineID).Update("update_lock", true).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("Update pipeline flow edge database error - failed to lock pipeline")
+	}
+
+	// ----- Delete old edges
+	edge := models.PipelineEdges{}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&edge).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("update pipeline flow edge database error")
+	}
+
+	// ----- Add pipeline edges to database
 
 	// ----- Delete old nodes
 	node := models.PipelineNodes{}
@@ -255,29 +277,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	// Record edges and nodes in database
 
-	var startNode string
-
 	if len(edges) > 0 {
-
-		// ---- test for cycle -----
-		// Obtain the first node in the graph
-		for _, p := range input.NodesInput {
-
-			if _, ok := dependencies[p.NodeID]; ok {
-				//do something here
-			} else {
-				startNode = p.NodeID
-				break
-			}
-		}
-
-		cycle := utilities.GraphCycleCheck(edges, startNode)
-		if cycle == true {
-			if config.Debug == "true" {
-				logging.PrintSecretsRedact("Cycle detected. Only acyclical pipelines allowed.")
-			}
-			return "", errors.New("Cycle detected. Only acyclical pipelines allowed.")
-		}
 
 		err = database.DBConn.Create(&edges).Error
 	}
