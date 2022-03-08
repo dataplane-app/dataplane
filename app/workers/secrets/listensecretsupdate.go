@@ -2,7 +2,6 @@ package secrets
 
 import (
 	"dataplane/workers/config"
-	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
 )
 
@@ -19,7 +18,7 @@ func ListenSecretUpdates() {
 
 		MapSecrets()
 
-		logging.PrintSecretsRedact("Test replacement:", "hello")
+		// logging.PrintSecretsRedact("Test replacement:", "hello")
 
 		x := TaskResponse{R: "ok", M: "ok"}
 		messageq.NATSencoded.Publish(reply, x)

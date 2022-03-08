@@ -5,16 +5,21 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/utilities"
 	"errors"
+	"log"
 	"os"
 	"regexp"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraphql.AddSecretsInput) (*models.Secrets, error) {
@@ -94,13 +99,13 @@ func (r *mutationResolver) UpdateSecret(ctx context.Context, input *privategraph
 	}
 
 	secretData := models.Secrets{
-		SecretType:  "custom",
+		// SecretType:  "custom",
 		Description: *input.Description,
-		EnvVar:      "secret_dp_" + strings.ToLower(input.Secret),
-		Active:      true,
+		// EnvVar:      "secret_dp_" + strings.ToLower(input.Secret),
+		// Active:      true,
 	}
 
-	err := database.DBConn.Where("secret = ?", input.Secret).Select("description").Updates(&secretData).Error
+	err := database.DBConn.Where("secret = ? and environment_id = ?", input.Secret, input.EnvironmentID).Select("description").Updates(&secretData).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -142,13 +147,54 @@ func (r *mutationResolver) UpdateSecretValue(ctx context.Context, secret string,
 		Value: encryptedSecretValue,
 	}
 
-	err = database.DBConn.Where("secret = ?", secret).Updates(&secretData).Error
+	err = database.DBConn.Where("secret = ? and environment_id = ?", secret, environmentID).Updates(&secretData).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Update secret database error.")
+	}
+
+	// ---- is this secret attached to any workers and if so send an update
+	var secretWorkers []string
+	if err := database.DBConn.Raw(`
+	select
+	distinct
+	ws.worker_group_id
+	from
+	secrets s, worker_secrets ws 
+	where 
+	s.secret = ws.secret_id and
+	s.environment_id = ws.environment_id and
+	ws.active = true and
+	s.active = true and
+	s.secret = ? and
+	s.environment_id = ? and
+	s.secret_type='custom'
+	`, secret, environmentID).Scan(&secretWorkers).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return nil, errors.New("Update secret database error - couldn't find attached workers.")
+		}
+	}
+
+	if len(secretWorkers) > 0 {
+
+		for _, x := range secretWorkers {
+			// ---- update workers
+
+			log.Println("Send update to worker: ", "updatesecrets."+x)
+
+			errnat := messageq.MsgSend("updatesecrets."+x, "update")
+			if errnat != nil {
+				if config.Debug == "true" {
+					logging.PrintSecretsRedact(errnat)
+				}
+
+			}
+
+		}
+
 	}
 
 	response := "Secret changed"
@@ -174,7 +220,7 @@ func (r *mutationResolver) UpdateDeleteSecret(ctx context.Context, secret string
 
 	s := models.Secrets{}
 
-	err := database.DBConn.Where(&models.Secrets{Secret: secret}).Delete(&s).Error
+	err := database.DBConn.Where(&models.Secrets{Secret: secret, EnvironmentID: environmentID}).Delete(&s).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -206,7 +252,7 @@ func (r *queryResolver) GetSecret(ctx context.Context, secret string, environmen
 
 	s := models.Secrets{}
 
-	err := database.DBConn.Where("secret = ?", secret).First(&s).Error
+	err := database.DBConn.Where("secret = ? and environment_id =?", secret, environmentID).First(&s).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
