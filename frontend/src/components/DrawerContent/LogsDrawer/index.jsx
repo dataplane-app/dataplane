@@ -5,7 +5,7 @@ import { LazyLog, ScrollFollow } from 'react-lazylog';
 import { useParams } from 'react-router-dom';
 import { useGetNodeLogs } from '../../../graphql/getNodeLogs';
 import { useGlobalRunState } from '../../../pages/View/useWebSocket';
-import { faRunning, faTimes, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { faRunning, faTimes, faCheckCircle, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { RunningSpinner } from './AdjustIcon';
 import useWebSocketLog, { formatDate } from './useWebSocketLog';
@@ -75,21 +75,32 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Button>
                 </Box>
 
-                {RunState[RunState.node_id.value].end_dt?.get() ? (
+                {RunState[RunState.node_id.value].status.get() === 'Success' ? (
                     <Box color="status.pipelineOnline" display="flex" alignItems="center" mt={0.5}>
                         <Box component={FontAwesomeIcon} fontSize={18} color="status.pipelineOnline" icon={faCheckCircle} />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
                             Complete
                         </Typography>
                     </Box>
-                ) : (
+                ) : null}
+
+                {RunState[RunState.node_id.value].status.get() === 'Run' ? (
                     <Box color="#65BEFF" display="flex" alignItems="center" mt={0.5}>
                         <RunningSpinner />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
                             Running
                         </Typography>
                     </Box>
-                )}
+                ) : null}
+
+                {RunState[RunState.node_id.value].status.get() === 'Fail' ? (
+                    <Box color="#F80000" display="flex" alignItems="center" mt={0.5}>
+                        <Box component={FontAwesomeIcon} fontSize={18} color="#F80000" icon={faExclamationCircle} />
+                        <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
+                            Failed
+                        </Typography>
+                    </Box>
+                ) : null}
             </Box>
 
             {/* LazyLog */}
