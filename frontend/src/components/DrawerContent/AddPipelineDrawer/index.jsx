@@ -21,7 +21,7 @@ const AddPipelineDrawer = ({ handleClose, environmentID }) => {
 
     // Custom GraphQL hook
     const addPipeline = useAddPipeline_(environmentID);
-    const getWorkerGroups = useGetWorkerGroups_(Environment.name.get(), setWorkerGroups);
+    const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setWorkerGroups);
 
     // Get workers on load
     useEffect(() => {
@@ -111,7 +111,7 @@ export const useAddPipeline_ = (environmentID) => {
 };
 
 // ------- Custom Hooks
-export const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
+const useGetWorkerGroupsHook = (environmentID, setWorkerGroups) => {
     // GraphQL hook
     const getAccessGroupUsers = useGetWorkerGroups();
 
@@ -119,7 +119,7 @@ export const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
 
     // Get worker groups
     return async () => {
-        const response = await getAccessGroupUsers({ environmentName });
+        const response = await getAccessGroupUsers({ environmentID });
 
         if (response === null) {
             setWorkerGroups([]);

@@ -1,7 +1,8 @@
-package logging
+package tests
 
 import (
 	"dataplane/workers/config"
+	"dataplane/workers/database"
 	"dataplane/workers/secrets"
 	"log"
 	"os"
@@ -15,6 +16,8 @@ Run Super secret squirrel function test
 go test -timeout 30s -v -run ^TestSecretsRedact$ dataplane/logging
 */
 func TestSecretsRedactFunction(t *testing.T) {
+
+	database.DBConnect()
 
 	// Create some secrets
 	os.Setenv("secret_super", "squirrel")

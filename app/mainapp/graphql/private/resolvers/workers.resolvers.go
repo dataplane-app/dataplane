@@ -5,11 +5,13 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/messageq"
 	"encoding/json"
 	"errors"
 	"os"
@@ -17,18 +19,15 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
-func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environmentName string, workerGroup string, secret string) (*string, error) {
+func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environmentID string, workerGroup string, secret string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
-
-	e := models.Environment{}
-	database.DBConn.First(&e, "name = ?", environmentName)
 
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
-		{Resource: "admin_environment", ResourceID: e.ID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
-		{Resource: "environment_secrets", ResourceID: e.ID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -40,6 +39,7 @@ func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environme
 	workerSecret := models.WorkerSecrets{
 		SecretID:      secret,
 		WorkerGroupID: workerGroup,
+		EnvironmentID: environmentID,
 		Active:        true,
 	}
 
@@ -53,22 +53,28 @@ func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environme
 		return nil, errors.New("Add secret to worker group database error.")
 	}
 
+	// ---- update workers
+	errnat := messageq.MsgSend("updatesecrets."+workerGroup, "update")
+	if errnat != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(errnat)
+		}
+
+	}
+
 	response := "Secret added to work group"
 	return &response, nil
 }
 
-func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, environmentName string, workerGroup string, secret string) (*string, error) {
+func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, environmentID string, workerGroup string, secret string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
-
-	e := models.Environment{}
-	database.DBConn.First(&e, "name = ?", environmentName)
 
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
-		{Resource: "admin_environment", ResourceID: e.ID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
-		{Resource: "environment_secrets", ResourceID: e.ID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -79,7 +85,7 @@ func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, envi
 
 	workerSecret := models.WorkerSecrets{}
 
-	err := database.DBConn.Where(&models.WorkerSecrets{SecretID: secret, WorkerGroupID: workerGroup}).
+	err := database.DBConn.Where(&models.WorkerSecrets{SecretID: secret, WorkerGroupID: workerGroup, EnvironmentID: environmentID}).
 		Delete(&workerSecret).Error
 
 	if err != nil {
@@ -90,25 +96,31 @@ func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, envi
 		return nil, errors.New("Remove secret from worker group database error.")
 	}
 
+	// ---- update workers
+	errnat := messageq.MsgSend("updatesecrets."+workerGroup, "update")
+	if errnat != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(errnat)
+		}
+
+	}
+
 	response := "Secret removed from work group"
 	return &response, nil
 }
 
-func (r *queryResolver) GetWorkers(ctx context.Context, environmentName string) ([]*privategraphql.Workers, error) {
+func (r *queryResolver) GetWorkers(ctx context.Context, environmentID string) ([]*privategraphql.Workers, error) {
 	var resp []*privategraphql.Workers
 	var worker models.WorkerStats
 
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
-	e := models.Environment{}
-	database.DBConn.First(&e, "name = ?", environmentName)
-
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
-		{Resource: "admin_environment", ResourceID: e.ID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
-		{Resource: "environment_view_workers", ResourceID: e.ID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -118,7 +130,7 @@ func (r *queryResolver) GetWorkers(ctx context.Context, environmentName string) 
 	}
 
 	database.GoDBWorker.View(func(tx *buntdb.Tx) error {
-		tx.AscendEqual("environment", `{"Env":"`+environmentName+`"}`, func(key, val string) bool {
+		tx.AscendEqual("environment", `{"EnvID":"`+environmentID+`"}`, func(key, val string) bool {
 			// fmt.Printf("Worker Groups: %s %s\n", key, val)
 
 			err := json.Unmarshal([]byte(val), &worker)
@@ -137,6 +149,7 @@ func (r *queryResolver) GetWorkers(ctx context.Context, environmentName string) 
 				MemoryPerc:  worker.MemoryPerc,
 				MemoryUsed:  worker.MemoryUsed,
 				Env:         worker.Env,
+				EnvID:       worker.EnvID,
 				Lb:          worker.LB,
 				WorkerType:  worker.WorkerType,
 			})
@@ -148,21 +161,18 @@ func (r *queryResolver) GetWorkers(ctx context.Context, environmentName string) 
 	return resp, nil
 }
 
-func (r *queryResolver) GetWorkerGroups(ctx context.Context, environmentName string) ([]*privategraphql.WorkerGroup, error) {
+func (r *queryResolver) GetWorkerGroups(ctx context.Context, environmentID string) ([]*privategraphql.WorkerGroup, error) {
 	var resp []*privategraphql.WorkerGroup
 	var workergroup models.WorkerGroup
 
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
-	e := models.Environment{}
-	database.DBConn.First(&e, "name = ?", environmentName)
-
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
-		{Resource: "admin_environment", ResourceID: e.ID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
-		{Resource: "environment_view_workers", ResourceID: e.ID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -172,7 +182,7 @@ func (r *queryResolver) GetWorkerGroups(ctx context.Context, environmentName str
 	}
 
 	database.GoDBWorkerGroup.View(func(tx *buntdb.Tx) error {
-		tx.AscendEqual("environment", `{"Env":"`+environmentName+`"}`, func(key, val string) bool {
+		tx.AscendEqual("environment", `{"EnvID":"`+environmentID+`"}`, func(key, val string) bool {
 			// fmt.Printf("Worker Groups: %s %s\n", key, val)
 
 			err := json.Unmarshal([]byte(val), &workergroup)
@@ -197,18 +207,15 @@ func (r *queryResolver) GetWorkerGroups(ctx context.Context, environmentName str
 	return resp, nil
 }
 
-func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentName string, secret string) ([]*models.WorkerSecrets, error) {
+func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentID string, secret string) ([]*models.WorkerSecrets, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
-
-	e := models.Environment{}
-	database.DBConn.First(&e, "name = ?", environmentName)
 
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
-		{Resource: "admin_environment", ResourceID: e.ID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
-		{Resource: "environment_secrets", ResourceID: e.ID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -219,7 +226,7 @@ func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentName str
 
 	s := []*models.WorkerSecrets{}
 
-	err := database.DBConn.Where("secret_id = ?", secret).Find(&s).Error
+	err := database.DBConn.Where("secret_id = ? and environment_id =?", secret, environmentID).Find(&s).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
@@ -230,18 +237,15 @@ func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentName str
 	return s, nil
 }
 
-func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentName string, workerGroup string) ([]*models.Secrets, error) {
+func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentID string, workerGroup string) ([]*models.Secrets, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
-
-	e := models.Environment{}
-	database.DBConn.First(&e, "name = ?", environmentName)
 
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
-		{Resource: "admin_environment", ResourceID: e.ID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
-		{Resource: "environment_secrets", ResourceID: e.ID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: e.ID},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -266,8 +270,8 @@ func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentNa
 		FROM secrets
 		JOIN worker_secrets
 		ON secrets.secret = worker_secrets.secret_id
-		WHERE worker_secrets.worker_group_id = ?	
-		`, workerGroup).Scan(&s).Error
+		WHERE worker_secrets.worker_group_id = ? and secrets.environment_id = ?
+		`, workerGroup, environmentID).Scan(&s).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {

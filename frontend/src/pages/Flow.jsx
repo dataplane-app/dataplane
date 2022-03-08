@@ -33,6 +33,7 @@ export const globalFlowState = createState({
     isOpenCommandDrawer: false,
     isOpenLogDrawer: false,
     isOpenAPIDrawer: false,
+    isOpenTurnOffPipelineDrawer: false,
     isEditorPage: false,
     selectedElement: null,
     elements: [],
@@ -133,12 +134,11 @@ const Flow = () => {
     }, [FlowState.triggerDelete.get()]);
 
     // Local state to detect unsaved changes
-    const [initialState, setInitialState] = useState();
+    const [initialState] = useState(JSON.parse(JSON.stringify(FlowState.elements.get())));
 
     // Fetch previous elements
     useEffect(() => {
         const prevElements = FlowState.elements.attach(Downgraded).get();
-        setInitialState(FlowState.elements.attach(Downgraded).get());
         FlowState.isEditorPage.set(true);
 
         console.log('FLOWWW: ', FlowState.attach(Downgraded).get());
@@ -317,6 +317,12 @@ const Flow = () => {
                 setSelectedElement(newNode);
                 FlowState.isOpenConfigureDrawer.set(true);
             }
+
+            if (type.nodeType === 'scheduleNode') {
+                FlowState.selectedElement.set(newNode);
+                setSelectedElement(newNode);
+                FlowState.isOpenSchedulerDrawer.set(true);
+            }
             return;
         }
     };
@@ -399,14 +405,19 @@ const Flow = () => {
             <Drawer anchor="right" open={FlowState.isOpenConfigureDrawer.get()} onClose={() => FlowState.isOpenConfigureDrawer.set(false)}>
                 <ProcessTypeDrawer
                     setElements={setElements}
-                    environmentName={Environment.name.get()}
+                    environmentID={Environment.id.get()}
                     handleClose={() => FlowState.isOpenConfigureDrawer.set(false)}
                     workerGroup={pipeline?.workerGroup}
                 />
             </Drawer>
 
             <Drawer anchor="right" open={FlowState.isOpenSchedulerDrawer.get()} onClose={() => FlowState.isOpenSchedulerDrawer.set(false)}>
-                <ScheduleDrawer handleClose={() => FlowState.isOpenSchedulerDrawer.set(false)} />
+                <ScheduleDrawer
+                    handleClose={() => FlowState.isOpenSchedulerDrawer.set(false)} //
+                    environmentID={Environment.id.get()}
+                    pipelineID={pipeline.pipelineID}
+                    setElements={setElements}
+                />
             </Drawer>
 
             <Drawer anchor="right" open={FlowState.isOpenAPIDrawer.get()} onClose={() => FlowState.isOpenAPIDrawer.set(false)}>
@@ -436,14 +447,15 @@ function prepareInputForBackend(input) {
 
     for (const iterator of input) {
         if (iterator.type === 'pythonNode' || iterator.type === 'bashNode') {
-            const { name, description, workerGroup, commands, ...data } = iterator.data;
+            const { name, description, triggerOnline, workerGroup, commands, ...data } = iterator.data;
             nodesInput.push({
                 nodeID: iterator.id,
                 name,
                 nodeType: nodeDictionary[iterator.type],
                 nodeTypeDesc: iterator.type.replace('Node', ''),
-                workerGroup,
+                triggerOnline,
                 description,
+                workerGroup,
                 commands: commands || [],
                 meta: {
                     position: {
@@ -473,6 +485,7 @@ function prepareInputForBackend(input) {
                 name: '',
                 nodeType: nodeDictionary[iterator.type],
                 nodeTypeDesc: iterator.type.replace('Node', ''),
+                triggerOnline: iterator.data.triggerOnline,
                 description: '',
                 workerGroup: '',
                 commands: [],

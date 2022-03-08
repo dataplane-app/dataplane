@@ -4,25 +4,12 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    query getWorkers($environmentID: String!) {
-        getWorkers(environmentID: $environmentID) {
-            WorkerGroup
-            WorkerID
-            Status
-            T
-            Interval
-            CPUPerc
-            Load
-            MemoryPerc
-            MemoryUsed
-            Env
-            LB
-            WorkerType
-        }
+    mutation turnOnOffPipeline($environmentID: String!, $pipelineID: String!, $online: Boolean!) {
+        turnOnOffPipeline(environmentID: $environmentID, pipelineID: $pipelineID, online: $online)
     }
 `;
 
-export const useGetWorkers = () => {
+export const useTurnOnOffPipeline = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -37,7 +24,7 @@ export const useGetWorkers = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.getWorkers;
+            return res?.turnOnOffPipeline;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

@@ -130,3 +130,12 @@ code {
 .tree_parent:hover .tree_controls {
     visibility: visible;
 }
+/* Pipeline flow log running spinner */
+@keyframes rotate-keyframes {
+    100% {
+        transform: rotate(360deg)
+    }
+}
+.anim-rotate {
+animation: rotate-keyframes 1s linear infinite;
+}
