@@ -7,7 +7,7 @@ import CustomChip from '../../../components/CustomChip';
 import { useGetWorkerGroupSecrets } from '../../../graphql/getWorkerGroupSecrets';
 import { useHistory } from 'react-router-dom';
 
-const SecretsDrawer = ({ handleClose, secretDrawerWorkGroup, environmentName }) => {
+const SecretsDrawer = ({ handleClose, secretDrawerWorkGroup, environmentID }) => {
     // React router
     const history = useHistory();
 
@@ -15,7 +15,7 @@ const SecretsDrawer = ({ handleClose, secretDrawerWorkGroup, environmentName }) 
     const [secrets, setSecrets] = useState([]);
 
     // Custom hook
-    const getWorkerGroupSecrets = useGetWorkerGroupSecrets_(environmentName, secretDrawerWorkGroup, setSecrets);
+    const getWorkerGroupSecrets = useGetWorkerGroupSecretsHook(environmentID, secretDrawerWorkGroup, setSecrets);
 
     // Get secrets on load
     useEffect(() => {
@@ -66,7 +66,7 @@ const SecretsDrawer = ({ handleClose, secretDrawerWorkGroup, environmentName }) 
 export default SecretsDrawer;
 
 // ------- Custom Hook
-const useGetWorkerGroupSecrets_ = (environmentName, WorkerGroup, setSecrets) => {
+const useGetWorkerGroupSecretsHook = (environmentID, WorkerGroup, setSecrets) => {
     // GraphQL hook
     const getWorkerGroupSecrets = useGetWorkerGroupSecrets();
 
@@ -79,7 +79,7 @@ const useGetWorkerGroupSecrets_ = (environmentName, WorkerGroup, setSecrets) => 
 
     // Get secrets
     return async () => {
-        const response = await getWorkerGroupSecrets({ environmentName, WorkerGroup });
+        const response = await getWorkerGroupSecrets({ environmentID, WorkerGroup });
 
         if (response === null) {
             setSecrets([]);

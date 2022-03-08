@@ -29,7 +29,7 @@ export default function WorkerDetail() {
     const [data, setData] = useState([]);
 
     // Custom hook
-    const getWorkers = useGetWorkers_(Environment.name.get(), setData, workerId);
+    const getWorkers = useGetWorkersHook(Environment.id.get(), setData, workerId);
 
     // Get workers on load and environment change
     useEffect(() => {
@@ -249,7 +249,7 @@ const CustomWorker = ({ row }) => {
 };
 
 // ------- Custom Hooks
-const useGetWorkers_ = (environmentName, setData, workerId) => {
+const useGetWorkersHook = (environmentID, setData, workerId) => {
     // GraphQL hook
     const getWorkers = useGetWorkers();
 
@@ -257,7 +257,7 @@ const useGetWorkers_ = (environmentName, setData, workerId) => {
 
     // Get workers
     return async () => {
-        const response = await getWorkers({ environmentName });
+        const response = await getWorkers({ environmentID });
 
         if (response === null) {
             setData([]);

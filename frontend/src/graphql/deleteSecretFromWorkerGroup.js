@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation deleteSecretFromWorkerGroup($environmentName: String!, $WorkerGroup: String!, $Secret: String!) {
-        deleteSecretFromWorkerGroup(environmentName: $environmentName, WorkerGroup: $WorkerGroup, Secret: $Secret)
+    mutation deleteSecretFromWorkerGroup($environmentID: String!, $WorkerGroup: String!, $Secret: String!) {
+        deleteSecretFromWorkerGroup(environmentID: $environmentID, WorkerGroup: $WorkerGroup, Secret: $Secret)
     }
 `;
 

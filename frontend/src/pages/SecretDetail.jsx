@@ -44,10 +44,10 @@ const SecretDetail = () => {
     // Custom GraphQL hooks
     const getSecret = useGetSecret_(secretId, setSecret, Environment, reset);
     const getUpdateSecret = useUpdateSecret_(setSecret, Environment, getSecret);
-    const getSecretWorkerGroups = useGetSecretGroups_(Environment.name.get(), secretId, setSecretWorkerGroups);
-    const addSecretToWorkerGroup = useAddSecretToWorkerGroup_(Environment.name.get(), workerGroup, secretId, getSecretWorkerGroups);
-    const getWorkerGroups = useGetWorkerGroups_(Environment.name.get(), setWorkerGroups);
-    const deleteSecretFromWorkerGroup = useDeleteSecretFromWorkerGroup_(Environment.name.get(), secretId, getSecretWorkerGroups);
+    const getSecretWorkerGroups = useGetSecretGroupsHook(Environment.id.get(), secretId, setSecretWorkerGroups);
+    const addSecretToWorkerGroup = useAddSecretToWorkerGroupHook(Environment.id.get(), workerGroup, secretId, getSecretWorkerGroups);
+    const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setWorkerGroups);
+    const deleteSecretFromWorkerGroup = useDeleteSecretFromWorkerGroupHook(Environment.id.get(), secretId, getSecretWorkerGroups);
 
     useEffect(() => {
         // Scroll to top on load
@@ -248,7 +248,7 @@ const useUpdateSecret_ = (setSecrets, Environment, getSecret) => {
     };
 };
 
-const useAddSecretToWorkerGroup_ = (environmentName, WorkerGroup, Secret, getSecretWorkerGroups) => {
+const useAddSecretToWorkerGroupHook = (environmentID, WorkerGroup, Secret, getSecretWorkerGroups) => {
     // GraphQL hook
     const addSecretToWorkerGroup = useAddSecretToWorkerGroup();
 
@@ -256,7 +256,7 @@ const useAddSecretToWorkerGroup_ = (environmentName, WorkerGroup, Secret, getSec
 
     // Update secret
     return async () => {
-        const response = await addSecretToWorkerGroup({ environmentName, WorkerGroup, Secret });
+        const response = await addSecretToWorkerGroup({ environmentID, WorkerGroup, Secret });
 
         if (response.r === 'error') {
             enqueueSnackbar("Can't update secrets: " + response.msg, { variant: 'error' });
@@ -269,7 +269,7 @@ const useAddSecretToWorkerGroup_ = (environmentName, WorkerGroup, Secret, getSec
     };
 };
 
-const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
+const useGetWorkerGroupsHook = (environmentID, setWorkerGroups) => {
     // GraphQL hook
     const getAccessGroupUsers = useGetWorkerGroups();
 
@@ -277,7 +277,7 @@ const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
 
     // Get worker groups
     return async () => {
-        const response = await getAccessGroupUsers({ environmentName });
+        const response = await getAccessGroupUsers({ environmentID });
 
         if (response === null) {
             setWorkerGroups([]);
@@ -293,7 +293,7 @@ const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
     };
 };
 
-const useGetSecretGroups_ = (environmentName, Secret, setSecretWorkerGroups) => {
+const useGetSecretGroupsHook = (environmentID, Secret, setSecretWorkerGroups) => {
     // GraphQL hook
     const getSecretGroups = useGetSecretGroups();
 
@@ -301,7 +301,7 @@ const useGetSecretGroups_ = (environmentName, Secret, setSecretWorkerGroups) => 
 
     // Get worker groups
     return async () => {
-        const response = await getSecretGroups({ environmentName, Secret });
+        const response = await getSecretGroups({ environmentID, Secret });
 
         if (response === null) {
             setSecretWorkerGroups([]);
@@ -315,7 +315,7 @@ const useGetSecretGroups_ = (environmentName, Secret, setSecretWorkerGroups) => 
     };
 };
 
-const useDeleteSecretFromWorkerGroup_ = (environmentName, Secret, getSecretWorkerGroups) => {
+const useDeleteSecretFromWorkerGroupHook = (environmentID, Secret, getSecretWorkerGroups) => {
     // GraphQL hook
     const deletePermissionToUser = useDeleteSecretFromWorkerGroup();
 
@@ -323,7 +323,7 @@ const useDeleteSecretFromWorkerGroup_ = (environmentName, Secret, getSecretWorke
 
     // Delete secret from worker group
     return async (WorkerGroup) => {
-        const response = await deletePermissionToUser({ environmentName, WorkerGroup, Secret });
+        const response = await deletePermissionToUser({ environmentID, WorkerGroup, Secret });
 
         if (response.r === 'error') {
             closeSnackbar();
