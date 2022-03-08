@@ -5,7 +5,7 @@ import TreeView from '@mui/lab/TreeView';
 import { Autocomplete, Box, Grid, IconButton, TextField, Typography } from '@mui/material';
 import { forwardRef, useEffect, useState } from 'react';
 import { useGlobalEditorState } from '../../../pages/Editor';
-import { useGetWorkerGroups_ } from '../../DrawerContent/AddPipelineDrawer';
+import { useGetWorkerGroupsHook } from '../../DrawerContent/AddPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { Downgraded } from '@hookstate/core';
 import { faFileAlt } from '@fortawesome/free-regular-svg-icons';
@@ -21,7 +21,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const [selectedParentFolder, setSelectedParentFolder] = useState(null);
 
     // Custom GraphQL hook
-    const getWorkerGroups = useGetWorkerGroups_(Environment.name.get(), setWorkerGroups);
+    const getWorkerGroups = useGetWorkerGroupsHook(Environment.name.get(), setWorkerGroups);
 
     // Get workers on load
     useEffect(() => {
