@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
@@ -40,6 +40,7 @@ func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environme
 	workerSecret := models.WorkerSecrets{
 		SecretID:      secret,
 		WorkerGroupID: workerGroup,
+		EnvironmentID: e.ID,
 		Active:        true,
 	}
 
@@ -79,7 +80,7 @@ func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, envi
 
 	workerSecret := models.WorkerSecrets{}
 
-	err := database.DBConn.Where(&models.WorkerSecrets{SecretID: secret, WorkerGroupID: workerGroup}).
+	err := database.DBConn.Where(&models.WorkerSecrets{SecretID: secret, WorkerGroupID: workerGroup, EnvironmentID: e.ID}).
 		Delete(&workerSecret).Error
 
 	if err != nil {
@@ -219,7 +220,7 @@ func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentName str
 
 	s := []*models.WorkerSecrets{}
 
-	err := database.DBConn.Where("secret_id = ?", secret).Find(&s).Error
+	err := database.DBConn.Where("secret_id = ? and environment_id =?", secret, e.ID).Find(&s).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
@@ -266,8 +267,8 @@ func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentNa
 		FROM secrets
 		JOIN worker_secrets
 		ON secrets.secret = worker_secrets.secret_id
-		WHERE worker_secrets.worker_group_id = ?	
-		`, workerGroup).Scan(&s).Error
+		WHERE worker_secrets.worker_group_id = ? and secrets.environment_id = ?
+		`, workerGroup, e.ID).Scan(&s).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {

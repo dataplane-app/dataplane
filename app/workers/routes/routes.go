@@ -39,7 +39,7 @@ func Setup(port string) *fiber.App {
 		panic("Requires worker_group environment variable")
 	}
 
-	// Validate secret name
+	// Validate group name
 	var isStringAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
 	if !isStringAlphaNumeric(os.Getenv("worker_group")) {
 		panic("Worker group - Only [a-z], [A-Z], [0-9] and _ are allowed")
