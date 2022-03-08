@@ -91,7 +91,7 @@ type ComplexityRoot struct {
 		DeleteAccessGroup                func(childComplexity int, accessGroupID string, environmentID string) int
 		DeletePermissionToUser           func(childComplexity int, userID string, permissionID string, environmentID string) int
 		DeletePipeline                   func(childComplexity int, environmentID string, pipelineID string) int
-		DeleteSecretFromWorkerGroup      func(childComplexity int, environmentName string, workerGroup string, secret string) int
+		DeleteSecretFromWorkerGroup      func(childComplexity int, environmentID string, workerGroup string, secret string) int
 		PipelinePermissionsToAccessGroup func(childComplexity int, environmentID string, resourceID string, access []string, accessGroupID string) int
 		PipelinePermissionsToUser        func(childComplexity int, environmentID string, resourceID string, access []string, userID string) int
 		RemoveUserFromAccessGroup        func(childComplexity int, userID string, accessGroupID string, environmentID string) int
@@ -378,7 +378,7 @@ type MutationResolver interface {
 	UpdateActivateUser(ctx context.Context, userid string) (*string, error)
 	UpdateDeleteUser(ctx context.Context, userid string) (*string, error)
 	AddSecretToWorkerGroup(ctx context.Context, environmentID string, workerGroup string, secret string) (*string, error)
-	DeleteSecretFromWorkerGroup(ctx context.Context, environmentName string, workerGroup string, secret string) (*string, error)
+	DeleteSecretFromWorkerGroup(ctx context.Context, environmentID string, workerGroup string, secret string) (*string, error)
 }
 type PipelineEdgesResolver interface {
 	Meta(ctx context.Context, obj *models.PipelineEdges) (interface{}, error)
@@ -732,7 +732,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteSecretFromWorkerGroup(childComplexity, args["environmentName"].(string), args["WorkerGroup"].(string), args["Secret"].(string)), true
+		return e.complexity.Mutation.DeleteSecretFromWorkerGroup(childComplexity, args["environmentID"].(string), args["WorkerGroup"].(string), args["Secret"].(string)), true
 
 	case "Mutation.pipelinePermissionsToAccessGroup":
 		if e.complexity.Mutation.PipelinePermissionsToAccessGroup == nil {
@@ -3262,7 +3262,7 @@ extend type Mutation {
 	+ **Permission**: admin_platform, admin_environment, environment_secrets
 	+ **Security**: Based on environment selected
 	"""
-  deleteSecretFromWorkerGroup(environmentName: String!, WorkerGroup: String!, Secret: String!): String
+  deleteSecretFromWorkerGroup(environmentID: String!, WorkerGroup: String!, Secret: String!): String
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -3614,14 +3614,14 @@ func (ec *executionContext) field_Mutation_deleteSecretFromWorkerGroup_args(ctx 
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["environmentName"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentName"))
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["environmentName"] = arg0
+	args["environmentID"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["WorkerGroup"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("WorkerGroup"))
@@ -7162,7 +7162,7 @@ func (ec *executionContext) _Mutation_deleteSecretFromWorkerGroup(ctx context.Co
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteSecretFromWorkerGroup(rctx, args["environmentName"].(string), args["WorkerGroup"].(string), args["Secret"].(string))
+		return ec.resolvers.Mutation().DeleteSecretFromWorkerGroup(rctx, args["environmentID"].(string), args["WorkerGroup"].(string), args["Secret"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

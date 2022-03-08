@@ -47,7 +47,7 @@ const SecretDetail = () => {
     const getSecretWorkerGroups = useGetSecretGroupsHook(Environment.id.get(), secretId, setSecretWorkerGroups);
     const addSecretToWorkerGroup = useAddSecretToWorkerGroupHook(Environment.id.get(), workerGroup, secretId, getSecretWorkerGroups);
     const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setWorkerGroups);
-    const deleteSecretFromWorkerGroup = useDeleteSecretFromWorkerGroup_(Environment.name.get(), secretId, getSecretWorkerGroups);
+    const deleteSecretFromWorkerGroup = useDeleteSecretFromWorkerGroupHook(Environment.id.get(), secretId, getSecretWorkerGroups);
 
     useEffect(() => {
         // Scroll to top on load
@@ -315,7 +315,7 @@ const useGetSecretGroupsHook = (environmentID, Secret, setSecretWorkerGroups) =>
     };
 };
 
-const useDeleteSecretFromWorkerGroup_ = (environmentName, Secret, getSecretWorkerGroups) => {
+const useDeleteSecretFromWorkerGroupHook = (environmentID, Secret, getSecretWorkerGroups) => {
     // GraphQL hook
     const deletePermissionToUser = useDeleteSecretFromWorkerGroup();
 
@@ -323,7 +323,7 @@ const useDeleteSecretFromWorkerGroup_ = (environmentName, Secret, getSecretWorke
 
     // Delete secret from worker group
     return async (WorkerGroup) => {
-        const response = await deletePermissionToUser({ environmentName, WorkerGroup, Secret });
+        const response = await deletePermissionToUser({ environmentID, WorkerGroup, Secret });
 
         if (response.r === 'error') {
             closeSnackbar();
