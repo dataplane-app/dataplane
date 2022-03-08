@@ -40,9 +40,11 @@ const ViewPageItem = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
                 Deploy
             </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={props.isPipelineOnline ? handleTurnOffPipeline : handleTurnOnPipeline}>
-                {props.isPipelineOnline ? 'Turn off' : 'Turn on'}
-            </MenuItem>
+            {props.pipeline.node_type_desc !== 'play' ? (
+                <MenuItem sx={{ color: 'cyan.main' }} onClick={props.isPipelineOnline ? handleTurnOffPipeline : handleTurnOnPipeline}>
+                    {props.isPipelineOnline ? 'Turn off' : 'Turn on'}
+                </MenuItem>
+            ) : null}
         </>
     );
 };

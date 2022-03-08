@@ -57,7 +57,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                                 name={row.value[1]}
                                 online={row.value[2]}
                                 environmentID={row.value[3]}
-                                nodeTypeDesc={row.value[2]}
+                                nodeTypeDesc={row.value[4]}
                                 handleOpenManage={() => setIsOpenManage(!isOpenManage)}
                                 setIsOpenDeletePipeline={setIsOpenDeletePipeline}
                                 getPipelines={getPipelines}
