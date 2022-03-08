@@ -112,6 +112,7 @@ func Setup(port string) *fiber.App {
 	})
 
 	/* ---- Listen for tasks ------- */
+	secrets.ListenSecretUpdates()
 	runtask.ListenTasks()
 
 	/* Every 5 seconds tell mainapp about my status

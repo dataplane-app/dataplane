@@ -17,10 +17,22 @@ var Reset = "\033[0m"
 /* Load the secrets for redaction on startup */
 func MapSecrets() {
 
+	SecretsArray = []string{}
+
+	log.Println("Secrets array (start):", len(SecretsArray), SecretsArray)
+
 	// Load the secrets attached to this worker group
 	for _, e := range os.Environ() {
 		pair := strings.SplitN(e, "=", 2)
+		if strings.Contains(pair[0], "secret_dp_") {
+			os.Unsetenv(pair[0])
+		}
+	}
+
+	for _, e := range os.Environ() {
+		pair := strings.SplitN(e, "=", 2)
 		if strings.Contains(pair[0], "secret") {
+			log.Println("Env pairs", pair[0], pair[1])
 			SecretsArray = append(SecretsArray, pair[1])
 			SecretsArray = append(SecretsArray, Green+"** Secret **"+Reset)
 		}
@@ -31,12 +43,14 @@ func MapSecrets() {
 	var loadsecrets []*modelmain.Secrets
 	if err := database.DBConn.Raw(`
 	select
+	s.env_var,
 	s.secret,
 	s.value
 	from
 	secrets s, worker_secrets ws 
 	where 
 	s.secret = ws.secret_id and
+	s.environment_id = ws.environment_id and
 	ws.active = true and
 	s.active = true and
 	ws.worker_group_id = ? and
@@ -49,13 +63,15 @@ func MapSecrets() {
 	for _, e := range loadsecrets {
 
 		decryptValue, _ := utilities.Decrypt(e.Value)
-		os.Setenv("secret_dp_"+strings.ToLower(e.Secret), decryptValue)
+		os.Setenv(e.EnvVar, decryptValue)
 		SecretsArray = append(SecretsArray, decryptValue)
 		SecretsArray = append(SecretsArray, Green+"** Secret **"+Reset)
 
-		log.Println(config.EnvID, "Secrets: ", "secret_dp_"+strings.ToLower(e.Secret), decryptValue)
+		log.Println(config.EnvID, "Secrets: ", "secret_dp_"+strings.ToLower(e.Secret), e.EnvVar, decryptValue)
 
 	}
+
+	log.Println("Secrets array :", len(SecretsArray), SecretsArray)
 	// The replacer is comma separated first is key then replacement - that is why append is twice above
 	config.Secrets = strings.NewReplacer(SecretsArray...)
 	log.Println("🐿  Secrets loaded")

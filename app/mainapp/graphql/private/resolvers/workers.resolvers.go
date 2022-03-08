@@ -6,10 +6,12 @@ package privateresolvers
 import (
 	"context"
 	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/messageq"
 	"encoding/json"
 	"errors"
 	"os"
@@ -54,6 +56,15 @@ func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environme
 		return nil, errors.New("Add secret to worker group database error.")
 	}
 
+	// ---- update workers
+	errnat := messageq.MsgSend("updatesecrets."+workerGroup, "update")
+	if errnat != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(errnat)
+		}
+
+	}
+
 	response := "Secret added to work group"
 	return &response, nil
 }
@@ -89,6 +100,15 @@ func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, envi
 		}
 
 		return nil, errors.New("Remove secret from worker group database error.")
+	}
+
+	// ---- update workers
+	errnat := messageq.MsgSend("updatesecrets."+workerGroup, "update")
+	if errnat != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(errnat)
+		}
+
 	}
 
 	response := "Secret removed from work group"
