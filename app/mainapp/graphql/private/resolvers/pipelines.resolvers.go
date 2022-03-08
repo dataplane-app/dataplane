@@ -412,12 +412,28 @@ func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID 
 		return "", errors.New("requires permissions")
 	}
 
+	// Get the trigger type
+	p := models.PipelineNodes{}
+
+	err := database.DBConn.Where("pipeline_id = ? AND node_type = ?", pipelineID, "trigger").Find(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete pipeline database error.")
+	}
+
+	if p.NodeTypeDesc == "play" {
+		online = true
+	}
+
 	// Update node
 	n := models.PipelineNodes{
 		TriggerOnline: online,
 	}
 
-	err := database.DBConn.Where("pipeline_id = ? AND node_type = ? AND node_type_desc <> ?", pipelineID, "trigger", "play").
+	err = database.DBConn.Where("pipeline_id = ? AND node_type = ?", pipelineID, "trigger").
 		Select("trigger_online").Updates(&n).Error
 
 	if err != nil {
