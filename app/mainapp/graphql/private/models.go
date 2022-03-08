@@ -86,15 +86,16 @@ type PipelineFlowInput struct {
 }
 
 type PipelineNodesInput struct {
-	NodeID       string                  `json:"nodeID"`
-	Name         string                  `json:"name"`
-	NodeType     string                  `json:"nodeType"`
-	NodeTypeDesc string                  `json:"nodeTypeDesc"`
-	Description  string                  `json:"description"`
-	Commands     interface{}             `json:"commands"`
-	Meta         *PipelineNodesMetaInput `json:"meta"`
-	WorkerGroup  string                  `json:"workerGroup"`
-	Active       bool                    `json:"active"`
+	NodeID        string                  `json:"nodeID"`
+	Name          string                  `json:"name"`
+	NodeType      string                  `json:"nodeType"`
+	NodeTypeDesc  string                  `json:"nodeTypeDesc"`
+	TriggerOnline bool                    `json:"triggerOnline"`
+	Description   string                  `json:"description"`
+	Commands      interface{}             `json:"commands"`
+	Meta          *PipelineNodesMetaInput `json:"meta"`
+	WorkerGroup   string                  `json:"workerGroup"`
+	Active        bool                    `json:"active"`
 }
 
 type PipelineNodesMetaInput struct {
@@ -206,6 +207,7 @@ type Workers struct {
 	MemoryPerc  float64   `json:"MemoryPerc"`
 	MemoryUsed  float64   `json:"MemoryUsed"`
 	Env         string    `json:"Env"`
+	EnvID       string    `json:"EnvID"`
 	Lb          string    `json:"LB"`
 	WorkerType  string    `json:"WorkerType"`
 }

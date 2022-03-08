@@ -14,7 +14,6 @@ import (
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
 
@@ -128,30 +127,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	}
 
-	// ----- lock the pipeline
-	err := database.DBConn.Model(&models.Pipelines{}).Where("pipeline_id = ?", pipelineID).Update("update_lock", true).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-
-		return "", errors.New("Update pipeline flow edge database error - failed to lock pipeline")
-	}
-
-	// ----- Delete old edges
-	edge := models.PipelineEdges{}
-
-	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&edge).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-
-		return "", errors.New("update pipeline flow edge database error")
-	}
-
-	// ----- Add pipeline edges to database
-
+	// ---- test for cycle -----
 	edges := []*models.PipelineEdges{}
 
 	for _, p := range input.EdgesInput {
@@ -179,6 +155,51 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 		// }
 
 	}
+	// Obtain the first node in the graph
+	var startNode string
+	if len(edges) > 0 {
+		for _, p := range input.NodesInput {
+
+			if _, ok := dependencies[p.NodeID]; ok {
+				//do something here
+			} else {
+				startNode = p.NodeID
+				break
+			}
+		}
+
+		cycle := utilities.GraphCycleCheck(edges, startNode)
+		if cycle == true {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact("Cycle detected. Only acyclical pipelines allowed.")
+			}
+			return "", errors.New("Cycle detected. Only acyclical pipelines allowed.")
+		}
+	}
+
+	// ----- lock the pipeline
+	err := database.DBConn.Model(&models.Pipelines{}).Where("pipeline_id = ?", pipelineID).Update("update_lock", true).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("Update pipeline flow edge database error - failed to lock pipeline")
+	}
+
+	// ----- Delete old edges
+	edge := models.PipelineEdges{}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&edge).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("update pipeline flow edge database error")
+	}
+
+	// ----- Add pipeline edges to database
 
 	// ----- Delete old nodes
 	node := models.PipelineNodes{}
@@ -209,6 +230,8 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			switch p.NodeTypeDesc {
 			case "play":
 				online = true
+			default:
+				online = p.TriggerOnline
 			}
 
 		}
@@ -254,29 +277,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	// Record edges and nodes in database
 
-	var startNode string
-
 	if len(edges) > 0 {
-
-		// ---- test for cycle -----
-		// Obtain the first node in the graph
-		for _, p := range input.NodesInput {
-
-			if _, ok := dependencies[p.NodeID]; ok {
-				//do something here
-			} else {
-				startNode = p.NodeID
-				break
-			}
-		}
-
-		cycle := utilities.GraphCycleCheck(edges, startNode)
-		if cycle == true {
-			if config.Debug == "true" {
-				logging.PrintSecretsRedact("Cycle detected. Only acyclical pipelines allowed.")
-			}
-			return "", errors.New("Cycle detected. Only acyclical pipelines allowed.")
-		}
 
 		err = database.DBConn.Create(&edges).Error
 	}
@@ -395,7 +396,54 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 }
 
 func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("requires permissions")
+	}
+
+	// Get the trigger type
+	p := models.PipelineNodes{}
+
+	err := database.DBConn.Where("pipeline_id = ? AND node_type = ?", pipelineID, "trigger").Find(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to retrieve trigger node.")
+	}
+
+	if p.NodeTypeDesc == "play" {
+		online = true
+	}
+
+	// Update node
+	n := models.PipelineNodes{
+		TriggerOnline: online,
+	}
+
+	err = database.DBConn.Where("pipeline_id = ? AND node_type = ?", pipelineID, "trigger").
+		Select("trigger_online").Updates(&n).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to update trigger node.")
+	}
+
+	return "Pipeline trigger updated", nil
 }
 
 func (r *pipelineEdgesResolver) Meta(ctx context.Context, obj *models.PipelineEdges) (interface{}, error) {

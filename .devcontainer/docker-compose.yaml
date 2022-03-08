@@ -79,6 +79,7 @@ services:
       debug: "true"
       dbdebug: "false"
       messagedebug: "true"
+      metricdebug: "false"
       worker_heartbeat_seconds: "1"
       worker_group: "python_1"
       # vm, container, kubernetes

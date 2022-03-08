@@ -8,7 +8,7 @@ import { Downgraded } from '@hookstate/core';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useSnackbar } from 'notistack';
 
-const ProcessTypeDrawer = ({ handleClose, setElements, environmentName, workerGroup }) => {
+const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGroup }) => {
     // React hook form
     const { register, handleSubmit, reset } = useForm();
 
@@ -21,7 +21,7 @@ const ProcessTypeDrawer = ({ handleClose, setElements, environmentName, workerGr
     const [selectedWorkerGroup, setSelectedWorkerGroup] = useState({ WorkerGroup: 'default' });
 
     // Custom GraphQL hook
-    const getWorkerGroups = useGetWorkerGroups_(environmentName, setWorkerGroups);
+    const getWorkerGroups = useGetWorkerGroupsHook(environmentID, setWorkerGroups);
 
     // Fill the form with selected element information
     useEffect(() => {
@@ -120,7 +120,7 @@ const ProcessTypeDrawer = ({ handleClose, setElements, environmentName, workerGr
 
 export default ProcessTypeDrawer;
 
-const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
+const useGetWorkerGroupsHook = (environmentID, setWorkerGroups) => {
     // GraphQL hook
     const getWorkerGroups = useGetWorkerGroups();
 
@@ -128,7 +128,7 @@ const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
 
     // Get worker groups
     return async () => {
-        const response = await getWorkerGroups({ environmentName });
+        const response = await getWorkerGroups({ environmentID });
 
         if (response === null) {
             setWorkerGroups([]);

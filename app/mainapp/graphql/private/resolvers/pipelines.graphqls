@@ -34,6 +34,7 @@ input PipelineNodesInput {
 	name:          String!         
 	nodeType:      String!      
   nodeTypeDesc:  String!   
+  triggerOnline: Boolean!
 	description:   String!  
   commands:      Any!
 	meta:          PipelineNodesMetaInput!
@@ -70,6 +71,7 @@ type PipelineNodes {
 	environmentID: String!         
 	nodeType:      String!   
   nodeTypeDesc:  String!   
+  triggerOnline: Boolean!
 	description:   String!         
   commands:      Any!
 	meta:          Any! 
