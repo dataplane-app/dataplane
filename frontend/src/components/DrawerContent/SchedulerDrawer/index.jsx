@@ -25,9 +25,6 @@ const ScheduleDrawer = ({ handleClose, environmentID, pipelineID, setElements })
     const { register, handleSubmit } = useForm();
     const [isOnline, setIsOnline] = useState(true);
 
-    // Graphql hook
-    const turnOnOffPipeline = useTurnOnOffPipelineHook(pipelineID, environmentID, handleClose, isOnline);
-
     // Set triggerOnline switch on load
     useEffect(() => {
         setIsOnline(FlowState.selectedElement?.data?.triggerOnline.get());
@@ -37,7 +34,7 @@ const ScheduleDrawer = ({ handleClose, environmentID, pipelineID, setElements })
 
     // Update triggerOnline on submit
     async function onSubmit(data) {
-        turnOnOffPipeline();
+        handleClose();
         setElements((els) =>
             els.map((el) => {
                 if (el.id === FlowState.selectedElement.id.get()) {
@@ -96,7 +93,7 @@ const ScheduleDrawer = ({ handleClose, environmentID, pipelineID, setElements })
                             />
 
                             <Box display="flex" alignItems="center">
-                                <IOSSwitch onClick={() => setIsOnline(!isOnline)} checked={isOnline} {...register('live')} />
+                                <IOSSwitch onClick={() => setIsOnline(!isOnline)} checked={isOnline} {...register('live')} inputProps={{ 'aria-label': 'controlled' }} />
                                 <Typography fontSize={13} ml={1.5} color={isOnline ? ' #2E6707' : '#F80000'}>
                                     {isOnline ? 'Online' : 'Offline'}
                                 </Typography>
@@ -122,7 +119,7 @@ const ScheduleDrawer = ({ handleClose, environmentID, pipelineID, setElements })
                             <Table sx={{ minWidth: 650 }} aria-label="simple table">
                                 <TableBody>
                                     {rule.all().map((row, idx) => {
-                                        console.log(new Date(row).getFullYear());
+                                        // console.log(new Date(row).getFullYear());
                                         return (
                                             <TableRow key={idx} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                                                 <TableCell component="th" scope="row">
@@ -161,7 +158,7 @@ const ScheduleDrawer = ({ handleClose, environmentID, pipelineID, setElements })
 
 export default ScheduleDrawer;
 
-const IOSSwitch = styled((props) => <Switch focusVisibleClassName=".Mui-focusVisible" disableRipple {...props} />)(({ theme }) => ({
+const IOSSwitch = styled(Switch)(({ theme }) => ({
     width: 42,
     height: 26,
     padding: 0,
@@ -206,28 +203,3 @@ const IOSSwitch = styled((props) => <Switch focusVisibleClassName=".Mui-focusVis
         }),
     },
 }));
-
-// ------ Custom hooks
-const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose, online) => {
-    // GraphQL hook
-    const turnOnOffPipeline = useTurnOnOffPipeline();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Update trigger
-    return async () => {
-        const response = await turnOnOffPipeline({ environmentID, pipelineID, online });
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't update trigger: " + response.msg, {
-                variant: 'error',
-            });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            enqueueSnackbar('Success', { variant: 'success' });
-            handleClose();
-        }
-    };
-};
