@@ -46,7 +46,7 @@ const SecretDetail = () => {
     const getUpdateSecret = useUpdateSecret_(setSecret, Environment, getSecret);
     const getSecretWorkerGroups = useGetSecretGroups_(Environment.name.get(), secretId, setSecretWorkerGroups);
     const addSecretToWorkerGroup = useAddSecretToWorkerGroup_(Environment.name.get(), workerGroup, secretId, getSecretWorkerGroups);
-    const getWorkerGroups = useGetWorkerGroups_(Environment.name.get(), setWorkerGroups);
+    const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setWorkerGroups);
     const deleteSecretFromWorkerGroup = useDeleteSecretFromWorkerGroup_(Environment.name.get(), secretId, getSecretWorkerGroups);
 
     useEffect(() => {
@@ -269,7 +269,7 @@ const useAddSecretToWorkerGroup_ = (environmentName, WorkerGroup, Secret, getSec
     };
 };
 
-const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
+const useGetWorkerGroupsHook = (environmentID, setWorkerGroups) => {
     // GraphQL hook
     const getAccessGroupUsers = useGetWorkerGroups();
 
@@ -277,7 +277,7 @@ const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
 
     // Get worker groups
     return async () => {
-        const response = await getAccessGroupUsers({ environmentName });
+        const response = await getAccessGroupUsers({ environmentID });
 
         if (response === null) {
             setWorkerGroups([]);

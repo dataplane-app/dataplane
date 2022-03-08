@@ -31,7 +31,7 @@ export default function Workers() {
     const [triggerRefresh, setTriggerRefresh] = useState(1);
 
     // Custom hook
-    const getWorkerGroups = useGetWorkerGroups_(Environment.name.get(), setData);
+    const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setData);
 
     // Get workers on load, on environment change and every 5 seconds
     useEffect(() => {
@@ -208,7 +208,7 @@ const CustomStatus = ({ row }) => {
 };
 
 // ------- Custom Hooks
-const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
+const useGetWorkerGroupsHook = (environmentID, setWorkerGroups) => {
     // GraphQL hook
     const getAccessGroupUsers = useGetWorkerGroups();
 
@@ -224,7 +224,7 @@ const useGetWorkerGroups_ = (environmentName, setWorkerGroups) => {
             return;
         }
 
-        const response = await getAccessGroupUsers({ environmentName });
+        const response = await getAccessGroupUsers({ environmentID });
 
         if (response === null) {
             setWorkerGroups([]);
