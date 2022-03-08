@@ -58,7 +58,7 @@ extend type Query {
 	+ **Permission**: admin_platform, admin_environment, environment_secrets
 	+ **Security**: Based on environment selected
 	"""
-  getWorkerGroupSecrets(environmentName: String!, WorkerGroup: String!): [Secrets]
+  getWorkerGroupSecrets(environmentID: String!, WorkerGroup: String!): [Secrets]
 }
 
 extend type Mutation {

@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -251,12 +251,12 @@ func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentID strin
 	return s, nil
 }
 
-func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentName string, workerGroup string) ([]*models.Secrets, error) {
+func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentID string, workerGroup string) ([]*models.Secrets, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
 	e := models.Environment{}
-	database.DBConn.First(&e, "name = ?", environmentName)
+	database.DBConn.First(&e, "id = ?", environmentID)
 
 	// ----- Permissions
 	perms := []models.Permissions{

@@ -150,7 +150,7 @@ export default function Workers() {
                         setSecretDrawerWorkGroup(null);
                     }}
                     secretDrawerWorkGroup={secretDrawerWorkGroup}
-                    environmentName={Environment.name.get()}
+                    environmentID={Environment.id.get()}
                 />
             </Drawer>
         </Box>
