@@ -21,7 +21,7 @@ services:
     restart: always
 
   nats:
-    image: nats:2.7.0-scratch
+    image: nats:2.7.3-scratch
     command:
       - "--debug"
       - "--cluster"
@@ -35,7 +35,7 @@ services:
       - "18222:8222"
 
   nats-r:
-    image: nats:2.7.0-scratch
+    image: nats:2.7.3-scratch
     command:
       - "--debug"
       - "--cluster"

@@ -1,4 +1,4 @@
-package logging
+package tests
 
 import (
 	"dataplane/workers/config"
