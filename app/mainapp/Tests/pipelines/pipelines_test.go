@@ -24,6 +24,7 @@ go test -p 1 -v -count=1 -run TestPipelines dataplane/mainapp/Tests/pipelines
 * Update pipeline flow
 * Get pipeline flow
 * Delete pipeline flow
+* Turn off pipeline
 * Delete pipeline
 */
 func TestPipelines(t *testing.T) {
@@ -128,6 +129,7 @@ func TestPipelines(t *testing.T) {
 					name: "Name",
 					nodeType: "type",
 					nodeTypeDesc: "nodeTypeDesc",
+					triggerOnline: true,
 					description: "desc",
 					commands: [""],
 					workerGroup: "python_1",
@@ -147,6 +149,7 @@ func TestPipelines(t *testing.T) {
 					name: "Name",
 					nodeType: "type",
 					nodeTypeDesc: "nodeTypeDesc",
+					triggerOnline: true,
 					description: "desc",
 					commands: [""],
 					workerGroup: "python_1",
@@ -207,10 +210,11 @@ func TestPipelines(t *testing.T) {
 				nodesInput: [{
 					nodeID: "nodeID",
 					name: "Name2",
-					nodeType: "type",
+					nodeType: "trigger",
 					description: "desc",
 					commands: [""],
-					nodeTypeDesc: "nodeTypeDesc",
+					nodeTypeDesc: "schedule",
+					triggerOnline: true,
 					workerGroup: "",
 					meta: {
 					  position: {
@@ -226,10 +230,11 @@ func TestPipelines(t *testing.T) {
 				  {
 					nodeID: "nodeID2",
 					name: "Name2",
-					nodeType: "type",
+					nodeType: "process",
 					description: "desc",
 					commands: [""],
-					nodeTypeDesc: "nodeTypeDesc",
+					nodeTypeDesc: "python",
+					triggerOnline: true,
 					workerGroup: "",
 					meta: {
 					  position: {
@@ -333,6 +338,25 @@ func TestPipelines(t *testing.T) {
 			)
       		
 		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete pipeline 200 status code")
+
+	// -------- Turn off pipeline -------------
+	mutation = `mutation {
+		turnOnOffPipeline(
+				environmentID: "` + envID + `",
+				online: false,
+				pipelineID: "test_` + pipelineId + `")
+				  
+			}`
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 
