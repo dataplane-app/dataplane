@@ -6,7 +6,7 @@ const PipelineItemTable = (props) => {
     const history = useHistory();
 
     //Props
-    const { handleCloseMenu, handleOpenManage, id, name, setIsOpenDeletePipeline } = props;
+    const { handleCloseMenu, handleOpenManage, id, name, setIsOpenDeletePipeline, nodeTypeDesc } = props;
 
     const manageClick = () => {
         handleCloseMenu();
@@ -34,9 +34,11 @@ const PipelineItemTable = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
                 Deploy
             </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
-                Turn off
-            </MenuItem>
+            {nodeTypeDesc !== 'play' ? (
+                <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
+                    Turn off
+                </MenuItem>
+            ) : null}
             <MenuItem sx={{ color: 'error.main' }} onClick={deleteClick}>
                 Delete
             </MenuItem>
