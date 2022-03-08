@@ -14,10 +14,8 @@ import ViewPageItem from '../../components/MoreInfoContent/ViewPageItem';
 import MoreInfoMenu from '../../components/MoreInfoMenu';
 import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
 import { edgeTypes, nodeTypes, useGlobalFlowState } from '../Flow';
-import RunsDropdown from './RunsDropdown';
-import StatusChips from './StatusChips';
-import Timer from './Timer';
 import LogsDrawer from '../../components/DrawerContent/LogsDrawer';
+import TurnOffPipelineDrawer from '../../components/DrawerContent/TurnOffPipelineDrawer';
 
 const View = () => {
     // Hooks
@@ -90,6 +88,12 @@ const View = () => {
         }
     };
 
+    // For setting pipeline status
+    const [isPipelineOnline, setIsPipelineOnline] = useState();
+    useEffect(() => {
+        setIsPipelineOnline(elements.filter((a) => a.type === 'scheduleNode')[0]?.data.triggerOnline ?? true);
+    }, [elements]);
+
     //Flow methods
     const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
     const onConnect = (params) => {
@@ -130,15 +134,19 @@ const View = () => {
 
                         <Grid display="flex">
                             <Box display="flex" alignItems="center" ml={4} mr={2}>
-                                <Box height={16} width={16} backgroundColor={pipeline?.online ? 'status.pipelineOnlineText' : 'error.main'} borderRadius="100%"></Box>
-                                <Typography ml={1} fontSize={16} color={pipeline?.online ? 'status.pipelineOnlineText' : 'error.main'}>
-                                    {pipeline?.online ? 'Online' : 'Offline'}
+                                <Box height={16} width={16} backgroundColor={isPipelineOnline ? 'status.pipelineOnlineText' : 'error.main'} borderRadius="100%"></Box>
+                                <Typography ml={1} fontSize={16} color={isPipelineOnline ? 'status.pipelineOnlineText' : 'error.main'}>
+                                    {isPipelineOnline ? 'Online' : 'Offline'}
                                 </Typography>
                             </Box>
 
                             <Box sx={{ top: '0', right: '0' }}>
                                 <MoreInfoMenu iconHorizontal>
-                                    <ViewPageItem pipeline={pipeline} />
+                                    <ViewPageItem
+                                        pipeline={pipeline}
+                                        getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
+                                        isPipelineOnline={isPipelineOnline}
+                                    />
                                 </MoreInfoMenu>
                             </Box>
                         </Grid>
@@ -201,6 +209,16 @@ const View = () => {
                 open={FlowState.isOpenLogDrawer.get()}
                 onClose={() => FlowState.isOpenLogDrawer.set(false)}>
                 <LogsDrawer handleClose={() => FlowState.isOpenLogDrawer.set(false)} environmentId={Environment.id.get()} />
+            </Drawer>
+
+            <Drawer anchor="right" open={FlowState.isOpenTurnOffPipelineDrawer.get()} onClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)}>
+                <TurnOffPipelineDrawer
+                    handleClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)} //
+                    pipelineID={pipeline.pipelineID}
+                    environmentID={pipeline.environmentID}
+                    name={pipeline.name}
+                    getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
+                />
             </Drawer>
         </Box>
     );
@@ -269,6 +287,7 @@ export function prepareInputForFrontend(input) {
                 description: node.description,
                 workerGroup: node.workerGroup,
                 commands: node.commands,
+                triggerOnline: node.triggerOnline,
             };
             nodesInput.push({
                 id: node.nodeID,

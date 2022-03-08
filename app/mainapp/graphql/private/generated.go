@@ -179,6 +179,7 @@ type ComplexityRoot struct {
 		NodeType      func(childComplexity int) int
 		NodeTypeDesc  func(childComplexity int) int
 		PipelineID    func(childComplexity int) int
+		TriggerOnline func(childComplexity int) int
 		WorkerGroup   func(childComplexity int) int
 	}
 
@@ -1352,6 +1353,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PipelineNodes.PipelineID(childComplexity), true
+
+	case "PipelineNodes.triggerOnline":
+		if e.complexity.PipelineNodes.TriggerOnline == nil {
+			break
+		}
+
+		return e.complexity.PipelineNodes.TriggerOnline(childComplexity), true
 
 	case "PipelineNodes.workerGroup":
 		if e.complexity.PipelineNodes.WorkerGroup == nil {
@@ -2805,6 +2813,7 @@ input PipelineNodesInput {
 	name:          String!         
 	nodeType:      String!      
   nodeTypeDesc:  String!   
+  triggerOnline: Boolean!
 	description:   String!  
   commands:      Any!
 	meta:          PipelineNodesMetaInput!
@@ -2841,6 +2850,7 @@ type PipelineNodes {
 	environmentID: String!         
 	nodeType:      String!   
   nodeTypeDesc:  String!   
+  triggerOnline: Boolean!
 	description:   String!         
   commands:      Any!
 	meta:          Any! 
@@ -8513,6 +8523,41 @@ func (ec *executionContext) _PipelineNodes_nodeTypeDesc(ctx context.Context, fie
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PipelineNodes_triggerOnline(ctx context.Context, field graphql.CollectedField, obj *models.PipelineNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PipelineNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TriggerOnline, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PipelineNodes_description(ctx context.Context, field graphql.CollectedField, obj *models.PipelineNodes) (ret graphql.Marshaler) {
@@ -14698,6 +14743,14 @@ func (ec *executionContext) unmarshalInputPipelineNodesInput(ctx context.Context
 			if err != nil {
 				return it, err
 			}
+		case "triggerOnline":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("triggerOnline"))
+			it.TriggerOnline, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "description":
 			var err error
 
@@ -16134,6 +16187,16 @@ func (ec *executionContext) _PipelineNodes(ctx context.Context, sel ast.Selectio
 		case "nodeTypeDesc":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._PipelineNodes_nodeTypeDesc(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "triggerOnline":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._PipelineNodes_triggerOnline(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

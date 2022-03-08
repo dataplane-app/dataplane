@@ -22,6 +22,7 @@ const query = gql`
                 environmentID
                 nodeType
                 nodeTypeDesc
+                triggerOnline
                 description
                 commands
                 meta

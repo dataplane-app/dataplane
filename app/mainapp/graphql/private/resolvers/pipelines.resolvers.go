@@ -14,7 +14,6 @@ import (
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
 
@@ -209,6 +208,8 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			switch p.NodeTypeDesc {
 			case "play":
 				online = true
+			default:
+				online = p.TriggerOnline
 			}
 
 		}
@@ -395,7 +396,54 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 }
 
 func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("requires permissions")
+	}
+
+	// Get the trigger type
+	p := models.PipelineNodes{}
+
+	err := database.DBConn.Where("pipeline_id = ? AND node_type = ?", pipelineID, "trigger").Find(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to retrieve trigger node.")
+	}
+
+	if p.NodeTypeDesc == "play" {
+		online = true
+	}
+
+	// Update node
+	n := models.PipelineNodes{
+		TriggerOnline: online,
+	}
+
+	err = database.DBConn.Where("pipeline_id = ? AND node_type = ?", pipelineID, "trigger").
+		Select("trigger_online").Updates(&n).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to update trigger node.")
+	}
+
+	return "Pipeline trigger updated", nil
 }
 
 func (r *pipelineEdgesResolver) Meta(ctx context.Context, obj *models.PipelineEdges) (interface{}, error) {

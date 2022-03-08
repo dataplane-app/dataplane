@@ -1,11 +1,15 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Autocomplete, Box, Button, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography } from '@mui/material';
-import { useState } from 'react';
+import { Autocomplete, Box, Button, Grid, Paper, Switch, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography } from '@mui/material';
+import { styled } from '@mui/system';
+import { useSnackbar } from 'notistack';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { RRule } from 'rrule';
+import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
+import { useGlobalFlowState } from '../../../pages/Flow';
 
-const ScheduleDrawer = ({ handleClose, refreshData }) => {
+const ScheduleDrawer = ({ handleClose, environmentID, pipelineID, setElements }) => {
     const rule = new RRule({
         freq: RRule.WEEKLY,
         count: 30,
@@ -14,11 +18,34 @@ const ScheduleDrawer = ({ handleClose, refreshData }) => {
 
     console.log(rule.all());
 
+    // Flow state
+    const FlowState = useGlobalFlowState();
+
     const [type, setType] = useState();
     const { register, handleSubmit } = useForm();
+    const [isOnline, setIsOnline] = useState(true);
 
+    // Set triggerOnline switch on load
+    useEffect(() => {
+        setIsOnline(FlowState.selectedElement?.data?.triggerOnline.get());
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [FlowState.selectedElement?.data?.triggerOnline.get()]);
+
+    // Update triggerOnline on submit
     async function onSubmit(data) {
-        console.log(data);
+        handleClose();
+        setElements((els) =>
+            els.map((el) => {
+                if (el.id === FlowState.selectedElement.id.get()) {
+                    el.data = {
+                        ...el.data,
+                        triggerOnline: isOnline,
+                    };
+                }
+                return el;
+            })
+        );
     }
 
     return (
@@ -60,10 +87,20 @@ const ScheduleDrawer = ({ handleClose, refreshData }) => {
                                 label="Schedule"
                                 id="schedule"
                                 size="small"
-                                required
+                                // required
                                 sx={{ mb: 2, mt: 2, fontSize: '.75rem', display: 'flex' }}
-                                {...register('schedule', { required: true })}
+                                {...register('schedule', { required: false })}
                             />
+
+                            <Box display="flex" alignItems="center">
+                                <IOSSwitch onClick={() => setIsOnline(!isOnline)} checked={isOnline} {...register('live')} inputProps={{ 'aria-label': 'controlled' }} />
+                                <Typography fontSize={13} ml={1.5} color={isOnline ? ' #2E6707' : '#F80000'}>
+                                    {isOnline ? 'Online' : 'Offline'}
+                                </Typography>
+                                <Typography fontSize={13} position="absolute" ml={14}>
+                                    {isOnline ? 'Scheduler will go live on save.' : 'Scheduler will be off on save.'}
+                                </Typography>
+                            </Box>
                         </Box>
 
                         <Grid mt={4} display="flex" alignItems="center">
@@ -82,7 +119,7 @@ const ScheduleDrawer = ({ handleClose, refreshData }) => {
                             <Table sx={{ minWidth: 650 }} aria-label="simple table">
                                 <TableBody>
                                     {rule.all().map((row, idx) => {
-                                        console.log(new Date(row).getFullYear());
+                                        // console.log(new Date(row).getFullYear());
                                         return (
                                             <TableRow key={idx} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                                                 <TableCell component="th" scope="row">
@@ -120,3 +157,49 @@ const ScheduleDrawer = ({ handleClose, refreshData }) => {
 };
 
 export default ScheduleDrawer;
+
+const IOSSwitch = styled(Switch)(({ theme }) => ({
+    width: 42,
+    height: 26,
+    padding: 0,
+    '& .MuiSwitch-switchBase': {
+        padding: 0,
+        margin: 2,
+        transitionDuration: '300ms',
+        '&.Mui-checked': {
+            transform: 'translateX(16px)',
+            color: '#fff',
+            '& + .MuiSwitch-track': {
+                backgroundColor: theme.palette.mode === 'dark' ? '#2ECA45' : '#72B842',
+                opacity: 1,
+                border: 0,
+            },
+            '&.Mui-disabled + .MuiSwitch-track': {
+                opacity: 0.5,
+            },
+        },
+        '&.Mui-focusVisible .MuiSwitch-thumb': {
+            color: '#33cf4d',
+            border: '6px solid #fff',
+        },
+        '&.Mui-disabled .MuiSwitch-thumb': {
+            color: theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[600],
+        },
+        '&.Mui-disabled + .MuiSwitch-track': {
+            opacity: theme.palette.mode === 'light' ? 0.7 : 0.3,
+        },
+    },
+    '& .MuiSwitch-thumb': {
+        boxSizing: 'border-box',
+        width: 22,
+        height: 22,
+    },
+    '& .MuiSwitch-track': {
+        borderRadius: 26 / 2,
+        backgroundColor: theme.palette.mode === 'light' ? '#F80000' : '#F80000',
+        opacity: 1,
+        transition: theme.transitions.create(['background-color'], {
+            duration: 500,
+        }),
+    },
+}));
