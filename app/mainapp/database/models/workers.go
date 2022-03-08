@@ -46,7 +46,8 @@ func (WorkerSecrets) TableName() string {
 
 type WorkerSecrets struct {
 	SecretID      string `gorm:"PRIMARY_KEY;type:varchar(255);" json:"secret_id"`
-	WorkerGroupID string `gorm:"PRIMARY_KEY;type:varchar(255);" json:"worker_group_id"`
+	WorkerGroupID string `gorm:"PRIMARY_KEY;type:varchar(64);" json:"worker_group_id"`
+	EnvironmentID string `gorm:"PRIMARY_KEY;type:varchar(64);" json:"environment_id"`
 	Active        bool
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     *time.Time `json:"updated_at"`
