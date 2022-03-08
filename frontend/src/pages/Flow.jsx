@@ -316,6 +316,12 @@ const Flow = () => {
                 setSelectedElement(newNode);
                 FlowState.isOpenConfigureDrawer.set(true);
             }
+
+            if (type.nodeType === 'scheduleNode') {
+                FlowState.selectedElement.set(newNode);
+                setSelectedElement(newNode);
+                FlowState.isOpenSchedulerDrawer.set(true);
+            }
             return;
         }
     };
