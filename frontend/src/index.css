@@ -108,3 +108,13 @@ code {
         box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
     }
 }
+
+/* Pipeline flow log running spinner */
+@keyframes rotate-keyframes {
+    100% {
+        transform: rotate(360deg)
+    }
+}
+.anim-rotate {
+animation: rotate-keyframes 1s linear infinite;
+}
