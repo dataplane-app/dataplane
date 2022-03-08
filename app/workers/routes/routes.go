@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -25,9 +26,6 @@ func Setup(port string) *fiber.App {
 
 	config.LoadConfig()
 
-	// ------- LOAD secrets ------
-	secrets.MapSecrets()
-
 	// -------- NATS Connect -------
 	messageq.NATSConnect()
 
@@ -39,6 +37,12 @@ func Setup(port string) *fiber.App {
 	// ------ Validate worker data ---------
 	if os.Getenv("worker_group") == "" {
 		panic("Requires worker_group environment variable")
+	}
+
+	// Validate secret name
+	var isStringAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
+	if !isStringAlphaNumeric(os.Getenv("worker_group")) {
+		panic("Worker group - Only [a-z], [A-Z], [0-9] and _ are allowed")
 	}
 
 	if os.Getenv("worker_type") == "" {
@@ -65,6 +69,9 @@ func Setup(port string) *fiber.App {
 
 	start := time.Now()
 
+	// ------- LOAD secrets ------
+	secrets.MapSecrets()
+
 	// ----- Load platformID ------
 	u := models.Platform{}
 	database.DBConn.First(&u)
@@ -73,7 +80,7 @@ func Setup(port string) *fiber.App {
 
 	// Load a worker ID
 	config.WorkerID = uuid.NewString()
-	log.Println("👷 Worker ID: ", config.WorkerID)
+	log.Println("👷 Worker Group and ID: ", os.Getenv("worker_group"), " - ", config.WorkerID)
 
 	//recover from panic
 	app.Use(recover.New())

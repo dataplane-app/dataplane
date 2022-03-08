@@ -68,7 +68,7 @@ func WorkerHealthStart() {
 	/* Start the worker heart beat */
 	s := gocron.NewScheduler(time.UTC)
 
-	log.Println("Submitting workers")
+	log.Println("🚚 Submitting workers")
 	WorkerLoad(s)
 
 	i, _ := strconv.Atoi(os.Getenv("worker_heartbeat_seconds"))

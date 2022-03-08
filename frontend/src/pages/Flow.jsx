@@ -321,7 +321,7 @@ const Flow = () => {
     };
 
     return (
-        <Box className="page" height="calc(100vh - 100px)" minHeight="min-content">
+        <Box className="page" height="calc(100vh - 136px)" minHeight="min-content">
             <Box ref={offsetRef}>
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex" alignItems="center" width="calc(100% - 145px)">
@@ -374,11 +374,14 @@ const Flow = () => {
                         arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
                         snapToGrid={true}
                         snapGrid={[15, 15]}>
-                        <Controls style={{ left: 'auto', right: 155, bottom: 20 }}>
+                        <Controls style={{ left: 'auto', right: 155, bottom: 50 }}>
                             <ControlButton onClick={onPanActive} style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
                                 <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} sx={{ color: FlowState.isPanEnable.get() ? '#72B842' : '' }} />
                             </ControlButton>
                         </Controls>
+                        <Box sx={{ position: 'absolute', left: 'auto', right: 155, bottom: 10 }}>
+                            <Typography fontSize={12}>Scale {Math.floor((FlowState.scale.get() || 1) * 100)}%</Typography>
+                        </Box>
                         {elements.length <= 0 ? (
                             <Box sx={{ position: 'absolute', top: '40%', left: -100, right: 0, textAlign: 'center' }}>
                                 <Typography>Create a pipeline by dragging the components here.</Typography>
