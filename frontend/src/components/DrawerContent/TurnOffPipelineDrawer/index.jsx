@@ -5,7 +5,7 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
 import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
 
-const TurnOffPipelineDrawer = ({ handleClose, pipeline, getPipelineFlow }) => {
+const TurnOffPipelineDrawer = ({ handleClose, name, pipelineID, environmentID, getPipelineFlow }) => {
     const { closeSnackbar } = useSnackbar();
 
     // Clear snackbar on load
@@ -15,7 +15,7 @@ const TurnOffPipelineDrawer = ({ handleClose, pipeline, getPipelineFlow }) => {
     }, []);
 
     // Graphql hook
-    const turnOnOffPipeline = useTurnOnOffPipelineHook(pipeline.pipelineID, pipeline.environmentID, handleClose, getPipelineFlow);
+    const turnOnOffPipeline = useTurnOnOffPipelineHook(pipelineID, environmentID, handleClose, getPipelineFlow);
 
     return (
         <Box position="relative">
@@ -27,7 +27,7 @@ const TurnOffPipelineDrawer = ({ handleClose, pipeline, getPipelineFlow }) => {
                 </Box>
 
                 <Typography component="h2" variant="h2">
-                    Turn off pipeline - {pipeline.name}
+                    Turn off pipeline - {name}
                 </Typography>
 
                 <Typography variant="body2" sx={{ mt: 2 }}>
@@ -60,7 +60,7 @@ const TurnOffPipelineDrawer = ({ handleClose, pipeline, getPipelineFlow }) => {
 export default TurnOffPipelineDrawer;
 
 // ------ Custom hook
-export const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose, getPipelineFlow) => {
+export const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose, refreshData) => {
     // GraphQL hook
     const turnOnOffPipeline = useTurnOnOffPipeline();
 
@@ -79,8 +79,8 @@ export const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose,
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
+            refreshData();
             handleClose();
-            getPipelineFlow();
         }
     };
 };

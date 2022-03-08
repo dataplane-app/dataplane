@@ -214,8 +214,9 @@ const View = () => {
             <Drawer anchor="right" open={FlowState.isOpenTurnOffPipelineDrawer.get()} onClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)}>
                 <TurnOffPipelineDrawer
                     handleClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)} //
-                    environmentId={Environment.id.get()}
-                    pipeline={pipeline}
+                    pipelineID={pipeline.pipelineID}
+                    environmentID={pipeline.environmentID}
+                    name={pipeline.name}
                     getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
                 />
             </Drawer>

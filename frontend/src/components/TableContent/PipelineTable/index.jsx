@@ -15,6 +15,7 @@ import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from '../../../pages/View';
 import DeletePipelineDrawer from '../../DrawerContent/DeletePipelineDrawer';
 import CustomChip from '../../CustomChip';
+import TurnOffPipelineDrawer from '../../DrawerContent/TurnOffPipelineDrawer';
 
 const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
     // React router
@@ -43,7 +44,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
         () => [
             {
                 Header: 'Manage',
-                accessor: (row) => [row.pipelineID, row.name],
+                accessor: (row) => [row.pipelineID, row.name, row.online, row.environmentID],
                 Cell: (row) => (
                     <Grid item sx={{ flex: 1, ml: -1 }} display="flex" alignItems="center" justifyContent="center">
                         <MoreInfoMenuPipeline
@@ -54,8 +55,11 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                             <PipelineItemTable //
                                 id={row.value[0]}
                                 name={row.value[1]}
+                                online={row.value[2]}
+                                environmentID={row.value[3]}
                                 handleOpenManage={() => setIsOpenManage(!isOpenManage)}
                                 setIsOpenDeletePipeline={setIsOpenDeletePipeline}
+                                getPipelines={getPipelines}
                             />
                         </MoreInfoMenuPipeline>
                     </Grid>
@@ -168,6 +172,16 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         }}
                         getPipelines={getPipelines}
                         pipelineID={pipelineId}
+                    />
+                </Drawer>
+
+                <Drawer anchor="right" open={FlowState.isOpenTurnOffPipelineDrawer.get()} onClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)}>
+                    <TurnOffPipelineDrawer
+                        handleClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)} //
+                        pipelineID={pipelineId}
+                        environmentID={environmentID}
+                        name={pipelineName}
+                        getPipelineFlow={getPipelines}
                     />
                 </Drawer>
             </Box>
