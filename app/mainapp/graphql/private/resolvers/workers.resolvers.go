@@ -19,12 +19,12 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
-func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environmentName string, workerGroup string, secret string) (*string, error) {
+func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environmentID string, workerGroup string, secret string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
 	e := models.Environment{}
-	database.DBConn.First(&e, "name = ?", environmentName)
+	database.DBConn.First(&e, "id = ?", environmentID)
 
 	// ----- Permissions
 	perms := []models.Permissions{

@@ -45,7 +45,7 @@ const SecretDetail = () => {
     const getSecret = useGetSecret_(secretId, setSecret, Environment, reset);
     const getUpdateSecret = useUpdateSecret_(setSecret, Environment, getSecret);
     const getSecretWorkerGroups = useGetSecretGroupsHook(Environment.id.get(), secretId, setSecretWorkerGroups);
-    const addSecretToWorkerGroup = useAddSecretToWorkerGroup_(Environment.name.get(), workerGroup, secretId, getSecretWorkerGroups);
+    const addSecretToWorkerGroup = useAddSecretToWorkerGroupHook(Environment.id.get(), workerGroup, secretId, getSecretWorkerGroups);
     const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setWorkerGroups);
     const deleteSecretFromWorkerGroup = useDeleteSecretFromWorkerGroup_(Environment.name.get(), secretId, getSecretWorkerGroups);
 
@@ -248,7 +248,7 @@ const useUpdateSecret_ = (setSecrets, Environment, getSecret) => {
     };
 };
 
-const useAddSecretToWorkerGroup_ = (environmentName, WorkerGroup, Secret, getSecretWorkerGroups) => {
+const useAddSecretToWorkerGroupHook = (environmentID, WorkerGroup, Secret, getSecretWorkerGroups) => {
     // GraphQL hook
     const addSecretToWorkerGroup = useAddSecretToWorkerGroup();
 
@@ -256,7 +256,7 @@ const useAddSecretToWorkerGroup_ = (environmentName, WorkerGroup, Secret, getSec
 
     // Update secret
     return async () => {
-        const response = await addSecretToWorkerGroup({ environmentName, WorkerGroup, Secret });
+        const response = await addSecretToWorkerGroup({ environmentID, WorkerGroup, Secret });
 
         if (response.r === 'error') {
             enqueueSnackbar("Can't update secrets: " + response.msg, { variant: 'error' });

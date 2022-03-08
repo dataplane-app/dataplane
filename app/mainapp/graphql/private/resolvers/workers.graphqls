@@ -68,7 +68,7 @@ extend type Mutation {
 	+ **Permission**: admin_platform, admin_environment, environment_secrets
 	+ **Security**: Based on environment selected
 	"""
-  addSecretToWorkerGroup(environmentName: String!, WorkerGroup: String!, Secret: String!): String
+  addSecretToWorkerGroup(environmentID: String!, WorkerGroup: String!, Secret: String!): String
 
   """
 	Remove secret from worker group.
