@@ -417,7 +417,8 @@ func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID 
 		TriggerOnline: online,
 	}
 
-	err := database.DBConn.Where("pipeline_id = ? AND node_type_desc = ?", pipelineID, "schedule").Select("trigger_online").Updates(&n).Error
+	err := database.DBConn.Where("pipeline_id = ? AND node_type = ? AND node_type_desc <> ?", pipelineID, "trigger", "play").
+		Select("trigger_online").Updates(&n).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
