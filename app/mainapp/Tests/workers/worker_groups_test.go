@@ -56,11 +56,16 @@ func TestAccessGroups(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpLoginResponse.StatusCode, "Login user 200 status code")
 
+	envID := testutils.TestEnvironmentID
+	if testutils.TestEnvironmentID == "" {
+		envID = "test-environment-id"
+	}
+
 	// -------- Get Worker Groups  -------------
 
 	query := `query {
 		getWorkerGroups(
-				environmentName: "Development"
+			environmentID: "` + envID + `"
 				)
 			{
 				WorkerGroup
@@ -87,7 +92,7 @@ func TestAccessGroups(t *testing.T) {
 
 	query = `query {
 		getWorkers(
-				environmentName: "Development"
+			environmentID: "` + envID + `"
 				) 
 			{
 			WorkerGroup
@@ -119,7 +124,7 @@ func TestAccessGroups(t *testing.T) {
 
 	mutation := `mutation {
 			addSecretToWorkerGroup(
-				environmentName: "Development",
+				environmentID: "` + envID + `",
 				WorkerGroup: "Test",
 				Secret: "Test_Secret"
 			)
@@ -139,7 +144,7 @@ func TestAccessGroups(t *testing.T) {
 
 	query = `query {
 			getSecretGroups(
-					environmentName: "Development",
+					environmentID: "` + envID + `",
 					Secret: "Test_Secret"
 					)
 				{
@@ -163,7 +168,7 @@ func TestAccessGroups(t *testing.T) {
 
 	query = `query {
 		getWorkerGroupSecrets(
-					environmentName: "Development",
+					environmentID: "` + envID + `",
 					WorkerGroup: "Test"
 					)
 				{
@@ -190,7 +195,7 @@ func TestAccessGroups(t *testing.T) {
 
 	mutation = `mutation {
 			deleteSecretFromWorkerGroup(
-				environmentName: "Development",
+				environmentID: "` + envID + `",
 				WorkerGroup: "Test",
 				Secret: "Test_Secret"
 			)
