@@ -398,7 +398,7 @@ const Flow = () => {
             <Drawer anchor="right" open={FlowState.isOpenConfigureDrawer.get()} onClose={() => FlowState.isOpenConfigureDrawer.set(false)}>
                 <ProcessTypeDrawer
                     setElements={setElements}
-                    environmentName={Environment.name.get()}
+                    environmentID={Environment.id.get()}
                     handleClose={() => FlowState.isOpenConfigureDrawer.set(false)}
                     workerGroup={pipeline?.workerGroup}
                 />

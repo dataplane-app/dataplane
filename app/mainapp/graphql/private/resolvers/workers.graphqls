@@ -36,21 +36,21 @@ extend type Query {
 	+ **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
 	+ **Security**: Based on environment selected
 	"""
-  getWorkers(environmentName: String!): [Workers]
+  getWorkers(environmentID: String!): [Workers]
   """
 	Get worker groups.
 	+ **Route**: Private
 	+ **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
 	+ **Security**: Based on environment selected
 	"""
-  getWorkerGroups(environmentName: String!): [WorkerGroup]
+  getWorkerGroups(environmentID: String!): [WorkerGroup]
   """
 	Get a secret's worker groups.
 	+ **Route**: Private
 	+ **Permission**: admin_platform, admin_environment, environment_secrets
 	+ **Security**: Based on environment selected
 	"""
-  getSecretGroups(environmentName: String!, Secret: String!): [SecretWorkerGroups]
+  getSecretGroups(environmentID: String!, Secret: String!): [SecretWorkerGroups]
 
     """
 	Get a worker group's secrets.
@@ -58,7 +58,7 @@ extend type Query {
 	+ **Permission**: admin_platform, admin_environment, environment_secrets
 	+ **Security**: Based on environment selected
 	"""
-  getWorkerGroupSecrets(environmentName: String!, WorkerGroup: String!): [Secrets]
+  getWorkerGroupSecrets(environmentID: String!, WorkerGroup: String!): [Secrets]
 }
 
 extend type Mutation {
@@ -68,7 +68,7 @@ extend type Mutation {
 	+ **Permission**: admin_platform, admin_environment, environment_secrets
 	+ **Security**: Based on environment selected
 	"""
-  addSecretToWorkerGroup(environmentName: String!, WorkerGroup: String!, Secret: String!): String
+  addSecretToWorkerGroup(environmentID: String!, WorkerGroup: String!, Secret: String!): String
 
   """
 	Remove secret from worker group.
@@ -76,5 +76,5 @@ extend type Mutation {
 	+ **Permission**: admin_platform, admin_environment, environment_secrets
 	+ **Security**: Based on environment selected
 	"""
-  deleteSecretFromWorkerGroup(environmentName: String!, WorkerGroup: String!, Secret: String!): String
+  deleteSecretFromWorkerGroup(environmentID: String!, WorkerGroup: String!, Secret: String!): String
 }

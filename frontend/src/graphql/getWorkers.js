@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    query getWorkers($environmentName: String!) {
-        getWorkers(environmentName: $environmentName) {
+    query getWorkers($environmentID: String!) {
+        getWorkers(environmentID: $environmentID) {
             WorkerGroup
             WorkerID
             Status
