@@ -44,6 +44,7 @@ func WorkerLoad(s *gocron.Scheduler) {
 			Load:        loadsend,
 			Interval:    1,
 			T:           time.Now().UTC(),
+			EnvID:       config.EnvID,
 			Env:         os.Getenv("worker_env"),
 			LB:          os.Getenv("worker_lb"),
 			WorkerType:  os.Getenv("worker_type"),

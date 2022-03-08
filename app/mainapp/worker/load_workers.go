@@ -23,6 +23,7 @@ func LoadWorkers(MainAppID string) {
 	var workerGroupdata models.WorkerGroup
 
 	messageq.NATSencoded.Subscribe("workerload", func(m *nats.Msg) {
+
 		// if os.Getenv("messagedebug") == "true" {
 		// 	logging.PrintSecretsRedact(string(m.Data))
 		// }
@@ -69,7 +70,8 @@ func LoadWorkers(MainAppID string) {
 				return nil
 			})
 
-			// log.Println(string(workerGroupdatajson))
+			// log.Println("worker:", string(workerdatajson))
+			// log.Println("workergroup:", string(workerGroupdatajson))
 
 		}
 

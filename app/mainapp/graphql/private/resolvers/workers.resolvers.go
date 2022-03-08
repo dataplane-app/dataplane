@@ -130,7 +130,7 @@ func (r *queryResolver) GetWorkers(ctx context.Context, environmentID string) ([
 	}
 
 	database.GoDBWorker.View(func(tx *buntdb.Tx) error {
-		tx.AscendEqual("environment", `{"Env":"`+environmentID+`"}`, func(key, val string) bool {
+		tx.AscendEqual("environment", `{"EnvID":"`+environmentID+`"}`, func(key, val string) bool {
 			// fmt.Printf("Worker Groups: %s %s\n", key, val)
 
 			err := json.Unmarshal([]byte(val), &worker)
@@ -149,6 +149,7 @@ func (r *queryResolver) GetWorkers(ctx context.Context, environmentID string) ([
 				MemoryPerc:  worker.MemoryPerc,
 				MemoryUsed:  worker.MemoryUsed,
 				Env:         worker.Env,
+				EnvID:       worker.EnvID,
 				Lb:          worker.LB,
 				WorkerType:  worker.WorkerType,
 			})
@@ -181,7 +182,7 @@ func (r *queryResolver) GetWorkerGroups(ctx context.Context, environmentID strin
 	}
 
 	database.GoDBWorkerGroup.View(func(tx *buntdb.Tx) error {
-		tx.AscendEqual("environment", `{"Env":"`+environmentID+`"}`, func(key, val string) bool {
+		tx.AscendEqual("environment", `{"EnvID":"`+environmentID+`"}`, func(key, val string) bool {
 			// fmt.Printf("Worker Groups: %s %s\n", key, val)
 
 			err := json.Unmarshal([]byte(val), &workergroup)

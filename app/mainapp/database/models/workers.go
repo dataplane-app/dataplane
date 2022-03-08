@@ -70,6 +70,7 @@ type WorkerStats struct {
 	MemoryPerc  float64
 	MemoryUsed  float64
 	Env         string `json:"Env"`
+	EnvID       string `json:"EnvID"`
 	LB          string `json:"LB"`
 	WorkerType  string `json:"WorkerType"` //container, kubernetes
 }
@@ -80,6 +81,7 @@ type WorkerGroup struct {
 	T           time.Time
 	Interval    int
 	Env         string `json:"Env"`
+	EnvID       string `json:"EnvID"`
 	LB          string `json:"LB"`
 	WorkerType  string `json:"WorkerType"` //container, kubernetes
 }

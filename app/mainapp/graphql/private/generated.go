@@ -324,6 +324,7 @@ type ComplexityRoot struct {
 	Workers struct {
 		CPUPerc     func(childComplexity int) int
 		Env         func(childComplexity int) int
+		EnvID       func(childComplexity int) int
 		Interval    func(childComplexity int) int
 		Lb          func(childComplexity int) int
 		Load        func(childComplexity int) int
@@ -2235,6 +2236,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Workers.Env(childComplexity), true
 
+	case "Workers.EnvID":
+		if e.complexity.Workers.EnvID == nil {
+			break
+		}
+
+		return e.complexity.Workers.EnvID(childComplexity), true
+
 	case "Workers.Interval":
 		if e.complexity.Workers.Interval == nil {
 			break
@@ -3195,6 +3203,7 @@ extend type Mutation {
 	MemoryPerc:  Float!
 	MemoryUsed:  Float!
 	Env:         String!
+	EnvID:       String!
 	LB:          String!
 	WorkerType:  String!
 }
@@ -12872,6 +12881,41 @@ func (ec *executionContext) _Workers_Env(ctx context.Context, field graphql.Coll
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Workers_EnvID(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Workers",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Workers_LB(ctx context.Context, field graphql.CollectedField, obj *Workers) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -17913,6 +17957,16 @@ func (ec *executionContext) _Workers(ctx context.Context, sel ast.SelectionSet, 
 		case "Env":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Workers_Env(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "EnvID":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Workers_EnvID(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

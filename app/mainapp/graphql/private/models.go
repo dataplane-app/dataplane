@@ -206,6 +206,7 @@ type Workers struct {
 	MemoryPerc  float64   `json:"MemoryPerc"`
 	MemoryUsed  float64   `json:"MemoryUsed"`
 	Env         string    `json:"Env"`
+	EnvID       string    `json:"EnvID"`
 	Lb          string    `json:"LB"`
 	WorkerType  string    `json:"WorkerType"`
 }

@@ -9,6 +9,7 @@ type Workers {
 	MemoryPerc:  Float!
 	MemoryUsed:  Float!
 	Env:         String!
+	EnvID:       String!
 	LB:          String!
 	WorkerType:  String!
 }
