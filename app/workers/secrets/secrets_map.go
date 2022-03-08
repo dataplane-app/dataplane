@@ -19,8 +19,6 @@ func MapSecrets() {
 
 	SecretsArray = []string{}
 
-	log.Println("Secrets array (start):", len(SecretsArray), SecretsArray)
-
 	// Load the secrets attached to this worker group
 	for _, e := range os.Environ() {
 		pair := strings.SplitN(e, "=", 2)
@@ -32,7 +30,7 @@ func MapSecrets() {
 	for _, e := range os.Environ() {
 		pair := strings.SplitN(e, "=", 2)
 		if strings.Contains(pair[0], "secret") {
-			log.Println("Env pairs", pair[0], pair[1])
+
 			SecretsArray = append(SecretsArray, pair[1])
 			SecretsArray = append(SecretsArray, Green+"** Secret **"+Reset)
 		}
@@ -67,11 +65,9 @@ func MapSecrets() {
 		SecretsArray = append(SecretsArray, decryptValue)
 		SecretsArray = append(SecretsArray, Green+"** Secret **"+Reset)
 
-		log.Println(config.EnvID, "Secrets: ", "secret_dp_"+strings.ToLower(e.Secret), e.EnvVar, decryptValue)
-
 	}
 
-	log.Println("Secrets array :", len(SecretsArray), SecretsArray)
+	// log.Println("Secrets array :", len(SecretsArray), SecretsArray)
 	// The replacer is comma separated first is key then replacement - that is why append is twice above
 	config.Secrets = strings.NewReplacer(SecretsArray...)
 	log.Println("🐿  Secrets loaded")

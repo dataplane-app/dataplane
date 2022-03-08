@@ -14,7 +14,7 @@ const PipelineItemTable = (props) => {
     const turnOnOffPipeline = useTurnOnOffPipelineHook(props.id, props.environmentID, props.handleClose, props.getPipelines);
 
     //Props
-    const { handleCloseMenu, handleOpenManage, id, name, setIsOpenDeletePipeline } = props;
+    const { handleCloseMenu, handleOpenManage, id, name, setIsOpenDeletePipeline, nodeTypeDesc } = props;
 
     const manageClick = () => {
         handleCloseMenu();
@@ -54,9 +54,11 @@ const PipelineItemTable = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
                 Deploy
             </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={props.online ? handleTurnOffPipeline : handleTurnOnPipeline}>
-                {props.online ? 'Turn off' : 'Turn on'}
-            </MenuItem>
+            {nodeTypeDesc !== 'play' ? (
+                <MenuItem sx={{ color: 'cyan.main' }} onClick={props.online ? handleTurnOffPipeline : handleTurnOnPipeline}>
+                    {props.online ? 'Turn off' : 'Turn on'}
+                </MenuItem>
+            ) : null}
             <MenuItem sx={{ color: 'error.main' }} onClick={deleteClick}>
                 Delete
             </MenuItem>

@@ -7,7 +7,7 @@ import { useGetNodeLogs } from '../../../graphql/getNodeLogs';
 import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 import { faRunning, faTimes, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AdjustIcon } from './AdjustIcon';
+import { RunningSpinner } from './AdjustIcon';
 import useWebSocketLog, { formatDate } from './useWebSocketLog';
 
 const LogsDrawer = ({ environmentId, handleClose }) => {
@@ -84,7 +84,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Box>
                 ) : (
                     <Box color="#65BEFF" display="flex" alignItems="center" mt={0.5}>
-                        <AdjustIcon />
+                        <RunningSpinner />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
                             Running
                         </Typography>

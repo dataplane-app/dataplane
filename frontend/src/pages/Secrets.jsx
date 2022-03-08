@@ -77,6 +77,10 @@ const Secrets = () => {
                 Secrets
             </Typography>
 
+            <Typography variant="subtitle2" mt=".20rem">
+                Environment: {Environment.name.get()}
+            </Typography>
+
             <Box mt={4} sx={{ width: { md: '570px' } }}>
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
