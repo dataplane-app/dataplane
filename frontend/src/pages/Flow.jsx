@@ -409,6 +409,7 @@ const Flow = () => {
                     handleClose={() => FlowState.isOpenSchedulerDrawer.set(false)} //
                     environmentID={Environment.id.get()}
                     pipelineID={pipeline.pipelineID}
+                    setElements={setElements}
                 />
             </Drawer>
 
@@ -439,14 +440,15 @@ function prepareInputForBackend(input) {
 
     for (const iterator of input) {
         if (iterator.type === 'pythonNode' || iterator.type === 'bashNode') {
-            const { name, description, workerGroup, commands, ...data } = iterator.data;
+            const { name, description, triggerOnline, workerGroup, commands, ...data } = iterator.data;
             nodesInput.push({
                 nodeID: iterator.id,
                 name,
                 nodeType: nodeDictionary[iterator.type],
                 nodeTypeDesc: iterator.type.replace('Node', ''),
-                workerGroup,
+                triggerOnline,
                 description,
+                workerGroup,
                 commands: commands || [],
                 meta: {
                     position: {
@@ -476,6 +478,7 @@ function prepareInputForBackend(input) {
                 name: '',
                 nodeType: nodeDictionary[iterator.type],
                 nodeTypeDesc: iterator.type.replace('Node', ''),
+                triggerOnline: iterator.data.triggerOnline,
                 description: '',
                 workerGroup: '',
                 commands: [],

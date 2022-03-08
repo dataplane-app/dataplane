@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -208,6 +208,8 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			switch p.NodeTypeDesc {
 			case "play":
 				online = true
+			default:
+				online = p.TriggerOnline
 			}
 
 		}

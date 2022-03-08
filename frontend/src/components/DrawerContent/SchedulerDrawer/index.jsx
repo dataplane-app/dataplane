@@ -3,12 +3,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Autocomplete, Box, Button, Grid, Paper, Switch, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography } from '@mui/material';
 import { styled } from '@mui/system';
 import { useSnackbar } from 'notistack';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { RRule } from 'rrule';
 import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
+import { useGlobalFlowState } from '../../../pages/Flow';
 
-const ScheduleDrawer = ({ handleClose, environmentID, pipelineID }) => {
+const ScheduleDrawer = ({ handleClose, environmentID, pipelineID, setElements }) => {
     const rule = new RRule({
         freq: RRule.WEEKLY,
         count: 30,
@@ -17,6 +18,9 @@ const ScheduleDrawer = ({ handleClose, environmentID, pipelineID }) => {
 
     console.log(rule.all());
 
+    // Flow state
+    const FlowState = useGlobalFlowState();
+
     const [type, setType] = useState();
     const { register, handleSubmit } = useForm();
     const [isOnline, setIsOnline] = useState(true);
@@ -24,8 +28,27 @@ const ScheduleDrawer = ({ handleClose, environmentID, pipelineID }) => {
     // Graphql hook
     const turnOnOffPipeline = useTurnOnOffPipelineHook(pipelineID, environmentID, handleClose, isOnline);
 
+    // Set triggerOnline switch on load
+    useEffect(() => {
+        setIsOnline(FlowState.selectedElement?.data?.triggerOnline.get());
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [FlowState.selectedElement?.data?.triggerOnline.get()]);
+
+    // Update triggerOnline on submit
     async function onSubmit(data) {
         turnOnOffPipeline();
+        setElements((els) =>
+            els.map((el) => {
+                if (el.id === FlowState.selectedElement.id.get()) {
+                    el.data = {
+                        ...el.data,
+                        triggerOnline: isOnline,
+                    };
+                }
+                return el;
+            })
+        );
     }
 
     return (
@@ -73,7 +96,7 @@ const ScheduleDrawer = ({ handleClose, environmentID, pipelineID }) => {
                             />
 
                             <Box display="flex" alignItems="center">
-                                <IOSSwitch onClick={() => setIsOnline(!isOnline)} defaultChecked {...register('live')} type="checkbox" value="a" />
+                                <IOSSwitch onClick={() => setIsOnline(!isOnline)} checked={isOnline} {...register('live')} />
                                 <Typography fontSize={13} ml={1.5} color={isOnline ? ' #2E6707' : '#F80000'}>
                                     {isOnline ? 'Online' : 'Offline'}
                                 </Typography>

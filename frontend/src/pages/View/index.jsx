@@ -269,6 +269,7 @@ export function prepareInputForFrontend(input) {
                 description: node.description,
                 workerGroup: node.workerGroup,
                 commands: node.commands,
+                triggerOnline: node.triggerOnline,
             };
             nodesInput.push({
                 id: node.nodeID,
