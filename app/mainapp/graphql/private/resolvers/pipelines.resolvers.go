@@ -421,7 +421,7 @@ func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID 
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return "", errors.New("Delete pipeline database error.")
+		return "", errors.New("Failed to retrieve trigger node.")
 	}
 
 	if p.NodeTypeDesc == "play" {
@@ -440,7 +440,7 @@ func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID 
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return "", errors.New("Delete pipeline database error.")
+		return "", errors.New("Failed to update trigger node.")
 	}
 
 	return "Pipeline trigger updated", nil
