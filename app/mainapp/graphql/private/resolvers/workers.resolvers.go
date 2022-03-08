@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -115,7 +115,7 @@ func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, envi
 	return &response, nil
 }
 
-func (r *queryResolver) GetWorkers(ctx context.Context, environmentName string) ([]*privategraphql.Workers, error) {
+func (r *queryResolver) GetWorkers(ctx context.Context, environmentID string) ([]*privategraphql.Workers, error) {
 	var resp []*privategraphql.Workers
 	var worker models.WorkerStats
 
@@ -123,7 +123,7 @@ func (r *queryResolver) GetWorkers(ctx context.Context, environmentName string) 
 	platformID := ctx.Value("platformID").(string)
 
 	e := models.Environment{}
-	database.DBConn.First(&e, "name = ?", environmentName)
+	database.DBConn.First(&e, "id = ?", environmentID)
 
 	// ----- Permissions
 	perms := []models.Permissions{
@@ -139,7 +139,7 @@ func (r *queryResolver) GetWorkers(ctx context.Context, environmentName string) 
 	}
 
 	database.GoDBWorker.View(func(tx *buntdb.Tx) error {
-		tx.AscendEqual("environment", `{"Env":"`+environmentName+`"}`, func(key, val string) bool {
+		tx.AscendEqual("environment", `{"Env":"`+e.Name+`"}`, func(key, val string) bool {
 			// fmt.Printf("Worker Groups: %s %s\n", key, val)
 
 			err := json.Unmarshal([]byte(val), &worker)
