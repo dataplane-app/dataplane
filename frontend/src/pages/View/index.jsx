@@ -94,7 +94,7 @@ const View = () => {
     // For setting pipeline status
     const [isPipelineOnline, setIsPipelineOnline] = useState();
     useEffect(() => {
-        setIsPipelineOnline(elements.filter((a) => a.type === 'scheduleNode')[0]?.data.triggerOnline ?? true);
+        setIsPipelineOnline(elements?.filter((a) => a.type === 'scheduleNode')[0]?.data.triggerOnline ?? true);
     }, [elements]);
 
     //Flow methods

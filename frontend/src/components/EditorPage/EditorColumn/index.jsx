@@ -2,7 +2,7 @@ import { Box, Chip, Grid, IconButton, Typography, useTheme } from '@mui/material
 import { forwardRef, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlayCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faExpandArrowsAlt, faPlayCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import { Downgraded } from '@hookstate/core';
 import { useState } from 'react';
@@ -78,6 +78,14 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         }
     };
 
+    /*     const renderPath = () => {
+        if(EditorGlobal.currentPath.get() && EditorGlobal.currentPath.get().length > 0){
+            EditorGlobal.currentPath.get()?.map()
+        }else{
+            return '>'
+        }
+    } */
+
     return (
         <div {...rest}>
             <Box
@@ -93,10 +101,11 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                     bottom: 0,
                     overflow: 'hidden',
                 }}>
-                <Grid container alignItems="stretch">
+                <Grid container flexWrap="noWrap" sx={{ width: rest?.style?.width, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
                     {EditorGlobal.tabs
                         .attach(Downgraded)
                         .get()
+                        ?.reverse()
                         ?.map((tabs) => {
                             return (
                                 <Box
@@ -155,6 +164,9 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 )}
             </Box>
             {children}
+            <Box sx={{ position: 'absolute', bottom: 2, left: 15, cursor: 'pointer' }}>
+                <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} className="drag-handle" />
+            </Box>
         </div>
     );
 });

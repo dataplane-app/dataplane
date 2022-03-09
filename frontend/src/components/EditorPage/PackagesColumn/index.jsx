@@ -1,3 +1,5 @@
+import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Grid, Typography } from '@mui/material';
 import { forwardRef } from 'react';
 
@@ -26,6 +28,9 @@ const PackageColumn = forwardRef(({ children, ...rest }, ref) => {
                 </Box>
             </Box>
             {children}
+            <Box sx={{ position: 'absolute', bottom: 2, left: 5, cursor: 'pointer' }}>
+                <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} className="drag-handle" />
+            </Box>
         </div>
     );
 });

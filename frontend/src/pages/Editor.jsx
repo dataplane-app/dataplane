@@ -7,7 +7,7 @@ import PackageColumn from '../components/EditorPage/PackagesColumn';
 import Navbar from '../components/Navbar';
 import { lgLayout, mdLayout, smLayout, xsLayout, xxsLayout } from '../utils/editorLayouts';
 import { createState, useState as useHookState } from '@hookstate/core';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import { Downgraded } from '@hookstate/core';
@@ -20,6 +20,7 @@ export const globalEditorState = createState({
     selectedFile: null,
     tabs: [],
     editor: null,
+    currentPath: [],
 });
 
 export const useGlobalEditorState = () => useHookState(globalEditorState);
@@ -30,6 +31,8 @@ const PipelineEditor = () => {
     const EditorGlobal = useGlobalEditorState();
     const { state: pipeline } = useLocation();
 
+    const editorRef = useRef(null);
+
     const layouts = {
         lg: lgLayout,
         md: mdLayout,
@@ -38,7 +41,9 @@ const PipelineEditor = () => {
         xxs: xxsLayout,
     };
 
-    const handleUnload = () => {};
+    const handleUnload = () => {
+        console.log('Still editing');
+    };
 
     useEffect(() => {
         if (!pipeline || Object.keys(pipeline).length === 0) {
@@ -51,7 +56,7 @@ const PipelineEditor = () => {
         window.addEventListener('beforeunload', handleUnload);
 
         return () => window.removeEventListener('beforeunload', handleUnload);
-    }, [handleUnload]);
+    }, []);
 
     const handleSave = () => {
         // Save code here
@@ -95,8 +100,9 @@ const PipelineEditor = () => {
             <Box sx={{ minHeight: 'calc(100vh - 150px)', position: 'relative' }}>
                 <Box>
                     <ResponsiveGridLayout
+                        draggableHandle=".drag-handle"
                         onLayoutChange={(e, _) => console.log('Change layout', e, _)}
-                        isDraggable={false}
+                        isDraggable={true}
                         verticalCompact
                         measureBeforeMount={true}
                         onResizeStop={(e, _) => console.log('Resize', e, _)}
@@ -106,7 +112,7 @@ const PipelineEditor = () => {
                         cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}>
                         <FileManagerColumn key="1" />
                         <PackageColumn key="2" />
-                        <EditorColumn key="3" />
+                        <EditorColumn key="3" ref={editorRef} />
                         <LogsColumn key="4" />
                     </ResponsiveGridLayout>
                 </Box>

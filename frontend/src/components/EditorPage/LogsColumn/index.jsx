@@ -1,3 +1,5 @@
+import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box } from '@mui/material';
 import { forwardRef } from 'react';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
@@ -18,6 +20,9 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                 <ScrollFollow startFollowing={true} render={({ follow, onScroll }) => <LazyLog url={url} stream follow={follow} onScroll={onScroll} />} />
             </Box>
             {children}
+            <Box sx={{ position: 'absolute', bottom: 2, left: 15, cursor: 'pointer' }}>
+                <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} className="drag-handle" sx={{ color: '#fff' }} />
+            </Box>
         </div>
     );
 });
