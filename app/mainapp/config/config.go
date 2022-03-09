@@ -8,6 +8,7 @@ import (
 /* Routine removal of stale data */
 var CleanTasks int = 30
 var CleanLogs int = 30
+var Leader = false
 
 // Debug
 var Debug string = "false"

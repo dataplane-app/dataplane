@@ -258,6 +258,8 @@ func Setup(port string) *fiber.App {
 	pipelines.RunNextPipeline()
 	log.Println("👷 Queue and worker subscriptions")
 
+	/* --- Before scheduling, elect a leader ---- */
+
 	/* --- Run the scheduler ---- */
 	s := gocron.NewScheduler(time.UTC)
 	routinetasks.CleanTasks(s, database.DBConn)
