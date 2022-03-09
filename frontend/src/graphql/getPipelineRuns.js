@@ -12,6 +12,7 @@ const query = gql`
             environment_id
             run_json
             created_at
+            ended_at
         }
     }
 `;
