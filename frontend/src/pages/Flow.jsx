@@ -143,6 +143,7 @@ const Flow = () => {
             FlowState.selectedEdge.set(null);
             return;
         }
+        RunState.set({ pipelineRunsTrigger: 1 });
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedEdge.get()]);
