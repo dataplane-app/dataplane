@@ -31,6 +31,12 @@ type PlatformNodes struct {
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
+type PlatformNodeUpdate struct {
+	NodeID string `json:"node_id"`
+	Leader string `json:"leader"`
+	Status string `json:"status"`
+}
+
 func (Environment) IsEntity() {}
 
 func (Environment) TableName() string {
