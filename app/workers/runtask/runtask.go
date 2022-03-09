@@ -181,7 +181,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 				messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
 				database.DBConn.Create(&logmsg)
-				if os.Getenv("debug") == "true" {
+				if config.Debug == "true" {
 					clog.Info(line)
 				}
 			}
@@ -229,7 +229,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 					CreatedAt: logmsg.CreatedAt,
 					UID:       uid,
 					Log:       line,
-					LogType:   "info",
+					LogType:   "error",
 				}
 
 				messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
