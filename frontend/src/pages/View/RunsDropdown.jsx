@@ -5,6 +5,7 @@ import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
 import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
+import { useGlobalFlowState } from '../Flow';
 
 export default function RunsDropdown({ environmentID, setElements, setPrevRunTime }) {
     // Global states
@@ -105,6 +106,7 @@ export const usePipelineTasksRunHook = () => {
     const { pipelineId } = useParams();
 
     const RunState = useGlobalRunState();
+    const FlowState = useGlobalFlowState();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -121,13 +123,17 @@ export const usePipelineTasksRunHook = () => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             // Keeping only start_id and run_id and removing rest of the nodes before adding this run's nodes.
+
             const keep = {
                 start_id: RunState.start_dt.get(),
-                run_id: RunState.run_id.get(),
+                run_id: RunState.run_id.get() || RunState.dropdownRunId.get(),
                 pipelineRunsTrigger: RunState.pipelineRunsTrigger.get(),
                 dropdownRunId: RunState.dropdownRunId.get(),
                 selectedNodeStatus: RunState.selectedNodeStatus.get(),
             };
+            if (!RunState.run_id.get()) {
+                FlowState.isRunning.set(true);
+            }
             response.map((a) => (keep[a.node_id] = { status: a.status, end_dt: a.end_dt, start_dt: a.start_dt }));
             RunState.set(keep);
         }
