@@ -50,7 +50,7 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
 
     return (
         <Grid item alignItems="center" display="flex" width={520}>
-            {selectedRun || runs.length === 0 || RunState.run_id.get() === 0 ? (
+            {selectedRun || runs.length === 0 ? (
                 <Autocomplete
                     id="run_autocomplete"
                     onChange={(event, newValue) => {
@@ -93,9 +93,7 @@ export const useGetPipelineRunsHook = (environmentID, setRuns, setSelectedRun) =
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setRuns(response);
-            if (RunState.run_id.get() !== 0) {
-                setSelectedRun(response[0]);
-            }
+            setSelectedRun(response[0]);
         }
     };
 };
