@@ -144,6 +144,9 @@ const Flow = () => {
             return;
         }
 
+        // Clear RunState to remove node colors on load
+        RunState.set({ pipelineRunsTrigger: 1 });
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedEdge.get()]);
 
@@ -358,7 +361,13 @@ const Flow = () => {
                             <Button
                                 sx={{ ml: 2 }}
                                 onClick={() => {
-                                    history.push('/');
+                                    if (elements.length === 0) {
+                                        history.push('/');
+                                        return null;
+                                    } else {
+                                        FlowState.isEditorPage.set(false);
+                                        history.push({ pathname: `/pipelines/view/${pipeline.pipelineID}`, state: pipeline });
+                                    }
                                 }}
                                 variant="text">
                                 Close

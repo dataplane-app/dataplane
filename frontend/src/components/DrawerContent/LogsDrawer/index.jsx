@@ -19,7 +19,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
     const RunState = useGlobalRunState();
 
     // Instantiate websocket
-    const webSocket = useWebSocketLog(environmentId, RunState.run_id.get(), RunState.node_id.get());
+    const webSocket = useWebSocketLog(environmentId, RunState.dropdownRunId.get(), RunState.node_id.get());
 
     useEffect(() => {
         setWebsocketResp((t) => t + webSocket + '\n');
@@ -41,10 +41,10 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
     }, [graphQlResp]);
 
     // Graphql Hook
-    const getNodeLogs = useGetNodeLogsHook(environmentId, RunState.run_id.get(), RunState.node_id.get(), setGraphQlResp);
+    const getNodeLogs = useGetNodeLogsHook(environmentId, RunState.dropdownRunId.get(), RunState.node_id.get(), setGraphQlResp);
 
     useEffect(() => {
-        if (!RunState.run_id.get() || !RunState.node_id.get()) return;
+        if (!RunState.dropdownRunId.get() || !RunState.node_id.get()) return;
         getNodeLogs();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -75,7 +75,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Button>
                 </Box>
 
-                {RunState[RunState.node_id.value].status.get() === 'Success' ? (
+                {RunState.selectedNodeStatus.get() === 'Success' ? (
                     <Box color="status.pipelineOnline" display="flex" alignItems="center" mt={0.5}>
                         <Box component={FontAwesomeIcon} fontSize={18} color="status.pipelineOnline" icon={faCheckCircle} />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
@@ -84,7 +84,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Box>
                 ) : null}
 
-                {RunState[RunState.node_id.value].status.get() === 'Run' ? (
+                {RunState.selectedNodeStatus.get() === 'Run' ? (
                     <Box color="#65BEFF" display="flex" alignItems="center" mt={0.5}>
                         <RunningSpinner />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
@@ -93,7 +93,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Box>
                 ) : null}
 
-                {RunState[RunState.node_id.value].status.get() === 'Fail' ? (
+                {RunState.selectedNodeStatus.get() === 'Fail' ? (
                     <Box color="#F80000" display="flex" alignItems="center" mt={0.5}>
                         <Box component={FontAwesomeIcon} fontSize={18} color="#F80000" icon={faExclamationCircle} />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
@@ -107,7 +107,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
             <Box height="100%" width="100%" bgcolor="#000">
                 <ScrollFollow
                     startFollowing={true}
-                    render={({ follow, onScroll }) => <LazyLog enableSearch text={filteredGraphqlResp + websocketResp} follow={follow} onScroll={onScroll} extraLines={2} />}
+                    render={({ follow, onScroll }) => <LazyLog enableSearch text={filteredGraphqlResp + websocketResp} follow={follow} onScroll={onScroll} extraLines={10} />}
                 />
             </Box>
         </>

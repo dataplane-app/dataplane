@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ConsoleLogHelper from '../../../Helper/logger';
+import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 
 const websocketEndpoint = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
 
@@ -8,7 +9,12 @@ export default function useWebSocketLog(environmentId, run_id, node_id) {
     const reconnectOnClose = useRef(true);
     const ws = useRef(null);
 
+    // Global state
+    const RunState = useGlobalRunState();
+
     useEffect(() => {
+        if (RunState.selectedNodeStatus.get() !== 'Run') return;
+
         function connect() {
             ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=workerlogs.${run_id}.${node_id}&id=${run_id}.${node_id}`);
 

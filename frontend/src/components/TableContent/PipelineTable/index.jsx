@@ -86,14 +86,15 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
             },
             {
                 accessor: 'node_type_desc',
-                Cell: (row) => (
-                    <Box display="flex" alignItems="center">
-                        <Box component={FontAwesomeIcon} fontSize={19} sx={{ color: 'secondary.main' }} icon={row.value === 'play' ? faPlayCircle : faClock} mr={1.5} />
-                        <Typography color="secondary.main" variant="body2">
-                            {row.value[0]?.toUpperCase() + row.value?.slice(1) + ' trigger'}
-                        </Typography>
-                    </Box>
-                ),
+                Cell: (row) =>
+                    row.value ? (
+                        <Box display="flex" alignItems="center">
+                            <Box component={FontAwesomeIcon} fontSize={19} sx={{ color: 'secondary.main' }} icon={row.value === 'play' ? faPlayCircle : faClock} mr={1.5} />
+                            <Typography color="secondary.main" variant="body2">
+                                {row.value[0]?.toUpperCase() + row.value?.slice(1) + ' trigger'}
+                            </Typography>
+                        </Box>
+                    ) : null,
             },
             {
                 accessor: 'online',

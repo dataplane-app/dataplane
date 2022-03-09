@@ -58,6 +58,7 @@ export default function useWebSocket(environmentId, runId) {
                     FlowState.isRunning.set(false);
                     reconnectOnClose.current = false;
                     RunState.pipelineRunsTrigger.set((t) => t + 1);
+                    RunState.selectedNodeStatus.set(response.status);
                     ws.current.close();
                 }
             };
