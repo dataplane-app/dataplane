@@ -361,7 +361,13 @@ const Flow = () => {
                             <Button
                                 sx={{ ml: 2 }}
                                 onClick={() => {
-                                    history.push('/');
+                                    if (elements.length === 0) {
+                                        history.push('/');
+                                        return null;
+                                    } else {
+                                        FlowState.isEditorPage.set(false);
+                                        history.push({ pathname: `/pipelines/view/${pipeline.pipelineID}`, state: pipeline });
+                                    }
                                 }}
                                 variant="text">
                                 Close
