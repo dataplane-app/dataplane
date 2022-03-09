@@ -44,6 +44,8 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
             setPrevRunTime(displayTimerMs(selectedRun.created_at, selectedRun.ended_at));
         }
 
+        RunState.dropdownRunId.set(selectedRun.run_id);
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedRun]);
 
@@ -119,7 +121,13 @@ export const usePipelineTasksRunHook = () => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             // Keeping only start_id and run_id and removing rest of the nodes before adding this run's nodes.
-            const keep = { start_id: RunState.start_dt.get(), run_id: RunState.run_id.get(), pipelineRunsTrigger: RunState.pipelineRunsTrigger.get() };
+            const keep = {
+                start_id: RunState.start_dt.get(),
+                run_id: RunState.run_id.get(),
+                pipelineRunsTrigger: RunState.pipelineRunsTrigger.get(),
+                dropdownRunId: RunState.dropdownRunId.get(),
+                selectedNodeStatus: RunState.selectedNodeStatus.get(),
+            };
             response.map((a) => (keep[a.node_id] = { status: a.status, end_dt: a.end_dt, start_dt: a.start_dt }));
             RunState.set(keep);
         }
