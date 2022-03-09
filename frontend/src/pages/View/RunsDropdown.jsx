@@ -5,7 +5,6 @@ import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
 import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
-import { displayTimer } from './Timer';
 
 export default function RunsDropdown({ environmentID, setElements, setPrevRunTime }) {
     // Global states
@@ -42,7 +41,7 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
 
         // Set timer on dropdown change. Works only for runs returned from pipeline runs.
         if (selectedRun.ended_at) {
-            setPrevRunTime(displayTimer(selectedRun.created_at, selectedRun.ended_at));
+            setPrevRunTime(displayTimerMs(selectedRun.created_at, selectedRun.ended_at));
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -72,8 +71,6 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
 export const useGetPipelineRunsHook = (environmentID, setRuns, setSelectedRun) => {
     // GraphQL hook
     const getPipelineRuns = useGetPipelineRuns();
-
-    const RunState = useGlobalRunState();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -129,7 +126,7 @@ export const usePipelineTasksRunHook = () => {
     };
 };
 
-// ----- Utility function
+// ----- Utility functions
 function formatDate(date) {
     if (!date) return;
     date = new Date(date);
@@ -137,4 +134,20 @@ function formatDate(date) {
     let monthYear = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short' }).format(date);
     let time = new Intl.DateTimeFormat('en', { hourCycle: 'h23', hour: '2-digit', minute: 'numeric', second: 'numeric' }).format(date);
     return `${day} ${monthYear} ${time}`;
+}
+
+function displayTimerMs(end, start) {
+    if (!end || !start) return null;
+
+    var ticks = (new Date(start) - new Date(end)) / 1000;
+    var hh = Math.floor(ticks / 3600);
+    var mm = Math.floor((ticks % 3600) / 60);
+    var ss = ticks % 60;
+
+    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(ss, 2);
+}
+
+function pad(n, width) {
+    const num = n + '';
+    return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
 }
