@@ -42,7 +42,7 @@ const Pipelines = () => {
             elements: [],
             triggerDelete: 1,
         });
-        RunState.set({});
+        RunState.set({ pipelineRunsTrigger: 1 });
         document.querySelector('#root div').scrollTo(0, 0);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps

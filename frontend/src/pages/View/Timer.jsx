@@ -15,15 +15,16 @@ export default function Timer({ environmentID, setElements }) {
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
 
-    // GraphQL hooks
-    const runPipelines = useRunPipelinesHook();
-    const stopPipelines = useStopPipelinesHook();
-    const getPipelineTasksRun = usePipelineTasksRunHook();
-
     // Local state
     const [elapsed, setElapsed] = useState();
     const [isRunning, setIsRunning] = useState(false);
     const [start, setStart] = useState();
+    const [prevRunTime, setPrevRunTime] = useState();
+
+    // GraphQL hooks
+    const runPipelines = useRunPipelinesHook();
+    const stopPipelines = useStopPipelinesHook(setPrevRunTime);
+    const getPipelineTasksRun = usePipelineTasksRunHook();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -42,8 +43,9 @@ export default function Timer({ environmentID, setElements }) {
 
     const handleTimerStart = () => {
         FlowState.isRunning.set(true);
-        RunState.set({});
+        RunState.set({ pipelineRunsTrigger: 1 });
         runPipelines(environmentID, pipelineId);
+        setPrevRunTime();
     };
 
     const handleTimerStop = () => {
@@ -113,13 +115,17 @@ export default function Timer({ environmentID, setElements }) {
 
                 <StatusChips />
 
-                <RunsDropdown environmentID={environmentID} setElements={setElements} />
+                <RunsDropdown environmentID={environmentID} setElements={setElements} setPrevRunTime={setPrevRunTime} />
 
                 {isRunning ? (
                     <Typography variant="h3" ml={2}>
                         {elapsed ? elapsed : isRunning ? '' : '00:00:00'}
                     </Typography>
-                ) : null}
+                ) : (
+                    <Typography variant="h3" ml={2}>
+                        {prevRunTime}
+                    </Typography>
+                )}
             </Box>
         </Grid>
     );
@@ -152,9 +158,11 @@ export const useRunPipelinesHook = () => {
     };
 };
 
-const useStopPipelinesHook = () => {
+const useStopPipelinesHook = (setPrevRunTime) => {
     // GraphQL hook
     const stopPipelines = useStopPipelines();
+
+    const RunState = useGlobalRunState();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -170,6 +178,9 @@ const useStopPipelinesHook = () => {
             enqueueSnackbar("Can't stop flow: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setPrevRunTime(displayTimer(response.created_at, response.ended_at));
+            RunState.pipelineRunsTrigger.set((t) => t + 1);
         }
     };
 };
@@ -209,8 +220,11 @@ export const usePipelineTasksRunHook = () => {
 };
 
 // Utility function
-function displayTimer(date) {
-    var ticks = Math.floor((new Date() - new Date(date)) / 1000);
+export function displayTimer(startDate, endDate = new Date()) {
+    if (typeof endDate === 'string') {
+        endDate = new Date(endDate);
+    }
+    var ticks = Math.floor((endDate - new Date(startDate)) / 1000);
     var hh = Math.floor(ticks / 3600);
     var mm = Math.floor((ticks % 3600) / 60);
     var ss = ticks % 60;

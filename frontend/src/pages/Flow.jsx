@@ -159,7 +159,6 @@ const Flow = () => {
 
         setElements([...prevElements]);
         setIsLoadingFlow(false);
-        RunState.set({});
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
