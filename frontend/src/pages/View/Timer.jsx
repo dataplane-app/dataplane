@@ -45,6 +45,7 @@ export default function Timer({ environmentID, setElements }) {
         FlowState.isRunning.set(true);
         RunState.set({ pipelineRunsTrigger: 1 });
         runPipelines(environmentID, pipelineId);
+        setPrevRunTime();
     };
 
     const handleTimerStop = () => {
