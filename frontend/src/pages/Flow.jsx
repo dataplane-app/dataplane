@@ -41,6 +41,7 @@ export const globalFlowState = createState({
     isDragging: false,
     isPanEnable: false,
     scale: 1,
+    selectedEdge: null,
     pipelineInfo: null,
 });
 
@@ -133,6 +134,23 @@ const Flow = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.triggerDelete.get()]);
 
+    // Delete an edge
+    useEffect(() => {
+        console.log('Triggering this: ', FlowState.selectedEdge.get());
+        const edgesToRemove = elements.filter((el) => el.id === FlowState.selectedEdge.attach(Downgraded).get());
+
+        if (edgesToRemove && edgesToRemove.length > 0) {
+            onElementsRemove([...edgesToRemove]);
+            FlowState.selectedEdge.set(null);
+            return;
+        }
+
+        // Clear RunState to remove node colors on load
+        RunState.set({ pipelineRunsTrigger: 1 });
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [FlowState.selectedEdge.get()]);
+
     // Local state to detect unsaved changes
     const [initialState] = useState(JSON.parse(JSON.stringify(FlowState.elements.get())));
 
@@ -145,7 +163,6 @@ const Flow = () => {
 
         setElements([...prevElements]);
         setIsLoadingFlow(false);
-        RunState.set({});
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -345,7 +362,13 @@ const Flow = () => {
                             <Button
                                 sx={{ ml: 2 }}
                                 onClick={() => {
-                                    history.push('/');
+                                    if (elements.length === 0) {
+                                        history.push('/');
+                                        return null;
+                                    } else {
+                                        FlowState.isEditorPage.set(false);
+                                        history.push({ pathname: `/pipelines/view/${pipeline.pipelineID}`, state: pipeline });
+                                    }
                                 }}
                                 variant="text">
                                 Close

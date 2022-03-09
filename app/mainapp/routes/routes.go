@@ -9,6 +9,7 @@ import (
 	"dataplane/mainapp/logme"
 	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/pipelines"
+	"dataplane/mainapp/platform"
 	"dataplane/mainapp/scheduler/routinetasks"
 	"dataplane/mainapp/worker"
 	"fmt"
@@ -256,12 +257,16 @@ func Setup(port string) *fiber.App {
 	/* Worker Load Subscriptions activate */
 	worker.LoadWorkers(MainAppID)
 	pipelines.RunNextPipeline()
+	platform.PlatformNodeListen()
 	log.Println("👷 Queue and worker subscriptions")
+
+	/* --- Before scheduling, elect a leader ---- */
 
 	/* --- Run the scheduler ---- */
 	s := gocron.NewScheduler(time.UTC)
 	routinetasks.CleanTasks(s, database.DBConn)
 	routinetasks.CleanWorkerLogs(s, database.DBConn)
+	platform.PlatformNodePublish(s, database.DBConn, MainAppID)
 	s.StartAsync()
 
 	stop := time.Now()

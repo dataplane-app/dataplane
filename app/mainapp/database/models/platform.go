@@ -19,6 +19,24 @@ type Platform struct {
 	DeletedAt        *time.Time `json:"deleted_at,omitempty"`
 }
 
+func (PlatformNodes) IsEntity() {}
+
+func (PlatformNodes) TableName() string {
+	return "platform_nodes"
+}
+
+type PlatformNodes struct {
+	NodeID    string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"node_id"`
+	Lead      bool       `json:"lead"`
+	UpdatedAt *time.Time `json:"updated_at"`
+}
+
+type PlatformNodeUpdate struct {
+	NodeID string `json:"node_id"`
+	Leader string `json:"leader"`
+	Status string `json:"status"`
+}
+
 func (Environment) IsEntity() {}
 
 func (Environment) TableName() string {

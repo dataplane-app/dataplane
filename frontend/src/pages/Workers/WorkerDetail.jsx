@@ -225,19 +225,15 @@ const CustomWorker = ({ row }) => {
                 <Typography component="h4" variant="h3" sx={{ display: 'inline' }}>
                     {WorkerID}
                 </Typography>
-                <Typography
-                    component="h4"
-                    variant="subtitle1"
-                    color={Status === 'Online' ? 'green' : 'red'}
-                    fontWeight={700}
-                    ml={3}
-                    sx={{ display: 'inline', verticalAlign: 'top' }}>
-                    {Status}
-                </Typography>
             </div>
-            <Typography component="h5" mt={0.5} variant="subtitle1">
+            <Typography component="h5" mt={0.5} variant="subtitle1" mb={1}>
                 Last updated: {T}
             </Typography>
+            {Status === 'Online' ? (
+                <CustomChip label={'Online'} customColor="green" style={{ width: 'fit-content' }} />
+            ) : (
+                <CustomChip label="Offline" customColor="red" style={{ width: 'fit-content' }} />
+            )}
             {/* <Grid item display="flex" alignItems="center" mt={2} sx={{ alignSelf: 'flex-start' }}>
                 <CustomChip amount={queue} label="Queue" margin={2} customColor="purple" />
                 <CustomChip amount={running} label="Running" margin={1} customColor="orange" />

@@ -3,12 +3,12 @@ import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useGlobalFlowState } from '../Flow';
-import { usePipelineTasksRunHook } from './Timer';
+import { displayTimer, usePipelineTasksRunHook } from './Timer';
 
 const websocketEndpoint = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
 
 // Global run state
-export const globalRunState = createState({});
+export const globalRunState = createState({ pipelineRunsTrigger: 1 });
 export const useGlobalRunState = () => useHookState(globalRunState);
 
 export default function useWebSocket(environmentId, runId) {
@@ -57,6 +57,8 @@ export default function useWebSocket(environmentId, runId) {
                 if (response.MSG) {
                     FlowState.isRunning.set(false);
                     reconnectOnClose.current = false;
+                    RunState.pipelineRunsTrigger.set((t) => t + 1);
+                    RunState.selectedNodeStatus.set(response.status);
                     ws.current.close();
                 }
             };

@@ -18,13 +18,12 @@ var Debug string = "false"
 
 func LoadConfig() {
 
-	if os.Getenv("debug") != "true" {
-		Debug = os.Getenv("debug")
+	Debug = os.Getenv("debug")
+	if Debug == "" {
+		Debug = "false"
 	}
 
-	if os.Getenv("secret_encryption_key") != "" {
-		EncryptSecret = os.Getenv("secret_encryption_key")
-	}
+	EncryptSecret = os.Getenv("secret_encryption_key")
 
 	WorkerGroup = os.Getenv("worker_group")
 

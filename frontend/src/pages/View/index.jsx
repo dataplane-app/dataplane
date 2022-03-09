@@ -16,6 +16,7 @@ import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
 import { edgeTypes, nodeTypes, useGlobalFlowState } from '../Flow';
 import LogsDrawer from '../../components/DrawerContent/LogsDrawer';
 import TurnOffPipelineDrawer from '../../components/DrawerContent/TurnOffPipelineDrawer';
+import CustomChip from '../../components/CustomChip';
 
 const View = () => {
     // Hooks
@@ -136,10 +137,7 @@ const View = () => {
 
                         <Grid display="flex">
                             <Box display="flex" alignItems="center" ml={4} mr={2}>
-                                <Box height={16} width={16} backgroundColor={isPipelineOnline ? 'status.pipelineOnlineText' : 'error.main'} borderRadius="100%"></Box>
-                                <Typography ml={1} fontSize={16} color={isPipelineOnline ? 'status.pipelineOnlineText' : 'error.main'}>
-                                    {isPipelineOnline ? 'Online' : 'Offline'}
-                                </Typography>
+                                {isPipelineOnline ? <CustomChip label={'Online'} customColor="green" /> : <CustomChip label="Offline" customColor="red" />}
                             </Box>
 
                             <Box sx={{ top: '0', right: '0' }}>

@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
 
-export default function RunsDropdown({ environmentID, setElements }) {
+export default function RunsDropdown({ environmentID, setElements, setPrevRunTime }) {
     // Global states
     const RunState = useGlobalRunState();
 
@@ -15,27 +15,43 @@ export default function RunsDropdown({ environmentID, setElements }) {
     const [runs, setRuns] = useState([]);
 
     // GraphQL hooks
-    const getPipelineRuns = useGetPipelineRunsHook();
+    const getPipelineRuns = useGetPipelineRunsHook(environmentID, setRuns, setSelectedRun);
     const getPipelineTasksRun = usePipelineTasksRunHook();
 
     // Get pipeline runs on load and environment change and after each run.
     useEffect(() => {
-        getPipelineRuns(environmentID, setRuns, setSelectedRun);
+        getPipelineRuns();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [environmentID, RunState.run_id.get()]);
+
+    // Get pipeline runs on trigger.
+    useEffect(() => {
+        if (RunState.pipelineRunsTrigger.get() < 2) return;
+        getPipelineRuns();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [RunState.pipelineRunsTrigger.get()]);
 
     // Update elements on run dropdown change
     useEffect(() => {
         if (!selectedRun) return;
         setElements(selectedRun.run_json);
         getPipelineTasksRun(selectedRun.run_id, environmentID);
+
+        // Set timer on dropdown change. Works only for runs returned from pipeline runs.
+        if (selectedRun.ended_at) {
+            setPrevRunTime(displayTimerMs(selectedRun.created_at, selectedRun.ended_at));
+        }
+
+        RunState.dropdownRunId.set(selectedRun.run_id);
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedRun]);
 
     return (
         <Grid item alignItems="center" display="flex" width={520}>
-            {selectedRun || runs.length === 0 || RunState.run_id.get() === 0 ? (
+            {selectedRun || runs.length === 0 ? (
                 <Autocomplete
                     id="run_autocomplete"
                     onChange={(event, newValue) => {
@@ -54,11 +70,9 @@ export default function RunsDropdown({ environmentID, setElements }) {
 }
 
 // ------ Custom hook
-const useGetPipelineRunsHook = () => {
+export const useGetPipelineRunsHook = (environmentID, setRuns, setSelectedRun) => {
     // GraphQL hook
     const getPipelineRuns = useGetPipelineRuns();
-
-    const RunState = useGlobalRunState();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -66,7 +80,7 @@ const useGetPipelineRunsHook = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get members
-    return async (environmentID, setRuns, setRun) => {
+    return async () => {
         const response = await getPipelineRuns({ pipelineID: pipelineId, environmentID });
 
         if (response.length === 0) {
@@ -78,9 +92,7 @@ const useGetPipelineRunsHook = () => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setRuns(response);
-            if (RunState.run_id.get() !== 0) {
-                setRun(response[0]);
-            }
+            setSelectedRun(response[0]);
         }
     };
 };
@@ -109,14 +121,20 @@ export const usePipelineTasksRunHook = () => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             // Keeping only start_id and run_id and removing rest of the nodes before adding this run's nodes.
-            const keep = { start_id: RunState.start_dt.get(), run_id: RunState.run_id.get() };
+            const keep = {
+                start_id: RunState.start_dt.get(),
+                run_id: RunState.run_id.get(),
+                pipelineRunsTrigger: RunState.pipelineRunsTrigger.get(),
+                dropdownRunId: RunState.dropdownRunId.get(),
+                selectedNodeStatus: RunState.selectedNodeStatus.get(),
+            };
             response.map((a) => (keep[a.node_id] = { status: a.status, end_dt: a.end_dt, start_dt: a.start_dt }));
             RunState.set(keep);
         }
     };
 };
 
-// ----- Utility function
+// ----- Utility functions
 function formatDate(date) {
     if (!date) return;
     date = new Date(date);
@@ -124,4 +142,20 @@ function formatDate(date) {
     let monthYear = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short' }).format(date);
     let time = new Intl.DateTimeFormat('en', { hourCycle: 'h23', hour: '2-digit', minute: 'numeric', second: 'numeric' }).format(date);
     return `${day} ${monthYear} ${time}`;
+}
+
+function displayTimerMs(end, start) {
+    if (!end || !start) return null;
+
+    var ticks = (new Date(start) - new Date(end)) / 1000;
+    var hh = Math.floor(ticks / 3600);
+    var mm = Math.floor((ticks % 3600) / 60);
+    var ss = ticks % 60;
+
+    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(ss, 2);
+}
+
+function pad(n, width) {
+    const num = n + '';
+    return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
 }

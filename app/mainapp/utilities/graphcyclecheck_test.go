@@ -4,6 +4,8 @@ import (
 	"dataplane/mainapp/database/models"
 	"log"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 /*
@@ -48,14 +50,14 @@ func TestGraphCycleCheckFunction(t *testing.T) {
 	for _, s := range TestNodes {
 		outcome := GraphCycleCheck(TestEdges, s.NodeID)
 		log.Println("Cycle check:", outcome)
-		// assert.Equalf(t, false, outcome, "Cycle check")
+		assert.Equalf(t, false, outcome, "Cycle check")
 	}
 
 	// Negative Test
 	for _, s := range TestNodes {
 		outcome := GraphCycleCheck(TestEdgesCycle, s.NodeID)
 		log.Println("Cycle check:", outcome)
-		// assert.Equalf(t, true, outcome, "Cycle check")
+		assert.Equalf(t, true, outcome, "Cycle check")
 	}
 
 }
