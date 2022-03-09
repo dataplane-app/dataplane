@@ -41,6 +41,7 @@ export const globalFlowState = createState({
     isDragging: false,
     isPanEnable: false,
     scale: 1,
+    selectedEdge: null,
 });
 
 export const useGlobalFlowState = () => useHookState(globalFlowState);
@@ -131,6 +132,20 @@ const Flow = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.triggerDelete.get()]);
+
+    // Delete an edge
+    useEffect(() => {
+        console.log('Triggering this: ', FlowState.selectedEdge.get());
+        const edgesToRemove = elements.filter((el) => el.id === FlowState.selectedEdge.attach(Downgraded).get());
+
+        if (edgesToRemove && edgesToRemove.length > 0) {
+            onElementsRemove([...edgesToRemove]);
+            FlowState.selectedEdge.set(null);
+            return;
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [FlowState.selectedEdge.get()]);
 
     // Local state to detect unsaved changes
     const [initialState] = useState(JSON.parse(JSON.stringify(FlowState.elements.get())));

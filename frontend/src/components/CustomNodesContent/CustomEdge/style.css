@@ -1,0 +1,24 @@
+.parent_edgebutton {
+    align-items: center;
+    background: transparent;
+    display: flex;
+    height: 40px;
+    justify-content: center;
+    min-height: 40px;
+    width: 40px;
+}
+
+.edgebutton {
+    background: #fff;
+    border: 1px solid #222;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    height: 20px;
+    line-height: 1;
+    width: 20px;
+}
+
+.edgebutton:hover {
+    box-shadow: 0 0 6px 2px rgb(0 0 0 / 8%);
+}
