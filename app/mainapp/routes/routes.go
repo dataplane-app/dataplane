@@ -42,6 +42,7 @@ func Setup(port string) *fiber.App {
 
 	// go runHub()
 	MainAppID = uuid.NewString()
+	config.MainAppID = MainAppID
 	log.Println("🍦 Server ID: ", MainAppID)
 
 	// ------- LOAD secrets ------
@@ -84,11 +85,9 @@ func Setup(port string) *fiber.App {
 	log.Println("💾 Removing stale data")
 	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expires < ?", time.Now())
 
-	// Start the scheduler
-	// scheduler.SchedulerStart()
+	// Start websocket hubs
 	go worker.RunHub()
 	go worker.RunHubRooms()
-	// go worker.SocketsSecureTimeout()
 
 	//recover from panic
 	app.Use(recover.New())
@@ -124,18 +123,6 @@ func Setup(port string) *fiber.App {
 	// ------- GRAPHQL------
 	app.Post("/app/public/graphql", PublicGraphqlHandler())
 	app.Post("/app/private/graphql", auth.TokenAuthMiddle(), PrivateGraphqlHandler())
-
-	// app.Use("/app/privatesubscribe", func(c *fiber.Ctx) error {
-	// 	// IsWebSocketUpgrade returns true if the client
-	// 	// requested upgrade to the WebSocket protocol.
-	// 	if websocket.IsWebSocketUpgrade(c) {
-	// 		c.Locals("allowed", true)
-	// 		return c.Next()
-	// 	}
-	// 	return fiber.ErrUpgradeRequired
-	// })
-
-	// app.Use("/privatesubscribe/graphql", PrivateSubscribeGraphqlHandler())
 
 	// WARNING: This is insecure and only for documentation, do not enable in production
 	if os.Getenv("graphqldocs") == "true" {
@@ -257,17 +244,17 @@ func Setup(port string) *fiber.App {
 	/* Worker Load Subscriptions activate */
 	worker.LoadWorkers(MainAppID)
 	pipelines.RunNextPipeline()
+
+	// Electing a leader by listening for running nodes
 	platform.PlatformNodeListen()
 	log.Println("👷 Queue and worker subscriptions")
 
-	/* --- Before scheduling, elect a leader ---- */
-
 	/* --- Run the scheduler ---- */
-	s := gocron.NewScheduler(time.UTC)
-	routinetasks.CleanTasks(s, database.DBConn)
-	routinetasks.CleanWorkerLogs(s, database.DBConn)
-	platform.PlatformNodePublish(s, database.DBConn, MainAppID)
-	s.StartAsync()
+	config.Scheduler = gocron.NewScheduler(time.UTC)
+	config.Scheduler.StartAsync()
+	routinetasks.CleanTasks(config.Scheduler, database.DBConn)
+	routinetasks.CleanWorkerLogs(config.Scheduler, database.DBConn)
+	platform.PlatformNodePublish(config.Scheduler, database.DBConn, MainAppID)
 
 	stop := time.Now()
 	// Do something with response
