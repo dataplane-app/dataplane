@@ -59,6 +59,10 @@ func Setup(port string) *fiber.App {
 
 	start := time.Now()
 
+	/* --- Run the scheduler ---- */
+	config.Scheduler = gocron.NewScheduler(time.UTC)
+	config.Scheduler.StartAsync()
+
 	// ------- RUN MIGRATIONS ------
 	database.Migrate()
 
@@ -177,65 +181,6 @@ func Setup(port string) *fiber.App {
 		worker.RoomUpdates(c, environment, subject, id)
 	}))
 
-	// Run Task
-	app.Post("/runtask", func(c *fiber.Ctx) error {
-
-		e := models.Environment{}
-		database.DBConn.First(&e, "name = ?", "Development")
-
-		taskID := uuid.NewString()
-		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), e.ID, "", "", []string{`for((i=1;i<=10; i+=1)); do echo "1st run $i times"; sleep 0.5; done`, `for((i=1;i<=10; i+=1)); do echo "2nd run $i times"; sleep 0.5; done`})
-		if err != nil {
-			return c.SendString(err.Error())
-		} else {
-			return c.SendString("Success: " + taskID)
-		}
-
-	})
-
-	app.Post("/runpython", func(c *fiber.Ctx) error {
-
-		e := models.Environment{}
-		database.DBConn.First(&e, "name = ?", "Development")
-
-		taskID := uuid.NewString()
-		cmd := string(c.Query("command"))
-		err := worker.WorkerRunTask(string(c.Query("workergroup")), taskID, uuid.NewString(), e.ID, "", "", []string{cmd})
-		if err != nil {
-			return c.SendString(err.Error())
-		} else {
-			return c.SendString("Success: " + taskID)
-		}
-
-	})
-
-	app.Post("/canceltask", func(c *fiber.Ctx) error {
-
-		taskID := string(c.Query("taskid"))
-		err := worker.WorkerCancelTask(taskID)
-		if err != nil {
-			return c.SendString(err.Error())
-		} else {
-			return c.SendString("Success: " + taskID)
-		}
-
-	})
-
-	app.Post("/runpipeline", func(c *fiber.Ctx) error {
-
-		pipelineID := "3453f0f1-4525-4337-a689-8f142c39f94a"
-		environmentID := "0e2cd75f-1514-44a0-b57d-fae236896cb4"
-
-		taskID := string(c.Query("taskid"))
-		_, err := pipelines.RunPipeline(pipelineID, environmentID)
-		if err != nil {
-			return c.SendString(err.Error())
-		} else {
-			return c.SendString("Success: " + taskID)
-		}
-
-	})
-
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {
 		return c.SendString("Hello 👋! Healthy 🍏")
@@ -249,9 +194,7 @@ func Setup(port string) *fiber.App {
 	platform.PlatformNodeListen()
 	log.Println("👷 Queue and worker subscriptions")
 
-	/* --- Run the scheduler ---- */
-	config.Scheduler = gocron.NewScheduler(time.UTC)
-	config.Scheduler.StartAsync()
+	/* Scheduled tasks */
 	routinetasks.CleanTasks(config.Scheduler, database.DBConn)
 	routinetasks.CleanWorkerLogs(config.Scheduler, database.DBConn)
 	platform.PlatformNodePublish(config.Scheduler, database.DBConn, MainAppID)

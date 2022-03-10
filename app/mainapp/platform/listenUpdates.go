@@ -4,6 +4,7 @@ import (
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/messageq"
+	"dataplane/mainapp/scheduler"
 	"log"
 )
 
@@ -20,11 +21,19 @@ func PlatformNodeListen() {
 			config.Leader = msg.Leader
 			// log.Println("Leader elected:", config.Leader)
 
+			countbefore := config.Scheduler.Tag("pipeline").Len()
+
 			// Remove any schedules
+			scheduler.RemovePipelineSchedules()
+
+			log.Println("Schedule removal count:", countbefore, config.Scheduler.Len())
 
 			// I am the leader, load schedules.
 			if config.Leader == config.MainAppID {
 				log.Println("I am the leader:", config.Leader, config.MainAppID)
+
+				// Load the pipleine schedules
+				scheduler.LoadPipelineSchedules()
 
 			}
 
