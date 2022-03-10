@@ -433,11 +433,16 @@ const Flow = () => {
                 />
             </Drawer>
 
-            <Drawer anchor="right" open={FlowState.isOpenSchedulerDrawer.get()} onClose={() => FlowState.isOpenSchedulerDrawer.set(false)}>
+            <Drawer
+                hideBackdrop
+                sx={{ width: 'calc(100% - 203px)', [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
+                anchor="right"
+                open={FlowState.isOpenSchedulerDrawer.get()}
+                onClose={() => FlowState.isOpenSchedulerDrawer.set(false)}>
                 <ScheduleDrawer
                     handleClose={() => FlowState.isOpenSchedulerDrawer.set(false)} //
-                    environmentID={Environment.id.get()}
-                    pipelineID={pipeline.pipelineID}
+                    // environmentID={Environment.id.get()}
+                    // pipelineID={pipeline.pipelineID}
                     setElements={setElements}
                 />
             </Drawer>
