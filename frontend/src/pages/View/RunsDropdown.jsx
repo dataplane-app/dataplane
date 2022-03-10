@@ -158,7 +158,7 @@ function displayTimerMs(end, start) {
     var mm = Math.floor((ticks % 3600) / 60);
     var ss = (ticks % 60).toFixed(3);
 
-    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(ss, 2);
+    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(Math.floor(ss), 2) + '.' + ss.split('.')[1];
 }
 
 function pad(n, width) {
