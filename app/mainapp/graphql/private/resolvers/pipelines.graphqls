@@ -22,6 +22,7 @@ input PositionInput {
 
 input DataInput {
   language: String!
+  genericdata: Any
 }
 
 input PipelineNodesMetaInput {

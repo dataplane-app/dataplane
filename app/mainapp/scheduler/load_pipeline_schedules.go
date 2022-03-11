@@ -14,7 +14,7 @@ func LoadPipelineSchedules() {
 
 	// Load the pipeline schedules
 	// log.Printf("%+v\n", config.Scheduler)
-	log.Println("Before loading:", config.Scheduler.Len())
+	// log.Println("Before loading:", config.Scheduler.Len())
 	var pipelineSchedules []*models.Scheduler
 	err := database.DBConn.Where("online = true").Find(&pipelineSchedules).Error
 	if err != nil {

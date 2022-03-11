@@ -2801,6 +2801,7 @@ input PositionInput {
 
 input DataInput {
   language: String!
+  genericdata: Any
 }
 
 input PipelineNodesMetaInput {
@@ -14555,6 +14556,14 @@ func (ec *executionContext) unmarshalInputDataInput(ctx context.Context, obj int
 			if err != nil {
 				return it, err
 			}
+		case "genericdata":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("genericdata"))
+			it.Genericdata, err = ec.unmarshalOAny2interface(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -19276,6 +19285,22 @@ func (ec *executionContext) unmarshalOAddUsersInput2ᚖdataplaneᚋmainappᚋgra
 	}
 	res, err := ec.unmarshalInputAddUsersInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOAny2interface(ctx context.Context, v interface{}) (interface{}, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalAny(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAny2interface(ctx context.Context, sel ast.SelectionSet, v interface{}) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalAny(v)
+	return res
 }
 
 func (ec *executionContext) marshalOAvailablePermissions2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx context.Context, sel ast.SelectionSet, v []*models.ResourceTypeStruct) graphql.Marshaler {

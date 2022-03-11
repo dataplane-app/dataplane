@@ -14,10 +14,13 @@ import (
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
+	jsoniter "github.com/json-iterator/go"
 	"gorm.io/gorm"
 )
 
@@ -187,32 +190,6 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 		return "", errors.New("Update pipeline flow edge database error - failed to lock pipeline")
 	}
 
-	// ----- Delete old edges
-	edge := models.PipelineEdges{}
-
-	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&edge).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-
-		return "", errors.New("update pipeline flow edge database error")
-	}
-
-	// ----- Add pipeline edges to database
-
-	// ----- Delete old nodes
-	node := models.PipelineNodes{}
-
-	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&node).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-
-		return "", errors.New("update pipeline flow edge database error")
-	}
-
 	// ----- Add pipeline nodes to database
 
 	nodes := []*models.PipelineNodes{}
@@ -225,13 +202,56 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 		*/
 		var online bool
 		online = false
+
+		// ----- Triggers ----------
 		if p.NodeType == "trigger" {
 
 			switch p.NodeTypeDesc {
 			case "play":
 				online = true
 			default:
+				// any trigger that is not play e.g. schedule
 				online = p.TriggerOnline
+			}
+
+			// remove any schedules if the trigger gets changed from schedule to something else.
+			if p.NodeTypeDesc != "schedule" {
+				var pipelineSchedules []*models.Scheduler
+				err := database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&pipelineSchedules).Error
+				if err != nil && err != gorm.ErrRecordNotFound {
+					logging.PrintSecretsRedact("Removal of changed trigger schedules:", err)
+
+				}
+
+				if len(pipelineSchedules) > 0 {
+					for _, psc := range pipelineSchedules {
+
+						// remove from scheduler
+						config.PipelineScheduler[psc.Timezone].RemoveByTag(psc.NodeID)
+
+						// remove from database
+						err := database.DBConn.Where("pipeline_id = ? and node_id=?", pipelineID, p.NodeID).Delete(&models.Scheduler{}).Error
+						if err != nil {
+							logging.PrintSecretsRedact("Removal of of changed trigger schedules:", err, p.NodeID)
+
+						}
+					}
+
+				}
+
+			}
+
+			// if the trigger is a schedule then register the schedule
+			if p.NodeTypeDesc == "schedule" {
+
+				schedulejson, _ := json.Marshal(p.Meta.Data.Genericdata)
+
+				timezone := jsoniter.Get(schedulejson, "timezone").ToString()
+				_, err := time.LoadLocation(timezone)
+				if err != nil {
+					log.Println("Scheduler timezone error: ", err)
+				}
+
 			}
 
 		}
@@ -275,7 +295,32 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	}
 
-	// Record edges and nodes in database
+	// ========== Remove the previous graph ==================:
+	// ----- Delete old edges
+	edge := models.PipelineEdges{}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&edge).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("update pipeline flow edge database error")
+	}
+
+	// ----- Delete old nodes
+	node := models.PipelineNodes{}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&node).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("update pipeline flow edge database error")
+	}
+
+	// ========== Create the new graph ==================:
 
 	if len(edges) > 0 {
 

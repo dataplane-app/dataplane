@@ -56,7 +56,8 @@ type ChangePasswordInput struct {
 }
 
 type DataInput struct {
-	Language string `json:"language"`
+	Language    string      `json:"language"`
+	Genericdata interface{} `json:"genericdata"`
 }
 
 type PipelineEdgesInput struct {
