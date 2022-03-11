@@ -435,14 +435,12 @@ const Flow = () => {
 
             <Drawer
                 hideBackdrop
-                sx={{ width: 'calc(100% - 203px)', [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
+                sx={{ width: 'calc(100% - 203px)', zIndex: 1099, [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
                 anchor="right"
                 open={FlowState.isOpenSchedulerDrawer.get()}
                 onClose={() => FlowState.isOpenSchedulerDrawer.set(false)}>
                 <ScheduleDrawer
                     handleClose={() => FlowState.isOpenSchedulerDrawer.set(false)} //
-                    // environmentID={Environment.id.get()}
-                    // pipelineID={pipeline.pipelineID}
                     setElements={setElements}
                 />
             </Drawer>
@@ -524,9 +522,9 @@ function prepareInputForBackend(input) {
                     data: {
                         language: '',
                         genericdata: {
-                            schedule: iterator.schedule,
-                            scheduleType: iterator.scheduleType,
-                            timezone: iterator.timezone,
+                            schedule: iterator.data.schedule,
+                            scheduleType: iterator.data.scheduleType,
+                            timezone: iterator.data.timezone,
                         },
                     },
                 },
