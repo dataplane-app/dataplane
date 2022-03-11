@@ -506,7 +506,33 @@ function prepareInputForBackend(input) {
                 },
                 active: false,
             });
+        } else if (iterator.type === 'scheduleNode') {
+            nodesInput.push({
+                nodeID: iterator.id,
+                name: '',
+                nodeType: nodeDictionary[iterator.type],
+                nodeTypeDesc: iterator.type.replace('Node', ''),
+                triggerOnline: iterator.data.triggerOnline,
+                description: '',
+                workerGroup: '',
+                commands: [],
+                meta: {
+                    position: {
+                        x: iterator.position.x,
+                        y: iterator.position.y,
+                    },
+                    data: {
+                        genericdata: {
+                            schedule: iterator.schedule,
+                            scheduleType: iterator.scheduleType,
+                            timezone: iterator.timezone,
+                        },
+                    },
+                },
+                active: false,
+            });
         } else {
+            // Play node
             nodesInput.push({
                 nodeID: iterator.id,
                 name: '',

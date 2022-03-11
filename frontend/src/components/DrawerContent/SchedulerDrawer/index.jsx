@@ -15,16 +15,18 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
 
     const { enqueueSnackbar } = useSnackbar();
 
-    const { register, handleSubmit } = useForm();
     const [isOnline, setIsOnline] = useState(true);
     const [validationError, setValidationError] = useState(false);
 
     // Tabs state
     const [tabValue, setTabValue] = useState(0);
-
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
     };
+
+    // Schedule state
+    const [scheduleStatement, setScheduleStatement] = useState('');
+    const [timezone, setTimezone] = useState(null);
 
     // Set triggerOnline switch on load
     useEffect(() => {
@@ -34,7 +36,9 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
     }, [FlowState.selectedElement?.data?.triggerOnline.get()]);
 
     // Update triggerOnline on submit
-    async function onSubmit(data) {
+    async function onSubmit(e) {
+        e.preventDefault();
+
         if (validationError) {
             enqueueSnackbar('Invalid statement', { variant: 'error' });
             return;
@@ -47,6 +51,9 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                     el.data = {
                         ...el.data,
                         triggerOnline: isOnline,
+                        schedule: scheduleStatement,
+                        scheduleType: tabValue ? 'rrule' : 'cron',
+                        timezone: timezone,
                     };
                 }
                 return el;
@@ -55,7 +62,7 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
     }
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={onSubmit}>
             <Box position="relative" width="100%">
                 <Box sx={{ p: '4.125rem 3.81rem', paddingTop: '26px' }}>
                     {/* Upper Section */}
@@ -67,7 +74,7 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                             </Typography>
 
                             <Box display="flex" alignItems="center" mt={3}>
-                                <IOSSwitch onClick={() => setIsOnline(!isOnline)} checked={isOnline} {...register('live')} inputProps={{ 'aria-label': 'controlled' }} />
+                                <IOSSwitch onClick={() => setIsOnline(!isOnline)} checked={isOnline} inputProps={{ 'aria-label': 'controlled' }} />
                                 <Typography fontSize={13} ml={1.5} color={isOnline ? ' #2E6707' : '#F80000'}>
                                     {isOnline ? 'Online' : 'Offline'}
                                 </Typography>
@@ -147,7 +154,13 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                             </Tabs>
                         </Box>
                         <TabPanel value={tabValue} index={0}>
-                            <Cron setValidationError={setValidationError} />
+                            <Cron
+                                setValidationError={setValidationError}
+                                scheduleStatement={scheduleStatement}
+                                setScheduleStatement={setScheduleStatement}
+                                timezone={timezone}
+                                setTimezone={setTimezone}
+                            />
                         </TabPanel>
                         <TabPanel value={tabValue} index={1}>
                             <RRuleTab />
