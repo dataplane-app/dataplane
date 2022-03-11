@@ -522,6 +522,7 @@ function prepareInputForBackend(input) {
                         y: iterator.position.y,
                     },
                     data: {
+                        language: '',
                         genericdata: {
                             schedule: iterator.schedule,
                             scheduleType: iterator.scheduleType,
