@@ -5,7 +5,10 @@ import "dataplane/mainapp/config"
 func RemovePipelineSchedules() {
 
 	// Remove any existing schedules
-	_ = config.Scheduler.RemoveByTag("pipelines")
+
+	for _, ps := range config.PipelineScheduler {
+		_ = ps.RemoveByTag("pipelines")
+	}
 
 	// Load the pipeline schedules
 

@@ -15,12 +15,13 @@ func PlatformNodePublish(s *gocron.Scheduler, db *gorm.DB, mainAppID string) {
 	s.Every(1).Second().Do(func() {
 
 		// log.Println("Platform ID:", mainAppID)
+
 		var data = models.PlatformNodeUpdate{
 			NodeID: mainAppID,
 			Leader: config.Leader,
 			Status: "online",
 		}
-		err := messageq.MsgSend("mainapplead", data)
+		err := messageq.MsgSend("mainapp-node-update", data)
 		if err != nil {
 			logging.PrintSecretsRedact("NATS error:", err)
 		}

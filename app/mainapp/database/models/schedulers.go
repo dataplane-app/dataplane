@@ -15,6 +15,7 @@ type Scheduler struct {
 	ScheduleType  string     `json:"schedule_type"`
 	Schedule      string     `json:"schedule"`
 	Timezone      string     `json:"timezone"`
+	Online        bool       `json:"online"`
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     *time.Time `json:"updated_at"`
 }

@@ -13,6 +13,7 @@ var CleanLogs int = 30
 var Leader string = ""
 var MainAppID string = ""
 var Scheduler *gocron.Scheduler
+var PipelineScheduler = make(map[string]*gocron.Scheduler)
 
 // Debug
 var Debug string = "false"
