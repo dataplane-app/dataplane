@@ -1,99 +1,86 @@
-import { Autocomplete, Box, Link, Paper, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography } from '@mui/material';
-import ct from 'countries-and-timezones';
-import { RRule } from 'rrule';
+import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography } from '@mui/material';
+import { getTimeZoneOffSet } from './Cron';
 
-export function RRuleTab() {
-    const rule = new RRule({
-        freq: RRule.WEEKLY,
-        count: 30,
-        interval: 1,
-    });
-
-    console.log(rule.all());
-    return false ? (
-        <Box display="flex" gap={8}>
-            {/* Left Side */}
-            <Box mt={1} sx={{ width: 650 }}>
-                <Box display="flex" gap={4}>
-                    <CronText />
-
-                    <Autocomplete
-                        // value={user.timezone}
-                        id="timezone-autocomplete"
-                        sx={{ width: 400 }}
-                        onChange={(event, newValue) => {
-                            // setUser({ ...user, timezone: newValue });
-                        }}
-                        options={Object.keys(ct.getAllTimezones())}
-                        renderInput={(params) => <TextField {...params} label="Timezone" id="timezone" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
-                    />
-                </Box>
-
-                <Typography fontSize={13} mt={1.5}>
-                    At 11:00 PM, Monday through Friday
+export function RRuleTab({ seconds, setSeconds, timezone }) {
+    return (
+        <Box display="flex" flexDirection="column">
+            <Box mt={1} sx={{ width: 650 }} display="flex" alignItems="center">
+                <Typography fontSize={15} fontWeight={700} mr={3}>
+                    Run every
                 </Typography>
+                <TextField size="small" value={seconds} label="Seconds" id="schedule" onChange={(e) => setSeconds(e.target.value)} />
+            </Box>
 
-                <Typography fontSize={15} fontWeight={700} mt={3}>
-                    Expected next 20 occurrences
-                </Typography>
-
-                {/* Table */}
-                <TableContainer
-                    component={Paper}
-                    sx={{
-                        mt: 3,
-                        width: 650,
-                    }}>
+            <Typography fontSize={15} fontWeight={700} mb={2} mt={6}>
+                Expected 20 occurrences
+            </Typography>
+            {/* Table */}
+            {seconds > 0 ? (
+                <TableContainer component={Paper} sx={{ width: 650 }}>
                     <Table
                         sx={{
                             minWidth: 650,
                         }}
                         aria-label="simple table">
-                        <TableBody>
-                            {rule.all().map((row, idx) => {
-                                // console.log(new Date(row).getFullYear());
-                                return (
-                                    <TableRow
-                                        key={idx}
-                                        sx={{
-                                            '&:last-child td, &:last-child th': {
-                                                border: 0,
-                                            },
-                                        }}>
-                                        <TableCell component="th" scope="row">
-                                            {idx + 1}
-                                        </TableCell>
-                                        <TableCell component="th" scope="row">
-                                            {new Date(row).getDate()}
-                                        </TableCell>
-                                        <TableCell component="th" scope="row">
-                                            {new Date(row).getMonth()}
-                                        </TableCell>
-                                        <TableCell component="th" scope="row">
-                                            {new Date(row).getFullYear()}
-                                        </TableCell>
-                                        <TableCell component="th" scope="row">
-                                            {new Date(row).getTime()}
-                                        </TableCell>
-                                        <TableCell component="th" scope="row">
-                                            {new Date(row).getFullYear()}
-                                        </TableCell>
-                                        <TableCell component="th" scope="row">
-                                            {new Date(row).getFullYear()}
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
+                        <TableBody>{SecondsTable(new Date(), seconds)}</TableBody>
                     </Table>
                 </TableContainer>
-            </Box>
-
-            {/* Right Side */}
+            ) : null}
         </Box>
-    ) : null;
+    );
+
+    function SecondsTable(date) {
+        const table = [];
+
+        for (let idx = 1; idx < 21; idx++) {
+            table.push(
+                <TableRow
+                    key={idx}
+                    sx={{
+                        '&:last-child td, &:last-child th': {
+                            border: 0,
+                        },
+                    }}>
+                    <TableCell component="th" scope="row">
+                        {idx}
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                        {date.toLocaleDateString('en-US', {
+                            weekday: 'short',
+                        })}
+                        ,
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                        {date.getDate}
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                        {date.toLocaleDateString('en-US', {
+                            month: 'short',
+                        })}
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                        {date.getFullYear()}
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                        {formatTime(date, seconds, idx)}
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                        {timezone && timezone + ' ' + getTimeZoneOffSet(timezone)}
+                    </TableCell>
+                </TableRow>
+            );
+        }
+
+        return table;
+    }
 }
 
-function CronText({}) {
-    return <TextField size="small" label="CRON" fullWidth />;
+// Utility functions
+function formatTime(date, s, idx) {
+    date = date.getTime() + s * idx * 1000;
+    date = new Date(date);
+    const hours = date.getHours() < 10 ? '0' + date.getHours() : date.getHours();
+    const minutes = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes();
+    const seconds = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
+    return hours + ':' + minutes + ':' + seconds;
 }

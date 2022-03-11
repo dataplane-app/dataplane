@@ -147,6 +147,6 @@ function formatTime(date) {
 
 // Takes timezone name and return its offset
 // Example 'Europe/Istanbul' => (GMT+3)
-function getTimeZoneOffSet(timezoneName) {
+export function getTimeZoneOffSet(timezoneName) {
     return '(' + new Intl.DateTimeFormat('en', { timeZoneName: 'short', timeZone: timezoneName }).format(new Date()).split(' ')[1] + ')';
 }
