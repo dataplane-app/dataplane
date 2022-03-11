@@ -31,6 +31,8 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
     // Set triggerOnline switch on load
     useEffect(() => {
         setIsOnline(FlowState.selectedElement?.data?.triggerOnline.get());
+        setScheduleStatement(FlowState.selectedElement?.data?.genericdata?.schedule?.get());
+        setTimezone(FlowState.selectedElement?.data?.genericdata?.timezone?.get());
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedElement?.data?.triggerOnline.get()]);

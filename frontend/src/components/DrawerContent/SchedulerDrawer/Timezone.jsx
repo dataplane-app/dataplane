@@ -1,19 +1,25 @@
 import { Autocomplete, TextField } from '@mui/material';
 import ct from 'countries-and-timezones';
 import { useSnackbar } from 'notistack';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useMe } from '../../../graphql/me';
+import { useGlobalFlowState } from '../../../pages/Flow';
 
 export function Timezone({ timezone, setTimezone }) {
+    // Flow state
+    const FlowState = useGlobalFlowState();
+
     // Graphql hook
-    const getMe = useMeHook(setTimezone);
+    const getMe = useMeHook(setTimezone, timezone);
 
     // Get timezone on load
     useEffect(() => {
-        getMe();
+        // Check if there is a timezone set, if not get user's timezone
+        if (FlowState.selectedElement?.data?.genericdata?.timezone?.get()) return;
+        // getMe();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [FlowState.selectedElement?.data?.genericdata?.timezone?.get()]);
 
     return (
         <Autocomplete
@@ -37,7 +43,7 @@ export function Timezone({ timezone, setTimezone }) {
     );
 }
 
-const useMeHook = (setTimezone) => {
+const useMeHook = (setTimezone, timezone) => {
     // GraphQL hook
     const getMe = useMe();
 

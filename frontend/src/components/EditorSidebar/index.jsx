@@ -53,7 +53,7 @@ const EditorSidebar = () => {
                     icon: faClock,
                     text: 'Scheduler',
                     eventType: 'scheduleNode',
-                    data: { triggerOnline: false },
+                    data: { triggerOnline: false, genericdata: { schedule: '', timezone: '', scheduleType: '' } },
                 },
                 // {
                 //     id: uuidv4(),
