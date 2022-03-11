@@ -7,13 +7,17 @@ import { useGlobalFlowState } from '../../../pages/Flow';
 import { IOSSwitch } from './IOSSwitch';
 import { Cron } from './Cron';
 import { RRuleTab } from './RRule';
+import { useSnackbar } from 'notistack';
 
 const ScheduleDrawer = ({ handleClose, setElements }) => {
     // Flow state
     const FlowState = useGlobalFlowState();
 
+    const { enqueueSnackbar } = useSnackbar();
+
     const { register, handleSubmit } = useForm();
     const [isOnline, setIsOnline] = useState(true);
+    const [validationError, setValidationError] = useState(false);
 
     // Tabs state
     const [tabValue, setTabValue] = useState(0);
@@ -31,6 +35,11 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
 
     // Update triggerOnline on submit
     async function onSubmit(data) {
+        if (validationError) {
+            enqueueSnackbar('Invalid statement', { variant: 'error' });
+            return;
+        }
+
         handleClose();
         setElements((els) =>
             els.map((el) => {
@@ -138,7 +147,7 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                             </Tabs>
                         </Box>
                         <TabPanel value={tabValue} index={0}>
-                            <Cron />
+                            <Cron setValidationError={setValidationError} />
                         </TabPanel>
                         <TabPanel value={tabValue} index={1}>
                             <RRuleTab />

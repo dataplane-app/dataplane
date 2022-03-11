@@ -5,7 +5,7 @@ import cronstrue from 'cronstrue';
 import later from '@breejs/later';
 import { isValidCron } from 'cron-validator';
 
-export function Cron() {
+export function Cron({ setValidationError }) {
     // Local State
     const [cronExpression, setCronExpression] = useState('');
     const [schedule, setSchedule] = useState([]);
@@ -15,6 +15,10 @@ export function Cron() {
     useEffect(() => {
         const sched = later.parse.cron(cronExpression);
         setSchedule(later.schedule(sched).next(20));
+
+        isValidCron(cronExpression) ? setValidationError(false) : setValidationError(true);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [cronExpression]);
 
     return (
