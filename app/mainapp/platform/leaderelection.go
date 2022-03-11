@@ -3,6 +3,7 @@ package platform
 import (
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/utilities"
 	"dataplane/workers/logging"
 	"log"
@@ -46,9 +47,16 @@ func LeaderElection() {
 		}
 
 		// Let everyone know who the new leader is
+		var data = models.PlatformNodeUpdate{
+			Leader: platformNodes[newLeaderIndex].NodeID,
+			Status: "leaderelect",
+		}
+
+		err = messageq.MsgSend("mainapplead", data)
+		if err != nil {
+			logging.PrintSecretsRedact("NATS error:", err)
+		}
 
 	}
-
-	// Is leader still alive, otherwise elect a new leader
 
 }
