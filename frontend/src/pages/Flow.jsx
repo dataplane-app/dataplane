@@ -433,11 +433,16 @@ const Flow = () => {
                 />
             </Drawer>
 
-            <Drawer anchor="right" open={FlowState.isOpenSchedulerDrawer.get()} onClose={() => FlowState.isOpenSchedulerDrawer.set(false)}>
+            <Drawer
+                hideBackdrop
+                sx={{ width: 'calc(100% - 203px)', [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
+                anchor="right"
+                open={FlowState.isOpenSchedulerDrawer.get()}
+                onClose={() => FlowState.isOpenSchedulerDrawer.set(false)}>
                 <ScheduleDrawer
                     handleClose={() => FlowState.isOpenSchedulerDrawer.set(false)} //
-                    environmentID={Environment.id.get()}
-                    pipelineID={pipeline.pipelineID}
+                    // environmentID={Environment.id.get()}
+                    // pipelineID={pipeline.pipelineID}
                     setElements={setElements}
                 />
             </Drawer>
@@ -501,7 +506,33 @@ function prepareInputForBackend(input) {
                 },
                 active: false,
             });
+        } else if (iterator.type === 'scheduleNode') {
+            nodesInput.push({
+                nodeID: iterator.id,
+                name: '',
+                nodeType: nodeDictionary[iterator.type],
+                nodeTypeDesc: iterator.type.replace('Node', ''),
+                triggerOnline: iterator.data.triggerOnline,
+                description: '',
+                workerGroup: '',
+                commands: [],
+                meta: {
+                    position: {
+                        x: iterator.position.x,
+                        y: iterator.position.y,
+                    },
+                    data: {
+                        genericdata: {
+                            schedule: iterator.schedule,
+                            scheduleType: iterator.scheduleType,
+                            timezone: iterator.timezone,
+                        },
+                    },
+                },
+                active: false,
+            });
         } else {
+            // Play node
             nodesInput.push({
                 nodeID: iterator.id,
                 name: '',
