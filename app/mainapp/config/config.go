@@ -18,6 +18,7 @@ var PipelineSchedulerJob = make(map[string]*gocron.Job)
 
 // Debug
 var Debug string = "false"
+var SchedulerDebug string = "false"
 
 func LoadConfig() {
 
@@ -36,6 +37,11 @@ func LoadConfig() {
 	Debug = os.Getenv("debug")
 	if Debug == "" {
 		Debug = "false"
+	}
+
+	SchedulerDebug = os.Getenv("schedulerdebug")
+	if SchedulerDebug == "" {
+		SchedulerDebug = "false"
 	}
 
 }

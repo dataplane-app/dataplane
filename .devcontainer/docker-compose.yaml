@@ -80,6 +80,7 @@ services:
       dbdebug: "false"
       messagedebug: "true"
       metricdebug: "false"
+      schedulerdebug: "true"
       worker_heartbeat_seconds: "1"
       worker_group: "python_1"
       # vm, container, kubernetes

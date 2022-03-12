@@ -13,7 +13,7 @@ import (
 
 func mytask(nodeID string, pipelineID string, environmentID string, timezone string) {
 
-	if config.Debug == "true" {
+	if config.SchedulerDebug == "true" {
 		log.Println("Schedule run:", nodeID, timezone)
 	}
 
@@ -30,7 +30,7 @@ func mytask(nodeID string, pipelineID string, environmentID string, timezone str
 
 	_, err := pipelines.RunPipeline(pipelineID, environmentID)
 	if err != nil {
-		if config.Debug == "true" {
+		if config.SchedulerDebug == "true" {
 			logging.PrintSecretsRedact("Pipeline schedule run error:", err)
 		}
 	}

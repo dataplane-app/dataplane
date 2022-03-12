@@ -29,7 +29,7 @@ func LoadPipelineSchedules() {
 
 	}
 
-	if config.Debug == "true" {
+	if config.SchedulerDebug == "true" {
 		for i, v := range config.PipelineScheduler {
 			log.Println("Scheduler:", i, v.IsRunning(), v.Len())
 		}
