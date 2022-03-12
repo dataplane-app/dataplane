@@ -28,6 +28,7 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
     const [timezone, setTimezone] = useState(null);
     const [seconds, setSeconds] = useState(null);
 
+    console.log('🚀 ~ file: index.jsx ~ line 34 ~ useEffect ~ FlowState.selectedElement', FlowState.selectedElement.get());
     // Set triggerOnline switch on load
     useEffect(() => {
         setIsOnline(FlowState.selectedElement?.data?.triggerOnline.get());
