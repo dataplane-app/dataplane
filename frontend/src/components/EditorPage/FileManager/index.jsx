@@ -40,6 +40,13 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const newFileRef = useRef();
     const editingFileRef = useRef();
 
+    // Check if selected file changed
+    useEffect(() => {
+        setSelected(Editor.selectedFile.get()?.id);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [Editor.selectedFile.get()?.id]);
+
     // Check if user clicked outside when adding or editing a new file/folder
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -313,6 +320,15 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             const removed = removeById(data.children, selected);
             const newData = { ...data, children: removed };
             setData(newData);
+
+            // Remove child from tabs
+            if (current?.children && current?.children.length > 0) {
+                const tabs = Editor.tabs.attach(Downgraded).get();
+                const newTabs = removeById(tabs, current.children[0].id);
+                checkLastTab(newTabs);
+            }
+        } else {
+            return;
         }
 
         // Remove files from tab
@@ -320,13 +336,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             const tabs = Editor.tabs.attach(Downgraded).get();
             const newTabs = tabs.filter((t) => t.id !== selected);
 
-            if (newTabs.length === 0) {
-                Editor.selectedFile.set(null);
-            } else {
-                Editor.selectedFile.set(newTabs[newTabs.length - 1]);
-            }
-
-            Editor.tabs.set(newTabs);
+            checkLastTab(newTabs);
         }
     };
 
@@ -435,6 +445,16 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         } else {
             currentDOMElement.style.border = 'none';
         }
+    };
+
+    const checkLastTab = (newTabs) => {
+        if (newTabs.length === 0) {
+            Editor.selectedFile.set(null);
+        } else {
+            Editor.selectedFile.set(newTabs[newTabs.length - 1]);
+        }
+
+        Editor.tabs.set(newTabs);
     };
 
     // Render files and folders to UI
