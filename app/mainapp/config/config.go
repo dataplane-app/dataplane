@@ -14,6 +14,7 @@ var Leader string = ""
 var MainAppID string = ""
 var Scheduler *gocron.Scheduler
 var PipelineScheduler = make(map[string]*gocron.Scheduler)
+var PipelineSchedulerJob = make(map[string]*gocron.Job)
 
 // Debug
 var Debug string = "false"
