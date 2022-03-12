@@ -154,61 +154,63 @@ const View = () => {
                 {/* Run/Stop button, Chips, Timer */}
                 <ActionLayer setElements={setElements} environmentId={Environment.id.get()} />
             </Box>
-
-            <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
-                {elements && elements.length > 0 ? (
-                    <ReactFlowProvider>
-                        <ReactFlow
-                            zoomOnScroll={false}
-                            zoomOnPinch={false}
-                            paneMoveable={panOnDrag || false}
-                            onMoveStart={onMoveStart}
-                            onMoveEnd={onMoveEnd}
-                            nodeTypes={nodeTypes}
-                            elements={elements}
-                            defaultZoom={FlowState.scale.get()}
-                            nodesDraggable={false}
-                            nodesConnectable={false}
-                            preventScrolling={false}
-                            onLoad={onLoad}
-                            onConnect={onConnect}
-                            onConnectStart={onConnectStart}
-                            onConnectEnd={onConnectEnd}
-                            connectionLineComponent={CustomLine}
-                            edgeTypes={edgeTypes}
-                            arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
-                            snapToGrid={true}
-                            snapGrid={[15, 15]}>
-                            <Controls style={{ left: 'auto', right: 10, bottom: 50 }}>
-                                <ControlButton onClick={onZoomActive} style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
-                                    <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} sx={{ color: FlowState.isPanEnable.get() ? '#72B842' : '' }} />
-                                </ControlButton>
-                            </Controls>
-                            <Box sx={{ position: 'absolute', left: 'auto', right: 10, bottom: 10 }}>
-                                <Typography fontSize={12}>Scale {Math.floor((FlowState.scale.get() || 1) * 100)}%</Typography>
-                            </Box>
-                        </ReactFlow>
-                    </ReactFlowProvider>
-                ) : (
-                    <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Typography>Create a pipeline by dragging the components here</Typography>
-                    </Box>
-                )}
-            </Box>
-
+            {!FlowState.isOpenLogDrawer.get() ? (
+                <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
+                    {elements && elements.length > 0 ? (
+                        <ReactFlowProvider>
+                            <ReactFlow
+                                zoomOnScroll={false}
+                                zoomOnPinch={false}
+                                paneMoveable={panOnDrag || false}
+                                onMoveStart={onMoveStart}
+                                onMoveEnd={onMoveEnd}
+                                nodeTypes={nodeTypes}
+                                elements={elements}
+                                defaultZoom={FlowState.scale.get()}
+                                nodesDraggable={false}
+                                nodesConnectable={false}
+                                preventScrolling={false}
+                                onLoad={onLoad}
+                                onConnect={onConnect}
+                                onConnectStart={onConnectStart}
+                                onConnectEnd={onConnectEnd}
+                                connectionLineComponent={CustomLine}
+                                edgeTypes={edgeTypes}
+                                arrowHeadColor={theme.palette.mode === 'dark' ? '#fff' : '#222'}
+                                snapToGrid={true}
+                                snapGrid={[15, 15]}>
+                                <Controls style={{ left: 'auto', right: 10, bottom: 50 }}>
+                                    <ControlButton onClick={onZoomActive} style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
+                                        <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} sx={{ color: FlowState.isPanEnable.get() ? '#72B842' : '' }} />
+                                    </ControlButton>
+                                </Controls>
+                                <Box sx={{ position: 'absolute', left: 'auto', right: 10, bottom: 10 }}>
+                                    <Typography fontSize={12}>Scale {Math.floor((FlowState.scale.get() || 1) * 100)}%</Typography>
+                                </Box>
+                            </ReactFlow>
+                        </ReactFlowProvider>
+                    ) : (
+                        <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Typography>Create a pipeline by dragging the components here</Typography>
+                        </Box>
+                    )}
+                </Box>
+            ) : null}
             <Drawer anchor="right" open={isOpenPublishDrawer} onClose={() => setIsOpenPublishDrawer(!isOpenPublishDrawer)}>
                 <PublishPipelineDrawer handleClose={() => setIsOpenPublishDrawer(false)} />
             </Drawer>
-
             <Drawer
                 hideBackdrop
-                sx={{ width: 'calc(100% - 203px)', [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
+                sx={{
+                    width: 'calc(100% - 203px)',
+                    height: 'calc(100% - 82px)',
+                    [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82, height: 'calc(100% - 82px)', background: '#222', paddingBottom: 2 },
+                }}
                 anchor="right"
                 open={FlowState.isOpenLogDrawer.get()}
                 onClose={() => FlowState.isOpenLogDrawer.set(false)}>
                 <LogsDrawer handleClose={() => FlowState.isOpenLogDrawer.set(false)} environmentId={Environment.id.get()} />
             </Drawer>
-
             <Drawer anchor="right" open={FlowState.isOpenTurnOffPipelineDrawer.get()} onClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)}>
                 <TurnOffPipelineDrawer
                     handleClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)} //
