@@ -52,7 +52,10 @@ func PlatformNodeListen() {
 
 			// I am the leader, load schedules.
 			if config.Leader == config.MainAppID {
-				log.Println("I am the leader:", config.Leader, config.MainAppID)
+
+				if config.Debug == "true" {
+					log.Println("Leader election:", config.Leader, config.MainAppID)
+				}
 
 				// Load the pipleine schedules
 				scheduler.LoadPipelineSchedules()
