@@ -521,11 +521,7 @@ function prepareInputForBackend(input) {
                     },
                     data: {
                         language: '',
-                        genericdata: {
-                            schedule: iterator.data.schedule,
-                            scheduleType: iterator.data.scheduleType,
-                            timezone: iterator.data.timezone,
-                        },
+                        genericdata: iterator.data.genericdata,
                     },
                 },
                 active: false,

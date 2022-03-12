@@ -16,6 +16,8 @@ const query = gql`
             created_at
             node_type
             node_type_desc
+            schedule
+            schedule_type
         }
     }
 `;
