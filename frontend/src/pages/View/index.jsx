@@ -2,7 +2,7 @@ import { ActionLayer } from './ActionLayer';
 import { useTheme } from '@emotion/react';
 import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
+import { Box, Drawer, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
@@ -135,7 +135,7 @@ const View = () => {
 
                         <Grid display="flex">
                             <Box display="flex" alignItems="center" ml={4} mr={2}>
-                                {isPipelineOnline ? <CustomChip label={'Online'} customColor="green" /> : <CustomChip label="Offline" customColor="red" />}
+                                {pipeline?.online ? <CustomChip label={'Online'} customColor="green" /> : <CustomChip label="Offline" customColor="red" />}
                             </Box>
 
                             <Box sx={{ top: '0', right: '0' }}>
@@ -143,7 +143,7 @@ const View = () => {
                                     <ViewPageItem
                                         pipeline={pipeline}
                                         getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
-                                        isPipelineOnline={isPipelineOnline}
+                                        isPipelineOnline={pipeline?.online}
                                     />
                                 </MoreInfoMenu>
                             </Box>
