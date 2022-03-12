@@ -5,8 +5,8 @@ import (
 	modelmain "dataplane/mainapp/database/models"
 	"dataplane/workers/config"
 	"dataplane/workers/database"
-	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
+	"log"
 	"time"
 
 	"gorm.io/gorm/clause"
@@ -24,7 +24,7 @@ func UpdateWorkerTasks(msg modelmain.WorkerTasks) {
 		DoUpdates: clause.AssignmentColumns([]string{"start_dt", "end_dt", "status", "reason", "worker_id", "worker_group"}),
 	}).Create(&msg)
 	if err2.Error != nil {
-		logging.PrintSecretsRedact(err2.Error.Error())
+		log.Println(err2.Error.Error())
 	}
 
 	if msg.Status == "Fail" {
@@ -41,13 +41,13 @@ func UpdateWorkerTasks(msg modelmain.WorkerTasks) {
 			DoUpdates: clause.AssignmentColumns([]string{"ended_at", "status"}),
 		}).Create(&run)
 		if err2.Error != nil {
-			logging.PrintSecretsRedact(err2.Error.Error())
+			log.Println(err2.Error.Error())
 		}
 
 		// Update all the future tasks
 		err3 := database.DBConn.Model(&modelmain.WorkerTasks{}).Where("run_id = ? and status=?", msg.RunID, "Queue").Updates(map[string]interface{}{"status": "Fail", "reason": "Upstream fail"}).Error
 		if err3 != nil {
-			logging.PrintSecretsRedact(err3.Error())
+			log.Println(err3.Error())
 		}
 
 	}
@@ -56,7 +56,7 @@ func UpdateWorkerTasks(msg modelmain.WorkerTasks) {
 	errnat := messageq.MsgSend("taskupdate."+msg.EnvironmentID+"."+msg.RunID, msg)
 	if errnat != nil {
 		if config.Debug == "true" {
-			logging.PrintSecretsRedact(errnat)
+			log.Println(errnat)
 		}
 
 	}

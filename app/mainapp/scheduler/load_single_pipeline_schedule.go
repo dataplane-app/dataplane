@@ -61,4 +61,8 @@ func LoadSingleSchedule(s models.Scheduler) {
 
 	}
 
+	if config.SchedulerDebug == "true" {
+		log.Println("Scheduler add: ", s.Timezone, s.NodeID, "Online:", s.Online)
+	}
+
 }

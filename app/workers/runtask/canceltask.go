@@ -2,8 +2,8 @@ package runtask
 
 import (
 	modelmain "dataplane/mainapp/database/models"
-	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
+	"log"
 	"syscall"
 	"time"
 
@@ -31,7 +31,7 @@ func Canceltask() fiber.Handler {
 		_, errnats := messageq.MsgReply("taskupdate", TaskUpdate, &response)
 
 		if errnats != nil {
-			logging.PrintSecretsRedact("Update task error nats:", errnats)
+			log.Println("Update task error nats:", errnats)
 		}
 
 		return c.SendString("Hello 👋! Healthy 🍏")

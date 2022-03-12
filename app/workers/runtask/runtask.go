@@ -6,9 +6,8 @@ import (
 	modelmain "dataplane/mainapp/database/models"
 	"dataplane/workers/config"
 	"dataplane/workers/database"
-	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
-	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"syscall"
@@ -40,19 +39,19 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	var statusUpdate string
 
 	if config.Debug == "true" {
-		fmt.Printf("starting task with id %s - node: %s run: %s\n", msg.TaskID, msg.NodeID, msg.RunID)
+		log.Printf("starting task with id %s - node: %s run: %s\n", msg.TaskID, msg.NodeID, msg.RunID)
 	}
 
 	// --- Check if this task is already running
 	var lockCheck modelmain.WorkerTasks
 	err2 := database.DBConn.Select("task_id", "status").Where("task_id = ?", msg.TaskID).First(&lockCheck).Error
 	if err2 != nil {
-		logging.PrintSecretsRedact(err2.Error())
+		log.Println(err2.Error())
 		return
 	}
 
 	if lockCheck.Status != "Queue" {
-		logging.PrintSecretsRedact("Skipping not in queue", msg.RunID, msg.NodeID)
+		log.Println("Skipping not in queue", msg.RunID, msg.NodeID)
 		return
 	}
 
@@ -60,13 +59,13 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	var pipelineCheck modelmain.PipelineRuns
 	err2 = database.DBConn.Select("run_id", "status").Where("run_id = ?", msg.RunID).First(&pipelineCheck).Error
 	if err2 != nil {
-		logging.PrintSecretsRedact(err2.Error())
+		log.Println(err2.Error())
 		return
 	}
 
 	if pipelineCheck.Status != "Running" {
 
-		logging.PrintSecretsRedact("Skipping pipeline not in running state", msg.RunID, msg.NodeID)
+		log.Println("Skipping pipeline not in running state", msg.RunID, msg.NodeID)
 
 		TaskFinal := modelmain.WorkerTasks{
 			TaskID:        msg.TaskID,
@@ -332,7 +331,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	errnat := messageq.MsgSend("pipeline-run-next", RunNext)
 	if errnat != nil {
 		if config.Debug == "true" {
-			logging.PrintSecretsRedact(errnat)
+			log.Println(errnat)
 		}
 
 	}

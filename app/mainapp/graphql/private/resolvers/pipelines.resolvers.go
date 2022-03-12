@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -226,11 +226,15 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 				schedulejson, _ := json.Marshal(p.Meta.Data.Genericdata)
 
-				log.Println("Meta sch:", string(schedulejson))
+				// log.Println("Meta sch:", string(schedulejson))
 
 				timezone := jsoniter.Get(schedulejson, "timezone").ToString()
 				schedule := jsoniter.Get(schedulejson, "schedule").ToString()
 				scheduleType := jsoniter.Get(schedulejson, "scheduleType").ToString()
+
+				if scheduleType == "cronseconds" {
+					timezone = "UTC"
+				}
 				_, err := time.LoadLocation(timezone)
 				if err != nil {
 					log.Println("Scheduler timezone error: ", err)
