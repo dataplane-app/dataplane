@@ -1,7 +1,7 @@
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography } from '@mui/material';
-import { getTimeZoneOffSet } from './Cron';
+import { getTimeZoneOffSet } from './CronTab';
 
-export function RRuleTab({ seconds, setSeconds, timezone }) {
+export function CronSecondsTab({ seconds, setSeconds, timezone }) {
     return (
         <Box display="flex" flexDirection="column">
             <Box mt={1} sx={{ width: 650 }} display="flex" alignItems="center">

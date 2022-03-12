@@ -5,7 +5,7 @@ import cronstrue from 'cronstrue';
 import later from '@breejs/later';
 import { isValidCron } from 'cron-validator';
 
-export function Cron({ setValidationError, scheduleStatement, setScheduleStatement, timezone, setTimezone }) {
+export function CronTab({ setValidationError, scheduleStatement, setScheduleStatement, timezone, setTimezone }) {
     // Local State
     const [schedule, setSchedule] = useState([]);
 

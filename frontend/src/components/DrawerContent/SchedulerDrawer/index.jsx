@@ -4,8 +4,8 @@ import { Box, Button, Tab, Tabs, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useGlobalFlowState } from '../../../pages/Flow';
 import { IOSSwitch } from './IOSSwitch';
-import { Cron } from './Cron';
-import { RRuleTab } from './RRule';
+import { CronTab } from './CronTab';
+import { CronSecondsTab } from './CronSecondsTab';
 import { useSnackbar } from 'notistack';
 
 const ScheduleDrawer = ({ handleClose, setElements }) => {
@@ -28,12 +28,17 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
     const [timezone, setTimezone] = useState(null);
     const [seconds, setSeconds] = useState(null);
 
-    console.log('🚀 ~ file: index.jsx ~ line 34 ~ useEffect ~ FlowState.selectedElement', FlowState.selectedElement.get());
     // Set triggerOnline switch on load
     useEffect(() => {
         setIsOnline(FlowState.selectedElement?.data?.triggerOnline.get());
-        setScheduleStatement(FlowState.selectedElement?.data?.genericdata?.schedule?.get());
         setTimezone(FlowState.selectedElement?.data?.genericdata?.timezone?.get());
+
+        if (FlowState.selectedElement?.data?.genericdata?.scheduleType?.get() === 'cronseconds') {
+            setTabValue(1);
+            setSeconds(FlowState.selectedElement?.data?.genericdata?.schedule?.get() || '');
+        } else {
+            setScheduleStatement(FlowState.selectedElement?.data?.genericdata?.schedule?.get() || '');
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedElement?.data?.triggerOnline.get()]);
@@ -54,9 +59,11 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                     el.data = {
                         ...el.data,
                         triggerOnline: isOnline,
-                        schedule: tabValue ? seconds : scheduleStatement,
-                        scheduleType: tabValue ? 'cronseconds' : 'cron',
-                        timezone: timezone,
+                        genericdata: {
+                            schedule: tabValue ? seconds : scheduleStatement,
+                            scheduleType: tabValue ? 'cronseconds' : 'cron',
+                            timezone: timezone,
+                        },
                     };
                 }
                 return el;
@@ -130,7 +137,7 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                             </Tabs>
                         </Box>
                         <TabPanel value={tabValue} index={0}>
-                            <Cron
+                            <CronTab
                                 setValidationError={setValidationError}
                                 scheduleStatement={scheduleStatement}
                                 setScheduleStatement={setScheduleStatement}
@@ -139,7 +146,7 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                             />
                         </TabPanel>
                         <TabPanel value={tabValue} index={1}>
-                            <RRuleTab seconds={seconds} setSeconds={setSeconds} timezone={timezone} />
+                            <CronSecondsTab seconds={seconds} setSeconds={setSeconds} timezone={timezone} />
                         </TabPanel>
                     </Box>
                 </Box>
