@@ -16,6 +16,7 @@ import { prepareInputForFrontend } from '../../../pages/View';
 import DeletePipelineDrawer from '../../DrawerContent/DeletePipelineDrawer';
 import CustomChip from '../../CustomChip';
 import TurnOffPipelineDrawer from '../../DrawerContent/TurnOffPipelineDrawer';
+import cronstrue from 'cronstrue';
 
 const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
     // React router
@@ -95,6 +96,13 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                             </Typography>
                         </Box>
                     ) : null,
+            },
+            {
+                Header: 'Schedule',
+                accessor: (row) => [row.schedule, row.schedule_type],
+                Cell: (row) => {
+                    return <Typography>{formatSchedule(row.value[0], row.value[1])}</Typography>;
+                },
             },
             {
                 accessor: 'online',
@@ -228,3 +236,17 @@ export const useRunPipelinesHook = () => {
         }
     };
 };
+
+// Utility function
+function formatSchedule(schedule, type) {
+    if (type === 'cronseconds') {
+        if (schedule === '*/1 * * * * *') {
+            return 'Every second';
+        } else {
+            return 'Every ' + schedule.split(' ')[0].replace('*/', '') + ' seconds';
+        }
+    }
+    if (type === 'cron') {
+        return cronstrue.toString(schedule, { throwExceptionOnParseError: false });
+    }
+}

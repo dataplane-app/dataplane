@@ -12,6 +12,8 @@ type Pipelines {
   created_at: Time!
   node_type: String!
   node_type_desc: String!
+  schedule: String!
+  schedule_type: String!
 }
 
 # ----- Add/Update flow

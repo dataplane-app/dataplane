@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -548,10 +548,13 @@ a.worker_group,
 a.created_at,
 b.node_type,
 b.node_type_desc,
-b.online
+b.online,
+scheduler.schedule,
+scheduler.schedule_type
 from pipelines a left join (
 	select node_type, node_type_desc, pipeline_id, trigger_online as online from pipeline_nodes where node_type='trigger'
 ) b on a.pipeline_id=b.pipeline_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id
 where a.environment_id = ?
 order by a.created_at desc
 `
@@ -578,7 +581,9 @@ a.worker_group,
 a.created_at,
 b.node_type,
 b.node_type_desc,
-b.online
+b.online,
+scheduler.schedule,
+scheduler.schedule_type
 from pipelines a 
 left join (
 	select node_type, node_type_desc, pipeline_id, trigger_online as online from pipeline_nodes where node_type='trigger'
@@ -615,6 +620,7 @@ inner join (
 	) x
 
 ) p on p.resource_id = a.pipeline_id and p.environment_id = a.environment_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id
 where 
 a.environment_id = ?
 order by a.created_at desc`

@@ -132,6 +132,8 @@ type Pipelines struct {
 	CreatedAt     time.Time `json:"created_at"`
 	NodeType      string    `json:"node_type"`
 	NodeTypeDesc  string    `json:"node_type_desc"`
+	Schedule      string    `json:"schedule"`
+	ScheduleType  string    `json:"schedule_type"`
 }
 
 type Platform struct {
