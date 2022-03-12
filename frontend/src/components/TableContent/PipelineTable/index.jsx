@@ -105,7 +105,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                 Header: 'Schedule',
                 accessor: (row) => [row.schedule, row.schedule_type],
                 Cell: (row) => {
-                    return <Typography>{formatSchedule(row.value[0], row.value[1])}</Typography>;
+                    return <Typography variant="body2">{formatSchedule(row.value[0], row.value[1])}</Typography>;
                 },
             },
             {
