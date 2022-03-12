@@ -21,16 +21,20 @@ var Debug string = "false"
 func LoadConfig() {
 
 	// Clean tasks set
-	if os.Getenv("dp_cleantasks_days") != "" {
-		CleanTasks, _ = strconv.Atoi(os.Getenv("dp_cleantasks_days"))
+
+	CleanTasks, _ = strconv.Atoi(os.Getenv("dp_cleantasks_days"))
+	if CleanTasks == 0 {
+		CleanTasks = 30
 	}
 
-	if os.Getenv("dp_removelogs_days") != "" {
-		CleanTasks, _ = strconv.Atoi(os.Getenv("dp_removelogs_days"))
+	CleanLogs, _ = strconv.Atoi(os.Getenv("dp_removelogs_days"))
+	if CleanLogs == 0 {
+		CleanLogs = 30
 	}
 
-	if os.Getenv("debug") != "true" {
-		Debug = os.Getenv("debug")
+	Debug = os.Getenv("debug")
+	if Debug == "" {
+		Debug = "false"
 	}
 
 }

@@ -11,6 +11,7 @@ import (
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
@@ -22,7 +23,6 @@ import (
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error) {
@@ -218,33 +218,6 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			}
 
 			// remove any schedules if the trigger gets changed from schedule to something else.
-			if p.NodeTypeDesc != "schedule" {
-				var pipelineSchedules []*models.Scheduler
-				err := database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&pipelineSchedules).Error
-				if err != nil && err != gorm.ErrRecordNotFound {
-					logging.PrintSecretsRedact("Removal of changed trigger schedules:", err)
-					return "", errors.New("Update pipeline error: Removal of changed trigger schedules")
-
-				}
-
-				if len(pipelineSchedules) > 0 {
-					for _, psc := range pipelineSchedules {
-
-						// remove from scheduler
-						config.PipelineScheduler[psc.Timezone].RemoveByTag(psc.NodeID)
-
-						// remove from database
-						err := database.DBConn.Where("pipeline_id = ? and node_id=?", pipelineID, p.NodeID).Delete(&models.Scheduler{}).Error
-						if err != nil {
-							logging.PrintSecretsRedact("Removal of of changed trigger schedules:", err, p.NodeID)
-							return "", errors.New("Update pipeline error: Removal of changed trigger schedules")
-
-						}
-					}
-
-				}
-
-			}
 
 			// if the trigger is a schedule then register the schedule
 			if p.NodeTypeDesc == "schedule" {
@@ -262,6 +235,14 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 				if err != nil {
 					log.Println("Scheduler timezone error: ", err)
 					return "", errors.New("Update pipeline error: Schedule trigger timezone invalid")
+				}
+
+				if schedule == "" {
+					return "", errors.New("Update pipeline error: Schedule missing")
+				}
+
+				if scheduleType == "" {
+					return "", errors.New("Update pipeline error: Schedule type missing")
 				}
 
 				pipelineSchedules = models.Scheduler{
@@ -395,15 +376,10 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	// ======= Update the schedule trigger ==========
 	if triggerType == "schedule" {
 
-		log.Println("pipline", pipelineSchedules)
-
-		err = database.DBConn.Clauses(clause.OnConflict{
-			UpdateAll: true,
-		}).Create(&pipelineSchedules).Error
-
+		// Add back to schedule
+		err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
 		if err != nil {
-			logging.PrintSecretsRedact("Platform nodes leader election:", err)
-
+			logging.PrintSecretsRedact("NATS error:", err)
 		}
 
 	}

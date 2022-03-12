@@ -10,6 +10,7 @@ import (
 	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/pipelines"
 	"dataplane/mainapp/platform"
+	"dataplane/mainapp/scheduler"
 	"dataplane/mainapp/scheduler/routinetasks"
 	"dataplane/mainapp/worker"
 	"fmt"
@@ -189,6 +190,7 @@ func Setup(port string) *fiber.App {
 	/* Worker Load Subscriptions activate */
 	worker.LoadWorkers(MainAppID)
 	pipelines.RunNextPipeline()
+	scheduler.PipelineSchedulerListen()
 
 	// Electing a leader by listening for running nodes
 	platform.PlatformNodeListen()
