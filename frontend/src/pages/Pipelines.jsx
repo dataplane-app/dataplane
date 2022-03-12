@@ -42,7 +42,8 @@ const Pipelines = () => {
             elements: [],
             triggerDelete: 1,
         });
-        RunState.set({ pipelineRunsTrigger: 1 });
+        const dropdownRunId = RunState.dropdownRunId.get();
+        RunState.set({ pipelineRunsTrigger: 1, dropdownRunId });
         document.querySelector('#root div').scrollTo(0, 0);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps

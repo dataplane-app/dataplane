@@ -11,13 +11,17 @@ import (
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
+	jsoniter "github.com/json-iterator/go"
 	"gorm.io/gorm"
 )
 
@@ -94,6 +98,8 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	var destinations = make(map[string][]string)
 	var dependencies = make(map[string][]string)
+	var triggerType string = ""
+	var pipelineSchedules = models.Scheduler{}
 
 	// ----- Permissions
 	perms := []models.Permissions{
@@ -187,32 +193,6 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 		return "", errors.New("Update pipeline flow edge database error - failed to lock pipeline")
 	}
 
-	// ----- Delete old edges
-	edge := models.PipelineEdges{}
-
-	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&edge).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-
-		return "", errors.New("update pipeline flow edge database error")
-	}
-
-	// ----- Add pipeline edges to database
-
-	// ----- Delete old nodes
-	node := models.PipelineNodes{}
-
-	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&node).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-
-		return "", errors.New("update pipeline flow edge database error")
-	}
-
 	// ----- Add pipeline nodes to database
 
 	nodes := []*models.PipelineNodes{}
@@ -225,13 +205,56 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 		*/
 		var online bool
 		online = false
+
+		// ----- Triggers ----------
 		if p.NodeType == "trigger" {
 
 			switch p.NodeTypeDesc {
 			case "play":
 				online = true
 			default:
+				// any trigger that is not play e.g. schedule
 				online = p.TriggerOnline
+			}
+
+			// remove any schedules if the trigger gets changed from schedule to something else.
+
+			// if the trigger is a schedule then register the schedule
+			if p.NodeTypeDesc == "schedule" {
+
+				triggerType = "schedule"
+
+				schedulejson, _ := json.Marshal(p.Meta.Data.Genericdata)
+
+				log.Println("Meta sch:", string(schedulejson))
+
+				timezone := jsoniter.Get(schedulejson, "timezone").ToString()
+				schedule := jsoniter.Get(schedulejson, "schedule").ToString()
+				scheduleType := jsoniter.Get(schedulejson, "scheduleType").ToString()
+				_, err := time.LoadLocation(timezone)
+				if err != nil {
+					log.Println("Scheduler timezone error: ", err)
+					return "", errors.New("Update pipeline error: Schedule trigger timezone invalid")
+				}
+
+				if schedule == "" {
+					return "", errors.New("Update pipeline error: Schedule missing")
+				}
+
+				if scheduleType == "" {
+					return "", errors.New("Update pipeline error: Schedule type missing")
+				}
+
+				pipelineSchedules = models.Scheduler{
+					NodeID:        p.NodeID,
+					PipelineID:    pipelineID,
+					EnvironmentID: environmentID,
+					ScheduleType:  scheduleType,
+					Schedule:      schedule,
+					Timezone:      timezone,
+					Online:        online,
+				}
+
 			}
 
 		}
@@ -275,7 +298,32 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	}
 
-	// Record edges and nodes in database
+	// ========== Remove the previous graph ==================:
+	// ----- Delete old edges
+	edge := models.PipelineEdges{}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&edge).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("update pipeline flow edge database error")
+	}
+
+	// ----- Delete old nodes
+	node := models.PipelineNodes{}
+
+	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&node).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("update pipeline flow edge database error")
+	}
+
+	// ========== Create the new graph ==================:
 
 	if len(edges) > 0 {
 
@@ -323,6 +371,17 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Update pipeline database error.")
+	}
+
+	// ======= Update the schedule trigger ==========
+	if triggerType == "schedule" {
+
+		// Add back to schedule
+		err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
+		if err != nil {
+			logging.PrintSecretsRedact("NATS error:", err)
+		}
+
 	}
 
 	// ----- unlock the pipeline

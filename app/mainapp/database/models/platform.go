@@ -19,15 +19,15 @@ type Platform struct {
 	DeletedAt        *time.Time `json:"deleted_at,omitempty"`
 }
 
-func (PlatformNodes) IsEntity() {}
+func (PlatformLeader) IsEntity() {}
 
-func (PlatformNodes) TableName() string {
-	return "platform_nodes"
+func (PlatformLeader) TableName() string {
+	return "platform_leader"
 }
 
-type PlatformNodes struct {
-	NodeID    string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"node_id"`
-	Lead      bool       `json:"lead"`
+type PlatformLeader struct {
+	Leader    bool       `gorm:"PRIMARY_KEY;" json:"leader"`
+	NodeID    string     `gorm:"type:varchar(48);" json:"node_id"`
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
