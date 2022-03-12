@@ -2,7 +2,6 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Tab, Tabs, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useGlobalFlowState } from '../../../pages/Flow';
 import { IOSSwitch } from './IOSSwitch';
 import { Cron } from './Cron';
@@ -27,10 +26,14 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
     // Schedule state
     const [scheduleStatement, setScheduleStatement] = useState('');
     const [timezone, setTimezone] = useState(null);
+    const [seconds, setSeconds] = useState(null);
 
+    console.log('🚀 ~ file: index.jsx ~ line 34 ~ useEffect ~ FlowState.selectedElement', FlowState.selectedElement.get());
     // Set triggerOnline switch on load
     useEffect(() => {
         setIsOnline(FlowState.selectedElement?.data?.triggerOnline.get());
+        setScheduleStatement(FlowState.selectedElement?.data?.genericdata?.schedule?.get());
+        setTimezone(FlowState.selectedElement?.data?.genericdata?.timezone?.get());
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedElement?.data?.triggerOnline.get()]);
@@ -39,26 +42,28 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
     async function onSubmit(e) {
         e.preventDefault();
 
-        if (validationError) {
+        // Check if cron statement is valid on save
+        if (validationError && !tabValue) {
             enqueueSnackbar('Invalid statement', { variant: 'error' });
             return;
         }
 
-        handleClose();
         setElements((els) =>
             els.map((el) => {
                 if (el.id === FlowState.selectedElement.id.get()) {
                     el.data = {
                         ...el.data,
                         triggerOnline: isOnline,
-                        schedule: scheduleStatement,
-                        scheduleType: tabValue ? 'rrule' : 'cron',
+                        schedule: tabValue ? seconds : scheduleStatement,
+                        scheduleType: tabValue ? 'cronseconds' : 'cron',
                         timezone: timezone,
                     };
                 }
                 return el;
             })
         );
+
+        handleClose();
     }
 
     return (
@@ -82,34 +87,6 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                                     {isOnline ? 'Scheduler will go live on save.' : 'Scheduler will be off on save.'}
                                 </Typography>
                             </Box>
-
-                            {/* <Autocomplete
-                                disablePortal
-                                value={type}
-                                id="combo-box-demo"
-                                onChange={(event, newValue) => {
-                                    setType(newValue);
-                                }}
-                                options={[]}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        label="Schedule type"
-                                        id="schecule_type"
-                                        size="small"
-                                        sx={{ mt: 2, fontSize: '.75rem', display: 'flex' }}
-                                        {...register('type')}
-                                    />
-                                )}
-                            />
-                            <TextField
-                                label="Schedule"
-                                id="schedule"
-                                size="small"
-                                // required
-                                sx={{ mb: 2, mt: 2, fontSize: '.75rem', display: 'flex' }}
-                                {...register('schedule', { required: false })}
-                            /> */}
                         </Box>
 
                         {/* Save/Close buttons */}
@@ -131,14 +108,13 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
 
                             {/* RRule warning */}
                             {tabValue ? (
-                                <Box position="absolute" width="600px" sx={{ background: 'rgba(123, 97, 255, 0.12)', right: '60px', top: '80px', p: 1, borderRadius: '6px' }}>
+                                <Box position="absolute" width="450px" sx={{ background: 'rgba(123, 97, 255, 0.12)', right: '60px', top: '80px', p: 1, borderRadius: '6px' }}>
                                     <Typography color="purple.main" fontSize={13}>
-                                        RRULE is experimental feature which is undergoing more testing.
+                                        CRON is limited to per minute schedules.
                                     </Typography>
 
                                     <Typography color="purple.main" fontSize={13} mt={1}>
-                                        CRON is limited to per minute schedules. If you need more frequent schedules less than one minute, it is safe to use per second frequency in
-                                        RRULE without other parameters.{' '}
+                                        Due to distributed locking leases, it is not advised to use schedules less then 3 seconds.
                                     </Typography>
                                 </Box>
                             ) : null}
@@ -150,7 +126,7 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                             <Tabs value={tabValue} onChange={handleTabChange} aria-label="schedule tabs">
                                 <Tab label="CRON" id="tab-0" aria-controls="tabpanel-0" sx={{ fontWeight: 700, fontSize: '1.0625rem', color: 'primary.main' }} />
-                                <Tab label="RRULE" id="tab-1" aria-controls="tabpanel-1" sx={{ fontWeight: 700, fontSize: '1.0625rem', color: 'primary.main' }} />
+                                <Tab label="Per second" id="tab-1" aria-controls="tabpanel-1" sx={{ fontWeight: 700, fontSize: '1.0625rem', color: 'primary.main' }} />
                             </Tabs>
                         </Box>
                         <TabPanel value={tabValue} index={0}>
@@ -163,7 +139,7 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                             />
                         </TabPanel>
                         <TabPanel value={tabValue} index={1}>
-                            <RRuleTab />
+                            <RRuleTab seconds={seconds} setSeconds={setSeconds} timezone={timezone} />
                         </TabPanel>
                     </Box>
                 </Box>

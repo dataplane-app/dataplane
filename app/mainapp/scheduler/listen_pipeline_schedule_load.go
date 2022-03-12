@@ -35,10 +35,9 @@ func PipelineSchedulerListen() {
 					if _, ok := config.PipelineScheduler[psc.Timezone]; ok {
 
 						log.Println("Scheduler remove by tag: ", psc.Timezone, psc.NodeID, "ok")
-						err := config.PipelineScheduler[psc.Timezone].RemoveByTag(psc.NodeID)
-						if err != nil {
-							log.Println("Remove by tag error", err)
-						}
+						config.PipelineScheduler[psc.Timezone].RemoveByReference(config.PipelineSchedulerJob[psc.NodeID])
+						delete(config.PipelineSchedulerJob, psc.NodeID)
+
 					}
 
 					// remove from database
@@ -65,10 +64,10 @@ func PipelineSchedulerListen() {
 			if config.Debug == "true" {
 				for i, v := range config.PipelineScheduler {
 					log.Println("Scheduler:", i, v.IsRunning(), v.Len())
-					jobs := v.Jobs()
-					for _, x := range jobs {
-						log.Printf("%+v\n", x)
-					}
+					// jobs := v.Jobs()
+					// for _, x := range jobs {
+					// 	log.Printf("%+v\n", x)
+					// }
 				}
 			}
 		}
