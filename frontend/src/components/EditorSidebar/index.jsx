@@ -2,7 +2,10 @@ import { faClock } from '@fortawesome/free-regular-svg-icons';
 import { faGlobe, faMapMarkedAlt, faPlayCircle, faRunning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Typography } from '@mui/material';
+import { useSnackbar } from 'notistack';
+import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { useMe } from '../../graphql/me';
 
 const defaultTypographyStyle = {
     fontSize: 11,
@@ -29,6 +32,13 @@ const defaultParentStyle = {
 const EditorSidebar = () => {
     const pythonUUID = uuidv4();
     const bashUUID = uuidv4();
+    const [timezone, setTimezone] = useState(null);
+
+    // Get user's timezone on load
+    const getMe = useMeHook(setTimezone);
+    useEffect(() => {
+        getMe();
+    }, [getMe]);
 
     const onDragStart = (event, nodeType, id, nodeData) => {
         const data = { nodeType, id, nodeData };
@@ -53,7 +63,7 @@ const EditorSidebar = () => {
                     icon: faClock,
                     text: 'Scheduler',
                     eventType: 'scheduleNode',
-                    data: { triggerOnline: false, genericdata: { schedule: '', timezone: '', scheduleType: '' } },
+                    data: { triggerOnline: false, genericdata: { schedule: '', timezone, scheduleType: '' } },
                 },
                 // {
                 //     id: uuidv4(),
@@ -145,3 +155,25 @@ const EditorSidebar = () => {
 };
 
 export default EditorSidebar;
+
+// ----- Custom hook
+const useMeHook = (setTimezone) => {
+    // GraphQL hook
+    const getMe = useMe();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get timezone
+    return async () => {
+        const response = await getMe();
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get timezone: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setTimezone(response.timezone);
+        }
+    };
+};

@@ -1,7 +1,6 @@
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography } from '@mui/material';
-import { getTimeZoneOffSet } from './CronTab';
 
-export function CronSecondsTab({ seconds, setSeconds, timezone }) {
+export function CronSecondsTab({ seconds, setSeconds }) {
     return (
         <Box display="flex" flexDirection="column">
             <Box mt={1} sx={{ width: 650 }} display="flex" alignItems="center">
@@ -63,9 +62,6 @@ export function CronSecondsTab({ seconds, setSeconds, timezone }) {
                     </TableCell>
                     <TableCell component="th" scope="row">
                         {formatTime(date, seconds, idx)}
-                    </TableCell>
-                    <TableCell component="th" scope="row">
-                        {timezone && timezone + ' ' + getTimeZoneOffSet(timezone)}
                     </TableCell>
                 </TableRow>
             );

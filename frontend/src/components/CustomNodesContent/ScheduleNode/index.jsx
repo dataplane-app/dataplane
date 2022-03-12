@@ -11,6 +11,7 @@ import { customSourceHandle, customSourceHandleDragging } from '../../../utils/h
 import ScheduleTriggerNodeItem from '../../MoreInfoContent/ScheduleTriggerNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
 import { getColor } from '../utils';
+import cronstrue from 'cronstrue';
 
 const ScheduleNode = (props) => {
     // Theme hook
@@ -23,6 +24,7 @@ const ScheduleNode = (props) => {
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
     const [borderColor, setBorderColor] = useState('#c4c4c4');
+    const [schedule, setSchedule] = useState(null);
 
     useEffect(() => {
         setIsEditorPage(FlowState.isEditorPage.get());
@@ -47,6 +49,19 @@ const ScheduleNode = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [RunState[props.id].status?.get()]);
 
+    // Set description
+    useEffect(() => {
+        if (props.data.genericdata.scheduleType === 'cron') {
+            setSchedule(cronstrue.toString(props.data.genericdata.schedule, { throwExceptionOnParseError: false }));
+        } else {
+            if (props.data.genericdata.schedule === '1') {
+                setSchedule('Every second');
+            } else {
+                setSchedule('Every ' + props.data.genericdata.schedule + ' seconds');
+            }
+        }
+    }, [props.data.genericdata.schedule, props.data.genericdata.scheduleType, schedule]);
+
     return (
         <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>
             <Handle type="source" position="right" id="schedule" style={FlowState.isDragging.get() ? customSourceHandleDragging : customSourceHandle(theme.palette.mode)} />
@@ -59,7 +74,7 @@ const ScheduleNode = (props) => {
                         </Typography>
 
                         <Typography fontSize={10} mt={1}>
-                            Every 5 minutes
+                            {schedule}
                         </Typography>
                     </Grid>
                 </Tooltip>
