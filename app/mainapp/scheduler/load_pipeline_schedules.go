@@ -10,7 +10,10 @@ import (
 
 func LoadPipelineSchedules() {
 
-	// Load the pipeline schedules
+	// Clear any existing pipelines
+	RemovePipelineSchedules()
+
+	// ----------- Load the pipeline schedules -------------
 	// log.Printf("%+v\n", config.Scheduler)
 	// log.Println("Before loading:", config.Scheduler.Len())
 	var pipelineSchedules []models.Scheduler

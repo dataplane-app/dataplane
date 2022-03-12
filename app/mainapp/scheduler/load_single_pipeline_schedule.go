@@ -4,15 +4,17 @@ import (
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	"dataplane/mainapp/logging"
+	"dataplane/mainapp/pipelines"
 	"log"
 
 	"gorm.io/gorm"
 )
 
-func mytask(nodeID string, environmentID string, timezone string) {
+func mytask(nodeID string, pipelineID string, environmentID string, timezone string) {
 
 	if config.Debug == "true" {
-		log.Println("Trigger me", nodeID, timezone)
+		log.Println("Schedule run:", nodeID, timezone)
 	}
 
 	err2 := database.DBConn.Model(&models.SchedulerLock{}).Create(map[string]interface{}{
@@ -26,6 +28,13 @@ func mytask(nodeID string, environmentID string, timezone string) {
 		return
 	}
 
+	_, err := pipelines.RunPipeline(pipelineID, environmentID)
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact("Pipeline schedule run error:", err)
+		}
+	}
+
 }
 
 func LoadSingleSchedule(s models.Scheduler) {
@@ -37,16 +46,16 @@ func LoadSingleSchedule(s models.Scheduler) {
 
 		if err == nil && s.Online {
 
-			_, _ = config.PipelineScheduler[s.Timezone].Tag("pipelines", s.NodeID).Cron(s.Schedule).Do(mytask, s.NodeID, s.EnvironmentID, s.Timezone)
+			config.PipelineSchedulerJob[s.NodeID], _ = config.PipelineScheduler[s.Timezone].Cron(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, s.Timezone)
 
 		}
 	case "cronseconds":
 
-		err := PipelineTimezoneScheduler(s.Timezone)
+		err := PipelineTimezoneScheduler("UTC")
 
 		if err == nil && s.Online {
 
-			config.PipelineScheduler[s.Timezone].Tag("pipelines", s.NodeID).CronWithSeconds(s.Schedule).Do(mytask, s.NodeID, s.EnvironmentID, s.Timezone)
+			config.PipelineSchedulerJob[s.NodeID], _ = config.PipelineScheduler["UTC"].CronWithSeconds(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, "UTC")
 
 		}
 
