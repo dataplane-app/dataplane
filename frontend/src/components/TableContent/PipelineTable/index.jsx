@@ -17,6 +17,7 @@ import DeletePipelineDrawer from '../../DrawerContent/DeletePipelineDrawer';
 import CustomChip from '../../CustomChip';
 import TurnOffPipelineDrawer from '../../DrawerContent/TurnOffPipelineDrawer';
 import cronstrue from 'cronstrue';
+import { useGlobalAuthState } from '../../../Auth/UserAuth';
 
 const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
     // React router
@@ -26,6 +27,9 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
     const [isOpenManage, setIsOpenManage] = useState(false);
 
     const FlowState = useGlobalFlowState();
+
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
 
     // Drawer state
     const [isOpenDeletePipeline, setIsOpenDeletePipeline] = useState(false);
@@ -101,7 +105,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                 Header: 'Schedule',
                 accessor: (row) => [row.schedule, row.schedule_type],
                 Cell: (row) => {
-                    return <Typography>{formatSchedule(row.value[0], row.value[1])}</Typography>;
+                    return <Typography variant="body2">{formatSchedule(row.value[0], row.value[1])}</Typography>;
                 },
             },
             {
@@ -113,7 +117,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
         ],
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [environmentID]
+        [environmentID, jwt]
     );
 
     // Use the state and functions returned from useTable to build your UI
