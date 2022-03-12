@@ -375,7 +375,6 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	// ======= Update the schedule trigger ==========
 	if triggerType == "schedule" {
-
 		// Add back to schedule
 		err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
 		if err != nil {
@@ -500,6 +499,37 @@ func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID 
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to update trigger node.")
+	}
+
+	// ---- if the trigger is a scheduler, add or remove from the schedule
+	// ======= Update the schedule trigger ==========
+	if p.NodeTypeDesc == "schedule" {
+
+		var plSchedules []*models.Scheduler
+		err := database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&plSchedules).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			log.Println("Removal of changed trigger schedules:", err)
+		}
+
+		if len(plSchedules) > 0 {
+			for _, psc := range plSchedules {
+
+				pipelineSchedules := models.Scheduler{
+					NodeID:        psc.NodeID,
+					PipelineID:    psc.PipelineID,
+					EnvironmentID: psc.EnvironmentID,
+					ScheduleType:  psc.ScheduleType,
+					Schedule:      psc.Schedule,
+					Timezone:      psc.Timezone,
+					Online:        online,
+				}
+				// Add back to schedule
+				err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
+				if err != nil {
+					logging.PrintSecretsRedact("NATS error:", err)
+				}
+			}
+		}
 	}
 
 	return "Pipeline trigger updated", nil

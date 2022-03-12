@@ -31,10 +31,10 @@ func PipelineSchedulerListen() {
 
 					// remove from scheduler -- can't be done here, needs to be removed on leader node
 
-					log.Println("Scheduler remove by tag: ", psc.Timezone, psc.NodeID, "Q")
+					// log.Println("Scheduler remove by id: ", psc.Timezone, psc.NodeID, "Q")
 					if _, ok := config.PipelineScheduler[psc.Timezone]; ok {
 
-						log.Println("Scheduler remove by tag: ", psc.Timezone, psc.NodeID, "ok")
+						log.Println("Scheduler remove by id: ", psc.Timezone, psc.NodeID, "ok")
 						config.PipelineScheduler[psc.Timezone].RemoveByReference(config.PipelineSchedulerJob[psc.NodeID])
 						delete(config.PipelineSchedulerJob, psc.NodeID)
 
