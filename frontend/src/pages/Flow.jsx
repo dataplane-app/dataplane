@@ -103,7 +103,7 @@ const Flow = () => {
 
     useEffect(() => {
         if (!pipeline || Object.keys(pipeline).length === 0) {
-            history.push('/');
+            // history.push('/');
             return null;
         }
         document.querySelector('#root div').scrollTo(0, 0);

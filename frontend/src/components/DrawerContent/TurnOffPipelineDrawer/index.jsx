@@ -5,7 +5,7 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
 import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
 
-const TurnOffPipelineDrawer = ({ handleClose, name, pipelineID, environmentID, getPipelineFlow }) => {
+const TurnOffPipelineDrawer = ({ handleClose, name, pipelineID, environmentID, getPipelineFlow, getPipeline }) => {
     const { closeSnackbar } = useSnackbar();
 
     // Clear snackbar on load
@@ -15,7 +15,7 @@ const TurnOffPipelineDrawer = ({ handleClose, name, pipelineID, environmentID, g
     }, []);
 
     // Graphql hook
-    const turnOnOffPipeline = useTurnOnOffPipelineHook(pipelineID, environmentID, handleClose, getPipelineFlow);
+    const turnOnOffPipeline = useTurnOnOffPipelineHook(pipelineID, environmentID, handleClose, getPipelineFlow, getPipeline);
 
     return (
         <Box position="relative">
@@ -60,7 +60,7 @@ const TurnOffPipelineDrawer = ({ handleClose, name, pipelineID, environmentID, g
 export default TurnOffPipelineDrawer;
 
 // ------ Custom hook
-export const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose, refreshData) => {
+export const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose, refreshData, getPipeline) => {
     // GraphQL hook
     const turnOnOffPipeline = useTurnOnOffPipeline();
 
@@ -79,8 +79,9 @@ export const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose,
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
-            refreshData();
             handleClose();
+            refreshData();
+            getPipeline();
         }
     };
 };
