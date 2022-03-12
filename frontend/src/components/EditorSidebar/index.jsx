@@ -157,7 +157,7 @@ const EditorSidebar = () => {
 export default EditorSidebar;
 
 // ----- Custom hook
-const useMeHook = (setTimezone) => {
+export const useMeHook = (setTimezone) => {
     // GraphQL hook
     const getMe = useMe();
 

@@ -1,13 +1,15 @@
 import { Timezone } from './Timezone';
-import { Box, Link, Paper, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography } from '@mui/material';
+import { Box, Link, Paper, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import cronstrue from 'cronstrue';
 import later from '@breejs/later';
 import { isValidCron } from 'cron-validator';
+import { useMeHook } from '../../EditorSidebar';
 
 export function CronTab({ setValidationError, scheduleStatement, setScheduleStatement, timezone, setTimezone }) {
     // Local State
     const [schedule, setSchedule] = useState([]);
+    const [userTimezone, setUserTimezone] = useState('');
 
     // Set schedule for upcoming runs on cron expression change
     useEffect(() => {
@@ -20,6 +22,12 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scheduleStatement]);
+
+    // Get user's timezone on load
+    const getMe = useMeHook(setUserTimezone);
+    useEffect(() => {
+        getMe();
+    }, [getMe]);
 
     return (
         <Box display="flex" gap={8}>
@@ -81,12 +89,20 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
                                             <TableCell component="th" scope="row">
                                                 {row.getFullYear()}
                                             </TableCell>
-                                            <TableCell component="th" scope="row">
-                                                {formatTime(row)}
-                                            </TableCell>
-                                            <TableCell component="th" scope="row">
-                                                {timezone && timezone + ' ' + getTimeZoneOffSet(timezone)}
-                                            </TableCell>
+                                            {userTimezone ? (
+                                                <Tooltip
+                                                    title={formatUsersTime(row, userTimezone, timezone) + ' ' + userTimezone + ' ' + getTimeZoneOffSet(userTimezone)}
+                                                    placement="top">
+                                                    <TableCell component="th" scope="row">
+                                                        {formatTime(row)}
+                                                    </TableCell>
+                                                </Tooltip>
+                                            ) : null}
+                                            <Tooltip title={'Node ID: '} placement="top">
+                                                <TableCell component="th" scope="row">
+                                                    {timezone && timezone + ' ' + getTimeZoneOffSet(timezone)}
+                                                </TableCell>
+                                            </Tooltip>
                                         </TableRow>
                                     );
                                 })}
@@ -148,5 +164,26 @@ function formatTime(date) {
 // Takes timezone name and return its offset
 // Example 'Europe/Istanbul' => (GMT+3)
 export function getTimeZoneOffSet(timezoneName) {
+    if (!timezoneName) return;
     return '(' + new Intl.DateTimeFormat('en', { timeZoneName: 'short', timeZone: timezoneName }).format(new Date()).split(' ')[1] + ')';
+}
+
+function formatUsersTime(date, userTimezone, timezone) {
+    const timezonediff = getOffsetBetweenTimezonesForDate(date, userTimezone, timezone);
+    const userDate = new Date(date.getTime() + timezonediff);
+
+    return formatTime(userDate);
+}
+
+function getOffsetBetweenTimezonesForDate(date, timezone1, timezone2) {
+    const timezone1Date = convertDateToAnotherTimeZone(date, timezone1);
+    const timezone2Date = convertDateToAnotherTimeZone(date, timezone2);
+    return timezone1Date.getTime() - timezone2Date.getTime();
+}
+
+function convertDateToAnotherTimeZone(date, timezone) {
+    const dateString = date.toLocaleString('en-US', {
+        timeZone: timezone,
+    });
+    return new Date(dateString);
 }
