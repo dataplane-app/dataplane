@@ -54,10 +54,10 @@ const ScheduleNode = (props) => {
         if (props.data.genericdata.scheduleType === 'cron') {
             setSchedule(cronstrue.toString(props.data.genericdata.schedule, { throwExceptionOnParseError: false }));
         } else {
-            if (props.data.genericdata.schedule === '1') {
+            if (props.data.genericdata.schedule === '*/1 * * * * *') {
                 setSchedule('Every second');
             } else {
-                setSchedule('Every ' + props.data.genericdata.schedule + ' seconds');
+                setSchedule('Every ' + props.data.genericdata.schedule.split(' ')[0].replace('*/', '') + ' seconds');
             }
         }
     }, [props.data.genericdata.schedule, props.data.genericdata.scheduleType, schedule]);

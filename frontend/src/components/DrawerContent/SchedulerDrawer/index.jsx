@@ -35,7 +35,7 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
 
         if (FlowState.selectedElement?.data?.genericdata?.scheduleType?.get() === 'cronseconds') {
             setTabValue(1);
-            setSeconds(FlowState.selectedElement?.data?.genericdata?.schedule?.get() || '');
+            setSeconds(FlowState.selectedElement?.data?.genericdata?.schedule?.get().split(' ')[0].replace('*/', ''));
         } else {
             setScheduleStatement(FlowState.selectedElement?.data?.genericdata?.schedule?.get() || '');
         }
@@ -60,7 +60,7 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                         ...el.data,
                         triggerOnline: isOnline,
                         genericdata: {
-                            schedule: tabValue ? seconds : scheduleStatement,
+                            schedule: tabValue ? '*/' + seconds + ' * * * * *' : scheduleStatement,
                             scheduleType: tabValue ? 'cronseconds' : 'cron',
                             timezone: timezone,
                         },
