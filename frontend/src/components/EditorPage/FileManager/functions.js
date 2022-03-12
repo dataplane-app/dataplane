@@ -59,3 +59,33 @@ export function getPath(object, id) {
         }
     }
 }
+
+export function isFolder(selected, data) {
+    if (!selected) return;
+
+    const selectedInfo = findNodeById(data.children, selected);
+    if (selectedInfo) {
+        if (selectedInfo.children) {
+            // Is folder\
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
+export function removeById(arr, targetId) {
+    return arr.reduce(
+        (acc, obj) =>
+            obj.id === targetId
+                ? acc
+                : [
+                      ...acc,
+                      {
+                          ...obj,
+                          ...(obj.children && { children: removeById(obj.children, targetId) }),
+                      },
+                  ],
+        []
+    );
+}

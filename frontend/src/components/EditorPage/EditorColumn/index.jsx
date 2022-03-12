@@ -2,10 +2,11 @@ import { Box, Chip, Grid, IconButton, Typography, useTheme } from '@mui/material
 import { forwardRef, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExpandArrowsAlt, faPlayCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faPlayCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import { Downgraded } from '@hookstate/core';
 import { useState } from 'react';
+import CustomDragHandle from '../../CustomDragHandle';
 
 const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Editor state
@@ -164,9 +165,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 )}
             </Box>
             {children}
-            <Box sx={{ position: 'absolute', bottom: 2, left: 15, cursor: 'pointer' }}>
-                <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} className="drag-handle" />
-            </Box>
+            <CustomDragHandle bottom={7} left={15} />
         </div>
     );
 });

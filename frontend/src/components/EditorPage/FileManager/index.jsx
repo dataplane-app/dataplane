@@ -1,4 +1,4 @@
-import { faChevronDown, faChevronRight, faExpandArrowsAlt, faFile, faFolder, faPencilAlt, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronRight, faFile, faFolder, faPencilAlt, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TreeItem from '@mui/lab/TreeItem';
 import TreeView from '@mui/lab/TreeView';
@@ -10,7 +10,9 @@ import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { faFileAlt } from '@fortawesome/free-regular-svg-icons';
 import { v4 as uuidv4 } from 'uuid';
 import { useSnackbar } from 'notistack';
-import { findNodeById, findNodeByName, getParentId, getPath } from './functions';
+import { findNodeById, findNodeByName, getParentId, getPath, isFolder, removeById } from './functions';
+import CustomDragHandle from '../../CustomDragHandle';
+import { Downgraded } from '@hookstate/core';
 
 const MOCK_ROOT_ID = 'all';
 
@@ -24,22 +26,34 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const [workerGroups, setWorkerGroups] = useState([]);
     const [selected, setSelected] = useState(null);
     const [expanded, setExpanded] = useState([]);
-    const [data] = useState(MOCK_DATA);
+    const [data, setData] = useState(MOCK_DATA);
 
     // File/folder creation states
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [newFileName, setNewFileName] = useState('');
     const [newFolderName, setNewFolderName] = useState('');
     const [whatTypeIsCreating, setWhatTypeIsCreating] = useState('file');
+    const [isEditing, setIsEditing] = useState(false);
+    const [tmpFileName, setTmpFileName] = useState(null);
 
     // Local ref
     const newFileRef = useRef();
+    const editingFileRef = useRef();
 
-    // Check if user clicked outside when adding a new file/folder
+    // Check if user clicked outside when adding or editing a new file/folder
     useEffect(() => {
         const handleClickOutside = (event) => {
+            // Check when creating
             if (newFileRef.current && !newFileRef.current.contains(event.target)) {
                 setIsAddingNew(false);
+                setNewFileName('');
+                setNewFolderName('');
+            }
+
+            // Check when editing
+            if (event.target.className !== 'treeItemInput') {
+                setIsEditing(false);
+                setTmpFileName(null);
             }
         };
         document.addEventListener('click', handleClickOutside, true);
@@ -71,6 +85,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const escFunction = useCallback((event) => {
         if (event.keyCode === 27) {
             setIsAddingNew(false);
+            setIsEditing(false);
+            setTmpFileName(null);
         }
     }, []);
 
@@ -141,7 +157,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         }
 
         // Success snack
-        enqueueSnackbar(`File ${newFileName} create!`, { variant: 'success' });
+        enqueueSnackbar(`File ${newFileName} created!`, { variant: 'success' });
 
         // Set values to default
         setNewFileName('');
@@ -202,11 +218,116 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         }
 
         // Success snack
-        enqueueSnackbar(`Folder ${newFolderName} create!`, { variant: 'success' });
+        enqueueSnackbar(`Folder ${newFolderName} created!`, { variant: 'success' });
 
         // Set values to default
         setNewFolderName('');
         setIsAddingNew(false);
+    };
+
+    // ####### Edit ########
+    const handleEdit = () => {
+        changeTreeStyling();
+        setIsEditing(true);
+    };
+
+    const handleEditFileChange = (e, nodes) => {
+        if (nodes.id === selected) {
+            setTmpFileName(e.target.value);
+        }
+    };
+
+    const handleEditKeyPress = (e, nodes) => {
+        if (e.charCode === 13) {
+            const folder = isFolder(selected, data);
+            const elementToChange = findNodeById(data.children, selected);
+
+            if (folder) {
+                const check = checkFolderName(tmpFileName);
+                const alreadyExistsFolder = findNodeByName(data?.children, tmpFileName);
+
+                if (!check) {
+                    setIsEditing(false);
+                    setTmpFileName(null);
+                    return;
+                }
+                if (alreadyExistsFolder) {
+                    enqueueSnackbar(`This folder already exists!`, { variant: 'error' });
+                    setTmpFileName(null);
+                    setIsEditing(false);
+                    return;
+                }
+
+                if (elementToChange) {
+                    elementToChange.name = tmpFileName;
+                    enqueueSnackbar(`Changed folder name to ${tmpFileName}!`, { variant: 'success' });
+
+                    setTmpFileName(null);
+                    setIsEditing(false);
+                    changeTreeStyling();
+                }
+            } else {
+                const check = checkFileName(tmpFileName);
+                const alreadyExistsFile = findNodeByName(data?.children, tmpFileName);
+
+                if (!check) {
+                    setIsEditing(false);
+                    setTmpFileName(null);
+                    return;
+                }
+                if (alreadyExistsFile) {
+                    enqueueSnackbar(`This file already exists!`, { variant: 'error' });
+                    setTmpFileName(null);
+                    setIsEditing(false);
+                    return;
+                }
+
+                if (elementToChange) {
+                    elementToChange.name = tmpFileName;
+                    enqueueSnackbar(`Changed file name to ${tmpFileName}!`, { variant: 'success' });
+
+                    setTmpFileName(null);
+                    setIsEditing(false);
+                    changeTreeStyling();
+                    selectAndOpenNewFile(nodes);
+                }
+            }
+        }
+    };
+
+    // ####### Delete ########
+    const handleDeleteIconClick = () => {
+        // Check if it's file or folder
+        const isTryingToDeleteFolder = isFolder(selected, data);
+
+        const current = findNodeById(data.children, selected);
+        let message = `Are you sure you want to delete - ${current?.name}?`;
+
+        if (current?.children && current?.children.length > 0) {
+            message += ` ${current?.children.length} file(s) will be removed!`;
+        }
+
+        const askForConfirmation = window.confirm(message);
+
+        if (askForConfirmation === true) {
+            const removed = removeById(data.children, selected);
+            const newData = { ...data, children: removed };
+            setData(newData);
+        }
+
+        // Remove files from tab
+        if (!isTryingToDeleteFolder) {
+            const tabs = Editor.tabs.attach(Downgraded).get();
+            const newTabs = tabs.filter((t) => t.id !== selected);
+
+            if (newTabs.length === 0) {
+                Editor.selectedFile.set(null);
+            } else {
+                Editor.selectedFile.set(newTabs[newTabs.length - 1]);
+            }
+
+            Editor.tabs.set(newTabs);
+        }
     };
 
     // ####### Utils ########
@@ -305,6 +426,17 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         return folderName;
     };
 
+    const changeTreeStyling = () => {
+        const currentDOMElement = document.getElementById(`file_${selected}`);
+
+        if (currentDOMElement && !isEditing) {
+            currentDOMElement.focus();
+            currentDOMElement.select();
+        } else {
+            currentDOMElement.style.border = 'none';
+        }
+    };
+
     // Render files and folders to UI
     const renderTree = (nodes) => {
         return (
@@ -314,10 +446,29 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 icon={!nodes.children && <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.tabTextColorNotActive', fontSize: 5 }} />}
                 key={nodes.id}
                 nodeId={nodes.id}
-                label={nodes.name}
+                ref={selected === nodes.id ? editingFileRef : null}
+                label={
+                    <input
+                        id={`file_${nodes.id}`}
+                        spellcheck="false"
+                        value={tmpFileName && selected === nodes.id ? tmpFileName : tmpFileName === '' && selected === nodes.id ? '' : nodes.name}
+                        onChange={(e) => handleEditFileChange(e, nodes)}
+                        onKeyPress={(e) => handleEditKeyPress(e, nodes)}
+                        className="treeItemInput"
+                        style={{
+                            border: `${selected === nodes.id && isEditing ? '1px solid #000' : 'none'}`,
+                            outline: 'none',
+                            background: 'transparent',
+                            color: `${selected === nodes.id && isEditing ? '#000' : 'transparent'}`,
+                            textShadow: '0 0 0 #000',
+                            cursor: 'pointer',
+                        }}
+                        readOnly={selected !== nodes.id && !isEditing}
+                    />
+                }
                 onClick={() => handleFileClick(nodes)}>
                 <Box className={`${nodes.id === MOCK_ROOT_ID ? 'showOnHover' : ''} hidden_controls tree-${nodes.id}`}>
-                    <IconButton aria-label="Edit File" onClick={() => {}}>
+                    <IconButton aria-label="Edit File" onClick={handleEdit}>
                         <Box component={FontAwesomeIcon} icon={faPencilAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
                     </IconButton>
                     <IconButton aria-label="New File" onClick={handleNewFileIconClick}>
@@ -326,7 +477,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                     <IconButton aria-label="New Folder" onClick={handleNewFolderIconClick}>
                         <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
                     </IconButton>
-                    <IconButton aria-label="Remove folder">
+                    <IconButton aria-label="Remove folder" onClick={handleDeleteIconClick}>
                         <Box component={FontAwesomeIcon} icon={faTimes} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
                     </IconButton>
                 </Box>
@@ -369,10 +520,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
         // Set file path
         const path = getPath(data.children, selected);
-        console.log(selected);
         Editor.currentPath.set(path);
-
-        console.log(path);
     };
 
     return (
@@ -433,9 +581,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             </Box>
 
             {children}
-            <Box sx={{ position: 'absolute', bottom: 2, left: 5, cursor: 'pointer' }}>
-                <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} className="drag-handle" />
-            </Box>
+            <CustomDragHandle left={8} />
         </div>
     );
 });
