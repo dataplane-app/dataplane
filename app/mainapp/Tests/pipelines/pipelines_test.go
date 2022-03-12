@@ -19,6 +19,7 @@ For individual tests - in separate window run: go run server.go
 go test -p 1 -v -count=1 -run TestPipelines dataplane/mainapp/Tests/pipelines
 * Login
 * Create pipeline
+* Get pipeline
 * Get pipelines
 * Add pipeline flow
 * Update pipeline flow
@@ -92,9 +93,36 @@ func TestPipelines(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create pipeline 200 status code")
 
-	// -------- Get pipelines -------------
+	// -------- Get pipeline -------------
 
 	query := `query {
+			getPipeline(
+				environmentID: "` + envID + `",
+				pipelineID: "` + pipelineId + `"
+				){
+					pipelineID
+					name
+					environmentID
+					description
+					active
+					online
+					current
+				}
+			}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get pipelines 200 status code")
+
+	// -------- Get pipelines -------------
+
+	query = `query {
 		getPipelines(
 			environmentID: "` + envID + `",
 			){
@@ -139,7 +167,8 @@ func TestPipelines(t *testing.T) {
 						y: 315
 					  },
 					  data: {
-						language: "Bash"
+						language: "Bash",
+						genericdata: null
 					  }
 					},
 					active: false
@@ -159,7 +188,8 @@ func TestPipelines(t *testing.T) {
 						y: 315
 					  },
 					  data: {
-						language: "Bash"
+						language: "Bash",
+						genericdata: null
 					  }
 					},
 					active: false
@@ -222,7 +252,12 @@ func TestPipelines(t *testing.T) {
 						y: 315
 					  },
 					  data: {
-						language: "Bash"
+						language: "Bash",
+						genericdata: {
+							schedule: "*/1 * * * * *",
+							scheduleType: "cronseconds",
+							timezone: "Europe/London"
+						}
 					  }
 					},
 					active: false
@@ -242,7 +277,12 @@ func TestPipelines(t *testing.T) {
 						y: 315
 					  },
 					  data: {
-						language: "Bash"
+						language: "Bash",
+						genericdata: {
+							schedule: "*/1 * * * * *",
+							scheduleType: "cronseconds",
+							timezone: "Europe/London"
+						}
 					  }
 					},
 					active: false
