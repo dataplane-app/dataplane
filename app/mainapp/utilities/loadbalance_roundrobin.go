@@ -17,13 +17,19 @@ var i = cmap.New()
 func Balance(workers []models.WorkerStats, workerGroup string) string {
 
 	// Retrieve current count from map.
+	var worker models.WorkerStats
 	var count int
 	if tmp, ok := i.Get(workerGroup); ok {
 		count = tmp.(int)
 	}
 
 	// worker := workers[i[workerGroup]]
-	worker := workers[count]
+	// Timing check
+	if count >= len(workers) {
+		worker = workers[0]
+	} else {
+		worker = workers[count]
+	}
 	count++
 	// i[workerGroup]++
 
