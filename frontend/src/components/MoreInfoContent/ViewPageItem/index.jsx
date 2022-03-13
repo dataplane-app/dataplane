@@ -1,21 +1,27 @@
 import { MenuItem } from '@mui/material';
+import { useParams } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import { useGlobalFlowState } from '../../../pages/Flow';
 import { useTurnOnOffPipelineHook } from '../../DrawerContent/TurnOffPipelineDrawer';
+import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 
 const ViewPageItem = (props) => {
     const history = useHistory();
 
     // Global state
     const FlowState = useGlobalFlowState();
+    const Environment = useGlobalEnvironmentState();
+
+    // URI parameter
+    const { pipelineId } = useParams();
 
     // Graphql hook
-    const turnOnOffPipeline = useTurnOnOffPipelineHook(props.pipeline.pipelineID, props.pipeline.environmentID, props.handleCloseMenu, props.getPipelineFlow, props.getPipeline);
+    const turnOnOffPipeline = useTurnOnOffPipelineHook(pipelineId, Environment.id.get(), props.handleCloseMenu, props.getPipelineFlow, props.getPipeline);
 
     // Handle edit button
     const handleGoToEditorPage = () => {
         FlowState.isEditorPage.set(true);
-        history.push({ pathname: `/pipelines/flow/${props.pipeline.pipelineID}`, state: props.pipeline });
+        history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: props.pipeline });
     };
 
     // Handle turn off button
