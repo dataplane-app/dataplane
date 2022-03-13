@@ -6,7 +6,7 @@ import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
-import { useHistory, useLocation, useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import CustomLine from '../../components/CustomNodesContent/CustomLine';
 import PublishPipelineDrawer from '../../components/DrawerContent/PublishPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
@@ -25,7 +25,6 @@ const View = () => {
     // Hooks
     const theme = useTheme();
     const [pipeline, setPipeline] = useState(null);
-    // const { state } = useLocation();
     const getPipelineFlow = useGetPipelineFlowHook(pipeline);
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
