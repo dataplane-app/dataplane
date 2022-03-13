@@ -10,6 +10,7 @@ type Pipelines {
   current: String!
   workerGroup: String!
   created_at: Time!
+  updated_at: Time!
   node_type: String!
   node_type_desc: String!
   schedule: String!

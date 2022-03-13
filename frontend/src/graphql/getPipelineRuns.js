@@ -13,6 +13,7 @@ const query = gql`
             run_json
             created_at
             ended_at
+            updated_at
         }
     }
 `;

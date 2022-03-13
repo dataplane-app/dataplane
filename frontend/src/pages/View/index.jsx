@@ -144,7 +144,7 @@ const View = () => {
                 </Grid>
 
                 {/* Run/Stop button, Chips, Timer */}
-                <ActionLayer setElements={setElements} environmentId={Environment.id.get()} />
+                <ActionLayer setElements={setElements} environmentId={Environment.id.get()} pipeline={pipeline} />
             </Box>
             {!FlowState.isOpenLogDrawer.get() && !isOpenAnalytics ? (
                 <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>

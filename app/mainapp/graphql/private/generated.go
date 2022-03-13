@@ -223,6 +223,7 @@ type ComplexityRoot struct {
 		PipelineID    func(childComplexity int) int
 		Schedule      func(childComplexity int) int
 		ScheduleType  func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
 		WorkerGroup   func(childComplexity int) int
 	}
 
@@ -1603,6 +1604,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Pipelines.ScheduleType(childComplexity), true
 
+	case "Pipelines.updated_at":
+		if e.complexity.Pipelines.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.UpdatedAt(childComplexity), true
+
 	case "Pipelines.workerGroup":
 		if e.complexity.Pipelines.WorkerGroup == nil {
 			break
@@ -2819,6 +2827,7 @@ type Pipelines {
   current: String!
   workerGroup: String!
   created_at: Time!
+  updated_at: Time!
   node_type: String!
   node_type_desc: String!
   schedule: String!
@@ -9843,6 +9852,41 @@ func (ec *executionContext) _Pipelines_created_at(ctx context.Context, field gra
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Pipelines_updated_at(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Pipelines_node_type(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -16815,6 +16859,16 @@ func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet
 		case "created_at":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Pipelines_created_at(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updated_at":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Pipelines_updated_at(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

@@ -7,16 +7,17 @@ import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
 import { useGlobalFlowState } from '../Flow';
 
-export default function RunsDropdown({ environmentID, setElements, setPrevRunTime }) {
+export default function RunsDropdown({ environmentID, setElements, setPrevRunTime, pipeline }) {
     // Global states
     const RunState = useGlobalRunState();
 
     // Local state
     const [selectedRun, setSelectedRun] = useState();
     const [runs, setRuns] = useState([]);
+    const [isNewFlow, setIsNewFlow] = useState(true);
 
     // GraphQL hooks
-    const getPipelineRuns = useGetPipelineRunsHook(environmentID, setRuns, setSelectedRun);
+    const getPipelineRuns = useGetPipelineRunsHook(environmentID, setRuns, setSelectedRun, pipeline);
     const getPipelineTasksRun = usePipelineTasksRunHook();
 
     // Get pipeline runs on load and environment change and after each run.
@@ -33,6 +34,15 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [RunState.pipelineRunsTrigger.get()]);
+
+    // Set flow status,color on change
+    useEffect(() => {
+        if (runs.length === 0 || !pipeline) return;
+        if (pipeline.updated_at < runs[0].updated_at) {
+            setSelectedRun(runs[0]);
+            setIsNewFlow(false);
+        }
+    }, [pipeline, runs]);
 
     // Update elements on run dropdown change
     useEffect(() => {
@@ -52,7 +62,21 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
 
     return (
         <Grid item alignItems="center" display="flex" width={520}>
-            {selectedRun || runs.length === 0 ? (
+            {selectedRun ? (
+                <Autocomplete
+                    id="run_autocomplete"
+                    onChange={(event, newValue) => {
+                        setSelectedRun(newValue);
+                    }}
+                    value={selectedRun}
+                    disableClearable
+                    sx={{ minWidth: '520px' }}
+                    options={runs}
+                    getOptionLabel={(a) => formatDate(a.created_at) + ' - ' + a.run_id}
+                    renderInput={(params) => <TextField {...params} label="Run" id="run" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
+                />
+            ) : null}
+            {isNewFlow ? (
                 <Autocomplete
                     id="run_autocomplete"
                     onChange={(event, newValue) => {
@@ -71,7 +95,7 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
 }
 
 // ------ Custom hook
-export const useGetPipelineRunsHook = (environmentID, setRuns, setSelectedRun) => {
+export const useGetPipelineRunsHook = (environmentID, setRuns, setSelectedRun, pipeline) => {
     // GraphQL hook
     const getPipelineRuns = useGetPipelineRuns();
 
@@ -93,7 +117,6 @@ export const useGetPipelineRunsHook = (environmentID, setRuns, setSelectedRun) =
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setRuns(response);
-            setSelectedRun(response[0]);
         }
     };
 };
