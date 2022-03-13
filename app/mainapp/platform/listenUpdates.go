@@ -53,7 +53,7 @@ func PlatformNodeListen() {
 			// I am the leader, load schedules.
 			if config.Leader == config.MainAppID {
 
-				if config.Debug == "true" {
+				if config.Debug == "true" || config.SchedulerDebug == "true" {
 					log.Println("Leader election:", config.Leader, config.MainAppID)
 				}
 

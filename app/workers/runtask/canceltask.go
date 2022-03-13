@@ -14,13 +14,19 @@ func Canceltask() fiber.Handler {
 
 	return func(c *fiber.Ctx) error {
 
+		var TasksRun Task
+
 		id := string(c.Params("id"))
 
-		if Tasks[id].PID != 0 {
-			_ = syscall.Kill(-Tasks[id].PID, syscall.SIGKILL)
+		if tmp, ok := Tasks.Get(id); ok {
+			TasksRun = tmp.(Task)
 		}
-		Tasks[id].Cancel()
-		TasksStatus[id] = "cancel"
+
+		if TasksRun.PID != 0 {
+			_ = syscall.Kill(-TasksRun.PID, syscall.SIGKILL)
+		}
+		TasksRun.Cancel()
+		TasksStatus.Set(id, "cancel")
 
 		TaskUpdate := modelmain.WorkerTasks{
 			TaskID: id,

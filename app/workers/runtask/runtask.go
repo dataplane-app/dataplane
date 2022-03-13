@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	cmap "github.com/orcaman/concurrent-map"
 	clog "github.com/pieterclaerhout/go-log"
 )
 
@@ -29,14 +30,18 @@ type Task struct {
 	Cancel  context.CancelFunc
 }
 
-var Tasks = make(map[string]Task)
+// var Tasks = make(map[string]Task)
+var Tasks = cmap.New()
 
-var TasksStatus = make(map[string]string)
+// var TasksStatus = make(map[string]string)
+var TasksStatus = cmap.New()
 
 // Worker function to run task
 func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 	var statusUpdate string
+	var TasksStatusWG string
+	var TasksRun Task
 
 	if config.Debug == "true" {
 		log.Printf("starting task with id %s - node: %s run: %s\n", msg.TaskID, msg.NodeID, msg.RunID)
@@ -111,13 +116,18 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		// Print the log timestamps
 		clog.PrintTimestamp = true
 
-		if TasksStatus[msg.TaskID] == "cancel" {
-			delete(TasksStatus, msg.TaskID)
+		if tmp, ok := TasksStatus.Get(msg.TaskID); ok {
+			TasksStatusWG = tmp.(string)
+		}
+
+		if TasksStatusWG == "cancel" {
+			// delete(TasksStatus, msg.TaskID)
+			TasksStatus.Remove(msg.TaskID)
 			break
 		}
 
-		if TasksStatus[msg.TaskID] == "error" {
-			delete(TasksStatus, msg.TaskID)
+		if TasksStatusWG == "error" {
+			TasksStatus.Remove(msg.TaskID)
 			break
 		}
 
@@ -244,19 +254,26 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		}()
 
 		// Start the command and check for errors
+
+		if tmp, ok := Tasks.Get(msg.TaskID); ok {
+			TasksRun = tmp.(Task)
+		}
+
 		var task Task
 
 		task.ID = msg.TaskID
-		task.Context = Tasks[msg.TaskID].Context
-		task.Cancel = Tasks[msg.TaskID].Cancel
-		TasksStatus[msg.TaskID] = "run"
+		task.Context = TasksRun.Context
+		task.Cancel = TasksRun.Cancel
+		// TasksStatus[msg.TaskID] = "run"
+		TasksStatus.Set(msg.TaskID, "run")
 
 		if os.Getenv("debug") == "true" {
 			// log.Println("tasks before pid:", Tasks)
 		}
 		err := cmd.Start()
 		task.PID = cmd.Process.Pid
-		Tasks[msg.TaskID] = task
+		Tasks.Set(msg.TaskID, task)
+		// Tasks[msg.TaskID] = task
 
 		if os.Getenv("debug") == "true" {
 			// fmt.Println("PID ", cmd.Process.Pid)
@@ -271,10 +288,15 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		// Wait for the command to finish
 		err = cmd.Wait()
 
+		if tmp, ok := TasksStatus.Get(msg.TaskID); ok {
+			TasksStatusWG = tmp.(string)
+		}
+
 		if err != nil {
 			statusUpdate = "Fail"
-			if TasksStatus[msg.TaskID] != "cancel" {
-				TasksStatus[msg.TaskID] = "error"
+			if TasksStatusWG != "cancel" {
+				TasksStatus.Set(msg.TaskID, "error")
+				// TasksStatus[msg.TaskID] = "error"
 			}
 			break
 		} else {
@@ -294,6 +316,10 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		statusUpdate = "Success"
 	}
 
+	if tmp, ok := TasksStatus.Get(msg.TaskID); ok {
+		TasksStatusWG = tmp.(string)
+	}
+
 	TaskFinal := modelmain.WorkerTasks{
 		TaskID:        msg.TaskID,
 		CreatedAt:     TaskUpdate.CreatedAt,
@@ -305,7 +331,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		PipelineID:    msg.PipelineID,
 		StartDT:       TaskUpdate.StartDT,
 		Status:        statusUpdate,
-		Reason:        TasksStatus[msg.TaskID],
+		Reason:        TasksStatusWG,
 		EndDT:         time.Now().UTC(),
 	}
 	UpdateWorkerTasks(TaskFinal)
@@ -336,8 +362,10 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 	}
 
-	delete(TasksStatus, msg.TaskID)
-	delete(Tasks, msg.TaskID)
+	// delete(TasksStatus, msg.TaskID)
+	// delete(Tasks, msg.TaskID)
+	TasksStatus.Remove(msg.TaskID)
+	Tasks.Remove(msg.TaskID)
 
 	if config.Debug == "true" {
 		// log.Println("tasks after del:", Tasks)
