@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"log"
@@ -93,7 +94,9 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Println("read error:", err)
+				if config.Debug == "true" {
+					log.Println("read error:", err)
+				}
 			}
 			return
 		}

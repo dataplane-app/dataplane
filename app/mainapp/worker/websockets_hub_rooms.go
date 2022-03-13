@@ -7,11 +7,14 @@ import (
 	"time"
 
 	"github.com/gofiber/websocket/v2"
+	cmap "github.com/orcaman/concurrent-map"
 )
 
 type clientq struct{} // Add more data to this type if needed
 
-var clientsq = make(map[string]map[*websocket.Conn]client) // Note: although large maps with pointer-like types (e.g. strings) as keys are slow, using pointers themselves as keys is acceptable and fast
+// var clientsq = make(map[string]map[*websocket.Conn]client) // Note: although large maps with pointer-like types (e.g. strings) as keys are slow, using pointers themselves as keys is acceptable and fast
+var clientsq = cmap.New()
+var clientsqconn = make(map[*websocket.Conn]client)
 var registerq = make(chan subscription)
 var broadcastq = make(chan message)
 var unregisterq = make(chan subscription)
@@ -29,15 +32,21 @@ type subscription struct {
 
 func secureTimeoutq(room string, connection *websocket.Conn) {
 	time.Sleep(1 * time.Hour)
-	if _, ok := clientsq[room][connection]; ok {
-		unregisterq <- subscription{conn: connection, room: room}
-		cm := websocket.FormatCloseMessage(websocket.CloseTryAgainLater, "reconnect")
-		if err := connection.WriteMessage(websocket.CloseMessage, cm); err != nil {
-			// handle error
-			log.Println(err)
-		}
-		if os.Getenv("messagedebug") == "true" {
-			log.Println("connection unregistered by SecureTimeout")
+
+	if tmp, ok := clientsq.Get(room); ok {
+
+		clientsqconn = tmp.(map[*websocket.Conn]client)
+
+		if _, ok := clientsqconn[connection]; ok {
+			unregisterq <- subscription{conn: connection, room: room}
+			cm := websocket.FormatCloseMessage(websocket.CloseTryAgainLater, "reconnect")
+			if err := connection.WriteMessage(websocket.CloseMessage, cm); err != nil {
+				// handle error
+				log.Println(err)
+			}
+			if os.Getenv("messagedebug") == "true" {
+				log.Println("connection unregistered by SecureTimeout")
+			}
 		}
 	}
 }
@@ -47,17 +56,22 @@ func RunHubRooms() {
 		select {
 		case register := <-registerq:
 
-			connections := clientsq[register.room]
-			if connections == nil {
-				connections = make(map[*websocket.Conn]client)
-				clientsq[register.room] = connections
+			if tmp, ok := clientsq.Get(register.room); ok {
+
+				clientsqconn = tmp.(map[*websocket.Conn]client)
 			}
 
-			log.Println("connection struct:", register)
+			connections := clientsqconn
+			if connections == nil {
+				connections = make(map[*websocket.Conn]client)
+				clientsq.Set(register.room, connections)
+			}
 
-			clientsq[register.room][register.conn] = client{}
+			// log.Println("connection struct:", register)
 
-			log.Println("client map:", clientsq)
+			clientsqconn[register.conn] = client{}
+
+			// log.Println("client map:", clientsq)
 
 			go secureTimeoutq(register.room, register.conn)
 			// go func() { Securetimeout <- 0 }()
@@ -71,29 +85,40 @@ func RunHubRooms() {
 				logging.PrintSecretsRedact("room:", message.room, "message received:", string(message.data))
 			}
 
+			if tmp, ok := clientsq.Get(message.room); ok {
+				clientsqconn = tmp.(map[*websocket.Conn]client)
+			}
+
 			// Send the message to all clients
-			for connection := range clientsq[message.room] {
+			for connection := range clientsqconn {
 
 				if err := connection.WriteMessage(websocket.TextMessage, []byte(message.data)); err != nil {
 					log.Println("write error:", err)
 
 					connection.WriteMessage(websocket.CloseMessage, []byte{})
 					connection.Close()
-					delete(clientsq[message.room], connection)
-					if len(clientsq[message.room]) == 0 {
-						delete(clientsq, message.room)
+					// clientsq.Remove(connection, clientsqconn)
+					delete(clientsqconn, connection)
+					if len(clientsqconn) == 0 {
+						// delete(clientsq, message.room)
+						clientsq.Remove(message.room)
 					}
 				}
 			}
 
 		case register := <-unregisterq:
 
-			connections := clientsq[register.room]
+			if tmp, ok := clientsq.Get(register.room); ok {
+				clientsqconn = tmp.(map[*websocket.Conn]client)
+			}
+
+			connections := clientsqconn
 			if connections != nil {
 				if _, ok := connections[register.conn]; ok {
 					delete(connections, register.conn)
 					if len(connections) == 0 {
-						delete(clientsq, register.room)
+						// delete(clientsq, register.room)
+						clientsq.Remove(register.room)
 					}
 				}
 			}
