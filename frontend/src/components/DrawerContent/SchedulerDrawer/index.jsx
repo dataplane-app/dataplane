@@ -62,7 +62,7 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                         genericdata: {
                             schedule: tabValue ? '*/' + seconds + ' * * * * *' : scheduleStatement,
                             scheduleType: tabValue ? 'cronseconds' : 'cron',
-                            timezone: timezone,
+                            timezone: tabValue ? 'Etc/UTC' : timezone,
                         },
                     };
                 }
