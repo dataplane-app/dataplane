@@ -421,7 +421,7 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 	// Delete the pipeline
 	p := models.Pipelines{}
 
-	err := database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&p).Error
+	err := database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Delete(&p).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -433,7 +433,7 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 	// Delete pipeline's nodes
 	n := models.PipelineNodes{}
 
-	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&n).Error
+	err = database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Delete(&n).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -445,13 +445,30 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 	// Delete pipeline's edges
 	e := models.PipelineEdges{}
 
-	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&e).Error
+	err = database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Delete(&e).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete pipeline edges database error.")
+	}
+
+	// Scheduler - remove from leader and from database
+	// ----- Delete schedules
+	var plSchedules []*models.Scheduler
+	err = database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Find(&plSchedules).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Println("Removal schedules in database - delete pipeline:", err)
+	}
+
+	if len(plSchedules) > 0 {
+		for _, psc := range plSchedules {
+			err := messageq.MsgSend("pipeline-scheduler-delete", psc)
+			if err != nil {
+				logging.PrintSecretsRedact("NATS error:", err)
+			}
+		}
 	}
 
 	response := "Pipeline deleted"
