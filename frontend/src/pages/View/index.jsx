@@ -25,7 +25,7 @@ const View = () => {
     // Hooks
     const theme = useTheme();
     const [pipeline, setPipeline] = useState(null);
-    const { state } = useLocation();
+    // const { state } = useLocation();
     const getPipelineFlow = useGetPipelineFlowHook(pipeline);
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
@@ -59,16 +59,8 @@ const View = () => {
 
     // Fetch previous elements
     useEffect(() => {
-        // const prevElements = FlowState.elements.get();
-        // setElements([...prevElements]);
-
         setIsLoadingFlow(false);
-
-        if (!state) {
-            getPipeline();
-        } else {
-            setPipeline(state);
-        }
+        getPipeline();
 
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
