@@ -79,7 +79,7 @@ const ScheduleNode = (props) => {
                         </Typography>
 
                         <Typography fontSize={10} mt={1}>
-                            {props.data.genericdata.timezone + ' ' + getTimeZoneOffSet(props.data.genericdata.timezone)}
+                            {printTimezone(props.data.genericdata.timezone)}
                         </Typography>
                     </Grid>
                 </Tooltip>
@@ -99,3 +99,11 @@ const ScheduleNode = (props) => {
 };
 
 export default ScheduleNode;
+
+// Utility function
+function printTimezone(timezone) {
+    if (timezone === 'Etc/UTC') {
+        return 'UTC';
+    }
+    return timezone + ' ' + getTimeZoneOffSet(timezone);
+}
