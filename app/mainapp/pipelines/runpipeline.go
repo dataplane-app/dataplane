@@ -22,6 +22,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 
 	// start := time.Now().UTC()
 
+	// Doesnt require concurrency safety, should be written / read in sequence.
 	var destinations = make(map[string][]string)
 	var dependencies = make(map[string][]string)
 	var triggerData = make(map[string]*models.WorkerTasks)

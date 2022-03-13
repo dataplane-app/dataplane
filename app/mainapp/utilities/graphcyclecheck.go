@@ -38,6 +38,7 @@ type Graph struct {
 
 func NewGraph() *Graph {
 	return &Graph{
+		// Doesnt require concurrency safety, should be written / read in sequence.
 		nodes: make(map[string]node),
 	}
 }
@@ -124,6 +125,7 @@ type orderedset struct {
 
 func newOrderedSet() *orderedset {
 	return &orderedset{
+		// Doesnt require concurrency safety, should be written / read in sequence.
 		indexes: make(map[string]int),
 		length:  0,
 	}

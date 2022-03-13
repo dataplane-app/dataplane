@@ -96,6 +96,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
+	// Doesnt require concurrency safety, should be written / read in sequence.
 	var destinations = make(map[string][]string)
 	var dependencies = make(map[string][]string)
 	var triggerType string = ""

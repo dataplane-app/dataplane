@@ -6,6 +6,8 @@ import (
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"log"
+
+	"github.com/go-co-op/gocron"
 )
 
 func LoadPipelineSchedules() {
@@ -30,8 +32,14 @@ func LoadPipelineSchedules() {
 	}
 
 	if config.SchedulerDebug == "true" {
-		for i, v := range config.PipelineScheduler {
-			log.Println("Scheduler:", i, v.IsRunning(), v.Len())
+		var PipelineScheduler *gocron.Scheduler
+		for i, v := range config.PipelineScheduler.Keys() {
+
+			if tmp, ok := config.PipelineScheduler.Get(v); ok {
+
+				PipelineScheduler = tmp.(*gocron.Scheduler)
+				log.Println("Scheduler:", i, v, PipelineScheduler.IsRunning(), PipelineScheduler.Len())
+			}
 		}
 
 		for i, v := range config.PipelineSchedulerJob {

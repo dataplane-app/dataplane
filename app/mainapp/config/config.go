@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/go-co-op/gocron"
+	cmap "github.com/orcaman/concurrent-map"
 )
 
 /* Routine removal of stale data */
@@ -13,7 +14,11 @@ var CleanLogs int = 30
 var Leader string = ""
 var MainAppID string = ""
 var Scheduler *gocron.Scheduler
-var PipelineScheduler = make(map[string]*gocron.Scheduler)
+
+// Needs concurrency safety:
+var PipelineScheduler = cmap.New()
+
+// var PipelineScheduler = make(map[string]*gocron.Scheduler)
 var PipelineSchedulerJob = make(map[string]*gocron.Job)
 
 // Debug

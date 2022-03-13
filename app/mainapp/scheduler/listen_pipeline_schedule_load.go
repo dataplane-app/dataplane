@@ -7,6 +7,7 @@ import (
 	"dataplane/mainapp/messageq"
 	"log"
 
+	"github.com/go-co-op/gocron"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -17,6 +18,8 @@ func PipelineSchedulerListen() {
 	messageq.NATSencoded.Subscribe("pipeline-scheduler", func(subj, reply string, msg models.Scheduler) {
 
 		if config.MainAppID == config.Leader {
+
+			var PipelineScheduler *gocron.Scheduler
 
 			// Remove existing trigger from schedule
 			// ----- Delete schedules
@@ -32,12 +35,15 @@ func PipelineSchedulerListen() {
 					// remove from scheduler -- can't be done here, needs to be removed on leader node
 
 					// log.Println("Scheduler remove by id: ", psc.Timezone, psc.NodeID, "Q")
-					if _, ok := config.PipelineScheduler[psc.Timezone]; ok {
+					if tmp, ok := config.PipelineScheduler.Get(psc.Timezone); ok {
+
+						PipelineScheduler = tmp.(*gocron.Scheduler)
+
 						if _, ok := config.PipelineSchedulerJob[psc.NodeID]; ok {
 							if config.SchedulerDebug == "true" {
 								log.Println("Scheduler remove by id: ", psc.Timezone, psc.NodeID, "ok")
 							}
-							config.PipelineScheduler[psc.Timezone].RemoveByReference(config.PipelineSchedulerJob[psc.NodeID])
+							PipelineScheduler.RemoveByReference(config.PipelineSchedulerJob[psc.NodeID])
 							delete(config.PipelineSchedulerJob, psc.NodeID)
 
 						}
@@ -65,8 +71,13 @@ func PipelineSchedulerListen() {
 			LoadSingleSchedule(msg)
 
 			if config.SchedulerDebug == "true" {
-				for i, v := range config.PipelineScheduler {
-					log.Println("Scheduler:", i, v.IsRunning(), v.Len())
+				for i, v := range config.PipelineScheduler.Keys() {
+
+					if tmp, ok := config.PipelineScheduler.Get(v); ok {
+
+						PipelineScheduler = tmp.(*gocron.Scheduler)
+						log.Println("Scheduler:", i, v, PipelineScheduler.IsRunning(), PipelineScheduler.Len())
+					}
 				}
 
 				for i, v := range config.PipelineSchedulerJob {

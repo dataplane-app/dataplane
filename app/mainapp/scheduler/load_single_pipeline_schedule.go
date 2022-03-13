@@ -8,6 +8,7 @@ import (
 	"dataplane/mainapp/pipelines"
 	"log"
 
+	"github.com/go-co-op/gocron"
 	"gorm.io/gorm"
 )
 
@@ -39,6 +40,8 @@ func mytask(nodeID string, pipelineID string, environmentID string, timezone str
 
 func LoadSingleSchedule(s models.Scheduler) {
 
+	var PipelineScheduler *gocron.Scheduler
+
 	switch s.ScheduleType {
 	case "cron":
 
@@ -46,7 +49,11 @@ func LoadSingleSchedule(s models.Scheduler) {
 
 		if err == nil && s.Online {
 
-			config.PipelineSchedulerJob[s.NodeID], _ = config.PipelineScheduler[s.Timezone].Cron(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, s.Timezone)
+			if tmp, ok := config.PipelineScheduler.Get(s.Timezone); ok {
+				PipelineScheduler = tmp.(*gocron.Scheduler)
+			}
+
+			config.PipelineSchedulerJob[s.NodeID], _ = PipelineScheduler.Cron(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, s.Timezone)
 
 		}
 	case "cronseconds":
@@ -55,7 +62,11 @@ func LoadSingleSchedule(s models.Scheduler) {
 
 		if err == nil && s.Online {
 
-			config.PipelineSchedulerJob[s.NodeID], _ = config.PipelineScheduler["UTC"].CronWithSeconds(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, "UTC")
+			if tmp, ok := config.PipelineScheduler.Get("UTC"); ok {
+				PipelineScheduler = tmp.(*gocron.Scheduler)
+			}
+
+			config.PipelineSchedulerJob[s.NodeID], _ = PipelineScheduler.CronWithSeconds(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, "UTC")
 
 		}
 

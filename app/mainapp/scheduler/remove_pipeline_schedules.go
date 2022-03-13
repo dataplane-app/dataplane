@@ -1,13 +1,22 @@
 package scheduler
 
-import "dataplane/mainapp/config"
+import (
+	"dataplane/mainapp/config"
+
+	"github.com/go-co-op/gocron"
+)
 
 func RemovePipelineSchedules() {
 
 	// Remove any existing schedules
 
-	for _, ps := range config.PipelineScheduler {
-		ps.Clear()
+	for _, v := range config.PipelineScheduler.Keys() {
+		if tmp, ok := config.PipelineScheduler.Get(v); ok {
+
+			PipelineScheduler := tmp.(*gocron.Scheduler)
+			PipelineScheduler.Clear()
+
+		}
 	}
 
 	for key, _ := range config.PipelineSchedulerJob {

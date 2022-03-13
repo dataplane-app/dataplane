@@ -29,6 +29,8 @@ func RunNextPipeline() {
 
 		// Retrieve all destinations
 		var destinations []string
+
+		// Doesnt require concurrency safety, should be written / read in sequence.
 		var uniquedependencies = make(map[string]bool)
 		var uniquedependenciesarray []string
 		destinationNodes := []*models.WorkerTasks{}
