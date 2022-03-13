@@ -12,6 +12,7 @@ import ScheduleTriggerNodeItem from '../../MoreInfoContent/ScheduleTriggerNodeIt
 import MoreInfoMenu from '../../MoreInfoMenu';
 import { getColor } from '../utils';
 import cronstrue from 'cronstrue';
+import { getTimeZoneOffSet } from '../../DrawerContent/SchedulerDrawer/CronTab';
 
 const ScheduleNode = (props) => {
     // Theme hook
@@ -75,6 +76,10 @@ const ScheduleNode = (props) => {
 
                         <Typography fontSize={10} mt={1}>
                             {schedule}
+                        </Typography>
+
+                        <Typography fontSize={10} mt={1}>
+                            {props.data.genericdata.timezone + ' ' + getTimeZoneOffSet(props.data.genericdata.timezone)}
                         </Typography>
                     </Grid>
                 </Tooltip>
