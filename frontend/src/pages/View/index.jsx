@@ -31,6 +31,7 @@ const View = () => {
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
     const [, setIsLoadingFlow] = useState(true);
+    const [isOpenAnalytics, setIsOpenAnalytics] = useState(false);
 
     const Environment = useGlobalEnvironmentState();
 
@@ -144,6 +145,7 @@ const View = () => {
                                         pipeline={pipeline}
                                         getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
                                         isPipelineOnline={pipeline?.online}
+                                        setIsOpenAnalytics={setIsOpenAnalytics}
                                     />
                                 </MoreInfoMenu>
                             </Box>

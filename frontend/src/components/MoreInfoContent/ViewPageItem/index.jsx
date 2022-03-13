@@ -29,6 +29,11 @@ const ViewPageItem = (props) => {
         turnOnOffPipeline(true);
     };
 
+    const handleAnalytics = () => {
+        props.handleCloseMenu();
+        props.setIsOpenAnalytics(true);
+    };
+
     return (
         <>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
@@ -36,6 +41,9 @@ const ViewPageItem = (props) => {
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleGoToEditorPage}>
                 Edit
+            </MenuItem>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleAnalytics}>
+                Analytics
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
                 Deploy
