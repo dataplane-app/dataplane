@@ -33,12 +33,14 @@ func PipelineSchedulerListen() {
 
 					// log.Println("Scheduler remove by id: ", psc.Timezone, psc.NodeID, "Q")
 					if _, ok := config.PipelineScheduler[psc.Timezone]; ok {
-						if config.SchedulerDebug == "true" {
-							log.Println("Scheduler remove by id: ", psc.Timezone, psc.NodeID, "ok")
-						}
-						config.PipelineScheduler[psc.Timezone].RemoveByReference(config.PipelineSchedulerJob[psc.NodeID])
-						delete(config.PipelineSchedulerJob, psc.NodeID)
+						if _, ok := config.PipelineSchedulerJob[psc.NodeID]; ok {
+							if config.SchedulerDebug == "true" {
+								log.Println("Scheduler remove by id: ", psc.Timezone, psc.NodeID, "ok")
+							}
+							config.PipelineScheduler[psc.Timezone].RemoveByReference(config.PipelineSchedulerJob[psc.NodeID])
+							delete(config.PipelineSchedulerJob, psc.NodeID)
 
+						}
 					}
 
 					// remove from database
@@ -65,10 +67,10 @@ func PipelineSchedulerListen() {
 			if config.SchedulerDebug == "true" {
 				for i, v := range config.PipelineScheduler {
 					log.Println("Scheduler:", i, v.IsRunning(), v.Len())
-					// jobs := v.Jobs()
-					// for _, x := range jobs {
-					// 	log.Printf("%+v\n", x)
-					// }
+				}
+
+				for i, v := range config.PipelineSchedulerJob {
+					log.Println("Scheduler Registered job:", i, v.NextRun())
 				}
 			}
 		}

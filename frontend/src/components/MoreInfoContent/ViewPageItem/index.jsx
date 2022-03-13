@@ -10,7 +10,7 @@ const ViewPageItem = (props) => {
     const FlowState = useGlobalFlowState();
 
     // Graphql hook
-    const turnOnOffPipeline = useTurnOnOffPipelineHook(props.pipeline.pipelineID, props.pipeline.environmentID, props.handleCloseMenu, props.getPipelineFlow);
+    const turnOnOffPipeline = useTurnOnOffPipelineHook(props.pipeline.pipelineID, props.pipeline.environmentID, props.handleCloseMenu, props.getPipelineFlow, props.getPipeline);
 
     // Handle edit button
     const handleGoToEditorPage = () => {

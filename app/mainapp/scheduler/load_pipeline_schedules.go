@@ -33,6 +33,10 @@ func LoadPipelineSchedules() {
 		for i, v := range config.PipelineScheduler {
 			log.Println("Scheduler:", i, v.IsRunning(), v.Len())
 		}
+
+		for i, v := range config.PipelineSchedulerJob {
+			log.Println("Scheduler Registered job:", i, v.NextRun())
+		}
 	}
 
 }

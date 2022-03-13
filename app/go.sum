@@ -280,6 +280,8 @@ github.com/nats-io/nkeys v0.3.0/go.mod h1:gvUNGjVcM2IPr5rCsRsC6Wb3Hr2CQAm08dsxtV
 github.com/nats-io/nuid v1.0.1 h1:5iA8DT8V7q8WK2EScv2padNa/rTESc1KdnPw4TC2paw=
 github.com/nats-io/nuid v1.0.1/go.mod h1:19wcPz3Ph3q0Jbyiqsd0kePYG7A95tJPxeL+1OSON2c=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
+github.com/orcaman/concurrent-map v1.0.0 h1:I/2A2XPCb4IuQWcQhBhSwGfiuybl/J0ev9HDbW65HOY=
+github.com/orcaman/concurrent-map v1.0.0/go.mod h1:Lu3tH6HLW3feq74c2GC+jIMS/K2CFcDWnWD9XkenwhI=
 github.com/pieterclaerhout/go-formatter v1.0.4/go.mod h1:1okQQFUwXCLGTWXoWoh3OGchp3i7KeebwIx/ufmsjks=
 github.com/pieterclaerhout/go-formatter v1.0.5 h1:TuE+KefU0+PGx3Ayhq9pem4aaR+TQZOAGvxdoVd6CjI=
 github.com/pieterclaerhout/go-formatter v1.0.5/go.mod h1:4V0RIAJipKb6tSZ9UgtVTZ4X8sO1ZzbX4qKbiSto0Nw=

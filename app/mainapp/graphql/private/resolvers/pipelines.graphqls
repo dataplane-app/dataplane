@@ -100,6 +100,13 @@ type PipelineFlow {
 
 extend type Query {
   """
+  Get pipeline.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getPipeline(pipelineID: String!, environmentID: String!): Pipelines
+
+  """
   Get pipelines.
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
