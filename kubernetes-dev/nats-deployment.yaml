@@ -1,0 +1,113 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: nats-r
+  namespace: default
+  labels:
+    app: nats-r
+spec:
+  ports:
+    - name: tcp
+      protocol: TCP
+      #      port = port connected to ingress
+      port: 6222
+      # targetPort = port on container
+      targetPort: 6222
+    - name: tcpconnect
+      protocol: TCP
+      #      port = port connected to ingress
+      port: 4222
+      # targetPort = port on container
+      targetPort: 4222
+  selector:
+    app: nats-r
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats
+spec:
+  replicas: 1
+  strategy: {}
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+        - name: nats
+          image: nats:2.7.3-scratch
+          command:
+            - "./nats-server"
+            - "--debug"
+            - "--cluster"
+            - "nats://0.0.0.0:6222"
+            - "--http_port"
+            - "8222"
+            - "--port"
+            - "4222"
+          ports:
+            - containerPort: 4222
+            - containerPort: 8222
+            - containerPort: 6222
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nats
+  namespace: default
+  labels:
+    app: nats
+spec:
+  ports:
+    - name: tcp
+      protocol: TCP
+      #      port = port connected to ingress
+      port: 6222
+      # targetPort = port on container
+      targetPort: 6222
+    - name: tcpconnect
+      protocol: TCP
+      #      port = port connected to ingress
+      port: 4222
+      # targetPort = port on container
+      targetPort: 4222
+  selector:
+    app: nats
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats-r
+spec:
+  replicas: 2
+  strategy: {}
+  selector:
+    matchLabels:
+      app: nats-r
+  template:
+    metadata:
+      labels:
+        app: nats-r
+    spec:
+      containers:
+        - name: nats-r
+          image: nats:2.7.3-scratch
+          command:
+            - "./nats-server"
+            - "--debug"
+            - "--cluster"
+            - "nats://0.0.0.0:6222"
+            - "--http_port"
+            - "8222"
+            - "--port"
+            - "4222"
+            - "--routes"
+            - "nats://nats:6222"
+          ports:
+            - containerPort: 4222
+            - containerPort: 8222
+            - containerPort: 6222
