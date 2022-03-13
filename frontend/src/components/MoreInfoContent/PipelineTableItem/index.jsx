@@ -1,7 +1,8 @@
 import { MenuItem } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
+import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
 import { useGlobalFlowState } from '../../../pages/Flow';
-import { useTurnOnOffPipelineHook } from '../../DrawerContent/TurnOffPipelineDrawer';
 
 const PipelineItemTable = (props) => {
     // React router
@@ -10,15 +11,15 @@ const PipelineItemTable = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
 
-    // Graphql hook
-    const turnOnOffPipeline = useTurnOnOffPipelineHook(props.id, props.environmentID, props.handleClose, props.getPipelines);
-
     //Props
-    const { handleCloseMenu, handleOpenManage, id, name, setIsOpenDeletePipeline, nodeTypeDesc } = props;
+    const { handleCloseMenu, handleClose, id, name, environmentID, setIsOpenDeletePipeline, nodeTypeDesc, getPipelines } = props;
 
-    const manageClick = () => {
-        handleCloseMenu();
-        handleOpenManage();
+    // Graphql hook
+    const turnOnOffPipeline = useTurnOnOffPipelineHook(id, environmentID, handleClose, getPipelines);
+
+    const manageEdit = () => {
+        FlowState.isEditorPage.get(true);
+        history.push({ pathname: `/pipelines/flow/${id}`, state: props.pipeline });
     };
 
     const permissionClick = () => {
@@ -33,19 +34,19 @@ const PipelineItemTable = (props) => {
 
     // Handle turn off button
     const handleTurnOffPipeline = () => {
-        props.handleCloseMenu();
+        handleCloseMenu();
         FlowState.isOpenTurnOffPipelineDrawer.set(true);
     };
 
     // Handle turn on button
     const handleTurnOnPipeline = async () => {
         turnOnOffPipeline(true);
-        props.handleCloseMenu();
+        handleCloseMenu();
     };
 
     return (
         <>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={manageClick}>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={manageEdit}>
                 Edit
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={permissionClick}>
@@ -67,3 +68,29 @@ const PipelineItemTable = (props) => {
 };
 
 export default PipelineItemTable;
+
+// ------ Custom hook
+const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose, getPipelines) => {
+    // GraphQL hook
+    const turnOnOffPipeline = useTurnOnOffPipeline();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Update trigger
+    return async (online) => {
+        const response = await turnOnOffPipeline({ environmentID, pipelineID, online });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't update trigger: " + response.msg, {
+                variant: 'error',
+            });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getPipelines();
+            handleClose();
+        }
+    };
+};

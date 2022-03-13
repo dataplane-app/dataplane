@@ -92,17 +92,21 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
                                             {userTimezone ? (
                                                 <Tooltip
                                                     title={formatUsersTime(row, userTimezone, timezone) + ' ' + userTimezone + ' ' + getTimeZoneOffSet(userTimezone)}
-                                                    placement="top">
+                                                    placement="top-start">
                                                     <TableCell component="th" scope="row">
                                                         {formatTime(row)}
                                                     </TableCell>
                                                 </Tooltip>
                                             ) : null}
-                                            <Tooltip title={'Node ID: '} placement="top">
-                                                <TableCell component="th" scope="row">
-                                                    {timezone && timezone + ' ' + getTimeZoneOffSet(timezone)}
-                                                </TableCell>
-                                            </Tooltip>
+                                            {userTimezone ? (
+                                                <Tooltip
+                                                    title={formatUsersTime(row, userTimezone, timezone) + ' ' + userTimezone + ' ' + getTimeZoneOffSet(userTimezone)}
+                                                    placement="top-start">
+                                                    <TableCell component="th" scope="row">
+                                                        {timezone && timezone + ' ' + getTimeZoneOffSet(timezone)}
+                                                    </TableCell>
+                                                </Tooltip>
+                                            ) : null}
                                         </TableRow>
                                     );
                                 })}
