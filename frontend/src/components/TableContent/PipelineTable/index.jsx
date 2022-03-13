@@ -153,7 +153,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                                 <Box component="td">
                                     {/* Name and description */}
                                     <Grid display="flex" alignItems="flex-start" justifyContent="space-between">
-                                        <Grid item onClick={() => history.push({ pathname: `/pipelines/view/${row.original.pipelineID}`, state: row.original })}>
+                                        <Grid item onClick={() => history.push(`/pipelines/view/${row.original.pipelineID}`)}>
                                             <Typography variant="h3" color="cyan.main">
                                                 {row.original.name}
                                             </Typography>

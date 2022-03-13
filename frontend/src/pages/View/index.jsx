@@ -6,7 +6,7 @@ import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
-import { useHistory, useLocation, useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import CustomLine from '../../components/CustomNodesContent/CustomLine';
 import PublishPipelineDrawer from '../../components/DrawerContent/PublishPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
@@ -25,7 +25,6 @@ const View = () => {
     // Hooks
     const theme = useTheme();
     const [pipeline, setPipeline] = useState(null);
-    const { state } = useLocation();
     const getPipelineFlow = useGetPipelineFlowHook(pipeline);
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
@@ -59,16 +58,8 @@ const View = () => {
 
     // Fetch previous elements
     useEffect(() => {
-        // const prevElements = FlowState.elements.get();
-        // setElements([...prevElements]);
-
         setIsLoadingFlow(false);
-
-        if (!state) {
-            getPipeline();
-        } else {
-            setPipeline(state);
-        }
+        getPipeline();
 
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
