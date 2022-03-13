@@ -1,0 +1,98 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: dataplane-worker
+  namespace: default
+  labels:
+    app: dataplane-worker
+spec:
+  ports:
+    - name: tcp
+      protocol: TCP
+      #      port = port connected to ingress
+      port: 9005
+      # targetPort = port on container
+      targetPort: 9005
+  selector:
+    app: dataplane-worker
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dataplane-worker
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: dataplane-worker
+  template:
+    metadata:
+      labels:
+        app: dataplane-worker
+    spec:
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+      containers:
+        - name: container
+          image: dataplane/dataplane-worker:latest
+          command:
+            - "./worker"
+          ports:
+            - containerPort: 9005
+          env:
+            - name: env
+              value: "local"
+            - name: dataplane_code_folder
+              value: "/appdev/code-files/"
+            - name: basepath
+              value: "/dataplane"
+            - name: secret_db_host
+              value: timescaledb-service
+            - name: secret_db_user 
+              value: postgres
+            - name: secret_db_pwd 
+              value: "Hello123!"
+            - name: secret_db_ssl 
+              value: "disable"
+            - name: secret_db_port
+              value: "5432"
+            - name: secret_db_database
+              value: "dataplane"
+            - name: secret_jwt_secret
+              value: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+            - name: secret_encryption_key
+              value: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
+            - name: database
+              value: "timescaledb"
+            - name: dataplane_port
+              value: "9000"
+            - name: dataplane_nats
+              value: "nats://nats:4222, nats://nats-r:4222"
+            - name: mode
+              value: "development"
+            - name: debug
+              value: "true"
+            - name: dbdebug
+              value: "false"
+            - name: messagedebug
+              value: "true"
+            - name: metricdebug
+              value: "false"
+            - name: schedulerdebug
+              value: "true"
+            - name: worker_heartbeat_seconds
+              value: "1"
+            - name: worker_group
+              value: "python_1"
+      # vm, container, kubernetes
+            - name: worker_type
+              value: "vm"
+            - name: worker_lb
+              value: "roundrobin"
+            - name: worker_env
+              value: "Development"
+            - name: dp_cleantasks_days
+              value: "60"
+            - name: dp_removelogs_days
+              value: "60"

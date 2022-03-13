@@ -11,8 +11,11 @@ kubectl apply -f postgresql-deploy.yaml
 ```
 
 4. Deploy worker with skaffold
+From root of this repo run:
 ```shell
-skaffold run -f ./kubernetes-dev/skaffold.yaml
+skaffold run -f ./kubernetes-dev/skaffold-main.yaml
+skaffold run -f ./kubernetes-dev/skaffold-worker.yaml
+
 
 
 

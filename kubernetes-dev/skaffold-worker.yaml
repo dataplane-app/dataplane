@@ -10,4 +10,4 @@ build:
 deploy:
   kubectl:
     manifests:
-    - ./kubernetes-dev/worker-deployment.yaml
+    - ./kubernetes-dev/dp-worker-deployment.yaml
