@@ -20,6 +20,7 @@ func PipelineSchedulerListen() {
 		if config.MainAppID == config.Leader {
 
 			var PipelineScheduler *gocron.Scheduler
+			var PipelineSJob *gocron.Job
 
 			// Remove existing trigger from schedule
 			// ----- Delete schedules
@@ -39,12 +40,16 @@ func PipelineSchedulerListen() {
 
 						PipelineScheduler = tmp.(*gocron.Scheduler)
 
-						if _, ok := config.PipelineSchedulerJob[psc.NodeID]; ok {
+						if tmp, ok := config.PipelineSchedulerJob.Get(psc.NodeID); ok {
+
+							PipelineSJob = tmp.(*gocron.Job)
+
 							if config.SchedulerDebug == "true" {
 								log.Println("Scheduler remove by id: ", psc.Timezone, psc.NodeID, "ok")
 							}
-							PipelineScheduler.RemoveByReference(config.PipelineSchedulerJob[psc.NodeID])
-							delete(config.PipelineSchedulerJob, psc.NodeID)
+							PipelineScheduler.RemoveByReference(PipelineSJob)
+							config.PipelineSchedulerJob.Remove(psc.NodeID)
+							// delete(config.PipelineSchedulerJob, psc.NodeID)
 
 						}
 					}
@@ -80,8 +85,13 @@ func PipelineSchedulerListen() {
 					}
 				}
 
-				for i, v := range config.PipelineSchedulerJob {
-					log.Println("Scheduler Registered job:", i, v.NextRun())
+				for i, v := range config.PipelineSchedulerJob.Keys() {
+
+					if tmp, ok := config.PipelineSchedulerJob.Get(v); ok {
+
+						PSJ := tmp.(*gocron.Job)
+						log.Println("Scheduler Registered job:", i, v, PSJ.NextRun())
+					}
 				}
 			}
 		}

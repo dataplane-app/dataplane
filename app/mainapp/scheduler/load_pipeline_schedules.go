@@ -42,8 +42,13 @@ func LoadPipelineSchedules() {
 			}
 		}
 
-		for i, v := range config.PipelineSchedulerJob {
-			log.Println("Scheduler Registered job:", i, v.NextRun())
+		for i, v := range config.PipelineSchedulerJob.Keys() {
+
+			if tmp, ok := config.PipelineSchedulerJob.Get(v); ok {
+
+				PSJ := tmp.(*gocron.Job)
+				log.Println("Scheduler Registered job:", i, v, PSJ.NextRun())
+			}
 		}
 	}
 

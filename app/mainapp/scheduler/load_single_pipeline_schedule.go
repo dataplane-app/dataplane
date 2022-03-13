@@ -43,6 +43,7 @@ func LoadSingleSchedule(s models.Scheduler) {
 	var PipelineScheduler *gocron.Scheduler
 
 	switch s.ScheduleType {
+
 	case "cron":
 
 		err := PipelineTimezoneScheduler(s.Timezone)
@@ -53,8 +54,8 @@ func LoadSingleSchedule(s models.Scheduler) {
 				PipelineScheduler = tmp.(*gocron.Scheduler)
 			}
 
-			config.PipelineSchedulerJob[s.NodeID], _ = PipelineScheduler.Cron(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, s.Timezone)
-
+			PSJob, _ := PipelineScheduler.Cron(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, s.Timezone)
+			config.PipelineSchedulerJob.Set(s.NodeID, PSJob)
 		}
 	case "cronseconds":
 
@@ -66,7 +67,8 @@ func LoadSingleSchedule(s models.Scheduler) {
 				PipelineScheduler = tmp.(*gocron.Scheduler)
 			}
 
-			config.PipelineSchedulerJob[s.NodeID], _ = PipelineScheduler.CronWithSeconds(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, "UTC")
+			PSJob, _ := PipelineScheduler.CronWithSeconds(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, "UTC")
+			config.PipelineSchedulerJob.Set(s.NodeID, PSJob)
 
 		}
 

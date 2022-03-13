@@ -19,8 +19,9 @@ func RemovePipelineSchedules() {
 		}
 	}
 
-	for key, _ := range config.PipelineSchedulerJob {
-		delete(config.PipelineSchedulerJob, key)
+	for _, v := range config.PipelineSchedulerJob.Keys() {
+
+		config.PipelineSchedulerJob.Remove(v)
 	}
 
 	// Load the pipeline schedules

@@ -17,9 +17,10 @@ var Scheduler *gocron.Scheduler
 
 // Needs concurrency safety:
 var PipelineScheduler = cmap.New()
+var PipelineSchedulerJob = cmap.New()
 
 // var PipelineScheduler = make(map[string]*gocron.Scheduler)
-var PipelineSchedulerJob = make(map[string]*gocron.Job)
+// var PipelineSchedulerJob = make(map[string]*gocron.Job)
 
 // Debug
 var Debug string = "false"
