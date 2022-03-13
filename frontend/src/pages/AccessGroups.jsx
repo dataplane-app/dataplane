@@ -10,6 +10,7 @@ import { useSnackbar } from 'notistack';
 import AddAccessGroupDrawer from '../components/DrawerContent/AddAccessGroupDrawer';
 import { useGlobalMeState } from '../components/Navbar';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
+import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const AccessGroups = () => {
     let history = useHistory();
@@ -23,6 +24,9 @@ const AccessGroups = () => {
 
     // Sidebar states
     const [isOpenAddAccessGroup, setIsOpenAddAccessGroup] = useState(false);
+
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
 
     // Custom hook
     const getAccessGroups = useGetAccessGroups_(MeData.user_id.get(), setData);
@@ -49,7 +53,7 @@ const AccessGroups = () => {
                 Cell: (row) => (row.value === true ? <CustomChip label="Active" customColor="green" /> : <CustomChip label="Inactive" customColor="red" />),
             },
         ],
-        [history]
+        [history, jwt]
     );
 
     // Use the state and functions returned from useTable to build your UI

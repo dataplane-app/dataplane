@@ -12,6 +12,7 @@ import { useSnackbar } from 'notistack';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { useGlobalMeState } from '../components/Navbar';
 import { DEFAULT_OPTIONS } from '../components/DrawerContent/AddPipelinesPermissionDrawer';
+import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const PipelinesPermission = () => {
     // React router
@@ -32,6 +33,9 @@ const PipelinesPermission = () => {
         last_name: '',
         email: '',
     });
+
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
 
     // Drawer state
     const [isOpenAddPermissions, setIsOpenAddPermissions] = useState(false);
@@ -89,7 +93,7 @@ const PipelinesPermission = () => {
         ],
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        []
+        [jwt]
     );
 
     const { getTableProps, getTableBodyProps, rows, prepareRow, setGlobalFilter } = useTable(

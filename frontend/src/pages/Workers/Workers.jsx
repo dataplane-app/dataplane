@@ -20,6 +20,9 @@ export default function Workers() {
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
 
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
+
     // Local state
     const [data, setData] = useState([]);
 
@@ -69,7 +72,8 @@ export default function Workers() {
                 Cell: (row) => <CustomStatus row={row} />,
             },
         ],
-        [history]
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [history, jwt]
     );
 
     // Use the state and functions returned from useTable to build your UI

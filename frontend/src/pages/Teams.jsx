@@ -7,6 +7,7 @@ import CustomChip from '../components/CustomChip';
 import { useGetUsers } from '../graphql/getUsers';
 import { useSnackbar } from 'notistack';
 import AddUserDrawer from '../components/DrawerContent/AddUserDrawer';
+import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const Teams = () => {
     let history = useHistory();
@@ -20,6 +21,9 @@ const Teams = () => {
 
     // Custom GraphQL hooks
     const getUsers = useGetUsersHook(setData);
+
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
 
     // Get users on load
     useEffect(() => {
@@ -52,7 +56,7 @@ const Teams = () => {
                 Cell: (row) => (row.value === 'active' ? <CustomChip label="Active" customColor="green" /> : <CustomChip label="Inactive" customColor="red" />),
             },
         ],
-        [history]
+        [history, jwt]
     );
 
     // Use the state and functions returned from useTable to build your UI

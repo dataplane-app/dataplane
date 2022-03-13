@@ -11,6 +11,7 @@ import AddEnvironmentDrawer from '../components/DrawerContent/AddEnvironmentDraw
 import { useGetPlatform } from '../graphql/getPlatform';
 import { useSnackbar } from 'notistack';
 import { useUpdatePlatform } from '../graphql/updatePlatform';
+import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const Settings = () => {
     let history = useHistory();
@@ -23,6 +24,9 @@ const Settings = () => {
     const [platform, setPlatform] = useState({});
     const [data, setData] = useState([]);
     const [isOpenAddEnv, setIsOpenAddEnv] = useState(false);
+
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
 
     // Form hook
     const { register, handleSubmit, reset } = useForm();
@@ -63,7 +67,7 @@ const Settings = () => {
             },
         ],
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        []
+        [jwt]
     );
 
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, setGlobalFilter } = useTable(
