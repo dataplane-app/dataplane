@@ -130,6 +130,7 @@ type Pipelines struct {
 	Current       string    `json:"current"`
 	WorkerGroup   string    `json:"workerGroup"`
 	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 	NodeType      string    `json:"node_type"`
 	NodeTypeDesc  string    `json:"node_type_desc"`
 	Schedule      string    `json:"schedule"`

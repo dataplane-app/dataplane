@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -96,7 +96,6 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
-	// Doesnt require concurrency safety, should be written / read in sequence.
 	var destinations = make(map[string][]string)
 	var dependencies = make(map[string][]string)
 	var triggerType string = ""
@@ -598,6 +597,7 @@ a.description,
 a.active,
 a.worker_group,
 a.created_at,
+a.updated_at,
 b.node_type,
 b.node_type_desc,
 b.online,
@@ -631,6 +631,7 @@ a.description,
 a.active,
 a.worker_group,
 a.created_at,
+a.updated_at,
 b.node_type,
 b.node_type_desc,
 b.online,

@@ -14,6 +14,7 @@ const query = gql`
             online
             current
             created_at
+            updated_at
             node_type
             node_type_desc
             schedule
