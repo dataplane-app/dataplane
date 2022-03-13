@@ -39,7 +39,7 @@ spec:
     spec:
       containers:
         - name: nats
-          image: nats:2.7.3-scratch
+          image: nats:2.7.4-scratch
           command:
             - "./nats-server"
             - "--debug"
@@ -95,7 +95,7 @@ spec:
     spec:
       containers:
         - name: nats-r
-          image: nats:2.7.3-scratch
+          image: nats:2.7.4-scratch
           command:
             - "./nats-server"
             - "--debug"

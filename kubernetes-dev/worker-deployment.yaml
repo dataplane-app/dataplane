@@ -32,7 +32,7 @@ spec:
     spec:
       containers:
         - name: container
-          image: nats:2.7.3-scratch
+          image: dataplane/dataplane-worker:latest
           command:
             - "./nats-server"
             - "--debug"
