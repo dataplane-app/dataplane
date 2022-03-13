@@ -25,6 +25,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useGlobalAuthState } from '../Auth/UserAuth';
 import { useGlobalRunState } from './View/useWebSocket';
+import { useGetPipelineFlow } from '../graphql/getPipelineFlow';
+import { prepareInputForFrontend } from './View';
 
 export const globalFlowState = createState({
     isRunning: false,
@@ -96,7 +98,7 @@ const Flow = () => {
     const history = useHistory();
     const { state: pipeline } = useLocation();
     const { enqueueSnackbar } = useSnackbar();
-
+    const getPipelineFlow = useGetPipelineFlowHook(pipeline);
     const updatePipelineFlow = useAddUpdatePipelineFlowfunc();
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
@@ -151,7 +153,7 @@ const Flow = () => {
     }, [FlowState.selectedEdge.get()]);
 
     // Local state to detect unsaved changes
-    const [initialState] = useState(JSON.parse(JSON.stringify(FlowState.elements.get())));
+    const [initialState, setInitialState] = useState(JSON.parse(JSON.stringify(FlowState.elements.get())));
 
     // Fetch previous elements
     useEffect(() => {
@@ -164,6 +166,10 @@ const Flow = () => {
         setIsLoadingFlow(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        getPipelineFlow(Environment.id.get(), setElements, setInitialState);
+    }, [Environment.id.get()]);
 
     // Trigger the scale button on keyboard 's' key click
     useEffect(() => {
@@ -453,6 +459,42 @@ const Flow = () => {
 };
 
 export default Flow;
+
+const useGetPipelineFlowHook = (pipeline) => {
+    // GraphQL hook
+    const getPipelineFlow = useGetPipelineFlow();
+
+    // React router
+    const history = useHistory();
+
+    // Global state
+    const FlowState = useGlobalFlowState();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get members
+    return async (environmentID, setElements, setInitialState) => {
+        const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
+        const response = prepareInputForFrontend(rawResponse);
+
+        if (response.length === 0) {
+            FlowState.elements.set([]);
+            history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipeline });
+        } else if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setElements(response);
+            FlowState.elements.set(response);
+            setInitialState(response);
+        }
+    };
+};
 
 // ----- Utility function
 function prepareInputForBackend(input) {

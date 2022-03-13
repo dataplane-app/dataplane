@@ -231,7 +231,7 @@ const View = () => {
 export default View;
 
 // ------ Custom hooks
-const useGetPipelineFlowHook = (pipeline) => {
+export const useGetPipelineFlowHook = (pipeline) => {
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
 
