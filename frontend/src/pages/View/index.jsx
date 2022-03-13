@@ -17,13 +17,17 @@ import { edgeTypes, nodeTypes, useGlobalFlowState } from '../Flow';
 import LogsDrawer from '../../components/DrawerContent/LogsDrawer';
 import TurnOffPipelineDrawer from '../../components/DrawerContent/TurnOffPipelineDrawer';
 import CustomChip from '../../components/CustomChip';
+import { useGetPipeline } from '../../graphql/getPipeline';
 
 const View = () => {
+    const Environment = useGlobalEnvironmentState();
+
     // Hooks
     const theme = useTheme();
-    const history = useHistory();
-    const { state: pipeline } = useLocation();
+    const [pipeline, setPipeline] = useState(null);
+    const { state } = useLocation();
     const getPipelineFlow = useGetPipelineFlowHook(pipeline);
+    const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
     // Global states
     const FlowState = useGlobalFlowState();
@@ -31,8 +35,6 @@ const View = () => {
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
     const [, setIsLoadingFlow] = useState(true);
-
-    const Environment = useGlobalEnvironmentState();
 
     //Offset states and refs
     const [offsetHeight, setOffsetHeight] = useState(0);
@@ -61,13 +63,15 @@ const View = () => {
 
         setIsLoadingFlow(false);
 
-        if (!pipeline || Object.keys(pipeline).length === 0) {
-            history.push('/');
-            return null;
+        if (!state) {
+            getPipeline();
+        } else {
+            setPipeline(state);
         }
+
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [Environment.id.get()]);
 
     useEffect(() => {
         getPipelineFlow(Environment.id.get(), setElements);
@@ -88,12 +92,6 @@ const View = () => {
             onZoomActive();
         }
     };
-
-    // For setting pipeline status
-    const [isPipelineOnline, setIsPipelineOnline] = useState();
-    useEffect(() => {
-        setIsPipelineOnline(elements.filter((a) => a.type === 'scheduleNode')[0]?.data.triggerOnline ?? true);
-    }, [elements]);
 
     //Flow methods
     const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
@@ -144,6 +142,7 @@ const View = () => {
                                         pipeline={pipeline}
                                         getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
                                         isPipelineOnline={pipeline?.online}
+                                        getPipeline={getPipeline}
                                     />
                                 </MoreInfoMenu>
                             </Box>
@@ -214,10 +213,11 @@ const View = () => {
             <Drawer anchor="right" open={FlowState.isOpenTurnOffPipelineDrawer.get()} onClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)}>
                 <TurnOffPipelineDrawer
                     handleClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)} //
-                    pipelineID={pipeline.pipelineID}
-                    environmentID={pipeline.environmentID}
-                    name={pipeline.name}
+                    pipelineID={pipeline?.pipelineID}
+                    environmentID={pipeline?.environmentID}
+                    name={pipeline?.name}
                     getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
+                    getPipeline={getPipeline}
                 />
             </Drawer>
         </Box>
@@ -258,6 +258,31 @@ const useGetPipelineFlowHook = (pipeline) => {
         } else {
             setElements(response);
             FlowState.elements.set(response);
+        }
+    };
+};
+
+// ------ Custom hooks
+const useGetPipelineHook = (environmentID, setPipeline) => {
+    // GraphQL hook
+    const getPipeline = useGetPipeline();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get members
+    return async () => {
+        const response = await getPipeline({ pipelineID: pipelineId, environmentID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get pipeline: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setPipeline(response);
         }
     };
 };

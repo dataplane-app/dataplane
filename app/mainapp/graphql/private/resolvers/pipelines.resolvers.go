@@ -551,6 +551,134 @@ func (r *pipelineNodesResolver) Meta(ctx context.Context, obj *models.PipelineNo
 	return obj.Meta, nil
 }
 
+func (r *queryResolver) GetPipeline(ctx context.Context, pipelineID string, environmentID string) (*privategraphql.Pipelines, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: platformID, Access: "read", EnvironmentID: environmentID},
+	}
+
+	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
+
+	// if permOutcome == "denied" {
+	// 	return []*privategraphql.Pipelines{}, nil
+	// }
+
+	p := privategraphql.Pipelines{}
+	var query string
+	if admin == "yes" || adminEnv == "yes" {
+		query = `
+select
+a.pipeline_id, 
+a.name,
+a.environment_id,
+a.description,
+a.active,
+a.worker_group,
+a.created_at,
+b.node_type,
+b.node_type_desc,
+b.online,
+scheduler.schedule,
+scheduler.schedule_type
+from pipelines a left join (
+	select node_type, node_type_desc, pipeline_id, trigger_online as online from pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id
+where a.pipeline_id = ?
+order by a.created_at desc
+`
+
+		err := database.DBConn.Raw(
+			query, pipelineID).Scan(&p).Error
+
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return nil, errors.New("Retrive pipelines database error.")
+		}
+
+	} else {
+
+		query = `select
+a.pipeline_id, 
+a.name,
+a.environment_id,
+a.description,
+a.active,
+a.worker_group,
+a.created_at,
+b.node_type,
+b.node_type_desc,
+b.online,
+scheduler.schedule,
+scheduler.schedule_type
+from pipelines a 
+left join (
+	select node_type, node_type_desc, pipeline_id, trigger_online as online from pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id
+inner join (
+  select distinct resource_id, environment_id from (
+	(select 
+		p.resource_id,
+        p.environment_id
+		from 
+		permissions p
+		where 
+		p.subject = 'user' and 
+		p.subject_id = ? and
+		p.resource = 'specific_pipeline' and
+		p.active = true
+		)
+		union
+		(
+		select
+		p.resource_id,
+        p.environment_id
+		from 
+		permissions p, permissions_accessg_users agu
+		where 
+		p.subject = 'access_group' and 
+		p.subject_id = agu.user_id and
+		p.subject_id = ? and
+		p.resource = 'specific_pipeline' and
+		p.environment_id = agu.environment_id and 
+		p.active = true and
+		agu.active = true
+		)
+	) x
+
+) p on p.resource_id = a.pipeline_id and p.environment_id = a.environment_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id
+where 
+a.pipeline_id = ?
+order by a.created_at desc`
+
+		err := database.DBConn.Raw(
+			query, currentUser, currentUser, pipelineID).Scan(&p).Error
+
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+
+			if err != gorm.ErrRecordNotFound {
+				return nil, errors.New("Retrive pipelines database error.")
+			}
+		}
+
+	}
+
+	// err := database.DBConn.Select("pipeline_id", "name", "environment_id", "description", "active", "online", "worker_group", "created_at").Order("created_at desc").Where("environment_id = ?", environmentID).Find(&p).Error
+
+	return &p, nil
+}
+
 func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) ([]*privategraphql.Pipelines, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
