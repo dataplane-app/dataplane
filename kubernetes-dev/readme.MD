@@ -11,6 +11,8 @@ kubectl apply -f postgresql-deploy.yaml
 ```
 
 4. Deploy worker with skaffold
+```shell
+skaffold run -f ./kubernetes-dev/skaffold.yaml
 
 
 
@@ -18,5 +20,5 @@ kubectl apply -f postgresql-deploy.yaml
 
 Go to root directory of this repo
 ```shell
-docker build -t dataplane/dataplane-worker:latest -f ./kubernetes-dev/Dockerfile.workerpython ./workers
+docker build -t dataplane/dataplane-worker:latest -f ./kubernetes-dev/Dockerfile.workerpython .
 ```

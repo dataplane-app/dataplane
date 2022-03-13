@@ -1,0 +1,13 @@
+apiVersion: skaffold/v2beta15
+kind: Config
+metadata:
+  name: kubernetes-dev
+build:
+  artifacts:
+  - image: dataplane/dataplane-worker
+    docker:
+      dockerfile: ./kubernetes-dev/Dockerfile.workerpython
+deploy:
+  kubectl:
+    manifests:
+    - ./kubernetes-dev/worker-deployment.yaml
