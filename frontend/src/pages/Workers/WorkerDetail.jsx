@@ -12,6 +12,7 @@ import WorkerDetailMemory from './WorkerDetailMemory';
 import useWebSocket from './useWebSocket';
 import { useParams } from 'react-router-dom';
 import { balancerDict } from './Workers';
+import { useGlobalAuthState } from '../../Auth/UserAuth';
 
 const tableWidth = '1140px';
 
@@ -24,6 +25,9 @@ export default function WorkerDetail() {
 
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
+
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
 
     // Users state
     const [data, setData] = useState([]);
@@ -66,7 +70,7 @@ export default function WorkerDetail() {
                 Cell: (row) => <WorkerDetailMemory row={row} />,
             },
         ],
-        []
+        [jwt]
     );
 
     // Use the state and functions returned from useTable to build your UI

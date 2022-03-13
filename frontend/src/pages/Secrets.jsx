@@ -8,6 +8,7 @@ import { useSnackbar } from 'notistack';
 import { useGetSecrets } from '../graphql/getSecrets';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { formatDate } from '../utils/formatDate';
+import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const Secrets = () => {
     // React router
@@ -18,6 +19,9 @@ const Secrets = () => {
 
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
+
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
 
     // Secrets states
     const [data, setData] = useState([]);
@@ -59,7 +63,7 @@ const Secrets = () => {
             },
         ],
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        []
+        [jwt]
     );
 
     // Use the state and functions returned from useTable to build your UI
