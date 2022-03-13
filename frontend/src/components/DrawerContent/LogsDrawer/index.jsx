@@ -12,6 +12,7 @@ import useWebSocketLog, { formatDate } from './useWebSocketLog';
 
 const LogsDrawer = ({ environmentId, handleClose }) => {
     const [websocketResp, setWebsocketResp] = useState('');
+    const [websocketRespClean, setWebsocketRespClean] = useState('');
     const [filteredGraphqlResp, setFilteredGraphqlResp] = useState('');
     const [graphQlResp, setGraphQlResp] = useState([]);
 
@@ -23,6 +24,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
 
     useEffect(() => {
         setWebsocketResp((t) => t + webSocket + '\n');
+        setWebsocketRespClean((t) => t + webSocket?.split(' -')[0] + '\n');
     }, [webSocket]);
 
     // Prepare filtered graphQL response
@@ -107,7 +109,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
             <Box height="100%" width="100%">
                 <ScrollFollow
                     startFollowing={true}
-                    render={({ follow, onScroll }) => <LazyLog enableSearch text={filteredGraphqlResp + websocketResp} follow={follow} onScroll={onScroll} />}
+                    render={({ follow, onScroll }) => <LazyLog enableSearch text={filteredGraphqlResp + websocketRespClean} follow={follow} onScroll={onScroll} />}
                 />
             </Box>
         </>

@@ -5,7 +5,7 @@ import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 const websocketEndpoint = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
 
 export default function useWebSocketLog(environmentId, run_id, node_id) {
-    const [socketResponse, setSocketResponse] = useState([]);
+    const [socketResponseWithUID, setSocketResponseWithUID] = useState('');
     const reconnectOnClose = useRef(true);
     const ws = useRef(null);
 
@@ -34,8 +34,11 @@ export default function useWebSocketLog(environmentId, run_id, node_id) {
 
             ws.current.onmessage = (e) => {
                 const resp = JSON.parse(e.data);
-                let text = `${formatDate(resp.created_at)} ${resp.log}`;
-                setSocketResponse(text);
+                // Return if not a log message
+                if (resp.run_id) return;
+
+                let text = `${formatDate(resp.created_at)} ${resp.log} -${resp.uid}`;
+                setSocketResponseWithUID(text);
             };
         }
 
@@ -49,7 +52,7 @@ export default function useWebSocketLog(environmentId, run_id, node_id) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [run_id]);
 
-    return socketResponse;
+    return socketResponseWithUID;
 }
 
 export function formatDate(dateString) {
