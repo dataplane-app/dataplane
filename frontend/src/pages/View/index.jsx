@@ -2,7 +2,7 @@ import { ActionLayer } from './ActionLayer';
 import { useTheme } from '@emotion/react';
 import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Drawer, Grid, Typography } from '@mui/material';
+import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
@@ -35,6 +35,7 @@ const View = () => {
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
     const [, setIsLoadingFlow] = useState(true);
+    const [isOpenAnalytics, setIsOpenAnalytics] = useState(false);
 
     //Offset states and refs
     const [offsetHeight, setOffsetHeight] = useState(0);
@@ -143,6 +144,7 @@ const View = () => {
                                         getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
                                         isPipelineOnline={pipeline?.online}
                                         getPipeline={getPipeline}
+                                        setIsOpenAnalytics={setIsOpenAnalytics}
                                     />
                                 </MoreInfoMenu>
                             </Box>
@@ -153,7 +155,7 @@ const View = () => {
                 {/* Run/Stop button, Chips, Timer */}
                 <ActionLayer setElements={setElements} environmentId={Environment.id.get()} />
             </Box>
-            {!FlowState.isOpenLogDrawer.get() ? (
+            {!FlowState.isOpenLogDrawer.get() && !isOpenAnalytics ? (
                 <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
                     {elements && elements.length > 0 ? (
                         <ReactFlowProvider>
@@ -195,6 +197,8 @@ const View = () => {
                     )}
                 </Box>
             ) : null}
+
+            {isOpenAnalytics ? <Analytics setIsOpenAnalytics={setIsOpenAnalytics} /> : null}
             <Drawer anchor="right" open={isOpenPublishDrawer} onClose={() => setIsOpenPublishDrawer(!isOpenPublishDrawer)}>
                 <PublishPipelineDrawer handleClose={() => setIsOpenPublishDrawer(false)} />
             </Drawer>
@@ -327,4 +331,8 @@ export function prepareInputForFrontend(input) {
     }
 
     return [...edgesInput, ...nodesInput];
+}
+
+function Analytics({ setIsOpenAnalytics }) {
+    return <Button onClick={() => setIsOpenAnalytics(false)}>Close</Button>;
 }
