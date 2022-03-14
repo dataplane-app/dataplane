@@ -83,7 +83,7 @@ spec:
             - name: dbdebug
               value: "false"
             - name: messagedebug
-              value: "true"
+              value: "false"
             - name: metricdebug
               value: "false"
             - name: schedulerdebug

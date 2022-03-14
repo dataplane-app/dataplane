@@ -67,7 +67,7 @@ func main() {
 	// Remove admin user
 	database.DBConn.Where("username = ?", testUser).Delete(&models.Users{})
 	// Remove environments
-	database.DBConn.Where("1 = 1").Delete(&models.Environment{})
+	database.DBConn.Where("name <> 'Development'").Delete(&models.Environment{})
 
 	//--------- Create user ------------
 	createUser := `mutation {
