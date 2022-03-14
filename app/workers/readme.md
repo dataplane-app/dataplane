@@ -44,5 +44,17 @@ order by created_at desc;
 
 ### Long running bash test for parallel runs
 ```shell
+bash:
 for((i=1;i<=10; i+=1)); do echo "2nd run $i times"; sleep 0.5; done
+
+sh:
+i=0; while [ $(($i)) -le 25 ]; do i=$(($i + 1)); sleep 0.5; echo "run $i times"; done;
+```
+
+### Number of database connections
+```sql
+SELECT * FROM pg_stat_database;
+SELECT sum(numbackends) FROM pg_stat_database;
+
+select * from pg_stat_activity;
 ```

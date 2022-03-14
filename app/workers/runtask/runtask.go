@@ -132,8 +132,16 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		}
 
 		// log.Println("command:", v)
+		var cmd *exec.Cmd
+		switch config.DPworkerCMD {
+		case "/bin/bash":
+			cmd = exec.Command("/bin/bash", "-c", v)
+		case "/bin/sh":
+			cmd = exec.Command("/bin/sh", "-c", v)
+		default:
+			cmd = exec.Command(v)
+		}
 
-		cmd := exec.Command("/bin/bash", "-c", v)
 		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, "DP_PIPELINEID="+msg.PipelineID)
 		cmd.Env = append(cmd.Env, "DP_NODEID="+msg.NodeID)
@@ -271,6 +279,48 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			// log.Println("tasks before pid:", Tasks)
 		}
 		err := cmd.Start()
+		if err != nil {
+			statusUpdate = "Fail"
+			if TasksStatusWG != "cancel" {
+				TasksStatus.Set(msg.TaskID, "error")
+				// TasksStatus[msg.TaskID] = "error"
+			}
+
+			uid := uuid.NewString()
+			line := config.Secrets.Replace(err.Error())
+
+			logmsg := modelmain.LogsWorkers{
+				CreatedAt:     time.Now().UTC(),
+				UID:           uid,
+				EnvironmentID: msg.EnvironmentID,
+				RunID:         msg.RunID,
+				NodeID:        msg.NodeID,
+				TaskID:        msg.TaskID,
+				Category:      "task",
+				Log:           line,
+				LogType:       "error",
+			}
+
+			// jsonmsg, err := json.Marshal(&logmsg)
+			// if err != nil {
+			// 	logging.PrintSecretsRedact(err)
+			// }
+			sendmsg := modelmain.LogsSend{
+				CreatedAt: logmsg.CreatedAt,
+				UID:       uid,
+				Log:       line,
+				LogType:   "error",
+			}
+
+			messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
+			database.DBConn.Create(&logmsg)
+			if config.Debug == "true" {
+				clog.Error(line)
+			}
+
+			// Break the loop
+			break
+		}
 		task.PID = cmd.Process.Pid
 		Tasks.Set(msg.TaskID, task)
 		// Tasks[msg.TaskID] = task

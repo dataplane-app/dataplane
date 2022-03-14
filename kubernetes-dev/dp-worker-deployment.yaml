@@ -103,3 +103,5 @@ spec:
               value: "60"
             - name: dp_removelogs_days
               value: "60"
+            - name: DP_WORKER_CMD
+              value: "/bin/sh"

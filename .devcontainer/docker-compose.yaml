@@ -83,6 +83,7 @@ services:
       schedulerdebug: "true"
       worker_heartbeat_seconds: "1"
       worker_group: "python_1"
+      DP_WORKER_CMD: "/bin/bash"
       # vm, container, kubernetes
       worker_type: "vm"
       worker_lb: "roundrobin"

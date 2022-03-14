@@ -15,6 +15,7 @@ var WorkerGroup string
 var WorkerType string
 var WorkerEnv string
 var WorkerLB string
+var DPworkerCMD string
 
 // Debug
 var Debug string = "false"
@@ -35,6 +36,10 @@ func LoadConfig() {
 	if WorkerLB == "" {
 		os.Setenv("worker_lb", "roundrobin")
 		WorkerLB = "roundrobin"
+	}
+	DPworkerCMD = os.Getenv("DP_WORKER_CMD")
+	if DPworkerCMD == "" {
+		DPworkerCMD = os.Getenv("SHELL")
 	}
 
 }
