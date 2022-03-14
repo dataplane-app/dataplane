@@ -18,7 +18,6 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraphql.AddAdminsInput) (*publicgraphql.Admin, error) {
@@ -29,6 +28,10 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	platform := models.Platform{}
 	if res := database.DBConn.First(&platform); res.Error == gorm.ErrRecordNotFound {
 		return nil, errors.New("Platform ID not found, restart the server.")
+	}
+
+	if platform.Complete == true {
+		return nil, errors.New("Platform already setup.")
 	}
 
 	password, err := auth.Encrypt(input.AddUsersInput.Password)
@@ -104,28 +107,6 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	if err != nil {
 		logging.PrintSecretsRedact(err)
 		errors.New("Failed to create admin permissions.")
-	}
-
-	// Environments get added
-	environment := &[]models.Environment{
-		{ID: uuid.New().String(),
-			Name:       "Development",
-			PlatformID: platform.ID,
-			Active:     true}, {
-			ID:         uuid.New().String(),
-			Name:       "Production",
-			PlatformID: platform.ID,
-			Active:     true,
-		},
-	}
-
-	err = database.DBConn.Clauses(clause.OnConflict{DoNothing: true}).Create(&environment).Error
-
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return nil, errors.New("Register database error.")
 	}
 
 	// Preferences get added

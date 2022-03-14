@@ -28,6 +28,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/websocket/v2"
 	"github.com/google/uuid"
+	"gorm.io/gorm/clause"
 )
 
 type client struct{} // Add more data to this type if needed
@@ -86,6 +87,28 @@ func Setup(port string) *fiber.App {
 			}
 		}
 		config.PlatformID = platformData.ID
+
+		// Environments get added
+		environment := &[]models.Environment{
+			{ID: uuid.New().String(),
+				Name:       "Development",
+				PlatformID: config.PlatformID,
+				Active:     true}, {
+				ID:         uuid.New().String(),
+				Name:       "Production",
+				PlatformID: config.PlatformID,
+				Active:     true,
+			},
+		}
+
+		err = database.DBConn.Clauses(clause.OnConflict{DoNothing: true}).Create(&environment).Error
+
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			panic("Add initial environments database error.")
+		}
 	}
 	log.Println("🎯 Platform ID: ", config.PlatformID)
 
@@ -225,7 +248,13 @@ func Setup(port string) *fiber.App {
 	// Do something with response
 	log.Println("🐆 Start time:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
 
-	log.Println("🌍 Visit dashboard at:", "http://localhost:"+port+"/webapp/")
+	if u.Complete == false {
+		log.Println("🐣 First time setup at:", "http://localhost:"+port+"/webapp/get-started")
+		log.Println("🌍 Visit dashboard at:", "http://localhost:"+port+"/webapp/")
+		log.Println(" ** Replace localhost with domain where app is hosted. **")
+	} else {
+		log.Println("🌍 Visit dashboard at:", "http://localhost:"+port+"/webapp/")
+	}
 
 	// log.Println("Subscribe", hello, err)
 
