@@ -4,15 +4,14 @@ RUN mkdir -p /go/src/build
 
 WORKDIR /go/src/build
 
-COPY ./workers/go.mod .
-COPY ./workers/go.sum .
+COPY app/go.mod .
+COPY app/go.sum .
 RUN go mod download
 
-ADD workers /go/src/build/
+ADD app /go/src/build/
 
-RUN CGO_ENABLED=0 go build -o main worker.go
-
-RUN PWD
+ARG SKAFFOLD_GO_GCFLAGS
+RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o worker workers/worker.go
 
 
 FROM python:alpine3.15
@@ -35,13 +34,14 @@ RUN adduser \
     "${USER}"
 
 
-COPY --from=builder go/src/build/main /workerdev/main
+COPY --from=builder go/src/build/worker /workerdev/worker
 WORKDIR /workerdev
 
 # COPY ../workers/go.mod /workerdev/go.mod
 # RUN go mod download
 
 # Use an unprivileged user.
+ENV GOTRACEBACK=single
 USER appuser:appuser
 
-CMD ["main"]
+CMD ["worker"]

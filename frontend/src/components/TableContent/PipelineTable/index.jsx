@@ -49,23 +49,23 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
         () => [
             {
                 Header: 'Manage',
-                accessor: (row) => row,
+                accessor: (row) => [row.name, row.pipelineID, row.online, row.environmentID, row.node_type_desc],
                 Cell: (row) => (
                     <Grid item sx={{ flex: 1, ml: -1 }} display="flex" alignItems="center" justifyContent="center">
                         <MoreInfoMenuPipeline
                             onClick={() => {
-                                setPipelineName(row.value.name);
-                                setPipelineId(row.value.pipelineID);
+                                setPipelineName(row.value[0]);
+                                setPipelineId(row.value[1]);
                             }}>
                             <PipelineItemTable //
-                                id={row.value.pipelineID}
-                                name={row.value.name}
-                                online={row.value.online}
-                                environmentID={row.value.environmentID}
-                                nodeTypeDesc={row.value.node_type_desc}
+                                id={row.value[1]}
+                                name={row.value[0]}
+                                online={row.value[2]}
+                                environmentID={row.value[3]}
+                                nodeTypeDesc={row.value[4]}
                                 setIsOpenDeletePipeline={setIsOpenDeletePipeline}
                                 getPipelines={getPipelines}
-                                pipeline={row.value}
+                                pipeline={row.cell.row.original}
                             />
                         </MoreInfoMenuPipeline>
                     </Grid>

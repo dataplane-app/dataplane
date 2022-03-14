@@ -7,6 +7,12 @@ Logout uses access token derived from the refresh token. This removes all refres
 go run mainapp/Tests/mainTest.go
 ```
 
+### Build front end to embed in app
+```shell
+cd frontend
+yarn build
+```
+
 # Update graphql schemas
 
 ```
