@@ -10,25 +10,25 @@ spec:
     - name: tcp
       protocol: TCP
       #      port = port connected to ingress
-      port: 9005
+      port: 9000
       # targetPort = port on container
-      targetPort: 9005
+      targetPort: 9000
   selector:
     app: dataplane-main
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dataplane-worker
+  name: dataplane-main
 spec:
-  replicas: 4
+  replicas: 3
   selector:
     matchLabels:
-      app: dataplane-worker
+      app: dataplane-main
   template:
     metadata:
       labels:
-        app: dataplane-worker
+        app: dataplane-main
     spec:
       securityContext:
         runAsUser: 10001
@@ -37,9 +37,16 @@ spec:
         - name: container
           image: dataplane/dataplane-main:latest
           command:
-            - "./worker"
+            - "./main"
           ports:
-            - containerPort: 9005
+            - containerPort: 9000
+          resources:
+            limits:
+              memory: "200Mi"
+              cpu: "0.2"
+            requests:
+              memory: "100Mi"
+              cpu: "0.1"
           env:
             - name: env
               value: "local"

@@ -10,12 +10,29 @@ kubectl apply -f postgresql-storage.yaml
 kubectl apply -f postgresql-deploy.yaml
 ```
 
-4. Deploy worker with skaffold
+4. Apply an ingress
+```shell
+kubectl apply -f dp-ingress.yaml
+kubectl get ingress
+```
+With the IP address add to /etc/hosts file
+```
+sudo nano /etc/hosts
+172.17.0.15 dev.dataplane
+```
+
+5. Deploy worker with skaffold
 From root of this repo run:
 ```shell
 skaffold run -f ./kubernetes-dev/skaffold-main.yaml
 skaffold run -f ./kubernetes-dev/skaffold-worker.yaml
+```
 
+6. Logging across apps
+```shell
+brew install stern
+stern -n default dataplane-main -t
+```
 
 
 

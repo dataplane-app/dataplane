@@ -35,7 +35,8 @@ RUN adduser \
     "${USER}"
 
 
-COPY --from=builder go/src/build/app/mainapp/frontbuild /workerdev/frontbuild
+ADD app/mainapp/frontbuild /workerdev/frontbuild
+# COPY --from=builder go/src/build/app/mainapp/frontbuild/ /workerdev/frontbuild/
 COPY --from=builder go/src/build/main /workerdev/main
 WORKDIR /workerdev
 
