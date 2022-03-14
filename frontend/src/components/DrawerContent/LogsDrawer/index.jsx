@@ -14,12 +14,13 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
     const [websocketResp, setWebsocketResp] = useState('');
     const [filteredGraphqlResp, setFilteredGraphqlResp] = useState('');
     const [graphQlResp, setGraphQlResp] = useState([]);
+    const [keys, setKeys] = useState([]);
 
     // Global state
     const RunState = useGlobalRunState();
 
     // Instantiate websocket
-    const webSocket = useWebSocketLog(environmentId, RunState.dropdownRunId.get(), RunState.node_id.get());
+    const webSocket = useWebSocketLog(environmentId, RunState.dropdownRunId.get(), RunState.node_id.get(), setKeys);
 
     useEffect(() => {
         setWebsocketResp((t) => t + webSocket + '\n');
@@ -41,7 +42,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
     }, [graphQlResp]);
 
     // Graphql Hook
-    const getNodeLogs = useGetNodeLogsHook(environmentId, RunState.dropdownRunId.get(), RunState.node_id.get(), setGraphQlResp);
+    const getNodeLogs = useGetNodeLogsHook(environmentId, RunState.dropdownRunId.get(), RunState.node_id.get(), setGraphQlResp, keys);
 
     useEffect(() => {
         if (!RunState.dropdownRunId.get() || !RunState.node_id.get()) return;
@@ -117,7 +118,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
 export default LogsDrawer;
 
 // ----- Custom Hooks
-const useGetNodeLogsHook = (environmentID, runID, nodeID, setGraphQlResp) => {
+const useGetNodeLogsHook = (environmentID, runID, nodeID, setGraphQlResp, keys) => {
     // GraphQL hook
     const getNodeLogs = useGetNodeLogs();
 
@@ -136,7 +137,8 @@ const useGetNodeLogsHook = (environmentID, runID, nodeID, setGraphQlResp) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setGraphQlResp(response);
+            const resp250 = response.slice(response.length - 250);
+            setGraphQlResp(resp250.filter((a) => !keys.includes(a.uid)));
         }
     };
 };
