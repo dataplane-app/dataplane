@@ -62,7 +62,7 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
 
     return (
         <Grid item alignItems="center" display="flex" width={520}>
-            {selectedRun ? (
+            {selectedRun && !isNewFlow ? (
                 <Autocomplete
                     id="run_autocomplete"
                     onChange={(event, newValue) => {
