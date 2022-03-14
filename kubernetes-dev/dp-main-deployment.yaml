@@ -75,7 +75,7 @@ spec:
             - name: dataplane_port
               value: "9000"
             - name: dataplane_nats
-              value: "nats://nats:4222, nats://nats-r:4222"
+              value: "nats://nats-0.nats.default.svc:4222, nats://nats-1.nats.default.svc:4222, nats-3.nats.default.svc:4222"
             - name: mode
               value: "development"
             - name: debug
