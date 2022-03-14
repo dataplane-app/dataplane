@@ -6,7 +6,6 @@ import (
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
-	"dataplane/mainapp/logme"
 	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/pipelines"
 	"dataplane/mainapp/platform"
@@ -37,6 +36,8 @@ var MainAppID string
 
 func Setup(port string) *fiber.App {
 
+	start := time.Now()
+
 	app := fiber.New()
 
 	config.LoadConfig()
@@ -58,33 +59,49 @@ func Setup(port string) *fiber.App {
 	// -------- NATS Connect -------
 	messageq.NATSConnect()
 
-	start := time.Now()
+	// ------- RUN MIGRATIONS ------
+	database.Migrate()
+
+	// ----- Load platformID ------
+	u := models.Platform{}
+	database.DBConn.First(&u)
+	config.PlatformID = u.ID
+
+	/* --- First time setup, workers will wait for this to be available ---- */
+	if u.ID == "" {
+		platformData := &models.Platform{
+			ID:       uuid.New().String(),
+			Complete: false,
+			One:      true,
+		}
+
+		err := database.DBConn.Create(&platformData).Error
+
+		if err != nil {
+			if config.Debug == "true" {
+				panic(err)
+			}
+		}
+		config.PlatformID = platformData.ID
+	}
+	log.Println("🎯 Platform ID: ", config.PlatformID)
 
 	/* --- Run the scheduler ---- */
 	config.Scheduler = gocron.NewScheduler(time.UTC)
 	config.Scheduler.StartAsync()
 
-	// ------- RUN MIGRATIONS ------
-	database.Migrate()
-
-	logme.PlatformLogger(models.LogsPlatform{
-		EnvironmentID: "d_platform",
-		Category:      "platform",
-		LogType:       "info", //can be error, info or debug
-		Log:           "🌟 Database connected",
-	})
-	logme.PlatformLogger(models.LogsPlatform{
-		EnvironmentID: "d_platform",
-		Category:      "platform",
-		LogType:       "info", //can be error, info or debug
-		Log:           "📦 Database migrated",
-	})
-
-	// ----- Load platformID ------
-	u := models.Platform{}
-	database.DBConn.First(&u)
-	database.PlatformID = u.ID
-	log.Println("🎯 Platform ID: ", database.PlatformID)
+	// logme.PlatformLogger(models.LogsPlatform{
+	// 	EnvironmentID: "d_platform",
+	// 	Category:      "platform",
+	// 	LogType:       "info", //can be error, info or debug
+	// 	Log:           "🌟 Database connected",
+	// })
+	// logme.PlatformLogger(models.LogsPlatform{
+	// 	EnvironmentID: "d_platform",
+	// 	Category:      "platform",
+	// 	LogType:       "info", //can be error, info or debug
+	// 	Log:           "📦 Database migrated",
+	// })
 
 	// ----- Remove stale tokens ------
 	log.Println("💾 Removing stale data")

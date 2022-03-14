@@ -67,7 +67,7 @@ func ListenTasks() {
 		}
 	})
 	if config.Debug == "true" {
-		log.Println("Listening for tasks on subject:", "task."+os.Getenv("worker_group")+"."+config.WorkerID)
+		log.Println("🎧 Listening for tasks on subject:", "task."+os.Getenv("worker_group")+"."+config.WorkerID)
 	}
 
 	messageq.NATSencoded.Subscribe("taskcancel."+os.Getenv("worker_group")+"."+config.WorkerID, func(subj, reply string, msg models.WorkerTaskSend) {

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logme"
@@ -53,7 +54,7 @@ func GenerateAccessClaims(userID string, username string, usertype string) strin
 		AuthenticationType: "PASSWORD",
 		PreferredUsername:  username,
 		UserType:           usertype, //admin or user
-		PlatformID:         database.PlatformID,
+		PlatformID:         config.PlatformID,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)

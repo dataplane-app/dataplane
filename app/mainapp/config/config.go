@@ -8,16 +8,19 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 )
 
+// Platform
+var PlatformID string
+var MainAppID string = ""
+var Leader string = ""
+
 /* Routine removal of stale data */
 var CleanTasks int = 30
 var CleanLogs int = 30
-var Leader string = ""
-var MainAppID string = ""
-var Scheduler *gocron.Scheduler
 
-// Needs concurrency safety:
+// Scheduler
 var PipelineScheduler = cmap.New()
 var PipelineSchedulerJob = cmap.New()
+var Scheduler *gocron.Scheduler
 
 // var PipelineScheduler = make(map[string]*gocron.Scheduler)
 // var PipelineSchedulerJob = make(map[string]*gocron.Job)

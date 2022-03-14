@@ -5,7 +5,8 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
@@ -46,7 +47,7 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 		ID:          uuid.New().String(),
 		Name:        input.Name,
 		Description: *input.Description,
-		PlatformID:  database.PlatformID,
+		PlatformID:  config.PlatformID,
 		Active:      true,
 	}
 
@@ -108,7 +109,7 @@ func (r *mutationResolver) UpdateEnvironment(ctx context.Context, input *private
 		ID:          input.ID,
 		Name:        input.Name,
 		Description: *input.Description,
-		PlatformID:  database.PlatformID,
+		PlatformID:  config.PlatformID,
 	}).First(&e).Error
 
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/database/models"
+	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
 	"dataplane/workers/runtask"
 	"dataplane/workers/secrets"
@@ -32,55 +33,83 @@ func Setup(port string) *fiber.App {
 	// ------- DATABASE CONNECT ------
 
 	database.DBConnect()
-	log.Println("🏃 ======== DATAPLANE WORKER ======== running on: ", os.Getenv("env"))
+	log.Println("🏃 ======== DATAPLANE WORKER ========")
 
 	// ------ Validate worker data ---------
-	if os.Getenv("worker_group") == "" {
+	if config.WorkerGroup == "" {
 		panic("Requires worker_group environment variable")
 	}
 
 	// Validate group name
 	var isStringAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
-	if !isStringAlphaNumeric(os.Getenv("worker_group")) {
+	if !isStringAlphaNumeric(config.WorkerGroup) {
 		panic("Worker group - Only [a-z], [A-Z], [0-9] and _ are allowed")
 	}
 
-	if os.Getenv("worker_type") == "" {
+	if config.WorkerType == "" {
 		panic("Requires worker_type environment variable")
 	}
 
-	if os.Getenv("worker_env") == "" {
+	if config.WorkerEnv == "" {
 		panic("Requires worker_env environment variable")
 	}
 
-	if os.Getenv("worker_lb") == "" {
-		os.Setenv("worker_lb", "roundrobin")
+	// ----- Load platformID ------
+	for i := 0; i < 50000; i++ {
+		platform := models.Platform{}
+		database.DBConn.First(&platform)
+		config.PlatformID = platform.ID
+
+		if config.PlatformID != "" {
+			break
+		} else {
+			log.Printf("😩 Platform not setup - waiting for main app to start: try number. %d, retry in 5 seconds", i+1)
+			time.Sleep(time.Second * 5)
+		}
+
 	}
 
-	e := models.Environment{}
-	database.DBConn.First(&e, "name = ?", os.Getenv("worker_env"))
+	log.Println("🎯 Platform ID: ", config.PlatformID)
 
-	if e.Name != os.Getenv("worker_env") {
-		panic("Envrionment not found - " + os.Getenv("worker_env"))
+	e := models.Environment{}
+	database.DBConn.First(&e, "name = ?", config.WorkerEnv)
+
+	// if e.Name != config.WorkerEnv  {
+	// 	panic("Warning: Envrionment not found. Be sure environment is setup with mainapp - " + config.WorkerEnv)
+	// }
+
+	// For first time users create a development environment ID
+	if e.ID == "" && config.WorkerEnv == "Development" {
+		e = models.Environment{
+			ID:         uuid.New().String(),
+			Name:       "Development",
+			PlatformID: config.PlatformID,
+			Active:     true,
+		}
+
+		err := database.DBConn.Create(&e).Error
+
+		if err != nil {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			panic("Failed to create a development environment on first use.")
+		}
+
 	}
 
 	config.EnvName = e.Name
 	config.EnvID = e.ID
+	log.Println("🌳 Environment name and ID: ", config.EnvName, " - ", config.EnvID)
 
 	start := time.Now()
 
 	// ------- LOAD secrets ------
 	secrets.MapSecrets()
 
-	// ----- Load platformID ------
-	u := models.Platform{}
-	database.DBConn.First(&u)
-	config.PlatformID = u.ID
-	log.Println("🎯 Platform ID: ", config.PlatformID)
-
 	// Load a worker ID
 	config.WorkerID = uuid.NewString()
-	log.Println("👷 Worker Group and ID: ", os.Getenv("worker_group"), " - ", config.WorkerID)
+	log.Println("👷 Worker Group and ID: ", config.WorkerGroup, " - ", config.WorkerID)
 
 	//recover from panic
 	app.Use(recover.New())

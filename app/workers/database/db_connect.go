@@ -15,7 +15,6 @@ import (
 )
 
 var DBConn *gorm.DB
-var PlatformID string
 
 func DBConnect() {
 	var err error

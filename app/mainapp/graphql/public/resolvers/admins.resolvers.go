@@ -17,6 +17,8 @@ import (
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraphql.AddAdminsInput) (*publicgraphql.Admin, error) {
@@ -24,9 +26,9 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 		return nil, errors.New("Not in development mode.")
 	}
 
-	u := models.Platform{}
-	if res := database.DBConn.First(&u); res.RowsAffected >= 1 {
-		return nil, errors.New("Platform already setup.")
+	platform := models.Platform{}
+	if res := database.DBConn.First(&platform); res.Error == gorm.ErrRecordNotFound {
+		return nil, errors.New("Platform ID not found, restart the server.")
 	}
 
 	password, err := auth.Encrypt(input.AddUsersInput.Password)
@@ -36,10 +38,10 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	}
 
 	platformData := &models.Platform{
-		ID:           uuid.New().String(),
+		ID:           platform.ID,
 		BusinessName: input.PlatformInput.BusinessName,
 		Timezone:     input.PlatformInput.Timezone,
-		Complete:     input.PlatformInput.Complete,
+		Complete:     true,
 	}
 
 	userData := &models.Users{
@@ -64,19 +66,17 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	}
 
 	// Platform information gets sent to DB
-	err = database.DBConn.Create(&platformData).Error
+	err = database.DBConn.Updates(&platformData).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		if strings.Contains(err.Error(), "duplicate key") {
-			return nil, errors.New("User already exists.")
+			return nil, errors.New("Platform already exists.")
 		}
 		return nil, errors.New("Register database error.")
 	}
-
-	database.PlatformID = platformData.ID
 
 	// Admin information gets sent to DB
 	err = database.DBConn.Create(&userData).Error
@@ -110,16 +110,16 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	environment := &[]models.Environment{
 		{ID: uuid.New().String(),
 			Name:       "Development",
-			PlatformID: database.PlatformID,
+			PlatformID: platform.ID,
 			Active:     true}, {
 			ID:         uuid.New().String(),
 			Name:       "Production",
-			PlatformID: database.PlatformID,
+			PlatformID: platform.ID,
 			Active:     true,
 		},
 	}
 
-	err = database.DBConn.Create(&environment).Error
+	err = database.DBConn.Clauses(clause.OnConflict{DoNothing: true}).Create(&environment).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
