@@ -69,11 +69,14 @@ func Setup(port string) *fiber.App {
 
 	/* --- First time setup, workers will wait for this to be available ---- */
 	if u.ID == "" {
+
 		platformData := &models.Platform{
 			ID:       uuid.New().String(),
 			Complete: false,
 			One:      true,
 		}
+
+		log.Println("🍽  Platform not found - setup first time.")
 
 		err := database.DBConn.Create(&platformData).Error
 

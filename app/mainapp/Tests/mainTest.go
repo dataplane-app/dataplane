@@ -26,18 +26,18 @@ domain: 127.0.0.1:8000
 route: /permission
 response: {"r": "OK", "msg": "Permission created", "count": 1}
 */
-func MockingBird() string {
+// func MockingBird() string {
 
-	// create a listener with the desired port.
-	testutils.App = routes.Setup("9000")
-	err := testutils.App.Listen("0.0.0.0:9000")
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	// create a listener with the desired port.
+// 	testutils.App = routes.Setup("9000")
+// 	err := testutils.App.Listen("0.0.0.0:9000")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	return "hello"
+// 	return "hello"
 
-}
+// }
 
 func main() {
 
@@ -60,7 +60,7 @@ func main() {
 
 	// // ---- create admin user
 	// // Delete platform for testing first time user
-	database.DBConn.Where("1 = 1").Delete(&models.Platform{})
+	// database.DBConn.Where("1 = 1").Delete(&models.Platform{})
 
 	testUser := testutils.AdminUser
 	testPassword := testutils.AdminPassword
