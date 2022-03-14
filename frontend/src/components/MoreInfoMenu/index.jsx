@@ -24,7 +24,7 @@ const MoreInfoMenu = ({ children, iconSize = 22, iconHorizontal = false, iconCol
         <div>
             <IconButton
                 aria-label="more"
-                sx={noPadding && { padding: 0 }}
+                sx={noPadding ? { padding: 0 } : null}
                 id="long-button"
                 aria-controls={open ? 'long-menu' : undefined}
                 aria-expanded={open ? 'true' : undefined}
