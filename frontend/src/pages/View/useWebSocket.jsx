@@ -5,7 +5,22 @@ import { createState, useState as useHookState } from '@hookstate/core';
 import { useGlobalFlowState } from '../Flow';
 import { displayTimer, usePipelineTasksRunHook } from './Timer';
 
-const websocketEndpoint = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+var loc = window.location, new_uri;
+if (loc.protocol === "https:") {
+    new_uri = "wss:";
+} else {
+    new_uri = "ws:";
+}
+new_uri += "//" + loc.host;
+
+// console.log("websockets loc:", new_uri)
+if (process.env.REACT_APP_DATAPLANE_ENV == "build"){
+    new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+}else{
+    new_uri = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+}
+
+const websocketEndpoint = new_uri;
 
 // Global run state
 export const globalRunState = createState({ pipelineRunsTrigger: 1 });

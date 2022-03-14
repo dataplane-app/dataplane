@@ -10,7 +10,8 @@ RUN go mod download
 
 ADD app /go/src/build/
 
-RUN CGO_ENABLED=0 go build -o worker workers/worker.go
+ARG SKAFFOLD_GO_GCFLAGS
+RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o worker workers/worker.go
 
 
 FROM python:alpine3.15
@@ -40,6 +41,7 @@ WORKDIR /workerdev
 # RUN go mod download
 
 # Use an unprivileged user.
+ENV GOTRACEBACK=single
 USER appuser:appuser
 
 CMD ["worker"]

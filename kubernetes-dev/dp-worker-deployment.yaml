@@ -40,6 +40,13 @@ spec:
             - "./worker"
           ports:
             - containerPort: 9005
+          resources:
+            limits:
+              memory: "500Mi"
+              cpu: "0.4"
+            requests:
+              memory: "100Mi"
+              cpu: "0.1"
           env:
             - name: env
               value: "local"
@@ -87,7 +94,7 @@ spec:
               value: "python_1"
       # vm, container, kubernetes
             - name: worker_type
-              value: "vm"
+              value: "container"
             - name: worker_lb
               value: "roundrobin"
             - name: worker_env

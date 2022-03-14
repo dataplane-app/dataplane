@@ -18,7 +18,7 @@ kubectl get ingress
 With the IP address add to /etc/hosts file
 ```
 sudo nano /etc/hosts
-172.17.0.15 dev.dataplane
+172.17.0.15 dataplane.info
 ```
 
 5. Deploy worker with skaffold
