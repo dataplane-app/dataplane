@@ -19,8 +19,8 @@ if (process.env.REACT_APP_DATAPLANE_ENV == "build"){
 
 const websocketEndpoint = new_uri;
 
-export default function useWebSocketLog(environmentId, run_id, node_id) {
-    const [socketResponseWithUID, setSocketResponseWithUID] = useState('');
+export default function useWebSocketLog(environmentId, run_id, node_id, setKeys) {
+    const [socketResponse, setSocketResponse] = useState('');
     const reconnectOnClose = useRef(true);
     const ws = useRef(null);
 
@@ -51,9 +51,9 @@ export default function useWebSocketLog(environmentId, run_id, node_id) {
                 const resp = JSON.parse(e.data);
                 // Return if not a log message
                 if (resp.run_id) return;
-
-                let text = `${formatDate(resp.created_at)} ${resp.log} -${resp.uid}`;
-                setSocketResponseWithUID(text);
+                setKeys((k) => [...k, resp.uid]);
+                let text = `${formatDate(resp.created_at)} ${resp.log}`;
+                setSocketResponse(text);
             };
         }
 
@@ -67,7 +67,7 @@ export default function useWebSocketLog(environmentId, run_id, node_id) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [run_id]);
 
-    return socketResponseWithUID;
+    return socketResponse;
 }
 
 export function formatDate(dateString) {
