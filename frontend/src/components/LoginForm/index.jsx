@@ -12,8 +12,6 @@ const LoginForm = ({ handleNext }) => {
     const { register, handleSubmit } = useForm();
 
     async function onSubmit(data) {
-        console.log(data);
-
         const allData = {
             username: data.email,
             password: data.password,
