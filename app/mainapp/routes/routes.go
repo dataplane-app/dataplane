@@ -11,6 +11,7 @@ import (
 	"dataplane/mainapp/platform"
 	"dataplane/mainapp/scheduler"
 	"dataplane/mainapp/scheduler/routinetasks"
+	"dataplane/mainapp/utilities"
 	"dataplane/mainapp/worker"
 	"fmt"
 	"log"
@@ -109,6 +110,35 @@ func Setup(port string) *fiber.App {
 			}
 			panic("Add initial environments database error.")
 		}
+
+		// --------- Setup coding directory structure --------
+
+		// directories := &[]models.CodeFolders{}
+		if _, err := os.Stat(config.CodeDirectory); os.IsNotExist(err) {
+			// path/to/whatever does not exist
+			err := os.MkdirAll(config.CodeDirectory, os.ModePerm)
+			if err != nil {
+				log.Println("Create directory error:", err)
+			}
+			log.Println("Created directory: ", config.CodeDirectory)
+
+		} else {
+			log.Println("Directory already exists: ", config.CodeDirectory)
+		}
+
+		// Platform
+		platformdir := models.CodeFolders{
+			EnvironmentID: "d_platform",
+			FolderName:    "Platform",
+			Level:         "platform",
+			Structure:     "", //must be root of folder/filename
+			FType:         "folder",
+			Active:        true,
+		}
+
+		// Should create a directory as follows code_directory/
+		utilities.CreateFolder(platformdir, "")
+
 	}
 	log.Println("🎯 Platform ID: ", config.PlatformID)
 

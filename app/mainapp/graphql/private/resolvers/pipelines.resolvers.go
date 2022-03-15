@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -88,6 +88,9 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 		}
 
 	}
+
+	// Create folder structure for pipeline
+	// id, err := gonanoid.New(10)
 
 	return pipelineID, nil
 }

@@ -29,6 +29,9 @@ var Scheduler *gocron.Scheduler
 var Debug string = "false"
 var SchedulerDebug string = "false"
 
+// Code editor
+var CodeDirectory string
+
 func LoadConfig() {
 
 	// Clean tasks set
@@ -52,5 +55,7 @@ func LoadConfig() {
 	if SchedulerDebug == "" {
 		SchedulerDebug = "false"
 	}
+
+	CodeDirectory = os.Getenv("dataplane_code_folder")
 
 }
