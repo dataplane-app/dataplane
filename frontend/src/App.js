@@ -33,6 +33,8 @@ import PipelinesPermission from './pages/PipelinesPermission';
 import createCustomTheme from './theme';
 import UseCheckTheme from './hooks/useCheckTheme';
 import Flow from './pages/Flow';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},

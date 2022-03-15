@@ -44,6 +44,7 @@ export const globalFlowState = createState({
     isPanEnable: false,
     scale: 1,
     selectedEdge: null,
+    pipelineInfo: null,
 });
 
 export const useGlobalFlowState = () => useHookState(globalFlowState);

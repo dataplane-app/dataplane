@@ -109,12 +109,38 @@ code {
     }
 }
 
+.oc-fm--file-navigator__toolbar {
+    display: none;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+    width: 20px !important;
+    height: 20px !important;
+    border-right: 5px solid rgba(0, 0, 0) !important;
+    border-bottom: 5px solid rgba(0, 0, 0) !important;
+}
+
+.hidden_controls {
+    position: absolute;
+    top: -3px;
+    right: 10px;
+    visibility: hidden;
+}
+
+.tree_parent:hover .showOnHover {
+    visibility: visible;
+}
+
+.tree_parent .MuiTreeItem-iconContainer svg {
+    font-size: 15px;
+}
+
 /* Pipeline flow log running spinner */
 @keyframes rotate-keyframes {
     100% {
-        transform: rotate(360deg)
+        transform: rotate(360deg);
     }
 }
 .anim-rotate {
-animation: rotate-keyframes 1s linear infinite;
+    animation: rotate-keyframes 1s linear infinite;
 }

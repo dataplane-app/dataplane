@@ -47,6 +47,11 @@ const createCustomTheme = (mode) => ({
                       tabColor: '#fff',
                       tabTextColor: '#222',
                   },
+                  editorPage: {
+                      tabTextColor: '#000',
+                      tabTextColorNotActive: '#616161',
+                      fileManagerIcon: '#8C8C8C',
+                  },
                   status: {
                       pipelineOnline: '#72B842',
                       pipelineOnlineText: '#2E6707',
@@ -94,6 +99,11 @@ const createCustomTheme = (mode) => ({
                       selectedTabColor: 'rgba(73, 123, 39, 0.31)',
                       tabColor: '#222',
                       tabTextColor: '#fff',
+                  },
+                  editorPage: {
+                      tabTextColor: '#000',
+                      tabTextColorNotActive: '#616161',
+                      fileManagerIcon: '#8C8C8C',
                   },
                   status: {
                       pipelineOnline: '#72B842',
