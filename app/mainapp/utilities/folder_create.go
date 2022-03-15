@@ -10,8 +10,10 @@ import (
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
-func CreateFolder(input models.CodeFolders, directoryRoot string) {
+func CreateFolder(input models.CodeFolders) models.CodeFolders {
 
+	var createDirectory string
+	var foldername string
 	// loops to avoid collision in nanoid
 	for i := 1; i < 5; i++ {
 		id, err := gonanoid.New(10)
@@ -21,6 +23,11 @@ func CreateFolder(input models.CodeFolders, directoryRoot string) {
 		}
 
 		input.FolderID = id
+		foldername = input.FolderID + "_" + FolderFriendly(input.FolderName)
+
+		createDirectory = input.Structure + foldername
+
+		input.Location = createDirectory + "/"
 
 		errdb := database.DBConn.Create(&input).Error
 		if errdb != nil {
@@ -32,9 +39,7 @@ func CreateFolder(input models.CodeFolders, directoryRoot string) {
 
 	}
 
-	foldername := input.FolderID + "_" + FolderFriendly(input.FolderName)
-
-	createDirectory := config.CodeDirectory + input.Structure + foldername
+	createDirectory = config.CodeDirectory + input.Structure + foldername
 
 	if _, err := os.Stat(createDirectory); os.IsNotExist(err) {
 		// path/to/whatever does not exist
@@ -47,5 +52,7 @@ func CreateFolder(input models.CodeFolders, directoryRoot string) {
 	} else {
 		log.Println("Directory already exists: ", config.CodeDirectory+input.Structure+foldername)
 	}
+
+	return input
 
 }
