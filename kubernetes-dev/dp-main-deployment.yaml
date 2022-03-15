@@ -79,7 +79,7 @@ spec:
             - name: mode
               value: "development"
             - name: debug
-              value: "true"
+              value: "false"
             - name: dbdebug
               value: "false"
             - name: messagedebug

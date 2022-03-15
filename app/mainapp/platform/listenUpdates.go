@@ -5,7 +5,6 @@ import (
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/messageq"
-	"dataplane/mainapp/scheduler"
 	"log"
 
 	"gorm.io/gorm"
@@ -14,55 +13,57 @@ import (
 
 func PlatformNodeListen() {
 
-	// Subscribe all nodes to the leader node
-	messageq.NATSencoded.Subscribe("mainapp-node-update", func(subj, reply string, msg models.PlatformNodeUpdate) {
+	// Clear stale leaders on spin up
+	err2 := database.DBConn.Exec(`
+		delete from platform_leader where updated_at < now() at time zone 'utc' - INTERVAL '2 seconds'
+		`)
+	if err2.Error != nil {
+		log.Println(err2.Error.Error())
+	}
 
-		// log.Println(msg)
+	// Subscribe all nodes to the leader node
+	messageq.NATSencoded.QueueSubscribe("mainapp-node-update", "mainapp-node-update", func(subj, reply string, msg models.PlatformNodeUpdate) {
+
+		// log.Println("Updated", msg.Leader == msg.NodeID)
+		// log.Println("Loaded leader", config.Leader)
 
 		switch msg.Status {
 		case "online":
 			// log.Println(msg.NodeID, msg.Leader, msg.Status)
-			UpdateLeader(msg.NodeID)
-		}
-	})
+			nodeID := msg.NodeID
 
-	// Subscribe to queue where worker is randomly chosen as leader
-	messageq.NATSencoded.QueueSubscribe("mainapplead", "leadqueue", func(subj, reply string, msg models.PlatformNodeUpdate) {
-
-		// log.Println("Message received:", msg)
-		switch msg.Status {
-		case "leaderelect":
-			config.Leader = config.MainAppID
-
-			// Elect myself as a leader
-			err2 := database.DBConn.Model(&models.PlatformLeader{}).Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "leader"}},
-				DoUpdates: clause.AssignmentColumns([]string{"updated_at"}),
-			}).Create(map[string]interface{}{
-				"leader":     true,
-				"node_id":    config.MainAppID,
-				"updated_at": gorm.Expr("now() at time zone 'utc'"),
-			})
+			// Remove all leaders older than 2 seconds
+			err2 := database.DBConn.Exec(`
+	delete from platform_leader where updated_at < now() at time zone 'utc' - INTERVAL '2 seconds'
+	`)
 			if err2.Error != nil {
 				log.Println(err2.Error.Error())
 			}
 
-			// Remove any schedules
-			scheduler.RemovePipelineSchedules()
-
-			// I am the leader, load schedules.
-			if config.Leader == config.MainAppID {
-
-				if config.Debug == "true" || config.SchedulerDebug == "true" {
-					log.Println("Leader election:", config.Leader, config.MainAppID)
+			// If the the leader is the current node, update the time using postgresql clock to avoid time drift
+			// This part will not run if no leader is found
+			if config.Leader == nodeID {
+				err2 = database.DBConn.Model(&models.PlatformLeader{}).Clauses(clause.OnConflict{
+					Columns:   []clause.Column{{Name: "leader"}},
+					DoUpdates: clause.AssignmentColumns([]string{"updated_at"}),
+				}).Create(map[string]interface{}{
+					"leader":     true,
+					"node_id":    nodeID,
+					"updated_at": gorm.Expr("now() at time zone 'utc'"),
+				})
+				if err2.Error != nil {
+					log.Println(err2.Error.Error())
 				}
-
-				// Load the pipleine schedules
-				scheduler.LoadPipelineSchedules()
-
 			}
 
+			// Remove all scheduler lease locks older than 2 seconds
+			err2 = database.DBConn.Exec(`
+	delete from scheduler_lock where lock_lease < now() at time zone 'utc' - INTERVAL '2 seconds'
+	`)
+			if err2.Error != nil {
+				log.Println(err2.Error.Error())
+			}
 		}
-
 	})
+
 }
