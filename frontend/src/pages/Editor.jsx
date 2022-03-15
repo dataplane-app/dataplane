@@ -47,7 +47,7 @@ const PipelineEditor = () => {
 
     useEffect(() => {
         if (!pipeline || Object.keys(pipeline).length === 0) {
-            history.push('/');
+            // history.push('/');
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
