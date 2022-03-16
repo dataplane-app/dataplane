@@ -8,6 +8,10 @@ const query = gql`
         filesNode(environmentID: $environmentID, nodeID: $nodeID, pipelineID: $pipelineID) {
             folderID
             parentID
+            folderName
+            level
+            fType
+            active
         }
     }
 `;
