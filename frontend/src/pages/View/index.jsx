@@ -2,7 +2,7 @@ import { ActionLayer } from './ActionLayer';
 import { useTheme } from '@emotion/react';
 import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
+import { Box, Drawer, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
@@ -18,6 +18,7 @@ import LogsDrawer from '../../components/DrawerContent/LogsDrawer';
 import TurnOffPipelineDrawer from '../../components/DrawerContent/TurnOffPipelineDrawer';
 import CustomChip from '../../components/CustomChip';
 import { useGetPipeline } from '../../graphql/getPipeline';
+import { Analytics } from './Analytics';
 
 const View = () => {
     const Environment = useGlobalEnvironmentState();
@@ -322,8 +323,4 @@ export function prepareInputForFrontend(input) {
     }
 
     return [...edgesInput, ...nodesInput];
-}
-
-function Analytics({ setIsOpenAnalytics }) {
-    return <Button onClick={() => setIsOpenAnalytics(false)}>Close</Button>;
 }
