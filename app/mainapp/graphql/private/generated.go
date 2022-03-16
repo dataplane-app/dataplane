@@ -64,8 +64,12 @@ type ComplexityRoot struct {
 	}
 
 	CodeFolders struct {
-		FolderID func(childComplexity int) int
-		ParentID func(childComplexity int) int
+		Active     func(childComplexity int) int
+		FType      func(childComplexity int) int
+		FolderID   func(childComplexity int) int
+		FolderName func(childComplexity int) int
+		Level      func(childComplexity int) int
+		ParentID   func(childComplexity int) int
 	}
 
 	Environments struct {
@@ -524,12 +528,40 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AvailablePermissions.ResourceID(childComplexity), true
 
+	case "CodeFolders.active":
+		if e.complexity.CodeFolders.Active == nil {
+			break
+		}
+
+		return e.complexity.CodeFolders.Active(childComplexity), true
+
+	case "CodeFolders.fType":
+		if e.complexity.CodeFolders.FType == nil {
+			break
+		}
+
+		return e.complexity.CodeFolders.FType(childComplexity), true
+
 	case "CodeFolders.folderID":
 		if e.complexity.CodeFolders.FolderID == nil {
 			break
 		}
 
 		return e.complexity.CodeFolders.FolderID(childComplexity), true
+
+	case "CodeFolders.folderName":
+		if e.complexity.CodeFolders.FolderName == nil {
+			break
+		}
+
+		return e.complexity.CodeFolders.FolderName(childComplexity), true
+
+	case "CodeFolders.level":
+		if e.complexity.CodeFolders.Level == nil {
+			break
+		}
+
+		return e.complexity.CodeFolders.Level(childComplexity), true
 
 	case "CodeFolders.parentID":
 		if e.complexity.CodeFolders.ParentID == nil {
@@ -2679,6 +2711,10 @@ extend type Mutation {
 	{Name: "resolvers/code_editor.graphqls", Input: `type CodeFolders {
     folderID: String!
     parentID: String!
+	folderName: String!
+	level: String!
+	fType: String!
+	active: Boolean!
 }
 
 extend type Query {
@@ -5489,6 +5525,146 @@ func (ec *executionContext) _CodeFolders_parentID(ctx context.Context, field gra
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeFolders_folderName(ctx context.Context, field graphql.CollectedField, obj *models.CodeFolders) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeFolders",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FolderName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeFolders_level(ctx context.Context, field graphql.CollectedField, obj *models.CodeFolders) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeFolders",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Level, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeFolders_fType(ctx context.Context, field graphql.CollectedField, obj *models.CodeFolders) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeFolders",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeFolders_active(ctx context.Context, field graphql.CollectedField, obj *models.CodeFolders) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeFolders",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Environments_id(ctx context.Context, field graphql.CollectedField, obj *models.Environment) (ret graphql.Marshaler) {
@@ -15642,6 +15818,46 @@ func (ec *executionContext) _CodeFolders(ctx context.Context, sel ast.SelectionS
 		case "parentID":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._CodeFolders_parentID(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "folderName":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeFolders_folderName(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "level":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeFolders_level(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "fType":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeFolders_fType(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "active":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeFolders_active(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

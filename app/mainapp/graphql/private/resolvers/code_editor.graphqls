@@ -1,6 +1,10 @@
 type CodeFolders {
     folderID: String!
     parentID: String!
+	folderName: String!
+	level: String!
+	fType: String!
+	active: Boolean!
 }
 
 extend type Query {
