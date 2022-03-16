@@ -5,6 +5,8 @@ import { Bar } from 'react-chartjs-2';
 import { Button } from '@mui/material';
 import { useGlobalRunState } from './useWebSocket';
 import { Downgraded } from '@hookstate/core';
+import { useMe } from '../../graphql/me';
+import { useSnackbar } from 'notistack';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, TimeScale, TimeSeriesScale);
 
@@ -16,16 +18,28 @@ export function Analytics({ setIsOpenAnalytics }) {
     const [nodes, setNodes] = useState([]);
     const [data, setData] = useState(null);
     const [height, setHeight] = useState(100);
+    const [timezone, setTimezone] = useState('');
+
+    // Graphql hook
+    const getMe = useMeHook(setTimezone);
+
+    // Get user's timezone on load
+    useEffect(() => {
+        getMe();
+    }, []);
 
     // Set nodes on dropdown change
     useEffect(() => {
+        if (!timezone) return;
         setNodes(
             Object.entries(RunState.attach(Downgraded).get())
                 .filter(([key, value]) => value?.status && value?.end_dt && value?.start_dt)
                 .map((a) => a[1])
                 .sort((a, b) => a.start_dt?.localeCompare(b.start_dt))
         );
-    }, [RunState.dropdownRunId.get()]);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [RunState.dropdownRunId.get(), timezone]);
 
     // Set labels, chart height on nodes change
     useEffect(() => {
@@ -71,6 +85,11 @@ export function Analytics({ setIsOpenAnalytics }) {
         scales: {
             x: {
                 type: 'time',
+                adapters: {
+                    date: {
+                        zone: timezone,
+                    },
+                },
                 time: {
                     // unit: 'second',
                 },
@@ -131,7 +150,7 @@ function formatType(type) {
     return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
-// Utility function
+// Utility functions
 function timeElapsed(startDate, endDate) {
     let ticks = new Date(endDate) - new Date(startDate); //?
     var hh = Math.floor(ticks / 3600 / 1000);
@@ -145,3 +164,25 @@ function pad(n, width) {
     const num = n + '';
     return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
 }
+
+// ----- Custom hook
+export const useMeHook = (setTimezone) => {
+    // GraphQL hook
+    const getMe = useMe();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get timezone
+    return async () => {
+        const response = await getMe();
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get timezone: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setTimezone(response.timezone);
+        }
+    };
+};
