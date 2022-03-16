@@ -63,6 +63,11 @@ type ComplexityRoot struct {
 		ResourceID func(childComplexity int) int
 	}
 
+	CodeFolders struct {
+		FolderID func(childComplexity int) int
+		ParentID func(childComplexity int) int
+	}
+
 	Environments struct {
 		Active      func(childComplexity int) int
 		Description func(childComplexity int) int
@@ -241,6 +246,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		AvailablePermissions          func(childComplexity int, environmentID string) int
+		FilesNode                     func(childComplexity int, environmentID string, nodeID string, pipelineID string) int
 		GetAccessGroup                func(childComplexity int, userID string, environmentID string, accessGroupID string) int
 		GetAccessGroupUsers           func(childComplexity int, environmentID string, accessGroupID string) int
 		GetAccessGroups               func(childComplexity int, userID string, environmentID string) int
@@ -405,6 +411,7 @@ type QueryResolver interface {
 	GetAccessGroup(ctx context.Context, userID string, environmentID string, accessGroupID string) (*models.PermissionsAccessGroups, error)
 	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error)
 	GetAccessGroupUsers(ctx context.Context, environmentID string, accessGroupID string) ([]*models.Users, error)
+	FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*models.CodeFolders, error)
 	Me(ctx context.Context) (*models.Users, error)
 	MyPipelinePermissions(ctx context.Context) ([]*PipelinePermissionsOutput, error)
 	UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*PipelinePermissionsOutput, error)
@@ -516,6 +523,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AvailablePermissions.ResourceID(childComplexity), true
+
+	case "CodeFolders.folderID":
+		if e.complexity.CodeFolders.FolderID == nil {
+			break
+		}
+
+		return e.complexity.CodeFolders.FolderID(childComplexity), true
+
+	case "CodeFolders.parentID":
+		if e.complexity.CodeFolders.ParentID == nil {
+			break
+		}
+
+		return e.complexity.CodeFolders.ParentID(childComplexity), true
 
 	case "Environments.active":
 		if e.complexity.Environments.Active == nil {
@@ -1672,6 +1693,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.AvailablePermissions(childComplexity, args["environmentID"].(string)), true
 
+	case "Query.filesNode":
+		if e.complexity.Query.FilesNode == nil {
+			break
+		}
+
+		args, err := ec.field_Query_filesNode_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.FilesNode(childComplexity, args["environmentID"].(string), args["nodeID"].(string), args["pipelineID"].(string)), true
+
 	case "Query.getAccessGroup":
 		if e.complexity.Query.GetAccessGroup == nil {
 			break
@@ -2641,6 +2674,20 @@ extend type Mutation {
     + **Permissions**: admin_platform, admin_environment, environment_permissions
     """
     removeUserFromAccessGroup(user_id: String!, access_group_id: String!, environmentID: String!): String!
+}
+`, BuiltIn: false},
+	{Name: "resolvers/code_editor.graphqls", Input: `type CodeFolders {
+    folderID: String!
+    parentID: String!
+}
+
+extend type Query {
+  """
+	Get a node's file structure.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+	"""
+  filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): CodeFolders!
 }
 `, BuiltIn: false},
 	{Name: "resolvers/me.graphqls", Input: `input AddUpdateMeInput {
@@ -4389,6 +4436,39 @@ func (ec *executionContext) field_Query_availablePermissions_args(ctx context.Co
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_filesNode_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["nodeID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["nodeID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_getAccessGroupUsers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -5325,6 +5405,76 @@ func (ec *executionContext) _AvailablePermissions_Access(ctx context.Context, fi
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Access, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeFolders_folderID(ctx context.Context, field graphql.CollectedField, obj *models.CodeFolders) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeFolders",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FolderID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeFolders_parentID(ctx context.Context, field graphql.CollectedField, obj *models.CodeFolders) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeFolders",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ParentID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10535,6 +10685,48 @@ func (ec *executionContext) _Query_getAccessGroupUsers(ctx context.Context, fiel
 	return ec.marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_filesNode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_filesNode_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().FilesNode(rctx, args["environmentID"].(string), args["nodeID"].(string), args["pipelineID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.CodeFolders)
+	fc.Result = res
+	return ec.marshalNCodeFolders2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -15427,6 +15619,47 @@ func (ec *executionContext) _AvailablePermissions(ctx context.Context, sel ast.S
 	return out
 }
 
+var codeFoldersImplementors = []string{"CodeFolders"}
+
+func (ec *executionContext) _CodeFolders(ctx context.Context, sel ast.SelectionSet, obj *models.CodeFolders) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, codeFoldersImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CodeFolders")
+		case "folderID":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeFolders_folderID(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "parentID":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeFolders_parentID(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var environmentsImplementors = []string{"Environments"}
 
 func (ec *executionContext) _Environments(ctx context.Context, sel ast.SelectionSet, obj *models.Environment) graphql.Marshaler {
@@ -17208,6 +17441,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "filesNode":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_filesNode(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "me":
 			field := field
 
@@ -18800,6 +19056,20 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNCodeFolders2dataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v models.CodeFolders) graphql.Marshaler {
+	return ec._CodeFolders(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCodeFolders2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v *models.CodeFolders) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CodeFolders(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {

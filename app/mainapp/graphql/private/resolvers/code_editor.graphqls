@@ -1,0 +1,13 @@
+type CodeFolders {
+    folderID: String!
+    parentID: String!
+}
+
+extend type Query {
+  """
+	Get a node's file structure.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+	"""
+  filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): CodeFolders!
+}

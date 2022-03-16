@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -20,8 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-git/go-git/v5"
-
+	git "github.com/go-git/go-git/v5"
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 	"gorm.io/gorm"
