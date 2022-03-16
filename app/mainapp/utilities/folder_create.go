@@ -25,6 +25,8 @@ func CreateFolder(input models.CodeFolders) models.CodeFolders {
 		input.FolderID = id
 		foldername = input.FolderID + "_" + FolderFriendly(input.FolderName)
 
+		input.FolderName = FolderFriendly(input.FolderName)
+
 		createDirectory = input.Structure + foldername
 
 		input.Location = createDirectory + "/"

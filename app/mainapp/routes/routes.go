@@ -142,6 +142,7 @@ func Setup(port string) *fiber.App {
 		for _, x := range environment {
 
 			envdir := models.CodeFolders{
+				ParentID:      platformFolder.FolderID,
 				EnvironmentID: x.ID,
 				FolderName:    x.Name,
 				Level:         "environment",

@@ -20,6 +20,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-git/go-git/v5"
+
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 	"gorm.io/gorm"
@@ -89,8 +91,25 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 
 	}
 
+	var parentfolder models.CodeFolders
+	database.DBConn.Where("environment_id = ? and level = ?", environmentID, "environment").First(&parentfolder)
+
 	// Create folder structure for pipeline
-	// id, err := gonanoid.New(10)
+	pipelinedir := models.CodeFolders{
+		EnvironmentID: environmentID,
+		PipelineID:    pipelineID,
+		ParentID:      parentfolder.FolderID,
+		FolderName:    e.Name,
+		Level:         "pipeline",
+		Structure:     parentfolder.Location, //must be root of folder/filename
+		FType:         "folder",
+		Active:        true,
+	}
+
+	// Should create a directory as follows code_directory/
+	foldercreate := utilities.CreateFolder(pipelinedir)
+
+	git.PlainInit(config.CodeDirectory+foldercreate.Location, false)
 
 	return pipelineID, nil
 }
