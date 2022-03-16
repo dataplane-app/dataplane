@@ -148,7 +148,12 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                                 <Box component="td">
                                     {/* Name and description */}
                                     <Grid display="flex" alignItems="flex-start" justifyContent="space-between">
-                                        <Grid item onClick={() => history.push(`/pipelines/view/${row.original.pipelineID}`)}>
+                                        <Grid
+                                            item
+                                            onClick={() => {
+                                                FlowState.pipelineInfo.set(row.original);
+                                                history.push(`/pipelines/view/${row.original.pipelineID}`);
+                                            }}>
                                             <Typography variant="h3" color="cyan.main">
                                                 {row.original.name}
                                             </Typography>
