@@ -90,7 +90,7 @@ func Setup(port string) *fiber.App {
 		config.PlatformID = platformData.ID
 
 		// Environments get added
-		environment := &[]models.Environment{
+		environment := []models.Environment{
 			{ID: uuid.New().String(),
 				Name:       "Development",
 				PlatformID: config.PlatformID,
@@ -137,7 +137,24 @@ func Setup(port string) *fiber.App {
 		}
 
 		// Should create a directory as follows code_directory/
-		utilities.CreateFolder(platformdir, "")
+		platformFolder := utilities.CreateFolder(platformdir)
+
+		for _, x := range environment {
+
+			envdir := models.CodeFolders{
+				ParentID:      platformFolder.FolderID,
+				EnvironmentID: x.ID,
+				FolderName:    x.Name,
+				Level:         "environment",
+				Structure:     platformFolder.Location, //must be root of folder/filename
+				FType:         "folder",
+				Active:        true,
+			}
+
+			// Should create a directory as follows code_directory/
+			utilities.CreateFolder(envdir)
+
+		}
 
 	}
 	log.Println("🎯 Platform ID: ", config.PlatformID)
