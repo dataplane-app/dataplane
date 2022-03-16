@@ -120,7 +120,7 @@ func Setup(port string) *fiber.App {
 			if err != nil {
 				log.Println("Create directory error:", err)
 			}
-			log.Println("Created directory: ", config.CodeDirectory)
+			log.Println("Created platform directory: ", config.CodeDirectory)
 
 		} else {
 			log.Println("Directory already exists: ", config.CodeDirectory)
@@ -131,28 +131,31 @@ func Setup(port string) *fiber.App {
 			EnvironmentID: "d_platform",
 			FolderName:    "Platform",
 			Level:         "platform",
-			Structure:     "", //must be root of folder/filename
 			FType:         "folder",
 			Active:        true,
 		}
 
 		// Should create a directory as follows code_directory/
-		platformFolder := utilities.CreateFolder(platformdir)
+		platformFolder := utilities.CreateFolder(platformdir, "")
 
+		var parentfolder string
 		for _, x := range environment {
+
+			parentfolder = ""
 
 			envdir := models.CodeFolders{
 				ParentID:      platformFolder.FolderID,
 				EnvironmentID: x.ID,
 				FolderName:    x.Name,
 				Level:         "environment",
-				Structure:     platformFolder.Location, //must be root of folder/filename
 				FType:         "folder",
 				Active:        true,
 			}
 
 			// Should create a directory as follows code_directory/
-			utilities.CreateFolder(envdir)
+			parentfolder, _ = utilities.FolderConstructByID(platformFolder.FolderID)
+			log.Println("Parent folder environment:", parentfolder)
+			utilities.CreateFolder(envdir, parentfolder)
 
 		}
 

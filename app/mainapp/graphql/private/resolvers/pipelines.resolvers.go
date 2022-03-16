@@ -101,15 +101,17 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 		ParentID:      parentfolder.FolderID,
 		FolderName:    e.Name,
 		Level:         "pipeline",
-		Structure:     parentfolder.Location, //must be root of folder/filename
 		FType:         "folder",
 		Active:        true,
 	}
 
 	// Should create a directory as follows code_directory/
-	foldercreate := utilities.CreateFolder(pipelinedir)
+	pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
+	foldercreate := utilities.CreateFolder(pipelinedir, pfolder)
 
-	git.PlainInit(config.CodeDirectory+foldercreate.Location, false)
+	thisfolder, _ := utilities.FolderConstructByID(foldercreate.FolderID)
+
+	git.PlainInit(config.CodeDirectory+thisfolder, false)
 
 	return pipelineID, nil
 }

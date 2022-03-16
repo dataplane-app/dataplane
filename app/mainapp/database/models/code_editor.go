@@ -17,9 +17,7 @@ type CodeFolders struct {
 	PipelineID    string     `gorm:"type:varchar(55); index:idx_pipelinesmodel;" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); index:idx_pipelinesmodel;" json:"parent_id"`
 	FolderName    string     `gorm:"type:varchar(255);" json:"folder_name"`
-	Level         string     `json:"level"`     //platform, environment, node, other
-	Structure     string     `json:"structure"` //root structure before id and name
-	Location      string     `json:"location"`
+	Level         string     `json:"level"`  //platform, environment, node, other
 	FType         string     `json:"f_type"` //folder, file, bin
 	Active        bool       `json:"active"`
 	CreatedAt     time.Time  `json:"created_at"`
