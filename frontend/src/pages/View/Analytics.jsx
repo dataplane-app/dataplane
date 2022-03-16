@@ -7,6 +7,7 @@ import { useGlobalRunState } from './useWebSocket';
 import { Downgraded } from '@hookstate/core';
 import { useMe } from '../../graphql/me';
 import { useSnackbar } from 'notistack';
+import { Box } from '@mui/system';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, TimeScale, TimeSeriesScale);
 
@@ -134,14 +135,14 @@ export function Analytics({ setIsOpenAnalytics }) {
     }, [labels]);
 
     return (
-        <>
-            <Button onClick={() => setIsOpenAnalytics(false)}>Close</Button>
-            <div style={{ position: 'relative', width: '800px', height }}>
+        <Box display="flex" alignItems="flex-start" mt={2}>
+            <div style={{ position: 'relative', width: '800px', height, marginRight: 20 }}>
                 {data ? ( //
                     <Bar options={options} data={data} />
                 ) : null}
             </div>
-        </>
+            <Button onClick={() => setIsOpenAnalytics(false)}>Close</Button>
+        </Box>
     );
 }
 
