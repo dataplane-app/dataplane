@@ -33,6 +33,7 @@ const EnviromentDropdown = () => {
     const open = Boolean(anchorEl);
 
     const handleClick = (event) => {
+        if (environments.length < 2) return;
         setAnchorEl(event.currentTarget);
     };
     const handleClose = () => {
@@ -139,7 +140,7 @@ const EnviromentDropdown = () => {
                         Enviroment
                     </Typography>
                 </Box>
-                <Box component={FontAwesomeIcon} icon={faCaretDown} fontSize="1.5rem" color="divider" />
+                {environments.length > 1 ? <Box component={FontAwesomeIcon} icon={faCaretDown} id="ssssss" fontSize="1.5rem" color="divider" /> : null}
             </Grid>
             <Menu
                 anchorEl={anchorEl}
