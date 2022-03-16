@@ -94,14 +94,15 @@ export function Analytics({ setIsOpenAnalytics }) {
                 time: {
                     // unit: 'second',
                 },
-                min: nodes[0]?.start_dt,
+                min: RunState.runStart.get(),
+                max: RunState.runEnd.get(),
                 grid: {
                     display: false,
                 },
                 ticks: {
                     maxTicksLimit: 8,
                     major: {
-                        enabled: true,
+                        // enabled: true,
                     },
                     // count: 100,
                     // precision: 1,
@@ -132,6 +133,8 @@ export function Analytics({ setIsOpenAnalytics }) {
                 },
             ],
         });
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [labels]);
 
     return (
