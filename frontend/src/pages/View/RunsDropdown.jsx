@@ -18,7 +18,7 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
 
     // GraphQL hooks
     const getPipelineRuns = useGetPipelineRunsHook(environmentID, setRuns, setSelectedRun, pipeline);
-    const getPipelineTasksRun = usePipelineTasksRunHook();
+    const getPipelineTasksRun = usePipelineTasksRunHook(selectedRun);
 
     // Get pipeline runs on load and environment change and after each run.
     useEffect(() => {
@@ -121,7 +121,7 @@ export const useGetPipelineRunsHook = (environmentID, setRuns, setSelectedRun, p
     };
 };
 
-export const usePipelineTasksRunHook = () => {
+export const usePipelineTasksRunHook = (selectedRun) => {
     // GraphQL hook
     const getPipelineTasksRun = usePipelineTasksRun();
 
@@ -146,19 +146,29 @@ export const usePipelineTasksRunHook = () => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             // Keeping only start_id and run_id and removing rest of the nodes before adding this run's nodes.
-
             const keep = {
                 start_id: RunState.start_dt.get(),
                 run_id: RunState.run_id.get() || RunState.dropdownRunId.get(),
                 pipelineRunsTrigger: RunState.pipelineRunsTrigger.get(),
-                dropdownRunId: RunState.dropdownRunId.get(),
+                // dropdownRunId: RunState.dropdownRunId.get(),
+                dropdownRunId: selectedRun.run_id,
                 selectedNodeStatus: RunState.selectedNodeStatus.get(),
             };
             if (!RunState.run_id.get()) {
                 FlowState.isRunning.set(true);
             }
-            response.map((a) => (keep[a.node_id] = { status: a.status, end_dt: a.end_dt, start_dt: a.start_dt }));
-            RunState.set(keep);
+
+            response.map(
+                (a) =>
+                    (keep[a.node_id] = {
+                        status: a.status,
+                        end_dt: a.end_dt,
+                        start_dt: a.start_dt,
+                        name: selectedRun.run_json.filter((b) => b.id === a.node_id)[0].data.name,
+                        type: selectedRun.run_json.filter((b) => b.id === a.node_id)[0].type,
+                    })
+            );
+            RunState.set(keep); //
         }
     };
 };
