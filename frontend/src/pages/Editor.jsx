@@ -11,6 +11,8 @@ import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import { Downgraded } from '@hookstate/core';
+import { useGetFilesNode } from '../graphql/getFilesNode';
+import { useSnackbar } from 'notistack';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -30,6 +32,7 @@ const PipelineEditor = () => {
     const history = useHistory();
     const EditorGlobal = useGlobalEditorState();
     const { state: pipeline } = useLocation();
+    const getFilesNode = useGetFilesNodeHook(pipeline.environmentID, pipeline.pipelineID, pipeline.nodeID);
 
     const editorRef = useRef(null);
 
@@ -46,6 +49,7 @@ const PipelineEditor = () => {
     };
 
     useEffect(() => {
+        getFilesNode();
         if (!pipeline || Object.keys(pipeline).length === 0) {
             // history.push('/');
         }
@@ -122,3 +126,25 @@ const PipelineEditor = () => {
 };
 
 export default PipelineEditor;
+
+// ----- Custom hook
+export const useGetFilesNodeHook = (environmentID, pipelineID, nodeID) => {
+    // GraphQL hook
+    const getFilesNode = useGetFilesNode();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get files
+    return async () => {
+        const response = await getFilesNode({ environmentID, pipelineID, nodeID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get files: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            console.log(response);
+        }
+    };
+};
