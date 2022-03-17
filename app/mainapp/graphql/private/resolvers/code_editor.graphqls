@@ -1,0 +1,37 @@
+type CodeFolders {
+    folderID: String!
+    parentID: String!
+	folderName: String!
+	level: String!
+	fType: String!
+	active: Boolean!
+}
+
+input FilesNodeInput {
+	folderID: String!
+    parentID: String!
+	environmentID: String!
+	pipelineID: String!
+	nodeID: String!
+	folderName: String!
+	fType: String!
+	active: Boolean!
+}
+
+extend type Query {
+  """
+	Get a node's file structure.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+	"""
+  filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): [CodeFolders]!
+}
+
+extend type Mutation {
+  """
+	Update a node's file structure.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+	"""
+  updateFilesNode(input:[FilesNodeInput]!): String!
+}

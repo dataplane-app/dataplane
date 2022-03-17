@@ -266,6 +266,8 @@ const useGetPipelineHook = (environmentID, setPipeline) => {
     // URI parameter
     const { pipelineId } = useParams();
 
+    const FlowState = useGlobalFlowState();
+
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get members
@@ -279,6 +281,7 @@ const useGetPipelineHook = (environmentID, setPipeline) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setPipeline(response);
+            FlowState.pipelineInfo.set(response);
         }
     };
 };

@@ -41,6 +41,8 @@ models:
    model: dataplane/mainapp/database/models.PipelineRuns
  LogsWorkers:
    model: dataplane/mainapp/database/models.LogsWorkers
+ CodeFolders:
+   model: dataplane/mainapp/database/models.CodeFolders
 
 resolver:
   layout: follow-schema
