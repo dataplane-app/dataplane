@@ -14,7 +14,6 @@ input FilesNodeInput {
 	pipelineID: String!
 	nodeID: String!
 	folderName: String!
-	level: String!
 	fType: String!
 	active: Boolean!
 }
@@ -25,7 +24,7 @@ extend type Query {
 	+ **Route**: Private
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
-  filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): CodeFolders!
+  filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): [CodeFolders]!
 }
 
 extend type Mutation {

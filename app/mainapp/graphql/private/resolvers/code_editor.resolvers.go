@@ -57,7 +57,7 @@ func (r *mutationResolver) UpdateFilesNode(ctx context.Context, input []*private
 			if os.Getenv("debug") == "true" {
 				logging.PrintSecretsRedact(err)
 			}
-			return "", errors.New("updateMe database error.")
+			return "", errors.New("update files node database error.")
 		}
 
 	}
@@ -65,7 +65,7 @@ func (r *mutationResolver) UpdateFilesNode(ctx context.Context, input []*private
 	return "Success", nil
 }
 
-func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*models.CodeFolders, error) {
+func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) ([]*models.CodeFolders, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -83,9 +83,9 @@ func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nod
 		return nil, errors.New("Requires permissions.")
 	}
 
-	f := models.CodeFolders{}
+	f := []*models.CodeFolders{}
 
-	err := database.DBConn.Where("node_id = ?", nodeID).First(&f).Error
+	err := database.DBConn.Where("node_id = ?", nodeID).Find(&f).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
@@ -93,5 +93,5 @@ func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nod
 		return nil, errors.New("Retrive user database error.")
 	}
 
-	return &f, nil
+	return f, nil
 }

@@ -67,7 +67,6 @@ type FilesNodeInput struct {
 	PipelineID    string `json:"pipelineID"`
 	NodeID        string `json:"nodeID"`
 	FolderName    string `json:"folderName"`
-	Level         string `json:"level"`
 	FType         string `json:"fType"`
 	Active        bool   `json:"active"`
 }

@@ -417,7 +417,7 @@ type QueryResolver interface {
 	GetAccessGroup(ctx context.Context, userID string, environmentID string, accessGroupID string) (*models.PermissionsAccessGroups, error)
 	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error)
 	GetAccessGroupUsers(ctx context.Context, environmentID string, accessGroupID string) ([]*models.Users, error)
-	FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*models.CodeFolders, error)
+	FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) ([]*models.CodeFolders, error)
 	Me(ctx context.Context) (*models.Users, error)
 	MyPipelinePermissions(ctx context.Context) ([]*PipelinePermissionsOutput, error)
 	UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*PipelinePermissionsOutput, error)
@@ -2738,7 +2738,6 @@ input FilesNodeInput {
 	pipelineID: String!
 	nodeID: String!
 	folderName: String!
-	level: String!
 	fType: String!
 	active: Boolean!
 }
@@ -2749,7 +2748,7 @@ extend type Query {
 	+ **Route**: Private
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
-  filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): CodeFolders!
+  filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): [CodeFolders]!
 }
 
 extend type Mutation {
@@ -10990,9 +10989,9 @@ func (ec *executionContext) _Query_filesNode(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*models.CodeFolders)
+	res := resTmp.([]*models.CodeFolders)
 	fc.Result = res
-	return ec.marshalNCodeFolders2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx, field.Selections, res)
+	return ec.marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -15303,14 +15302,6 @@ func (ec *executionContext) unmarshalInputFilesNodeInput(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
-		case "level":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("level"))
-			it.Level, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "fType":
 			var err error
 
@@ -19463,18 +19454,42 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCodeFolders2dataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v models.CodeFolders) graphql.Marshaler {
-	return ec._CodeFolders(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNCodeFolders2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v *models.CodeFolders) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
+func (ec *executionContext) marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v []*models.CodeFolders) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
 	}
-	return ec._CodeFolders(ctx, sel, v)
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOCodeFolders2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNFilesNodeInput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐFilesNodeInput(ctx context.Context, v interface{}) ([]*FilesNodeInput, error) {
@@ -20341,6 +20356,13 @@ func (ec *executionContext) unmarshalOChangePasswordInput2ᚖdataplaneᚋmainapp
 	}
 	res, err := ec.unmarshalInputChangePasswordInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOCodeFolders2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v *models.CodeFolders) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CodeFolders(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalODataInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDataInput(ctx context.Context, v interface{}) (*DataInput, error) {
