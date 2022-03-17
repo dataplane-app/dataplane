@@ -140,6 +140,7 @@ const Settings = () => {
                         </Grid>
                     </Grid>
 
+                    {/* Environments table */}
                     {data && data.length > 0 ? (
                         <Box component="table" width="100%" mt={4} {...getTableProps()}>
                             <thead>
@@ -217,7 +218,7 @@ const CustomEnvName = ({ row, onClick }) => {
                 {title}
             </Typography>
             <Typography component="h5" variant="subtitle1">
-                {description || '-'}
+                {description || ''}
             </Typography>
         </Grid>
     );
