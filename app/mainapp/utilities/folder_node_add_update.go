@@ -1,8 +1,10 @@
 package utilities
 
 import (
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	"log"
 )
 
 type FolderNodeUpdate struct {
@@ -14,7 +16,7 @@ type FolderNodeUpdate struct {
 	Action     string `json:"action"`
 }
 
-func FolderNodeAddUpdate(pipelineID string, environmentID string, updatenodes []models.PipelineNodes) {
+func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 
 	/*
 		Pipeline nodes have been updated.
@@ -27,7 +29,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, updatenodes []
 	pfolder, _ := FolderConstructByID(parentfolder.FolderID)
 
 	var output []FolderNodeUpdate
-	database.DBConn.Debug().Exec(`
+	database.DBConn.Debug().Raw(`
 	select 
 	p.node_id,
 	p.name,
@@ -36,7 +38,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, updatenodes []
 	f.folder_name
 	from pipeline_nodes p 
 	left join code_folders f on p.pipeline_id = f.pipeline_id and p.node_id = f.node_id and f.level='node'
-	where p.pipeline =? and p.environment_id = ?
+	where p.pipeline_id =? and p.environment_id = ?
 	`, pipelineID, environmentID).Scan(&output)
 
 	for _, n := range output {
@@ -61,7 +63,11 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, updatenodes []
 				Active:        true,
 			}
 
-			CreateFolder(pipelinedir, pfolder)
+			_, cf := CreateFolder(pipelinedir, pfolder)
+
+			if config.Debug == "true" {
+				log.Println("Add node directory: ", cf)
+			}
 
 		} else {
 			// Do we need to update existing folders
@@ -69,8 +75,34 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, updatenodes []
 			// Has the folder name changed?
 			if n.FolderName != FolderFriendly(n.Name) {
 				n.Action = "update"
+				OLDinput := models.CodeFolders{
+					EnvironmentID: environmentID,
+					PipelineID:    pipelineID,
+					NodeID:        n.NodeID,
+					ParentID:      parentfolder.FolderID,
+					FolderName:    n.FolderName,
+					Level:         "node",
+					FType:         "folder",
+					Active:        true,
+				}
+
+				Newinput := models.CodeFolders{
+					EnvironmentID: environmentID,
+					PipelineID:    pipelineID,
+					NodeID:        n.NodeID,
+					ParentID:      parentfolder.FolderID,
+					FolderName:    n.Name,
+					Level:         "node",
+					FType:         "folder",
+					Active:        true,
+				}
+				UpdateFolder(n.FolderID, OLDinput, Newinput, pfolder)
+
 			} else {
 				n.Action = "nochange"
+				if config.Debug == "true" {
+					log.Println("No change node directory: ", n.FolderID, n.NodeID)
+				}
 			}
 
 		}

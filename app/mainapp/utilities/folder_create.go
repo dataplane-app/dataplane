@@ -10,7 +10,7 @@ import (
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
-func CreateFolder(input models.CodeFolders, parentFolder string) models.CodeFolders {
+func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFolders, string) {
 
 	var createDirectory string
 	var foldername string
@@ -67,6 +67,6 @@ func CreateFolder(input models.CodeFolders, parentFolder string) models.CodeFold
 		}
 	}
 
-	return input
+	return input, createDirectory
 
 }

@@ -11,10 +11,10 @@ import (
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/utilities"
 	"errors"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/google/uuid"
@@ -63,16 +63,26 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 		return nil, errors.New("AddEnvironment database error.")
 	}
 
-	log.Println("Create  directory:", os.Getenv("dataplane_code_folder")+e.ID)
-	cmd := exec.Command("mkdir", "-p", os.Getenv("dataplane_code_folder")+e.ID)
-	// cmd.Env = os.Environ()
+	var parentfolder models.CodeFolders
+	database.DBConn.Where("level = ?", "platform").First(&parentfolder)
 
-	// cmd.Stdout = os.Stdout
-	// cmd.Stderr = os.Stderr
+	// Create folder structure for pipeline
+	pipelinedir := models.CodeFolders{
+		EnvironmentID: e.ID,
+		ParentID:      parentfolder.FolderID,
+		FolderName:    e.Name,
+		Level:         "pipeline",
+		FType:         "folder",
+		Active:        true,
+	}
 
-	// log.Println(cmd.CombinedOutput())
+	// Should create a directory as follows code_directory/
+	pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
+	_, foldercreated := utilities.CreateFolder(pipelinedir, pfolder)
 
-	log.Println(cmd.Stdout)
+	if config.Debug == "true" {
+		log.Println("Environment dir created: ", foldercreated)
+	}
 
 	return &models.Environment{
 		ID:          e.ID,

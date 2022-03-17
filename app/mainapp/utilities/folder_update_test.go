@@ -58,7 +58,7 @@ func TestUpdateFolder(t *testing.T) {
 		FolderName: OLDinput.FolderName + "-New",
 	}
 
-	_, actual := UpdateFolder(id, OLDinput, Newinput, parentFolder)
+	_, actual, _ := UpdateFolder(id, OLDinput, Newinput, parentFolder)
 
 	log.Println(actual)
 
