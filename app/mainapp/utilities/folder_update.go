@@ -38,7 +38,7 @@ func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFo
 	NewDirectory = parentFolder + Newfoldername
 
 	// ----- Update the database with new values
-	errdb := database.DBConn.Debug().Updates(&Newinput).Error
+	errdb := database.DBConn.Updates(&Newinput).Error
 	if errdb != nil {
 		log.Println("Directory create error:", errdb)
 		return models.CodeFolders{}, "", ""

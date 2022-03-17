@@ -29,7 +29,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 	pfolder, _ := FolderConstructByID(parentfolder.FolderID)
 
 	var output []FolderNodeUpdate
-	database.DBConn.Debug().Raw(`
+	database.DBConn.Raw(`
 	select 
 	p.node_id,
 	p.name,
