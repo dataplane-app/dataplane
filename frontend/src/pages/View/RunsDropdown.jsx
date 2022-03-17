@@ -76,6 +76,7 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
                     disableClearable
                     sx={{ minWidth: '520px' }}
                     options={runs}
+                    isOptionEqualToValue={(option, value) => option.run_id === value.run_id}
                     getOptionLabel={(a) => formatDate(a.created_at) + ' - ' + a.run_id}
                     renderInput={(params) => <TextField {...params} label="Run" id="run" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />
@@ -92,6 +93,7 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
                     disableClearable
                     sx={{ minWidth: '520px' }}
                     options={runs}
+                    isOptionEqualToValue={(option, value) => option.run_id === value.run_id}
                     getOptionLabel={(a) => formatDate(a.created_at) + ' - ' + a.run_id}
                     renderInput={(params) => <TextField {...params} label="Run" id="run" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />

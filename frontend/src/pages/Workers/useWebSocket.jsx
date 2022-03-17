@@ -2,19 +2,19 @@ import { useEffect, useRef, useState } from 'react';
 import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 
-
-var loc = window.location, new_uri;
-if (loc.protocol === "https:") {
-    new_uri = "wss:";
+var loc = window.location,
+    new_uri;
+if (loc.protocol === 'https:') {
+    new_uri = 'wss:';
 } else {
-    new_uri = "ws:";
+    new_uri = 'ws:';
 }
-new_uri += "//" + loc.host;
+new_uri += '//' + loc.host;
 
 // console.log("websockets loc:", new_uri)
-if (process.env.REACT_APP_DATAPLANE_ENV == "build"){
+if (process.env.REACT_APP_DATAPLANE_ENV == 'build') {
     new_uri += process.env.REACT_APP_WEBSOCKET_ENDPOINT;
-}else{
+} else {
     new_uri = process.env.REACT_APP_WEBSOCKET_ENDPOINT;
 }
 
