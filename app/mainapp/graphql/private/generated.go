@@ -119,6 +119,7 @@ type ComplexityRoot struct {
 		UpdateDeleteSecret               func(childComplexity int, secret string, environmentID string) int
 		UpdateDeleteUser                 func(childComplexity int, userid string) int
 		UpdateEnvironment                func(childComplexity int, input *UpdateEnvironment) int
+		UpdateFilesNode                  func(childComplexity int, input []*FilesNodeInput) int
 		UpdateMe                         func(childComplexity int, input *AddUpdateMeInput) int
 		UpdatePermissionToAccessGroup    func(childComplexity int, environmentID string, resource string, resourceID string, access string, accessGroupID string) int
 		UpdatePermissionToUser           func(childComplexity int, environmentID string, resource string, resourceID string, access string, userID string) int
@@ -370,6 +371,7 @@ type MutationResolver interface {
 	UpdatePermissionToAccessGroup(ctx context.Context, environmentID string, resource string, resourceID string, access string, accessGroupID string) (string, error)
 	UpdateUserToAccessGroup(ctx context.Context, environmentID string, userID string, accessGroupID string) (string, error)
 	RemoveUserFromAccessGroup(ctx context.Context, userID string, accessGroupID string, environmentID string) (string, error)
+	UpdateFilesNode(ctx context.Context, input []*FilesNodeInput) (string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 	PipelinePermissionsToUser(ctx context.Context, environmentID string, resourceID string, access []string, userID string) (string, error)
@@ -1009,6 +1011,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateEnvironment(childComplexity, args["input"].(*UpdateEnvironment)), true
+
+	case "Mutation.updateFilesNode":
+		if e.complexity.Mutation.UpdateFilesNode == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateFilesNode_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateFilesNode(childComplexity, args["input"].([]*FilesNodeInput)), true
 
 	case "Mutation.updateMe":
 		if e.complexity.Mutation.UpdateMe == nil {
@@ -2717,6 +2731,18 @@ extend type Mutation {
 	active: Boolean!
 }
 
+input FilesNodeInput {
+	folderID: String!
+    parentID: String!
+	environmentID: String!
+	pipelineID: String!
+	nodeID: String!
+	folderName: String!
+	level: String!
+	fType: String!
+	active: Boolean!
+}
+
 extend type Query {
   """
 	Get a node's file structure.
@@ -2724,6 +2750,15 @@ extend type Query {
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
   filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): CodeFolders!
+}
+
+extend type Mutation {
+  """
+	Update a node's file structure.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+	"""
+  updateFilesNode(input:[FilesNodeInput]!): String!
 }
 `, BuiltIn: false},
 	{Name: "resolvers/me.graphqls", Input: `input AddUpdateMeInput {
@@ -4191,6 +4226,21 @@ func (ec *executionContext) field_Mutation_updateEnvironment_args(ctx context.Co
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOUpdateEnvironment2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateEnvironment(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateFilesNode_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*FilesNodeInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNFilesNodeInput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐFilesNodeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -6573,6 +6623,48 @@ func (ec *executionContext) _Mutation_removeUserFromAccessGroup(ctx context.Cont
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().RemoveUserFromAccessGroup(rctx, args["user_id"].(string), args["access_group_id"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateFilesNode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateFilesNode_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateFilesNode(rctx, args["input"].([]*FilesNodeInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -15154,6 +15246,93 @@ func (ec *executionContext) unmarshalInputDataInput(ctx context.Context, obj int
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputFilesNodeInput(ctx context.Context, obj interface{}) (FilesNodeInput, error) {
+	var it FilesNodeInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "folderID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("folderID"))
+			it.FolderID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "parentID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parentID"))
+			it.ParentID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "environmentID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+			it.EnvironmentID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "pipelineID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+			it.PipelineID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nodeID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeID"))
+			it.NodeID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "folderName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("folderName"))
+			it.FolderName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "level":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("level"))
+			it.Level, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "fType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fType"))
+			it.FType, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "active":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("active"))
+			it.Active, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPipelineEdgesInput(ctx context.Context, obj interface{}) (PipelineEdgesInput, error) {
 	var it PipelineEdgesInput
 	asMap := map[string]interface{}{}
@@ -16140,6 +16319,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "removeUserFromAccessGroup":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_removeUserFromAccessGroup(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateFilesNode":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateFilesNode(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
@@ -19288,6 +19477,23 @@ func (ec *executionContext) marshalNCodeFolders2ᚖdataplaneᚋmainappᚋdatabas
 	return ec._CodeFolders(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNFilesNodeInput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐFilesNodeInput(ctx context.Context, v interface{}) ([]*FilesNodeInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*FilesNodeInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOFilesNodeInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐFilesNodeInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
 	res, err := graphql.UnmarshalFloatContext(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -20191,6 +20397,14 @@ func (ec *executionContext) marshalOEnvironments2ᚖdataplaneᚋmainappᚋdataba
 		return graphql.Null
 	}
 	return ec._Environments(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOFilesNodeInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐFilesNodeInput(ctx context.Context, v interface{}) (*FilesNodeInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputFilesNodeInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOLogsWorkers2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsWorkersᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.LogsWorkers) graphql.Marshaler {

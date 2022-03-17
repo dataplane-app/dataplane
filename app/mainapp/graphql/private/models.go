@@ -60,6 +60,18 @@ type DataInput struct {
 	Genericdata interface{} `json:"genericdata"`
 }
 
+type FilesNodeInput struct {
+	FolderID      string `json:"folderID"`
+	ParentID      string `json:"parentID"`
+	EnvironmentID string `json:"environmentID"`
+	PipelineID    string `json:"pipelineID"`
+	NodeID        string `json:"nodeID"`
+	FolderName    string `json:"folderName"`
+	Level         string `json:"level"`
+	FType         string `json:"fType"`
+	Active        bool   `json:"active"`
+}
+
 type PipelineEdgesInput struct {
 	EdgeID string                  `json:"edgeID"`
 	From   string                  `json:"from"`
