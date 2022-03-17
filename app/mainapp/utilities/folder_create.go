@@ -22,7 +22,9 @@ func CreateFolder(input models.CodeFolders, parentFolder string) models.CodeFold
 
 		id, err := gonanoid.New(10)
 		if err != nil {
-			log.Println("Directory id error:", err)
+			if config.Debug == "true" {
+				log.Println("Directory id error:", err)
+			}
 			continue
 		}
 
@@ -35,7 +37,9 @@ func CreateFolder(input models.CodeFolders, parentFolder string) models.CodeFold
 
 		errdb := database.DBConn.Create(&input).Error
 		if errdb != nil {
-			log.Println("Directory create error:", err)
+			if config.Debug == "true" {
+				log.Println("Directory create error:", errdb)
+			}
 			continue
 		} else {
 			break
@@ -49,12 +53,18 @@ func CreateFolder(input models.CodeFolders, parentFolder string) models.CodeFold
 		// path/to/whatever does not exist
 		err := os.MkdirAll(createDirectory, os.ModePerm)
 		if err != nil {
-			log.Println("Create directory error:", err)
+			if config.Debug == "true" {
+				log.Println("Create directory error:", err)
+			}
 		}
-		log.Println("Created directory: ", createDirectory)
+		if config.Debug == "true" {
+			log.Println("Created directory: ", createDirectory)
+		}
 
 	} else {
-		log.Println("Directory already exists: ", createDirectory)
+		if config.Debug == "true" {
+			log.Println("Directory already exists: ", createDirectory)
+		}
 	}
 
 	return input
