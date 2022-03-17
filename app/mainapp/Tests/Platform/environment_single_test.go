@@ -3,6 +3,7 @@ package admintests
 import (
 	"dataplane/mainapp/Tests/testutils"
 	"dataplane/mainapp/database"
+	"dataplane/mainapp/database/models"
 	"log"
 	"net/http"
 	"strings"
@@ -50,10 +51,19 @@ func TestGetSingleEnvironment(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpLoginResponse.StatusCode, "Login user 200 status code")
 
+	var environmentID models.Environment
+	database.DBConn.Debug().Where("name=?", "Development").First(&environmentID)
+
 	// -------- Get environments  -------------
-	getEnvironment := `{
-		getEnvironments{
+	// getEnvironment(environment_id: String!): Environments
+	getEnvironment := `
+	{
+		getEnvironment(
+			environment_id: "` + environmentID.ID + `",
+		){
+			id
 			name
+			description
 		}
 	}`
 
@@ -68,10 +78,8 @@ func TestGetSingleEnvironment(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get environments 200 status code")
 
-	singleEnvironment := jsoniter.Get(response, "data", "getEnvironments", 0, "name").ToString()
-	secondEnvironment := jsoniter.Get(response, "data", "getEnvironments", 1, "name").ToString()
+	singleEnvironment := jsoniter.Get(response, "data", "getEnvironment", "name").ToString()
 
 	assert.Equalf(t, "Development", singleEnvironment, "Got single enviromnet")
-	assert.Equalf(t, "", secondEnvironment, "Got single enviromnet")
 
 }
