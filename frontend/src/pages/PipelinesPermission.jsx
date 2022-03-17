@@ -252,7 +252,8 @@ const CustomAccess = ({ row, onClick }) => {
                     <Box
                         component={FontAwesomeIcon}
                         sx={{
-                            fontSize: '0.6875rem',
+                            flex: 0.2,
+                            fontSize: 14,
                             fontWeight: 900,
                             paddingY: '2px',
                             mr: '10px',
@@ -260,7 +261,7 @@ const CustomAccess = ({ row, onClick }) => {
                         }}
                         icon={access.includes(accessDictionary[option]) ? faCheck : faTimes}
                     />
-                    <Typography variant="subtitle1" lineHeight="16px" ml={1}>
+                    <Typography flex={4} variant="subtitle1" lineHeight="16px">
                         {prettyAccess(option)}
                     </Typography>
                 </Box>
