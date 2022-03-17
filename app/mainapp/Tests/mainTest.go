@@ -42,6 +42,9 @@ response: {"r": "OK", "msg": "Permission created", "count": 1}
 func main() {
 
 	// finish := make(chan bool)
+	// // Delete platform for testing first time user
+	database.DBConnect()
+	database.DBConn.Where("1 = 1").Delete(&models.Platform{})
 
 	testutils.DbInstance = "hello"
 
@@ -59,8 +62,6 @@ func main() {
 	var t *testing.T
 
 	// // ---- create admin user
-	// // Delete platform for testing first time user
-	// database.DBConn.Where("1 = 1").Delete(&models.Platform{})
 
 	testUser := testutils.AdminUser
 	testPassword := testutils.AdminPassword

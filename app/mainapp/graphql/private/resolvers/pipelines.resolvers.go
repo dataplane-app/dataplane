@@ -219,7 +219,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	// ----- Add pipeline nodes to database
 
-	nodes := []*models.PipelineNodes{}
+	nodes := []models.PipelineNodes{}
 
 	for _, p := range input.NodesInput {
 
@@ -307,7 +307,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			logging.PrintSecretsRedact(err)
 		}
 
-		nodes = append(nodes, &models.PipelineNodes{
+		nodes = append(nodes, models.PipelineNodes{
 			NodeID:        p.NodeID,
 			PipelineID:    pipelineID,
 			Name:          p.Name,
@@ -409,6 +409,38 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			logging.PrintSecretsRedact("NATS error:", err)
 		}
 
+	}
+
+	// ====== create folders =======
+	var parentfolder models.CodeFolders
+	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ?", environmentID, pipelineID, "pipeline").First(&parentfolder)
+
+	pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
+
+	for _, f := range nodes {
+		// Should create a directory as follows code_directory/
+		if f.NodeType == "trigger" {
+			f.Name = "trigger"
+		}
+
+		// Create folder structure for nodes
+		pipelinedir := models.CodeFolders{
+			EnvironmentID: f.EnvironmentID,
+			PipelineID:    f.PipelineID,
+			NodeID:        f.NodeID,
+			ParentID:      parentfolder.FolderID,
+			FolderName:    f.Name,
+			Level:         "node",
+			FType:         "folder",
+			Active:        true,
+		}
+
+		utilities.CreateFolder(pipelinedir, pfolder)
+		// foldercreate :=
+		// thisfolder, _ := utilities.FolderConstructByID(foldercreate.FolderID)
+		// if config.Debug == "true" {
+		// 	log.Println("Created node folder:", thisfolder)
+		// }
 	}
 
 	// ----- unlock the pipeline
