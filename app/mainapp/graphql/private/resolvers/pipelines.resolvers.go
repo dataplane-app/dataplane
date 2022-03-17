@@ -106,7 +106,7 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 
 	// Should create a directory as follows code_directory/
 	pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
-	foldercreate := utilities.CreateFolder(pipelinedir, pfolder)
+	foldercreate, _ := utilities.CreateFolder(pipelinedir, pfolder)
 
 	thisfolder, _ := utilities.FolderConstructByID(foldercreate.FolderID)
 
@@ -218,7 +218,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	// ----- Add pipeline nodes to database
 
-	nodes := []*models.PipelineNodes{}
+	nodes := []models.PipelineNodes{}
 
 	for _, p := range input.NodesInput {
 
@@ -306,7 +306,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			logging.PrintSecretsRedact(err)
 		}
 
-		nodes = append(nodes, &models.PipelineNodes{
+		nodes = append(nodes, models.PipelineNodes{
 			NodeID:        p.NodeID,
 			PipelineID:    pipelineID,
 			Name:          p.Name,
@@ -409,6 +409,14 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 		}
 
 	}
+
+	// ====== create folders =======
+	// var parentfolder models.CodeFolders
+	// database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ?", environmentID, pipelineID, "pipeline").First(&parentfolder)
+
+	// pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
+
+	utilities.FolderNodeAddUpdate(pipelineID, environmentID)
 
 	// ----- unlock the pipeline
 	err = database.DBConn.Model(&models.Pipelines{}).Where("pipeline_id = ?", pipelineID).Update("update_lock", false).Error

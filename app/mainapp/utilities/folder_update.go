@@ -1,0 +1,68 @@
+package utilities
+
+import (
+	"dataplane/mainapp/config"
+	"dataplane/mainapp/database"
+	"dataplane/mainapp/database/models"
+	"log"
+	"os"
+)
+
+func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFolders, parentFolder string) (Newoutput models.CodeFolders, updateOLDDirectory string, updateNewDirectory string) {
+
+	var OLDDirectory string
+	var OLDfoldername string
+	var NewDirectory string
+	var Newfoldername string
+
+	OLDDirectory = ""
+	OLDfoldername = ""
+	NewDirectory = ""
+	Newfoldername = ""
+
+	// ---- construct old
+
+	OLDinput.FolderID = id
+	OLDfoldername = OLDinput.FolderID + "_" + FolderFriendly(OLDinput.FolderName)
+
+	OLDinput.FolderName = FolderFriendly(OLDinput.FolderName)
+
+	OLDDirectory = parentFolder + OLDfoldername
+
+	// ---- construct new
+	Newinput.FolderID = id
+	Newfoldername = Newinput.FolderID + "_" + FolderFriendly(Newinput.FolderName)
+
+	Newinput.FolderName = FolderFriendly(Newinput.FolderName)
+
+	NewDirectory = parentFolder + Newfoldername
+
+	// ----- Update the database with new values
+	errdb := database.DBConn.Debug().Updates(&Newinput).Error
+	if errdb != nil {
+		log.Println("Directory create error:", errdb)
+		return models.CodeFolders{}, "", ""
+	}
+
+	// Updare the directory
+	updateOLDDirectory = config.CodeDirectory + OLDDirectory
+	updateNewDirectory = config.CodeDirectory + NewDirectory
+
+	if _, err := os.Stat(updateOLDDirectory); os.IsNotExist(err) {
+		// path/to/whatever does not exist
+		if config.Debug == "true" {
+			log.Println("Update directory doesn't exist: ", updateOLDDirectory)
+		}
+		return models.CodeFolders{}, "", ""
+
+	} else {
+		err = os.Rename(updateOLDDirectory, updateNewDirectory)
+		if err != nil {
+			log.Println("Rename pipeline dir err:", err)
+		}
+		log.Println("Directory change: ", updateOLDDirectory, "->", updateNewDirectory)
+	}
+
+	return Newinput, updateOLDDirectory, updateNewDirectory
+
+}

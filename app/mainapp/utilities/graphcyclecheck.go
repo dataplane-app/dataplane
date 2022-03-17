@@ -3,8 +3,8 @@ package utilities
 import (
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/logging"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -24,7 +24,7 @@ func GraphCycleCheck(edges []*models.PipelineEdges, node string) bool {
 	_, err := graph.TopSort(node)
 	if err != nil {
 		if config.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+			log.Println(err)
 		}
 		return true
 	}

@@ -136,7 +136,7 @@ func Setup(port string) *fiber.App {
 		}
 
 		// Should create a directory as follows code_directory/
-		platformFolder := utilities.CreateFolder(platformdir, "")
+		platformFolder, _ := utilities.CreateFolder(platformdir, "")
 
 		var parentfolder string
 		for _, x := range environment {

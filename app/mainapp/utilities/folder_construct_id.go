@@ -4,7 +4,6 @@ import (
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"errors"
-	"log"
 )
 
 func FolderConstructByID(id string) (string, error) {
@@ -26,7 +25,6 @@ func FolderConstructByID(id string) (string, error) {
 	// var parentFolder models.CodeFolders
 	if currentFolder.Level != "platform" {
 
-		log.Println("hello")
 		for i := 1; i < 100; i++ {
 
 			currentFolder.FolderID = currentFolder.ParentID
