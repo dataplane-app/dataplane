@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFolders, parentFolder string) (models.CodeFolders, string) {
+func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFolders, parentFolder string) (Newoutput models.CodeFolders, updateOLDDirectory string, updateNewDirectory string) {
 
 	var OLDDirectory string
 	var OLDfoldername string
@@ -41,19 +41,19 @@ func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFo
 	errdb := database.DBConn.Debug().Updates(&Newinput).Error
 	if errdb != nil {
 		log.Println("Directory create error:", errdb)
-		return models.CodeFolders{}, ""
+		return models.CodeFolders{}, "", ""
 	}
 
 	// Updare the directory
-	updateOLDDirectory := config.CodeDirectory + OLDDirectory
-	updateNewDirectory := config.CodeDirectory + NewDirectory
+	updateOLDDirectory = config.CodeDirectory + OLDDirectory
+	updateNewDirectory = config.CodeDirectory + NewDirectory
 
 	if _, err := os.Stat(updateOLDDirectory); os.IsNotExist(err) {
 		// path/to/whatever does not exist
 		if config.Debug == "true" {
 			log.Println("Update directory doesn't exist: ", updateOLDDirectory)
 		}
-		return models.CodeFolders{}, ""
+		return models.CodeFolders{}, "", ""
 
 	} else {
 		err = os.Rename(updateOLDDirectory, updateNewDirectory)
@@ -63,6 +63,6 @@ func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFo
 		log.Println("Directory change: ", updateOLDDirectory, "->", updateNewDirectory)
 	}
 
-	return Newinput, updateNewDirectory
+	return Newinput, updateOLDDirectory, updateNewDirectory
 
 }
