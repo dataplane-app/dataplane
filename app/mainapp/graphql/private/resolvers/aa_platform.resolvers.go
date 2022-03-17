@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -66,22 +66,22 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 	var parentfolder models.CodeFolders
 	database.DBConn.Where("level = ?", "platform").First(&parentfolder)
 
-	// Create folder structure for pipeline
-	pipelinedir := models.CodeFolders{
+	// Create folder structure for environment
+	dir := models.CodeFolders{
 		EnvironmentID: e.ID,
 		ParentID:      parentfolder.FolderID,
 		FolderName:    e.Name,
-		Level:         "pipeline",
+		Level:         "environment",
 		FType:         "folder",
 		Active:        true,
 	}
 
 	// Should create a directory as follows code_directory/
 	pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
-	_, foldercreated := utilities.CreateFolder(pipelinedir, pfolder)
+	utilities.CreateFolder(dir, pfolder)
 
 	if config.Debug == "true" {
-		log.Println("Environment dir created: ", foldercreated)
+		log.Println("Environment dir created.")
 	}
 
 	return &models.Environment{
@@ -128,6 +128,34 @@ func (r *mutationResolver) UpdateEnvironment(ctx context.Context, input *private
 		}
 		return nil, errors.New("Rename environment database error.")
 	}
+
+	// Update folder structure for environment
+	var parentfolder models.CodeFolders
+	database.DBConn.Where("level = ?", "platform").First(&parentfolder)
+
+	pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
+
+	var oldfolder models.CodeFolders
+	database.DBConn.Where("environment_id = ? and level = ?", input.ID, "environment").First(&oldfolder)
+
+	OLDinput := models.CodeFolders{
+		EnvironmentID: oldfolder.EnvironmentID,
+		ParentID:      parentfolder.FolderID,
+		FolderName:    oldfolder.FolderName,
+		Level:         "environment",
+		FType:         "folder",
+		Active:        true,
+	}
+
+	Newinput := models.CodeFolders{
+		EnvironmentID: oldfolder.EnvironmentID,
+		ParentID:      parentfolder.FolderID,
+		FolderName:    input.Name,
+		Level:         "environment",
+		FType:         "folder",
+		Active:        true,
+	}
+	utilities.UpdateFolder(oldfolder.FolderID, OLDinput, Newinput, pfolder)
 
 	return &models.Environment{
 		ID:          e.ID,
