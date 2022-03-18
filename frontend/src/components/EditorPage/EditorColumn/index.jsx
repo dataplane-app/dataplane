@@ -1,5 +1,5 @@
 import { Box, Chip, Grid, IconButton, Typography, useTheme } from '@mui/material';
-import { forwardRef, useRef } from 'react';
+import { forwardRef, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlayCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -52,6 +52,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     const handleTabClose = (tab) => {
         const tabs = EditorGlobal.tabs.attach(Downgraded).get();
+        console.log('🚀 ~ file: index.jsx ~ line 55 ~ handleTabClose ~ tabs', tabs);
 
         // Check to see if it's unsaved
         if (tab?.isEditing) {
@@ -86,6 +87,21 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             return '>'
         }
     } */
+
+    // Handle ctrl+s
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const handleKeyDown = (e) => {
+        if (e.keyCode === 83 && e.ctrlKey) {
+            alert('ctrl+s clicked...');
+        }
+    };
 
     return (
         <div {...rest}>
