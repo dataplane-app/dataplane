@@ -119,7 +119,7 @@ type ComplexityRoot struct {
 		UpdateDeleteSecret               func(childComplexity int, secret string, environmentID string) int
 		UpdateDeleteUser                 func(childComplexity int, userid string) int
 		UpdateEnvironment                func(childComplexity int, input *UpdateEnvironment) int
-		UpdateFilesNode                  func(childComplexity int, input []*FilesNodeInput) int
+		UpdateFilesNode                  func(childComplexity int, input *FilesNodeInput) int
 		UpdateMe                         func(childComplexity int, input *AddUpdateMeInput) int
 		UpdatePermissionToAccessGroup    func(childComplexity int, environmentID string, resource string, resourceID string, access string, accessGroupID string) int
 		UpdatePermissionToUser           func(childComplexity int, environmentID string, resource string, resourceID string, access string, userID string) int
@@ -371,7 +371,7 @@ type MutationResolver interface {
 	UpdatePermissionToAccessGroup(ctx context.Context, environmentID string, resource string, resourceID string, access string, accessGroupID string) (string, error)
 	UpdateUserToAccessGroup(ctx context.Context, environmentID string, userID string, accessGroupID string) (string, error)
 	RemoveUserFromAccessGroup(ctx context.Context, userID string, accessGroupID string, environmentID string) (string, error)
-	UpdateFilesNode(ctx context.Context, input []*FilesNodeInput) (string, error)
+	UpdateFilesNode(ctx context.Context, input *FilesNodeInput) (string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 	PipelinePermissionsToUser(ctx context.Context, environmentID string, resourceID string, access []string, userID string) (string, error)
@@ -1022,7 +1022,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateFilesNode(childComplexity, args["input"].([]*FilesNodeInput)), true
+		return e.complexity.Mutation.UpdateFilesNode(childComplexity, args["input"].(*FilesNodeInput)), true
 
 	case "Mutation.updateMe":
 		if e.complexity.Mutation.UpdateMe == nil {
@@ -2757,7 +2757,7 @@ extend type Mutation {
 	+ **Route**: Private
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
-  updateFilesNode(input:[FilesNodeInput]!): String!
+  updateFilesNode(input:FilesNodeInput): String!
 }
 `, BuiltIn: false},
 	{Name: "resolvers/me.graphqls", Input: `input AddUpdateMeInput {
@@ -4236,10 +4236,10 @@ func (ec *executionContext) field_Mutation_updateEnvironment_args(ctx context.Co
 func (ec *executionContext) field_Mutation_updateFilesNode_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []*FilesNodeInput
+	var arg0 *FilesNodeInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNFilesNodeInput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐFilesNodeInput(ctx, tmp)
+		arg0, err = ec.unmarshalOFilesNodeInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐFilesNodeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -6663,7 +6663,7 @@ func (ec *executionContext) _Mutation_updateFilesNode(ctx context.Context, field
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateFilesNode(rctx, args["input"].([]*FilesNodeInput))
+		return ec.resolvers.Mutation().UpdateFilesNode(rctx, args["input"].(*FilesNodeInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -19490,23 +19490,6 @@ func (ec *executionContext) marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdata
 	wg.Wait()
 
 	return ret
-}
-
-func (ec *executionContext) unmarshalNFilesNodeInput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐFilesNodeInput(ctx context.Context, v interface{}) ([]*FilesNodeInput, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*FilesNodeInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOFilesNodeInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐFilesNodeInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {

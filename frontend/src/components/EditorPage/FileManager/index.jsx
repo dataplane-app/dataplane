@@ -161,18 +161,19 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
         // Push new file to root children
         //Find the ID first
-        const currentSelectedElement = findNodeById(data.children, selected); //
+        const currentSelectedElement = findNodeById(data.children, selected);
         if (selected === data.id) {
-            data.children.push(newFileMock);
+            let newData = { ...data };
+            newData.children.push(newFileMock);
+            setData(newData);
         } else if (currentSelectedElement && currentSelectedElement.children) {
-            currentSelectedElement.children.push(newFileMock);
+            currentSelectedElement.children.push(newFileMock); // ???
             selectAndOpenNewFile(newFileMock);
         } else {
             return;
         }
 
-        // Success snack
-        enqueueSnackbar(`File ${newFileName} created!`, { variant: 'success' });
+        updateFilesNode(newFileMock, `File ${newFileName} created!`);
 
         // Set values to default
         setNewFileName('');
@@ -226,7 +227,9 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         //Find the ID first
         const currentSelectedElement = findNodeById(data.children, selected);
         if (selected === data.id) {
-            data.children.push(newFolderMock);
+            let newData = { ...data };
+            newData.children.push(newFolderMock);
+            setData(newData);
         } else if (currentSelectedElement && currentSelectedElement.children) {
             currentSelectedElement.children.push(newFolderMock);
             selectAndOpenNewFile(newFolderMock);
@@ -234,8 +237,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             return;
         }
 
-        // Success snack
-        enqueueSnackbar(`Folder ${newFolderName} created!`, { variant: 'success' });
+        updateFilesNode(newFolderMock, `Folder ${newFolderName} created!`);
 
         // Set values to default
         setNewFolderName('');
@@ -277,7 +279,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
                 if (elementToChange) {
                     elementToChange.name = tmpFileName;
-                    enqueueSnackbar(`Changed folder name to ${tmpFileName}!`, { variant: 'success' });
+
+                    updateFilesNode(elementToChange, `Changed folder name to ${tmpFileName}!`);
 
                     setTmpFileName(null);
                     setIsEditing(false);
@@ -301,7 +304,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
                 if (elementToChange) {
                     elementToChange.name = tmpFileName;
-                    enqueueSnackbar(`Changed file name to ${tmpFileName}!`, { variant: 'success' });
+
+                    updateFilesNode(elementToChange, `Changed file name to ${tmpFileName}!`);
 
                     setTmpFileName(null);
                     setIsEditing(false);
@@ -733,6 +737,12 @@ export const useGetFilesNodeHook = (pipeline, setData) => {
 
 function prepareForFrontEnd(data) {
     data = JSON.parse(JSON.stringify(data).replaceAll('folderID', 'id').replaceAll('folderName', 'name'));
+    data.forEach((a) => (a.fType === 'folder' ? (a.children = []) : null));
+
+    if (data.length === 1) {
+        data[0].children = [];
+        return data[0];
+    }
 
     let parentIDs = data.map((a) => a.id);
     const top = data.filter((a) => !parentIDs.includes(a.parentID))[0];
@@ -776,7 +786,6 @@ function prepareForFrontEnd(data) {
             }
         }
     }
-
     recursive2(top.children);
     return top;
 }
@@ -789,9 +798,18 @@ export const useUpdateFilesNodeHook = (environmentID, pipelineID, nodeID) => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get files
-    return async (data) => {
-        const input = prepareFilesNodeForBackend(data, environmentID, pipelineID, nodeID);
-        // return;
+    return async (data, msg) => {
+        const input = {
+            folderID: data.id,
+            parentID: data.parentID,
+            environmentID,
+            pipelineID,
+            nodeID,
+            folderName: data.name,
+            fType: data.fType,
+            active: true,
+        };
+
         const response = await updateFilesNode({ input });
 
         if (response.r === 'error') {
@@ -800,43 +818,7 @@ export const useUpdateFilesNodeHook = (environmentID, pipelineID, nodeID) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            enqueueSnackbar('Success', { variant: 'success' });
+            enqueueSnackbar(msg, { variant: 'success' });
         }
     };
 };
-
-function prepareFilesNodeForBackend(files, environmentID, pipelineID, nodeID) {
-    let array = [];
-    array.push({
-        folderID: files.id,
-        parentID: files.parentID,
-        environmentID,
-        pipelineID,
-        nodeID,
-        folderName: files.name,
-        fType: files.fType,
-        active: true,
-    });
-
-    function recursive(arr) {
-        for (const key of arr) {
-            if (key.children) {
-                recursive(key.children);
-            }
-            array.push({
-                folderID: key.id,
-                parentID: key.parentID,
-                environmentID,
-                pipelineID,
-                nodeID,
-                folderName: key.name,
-                fType: key.fType,
-                active: true,
-            });
-        }
-        return array;
-    }
-    recursive(files.children);
-
-    return array;
-}

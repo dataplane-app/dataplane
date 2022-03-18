@@ -88,9 +88,9 @@ const PipelineEditor = () => {
                     Code {'>'} {pipeline?.name}
                 </Typography>
                 <Grid item sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
-                    <Button variant="contained" onClick={handleSave}>
+                    {/* <Button variant="contained" onClick={handleSave}>
                         Save
-                    </Button>
+                    </Button> */}
                     <Button variant="outlined" sx={{ ml: 2, backgroundColor: 'background.main' }} onClick={() => history.push(`/pipelines/view/${pipeline.pipelineID}`)}>
                         Close
                     </Button>

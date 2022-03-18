@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
@@ -16,16 +16,16 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (r *mutationResolver) UpdateFilesNode(ctx context.Context, input []*privategraphql.FilesNodeInput) (string, error) {
+func (r *mutationResolver) UpdateFilesNode(ctx context.Context, input *privategraphql.FilesNodeInput) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: input[0].EnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: input[0].EnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: input[0].PipelineID, Access: "write", EnvironmentID: input[0].EnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: input.EnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: input.EnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: input.PipelineID, Access: "write", EnvironmentID: input.EnvironmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -36,30 +36,26 @@ func (r *mutationResolver) UpdateFilesNode(ctx context.Context, input []*private
 
 	// ----- Add node files to database
 
-	for _, p := range input {
+	f := &models.CodeFolders{
+		EnvironmentID: input.EnvironmentID,
+		PipelineID:    input.PipelineID,
+		NodeID:        input.NodeID,
+		FolderID:      input.FolderID,
+		ParentID:      input.ParentID,
+		FolderName:    input.FolderName,
+		FType:         input.FType,
+		Level:         "node",
+		Active:        input.Active,
+	}
 
-		f := &models.CodeFolders{
-			EnvironmentID: p.EnvironmentID,
-			PipelineID:    p.PipelineID,
-			NodeID:        p.NodeID,
-			FolderID:      p.FolderID,
-			ParentID:      p.ParentID,
-			FolderName:    p.FolderName,
-			FType:         p.FType,
-			Level:         "node",
-			Active:        p.Active,
+	err := database.DBConn.Clauses(clause.OnConflict{UpdateAll: true}).Where("folder_id = ?", input.FolderID).
+		Create(&f).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
 		}
-
-		err := database.DBConn.Clauses(clause.OnConflict{UpdateAll: true}).Where("folder_id = ?", p.FolderID).
-			Create(&f).Error
-
-		if err != nil {
-			if os.Getenv("debug") == "true" {
-				logging.PrintSecretsRedact(err)
-			}
-			return "", errors.New("update files node database error.")
-		}
-
+		return "", errors.New("update files node database error.")
 	}
 
 	return "Success", nil

@@ -33,5 +33,5 @@ extend type Mutation {
 	+ **Route**: Private
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
-  updateFilesNode(input:[FilesNodeInput]!): String!
+  updateFilesNode(input:FilesNodeInput): String!
 }
