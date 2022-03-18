@@ -11,8 +11,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import { Downgraded } from '@hookstate/core';
-import { useUpdateFilesNode } from '../graphql/updateFilesNode';
-import { useSnackbar } from 'notistack';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -28,14 +26,10 @@ export const globalEditorState = createState({
 export const useGlobalEditorState = () => useHookState(globalEditorState);
 
 const PipelineEditor = () => {
-    const [data, setData] = useState([]);
-
     // Hooks
     const history = useHistory();
     const EditorGlobal = useGlobalEditorState();
     const { state: pipeline } = useLocation();
-    // Graphql hook
-    const updateFilesNode = useUpdateFilesNodeHook(pipeline.environmentID, pipeline.pipelineID, pipeline.nodeID);
 
     const editorRef = useRef(null);
 
@@ -75,7 +69,6 @@ const PipelineEditor = () => {
                 return true;
             });
         }
-        updateFilesNode(data);
     };
 
     return (
@@ -117,7 +110,7 @@ const PipelineEditor = () => {
                         layouts={layouts}
                         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                         cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}>
-                        <FileManagerColumn key="1" pipeline={pipeline} data={data} setData={setData} />
+                        <FileManagerColumn key="1" pipeline={pipeline} />
                         <PackageColumn key="2" />
                         <EditorColumn key="3" ref={editorRef} />
                         <LogsColumn key="4" />
@@ -129,63 +122,3 @@ const PipelineEditor = () => {
 };
 
 export default PipelineEditor;
-
-// ----- Custom hook
-export const useUpdateFilesNodeHook = (environmentID, pipelineID, nodeID) => {
-    // GraphQL hook
-    const updateFilesNode = useUpdateFilesNode();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Get files
-    return async (data) => {
-        const input = prepareFilesNodeForBackend(data, environmentID, pipelineID, nodeID);
-        // return;
-        const response = await updateFilesNode({ input });
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get files: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            enqueueSnackbar('Success', { variant: 'success' });
-        }
-    };
-};
-
-function prepareFilesNodeForBackend(files, environmentID, pipelineID, nodeID) {
-    let array = [];
-    array.push({
-        folderID: files.id,
-        parentID: files.parentID,
-        environmentID,
-        pipelineID,
-        nodeID,
-        folderName: files.name,
-        fType: files.fType,
-        active: true,
-    });
-
-    function recursive(arr) {
-        for (const key of arr) {
-            if (key.children) {
-                recursive(key.children);
-            }
-            array.push({
-                folderID: key.id,
-                parentID: key.parentID,
-                environmentID,
-                pipelineID,
-                nodeID,
-                folderName: key.name,
-                fType: key.fType,
-                active: true,
-            });
-        }
-        return array;
-    }
-    recursive(files.children);
-
-    return array;
-}
