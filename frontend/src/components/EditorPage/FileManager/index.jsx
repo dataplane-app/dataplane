@@ -46,6 +46,14 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const getFilesNode = useGetFilesNodeHook(rest.pipeline, setData);
     const updateFilesNode = useUpdateFilesNodeHook(rest.pipeline.environmentID, rest.pipeline.pipelineID, rest.pipeline.nodeID);
 
+    // Set parent name and id for upload file names
+    useEffect(() => {
+        Editor.parentName.set(data.name);
+        Editor.parentID.set(data.id);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.id, data.name]);
+
     // Check if selected file changed
     useEffect(() => {
         setSelected(Editor.selectedFile.get()?.id);

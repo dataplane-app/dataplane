@@ -7,6 +7,8 @@ import { useGlobalEditorState } from '../../../pages/Editor';
 import { Downgraded } from '@hookstate/core';
 import { useState } from 'react';
 import CustomDragHandle from '../../CustomDragHandle';
+import { useUploadFileNode } from '../../../graphql/uploadFileNode';
+import { useSnackbar } from 'notistack';
 
 const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Editor state
@@ -20,6 +22,9 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Ref
     const editorRef = useRef(null);
+
+    // Graphql hook
+    const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
 
     const handleEditorOnMount = (editor) => {
         editorRef.current = editor;
@@ -98,8 +103,10 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     }, []);
 
     const handleKeyDown = (e) => {
+        e.preventDefault();
         if (e.keyCode === 83 && e.ctrlKey) {
-            alert('ctrl+s clicked...');
+            if (!EditorGlobal.selectedFile.name.value) return;
+            uploadFileNode();
         }
     };
 
@@ -187,3 +194,33 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 });
 
 export default EditorColumn;
+
+// ----- Custom hook
+export const useUploadFileNodeHook = (pipeline) => {
+    const environmentID = pipeline.environmentID;
+    const pipelineID = pipeline.pipelineID;
+    const nodeID = pipeline.nodeID;
+
+    // Global editor state
+    const EditorGlobal = useGlobalEditorState();
+
+    // GraphQL hook
+    const uploadFileNode = useUploadFileNode();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Upload file
+    return async () => {
+        const file = new File(['Hello'], `${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`, { type: 'text/plain' });
+        const response = await uploadFileNode({ environmentID, pipelineID, nodeID, file });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get files: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('File saved.', { variant: 'success' });
+        }
+    };
+};

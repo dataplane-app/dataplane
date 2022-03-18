@@ -1,3 +1,5 @@
+scalar Upload
+
 type CodeFolders {
     folderID: String!
     parentID: String!
@@ -34,4 +36,11 @@ extend type Mutation {
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
   updateFilesNode(input:FilesNodeInput): String!
+
+"""
+	Upload a node file.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+	"""
+  uploadFileNode(environmentID: String!, nodeID: String!, pipelineID: String!, file:Upload!): String!
 }

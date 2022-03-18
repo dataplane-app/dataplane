@@ -21,6 +21,8 @@ export const globalEditorState = createState({
     tabs: [],
     editor: null,
     currentPath: [],
+    parentID: null,
+    parentName: null,
 });
 
 export const useGlobalEditorState = () => useHookState(globalEditorState);
@@ -112,7 +114,7 @@ const PipelineEditor = () => {
                         cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}>
                         <FileManagerColumn key="1" pipeline={pipeline} />
                         <PackageColumn key="2" />
-                        <EditorColumn key="3" ref={editorRef} />
+                        <EditorColumn key="3" ref={editorRef} pipeline={pipeline} />
                         <LogsColumn key="4" />
                     </ResponsiveGridLayout>
                 </Box>
