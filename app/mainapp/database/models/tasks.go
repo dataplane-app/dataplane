@@ -21,6 +21,7 @@ type WorkerTasks struct {
 	WorkerID      string         `json:"worker_id"`
 	PipelineID    string         `json:"pipeline_id"`
 	NodeID        string         `gorm:"index:idx_task_nodeid;" json:"node_id"`
+	Folder        string         `json:"folder"`
 	Dependency    datatypes.JSON `json:"dependency"`
 	Destination   datatypes.JSON `json:"destination"`
 	StartDT       time.Time      `json:"start_dt"`

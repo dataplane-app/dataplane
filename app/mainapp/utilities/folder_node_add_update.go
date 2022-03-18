@@ -41,6 +41,8 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 	where p.pipeline_id =? and p.environment_id = ?
 	`, pipelineID, environmentID).Scan(&output)
 
+	var updateNode models.PipelineNodes
+
 	for _, n := range output {
 
 		if n.NodeType == "trigger" {
@@ -63,10 +65,23 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 				Active:        true,
 			}
 
-			_, cf := CreateFolder(pipelinedir, pfolder)
+			folderReturn, _ := CreateFolder(pipelinedir, pfolder)
 
-			if config.Debug == "true" {
-				log.Println("Add node directory: ", cf)
+			// if config.Debug == "true" {
+			// 	log.Println("Add node directory: ", cf)
+			// }
+
+			updateNode = models.PipelineNodes{
+				NodeID:         n.NodeID,
+				ParentFolderID: parentfolder.FolderID,
+				FolderID:       folderReturn.FolderID,
+			}
+
+			err := database.DBConn.Model(&models.PipelineNodes{}).Select("folder_id", "parent_folder_id").Where("node_id=?", n.NodeID).Updates(&updateNode).Error
+			if err != nil {
+				if config.Debug == "true" {
+					log.Println("Error updating nodes database: ", err)
+				}
 			}
 
 		} else {
@@ -98,10 +113,36 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 				}
 				UpdateFolder(n.FolderID, OLDinput, Newinput, pfolder)
 
+				updateNode = models.PipelineNodes{
+					NodeID:         n.NodeID,
+					ParentFolderID: parentfolder.FolderID,
+					FolderID:       n.FolderID,
+				}
+
+				err := database.DBConn.Model(&models.PipelineNodes{}).Select("folder_id", "parent_folder_id").Where("node_id=?", n.NodeID).Updates(&updateNode).Error
+				if err != nil {
+					if config.Debug == "true" {
+						log.Println("Error updating nodes database: ", err)
+					}
+				}
+
 			} else {
 				n.Action = "nochange"
 				if config.Debug == "true" {
 					log.Println("No change node directory: ", n.FolderID, n.NodeID)
+				}
+
+				updateNode = models.PipelineNodes{
+					NodeID:         n.NodeID,
+					ParentFolderID: parentfolder.FolderID,
+					FolderID:       n.FolderID,
+				}
+
+				err := database.DBConn.Model(&models.PipelineNodes{}).Select("folder_id", "parent_folder_id").Where("node_id=?", n.NodeID).Updates(&updateNode).Error
+				if err != nil {
+					if config.Debug == "true" {
+						log.Println("Error updating nodes database: ", err)
+					}
 				}
 			}
 
