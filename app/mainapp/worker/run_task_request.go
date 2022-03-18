@@ -23,8 +23,7 @@ Task status: Queue, Allocated, Started, Failed, Success
 */
 func WorkerRunTask(workerGroup string, taskid string, runid string, envID string, pipelineID string, nodeID string, commands []string) error {
 
-	// log.Println("task accepted")
-
+	// Important not to update status to avoid timing issue where it can overwrite a success a status
 	TaskFinal := models.WorkerTasks{
 		TaskID:        taskid,
 		CreatedAt:     time.Now().UTC(),
@@ -32,16 +31,9 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 		RunID:         runid,
 		WorkerGroup:   workerGroup,
 		StartDT:       time.Now().UTC(),
-		Status:        "Queue",
 	}
 
-	// response := runtask.TaskResponse{R: "ok"}
-	// _, errnats := messageq.MsgReply("taskupdate", TaskFinal, &response)
-	// if errnats != nil {
-	// 	logging.PrintSecretsRedact(errnats)
-	// }
-
-	UpdateWorkerTasks(TaskFinal)
+	UpdateWorkerTasksNoStatus(TaskFinal)
 
 	/* Look up chosen workers -
 	if none, keep trying for 10 x 2 seconds
@@ -89,7 +81,6 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 			var loadbalanceNext string
 
 			// if a worker group goes offline in between, choose the next in the load balancer and retry
-			// for i := 0; i < maxRetiresAllowed; i++ {
 
 			if os.Getenv("debug") == "true" {
 				log.Println("Worker LB:", onlineWorkers[0].LB, onlineWorkers)

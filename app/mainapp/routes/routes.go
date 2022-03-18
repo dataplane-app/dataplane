@@ -290,6 +290,7 @@ func Setup(port string) *fiber.App {
 	log.Println("👷 Queue and worker subscriptions")
 
 	/* Scheduled tasks */
+	routinetasks.CleanTaskLocks(config.Scheduler, database.DBConn)
 	routinetasks.CleanTasks(config.Scheduler, database.DBConn)
 	routinetasks.CleanWorkerLogs(config.Scheduler, database.DBConn)
 	platform.PlatformNodePublish(config.Scheduler, database.DBConn, MainAppID)

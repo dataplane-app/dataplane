@@ -31,6 +31,18 @@ type WorkerTasks struct {
 	Commands      datatypes.JSON `json:"commands"`
 }
 
+func (WorkerTaskLock) IsEntity() {}
+
+func (WorkerTaskLock) TableName() string {
+	return "worker_task_lock"
+}
+
+type WorkerTaskLock struct {
+	RunID     string    `gorm:"PRIMARY_KEY;type:varchar(48);" json:"run_id"`
+	NodeID    string    `gorm:"PRIMARY_KEY;type:varchar(48);" json:"node_id"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type WorkerTaskSend struct {
 	TaskID        string    `json:"task_id"`
 	CreatedAt     time.Time `json:"created_at"`

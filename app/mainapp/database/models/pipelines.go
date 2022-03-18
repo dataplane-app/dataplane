@@ -36,25 +36,25 @@ func (PipelineNodes) TableName() string {
 }
 
 type PipelineNodes struct {
-	NodeID         string         `gorm:"PRIMARY_KEY;type:varchar(128);" json:"node_id"`
-	PipelineID     string         `gorm:"index:idx_pipelineid_nodes;" json:"pipeline_id"`
-	Name           string         `gorm:"type:varchar(255);" json:"name"`
-	EnvironmentID  string         `json:"environment_id"`
-	NodeType       string         `json:"node_type"`      //trigger, process, checkpoint
-	NodeTypeDesc   string         `json:"node_type_desc"` //python, bash, play, scheduler, checkpoint, api
-	TriggerOnline  bool           `gorm:"default:false;" json:"trigger_online"`
-	Description    string         `json:"description"`
-	Commands       datatypes.JSON `json:"commands"`
-	Meta           datatypes.JSON `json:"meta"`
-	Dependency     datatypes.JSON `json:"dependency"`
-	Destination    datatypes.JSON `json:"destination"`
-	WorkerGroup    string         `json:"worker_group"` //Inherits Pipeline workergroup unless specified
-	Active         bool           `json:"active"`
-	FolderID       string         `json:"folder_id"`
-	ParentFolderID string         `json:"parent_folder_id"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      *time.Time     `json:"updated_at"`
-	DeletedAt      *time.Time     `json:"deleted_at,omitempty"`
+	NodeID        string         `gorm:"PRIMARY_KEY;type:varchar(128);" json:"node_id"`
+	PipelineID    string         `gorm:"index:idx_pipelineid_nodes;" json:"pipeline_id"`
+	Name          string         `gorm:"type:varchar(255);" json:"name"`
+	EnvironmentID string         `json:"environment_id"`
+	NodeType      string         `json:"node_type"`      //trigger, process, checkpoint
+	NodeTypeDesc  string         `json:"node_type_desc"` //python, bash, play, scheduler, checkpoint, api
+	TriggerOnline bool           `gorm:"default:false;" json:"trigger_online"`
+	Description   string         `json:"description"`
+	Commands      datatypes.JSON `json:"commands"`
+	Meta          datatypes.JSON `json:"meta"`
+	Dependency    datatypes.JSON `json:"dependency"`
+	Destination   datatypes.JSON `json:"destination"`
+	WorkerGroup   string         `json:"worker_group"` //Inherits Pipeline workergroup unless specified
+	Active        bool           `json:"active"`
+	// FolderID       string         `json:"folder_id"`
+	// ParentFolderID string         `json:"parent_folder_id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
 func (PipelineEdges) IsEntity() {}

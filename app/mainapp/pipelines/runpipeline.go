@@ -6,45 +6,18 @@ import (
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
+	"dataplane/mainapp/utilities"
 	"dataplane/mainapp/worker"
 	"encoding/json"
 	"log"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 )
 
 type Command struct {
 	Command string `json:command`
-}
-
-func (PipelineNodes) IsEntity() {}
-
-func (PipelineNodes) TableName() string {
-	return "pipeline_nodes"
-}
-
-type PipelineNodes struct {
-	NodeID        string         `gorm:"PRIMARY_KEY;type:varchar(128);" json:"node_id"`
-	PipelineID    string         `gorm:"index:idx_pipelineid_nodes;" json:"pipeline_id"`
-	Name          string         `gorm:"type:varchar(255);" json:"name"`
-	EnvironmentID string         `json:"environment_id"`
-	NodeType      string         `json:"node_type"`      //trigger, process, checkpoint
-	NodeTypeDesc  string         `json:"node_type_desc"` //python, bash, play, scheduler, checkpoint, api
-	TriggerOnline bool           `gorm:"default:false;" json:"trigger_online"`
-	Description   string         `json:"description"`
-	Commands      datatypes.JSON `json:"commands"`
-	Meta          datatypes.JSON `json:"meta"`
-	Dependency    datatypes.JSON `json:"dependency"`
-	Destination   datatypes.JSON `json:"destination"`
-	WorkerGroup   string         `json:"worker_group"` //Inherits Pipeline workergroup unless specified
-	Active        bool           `json:"active"`
-	FolderName    string         `json:"folder_name"`
-	FolderID      string         `json:"folder_id"`
-	CreatedAt     time.Time      `json:"created_at"`
-	UpdatedAt     *time.Time     `json:"updated_at"`
-	DeletedAt     *time.Time     `json:"deleted_at,omitempty"`
 }
 
 func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, error) {
@@ -67,6 +40,8 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		return models.PipelineRuns{}, err
 	}
 
+	// Retrieve folders
+
 	// Create a run
 	run := models.PipelineRuns{
 		RunID:         uuid.NewString(),
@@ -86,39 +61,30 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		return models.PipelineRuns{}, err
 	}
 
-	// Chart a course
-	nodes := make(chan []*PipelineNodes)
-	nodesdata := []*PipelineNodes{}
+	// ------ Obtain folders
+	folders := make(chan []models.CodeFolders)
+	parentfolder := make(chan string)
+	foldersdata := []models.CodeFolders{}
 
 	go func() {
-		database.DBConn.Raw(`
-		select
-		n.node_id,
-		n.pipeline_id,
-		n.name,
-		n.environment_id,
-		n.node_type,
-		n.node_type_desc,
-		n.trigger_online,
-		n.commands,
-		n.dependency,
-		n.destination,
-		n.worker_group,
-		n.active,
-		n.created_at,
-		c.folder_name,
-		c.folder_id
-		from pipeline_nodes n 
-		left join code_folders c on 
-		c.pipeline_id = n.pipeline_id and 
-		c.environment_id = n.environment_id and 
-		c.node_id = n.node_id and
-		n.level = 'node' and
-		n.f_type = 'folder'
-		where n.pipeline_id =? and n.environment_id =?
-		`, pipelineID, environmentID).Scan(&nodesdata)
+		database.DBConn.Where("pipeline_id = ? and environment_id =? and level = ?", pipelineID, environmentID, "node").Find(&foldersdata)
+		folders <- foldersdata
 
-		// Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID)
+		pf := ""
+
+		if len(foldersdata) > 0 {
+			pf, _ = utilities.FolderConstructByID(foldersdata[0].ParentID)
+		}
+		parentfolder <- pf
+	}()
+
+	// Chart a course
+	nodes := make(chan []*models.PipelineNodes)
+	nodesdata := []*models.PipelineNodes{}
+
+	go func() {
+
+		database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Find(&nodesdata)
 		nodes <- nodesdata
 	}()
 
@@ -137,12 +103,35 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	// Return go routines
 	nodesdata = <-nodes
 	edgesdata = <-edges
+	foldersdata = <-folders
+	parentfolderdata := <-parentfolder
+
+	// log.Println("parent folder", parentfolderdata)
 
 	// Map children
 	for _, s := range edgesdata {
 
 		destinations[s.From] = append(destinations[s.From], s.To)
 		dependencies[s.To] = append(dependencies[s.To], s.From)
+
+	}
+
+	// Map folder structure:
+	var folderMap = make(map[string]string)
+	for _, f := range foldersdata {
+
+		if f.Level == "node" {
+
+			dir := parentfolderdata + f.FolderID + "_" + f.FolderName
+			folderMap[f.NodeID] = dir
+			if config.Debug == "yes" {
+				if _, err := os.Stat(config.CodeDirectory + dir); os.IsExist(err) {
+					log.Println("Dir exists:", config.CodeDirectory+dir)
+
+				}
+			}
+
+		}
 
 	}
 
@@ -208,7 +197,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 			Dependency:    dependJSON,
 			Commands:      s.Commands,
 			Destination:   destinationJSON,
-			Folder:        "",
+			Folder:        folderMap[s.NodeID],
 		}
 
 		if nodeType == "start" {
