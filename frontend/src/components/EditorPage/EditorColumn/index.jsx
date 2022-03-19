@@ -211,7 +211,13 @@ export const useUploadFileNodeHook = (pipeline) => {
 
     // Upload file
     return async () => {
-        const file = new File(['Hello'], `${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`, { type: 'text/plain' });
+        const file = new File(
+            [EditorGlobal.selectedFile.diffValue.value],
+            `${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`,
+            {
+                type: 'text/plain',
+            }
+        );
         const response = await uploadFileNode({ environmentID, pipelineID, nodeID, file });
 
         if (response.r === 'error') {
@@ -221,6 +227,7 @@ export const useUploadFileNodeHook = (pipeline) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('File saved.', { variant: 'success' });
+            EditorGlobal.selectedFile.isEditing.set(false);
         }
     };
 };
