@@ -104,10 +104,15 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Handle tab change
     useEffect(() => {
+        // If no selection, return
         if (!EditorGlobal.selectedFile.value) return;
-        if (EditorGlobal.selectedFile.new.value) {
-            return;
-        }
+
+        // // If file is newly created, return
+        // if (!EditorGlobal.selectedFile.diffValue.value) {
+        //     return;
+        // }
+
+        // If selected file already has content, return
         if (EditorGlobal.selectedFile.content.value) {
             return;
         }
@@ -119,7 +124,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             return;
         }
 
-        console.log('🚀 ~ file: index.jsx ~ line 117 ~ useEffect ~ EditorGlobal.selectedFile', EditorGlobal.selectedFile.value);
         fetch(`${codeFilesEndpoint}/${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`)
             .then(async (response) => {
                 if (response.status !== 200) {
@@ -148,7 +152,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         if (e.keyCode === 83 && e.ctrlKey) {
             e.preventDefault();
             if (!EditorGlobal.selectedFile.name.value) return;
-            EditorGlobal.selectedFile.new.set(false);
             uploadFileNode();
         }
     };

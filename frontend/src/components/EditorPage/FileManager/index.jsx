@@ -15,6 +15,7 @@ import CustomDragHandle from '../../CustomDragHandle';
 import { Downgraded } from '@hookstate/core';
 import { useGetFilesNode } from '../../../graphql/getFilesNode';
 import { useUpdateFilesNode } from '../../../graphql/updateFilesNode';
+import { useUploadFileNodeHook } from '../EditorColumn';
 
 const MOCK_ROOT_ID = 'all';
 
@@ -45,6 +46,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Graphql hook
     const getFilesNode = useGetFilesNodeHook(rest.pipeline, setData);
     const updateFilesNode = useUpdateFilesNodeHook(rest.pipeline.environmentID, rest.pipeline.pipelineID, rest.pipeline.nodeID);
+    const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
 
     // Set parent name and id for upload file names
     useEffect(() => {
@@ -166,7 +168,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             diffValue: ``,
             fType: 'file',
             parentID: selected,
-            new: true,
         };
 
         // Push new file to root children
@@ -178,10 +179,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             newData.children.push(newFileMock);
             setData(newData);
             selectAndOpenNewFile(newFileMock);
+            uploadFileNode();
         } else if (currentSelectedElement && currentSelectedElement.children) {
             // If lower level folder
             currentSelectedElement.children.push(newFileMock); // ???
             selectAndOpenNewFile(newFileMock);
+            uploadFileNode();
         }
 
         updateFilesNode(newFileMock, `File ${newFileName} created!`);
@@ -829,7 +832,7 @@ export const useUpdateFilesNodeHook = (environmentID, pipelineID, nodeID) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            enqueueSnackbar(msg, { variant: 'success' });
+            // enqueueSnackbar(msg, { variant: 'success' });
         }
     };
 };
