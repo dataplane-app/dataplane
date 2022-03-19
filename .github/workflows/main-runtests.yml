@@ -66,7 +66,7 @@ jobs:
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
 
       - name: Home directory
-        run: PWD
+        run: echo $HOME
 
       - name: Run Go Tests
         env: 
