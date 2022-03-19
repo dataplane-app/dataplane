@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 
@@ -47,6 +48,24 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		log.Printf("starting task with id %s - node: %s run: %s\n", msg.TaskID, msg.NodeID, msg.RunID)
 	}
 
+	// lock node for run
+	var createLock = modelmain.WorkerTaskLock{
+		RunID:  msg.RunID,
+		NodeID: msg.NodeID,
+	}
+	errl := database.DBConn.Create(&createLock).Error
+	if errl != nil {
+		if strings.Contains(errl.Error(), "duplicate") {
+			if config.Debug == "true" {
+				log.Println("Lock for run and node exists:", msg.RunID, msg.NodeID)
+			}
+		} else {
+			log.Println(errl.Error())
+		}
+
+		return
+	}
+
 	// --- Check if this task is already running
 	var lockCheck modelmain.WorkerTasks
 	err2 := database.DBConn.Select("task_id", "status").Where("task_id = ?", msg.TaskID).First(&lockCheck).Error
@@ -59,6 +78,23 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		log.Println("Skipping not in queue", msg.RunID, msg.NodeID)
 		return
 	}
+
+	statusUpdate = "Run"
+
+	TaskUpdate := modelmain.WorkerTasks{
+		TaskID:        msg.TaskID,
+		CreatedAt:     time.Now().UTC(),
+		EnvironmentID: msg.EnvironmentID,
+		RunID:         msg.RunID,
+		NodeID:        msg.NodeID,
+		PipelineID:    msg.PipelineID,
+		WorkerGroup:   os.Getenv("worker_group"),
+		WorkerID:      config.WorkerID,
+		StartDT:       time.Now().UTC(),
+		Status:        statusUpdate,
+	}
+
+	UpdateWorkerTasks(TaskUpdate)
 
 	// --- Check if pipeline has failed
 	var pipelineCheck modelmain.PipelineRuns
@@ -89,22 +125,6 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		return
 	}
 
-	statusUpdate = "Run"
-
-	TaskUpdate := modelmain.WorkerTasks{
-		TaskID:        msg.TaskID,
-		CreatedAt:     time.Now().UTC(),
-		EnvironmentID: msg.EnvironmentID,
-		RunID:         msg.RunID,
-		NodeID:        msg.NodeID,
-		PipelineID:    msg.PipelineID,
-		WorkerGroup:   os.Getenv("worker_group"),
-		WorkerID:      config.WorkerID,
-		StartDT:       time.Now().UTC(),
-		Status:        statusUpdate,
-	}
-
-	UpdateWorkerTasks(TaskUpdate)
 	// var response TaskResponse
 	// _, errnats := messageq.MsgReply("taskupdate", TaskUpdate, &response)
 
@@ -362,6 +382,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	}
 
 	// if there are empty commands simply move on as success.
+	// log.Println("Node status", msg.NodeID, statusUpdate)
 	if statusUpdate == "Run" {
 		statusUpdate = "Success"
 	}

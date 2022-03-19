@@ -4,11 +4,13 @@ import (
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	"dataplane/mainapp/filesystem"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/worker"
 	"encoding/json"
 	"log"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,6 +40,8 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		return models.PipelineRuns{}, err
 	}
 
+	// Retrieve folders
+
 	// Create a run
 	run := models.PipelineRuns{
 		RunID:         uuid.NewString(),
@@ -57,11 +61,29 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		return models.PipelineRuns{}, err
 	}
 
+	// ------ Obtain folders
+	folders := make(chan []models.CodeFolders)
+	parentfolder := make(chan string)
+	foldersdata := []models.CodeFolders{}
+
+	go func() {
+		database.DBConn.Where("pipeline_id = ? and environment_id =? and level = ?", pipelineID, environmentID, "node").Find(&foldersdata)
+		folders <- foldersdata
+
+		pf := ""
+
+		if len(foldersdata) > 0 {
+			pf, _ = filesystem.FolderConstructByID(foldersdata[0].ParentID)
+		}
+		parentfolder <- pf
+	}()
+
 	// Chart a course
 	nodes := make(chan []*models.PipelineNodes)
 	nodesdata := []*models.PipelineNodes{}
 
 	go func() {
+
 		database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Find(&nodesdata)
 		nodes <- nodesdata
 	}()
@@ -81,12 +103,35 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	// Return go routines
 	nodesdata = <-nodes
 	edgesdata = <-edges
+	foldersdata = <-folders
+	parentfolderdata := <-parentfolder
+
+	// log.Println("parent folder", parentfolderdata)
 
 	// Map children
 	for _, s := range edgesdata {
 
 		destinations[s.From] = append(destinations[s.From], s.To)
 		dependencies[s.To] = append(dependencies[s.To], s.From)
+
+	}
+
+	// Map folder structure:
+	var folderMap = make(map[string]string)
+	for _, f := range foldersdata {
+
+		if f.Level == "node" {
+
+			dir := parentfolderdata + f.FolderID + "_" + f.FolderName
+			folderMap[f.NodeID] = dir
+			if config.Debug == "yes" {
+				if _, err := os.Stat(config.CodeDirectory + dir); os.IsExist(err) {
+					log.Println("Dir exists:", config.CodeDirectory+dir)
+
+				}
+			}
+
+		}
 
 	}
 
@@ -152,6 +197,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 			Dependency:    dependJSON,
 			Commands:      s.Commands,
 			Destination:   destinationJSON,
+			Folder:        folderMap[s.NodeID],
 		}
 
 		if nodeType == "start" {

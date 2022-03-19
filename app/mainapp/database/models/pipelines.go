@@ -50,9 +50,11 @@ type PipelineNodes struct {
 	Destination   datatypes.JSON `json:"destination"`
 	WorkerGroup   string         `json:"worker_group"` //Inherits Pipeline workergroup unless specified
 	Active        bool           `json:"active"`
-	CreatedAt     time.Time      `json:"created_at"`
-	UpdatedAt     *time.Time     `json:"updated_at"`
-	DeletedAt     *time.Time     `json:"deleted_at,omitempty"`
+	// FolderID       string         `json:"folder_id"`
+	// ParentFolderID string         `json:"parent_folder_id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
 func (PipelineEdges) IsEntity() {}

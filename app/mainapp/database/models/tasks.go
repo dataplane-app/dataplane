@@ -21,6 +21,7 @@ type WorkerTasks struct {
 	WorkerID      string         `json:"worker_id"`
 	PipelineID    string         `json:"pipeline_id"`
 	NodeID        string         `gorm:"index:idx_task_nodeid;" json:"node_id"`
+	Folder        string         `json:"folder"`
 	Dependency    datatypes.JSON `json:"dependency"`
 	Destination   datatypes.JSON `json:"destination"`
 	StartDT       time.Time      `json:"start_dt"`
@@ -28,6 +29,18 @@ type WorkerTasks struct {
 	Status        string         `json:"status"`
 	Reason        string         `json:"reason"`
 	Commands      datatypes.JSON `json:"commands"`
+}
+
+func (WorkerTaskLock) IsEntity() {}
+
+func (WorkerTaskLock) TableName() string {
+	return "worker_task_lock"
+}
+
+type WorkerTaskLock struct {
+	RunID     string    `gorm:"PRIMARY_KEY;type:varchar(48);" json:"run_id"`
+	NodeID    string    `gorm:"PRIMARY_KEY;type:varchar(48);" json:"node_id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type WorkerTaskSend struct {
