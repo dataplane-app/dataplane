@@ -22,6 +22,7 @@ type WorkerTasks struct {
 	PipelineID    string         `json:"pipeline_id"`
 	NodeID        string         `gorm:"index:idx_task_nodeid;" json:"node_id"`
 	Folder        string         `json:"folder"`
+	FolderID      string         `json:"folder_id"`
 	Dependency    datatypes.JSON `json:"dependency"`
 	Destination   datatypes.JSON `json:"destination"`
 	StartDT       time.Time      `json:"start_dt"`
@@ -52,6 +53,8 @@ type WorkerTaskSend struct {
 	RunID         string    `json:"run_id"`
 	WorkerGroup   string    `json:"worker_group"`
 	WorkerID      string    `json:"worker_id"`
+	Folder        string    `json:"folder"`
+	FolderID      string    `json:"folder_id"`
 	Commands      []string  `json:"commands"`
 }
 

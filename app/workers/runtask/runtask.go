@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	modelmain "dataplane/mainapp/database/models"
+	"dataplane/mainapp/filesystem"
 	"dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/messageq"
@@ -149,6 +150,24 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		if TasksStatusWG == "error" {
 			TasksStatus.Remove(msg.TaskID)
 			break
+		}
+
+		// Detect if folder is being requested
+		if strings.Contains(v, "${{nodedirectory}}") {
+
+			directoryRun := config.CodeDirectory + msg.Folder
+
+			// construct the directory if the directory cant be found
+			if _, err := os.Stat(directoryRun); os.IsNotExist(err) {
+				newdir, err := filesystem.FolderConstructByID(msg.FolderID)
+				if err == nil {
+					directoryRun = newdir
+				}
+			}
+
+			// Overwrite command with injected directory
+			v = strings.ReplaceAll(v, "${{nodedirectory}}", directoryRun)
+
 		}
 
 		// log.Println("command:", v)
