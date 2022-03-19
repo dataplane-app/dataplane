@@ -185,6 +185,9 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             currentSelectedElement.children.push(newFileMock); // ???
             selectAndOpenNewFile(newFileMock);
             uploadFileNode();
+        } else {
+            alert('Click on the folder you would like to create the file in.');
+            return;
         }
 
         updateFilesNode(newFileMock, `File ${newFileName} created!`);
