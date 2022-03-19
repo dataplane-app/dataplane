@@ -359,6 +359,10 @@ const Flow = () => {
                             Pipelines {'>'} {pipeline?.name}
                         </Typography>
 
+                        <Button sx={{ ml: 2 }} onClick={handleSave} variant="contained">
+                            Edit
+                        </Button>
+
                         {isUnsavedWithChanges ? <UnsavedChangesIndicator /> : null}
 
                         <Grid display="flex" alignItems="flex-start" marginLeft="auto">

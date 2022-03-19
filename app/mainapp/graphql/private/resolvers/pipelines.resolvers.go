@@ -116,6 +116,41 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	return pipelineID, nil
 }
 
+func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string, name string, environmentID string, description string, workerGroup string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	p := models.Pipelines{}
+
+	err := database.DBConn.Where("pipeline_id = ?", pipelineID).Updates(models.Pipelines{
+		Name:        name,
+		Description: description,
+		WorkerGroup: workerGroup,
+	}).First(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Update pipeline database error.")
+	}
+
+	return "Success", nil
+}
+
 func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *privategraphql.PipelineFlowInput, environmentID string, pipelineID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
