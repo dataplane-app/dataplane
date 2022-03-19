@@ -5,13 +5,13 @@ import (
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	"dataplane/mainapp/filesystem"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/pipelines"
 	"dataplane/mainapp/platform"
 	"dataplane/mainapp/scheduler"
 	"dataplane/mainapp/scheduler/routinetasks"
-	"dataplane/mainapp/utilities"
 	"dataplane/mainapp/worker"
 	"fmt"
 	"log"
@@ -136,7 +136,7 @@ func Setup(port string) *fiber.App {
 		}
 
 		// Should create a directory as follows code_directory/
-		platformFolder, _ := utilities.CreateFolder(platformdir, "")
+		platformFolder, _ := filesystem.CreateFolder(platformdir, "")
 
 		var parentfolder string
 		for _, x := range environment {
@@ -153,9 +153,9 @@ func Setup(port string) *fiber.App {
 			}
 
 			// Should create a directory as follows code_directory/
-			parentfolder, _ = utilities.FolderConstructByID(platformFolder.FolderID)
+			parentfolder, _ = filesystem.FolderConstructByID(platformFolder.FolderID)
 			log.Println("Parent folder environment:", parentfolder)
-			utilities.CreateFolder(envdir, parentfolder)
+			filesystem.CreateFolder(envdir, parentfolder)
 
 		}
 

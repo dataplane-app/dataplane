@@ -5,10 +5,11 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	"dataplane/mainapp/filesystem"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
@@ -105,10 +106,10 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	}
 
 	// Should create a directory as follows code_directory/
-	pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
-	foldercreate, _ := utilities.CreateFolder(pipelinedir, pfolder)
+	pfolder, _ := filesystem.FolderConstructByID(parentfolder.FolderID)
+	foldercreate, _ := filesystem.CreateFolder(pipelinedir, pfolder)
 
-	thisfolder, _ := utilities.FolderConstructByID(foldercreate.FolderID)
+	thisfolder, _ := filesystem.FolderConstructByID(foldercreate.FolderID)
 
 	git.PlainInit(config.CodeDirectory+thisfolder, false)
 
@@ -416,7 +417,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	// pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
 
-	utilities.FolderNodeAddUpdate(pipelineID, environmentID)
+	filesystem.FolderNodeAddUpdate(pipelineID, environmentID)
 
 	// ----- unlock the pipeline
 	err = database.DBConn.Model(&models.Pipelines{}).Where("pipeline_id = ?", pipelineID).Update("update_lock", false).Error

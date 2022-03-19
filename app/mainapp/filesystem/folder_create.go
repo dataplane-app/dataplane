@@ -1,4 +1,4 @@
-package utilities
+package filesystem
 
 import (
 	"dataplane/mainapp/config"
@@ -33,7 +33,7 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 
 		input.FolderName = FolderFriendly(input.FolderName)
 
-		createDirectory = parentFolder + foldername
+		// createDirectory = parentFolder + foldername
 
 		errdb := database.DBConn.Create(&input).Error
 		if errdb != nil {
@@ -67,6 +67,8 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 		}
 	}
 
-	return input, createDirectory
+	returnpath := parentFolder + foldername
+
+	return input, returnpath
 
 }

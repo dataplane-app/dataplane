@@ -1,4 +1,4 @@
-package utilities
+package filesystem
 
 import (
 	"dataplane/mainapp/config"
@@ -8,12 +8,13 @@ import (
 )
 
 type FolderNodeUpdate struct {
-	NodeID     string `json:"node_id"`
-	Name       string `json:"name"`
-	NodeType   string `json:"node_type"`
-	FolderID   string `json:"folder_id"`
-	FolderName string `json:"folder_name"`
-	Action     string `json:"action"`
+	NodeID       string `json:"node_id"`
+	Name         string `json:"name"`
+	NodeType     string `json:"node_type"`
+	NodeTypeDesc string `json:"node_type_desc"`
+	FolderID     string `json:"folder_id"`
+	FolderName   string `json:"folder_name"`
+	Action       string `json:"action"`
 }
 
 func FolderNodeAddUpdate(pipelineID string, environmentID string) {
@@ -34,6 +35,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 	p.node_id,
 	p.name,
 	p.node_type,
+	p.node_type_desc,
 	f.folder_id,
 	f.folder_name
 	from pipeline_nodes p 
@@ -63,7 +65,30 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 				Active:        true,
 			}
 
-			CreateFolder(pipelinedir, pfolder)
+			_, rfolder := CreateFolder(pipelinedir, pfolder)
+
+			// If processor nodes need entrypoint files
+			// log.Println("Node types:", n.NodeType, n.NodeTypeDesc)
+			if n.NodeType == "process" {
+
+				node := models.PipelineNodes{
+					EnvironmentID: environmentID,
+					PipelineID:    pipelineID,
+					NodeID:        n.NodeID,
+				}
+
+				switch n.NodeTypeDesc {
+				// Python processor
+				case "python":
+					// log.Println("Node types:", n.NodeType, n.NodeTypeDesc)
+					path, err := FileCreateProcessor(n.NodeTypeDesc, config.CodeDirectory+rfolder, node)
+					if err != nil {
+						if config.Debug == "true" {
+							log.Println("Failed to create python processor file: ", err, path)
+						}
+					}
+				}
+			}
 
 		} else {
 			// Do we need to update existing folders

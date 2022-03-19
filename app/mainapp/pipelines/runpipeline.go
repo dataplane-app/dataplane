@@ -4,9 +4,9 @@ import (
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	"dataplane/mainapp/filesystem"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
-	"dataplane/mainapp/utilities"
 	"dataplane/mainapp/worker"
 	"encoding/json"
 	"log"
@@ -73,7 +73,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		pf := ""
 
 		if len(foldersdata) > 0 {
-			pf, _ = utilities.FolderConstructByID(foldersdata[0].ParentID)
+			pf, _ = filesystem.FolderConstructByID(foldersdata[0].ParentID)
 		}
 		parentfolder <- pf
 	}()
