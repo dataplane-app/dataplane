@@ -20,7 +20,7 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 		createDirectory = ""
 		foldername = ""
 
-		id, err := gonanoid.New(10)
+		id, err := gonanoid.Generate("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 7)
 		if err != nil {
 			if config.Debug == "true" {
 				log.Println("Directory id error:", err)

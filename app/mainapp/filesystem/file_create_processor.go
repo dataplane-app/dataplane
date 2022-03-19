@@ -17,10 +17,9 @@ func FileCreateProcessor(nodeTypeDesc string, nodePath string, node models.Pipel
 	case "python":
 
 		content := `print("Pipeline id: ` + node.PipelineID + `")
-print("Node id: ` + node.NodeID + `")
-`
+print("Node id: ` + node.NodeID + `")`
 
-		log.Println(content)
+		// log.Println(content)
 		filepath = nodePath + "/dp-entrypoint.py"
 		err := os.WriteFile(filepath, []byte(content), 0644)
 		if err != nil {

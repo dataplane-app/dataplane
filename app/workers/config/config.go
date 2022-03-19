@@ -16,6 +16,7 @@ var WorkerType string
 var WorkerEnv string
 var WorkerLB string
 var DPworkerCMD string
+var CodeDirectory string
 
 // Debug
 var Debug string = "false"
@@ -41,6 +42,8 @@ func LoadConfig() {
 	if DPworkerCMD == "" {
 		DPworkerCMD = os.Getenv("SHELL")
 	}
+
+	CodeDirectory = os.Getenv("dataplane_code_folder")
 
 }
 
