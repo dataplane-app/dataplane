@@ -9,6 +9,7 @@ import { useState } from 'react';
 import CustomDragHandle from '../../CustomDragHandle';
 import { useUploadFileNode } from '../../../graphql/uploadFileNode';
 import { useSnackbar } from 'notistack';
+import { useGlobalAuthState } from '../../../Auth/UserAuth';
 
 const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Editor state
@@ -16,6 +17,10 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Theme hook
     const theme = useTheme();
+
+
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
 
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
@@ -101,7 +106,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
+    }, [jwt]);
     const handleKeyDown = (e) => {
         if (e.keyCode === 83 && e.ctrlKey) {
             e.preventDefault();
