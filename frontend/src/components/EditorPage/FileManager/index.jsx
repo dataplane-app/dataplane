@@ -572,6 +572,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 <Autocomplete
                     options={workerGroups}
                     getOptionLabel={(option) => option.WorkerGroup}
+                    sx={{ '& fieldset': { borderRadius: 0 } }}
                     renderInput={(params) => <TextField {...params} label="Worker" required size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />
             </Box>
@@ -580,7 +581,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 sx={{
                     backgroundColor: 'background.main',
                     border: '1px solid  #D3D3D3',
-                    borderRadius: '7px',
                     position: 'absolute',
                     mt: 1,
                     top: 40,

@@ -157,7 +157,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 sx={{
                     backgroundColor: 'background.main',
                     border: '1px solid  #D3D3D3',
-                    borderRadius: '7px',
                     ml: 0.8,
                     position: 'absolute',
                     top: 0,
