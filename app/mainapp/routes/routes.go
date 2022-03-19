@@ -275,6 +275,19 @@ func Setup(port string) *fiber.App {
 		worker.RoomUpdates(c, environment, subject, id)
 	}))
 
+	// Download code files
+	app.Get("/app/private/code-files/:filename", func(c *fiber.Ctx) error {
+		filename := string(c.Params("filename"))
+		dat, err := os.ReadFile("../../code-files/" + filename)
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return err
+		}
+		return c.SendString(string(dat))
+	})
+
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {
 		return c.SendString("Hello 👋! Healthy 🍏")

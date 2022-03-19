@@ -14,6 +14,8 @@ import { findNodeById, findNodeByName, getParentId, getPath, isFolder, removeByI
 import CustomDragHandle from '../../CustomDragHandle';
 import { Downgraded } from '@hookstate/core';
 import { useGetFilesNode } from '../../../graphql/getFilesNode';
+import { useUpdateFilesNode } from '../../../graphql/updateFilesNode';
+import { useUploadFileNodeHook } from '../EditorColumn';
 
 const MOCK_ROOT_ID = 'all';
 
@@ -27,7 +29,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const [workerGroups, setWorkerGroups] = useState([]);
     const [selected, setSelected] = useState(null);
     const [expanded, setExpanded] = useState([]);
-    // const [data, setData] = useState(MOCK_DATA);
+    const [data, setData] = useState([]);
 
     // File/folder creation states
     const [isAddingNew, setIsAddingNew] = useState(false);
@@ -42,7 +44,17 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const editingFileRef = useRef();
 
     // Graphql hook
-    const getFilesNode = useGetFilesNodeHook(rest.pipeline, rest.setData);
+    const getFilesNode = useGetFilesNodeHook(rest.pipeline, setData);
+    const updateFilesNode = useUpdateFilesNodeHook(rest.pipeline.environmentID, rest.pipeline.pipelineID, rest.pipeline.nodeID);
+    const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
+
+    // Set parent name and id for upload file names
+    useEffect(() => {
+        Editor.parentName.set(data.name);
+        Editor.parentID.set(data.id);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.id, data.name]);
 
     // Check if selected file changed
     useEffect(() => {
@@ -83,14 +95,15 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     };
 
     // Custom GraphQL hook
-    const getWorkerGroups = useGetWorkerGroupsHook(Environment.name.get(), setWorkerGroups);
+    const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setWorkerGroups);
 
     // Get workers and files on load
     useEffect(() => {
+        if (!Environment.id.get()) return;
         getWorkerGroups();
         getFilesNode();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [Environment.id.get()]);
 
     // Handle ESC key press when adding a new file
     const escFunction = useCallback((event) => {
@@ -132,7 +145,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         // Check if enter has being pressed
         if (e.charCode === 13) {
             const check = checkFileName(newFileName);
-            const alreadyExistsFile = findNodeByName(rest.data?.children, newFileName);
+            const alreadyExistsFile = findNodeByName(data?.children, newFileName);
 
             if (!check) return;
             if (alreadyExistsFile) {
@@ -159,18 +172,25 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
         // Push new file to root children
         //Find the ID first
-        const currentSelectedElement = findNodeById(rest.data.children, selected); //
-        if (selected === rest.data.id) {
-            rest.data.children.push(newFileMock);
-        } else if (currentSelectedElement && currentSelectedElement.children) {
-            currentSelectedElement.children.push(newFileMock);
+        const currentSelectedElement = findNodeById(data.children, selected);
+        if (selected === data.id) {
+            // If top level folder
+            let newData = { ...data };
+            newData.children.push(newFileMock);
+            setData(newData);
             selectAndOpenNewFile(newFileMock);
+            uploadFileNode();
+        } else if (currentSelectedElement && currentSelectedElement.children) {
+            // If lower level folder
+            currentSelectedElement.children.push(newFileMock); // ???
+            selectAndOpenNewFile(newFileMock);
+            uploadFileNode();
         } else {
+            alert('Click on the folder you would like to create the file in.');
             return;
         }
 
-        // Success snack
-        enqueueSnackbar(`File ${newFileName} created!`, { variant: 'success' });
+        updateFilesNode(newFileMock, `File ${newFileName} created!`);
 
         // Set values to default
         setNewFileName('');
@@ -198,7 +218,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         // Check if enter has being pressed
         if (e.charCode === 13) {
             const check = checkFolderName(newFolderName);
-            const alreadyExistsFolder = findNodeByName(rest.data?.children, newFolderName);
+            const alreadyExistsFolder = findNodeByName(data?.children, newFolderName);
 
             if (!check) return;
             if (alreadyExistsFolder) {
@@ -222,9 +242,11 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
         // Push new file to root children
         //Find the ID first
-        const currentSelectedElement = findNodeById(rest.data.children, selected);
-        if (selected === rest.data.id) {
-            rest.data.children.push(newFolderMock);
+        const currentSelectedElement = findNodeById(data.children, selected);
+        if (selected === data.id) {
+            let newData = { ...data };
+            newData.children.push(newFolderMock);
+            setData(newData);
         } else if (currentSelectedElement && currentSelectedElement.children) {
             currentSelectedElement.children.push(newFolderMock);
             selectAndOpenNewFile(newFolderMock);
@@ -232,8 +254,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             return;
         }
 
-        // Success snack
-        enqueueSnackbar(`Folder ${newFolderName} created!`, { variant: 'success' });
+        updateFilesNode(newFolderMock, `Folder ${newFolderName} created!`);
 
         // Set values to default
         setNewFolderName('');
@@ -254,12 +275,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     const handleEditKeyPress = (e, nodes) => {
         if (e.charCode === 13) {
-            const folder = isFolder(selected, rest.data);
-            const elementToChange = findNodeById(rest.data.children, selected);
+            const folder = isFolder(selected, data);
+            const elementToChange = findNodeById(data.children, selected);
 
             if (folder) {
                 const check = checkFolderName(tmpFileName);
-                const alreadyExistsFolder = findNodeByName(rest.data?.children, tmpFileName);
+                const alreadyExistsFolder = findNodeByName(data?.children, tmpFileName);
 
                 if (!check) {
                     setIsEditing(false);
@@ -275,7 +296,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
                 if (elementToChange) {
                     elementToChange.name = tmpFileName;
-                    enqueueSnackbar(`Changed folder name to ${tmpFileName}!`, { variant: 'success' });
+
+                    updateFilesNode(elementToChange, `Changed folder name to ${tmpFileName}!`);
 
                     setTmpFileName(null);
                     setIsEditing(false);
@@ -283,7 +305,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 }
             } else {
                 const check = checkFileName(tmpFileName);
-                const alreadyExistsFile = findNodeByName(rest.data?.children, tmpFileName);
+                const alreadyExistsFile = findNodeByName(data?.children, tmpFileName);
 
                 if (!check) {
                     setIsEditing(false);
@@ -299,7 +321,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
                 if (elementToChange) {
                     elementToChange.name = tmpFileName;
-                    enqueueSnackbar(`Changed file name to ${tmpFileName}!`, { variant: 'success' });
+
+                    updateFilesNode(elementToChange, `Changed file name to ${tmpFileName}!`);
 
                     setTmpFileName(null);
                     setIsEditing(false);
@@ -313,9 +336,9 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // ####### Delete ########
     const handleDeleteIconClick = () => {
         // Check if it's file or folder
-        const isTryingToDeleteFolder = isFolder(selected, rest.data);
+        const isTryingToDeleteFolder = isFolder(selected, data);
 
-        const current = findNodeById(rest.data.children, selected);
+        const current = findNodeById(data.children, selected);
         let message = `Are you sure you want to delete - ${current?.name}?`;
 
         if (current?.children && current?.children.length > 0) {
@@ -325,9 +348,9 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         const askForConfirmation = window.confirm(message);
 
         if (askForConfirmation === true) {
-            const removed = removeById(rest.data.children, selected);
-            const newData = { ...rest.data, children: removed };
-            rest.setData(newData);
+            const removed = removeById(data.children, selected);
+            const newData = { ...data, children: removed };
+            setData(newData);
 
             // Remove child from tabs
             if (current?.children && current?.children.length > 0) {
@@ -351,12 +374,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // ####### Utils ########
     // Checks if selected folder is expanded
     const expandFolder = () => {
-        if (!selected || selected === rest.data.id) {
-            if (expanded?.filter((id) => id === rest.data.id).length > 0) {
+        if (!selected || selected === data.id) {
+            if (expanded?.filter((id) => id === data.id).length > 0) {
                 return;
             } else {
-                setExpanded([...expanded, rest.data.id]);
-                setSelected(rest.data.id);
+                setExpanded([...expanded, data.id]);
+                setSelected(data.id);
             }
         } else {
             if (expanded?.filter((id) => id === selected).length > 0) {
@@ -369,16 +392,16 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Check if it is folder of file
     const checkLevel = () => {
-        if (!selected || selected === rest.data.id) return;
+        if (!selected || selected === data.id) return;
 
-        const selectedInfo = findNodeById(rest.data.children, selected);
+        const selectedInfo = findNodeById(data.children, selected);
         if (selectedInfo) {
             if (selectedInfo.children) {
                 // Is folder\
                 return false;
             } else {
                 // Is file
-                const closestParentID = getParentId(rest.data.children, selected);
+                const closestParentID = getParentId(data.children, selected);
                 closestParentID && setSelected(closestParentID);
             }
         }
@@ -495,7 +518,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                     />
                 }
                 onClick={() => handleFileClick(nodes)}>
-                <Box className={`${nodes.id === rest.data.id ? 'showOnHover' : ''} hidden_controls tree-${nodes.id}`}>
+                <Box className={`${nodes.id === data.id ? 'showOnHover' : ''} hidden_controls tree-${nodes.id}`}>
                     <IconButton aria-label="Edit File" onClick={handleEdit}>
                         <Box component={FontAwesomeIcon} icon={faPencilAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
                     </IconButton>
@@ -547,7 +570,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         Editor.tabs.set((prevTabs) => [...prevTabs, file]);
 
         // Set file path
-        const path = getPath(rest.data.children, selected);
+        const path = getPath(data.children, selected);
         Editor.currentPath.set(path);
     };
 
@@ -557,6 +580,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 <Autocomplete
                     options={workerGroups}
                     getOptionLabel={(option) => option.WorkerGroup}
+                    sx={{ '& fieldset': { borderRadius: 0 } }}
                     renderInput={(params) => <TextField {...params} label="Worker" required size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />
             </Box>
@@ -565,7 +589,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 sx={{
                     backgroundColor: 'background.main',
                     border: '1px solid  #D3D3D3',
-                    borderRadius: '7px',
                     position: 'absolute',
                     mt: 1,
                     top: 40,
@@ -604,7 +627,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
                         p: '0 5px',
                     }}>
-                    {renderTree(rest.data)}
+                    {renderTree(data)}
                 </TreeView>
             </Box>
 
@@ -731,6 +754,12 @@ export const useGetFilesNodeHook = (pipeline, setData) => {
 
 function prepareForFrontEnd(data) {
     data = JSON.parse(JSON.stringify(data).replaceAll('folderID', 'id').replaceAll('folderName', 'name'));
+    data.forEach((a) => (a.fType === 'folder' ? (a.children = []) : null));
+
+    if (data.length === 1) {
+        data[0].children = [];
+        return data[0];
+    }
 
     let parentIDs = data.map((a) => a.id);
     const top = data.filter((a) => !parentIDs.includes(a.parentID))[0];
@@ -774,7 +803,39 @@ function prepareForFrontEnd(data) {
             }
         }
     }
-
     recursive2(top.children);
     return top;
 }
+
+// ----- Custom hook
+export const useUpdateFilesNodeHook = (environmentID, pipelineID, nodeID) => {
+    // GraphQL hook
+    const updateFilesNode = useUpdateFilesNode();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get files
+    return async (data, msg) => {
+        const input = {
+            folderID: data.id,
+            parentID: data.parentID,
+            environmentID,
+            pipelineID,
+            nodeID,
+            folderName: data.name,
+            fType: data.fType,
+            active: true,
+        };
+
+        const response = await updateFilesNode({ input });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get files: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            // enqueueSnackbar(msg, { variant: 'success' });
+        }
+    };
+};
