@@ -11,6 +11,8 @@ import { useUploadFileNode } from '../../../graphql/uploadFileNode';
 import { useSnackbar } from 'notistack';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 
+const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
+
 const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Editor state
     const [, setEditorInstance] = useState(null);
@@ -18,6 +20,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Theme hook
     const theme = useTheme();
 
+    const { enqueueSnackbar } = useSnackbar();
 
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
@@ -98,6 +101,25 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         }
     } */
 
+    // Handle tab change
+    useEffect(() => {
+        if (!EditorGlobal.selectedFile.value) return;
+        fetch(`${codeFilesEndpoint}/${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`)
+            .then(async (response) => {
+                if (response.status !== 200) {
+                    const error = (response && response.statusText) || response.status;
+                    return Promise.reject(error);
+                }
+                let fileContent = await response.text();
+                EditorGlobal.selectedFile.content.set(fileContent);
+            })
+            .catch((error) => {
+                enqueueSnackbar("Can't get file: " + error, { variant: 'error' });
+            });
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [EditorGlobal.selectedFile?.id?.value]);
+
     // Handle ctrl+s
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
@@ -105,7 +127,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             window.removeEventListener('keydown', handleKeyDown);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
     }, [jwt]);
     const handleKeyDown = (e) => {
         if (e.keyCode === 83 && e.ctrlKey) {
@@ -181,6 +202,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         defaultLanguage={EditorGlobal.selectedFile.get()?.language}
                         path={EditorGlobal.selectedFile.get()?.name}
                         defaultValue={EditorGlobal.selectedFile.get()?.content}
+                        value={EditorGlobal.selectedFile.get()?.content}
                         theme={theme.palette.mode === 'dark' ? 'vs-dark' : 'customTheme'}
                         height="100%"
                         saveViewState
@@ -225,9 +247,8 @@ export const useUploadFileNodeHook = (pipeline) => {
         );
         const response = await uploadFileNode({ environmentID, pipelineID, nodeID, file });
 
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get files: " + response.msg, { variant: 'error' });
+        if (response.status) {
+            enqueueSnackbar("Can't get files: " + (response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {

@@ -37,7 +37,7 @@ extend type Mutation {
 	"""
   updateFilesNode(input:FilesNodeInput): String!
 
-"""
+  """
 	Upload a node file.
 	+ **Route**: Private
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
