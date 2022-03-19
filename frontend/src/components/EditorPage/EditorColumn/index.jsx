@@ -103,8 +103,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     }, []);
 
     const handleKeyDown = (e) => {
-        e.preventDefault();
         if (e.keyCode === 83 && e.ctrlKey) {
+            e.preventDefault();
             if (!EditorGlobal.selectedFile.name.value) return;
             uploadFileNode();
         }
