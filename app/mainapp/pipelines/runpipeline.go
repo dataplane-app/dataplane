@@ -118,12 +118,14 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 
 	// Map folder structure:
 	var folderMap = make(map[string]string)
+	var folderNodeMap = make(map[string]string)
 	for _, f := range foldersdata {
 
 		if f.Level == "node" {
 
 			dir := parentfolderdata + f.FolderID + "_" + f.FolderName
 			folderMap[f.NodeID] = dir
+			folderNodeMap[f.NodeID] = f.FolderID
 			if config.Debug == "yes" {
 				if _, err := os.Stat(config.CodeDirectory + dir); os.IsExist(err) {
 					log.Println("Dir exists:", config.CodeDirectory+dir)
@@ -198,6 +200,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 			Commands:      s.Commands,
 			Destination:   destinationJSON,
 			Folder:        folderMap[s.NodeID],
+			FolderID:      folderNodeMap[s.NodeID],
 		}
 
 		if nodeType == "start" {

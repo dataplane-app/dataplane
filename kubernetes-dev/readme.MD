@@ -32,6 +32,7 @@ skaffold run -f ./kubernetes-dev/skaffold-worker.yaml
 ```shell
 brew install stern
 stern -n default dataplane-main -t
+stern -n default dataplane-worker -t
 ```
 
 
