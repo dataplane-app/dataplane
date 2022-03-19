@@ -93,14 +93,15 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     };
 
     // Custom GraphQL hook
-    const getWorkerGroups = useGetWorkerGroupsHook(Environment.name.get(), setWorkerGroups);
+    const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setWorkerGroups);
 
     // Get workers and files on load
     useEffect(() => {
+        if (!Environment.id.get()) return;
         getWorkerGroups();
         getFilesNode();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [Environment.id.get()]);
 
     // Handle ESC key press when adding a new file
     const escFunction = useCallback((event) => {
