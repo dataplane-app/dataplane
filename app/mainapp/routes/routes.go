@@ -153,7 +153,7 @@ func Setup(port string) *fiber.App {
 			}
 
 			// Should create a directory as follows code_directory/
-			parentfolder, _ = filesystem.FolderConstructByID(platformFolder.FolderID)
+			parentfolder, _ = filesystem.FolderConstructByID(database.DBConn, platformFolder.FolderID)
 			log.Println("Parent folder environment:", parentfolder)
 			filesystem.CreateFolder(envdir, parentfolder)
 

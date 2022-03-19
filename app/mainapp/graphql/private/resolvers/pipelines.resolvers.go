@@ -106,10 +106,10 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	}
 
 	// Should create a directory as follows code_directory/
-	pfolder, _ := filesystem.FolderConstructByID(parentfolder.FolderID)
+	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID)
 	foldercreate, _ := filesystem.CreateFolder(pipelinedir, pfolder)
 
-	thisfolder, _ := filesystem.FolderConstructByID(foldercreate.FolderID)
+	thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID)
 
 	git.PlainInit(config.CodeDirectory+thisfolder, false)
 

@@ -77,7 +77,7 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 	}
 
 	// Should create a directory as follows code_directory/
-	pfolder, _ := filesystem.FolderConstructByID(parentfolder.FolderID)
+	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID)
 	filesystem.CreateFolder(dir, pfolder)
 
 	if config.Debug == "true" {
@@ -133,7 +133,7 @@ func (r *mutationResolver) UpdateEnvironment(ctx context.Context, input *private
 	var parentfolder models.CodeFolders
 	database.DBConn.Where("level = ?", "platform").First(&parentfolder)
 
-	pfolder, _ := filesystem.FolderConstructByID(parentfolder.FolderID)
+	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID)
 
 	var oldfolder models.CodeFolders
 	database.DBConn.Where("environment_id = ? and level = ?", input.ID, "environment").First(&oldfolder)

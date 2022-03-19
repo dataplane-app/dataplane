@@ -73,7 +73,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		pf := ""
 
 		if len(foldersdata) > 0 {
-			pf, _ = filesystem.FolderConstructByID(foldersdata[0].ParentID)
+			pf, _ = filesystem.FolderConstructByID(database.DBConn, foldersdata[0].ParentID)
 		}
 		parentfolder <- pf
 	}()
@@ -126,7 +126,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 			dir := parentfolderdata + f.FolderID + "_" + f.FolderName
 			log.Println(dir)
 
-			folderMap[f.NodeID] = dir + "f"
+			folderMap[f.NodeID] = dir
 			folderNodeMap[f.NodeID] = f.FolderID
 			if config.Debug == "yes" {
 				if _, err := os.Stat(config.CodeDirectory + dir); os.IsExist(err) {
