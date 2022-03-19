@@ -155,8 +155,8 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		// Detect if folder is being requested
 		if strings.Contains(v, "${{nodedirectory}}") {
 
-			directoryRun := config.CodeDirectory + msg.Folder
-			// log.Println(config.CodeDirectory, directoryRun, msg.FolderID)
+			directoryRun := config.CodeDirectory + msg.Folder + "/"
+			// log.Println(directoryRun)
 
 			// construct the directory if the directory cant be found
 			if _, err := os.Stat(directoryRun); os.IsNotExist(err) {

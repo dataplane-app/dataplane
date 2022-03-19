@@ -80,7 +80,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 				switch n.NodeTypeDesc {
 				// Python processor
 				case "python":
-					// log.Println("Node types:", n.NodeType, n.NodeTypeDesc)
+					// log.Println("Node types:", n.NodeType, n.NodeTypeDesc, config.CodeDirectory+rfolder)
 					path, err := FileCreateProcessor(n.NodeTypeDesc, config.CodeDirectory+rfolder, node)
 					if err != nil {
 						if config.Debug == "true" {
