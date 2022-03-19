@@ -156,12 +156,16 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		if strings.Contains(v, "${{nodedirectory}}") {
 
 			directoryRun := config.CodeDirectory + msg.Folder
+			// log.Println(config.CodeDirectory, directoryRun, msg.FolderID)
 
 			// construct the directory if the directory cant be found
 			if _, err := os.Stat(directoryRun); os.IsNotExist(err) {
-				newdir, err := filesystem.FolderConstructByID(msg.FolderID)
+				if config.Debug == "true" {
+					log.Println("Directory not found - reconstructing:", directoryRun)
+				}
+				newdir, err := filesystem.FolderConstructByID(database.DBConn, msg.FolderID)
 				if err == nil {
-					directoryRun = newdir
+					directoryRun = config.CodeDirectory + newdir
 				}
 			}
 

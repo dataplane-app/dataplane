@@ -124,7 +124,9 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		if f.Level == "node" {
 
 			dir := parentfolderdata + f.FolderID + "_" + f.FolderName
-			folderMap[f.NodeID] = dir
+			log.Println(dir)
+
+			folderMap[f.NodeID] = dir + "f"
 			folderNodeMap[f.NodeID] = f.FolderID
 			if config.Debug == "yes" {
 				if _, err := os.Stat(config.CodeDirectory + dir); os.IsExist(err) {
@@ -260,7 +262,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		// 	ex = "exit 1;"
 		// }
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
-		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend)
+		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID])
 		if err != nil {
 			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)

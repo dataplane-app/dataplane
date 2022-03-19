@@ -20,7 +20,7 @@ func ListenTasks() {
 
 	// Responding to a task request
 	messageq.NATSencoded.Subscribe("task."+os.Getenv("worker_group")+"."+config.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
-		// log.Println(msg)
+		// log.Println("message:", msg)
 
 		response := "ok"
 		message := "ok"

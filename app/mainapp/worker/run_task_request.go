@@ -21,7 +21,7 @@ import (
 /*
 Task status: Queue, Allocated, Started, Failed, Success
 */
-func WorkerRunTask(workerGroup string, taskid string, runid string, envID string, pipelineID string, nodeID string, commands []string) error {
+func WorkerRunTask(workerGroup string, taskid string, runid string, envID string, pipelineID string, nodeID string, commands []string, Folder string, FolderID string) error {
 
 	// Important not to update status to avoid timing issue where it can overwrite a success a status
 	TaskFinal := models.WorkerTasks{
@@ -110,6 +110,8 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 				WorkerGroup:   workerGroup,
 				WorkerID:      loadbalanceNext,
 				Commands:      commands,
+				Folder:        Folder,
+				FolderID:      FolderID,
 			}
 
 			var response runtask.TaskResponse
