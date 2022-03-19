@@ -10,6 +10,7 @@ import CustomDragHandle from '../../CustomDragHandle';
 import { useUploadFileNode } from '../../../graphql/uploadFileNode';
 import { useSnackbar } from 'notistack';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
+import { useCodeEditorRun } from '../../../graphql/codeEditorRun';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
@@ -33,6 +34,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Graphql hook
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
+    const codeEditorRun = useCodeEditorRunHook(rest.pipeline);
 
     const handleEditorOnMount = (editor) => {
         editorRef.current = editor;
@@ -205,6 +207,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         <Chip
                             avatar={<Box component={FontAwesomeIcon} sx={{ color: '#ffffff!important', fontSize: 18 }} icon={faPlayCircle} />}
                             label="Play"
+                            onClick={() => codeEditorRun()}
                             sx={{ mr: 0, bgcolor: 'primary.main', color: '#fff', fontWeight: 600 }}
                         />
                     </Grid>
@@ -273,6 +276,35 @@ export const useUploadFileNodeHook = (pipeline) => {
         } else {
             enqueueSnackbar('File saved.', { variant: 'success' });
             EditorGlobal.selectedFile.isEditing.set(false);
+        }
+    };
+};
+
+const useCodeEditorRunHook = (pipeline) => {
+    const environmentID = pipeline.environmentID;
+    const pipelineID = pipeline.pipelineID;
+    const nodeID = pipeline.nodeID;
+
+    // Global editor state
+    const EditorGlobal = useGlobalEditorState();
+
+    // GraphQL hook
+    const codeEditorRun = useCodeEditorRun();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Run script
+    return async () => {
+        const path = `${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`;
+
+        const response = await codeEditorRun({ environmentID, pipelineID, nodeID, path });
+
+        if (response.status) {
+            enqueueSnackbar("Can't get files: " + (response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
         }
     };
 };

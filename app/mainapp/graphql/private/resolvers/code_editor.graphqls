@@ -43,4 +43,11 @@ extend type Mutation {
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
   uploadFileNode(environmentID: String!, nodeID: String!, pipelineID: String!, file:Upload!): String!
+
+  """
+	Run script.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+	"""
+  codeEditorRun(environmentID: String!, nodeID: String!, pipelineID: String!, path:String!): String!
 }

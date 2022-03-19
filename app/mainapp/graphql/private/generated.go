@@ -93,6 +93,7 @@ type ComplexityRoot struct {
 		AddSecretToWorkerGroup           func(childComplexity int, environmentID string, workerGroup string, secret string) int
 		AddUpdatePipelineFlow            func(childComplexity int, input *PipelineFlowInput, environmentID string, pipelineID string) int
 		AddUserToEnvironment             func(childComplexity int, userID string, environmentID string) int
+		CodeEditorRun                    func(childComplexity int, environmentID string, nodeID string, pipelineID string, path string) int
 		CreateAccessGroup                func(childComplexity int, environmentID string, name string, description *string) int
 		CreateSecret                     func(childComplexity int, input *AddSecretsInput) int
 		CreateUser                       func(childComplexity int, input *AddUsersInput) int
@@ -374,6 +375,7 @@ type MutationResolver interface {
 	RemoveUserFromAccessGroup(ctx context.Context, userID string, accessGroupID string, environmentID string) (string, error)
 	UpdateFilesNode(ctx context.Context, input *FilesNodeInput) (string, error)
 	UploadFileNode(ctx context.Context, environmentID string, nodeID string, pipelineID string, file graphql.Upload) (string, error)
+	CodeEditorRun(ctx context.Context, environmentID string, nodeID string, pipelineID string, path string) (string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 	PipelinePermissionsToUser(ctx context.Context, environmentID string, resourceID string, access []string, userID string) (string, error)
@@ -701,6 +703,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddUserToEnvironment(childComplexity, args["user_id"].(string), args["environment_id"].(string)), true
+
+	case "Mutation.codeEditorRun":
+		if e.complexity.Mutation.CodeEditorRun == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_codeEditorRun_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CodeEditorRun(childComplexity, args["environmentID"].(string), args["nodeID"].(string), args["pipelineID"].(string), args["path"].(string)), true
 
 	case "Mutation.createAccessGroup":
 		if e.complexity.Mutation.CreateAccessGroup == nil {
@@ -2775,12 +2789,19 @@ extend type Mutation {
 	"""
   updateFilesNode(input:FilesNodeInput): String!
 
-"""
+  """
 	Upload a node file.
 	+ **Route**: Private
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
   uploadFileNode(environmentID: String!, nodeID: String!, pipelineID: String!, file:Upload!): String!
+
+  """
+	Upload a node file.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+	"""
+  codeEditorRun(environmentID: String!, nodeID: String!, pipelineID: String!, path:String!): String!
 }
 `, BuiltIn: false},
 	{Name: "resolvers/me.graphqls", Input: `input AddUpdateMeInput {
@@ -3647,6 +3668,48 @@ func (ec *executionContext) field_Mutation_addUserToEnvironment_args(ctx context
 		}
 	}
 	args["environment_id"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_codeEditorRun_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["nodeID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["nodeID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["path"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("path"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["path"] = arg3
 	return args, nil
 }
 
@@ -6771,6 +6834,48 @@ func (ec *executionContext) _Mutation_uploadFileNode(ctx context.Context, field 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().UploadFileNode(rctx, args["environmentID"].(string), args["nodeID"].(string), args["pipelineID"].(string), args["file"].(graphql.Upload))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_codeEditorRun(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_codeEditorRun_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CodeEditorRun(rctx, args["environmentID"].(string), args["nodeID"].(string), args["pipelineID"].(string), args["path"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -16437,6 +16542,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "uploadFileNode":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_uploadFileNode(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "codeEditorRun":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_codeEditorRun(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
