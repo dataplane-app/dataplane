@@ -222,6 +222,11 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         height="100%"
                         saveViewState
                         onChange={handleEditorChange}
+                        options={{
+                            minimap: {
+                                enabled: false,
+                            },
+                        }}
                     />
                 ) : (
                     <Grid height="100%" container alignItems="center" justifyContent="center">
