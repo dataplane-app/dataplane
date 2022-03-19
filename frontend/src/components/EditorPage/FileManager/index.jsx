@@ -165,20 +165,21 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             diffValue: ``,
             fType: 'file',
             parentID: selected,
+            new: true,
         };
 
         // Push new file to root children
         //Find the ID first
         const currentSelectedElement = findNodeById(data.children, selected);
         if (selected === data.id) {
+            // If top level folder
             let newData = { ...data };
             newData.children.push(newFileMock);
             setData(newData);
         } else if (currentSelectedElement && currentSelectedElement.children) {
+            // If lower level folder
             currentSelectedElement.children.push(newFileMock); // ???
             selectAndOpenNewFile(newFileMock);
-        } else {
-            return;
         }
 
         updateFilesNode(newFileMock, `File ${newFileName} created!`);

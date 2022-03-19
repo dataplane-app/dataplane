@@ -65,7 +65,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     const handleTabClose = (tab) => {
         const tabs = EditorGlobal.tabs.attach(Downgraded).get();
-        console.log('🚀 ~ file: index.jsx ~ line 55 ~ handleTabClose ~ tabs', tabs);
 
         // Check to see if it's unsaved
         if (tab?.isEditing) {
@@ -104,6 +103,21 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Handle tab change
     useEffect(() => {
         if (!EditorGlobal.selectedFile.value) return;
+        if (EditorGlobal.selectedFile.new.value) {
+            return;
+        }
+        if (EditorGlobal.selectedFile.content.value) {
+            return;
+        }
+        if (
+            EditorGlobal.selectedFile.content.value &&
+            EditorGlobal.selectedFile.diffValue.value &&
+            EditorGlobal.selectedFile.content.value === EditorGlobal.selectedFile.diffValue.value
+        ) {
+            return;
+        }
+
+        console.log('🚀 ~ file: index.jsx ~ line 117 ~ useEffect ~ EditorGlobal.selectedFile', EditorGlobal.selectedFile.value);
         fetch(`${codeFilesEndpoint}/${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`)
             .then(async (response) => {
                 if (response.status !== 200) {
@@ -132,6 +146,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         if (e.keyCode === 83 && e.ctrlKey) {
             e.preventDefault();
             if (!EditorGlobal.selectedFile.name.value) return;
+            EditorGlobal.selectedFile.new.set(false);
             uploadFileNode();
         }
     };
@@ -202,7 +217,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         defaultLanguage={EditorGlobal.selectedFile.get()?.language}
                         path={EditorGlobal.selectedFile.get()?.name}
                         defaultValue={EditorGlobal.selectedFile.get()?.content}
-                        value={EditorGlobal.selectedFile.get()?.content}
+                        value={EditorGlobal.selectedFile.get()?.diffValue || EditorGlobal.selectedFile.get()?.content}
                         theme={theme.palette.mode === 'dark' ? 'vs-dark' : 'customTheme'}
                         height="100%"
                         saveViewState
