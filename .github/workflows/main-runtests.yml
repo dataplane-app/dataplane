@@ -66,7 +66,7 @@ jobs:
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
 
       - name: Create file directory
-        run: echo ${{ github.GITHUB_WORKSPACE }}/appdev/code-files/ && mkdir -p ${{ github.GITHUB_WORKSPACE }}/appdev/code-files/
+        run: echo ${{ github.workspace }}/appdev/code-files/ && mkdir -p ${{ github.workspace }}/appdev/code-files/
 
       - name: Run Go Tests
         env: 
@@ -92,5 +92,5 @@ jobs:
           worker_env: "Development"
           dp_cleantasks_days: "60"
           dp_removelogs_days: "60"
-          dataplane_code_folder: "${{ github.GITHUB_WORKSPACE }}/appdev/code-files/"
+          dataplane_code_folder: "${{ github.workspace }}/appdev/code-files/"
         run: cd app/mainapp && time go run Tests/mainTest.go
