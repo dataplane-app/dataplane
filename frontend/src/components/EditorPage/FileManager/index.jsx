@@ -177,6 +177,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             let newData = { ...data };
             newData.children.push(newFileMock);
             setData(newData);
+            selectAndOpenNewFile(newFileMock);
         } else if (currentSelectedElement && currentSelectedElement.children) {
             // If lower level folder
             currentSelectedElement.children.push(newFileMock); // ???
