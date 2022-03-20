@@ -5,11 +5,10 @@ import (
 	"dataplane/mainapp/database/models"
 	"errors"
 	"log"
-	"os"
 )
 
 /* Processor file will be overwritten */
-func FileCreateProcessor(nodeTypeDesc string, nodePath string, node models.PipelineNodes) (filepath string, err error) {
+func FileCreateProcessor(nodeTypeDesc string, Folder string, FolderID string, node models.PipelineNodes) (filepath string, err error) {
 
 	switch nodeTypeDesc {
 
@@ -19,11 +18,20 @@ func FileCreateProcessor(nodeTypeDesc string, nodePath string, node models.Pipel
 		content := `print("Pipeline id: ` + node.PipelineID + `")
 print("Node id: ` + node.NodeID + `")`
 
-		// log.Println(content)
-		filepath = nodePath + "/dp-entrypoint.py"
-		err := os.WriteFile(filepath, []byte(content), 0644)
+		input := models.CodeFiles{
+			EnvironmentID: node.EnvironmentID,
+			NodeID:        node.NodeID,
+			FileName:      "dp-entrypoint.py",
+			Active:        true,
+			Level:         "node_file",
+			FType:         "file",
+			FolderID:      FolderID,
+		}
+
+		// Folder excludes code directory
+		_, filepath, err = CreateFile(input, Folder, []byte(content))
 		if err != nil {
-			return filepath, errors.New("Failed to write python file")
+			return "", err
 		}
 
 	default:

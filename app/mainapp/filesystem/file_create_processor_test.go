@@ -2,6 +2,7 @@ package filesystem
 
 import (
 	"dataplane/mainapp/config"
+	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"fmt"
 	"log"
@@ -19,25 +20,29 @@ go test -count=1 -timeout 30s -v -run ^TestFileCreateProcessor$ dataplane/mainap
 func TestFileCreateProcessor(t *testing.T) {
 
 	config.LoadConfig()
+	database.DBConnect()
 
 	nodeTypeDesc := "python"
 
 	start := time.Now()
 	node := models.PipelineNodes{
-		NodeID:     "test-node-id",
-		PipelineID: "test-pipeline-id",
+		EnvironmentID: "test-environment-id",
+		NodeID:        "test-node-id",
+		PipelineID:    "test-pipeline-id",
 	}
-	output, err := FileCreateProcessor(nodeTypeDesc, config.CodeDirectory, node)
+
+	// FileCreateProcessor(n.NodeTypeDesc, config.CodeDirectory+rfolder+"/", node)
+	output, err := FileCreateProcessor(nodeTypeDesc, "", "testFolderID", node)
 	if err != nil {
 		t.Error(err)
 	}
 
-	log.Println("File location: ", output)
+	log.Println("File location: ", config.CodeDirectory+output)
 	stop := time.Now()
 	// Do something with response
 	log.Println("🐆 Runtime:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
 
-	dat, err := os.ReadFile(output)
+	dat, err := os.ReadFile(config.CodeDirectory + output)
 	if err != nil {
 		t.Error(err)
 	}
