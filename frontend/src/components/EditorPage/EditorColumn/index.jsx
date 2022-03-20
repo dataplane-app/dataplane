@@ -272,8 +272,8 @@ export const useUploadFileNodeHook = (pipeline) => {
         );
         const response = await uploadFileNode({ environmentID, pipelineID, nodeID, file });
 
-        if (response.status) {
-            enqueueSnackbar("Can't get files: " + (response.r || response.error), { variant: 'error' });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
@@ -302,8 +302,8 @@ const useCodeEditorRunHook = (pipeline) => {
 
         const response = await codeEditorRun({ environmentID, pipelineID, nodeID, path });
 
-        if (response.status) {
-            enqueueSnackbar("Can't get files: " + (response.r || response.error), { variant: 'error' });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {

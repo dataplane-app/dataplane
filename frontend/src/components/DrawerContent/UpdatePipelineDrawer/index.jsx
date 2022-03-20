@@ -109,8 +109,8 @@ export const useUpdatePipelineHook = (environmentID, pipelineID, handleClose, ge
         const { name, description, workerGroup } = data;
         const response = await updatePipeline({ name, pipelineID, description, environmentID, workerGroup });
 
-        if (response.status) {
-            enqueueSnackbar("Can't update pipeline: " + (response.r || response.error), { variant: 'error' });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't update pipeline: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
@@ -134,8 +134,8 @@ export const useGetWorkerGroupsHook = (environmentID, setWorkerGroups) => {
 
         if (response === null) {
             setWorkerGroups([]);
-        } else if (response.status) {
-            enqueueSnackbar("Can't get worker groups: " + (response.r || response.error), { variant: 'error' });
+        } else if (response.r || response.error) {
+            enqueueSnackbar("Can't get worker groups: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
