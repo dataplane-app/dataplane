@@ -153,7 +153,7 @@ func Setup(port string) *fiber.App {
 			}
 
 			// Should create a directory as follows code_directory/
-			parentfolder, _ = filesystem.FolderConstructByID(platformFolder.FolderID)
+			parentfolder, _ = filesystem.FolderConstructByID(database.DBConn, platformFolder.FolderID)
 			log.Println("Parent folder environment:", parentfolder)
 			filesystem.CreateFolder(envdir, parentfolder)
 
@@ -274,6 +274,19 @@ func Setup(port string) *fiber.App {
 		id := string(c.Query("id"))
 		worker.RoomUpdates(c, environment, subject, id)
 	}))
+
+	// Download code files
+	app.Get("/app/private/code-files/:filename", func(c *fiber.Ctx) error {
+		filename := string(c.Params("filename"))
+		dat, err := os.ReadFile("../../code-files/" + filename)
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return err
+		}
+		return c.SendString(string(dat))
+	})
 
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {

@@ -1,5 +1,5 @@
 import { Box, Chip, Grid, IconButton, Typography, useTheme } from '@mui/material';
-import { forwardRef, useRef } from 'react';
+import { forwardRef, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlayCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -7,6 +7,12 @@ import { useGlobalEditorState } from '../../../pages/Editor';
 import { Downgraded } from '@hookstate/core';
 import { useState } from 'react';
 import CustomDragHandle from '../../CustomDragHandle';
+import { useUploadFileNode } from '../../../graphql/uploadFileNode';
+import { useSnackbar } from 'notistack';
+import { useGlobalAuthState } from '../../../Auth/UserAuth';
+import { useCodeEditorRun } from '../../../graphql/codeEditorRun';
+
+const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
 const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Editor state
@@ -15,11 +21,20 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Theme hook
     const theme = useTheme();
 
+    const { enqueueSnackbar } = useSnackbar();
+
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
+
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
 
     // Ref
     const editorRef = useRef(null);
+
+    // Graphql hook
+    const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
+    const codeEditorRun = useCodeEditorRunHook(rest.pipeline);
 
     const handleEditorOnMount = (editor) => {
         editorRef.current = editor;
@@ -87,13 +102,66 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         }
     } */
 
+    // Handle tab change
+    useEffect(() => {
+        // If no selection, return
+        if (!EditorGlobal.selectedFile.value) return;
+
+        // // If file is newly created, return
+        // if (!EditorGlobal.selectedFile.diffValue.value) {
+        //     return;
+        // }
+
+        // If selected file already has content, return
+        if (EditorGlobal.selectedFile.content.value) {
+            return;
+        }
+        if (
+            EditorGlobal.selectedFile.content.value &&
+            EditorGlobal.selectedFile.diffValue.value &&
+            EditorGlobal.selectedFile.content.value === EditorGlobal.selectedFile.diffValue.value
+        ) {
+            return;
+        }
+
+        fetch(`${codeFilesEndpoint}/${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`)
+            .then(async (response) => {
+                if (response.status !== 200) {
+                    const error = (response && response.statusText) || response.status;
+                    return Promise.reject(error);
+                }
+                let fileContent = await response.text();
+                EditorGlobal.selectedFile.content.set(fileContent);
+            })
+            .catch((error) => {
+                enqueueSnackbar("Can't get file: " + error, { variant: 'error' });
+            });
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [EditorGlobal.selectedFile?.id?.value]);
+
+    // Handle ctrl+s
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [jwt]);
+    const handleKeyDown = (e) => {
+        if (e.keyCode === 83 && e.ctrlKey) {
+            e.preventDefault();
+            if (!EditorGlobal.selectedFile.name.value) return;
+            uploadFileNode();
+        }
+    };
+
     return (
         <div {...rest}>
             <Box
                 sx={{
                     backgroundColor: 'background.main',
                     border: '1px solid  #D3D3D3',
-                    borderRadius: '7px',
                     ml: 0.8,
                     position: 'absolute',
                     top: 0,
@@ -142,6 +210,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         <Chip
                             avatar={<Box component={FontAwesomeIcon} sx={{ color: '#ffffff!important', fontSize: 18 }} icon={faPlayCircle} />}
                             label="Play"
+                            onClick={() => codeEditorRun()}
                             sx={{ mr: 0, bgcolor: 'primary.main', color: '#fff', fontWeight: 600 }}
                         />
                     </Grid>
@@ -153,10 +222,16 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         defaultLanguage={EditorGlobal.selectedFile.get()?.language}
                         path={EditorGlobal.selectedFile.get()?.name}
                         defaultValue={EditorGlobal.selectedFile.get()?.content}
+                        value={EditorGlobal.selectedFile.get()?.diffValue || EditorGlobal.selectedFile.get()?.content}
                         theme={theme.palette.mode === 'dark' ? 'vs-dark' : 'customTheme'}
                         height="100%"
                         saveViewState
                         onChange={handleEditorChange}
+                        options={{
+                            minimap: {
+                                enabled: false,
+                            },
+                        }}
                     />
                 ) : (
                     <Grid height="100%" container alignItems="center" justifyContent="center">
@@ -171,3 +246,68 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 });
 
 export default EditorColumn;
+
+// ----- Custom hook
+export const useUploadFileNodeHook = (pipeline) => {
+    const environmentID = pipeline.environmentID;
+    const pipelineID = pipeline.pipelineID;
+    const nodeID = pipeline.nodeID;
+
+    // Global editor state
+    const EditorGlobal = useGlobalEditorState();
+
+    // GraphQL hook
+    const uploadFileNode = useUploadFileNode();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Upload file
+    return async () => {
+        const file = new File(
+            [EditorGlobal.selectedFile.diffValue.value],
+            `${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`,
+            {
+                type: 'text/plain',
+            }
+        );
+        const response = await uploadFileNode({ environmentID, pipelineID, nodeID, file });
+
+        if (response.status) {
+            enqueueSnackbar("Can't get files: " + (response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('File saved.', { variant: 'success' });
+            EditorGlobal.selectedFile.isEditing.set(false);
+        }
+    };
+};
+
+const useCodeEditorRunHook = (pipeline) => {
+    const environmentID = pipeline.environmentID;
+    const pipelineID = pipeline.pipelineID;
+    const nodeID = pipeline.nodeID;
+
+    // Global editor state
+    const EditorGlobal = useGlobalEditorState();
+
+    // GraphQL hook
+    const codeEditorRun = useCodeEditorRun();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Run script
+    return async () => {
+        const path = `${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`;
+
+        const response = await codeEditorRun({ environmentID, pipelineID, nodeID, path });
+
+        if (response.status) {
+            enqueueSnackbar("Can't get files: " + (response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+        }
+    };
+};

@@ -1,18 +1,19 @@
 package filesystem
 
 import (
-	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"errors"
+
+	"gorm.io/gorm"
 )
 
-func FolderConstructByID(id string) (string, error) {
+func FolderConstructByID(db *gorm.DB, id string) (string, error) {
 
 	var filepath string
 
 	var currentFolder models.CodeFolders
 
-	database.DBConn.Where("folder_id=?", id).First(&currentFolder)
+	db.Where("folder_id=?", id).First(&currentFolder)
 
 	if currentFolder.FolderID != id {
 		return "", errors.New("File record not found.")
@@ -28,7 +29,7 @@ func FolderConstructByID(id string) (string, error) {
 		for i := 1; i < 100; i++ {
 
 			currentFolder.FolderID = currentFolder.ParentID
-			database.DBConn.First(&currentFolder)
+			db.First(&currentFolder)
 
 			filepath = currentFolder.FolderID + "_" + currentFolder.FolderName + "/" + filepath
 			if currentFolder.Level == "platform" {

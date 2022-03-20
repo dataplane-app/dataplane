@@ -145,7 +145,7 @@ func RunNextPipeline() {
 				}
 
 				// ------ run the destination -------
-				err = worker.WorkerRunTask(s.WorkerGroup, s.TaskID, s.RunID, s.EnvironmentID, s.PipelineID, s.NodeID, commandsend)
+				err = worker.WorkerRunTask(s.WorkerGroup, s.TaskID, s.RunID, s.EnvironmentID, s.PipelineID, s.NodeID, commandsend, s.Folder, s.FolderID)
 				// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s})
 				if err != nil {
 					if config.Debug == "true" {

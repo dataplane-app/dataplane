@@ -19,7 +19,7 @@ func TestFolderConstructByID(t *testing.T) {
 	id := "qAVAMSVX5z"
 
 	start := time.Now()
-	output, err := FolderConstructByID(id)
+	output, err := FolderConstructByID(database.DBConn, id)
 
 	log.Println("Folder construct error:", err)
 

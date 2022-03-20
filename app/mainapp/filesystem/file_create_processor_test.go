@@ -44,8 +44,7 @@ func TestFileCreateProcessor(t *testing.T) {
 	fmt.Print(string(dat))
 
 	expected := `print("Pipeline id: test-pipeline-id")
-print("Node id: test-node-id")
-`
+print("Node id: test-node-id")`
 
 	assert.Equalf(t, expected, string(dat), "Processor entry file.")
 

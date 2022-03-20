@@ -4,12 +4,12 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation updateFilesNode($input: FilesNodeInput) {
-        updateFilesNode(input: $input)
+    mutation uploadFileNode($environmentID: String!, $nodeID: String!, $pipelineID: String!, $file: Upload!) {
+        uploadFileNode(environmentID: $environmentID, nodeID: $nodeID, pipelineID: $pipelineID, file: $file)
     }
 `;
 
-export const useUpdateFilesNode = () => {
+export const useUploadFileNode = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -24,7 +24,7 @@ export const useUpdateFilesNode = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.updateFilesNode;
+            return res?.uploadFileNode;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

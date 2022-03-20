@@ -12,7 +12,6 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                 sx={{
                     backgroundColor: 'background.main',
                     border: '1px solid  #D3D3D3',
-                    borderRadius: '7px',
                     height: '100%',
                     ml: 0.8,
                 }}>
