@@ -27,6 +27,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Local state
     const [workerGroups, setWorkerGroups] = useState([]);
+    const [workerGroup, setWorkerGroup] = useState(null);
     const [selected, setSelected] = useState(null);
     const [expanded, setExpanded] = useState([]);
     const [data, setData] = useState([]);
@@ -47,6 +48,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const getFilesNode = useGetFilesNodeHook(rest.pipeline, setData);
     const updateFilesNode = useUpdateFilesNodeHook(rest.pipeline.environmentID, rest.pipeline.pipelineID, rest.pipeline.nodeID);
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
+
+    // Set worker group on load
+    useEffect(() => {
+        if (workerGroups.length === 0) return;
+        setWorkerGroup(workerGroups.filter((a) => a.WorkerGroup === rest.pipeline.workerGroup)[0]);
+    }, [rest.pipeline.workerGroup, workerGroups]);
 
     // Set parent name and id for upload file names
     useEffect(() => {
@@ -580,6 +587,10 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 <Autocomplete
                     options={workerGroups}
                     getOptionLabel={(option) => option.WorkerGroup}
+                    value={workerGroup}
+                    onChange={(event, newValue) => {
+                        setWorkerGroup(newValue);
+                    }}
                     sx={{ '& fieldset': { borderRadius: 0 } }}
                     renderInput={(params) => <TextField {...params} label="Worker" required size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />
