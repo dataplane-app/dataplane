@@ -24,7 +24,7 @@ const PipelineItemTable = (props) => {
 
     const permissionClick = () => {
         handleCloseMenu();
-        history.push(`/pipelines/permissions/${id}`);
+        history.push({ pathname: `/pipelines/permissions/${id}`, state: name });
     };
 
     const deleteClick = () => {
