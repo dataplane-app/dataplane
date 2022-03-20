@@ -6,12 +6,22 @@ const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 const query = gql`
     query filesNode($environmentID: String!, $nodeID: String!, $pipelineID: String!) {
         filesNode(environmentID: $environmentID, nodeID: $nodeID, pipelineID: $pipelineID) {
-            folderID
-            parentID
-            folderName
-            level
-            fType
-            active
+            folders {
+                folderID
+                parentID
+                folderName
+                level
+                fType
+                active
+            }
+            files {
+                fileID
+                folderID
+                fileName
+                level
+                fType
+                active
+            }
         }
     }
 `;
