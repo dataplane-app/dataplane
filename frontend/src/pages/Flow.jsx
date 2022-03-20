@@ -27,6 +27,7 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 import { useGlobalRunState } from './View/useWebSocket';
 import { useGetPipelineFlow } from '../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from './View';
+import UpdatePipelineDrawer from '../components/DrawerContent/UpdatePipelineDrawer';
 
 export const globalFlowState = createState({
     isRunning: false,
@@ -36,6 +37,7 @@ export const globalFlowState = createState({
     isOpenLogDrawer: false,
     isOpenAPIDrawer: false,
     isOpenTurnOffPipelineDrawer: false,
+    isOpenUpdatePipelineDrawer: false,
     isEditorPage: false,
     selectedElement: null,
     elements: [],
@@ -359,7 +361,7 @@ const Flow = () => {
                             Pipelines {'>'} {pipeline?.name}
                         </Typography>
 
-                        <Button sx={{ ml: 2 }} onClick={handleSave} variant="contained">
+                        <Button sx={{ ml: 2 }} onClick={() => FlowState.isOpenUpdatePipelineDrawer.set(true)} variant="contained">
                             Edit
                         </Button>
 
@@ -458,6 +460,10 @@ const Flow = () => {
 
             <Drawer anchor="right" open={FlowState.isOpenAPIDrawer.get()} onClose={() => FlowState.isOpenAPIDrawer.set(false)}>
                 <APITRiggerDrawer handleClose={() => FlowState.isOpenAPIDrawer.set(false)} />
+            </Drawer>
+
+            <Drawer anchor="right" open={FlowState.isOpenUpdatePipelineDrawer.get()} onClose={() => FlowState.isOpenUpdatePipelineDrawer.set(false)}>
+                <UpdatePipelineDrawer pipeline={pipeline} handleClose={() => FlowState.isOpenUpdatePipelineDrawer.set(false)} />
             </Drawer>
         </Box>
     );
