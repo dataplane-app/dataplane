@@ -105,7 +105,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Handle tab change
     useEffect(() => {
         // If no selection, return
-        if (!EditorGlobal.selectedFile.value) return;
+        if (!EditorGlobal.selectedFile.value || EditorGlobal.selectedFile.fType.value !== 'file') return;
 
         // // If file is newly created, return
         // if (!EditorGlobal.selectedFile.diffValue.value) {

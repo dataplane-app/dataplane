@@ -63,6 +63,15 @@ type ComplexityRoot struct {
 		ResourceID func(childComplexity int) int
 	}
 
+	CodeFiles struct {
+		Active   func(childComplexity int) int
+		FType    func(childComplexity int) int
+		FileID   func(childComplexity int) int
+		FileName func(childComplexity int) int
+		FolderID func(childComplexity int) int
+		Level    func(childComplexity int) int
+	}
+
 	CodeFolders struct {
 		Active     func(childComplexity int) int
 		FType      func(childComplexity int) int
@@ -70,6 +79,11 @@ type ComplexityRoot struct {
 		FolderName func(childComplexity int) int
 		Level      func(childComplexity int) int
 		ParentID   func(childComplexity int) int
+	}
+
+	CodeTree struct {
+		Files   func(childComplexity int) int
+		Folders func(childComplexity int) int
 	}
 
 	Environments struct {
@@ -431,7 +445,7 @@ type QueryResolver interface {
 	GetAccessGroup(ctx context.Context, userID string, environmentID string, accessGroupID string) (*models.PermissionsAccessGroups, error)
 	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error)
 	GetAccessGroupUsers(ctx context.Context, environmentID string, accessGroupID string) ([]*models.Users, error)
-	FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) ([]*models.CodeFolders, error)
+	FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*CodeTree, error)
 	Me(ctx context.Context) (*models.Users, error)
 	MyPipelinePermissions(ctx context.Context) ([]*PipelinePermissionsOutput, error)
 	UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*PipelinePermissionsOutput, error)
@@ -544,6 +558,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AvailablePermissions.ResourceID(childComplexity), true
 
+	case "CodeFiles.active":
+		if e.complexity.CodeFiles.Active == nil {
+			break
+		}
+
+		return e.complexity.CodeFiles.Active(childComplexity), true
+
+	case "CodeFiles.fType":
+		if e.complexity.CodeFiles.FType == nil {
+			break
+		}
+
+		return e.complexity.CodeFiles.FType(childComplexity), true
+
+	case "CodeFiles.fileID":
+		if e.complexity.CodeFiles.FileID == nil {
+			break
+		}
+
+		return e.complexity.CodeFiles.FileID(childComplexity), true
+
+	case "CodeFiles.fileName":
+		if e.complexity.CodeFiles.FileName == nil {
+			break
+		}
+
+		return e.complexity.CodeFiles.FileName(childComplexity), true
+
+	case "CodeFiles.folderID":
+		if e.complexity.CodeFiles.FolderID == nil {
+			break
+		}
+
+		return e.complexity.CodeFiles.FolderID(childComplexity), true
+
+	case "CodeFiles.level":
+		if e.complexity.CodeFiles.Level == nil {
+			break
+		}
+
+		return e.complexity.CodeFiles.Level(childComplexity), true
+
 	case "CodeFolders.active":
 		if e.complexity.CodeFolders.Active == nil {
 			break
@@ -585,6 +641,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CodeFolders.ParentID(childComplexity), true
+
+	case "CodeTree.files":
+		if e.complexity.CodeTree.Files == nil {
+			break
+		}
+
+		return e.complexity.CodeTree.Files(childComplexity), true
+
+	case "CodeTree.folders":
+		if e.complexity.CodeTree.Folders == nil {
+			break
+		}
+
+		return e.complexity.CodeTree.Folders(childComplexity), true
 
 	case "Environments.active":
 		if e.complexity.Environments.Active == nil {
@@ -2831,6 +2901,21 @@ type CodeFolders {
 	active: Boolean!
 }
 
+type CodeFiles {
+    fileID: String!
+	folderID: String!
+	fileName: String!
+	level: String!
+	fType: String!
+	active: Boolean!
+}
+
+type CodeTree {
+	files: [CodeFiles!]!
+	folders: [CodeFolders!]!
+}
+
+
 input FolderNodeInput {
 	folderID: String!
     parentID: String!
@@ -2848,7 +2933,7 @@ extend type Query {
 	+ **Route**: Private
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
-  filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): [CodeFolders]!
+  filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): CodeTree
 }
 
 extend type Mutation {
@@ -5922,6 +6007,216 @@ func (ec *executionContext) _AvailablePermissions_Access(ctx context.Context, fi
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _CodeFiles_fileID(ctx context.Context, field graphql.CollectedField, obj *models.CodeFiles) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeFiles",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeFiles_folderID(ctx context.Context, field graphql.CollectedField, obj *models.CodeFiles) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeFiles",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FolderID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeFiles_fileName(ctx context.Context, field graphql.CollectedField, obj *models.CodeFiles) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeFiles",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeFiles_level(ctx context.Context, field graphql.CollectedField, obj *models.CodeFiles) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeFiles",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Level, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeFiles_fType(ctx context.Context, field graphql.CollectedField, obj *models.CodeFiles) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeFiles",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeFiles_active(ctx context.Context, field graphql.CollectedField, obj *models.CodeFiles) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeFiles",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _CodeFolders_folderID(ctx context.Context, field graphql.CollectedField, obj *models.CodeFolders) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6130,6 +6425,76 @@ func (ec *executionContext) _CodeFolders_active(ctx context.Context, field graph
 	res := resTmp.(bool)
 	fc.Result = res
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeTree_files(ctx context.Context, field graphql.CollectedField, obj *CodeTree) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeTree",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Files, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.CodeFiles)
+	fc.Result = res
+	return ec.marshalNCodeFiles2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFilesᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodeTree_folders(ctx context.Context, field graphql.CollectedField, obj *CodeTree) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodeTree",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Folders, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.CodeFolders)
+	fc.Result = res
+	return ec.marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFoldersᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Environments_id(ctx context.Context, field graphql.CollectedField, obj *models.Environment) (ret graphql.Marshaler) {
@@ -11694,14 +12059,11 @@ func (ec *executionContext) _Query_filesNode(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.CodeFolders)
+	res := resTmp.(*CodeTree)
 	fc.Result = res
-	return ec.marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx, field.Selections, res)
+	return ec.marshalOCodeTree2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCodeTree(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -16675,6 +17037,87 @@ func (ec *executionContext) _AvailablePermissions(ctx context.Context, sel ast.S
 	return out
 }
 
+var codeFilesImplementors = []string{"CodeFiles"}
+
+func (ec *executionContext) _CodeFiles(ctx context.Context, sel ast.SelectionSet, obj *models.CodeFiles) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, codeFilesImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CodeFiles")
+		case "fileID":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeFiles_fileID(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "folderID":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeFiles_folderID(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "fileName":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeFiles_fileName(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "level":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeFiles_level(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "fType":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeFiles_fType(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "active":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeFiles_active(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var codeFoldersImplementors = []string{"CodeFolders"}
 
 func (ec *executionContext) _CodeFolders(ctx context.Context, sel ast.SelectionSet, obj *models.CodeFolders) graphql.Marshaler {
@@ -16738,6 +17181,47 @@ func (ec *executionContext) _CodeFolders(ctx context.Context, sel ast.SelectionS
 		case "active":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._CodeFolders_active(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var codeTreeImplementors = []string{"CodeTree"}
+
+func (ec *executionContext) _CodeTree(ctx context.Context, sel ast.SelectionSet, obj *CodeTree) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, codeTreeImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CodeTree")
+		case "files":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeTree_files(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "folders":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodeTree_folders(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -18627,9 +19111,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_filesNode(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			}
 
@@ -20234,11 +20715,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCodeFolders2dataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v models.CodeFolders) graphql.Marshaler {
-	return ec._CodeFolders(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v []*models.CodeFolders) graphql.Marshaler {
+func (ec *executionContext) marshalNCodeFiles2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFilesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.CodeFiles) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -20262,7 +20739,7 @@ func (ec *executionContext) marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdata
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOCodeFolders2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx, sel, v[i])
+			ret[i] = ec.marshalNCodeFiles2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFiles(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -20272,6 +20749,70 @@ func (ec *executionContext) marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdata
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCodeFiles2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFiles(ctx context.Context, sel ast.SelectionSet, v *models.CodeFiles) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CodeFiles(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCodeFolders2dataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v models.CodeFolders) graphql.Marshaler {
+	return ec._CodeFolders(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFoldersᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.CodeFolders) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCodeFolders2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
 
 	return ret
 }
@@ -21150,11 +21691,11 @@ func (ec *executionContext) unmarshalOChangePasswordInput2ᚖdataplaneᚋmainapp
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOCodeFolders2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v *models.CodeFolders) graphql.Marshaler {
+func (ec *executionContext) marshalOCodeTree2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCodeTree(ctx context.Context, sel ast.SelectionSet, v *CodeTree) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._CodeFolders(ctx, sel, v)
+	return ec._CodeTree(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalODataInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDataInput(ctx context.Context, v interface{}) (*DataInput, error) {

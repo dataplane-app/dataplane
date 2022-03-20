@@ -55,6 +55,11 @@ type ChangePasswordInput struct {
 	UserID   string `json:"user_id"`
 }
 
+type CodeTree struct {
+	Files   []*models.CodeFiles   `json:"files"`
+	Folders []*models.CodeFolders `json:"folders"`
+}
+
 type DataInput struct {
 	Language    string      `json:"language"`
 	Genericdata interface{} `json:"genericdata"`
