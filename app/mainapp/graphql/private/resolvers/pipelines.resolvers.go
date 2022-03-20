@@ -135,11 +135,12 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 
 	p := models.Pipelines{}
 
-	err := database.DBConn.Where("pipeline_id = ?", pipelineID).Select("description").Updates(models.Pipelines{
-		Name:        name,
-		Description: description,
-		WorkerGroup: workerGroup,
-	}).First(&p).Error
+	err := database.DBConn.Where("pipeline_id = ?", pipelineID).Select("description", "name", "worker_group").
+		Updates(models.Pipelines{
+			Name:        name,
+			Description: description,
+			WorkerGroup: workerGroup,
+		}).First(&p).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
