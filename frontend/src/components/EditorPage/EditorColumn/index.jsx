@@ -1,4 +1,4 @@
-import { Box, Chip, Grid, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, Button, Chip, Grid, IconButton, Typography, useTheme } from '@mui/material';
 import { forwardRef, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -207,12 +207,18 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                             {rest.pipeline.nodeName} {'>'} code-files {'>'} clear_the_logs.py
                         </Typography>
 
-                        <Chip
-                            avatar={<Box component={FontAwesomeIcon} sx={{ color: '#ffffff!important', fontSize: 18 }} icon={faPlayCircle} />}
-                            label="Play"
-                            onClick={() => codeEditorRun()}
-                            sx={{ mr: 0, bgcolor: 'primary.main', color: '#fff', fontWeight: 600 }}
-                        />
+                        <Box>
+                            <Button onClick={uploadFileNode} variant="contained" color="primary" sx={{ mr: 2 }}>
+                                Save
+                            </Button>
+
+                            <Chip
+                                avatar={<Box component={FontAwesomeIcon} sx={{ color: '#ffffff!important', fontSize: 18 }} icon={faPlayCircle} />}
+                                label="Play"
+                                onClick={() => codeEditorRun()}
+                                sx={{ mr: 0, bgcolor: 'primary.main', color: '#fff', fontWeight: 600 }}
+                            />
+                        </Box>
                     </Grid>
                 ) : null}
 
