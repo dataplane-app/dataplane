@@ -60,7 +60,7 @@ type DataInput struct {
 	Genericdata interface{} `json:"genericdata"`
 }
 
-type FilesNodeInput struct {
+type FolderNodeInput struct {
 	FolderID      string `json:"folderID"`
 	ParentID      string `json:"parentID"`
 	EnvironmentID string `json:"environmentID"`

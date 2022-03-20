@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -107,7 +107,7 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 
 	// Should create a directory as follows code_directory/
 	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID)
-	foldercreate, _ := filesystem.CreateFolder(pipelinedir, pfolder)
+	foldercreate, _, _ := filesystem.CreateFolder(pipelinedir, pfolder)
 
 	thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID)
 
