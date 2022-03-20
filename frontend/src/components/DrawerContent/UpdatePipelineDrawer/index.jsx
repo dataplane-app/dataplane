@@ -109,8 +109,8 @@ export const useUpdatePipelineHook = (environmentID, pipelineID, handleClose, ge
         const { name, description, workerGroup } = data;
         const response = await updatePipeline({ name, pipelineID, description, environmentID, workerGroup });
 
-        if (response.r === 'error') {
-            enqueueSnackbar("Can't update pipeline: " + response.msg, { variant: 'error' });
+        if (response.status) {
+            enqueueSnackbar("Can't update pipeline: " + (response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
