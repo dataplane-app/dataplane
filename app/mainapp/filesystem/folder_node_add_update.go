@@ -65,7 +65,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 				Active:        true,
 			}
 
-			cfolder, rfolder := CreateFolder(pipelinedir, pfolder)
+			cfolder, rfolder, _ := CreateFolder(pipelinedir, pfolder)
 
 			// If processor nodes need entrypoint files
 			// log.Println("Node types:", n.NodeType, n.NodeTypeDesc)

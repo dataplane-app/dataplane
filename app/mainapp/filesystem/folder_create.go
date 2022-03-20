@@ -10,10 +10,11 @@ import (
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
-func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFolders, string) {
+func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFolders, string, error) {
 
 	var createDirectory string
 	var foldername string
+
 	// loops to avoid collision in nanoid
 	for i := 1; i < 5; i++ {
 
@@ -40,12 +41,17 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 			if config.Debug == "true" {
 				log.Println("Directory create error:", errdb)
 			}
+			if i == 4 {
+				return input, "", errdb
+			}
 			continue
 		} else {
 			break
 		}
 
 	}
+
+	returnpath := parentFolder + foldername
 
 	createDirectory = config.CodeDirectory + parentFolder + foldername
 
@@ -55,6 +61,7 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 		if err != nil {
 			if config.Debug == "true" {
 				log.Println("Create directory error:", err)
+				return input, returnpath, err
 			}
 		}
 		if config.Debug == "true" {
@@ -67,8 +74,6 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 		}
 	}
 
-	returnpath := parentFolder + foldername
-
-	return input, returnpath
+	return input, returnpath, nil
 
 }
