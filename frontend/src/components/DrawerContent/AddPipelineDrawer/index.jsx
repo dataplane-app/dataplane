@@ -105,7 +105,7 @@ export const useAddPipeline_ = (environmentID) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            history.push({ pathname: `/pipelines/flow/${response}`, state: data });
+            history.push(`/pipelines/flow/${response}`);
         }
     };
 };

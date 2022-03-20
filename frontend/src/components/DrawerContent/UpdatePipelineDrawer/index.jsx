@@ -9,7 +9,7 @@ import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useParams } from 'react-router-dom';
 import { useUpdatePipeline } from '../../../graphql/updatePipeline';
 
-const UpdatePipelineDrawer = ({ handleClose, pipeline }) => {
+const UpdatePipelineDrawer = ({ handleClose, pipeline, getPipeline }) => {
     // React hook form
     const { register, handleSubmit } = useForm({
         defaultValues: {
@@ -29,7 +29,7 @@ const UpdatePipelineDrawer = ({ handleClose, pipeline }) => {
     const [workerGroups, setWorkerGroups] = useState([]);
 
     // Custom GraphQL hook
-    const updatePipeline = useUpdatePipelineHook(Environment.id.get(), pipelineId, handleClose);
+    const updatePipeline = useUpdatePipelineHook(Environment.id.get(), pipelineId, handleClose, getPipeline);
     const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setWorkerGroups);
 
     // Get workers on load
@@ -98,7 +98,7 @@ export default UpdatePipelineDrawer;
 
 // ---------- Custom Hook
 
-export const useUpdatePipelineHook = (environmentID, pipelineID, handleClose) => {
+export const useUpdatePipelineHook = (environmentID, pipelineID, handleClose, getPipeline) => {
     // GraphQL hook
     const updatePipeline = useUpdatePipeline();
 
@@ -116,6 +116,7 @@ export const useUpdatePipelineHook = (environmentID, pipelineID, handleClose) =>
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             handleClose();
+            getPipeline();
         }
     };
 };

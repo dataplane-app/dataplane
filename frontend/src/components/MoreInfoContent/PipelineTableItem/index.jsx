@@ -19,12 +19,12 @@ const PipelineItemTable = (props) => {
 
     const manageEdit = () => {
         FlowState.isEditorPage.get(true);
-        history.push({ pathname: `/pipelines/flow/${id}`, state: props.pipeline });
+        history.push(`/pipelines/flow/${id}`);
     };
 
     const permissionClick = () => {
         handleCloseMenu();
-        history.push({ pathname: `/pipelines/permissions/${id}`, state: name });
+        history.push(`/pipelines/permissions/${id}`);
     };
 
     const deleteClick = () => {

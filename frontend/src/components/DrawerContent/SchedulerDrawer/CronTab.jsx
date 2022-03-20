@@ -27,7 +27,9 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
     const getMe = useMeHook(setUserTimezone);
     useEffect(() => {
         getMe();
-    }, [getMe]);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <Box display="flex" gap={8}>
