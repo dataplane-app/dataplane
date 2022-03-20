@@ -276,7 +276,7 @@ export const useUploadFileNodeHook = (pipeline) => {
                 type: 'text/plain',
             }
         );
-        const response = await uploadFileNode({ environmentID, pipelineID, nodeID, file });
+        const response = await uploadFileNode({ environmentID, pipelineID, nodeID, folderID: EditorGlobal.parentID.value, file });
 
         if (response.status) {
             enqueueSnackbar("Can't get files: " + (response.r || response.error), { variant: 'error' });
