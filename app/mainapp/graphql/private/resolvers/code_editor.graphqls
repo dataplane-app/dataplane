@@ -9,7 +9,7 @@ type CodeFolders {
 	active: Boolean!
 }
 
-input FilesNodeInput {
+input FolderNodeInput {
 	folderID: String!
     parentID: String!
 	environmentID: String!
@@ -31,11 +31,25 @@ extend type Query {
 
 extend type Mutation {
   """
-	Update a node's file structure.
+	Update a node's folder structure.
 	+ **Route**: Private
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
-  updateFilesNode(input:FilesNodeInput): String!
+  updateFolderNode(input:FolderNodeInput): CodeFolders!
+
+    """
+	Delete a node's folder structure.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+	"""
+  deleteFolderNode(environmentID: String!, folderID: String!, nodeID: String!, pipelineID: String!): String!
+
+    """
+	Rename a folder.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+	"""
+  renameFolder(environmentID: String!, folderID: String!, nodeID: String!, pipelineID: String!): String!
 
   """
 	Upload a node file.
@@ -43,6 +57,13 @@ extend type Mutation {
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
   uploadFileNode(environmentID: String!, nodeID: String!, pipelineID: String!, file:Upload!): String!
+
+    """
+	Delete a file.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+	"""
+  deleteFolderNode(environmentID: String!, fileID: String!, nodeID: String!, pipelineID: String!): String!
 
   """
 	Run script.

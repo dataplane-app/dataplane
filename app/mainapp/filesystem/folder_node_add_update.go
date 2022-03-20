@@ -65,7 +65,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 				Active:        true,
 			}
 
-			_, rfolder := CreateFolder(pipelinedir, pfolder)
+			cfolder, rfolder := CreateFolder(pipelinedir, pfolder)
 
 			// If processor nodes need entrypoint files
 			// log.Println("Node types:", n.NodeType, n.NodeTypeDesc)
@@ -81,7 +81,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 				// Python processor
 				case "python":
 					// log.Println("Node types:", n.NodeType, n.NodeTypeDesc, config.CodeDirectory+rfolder)
-					path, err := FileCreateProcessor(n.NodeTypeDesc, config.CodeDirectory+rfolder, node)
+					path, err := FileCreateProcessor(n.NodeTypeDesc, rfolder+"/", cfolder.FolderID, node)
 					if err != nil {
 						if config.Debug == "true" {
 							log.Println("Failed to create python processor file: ", err, path)
