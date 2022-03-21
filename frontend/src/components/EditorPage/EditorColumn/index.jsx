@@ -1,4 +1,4 @@
-import { Box, Chip, Grid, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, Button, Chip, Grid, IconButton, Typography, useTheme } from '@mui/material';
 import { forwardRef, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -105,7 +105,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Handle tab change
     useEffect(() => {
         // If no selection, return
-        if (!EditorGlobal.selectedFile.value) return;
+        if (!EditorGlobal.selectedFile.value || EditorGlobal.selectedFile.fType.value !== 'file') return;
 
         // // If file is newly created, return
         // if (!EditorGlobal.selectedFile.diffValue.value) {
@@ -124,7 +124,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             return;
         }
 
-        fetch(`${codeFilesEndpoint}/${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`)
+        fetch(`${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}`)
             .then(async (response) => {
                 if (response.status !== 200) {
                     const error = (response && response.statusText) || response.status;
@@ -204,15 +204,21 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 {EditorGlobal.tabs.get().length > 0 && EditorGlobal.selectedFile.get() && Object.keys(EditorGlobal.selectedFile.attach(Downgraded).get().length > 0) ? (
                     <Grid container alignItems="center" justifyContent="space-between" sx={{ p: '6px 15px', border: '1px solid #B9B9B9', mb: 2 }}>
                         <Typography fontSize={15}>
-                            {'>'} code-files {'>'} clear_the_logs.py
+                            {rest.pipeline.nodeName} {'>'} code-files {'>'} clear_the_logs.py
                         </Typography>
 
-                        <Chip
-                            avatar={<Box component={FontAwesomeIcon} sx={{ color: '#ffffff!important', fontSize: 18 }} icon={faPlayCircle} />}
-                            label="Play"
-                            onClick={() => codeEditorRun()}
-                            sx={{ mr: 0, bgcolor: 'primary.main', color: '#fff', fontWeight: 600 }}
-                        />
+                        <Box>
+                            <Button onClick={uploadFileNode} variant="contained" color="primary" sx={{ mr: 2 }}>
+                                Save
+                            </Button>
+
+                            <Chip
+                                avatar={<Box component={FontAwesomeIcon} sx={{ color: '#ffffff!important', fontSize: 18 }} icon={faPlayCircle} />}
+                                label="Play"
+                                onClick={() => codeEditorRun()}
+                                sx={{ mr: 0, bgcolor: 'primary.main', color: '#fff', fontWeight: 600 }}
+                            />
+                        </Box>
                     </Grid>
                 ) : null}
 
@@ -259,18 +265,14 @@ export const useUploadFileNodeHook = (pipeline) => {
     // GraphQL hook
     const uploadFileNode = useUploadFileNode();
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const { enqueueSnackbar } = useSnackbar();
 
     // Upload file
     return async () => {
-        const file = new File(
-            [EditorGlobal.selectedFile.diffValue.value],
-            `${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`,
-            {
-                type: 'text/plain',
-            }
-        );
-        const response = await uploadFileNode({ environmentID, pipelineID, nodeID, file });
+        const file = new File([EditorGlobal.selectedFile.diffValue.value], EditorGlobal.selectedFile.name.value, {
+            type: 'text/plain',
+        });
+        const response = await uploadFileNode({ environmentID, pipelineID, nodeID, folderID: EditorGlobal.selectedFile.parentID.value, file });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });

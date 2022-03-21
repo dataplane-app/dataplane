@@ -281,10 +281,8 @@ const useGetWorkerGroupsHook = (environmentID, setWorkerGroups) => {
 
         if (response === null) {
             setWorkerGroups([]);
-        } else if (response.r === 'error') {
-            enqueueSnackbar("Can't get worker groups: " + response.msg, { variant: 'error' });
-        } else if (response.r === 'Unauthorized') {
-            enqueueSnackbar('Idle: not polling', { variant: 'warning' });
+        } else if (response.r || response.error) {
+            enqueueSnackbar("Can't get worker groups: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {

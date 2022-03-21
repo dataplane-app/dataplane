@@ -9,6 +9,21 @@ type CodeFolders {
 	active: Boolean!
 }
 
+type CodeFiles {
+    fileID: String!
+	folderID: String!
+	fileName: String!
+	level: String!
+	fType: String!
+	active: Boolean!
+}
+
+type CodeTree {
+	files: [CodeFiles!]!
+	folders: [CodeFolders!]!
+}
+
+
 input FolderNodeInput {
 	folderID: String!
     parentID: String!
@@ -26,7 +41,7 @@ extend type Query {
 	+ **Route**: Private
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
-  filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): [CodeFolders]!
+  filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): CodeTree
 }
 
 extend type Mutation {

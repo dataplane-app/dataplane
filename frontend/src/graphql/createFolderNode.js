@@ -4,29 +4,19 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    query filesNode($environmentID: String!, $nodeID: String!, $pipelineID: String!) {
-        filesNode(environmentID: $environmentID, nodeID: $nodeID, pipelineID: $pipelineID) {
-            folders {
-                folderID
-                parentID
-                folderName
-                level
-                fType
-                active
-            }
-            files {
-                fileID
-                folderID
-                fileName
-                level
-                fType
-                active
-            }
+    mutation createFolderNode($input: FolderNodeInput) {
+        createFolderNode(input: $input) {
+            folderID
+            parentID
+            folderName
+            level
+            fType
+            active
         }
     }
 `;
 
-export const useGetFilesNode = () => {
+export const useCreateFolderNode = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -41,7 +31,7 @@ export const useGetFilesNode = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.filesNode;
+            return res?.createFolderNode;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

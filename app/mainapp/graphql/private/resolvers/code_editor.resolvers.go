@@ -18,6 +18,7 @@ import (
 	"os"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/google/uuid"
 )
 
 func (r *mutationResolver) CreateFolderNode(ctx context.Context, input *privategraphql.FolderNodeInput) (*models.CodeFolders, error) {
@@ -48,7 +49,7 @@ func (r *mutationResolver) CreateFolderNode(ctx context.Context, input *privateg
 		ParentID:      input.ParentID,
 		FolderName:    input.FolderName,
 		FType:         input.FType,
-		Level:         "node",
+		Level:         uuid.NewString(),
 		Active:        input.Active,
 	}
 
@@ -158,7 +159,7 @@ func (r *mutationResolver) CodeEditorRun(ctx context.Context, environmentID stri
 	return "Success", nil
 }
 
-func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) ([]*models.CodeFolders, error) {
+func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*privategraphql.CodeTree, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -176,9 +177,9 @@ func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nod
 		return nil, errors.New("Requires permissions.")
 	}
 
-	f := []*models.CodeFolders{}
+	fo := []*models.CodeFolders{}
 
-	err := database.DBConn.Where("node_id = ?", nodeID).Find(&f).Error
+	err := database.DBConn.Where("node_id = ?", nodeID).Find(&fo).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
@@ -186,5 +187,20 @@ func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nod
 		return nil, errors.New("Retrive user database error.")
 	}
 
-	return f, nil
+	fi := []*models.CodeFiles{}
+
+	err = database.DBConn.Where("node_id = ?", nodeID).Find(&fi).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive user database error.")
+	}
+
+	t := privategraphql.CodeTree{
+		Folders: fo,
+		Files:   fi,
+	}
+
+	return &t, nil
 }

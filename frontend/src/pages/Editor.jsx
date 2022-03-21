@@ -48,13 +48,6 @@ const PipelineEditor = () => {
     };
 
     useEffect(() => {
-        if (!pipeline || Object.keys(pipeline).length === 0) {
-            // history.push('/');
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    useEffect(() => {
         window.addEventListener('beforeunload', handleUnload);
 
         return () => window.removeEventListener('beforeunload', handleUnload);
