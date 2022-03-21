@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -148,6 +148,41 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 		}
 		return "", errors.New("Update pipeline database error.")
 	}
+
+	// Update folder structure for environment
+	var parentfolder models.CodeFolders
+	database.DBConn.Where("level = ? and environment_id = ?", "environment", environmentID).First(&parentfolder)
+
+	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID)
+
+	// log.Println("Parent folder:", pfolder)
+
+	var oldfolder models.CodeFolders
+	database.DBConn.Debug().Where("environment_id = ? and level = ? and pipeline_id =?", environmentID, "pipeline", pipelineID).First(&oldfolder)
+
+	// log.Println("Old folder:", oldfolder.FolderID, oldfolder.FolderName)
+	if oldfolder.FolderID == "" {
+		return "", errors.New("Update pipeline folder error.")
+	}
+
+	OLDinput := models.CodeFolders{
+		EnvironmentID: oldfolder.EnvironmentID,
+		ParentID:      parentfolder.FolderID,
+		FolderName:    oldfolder.FolderName,
+		Level:         "pipeline",
+		FType:         "folder",
+		Active:        true,
+	}
+
+	Newinput := models.CodeFolders{
+		EnvironmentID: oldfolder.EnvironmentID,
+		ParentID:      parentfolder.FolderID,
+		FolderName:    name,
+		Level:         "pipeline",
+		FType:         "folder",
+		Active:        true,
+	}
+	filesystem.UpdateFolder(oldfolder.FolderID, OLDinput, Newinput, pfolder)
 
 	return "Success", nil
 }
