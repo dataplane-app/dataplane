@@ -38,7 +38,9 @@ const EditorSidebar = () => {
     const getMe = useMeHook(setTimezone);
     useEffect(() => {
         getMe();
-    }, [getMe]);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const onDragStart = (event, nodeType, id, nodeData) => {
         const data = { nodeType, id, nodeData };

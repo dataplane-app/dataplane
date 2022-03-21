@@ -93,6 +93,29 @@ func TestPipelines(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create pipeline 200 status code")
 
+	// -------- Update pipeline -------------
+	id := jsoniter.Get(response, "data", "addPipeline").ToString()
+
+	mutation = `mutation {
+		updatePipeline(
+				name: "test_` + pipelineId + `",
+				pipelineID: "` + id + `",
+				environmentID: "` + envID + `",
+				description: "Test new description",
+				workerGroup: "python_1"
+				)
+			}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Update pipeline 200 status code")
+
 	// -------- Get pipeline -------------
 
 	query := `query {

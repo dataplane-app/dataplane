@@ -4,23 +4,32 @@ import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/mat
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useAddPipeline } from '../../../graphql/addPipeline';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
-import { useHistory } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useUpdatePipeline } from '../../../graphql/updatePipeline';
 
-const AddPipelineDrawer = ({ handleClose, environmentID }) => {
+const UpdatePipelineDrawer = ({ handleClose, pipeline, getPipeline }) => {
     // React hook form
-    const { register, handleSubmit } = useForm();
+    const { register, handleSubmit } = useForm({
+        defaultValues: {
+            name: pipeline.name,
+            description: pipeline.description,
+            workerGroup: pipeline.workerGroup,
+        },
+    });
 
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
+
+    // URI parameter
+    const { pipelineId } = useParams();
 
     // Local state
     const [workerGroups, setWorkerGroups] = useState([]);
 
     // Custom GraphQL hook
-    const addPipeline = useAddPipeline_(environmentID);
+    const updatePipeline = useUpdatePipelineHook(Environment.id.get(), pipelineId, handleClose, getPipeline);
     const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setWorkerGroups);
 
     // Get workers on load
@@ -31,7 +40,7 @@ const AddPipelineDrawer = ({ handleClose, environmentID }) => {
     }, []);
 
     return (
-        <form onSubmit={handleSubmit(addPipeline)}>
+        <form onSubmit={handleSubmit(updatePipeline)}>
             <Box position="relative">
                 <Box sx={{ p: '4.125rem' }}>
                     <Box position="absolute" top="26px" right="39px" display="flex" alignItems="center">
@@ -42,7 +51,7 @@ const AddPipelineDrawer = ({ handleClose, environmentID }) => {
 
                     <Box mt={3} width="212px">
                         <Typography component="h2" variant="h2">
-                            Create pipeline
+                            Update pipeline
                         </Typography>
 
                         <TextField
@@ -55,20 +64,23 @@ const AddPipelineDrawer = ({ handleClose, environmentID }) => {
                         />
                         <TextField label="Description" id="description" size="small" sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
 
-                        <Autocomplete
-                            options={workerGroups}
-                            getOptionLabel={(option) => option.WorkerGroup}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params} //
-                                    label="Worker group"
-                                    required
-                                    size="small"
-                                    sx={{ fontSize: '.75rem', display: 'flex' }}
-                                    {...register('workerGroup', { required: true })}
-                                />
-                            )}
-                        />
+                        {workerGroups.length > 0 ? (
+                            <Autocomplete
+                                options={workerGroups}
+                                getOptionLabel={(option) => option.WorkerGroup}
+                                defaultValue={workerGroups.filter((a) => a.WorkerGroup === pipeline.workerGroup)[0]}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params} //
+                                        label="Worker group"
+                                        required
+                                        size="small"
+                                        sx={{ fontSize: '.75rem', display: 'flex' }}
+                                        {...register('workerGroup', { required: true })}
+                                    />
+                                )}
+                            />
+                        ) : null}
 
                         <Grid mt={4} display="flex" alignItems="center">
                             <Button type="submit" required variant="contained" color="primary" style={{ width: '100%' }}>
@@ -82,30 +94,29 @@ const AddPipelineDrawer = ({ handleClose, environmentID }) => {
     );
 };
 
-export default AddPipelineDrawer;
+export default UpdatePipelineDrawer;
 
 // ---------- Custom Hook
 
-export const useAddPipeline_ = (environmentID) => {
+export const useUpdatePipelineHook = (environmentID, pipelineID, handleClose, getPipeline) => {
     // GraphQL hook
-    const addPipeline = useAddPipeline();
-
-    // React router
-    const history = useHistory();
+    const updatePipeline = useUpdatePipeline();
 
     const { enqueueSnackbar } = useSnackbar();
 
-    // Create pipeline
+    // Update pipeline
     return async (data) => {
         const { name, description, workerGroup } = data;
-        const response = await addPipeline({ name, description, environmentID, workerGroup });
+        const response = await updatePipeline({ name, pipelineID, description, environmentID, workerGroup });
 
-        if (response.r === 'error') {
-            enqueueSnackbar("Can't create pipeline: " + response.msg, { variant: 'error' });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't update pipeline: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            history.push(`/pipelines/flow/${response}`);
+            enqueueSnackbar('Success', { variant: 'success' });
+            handleClose();
+            getPipeline();
         }
     };
 };

@@ -21,7 +21,7 @@ const ViewPageItem = (props) => {
     // Handle edit button
     const handleGoToEditorPage = () => {
         FlowState.isEditorPage.set(true);
-        history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: props.pipeline });
+        history.push(`/pipelines/flow/${pipelineId}`);
     };
 
     // Handle turn off button
