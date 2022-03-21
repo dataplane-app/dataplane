@@ -135,7 +135,7 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 
 	p := models.Pipelines{}
 
-	err := database.DBConn.Where("pipeline_id = ?", pipelineID).Select("description", "name", "worker_group").
+	err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Select("description", "name", "worker_group").
 		Updates(models.Pipelines{
 			Name:        name,
 			Description: description,
