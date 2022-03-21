@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation uploadFileNode($environmentID: String!, $nodeID: String!, $pipelineID: String!, $file: Upload!) {
-        uploadFileNode(environmentID: $environmentID, nodeID: $nodeID, pipelineID: $pipelineID, file: $file)
+    mutation uploadFileNode($environmentID: String!, $nodeID: String!, $pipelineID: String!, $folderID: String!, $file: Upload!) {
+        uploadFileNode(environmentID: $environmentID, nodeID: $nodeID, pipelineID: $pipelineID, folderID: $folderID, file: $file)
     }
 `;
 

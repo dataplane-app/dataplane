@@ -43,6 +43,8 @@ models:
    model: dataplane/mainapp/database/models.LogsWorkers
  CodeFolders:
    model: dataplane/mainapp/database/models.CodeFolders
+ CodeFiles:
+   model: dataplane/mainapp/database/models.CodeFiles
 
 resolver:
   layout: follow-schema

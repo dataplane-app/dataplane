@@ -86,7 +86,7 @@ const PythonNode = (props) => {
 
                 <Box mt={0}>
                     <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
-                        {isEditorPage ? <ProcessTypeEditorModeItem /> : <ProcessTypeNodeItem nodeId={props.id} workerGroup={props.data.workerGroup} />}
+                        {isEditorPage ? <ProcessTypeEditorModeItem /> : <ProcessTypeNodeItem nodeId={props.id} nodeName={props.data.name} />}
                     </MoreInfoMenu>
                 </Box>
             </Grid>

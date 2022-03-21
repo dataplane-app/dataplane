@@ -14,7 +14,7 @@ import { findNodeById, findNodeByName, getParentId, getPath, isFolder, removeByI
 import CustomDragHandle from '../../CustomDragHandle';
 import { Downgraded } from '@hookstate/core';
 import { useGetFilesNode } from '../../../graphql/getFilesNode';
-import { useUpdateFilesNode } from '../../../graphql/updateFilesNode';
+import { useCreateFolderNode } from '../../../graphql/createFolderNode';
 import { useUploadFileNodeHook } from '../EditorColumn';
 
 const MOCK_ROOT_ID = 'all';
@@ -27,6 +27,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Local state
     const [workerGroups, setWorkerGroups] = useState([]);
+    const [workerGroup, setWorkerGroup] = useState(null);
     const [selected, setSelected] = useState(null);
     const [expanded, setExpanded] = useState([]);
     const [data, setData] = useState([]);
@@ -45,8 +46,15 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Graphql hook
     const getFilesNode = useGetFilesNodeHook(rest.pipeline, setData);
-    const updateFilesNode = useUpdateFilesNodeHook(rest.pipeline.environmentID, rest.pipeline.pipelineID, rest.pipeline.nodeID);
+    // const updateFilesNode = useUpdateFilesNodeHook(rest.pipeline.environmentID, rest.pipeline.pipelineID, rest.pipeline.nodeID);
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
+    const createFolderNode = useCreateFolderNodeHook(rest.pipeline, selected);
+
+    // Set worker group on load
+    useEffect(() => {
+        if (workerGroups.length === 0) return;
+        setWorkerGroup(workerGroups.filter((a) => a.WorkerGroup === rest.pipeline.workerGroup)[0]);
+    }, [rest.pipeline.workerGroup, workerGroups]);
 
     // Set parent name and id for upload file names
     useEffect(() => {
@@ -59,7 +67,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Check if selected file changed
     useEffect(() => {
         setSelected(Editor.selectedFile.get()?.id);
-
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Editor.selectedFile.get()?.id]);
 
@@ -190,7 +197,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             return;
         }
 
-        updateFilesNode(newFileMock, `File ${newFileName} created!`);
+        // updateFilesNode(newFileMock, `File ${newFileName} created!`);
 
         // Set values to default
         setNewFileName('');
@@ -254,7 +261,10 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             return;
         }
 
-        updateFilesNode(newFolderMock, `Folder ${newFolderName} created!`);
+        // updateFilesNode(newFolderMock, `Folder ${newFolderName} created!`);
+        Editor.selectedFile.set(newFolderMock);
+
+        createFolderNode(newFolderMock);
 
         // Set values to default
         setNewFolderName('');
@@ -297,7 +307,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 if (elementToChange) {
                     elementToChange.name = tmpFileName;
 
-                    updateFilesNode(elementToChange, `Changed folder name to ${tmpFileName}!`);
+                    // updateFilesNode(elementToChange, `Changed folder name to ${tmpFileName}!`);
 
                     setTmpFileName(null);
                     setIsEditing(false);
@@ -322,7 +332,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 if (elementToChange) {
                     elementToChange.name = tmpFileName;
 
-                    updateFilesNode(elementToChange, `Changed file name to ${tmpFileName}!`);
+                    // updateFilesNode(elementToChange, `Changed file name to ${tmpFileName}!`);
 
                     setTmpFileName(null);
                     setIsEditing(false);
@@ -580,6 +590,10 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 <Autocomplete
                     options={workerGroups}
                     getOptionLabel={(option) => option.WorkerGroup}
+                    value={workerGroup}
+                    onChange={(event, newValue) => {
+                        setWorkerGroup(newValue);
+                    }}
                     sx={{ '& fieldset': { borderRadius: 0 } }}
                     renderInput={(params) => <TextField {...params} label="Worker" required size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />
@@ -752,9 +766,49 @@ export const useGetFilesNodeHook = (pipeline, setData) => {
     };
 };
 
+const useCreateFolderNodeHook = (pipeline, selected) => {
+    const environmentID = pipeline.environmentID;
+    const pipelineID = pipeline.pipelineID;
+    const nodeID = pipeline.nodeID;
+
+    // Global editor state
+    const EditorGlobal = useGlobalEditorState();
+
+    // GraphQL hook
+    const createFolderNode = useCreateFolderNode();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Upload file
+    return async () => {
+        const input = {
+            folderID: EditorGlobal.selectedFile.id.value,
+            parentID: EditorGlobal.selectedFile.parentID.value,
+            environmentID,
+            pipelineID,
+            nodeID,
+            folderName: EditorGlobal.selectedFile.name.value,
+            fType: EditorGlobal.selectedFile.fType.value,
+            active: true,
+        };
+        const response = await createFolderNode({ input });
+
+        if (response.status) {
+            enqueueSnackbar("Can't get files: " + (response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Folder saved.', { variant: 'success' });
+            EditorGlobal.selectedFile.isEditing.set(false);
+        }
+    };
+};
+
 function prepareForFrontEnd(data) {
-    data = JSON.parse(JSON.stringify(data).replaceAll('folderID', 'id').replaceAll('folderName', 'name'));
-    data.forEach((a) => (a.fType === 'folder' ? (a.children = []) : null));
+    const files = JSON.parse(JSON.stringify(data.files).replaceAll('fileID', 'id').replaceAll('fileName', 'name').replaceAll('folderID', 'parentID'));
+    const folders = JSON.parse(JSON.stringify(data.folders).replaceAll('folderID', 'id').replaceAll('folderName', 'name'));
+    folders.forEach((a) => (a.children = []));
+    data = [...files, ...folders];
 
     if (data.length === 1) {
         data[0].children = [];
@@ -806,36 +860,3 @@ function prepareForFrontEnd(data) {
     recursive2(top.children);
     return top;
 }
-
-// ----- Custom hook
-export const useUpdateFilesNodeHook = (environmentID, pipelineID, nodeID) => {
-    // GraphQL hook
-    const updateFilesNode = useUpdateFilesNode();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Get files
-    return async (data, msg) => {
-        const input = {
-            folderID: data.id,
-            parentID: data.parentID,
-            environmentID,
-            pipelineID,
-            nodeID,
-            folderName: data.name,
-            fType: data.fType,
-            active: true,
-        };
-
-        const response = await updateFilesNode({ input });
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get files: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            // enqueueSnackbar(msg, { variant: 'success' });
-        }
-    };
-};

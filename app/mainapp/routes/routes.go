@@ -276,9 +276,10 @@ func Setup(port string) *fiber.App {
 	}))
 
 	// Download code files
-	app.Get("/app/private/code-files/:filename", func(c *fiber.Ctx) error {
-		filename := string(c.Params("filename"))
-		dat, err := os.ReadFile("../../code-files/" + filename)
+	app.Get("/app/private/code-files/:fileid", func(c *fiber.Ctx) error {
+		fileID := string(c.Params("fileid"))
+
+		dat, err := os.ReadFile("../../code-files/" + fileID)
 		if err != nil {
 			if os.Getenv("debug") == "true" {
 				logging.PrintSecretsRedact(err)
