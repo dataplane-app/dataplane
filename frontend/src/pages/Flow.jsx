@@ -20,13 +20,15 @@ import { useSnackbar } from 'notistack';
 import APITRiggerDrawer from '../components/DrawerContent/EditorDrawers/APITriggerDrawer';
 import { useAddUpdatePipelineFlow } from '../graphql/addUpdatePipelineFlow';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
-import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
+import { faExpandArrowsAlt, faPen } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useGlobalAuthState } from '../Auth/UserAuth';
 import { useGlobalRunState } from './View/useWebSocket';
 import { useGetPipelineFlow } from '../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from './View';
+import UpdatePipelineDrawer from '../components/DrawerContent/UpdatePipelineDrawer';
+import { useGetPipeline } from '../graphql/getPipeline';
 
 export const globalFlowState = createState({
     isRunning: false,
@@ -36,6 +38,7 @@ export const globalFlowState = createState({
     isOpenLogDrawer: false,
     isOpenAPIDrawer: false,
     isOpenTurnOffPipelineDrawer: false,
+    isOpenUpdatePipelineDrawer: false,
     isEditorPage: false,
     selectedElement: null,
     elements: [],
@@ -97,10 +100,9 @@ const Flow = () => {
     // Hooks
     const theme = useTheme();
     const history = useHistory();
-    const { state: pipeline } = useLocation();
     const { enqueueSnackbar } = useSnackbar();
-    const getPipelineFlow = useGetPipelineFlowHook(pipeline);
-    const updatePipelineFlow = useAddUpdatePipelineFlowfunc();
+
+    // Auth state for dependency array
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -120,6 +122,14 @@ const Flow = () => {
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
     const Environment = useGlobalEnvironmentState();
+
+    // Local state
+    const [pipeline, setPipeline] = useState(null);
+
+    // Graphql Hooks
+    const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
+    const getPipelineFlow = useGetPipelineFlowHook(Environment.id.get(), pipeline);
+    const updatePipelineFlow = useAddUpdatePipelineFlowfunc();
 
     //Offset states and refs
     const [offsetHeight, setOffsetHeight] = useState(0);
@@ -158,6 +168,9 @@ const Flow = () => {
 
     // Fetch previous elements
     useEffect(() => {
+        if (Environment.id.get() === '') return;
+
+        getPipeline();
         const prevElements = FlowState.elements.attach(Downgraded).get();
         FlowState.isEditorPage.set(true);
 
@@ -166,11 +179,12 @@ const Flow = () => {
         setElements([...prevElements]);
         setIsLoadingFlow(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [Environment.id.get()]);
 
     useEffect(() => {
+        if (!pipeline) return;
         getPipelineFlow(Environment.id.get(), setElements, setInitialState);
-    }, [Environment.id.get()]);
+    }, [pipeline]);
 
     // Trigger the scale button on keyboard 's' key click
     useEffect(() => {
@@ -359,6 +373,11 @@ const Flow = () => {
                             Pipelines {'>'} {pipeline?.name}
                         </Typography>
 
+                        <Button sx={{ py: '10px', color: 'gray', borderColor: 'transparent' }} onClick={() => FlowState.isOpenUpdatePipelineDrawer.set(true)} variant="text">
+                            <Box component={FontAwesomeIcon} icon={faPen} />
+                            <FontAwesomeIcon icon="fas fa-pen" />
+                        </Button>
+
                         {isUnsavedWithChanges ? <UnsavedChangesIndicator /> : null}
 
                         <Grid display="flex" alignItems="flex-start" marginLeft="auto">
@@ -455,6 +474,10 @@ const Flow = () => {
             <Drawer anchor="right" open={FlowState.isOpenAPIDrawer.get()} onClose={() => FlowState.isOpenAPIDrawer.set(false)}>
                 <APITRiggerDrawer handleClose={() => FlowState.isOpenAPIDrawer.set(false)} />
             </Drawer>
+
+            <Drawer anchor="right" open={FlowState.isOpenUpdatePipelineDrawer.get()} onClose={() => FlowState.isOpenUpdatePipelineDrawer.set(false)}>
+                <UpdatePipelineDrawer pipeline={pipeline} getPipeline={getPipeline} handleClose={() => FlowState.isOpenUpdatePipelineDrawer.set(false)} />
+            </Drawer>
         </Box>
     );
 };
@@ -483,7 +506,7 @@ const useGetPipelineFlowHook = (pipeline) => {
 
         if (response.length === 0) {
             FlowState.elements.set([]);
-            history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipeline });
+            history.push(`/pipelines/flow/${pipelineId}`);
         } else if (response.r === 'error') {
             closeSnackbar();
             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
@@ -493,6 +516,34 @@ const useGetPipelineFlowHook = (pipeline) => {
             setElements(response);
             FlowState.elements.set(response);
             setInitialState(response);
+        }
+    };
+};
+
+// ------ Custom hooks
+const useGetPipelineHook = (environmentID, setPipeline) => {
+    // GraphQL hook
+    const getPipeline = useGetPipeline();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const FlowState = useGlobalFlowState();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get members
+    return async () => {
+        const response = await getPipeline({ pipelineID: pipelineId, environmentID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get pipeline: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setPipeline(response);
+            FlowState.pipelineInfo.set(response);
         }
     };
 };

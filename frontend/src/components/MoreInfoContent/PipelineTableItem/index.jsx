@@ -19,7 +19,7 @@ const PipelineItemTable = (props) => {
 
     const manageEdit = () => {
         FlowState.isEditorPage.get(true);
-        history.push({ pathname: `/pipelines/flow/${id}`, state: props.pipeline });
+        history.push(`/pipelines/flow/${id}`);
     };
 
     const permissionClick = () => {

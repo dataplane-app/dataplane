@@ -245,7 +245,7 @@ export const useGetPipelineFlowHook = (pipeline) => {
 
         if (response.length === 0) {
             FlowState.elements.set([]);
-            history.push({ pathname: `/pipelines/flow/${pipelineId}`, state: pipeline });
+            history.push(`/pipelines/flow/${pipelineId}`);
         } else if (response.r === 'error') {
             closeSnackbar();
             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
