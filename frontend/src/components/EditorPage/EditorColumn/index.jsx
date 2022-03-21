@@ -124,7 +124,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             return;
         }
 
-        fetch(`${codeFilesEndpoint}/${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`)
+        fetch(`${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}`)
             .then(async (response) => {
                 if (response.status !== 200) {
                     const error = (response && response.statusText) || response.status;
@@ -269,14 +269,10 @@ export const useUploadFileNodeHook = (pipeline) => {
 
     // Upload file
     return async () => {
-        const file = new File(
-            [EditorGlobal.selectedFile.diffValue.value],
-            `${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`,
-            {
-                type: 'text/plain',
-            }
-        );
-        const response = await uploadFileNode({ environmentID, pipelineID, nodeID, folderID: EditorGlobal.parentID.value, file });
+        const file = new File([EditorGlobal.selectedFile.diffValue.value], EditorGlobal.selectedFile.name.value, {
+            type: 'text/plain',
+        });
+        const response = await uploadFileNode({ environmentID, pipelineID, nodeID, folderID: EditorGlobal.selectedFile.parentID.value, file });
 
         if (response.status) {
             enqueueSnackbar("Can't get files: " + (response.r || response.error), { variant: 'error' });
