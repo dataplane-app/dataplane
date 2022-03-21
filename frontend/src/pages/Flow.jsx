@@ -20,7 +20,7 @@ import { useSnackbar } from 'notistack';
 import APITRiggerDrawer from '../components/DrawerContent/EditorDrawers/APITriggerDrawer';
 import { useAddUpdatePipelineFlow } from '../graphql/addUpdatePipelineFlow';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
-import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
+import { faExpandArrowsAlt, faPen } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useGlobalAuthState } from '../Auth/UserAuth';
@@ -373,8 +373,9 @@ const Flow = () => {
                             Pipelines {'>'} {pipeline?.name}
                         </Typography>
 
-                        <Button sx={{ ml: 2 }} onClick={() => FlowState.isOpenUpdatePipelineDrawer.set(true)} variant="contained">
-                            Edit
+                        <Button sx={{ py: '10px', color: 'gray', borderColor: 'transparent' }} onClick={() => FlowState.isOpenUpdatePipelineDrawer.set(true)} variant="text">
+                            <Box component={FontAwesomeIcon} icon={faPen} />
+                            <FontAwesomeIcon icon="fas fa-pen" />
                         </Button>
 
                         {isUnsavedWithChanges ? <UnsavedChangesIndicator /> : null}
