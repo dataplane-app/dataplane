@@ -17,6 +17,7 @@ import { Downgraded } from '@hookstate/core';
 import { useGetFilesNode } from '../../../graphql/getFilesNode';
 import { useCreateFolderNode } from '../../../graphql/createFolderNode';
 import { useUploadFileNodeHook } from '../EditorColumn';
+import DeleteFileFolderDrawer from '../../DrawerContent/DeleteFileFolderDrawer';
 
 const MOCK_ROOT_ID = 'all';
 
@@ -31,8 +32,11 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const [workerGroup, setWorkerGroup] = useState(null);
     const [selected, setSelected] = useState(null);
     const [expanded, setExpanded] = useState([]);
+    const [elementToBeDeleted, setElementToBeDeleted] = useState([]);
     const data = useHookState({});
 
+    // Drawer State
+    const [isOpenDelete, setIsOpenDelete] = useState(false);
 
     // File/folder creation states
     const [isAddingNew, setIsAddingNew] = useState(false);
@@ -347,41 +351,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // ####### Delete ########
     const handleDeleteIconClick = () => {
-        // Check if it's file or folder
-        const isTryingToDeleteFolder = isFolder(selected, data.attach(Downgraded).get());
-
-
-        const current = findNodeById(data.children.attach(Downgraded).get(), selected);
-        let message = `Are you sure you want to delete - ${current?.name}?`;
-
-        if (current?.children && current?.children.length > 0) {
-            message += ` ${current?.children.length} file(s) will be removed!`;
-        }
-
-        const askForConfirmation = window.confirm(message);
-
-        if (askForConfirmation === true) {
-            const removed = removeById(data.children.attach(Downgraded).get(), selected);
-            const newData = { ...data.attach(Downgraded).get(), children: removed };
-            data.set(newData);
-
-            // Remove child from tabs
-            if (current?.children && current?.children.length > 0) {
-                const tabs = Editor.tabs.attach(Downgraded).get();
-                const newTabs = removeById(tabs, current.children[0].id);
-                checkLastTab(newTabs);
-            }
-        } else {
-            return;
-        }
-
-        // Remove files from tab
-        if (!isTryingToDeleteFolder) {
-            const tabs = Editor.tabs.attach(Downgraded).get();
-            const newTabs = tabs.filter((t) => t.id !== selected);
-
-            checkLastTab(newTabs);
-        }
+        setIsOpenDelete(true);
     };
 
     // ####### Utils ########
@@ -650,7 +620,16 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
             {children}
             <CustomDragHandle left={8} />
-            <Drawer anchor="right" open={isOpenDeleteFolder} onClose={() => setIsOpenDeleteFolder(!isOpenDeleteFolder)}>
+            <Drawer anchor="right" open={isOpenDelete} onClose={() => setIsOpenDelete(!isOpenDelete)}>
+                <DeleteFileFolderDrawer
+                    handleClose={() => {
+                        setIsOpenDelete(false);
+                    }}
+                    data={data}
+                    selected={selected}
+                    nodeID={rest.pipeline.nodeID}
+                />
+            </Drawer>
         </div>
     );
 });
