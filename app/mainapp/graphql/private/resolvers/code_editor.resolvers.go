@@ -88,6 +88,39 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 		return "", errors.New("Requires permissions.")
 	}
 
+	// Delete folder and all its contents from directory
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID)
+
+	err := os.RemoveAll(config.CodeDirectory + folderpath)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// Delete folder and all its contents from database
+	// ---- Delete files from database
+	f := models.CodeFiles{}
+
+	err = database.DBConn.Where("folder_id = ?", folderID).Delete(&f).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete file database error.")
+	}
+
+	// ---- Delete folder from database
+	fo := models.CodeFolders{}
+
+	err = database.DBConn.Where("folder_id = ?", folderID).Delete(&fo).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete folder database error.")
+	}
+
 	return "Success", nil
 }
 
@@ -161,6 +194,26 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 
 	if permOutcome == "denied" {
 		return "", errors.New("Requires permissions.")
+	}
+
+	// Delete file from folder
+	filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID)
+
+	err := os.Remove(config.CodeDirectory + filepath)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// Delete file from database
+	f := models.CodeFiles{}
+
+	err = database.DBConn.Where("file_id = ?", fileID).Delete(&f).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete file database error.")
 	}
 
 	return "Success", nil
