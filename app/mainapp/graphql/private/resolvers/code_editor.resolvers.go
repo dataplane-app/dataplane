@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/google/uuid"
@@ -90,6 +91,11 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 
 	// Delete folder and all its contents from directory
 	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID)
+
+	// Make sure there is a path
+	if strings.TrimSpace(folderpath) == "" {
+		return "", errors.New("Missing folder path.")
+	}
 
 	err := os.RemoveAll(config.CodeDirectory + folderpath)
 	if err != nil {
