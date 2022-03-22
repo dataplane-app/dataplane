@@ -280,7 +280,7 @@ func Setup(port string) *fiber.App {
 		fileID := string(c.Params("fileid"))
 		filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID)
 
-		dat, err := os.ReadFile("../../code-files/" + filepath)
+		dat, err := os.ReadFile(config.CodeDirectory + filepath)
 		if err != nil {
 			if os.Getenv("debug") == "true" {
 				logging.PrintSecretsRedact(err)
