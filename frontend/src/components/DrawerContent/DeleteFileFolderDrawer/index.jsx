@@ -88,7 +88,7 @@ const DeleteFileFolderDrawer = ({ handleClose, data, selected, nodeID }) => {
                 </Typography>
 
                 <Typography variant="body2" sx={{ mt: 2 }}>
-                    You are about to delete a folder, would you like to continue?
+                    You are about to delete a {file ? 'file' : 'folder'}, would you like to continue?
                 </Typography>
 
                 <Grid mt={4} display="flex" alignItems="center">
