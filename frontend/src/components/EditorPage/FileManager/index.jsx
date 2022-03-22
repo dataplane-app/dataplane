@@ -2,8 +2,9 @@ import { faChevronDown, faChevronRight, faFile, faFolder, faPencilAlt, faTimes }
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TreeItem from '@mui/lab/TreeItem';
 import TreeView from '@mui/lab/TreeView';
-import { Autocomplete, Box, Grid, IconButton, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Drawer, Grid, IconButton, TextField, Typography } from '@mui/material';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
+import { useState as useHookState } from '@hookstate/core';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import { useGetWorkerGroupsHook } from '../../DrawerContent/AddPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
@@ -30,7 +31,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const [workerGroup, setWorkerGroup] = useState(null);
     const [selected, setSelected] = useState(null);
     const [expanded, setExpanded] = useState([]);
-    const [data, setData] = useState([]);
+    const data = useHookState({});
+
 
     // File/folder creation states
     const [isAddingNew, setIsAddingNew] = useState(false);
@@ -45,7 +47,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const editingFileRef = useRef();
 
     // Graphql hook
-    const getFilesNode = useGetFilesNodeHook(rest.pipeline, setData);
+    const getFilesNode = useGetFilesNodeHook(rest.pipeline, data);
     // const updateFilesNode = useUpdateFilesNodeHook(rest.pipeline.environmentID, rest.pipeline.pipelineID, rest.pipeline.nodeID);
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
     const createFolderNode = useCreateFolderNodeHook(rest.pipeline, selected);
@@ -58,11 +60,11 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Set parent name and id for upload file names
     useEffect(() => {
-        Editor.parentName.set(data.name);
-        Editor.parentID.set(data.id);
+        Editor.parentName.set(data.name.get());
+        Editor.parentID.set(data.id.get());
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data.id, data.name]);
+    }, [data.id?.get(), data.name?.get()]);
 
     // Check if selected file changed
     useEffect(() => {
@@ -152,7 +154,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         // Check if enter has being pressed
         if (e.charCode === 13) {
             const check = checkFileName(newFileName);
-            const alreadyExistsFile = findNodeByName(data?.children, newFileName);
+            const alreadyExistsFile = findNodeByName(data?.children.attach(Downgraded).get(), newFileName);
 
             if (!check) return;
             if (alreadyExistsFile) {
@@ -179,12 +181,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
         // Push new file to root children
         //Find the ID first
-        const currentSelectedElement = findNodeById(data.children, selected);
-        if (selected === data.id) {
+        const currentSelectedElement = findNodeById(data.children.attach(Downgraded).get(), selected);
+        if (selected === data.id.get()) {
             // If top level folder
-            let newData = { ...data };
+            let newData = { ...data.attach(Downgraded).get() };
             newData.children.push(newFileMock);
-            setData(newData);
+            data.set(newData);
             selectAndOpenNewFile(newFileMock);
             uploadFileNode();
         } else if (currentSelectedElement && currentSelectedElement.children) {
@@ -225,7 +227,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         // Check if enter has being pressed
         if (e.charCode === 13) {
             const check = checkFolderName(newFolderName);
-            const alreadyExistsFolder = findNodeByName(data?.children, newFolderName);
+            const alreadyExistsFolder = findNodeByName(data?.children.attach(Downgraded).get(), newFolderName);
 
             if (!check) return;
             if (alreadyExistsFolder) {
@@ -249,11 +251,11 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
         // Push new file to root children
         //Find the ID first
-        const currentSelectedElement = findNodeById(data.children, selected);
-        if (selected === data.id) {
-            let newData = { ...data };
+        const currentSelectedElement = findNodeById(data.children.attach(Downgraded).get(), selected);
+        if (selected === data.id.get()) {
+            let newData = { ...data.attach(Downgraded).get() };
             newData.children.push(newFolderMock);
-            setData(newData);
+            data.set(newData);
         } else if (currentSelectedElement && currentSelectedElement.children) {
             currentSelectedElement.children.push(newFolderMock);
             selectAndOpenNewFile(newFolderMock);
@@ -285,12 +287,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     const handleEditKeyPress = (e, nodes) => {
         if (e.charCode === 13) {
-            const folder = isFolder(selected, data);
-            const elementToChange = findNodeById(data.children, selected);
+            const folder = isFolder(selected, data.attach(Downgraded).get());
+            const elementToChange = findNodeById(data.children.attach(Downgraded).get(), selected);
 
             if (folder) {
                 const check = checkFolderName(tmpFileName);
-                const alreadyExistsFolder = findNodeByName(data?.children, tmpFileName);
+                const alreadyExistsFolder = findNodeByName(data?.children.attach(Downgraded).get(), tmpFileName);
 
                 if (!check) {
                     setIsEditing(false);
@@ -315,7 +317,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 }
             } else {
                 const check = checkFileName(tmpFileName);
-                const alreadyExistsFile = findNodeByName(data?.children, tmpFileName);
+                const alreadyExistsFile = findNodeByName(data?.children.attach(Downgraded).get(), tmpFileName);
 
                 if (!check) {
                     setIsEditing(false);
@@ -346,9 +348,10 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // ####### Delete ########
     const handleDeleteIconClick = () => {
         // Check if it's file or folder
-        const isTryingToDeleteFolder = isFolder(selected, data);
+        const isTryingToDeleteFolder = isFolder(selected, data.attach(Downgraded).get());
 
-        const current = findNodeById(data.children, selected);
+
+        const current = findNodeById(data.children.attach(Downgraded).get(), selected);
         let message = `Are you sure you want to delete - ${current?.name}?`;
 
         if (current?.children && current?.children.length > 0) {
@@ -358,9 +361,9 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         const askForConfirmation = window.confirm(message);
 
         if (askForConfirmation === true) {
-            const removed = removeById(data.children, selected);
-            const newData = { ...data, children: removed };
-            setData(newData);
+            const removed = removeById(data.children.attach(Downgraded).get(), selected);
+            const newData = { ...data.attach(Downgraded).get(), children: removed };
+            data.set(newData);
 
             // Remove child from tabs
             if (current?.children && current?.children.length > 0) {
@@ -384,12 +387,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // ####### Utils ########
     // Checks if selected folder is expanded
     const expandFolder = () => {
-        if (!selected || selected === data.id) {
-            if (expanded?.filter((id) => id === data.id).length > 0) {
+        if (!selected || selected === data.id.get()) {
+            if (expanded?.filter((id) => id === data.id.get()).length > 0) {
                 return;
             } else {
-                setExpanded([...expanded, data.id]);
-                setSelected(data.id);
+                setExpanded([...expanded, data.id.get()]);
+                setSelected(data.id.get());
             }
         } else {
             if (expanded?.filter((id) => id === selected).length > 0) {
@@ -402,16 +405,16 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Check if it is folder of file
     const checkLevel = () => {
-        if (!selected || selected === data.id) return;
+        if (!selected || selected === data.id.get()) return;
 
-        const selectedInfo = findNodeById(data.children, selected);
+        const selectedInfo = findNodeById(data.children.attach(Downgraded).get(), selected);
         if (selectedInfo) {
             if (selectedInfo.children) {
                 // Is folder\
                 return false;
             } else {
                 // Is file
-                const closestParentID = getParentId(data.children, selected);
+                const closestParentID = getParentId(data.children.attach(Downgraded).get(), selected);
                 closestParentID && setSelected(closestParentID);
             }
         }
@@ -528,7 +531,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                     />
                 }
                 onClick={() => handleFileClick(nodes)}>
-                <Box className={`${nodes.id === data.id ? 'showOnHover' : ''} hidden_controls tree-${nodes.id}`}>
+                <Box className={`${nodes.id === data.id?.get() ? 'showOnHover' : ''} hidden_controls tree-${nodes.id}`}>
                     <IconButton aria-label="Edit File" onClick={handleEdit}>
                         <Box component={FontAwesomeIcon} icon={faPencilAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
                     </IconButton>
@@ -580,7 +583,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         Editor.tabs.set((prevTabs) => [...prevTabs, file]);
 
         // Set file path
-        const path = getPath(data.children, selected);
+        const path = getPath(data.children.attach(Downgraded).get(), selected);
         Editor.currentPath.set(path);
     };
 
@@ -641,12 +644,13 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
                         p: '0 5px',
                     }}>
-                    {renderTree(data)}
+                    {renderTree(data.attach(Downgraded).get())}
                 </TreeView>
             </Box>
 
             {children}
             <CustomDragHandle left={8} />
+            <Drawer anchor="right" open={isOpenDeleteFolder} onClose={() => setIsOpenDeleteFolder(!isOpenDeleteFolder)}>
         </div>
     );
 });
@@ -741,7 +745,7 @@ function CustomTreeItem(props) {
 export default FileManagerColumn;
 
 // ----- Custom hook
-export const useGetFilesNodeHook = (pipeline, setData) => {
+export const useGetFilesNodeHook = (pipeline, data) => {
     const environmentID = pipeline.environmentID;
     const pipelineID = pipeline.pipelineID;
     const nodeID = pipeline.nodeID;
@@ -761,7 +765,7 @@ export const useGetFilesNodeHook = (pipeline, setData) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setData(prepareForFrontEnd(response));
+            data.set(prepareForFrontEnd(response));
         }
     };
 };
