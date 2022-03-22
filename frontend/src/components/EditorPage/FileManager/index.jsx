@@ -11,7 +11,7 @@ import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { faFileAlt } from '@fortawesome/free-regular-svg-icons';
 import { v4 as uuidv4 } from 'uuid';
 import { useSnackbar } from 'notistack';
-import { findNodeById, findNodeByName, getParentId, getPath, isFolder, removeById } from './functions';
+import { findNodeById, findNodeByName, getParentId, getPath, isFolder } from './functions';
 import CustomDragHandle from '../../CustomDragHandle';
 import { Downgraded } from '@hookstate/core';
 import { useGetFilesNode } from '../../../graphql/getFilesNode';
@@ -32,7 +32,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const [workerGroup, setWorkerGroup] = useState(null);
     const [selected, setSelected] = useState(null);
     const [expanded, setExpanded] = useState([]);
-    const [elementToBeDeleted, setElementToBeDeleted] = useState([]);
     const data = useHookState({});
 
     // Drawer State
@@ -52,7 +51,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Graphql hook
     const getFilesNode = useGetFilesNodeHook(rest.pipeline, data);
-    // const updateFilesNode = useUpdateFilesNodeHook(rest.pipeline.environmentID, rest.pipeline.pipelineID, rest.pipeline.nodeID);
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
     const createFolderNode = useCreateFolderNodeHook(rest.pipeline, selected);
 
