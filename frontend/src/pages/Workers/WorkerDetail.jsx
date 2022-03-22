@@ -44,13 +44,14 @@ export default function WorkerDetail() {
 
     // Polling on websocket
     useEffect(() => {
-        // Keep workers that aren't same as incoming response and less than 10 seconds old
-        let keep = data.filter((a) => a.WorkerID !== socketResponse.WorkerID && new Date().valueOf() - new Date(a.T).valueOf() < 10000);
-
-        socketResponse.T && setData([...keep, socketResponse].sort(sortObjectByName));
+        let arr = [];
+        for (let i in socketResponse) {
+            arr.push(socketResponse[i]);
+        }
+        setData(arr);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [socketResponse.T]);
+    }, [socketResponse]);
 
     const columns = useMemo(
         () => [
@@ -116,7 +117,7 @@ export default function WorkerDetail() {
                     <Grid>
                         <Grid item display="flex" alignItems="center" flexDirection="row">
                             <Typography component="div" variant="body1" sx={{ fontSize: '1.0625rem' }}>
-                                Worker group: {socketResponse?.WorkerGroup}
+                                Worker group: {data[0]?.WorkerGroup}
                             </Typography>
 
                             <Box display="flex" ml={4} alignItems="center">
@@ -124,7 +125,7 @@ export default function WorkerDetail() {
                                     Worker type:
                                 </Typography>
                                 <Typography variant="subtitle1" style={{ display: 'inline' }}>
-                                    {socketResponse.WorkerType}
+                                    {data[0]?.WorkerType}
                                 </Typography>
                             </Box>
 
@@ -133,7 +134,7 @@ export default function WorkerDetail() {
                                     Load balancer:
                                 </Typography>
                                 <Typography variant="subtitle1" align="left" sx={{ lineHeight: 1, marginLeft: 1 }}>
-                                    {balancerDict[socketResponse.LB]}
+                                    {balancerDict[data[0]?.LB]}
                                 </Typography>
                             </Box>
                         </Grid>
