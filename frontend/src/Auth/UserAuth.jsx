@@ -115,34 +115,31 @@ export const UserAuth = ({ children, Env, loginUrl, refreshTokenUrl, logoutUrl, 
     // --------- check activity every 5 seconds --------
     const MINUTE_MS = 5000;
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    console.log('Logs every 5 seconds');
-    if (Authstate.privateRoute.get() === true) {
-        let decodedToken = decodedAccessToken(Authstate.authToken.get());
-        if (decodedToken === undefined) {
-            ConsoleLogHelper('Set Empty for onActivity');
-            Authstate.authToken.set('empty');
-        } else {
-            let x = getAccessTokenRefreshTime(decodedToken);
-            // refresh.set(x)
-            ConsoleLogHelper('On activity is refresh needed?:', x);
-            if (x === true) {
-                ConsoleLogHelper('Refresh count up:', refreshCount.get());
-                refreshCount.set((p) => p + 1);
+    useEffect(() => {
+        const interval = setInterval(() => {
+            console.log('Logs every 5 seconds');
+            if (Authstate.privateRoute.get() === true) {
+                let decodedToken = decodedAccessToken(Authstate.authToken.get());
+                if (decodedToken === undefined) {
+                    ConsoleLogHelper('Set Empty for onActivity');
+                    Authstate.authToken.set('empty');
+                } else {
+                    let x = getAccessTokenRefreshTime(decodedToken);
+                    // refresh.set(x)
+                    ConsoleLogHelper('On activity is refresh needed?:', x);
+                    if (x === true) {
+                        ConsoleLogHelper('Refresh count up:', refreshCount.get());
+                        refreshCount.set((p) => p + 1);
+                    }
+                }
             }
-        }
-    }
-  }, MINUTE_MS);
+        }, MINUTE_MS);
 
-  return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
-}, [])
+        return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
+    }, []);
 
     //   ------ On refresh is True, fire off refresh token
     useEffect(() => {
-
-       
-
         ConsoleLogHelper('Fire me when token is needed - ID:', refreshCount.get());
 
         async function fetchToken() {
