@@ -57,7 +57,7 @@ export default function WorkerDetail() {
         () => [
             {
                 Header: 'Worker',
-                accessor: (row) => [row.WorkerID, row.Status, formatDate(row.T)],
+                accessor: (row) => [row.WorkerID, row.Status, formatDate(row.T, timezone)],
                 Cell: (row) => <CustomWorker row={row} />,
             },
             {
