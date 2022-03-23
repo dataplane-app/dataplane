@@ -12,6 +12,7 @@ import WorkerDetailMemory from './WorkerDetailMemory';
 import useWebSocket from './useWebSocket';
 import { useParams } from 'react-router-dom';
 import { balancerDict } from './Workers';
+import { useMeHook } from '../View/Analytics';
 
 const tableWidth = '1140px';
 
@@ -27,13 +28,16 @@ export default function WorkerDetail() {
 
     // Users state
     const [data, setData] = useState([]);
+    const [timezone, setTimezone] = useState('');
 
     // Custom hook
     const getWorkers = useGetWorkersHook(Environment.id.get(), setData, workerId);
+    const getMe = useMeHook(setTimezone);
 
     // Get workers on load and environment change
     useEffect(() => {
         getWorkers();
+        getMe();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.name.get()]);
@@ -58,16 +62,16 @@ export default function WorkerDetail() {
             },
             {
                 Header: 'CPU',
-                accessor: (row) => [row.CPUPerc, row.Load, row.T],
+                accessor: (row) => [row.CPUPerc, row.Load, row.T, timezone],
                 Cell: (row) => <WorkerDetailCPU row={row} />,
             },
             {
                 Header: 'Memory',
-                accessor: (row) => [row.MemoryPerc, formatMemory(row.MemoryUsed), row.T],
+                accessor: (row) => [row.MemoryPerc, formatMemory(row.MemoryUsed), row.T, timezone],
                 Cell: (row) => <WorkerDetailMemory row={row} />,
             },
         ],
-        []
+        [timezone]
     );
 
     // Use the state and functions returned from useTable to build your UI
@@ -188,7 +192,7 @@ export default function WorkerDetail() {
                                 component="tr"
                                 {...row.getRowProps()}
                                 display="grid"
-                                gridTemplateColumns="450px 1fr 1fr"
+                                gridTemplateColumns="350px 1fr 1fr"
                                 alignItems="start"
                                 borderRadius="5px"
                                 backgroundColor="background.secondary"
