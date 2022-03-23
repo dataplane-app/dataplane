@@ -71,7 +71,7 @@ export default function WorkerDetail() {
                 Cell: (row) => <WorkerDetailMemory row={row} />,
             },
         ],
-        [jwt]
+        []
     );
 
     // Use the state and functions returned from useTable to build your UI
