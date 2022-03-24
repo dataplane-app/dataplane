@@ -104,7 +104,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 
 	// 2. ----- Delete folder and all its contents from the database
 
-	// Folder ids of to be deleted folders are stored here. Initialized with parent folder
+	// Folder ids of to be deleted folders are stored here. Initialized with the parent folder
 	foldersIDsToDelete := []string{folderID}
 
 	// Initialize recursive function to walk the folder to be deleted
