@@ -120,7 +120,7 @@ type ComplexityRoot struct {
 		DeletePipeline                   func(childComplexity int, environmentID string, pipelineID string) int
 		DeleteSecretFromWorkerGroup      func(childComplexity int, environmentID string, workerGroup string, secret string) int
 		MoveFileNode                     func(childComplexity int, fileID string, toFolderID string) int
-		MoveFolderNode                   func(childComplexity int, folderID string, toFolderID string) int
+		MoveFolderNode                   func(childComplexity int, folderID string, toFolderID string, environmentID string, pipelineID string) int
 		PipelinePermissionsToAccessGroup func(childComplexity int, environmentID string, resourceID string, access []string, accessGroupID string) int
 		PipelinePermissionsToUser        func(childComplexity int, environmentID string, resourceID string, access []string, userID string) int
 		RemoveUserFromAccessGroup        func(childComplexity int, userID string, accessGroupID string, environmentID string) int
@@ -394,7 +394,7 @@ type MutationResolver interface {
 	UpdateUserToAccessGroup(ctx context.Context, environmentID string, userID string, accessGroupID string) (string, error)
 	RemoveUserFromAccessGroup(ctx context.Context, userID string, accessGroupID string, environmentID string) (string, error)
 	CreateFolderNode(ctx context.Context, input *FolderNodeInput) (*models.CodeFolders, error)
-	MoveFolderNode(ctx context.Context, folderID string, toFolderID string) (string, error)
+	MoveFolderNode(ctx context.Context, folderID string, toFolderID string, environmentID string, pipelineID string) (string, error)
 	DeleteFolderNode(ctx context.Context, environmentID string, folderID string, nodeID string, pipelineID string) (string, error)
 	RenameFolder(ctx context.Context, environmentID string, folderID string, nodeID string, pipelineID string) (string, error)
 	UploadFileNode(ctx context.Context, environmentID string, nodeID string, pipelineID string, folderID string, file graphql.Upload) (string, error)
@@ -952,7 +952,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MoveFolderNode(childComplexity, args["FolderID"].(string), args["ToFolderID"].(string)), true
+		return e.complexity.Mutation.MoveFolderNode(childComplexity, args["folderID"].(string), args["toFolderID"].(string), args["environmentID"].(string), args["pipelineID"].(string)), true
 
 	case "Mutation.pipelinePermissionsToAccessGroup":
 		if e.complexity.Mutation.PipelinePermissionsToAccessGroup == nil {
@@ -2963,7 +2963,7 @@ extend type Mutation {
 	+ **Route**: Private
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
 	"""
-  moveFolderNode(FolderID: String! ToFolderID: String!): String!
+  moveFolderNode(folderID: String!, toFolderID: String!,environmentID: String!,pipelineID: String!): String!
 
     """
 	Delete a node's folder structure.
@@ -4252,23 +4252,41 @@ func (ec *executionContext) field_Mutation_moveFolderNode_args(ctx context.Conte
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["FolderID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("FolderID"))
+	if tmp, ok := rawArgs["folderID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("folderID"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["FolderID"] = arg0
+	args["folderID"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["ToFolderID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ToFolderID"))
+	if tmp, ok := rawArgs["toFolderID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toFolderID"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["ToFolderID"] = arg1
+	args["toFolderID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg3
 	return args, nil
 }
 
@@ -7558,7 +7576,7 @@ func (ec *executionContext) _Mutation_moveFolderNode(ctx context.Context, field 
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().MoveFolderNode(rctx, args["FolderID"].(string), args["ToFolderID"].(string))
+		return ec.resolvers.Mutation().MoveFolderNode(rctx, args["folderID"].(string), args["toFolderID"].(string), args["environmentID"].(string), args["pipelineID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
