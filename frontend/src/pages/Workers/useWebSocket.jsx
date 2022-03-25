@@ -25,9 +25,16 @@ export default function useWebSocket(workerId) {
 
     const [, triggerRender] = useState(1);
     const response = useRef(null);
-    const time = useRef(new Date().valueOf());
 
     const { authToken } = useGlobalAuthState();
+
+    // Trigger a render every second.
+    useEffect(() => {
+        const timer = setInterval(() => {
+            triggerRender((a) => a * -1);
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         function connect() {
@@ -54,12 +61,6 @@ export default function useWebSocket(workerId) {
                 if (resp.WorkerGroup === workerId) {
                     response.current = { ...response.current, [resp.WorkerID]: resp };
                 }
-
-                // Trigger a render every second
-                if (new Date().valueOf() - time.current > 1000) {
-                    triggerRender((a) => a * -1);
-                    time.current = new Date().valueOf();
-                }
             };
         }
 
@@ -69,6 +70,8 @@ export default function useWebSocket(workerId) {
             reconnectOnClose.current = false;
             ws.current.close();
         };
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workerId]);
 
     return response.current;
