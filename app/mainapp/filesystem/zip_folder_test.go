@@ -22,7 +22,9 @@ func TestZIPFolder(t *testing.T) {
 
 	zipDirectory := config.CodeDirectory + "/test/trash/"
 
-	log.Println("Folder to zip: ", createDirectory)
+	zipfile := zipDirectory + "ziptest.zip"
+
+	log.Println("Folder to zip: ", createDirectory, " -> ", zipfile)
 
 	if _, err := os.Stat(createDirectory); os.IsNotExist(err) {
 		// path/to/whatever does not exist
@@ -52,7 +54,17 @@ func TestZIPFolder(t *testing.T) {
 
 	start := time.Now()
 
-	ZipSource(createDirectory, config.CodeDirectory+"test/trash/ziptest.zip")
+	if _, err := os.Stat(zipfile); os.IsExist(err) {
+		err := os.Remove(zipfile)
+		if err != nil {
+			t.Error(err)
+		}
+	}
+	ZipSource(createDirectory, zipfile)
+
+	if _, err := os.Stat(zipfile); os.IsNotExist(err) {
+		t.Error("Failed to create zip file")
+	}
 
 	stop := time.Now()
 	// Do something with response
