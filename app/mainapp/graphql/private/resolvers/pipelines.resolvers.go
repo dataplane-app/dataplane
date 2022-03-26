@@ -106,10 +106,10 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	}
 
 	// Should create a directory as follows code_directory/
-	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID)
+	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID)
 	foldercreate, _, _ := filesystem.CreateFolder(pipelinedir, pfolder)
 
-	thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID)
+	thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID)
 
 	git.PlainInit(config.CodeDirectory+thisfolder, false)
 
@@ -153,7 +153,7 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 	var parentfolder models.CodeFolders
 	database.DBConn.Where("level = ? and environment_id = ?", "environment", environmentID).First(&parentfolder)
 
-	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID)
+	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID)
 
 	// log.Println("Parent folder:", pfolder)
 
