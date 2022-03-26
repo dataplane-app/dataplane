@@ -54,7 +54,7 @@ func (r *mutationResolver) CreateFolderNode(ctx context.Context, input *privateg
 		Active:        input.Active,
 	}
 
-	parentFolder, err := filesystem.FolderConstructByID(database.DBConn, input.ParentID)
+	parentFolder, err := filesystem.FolderConstructByID(database.DBConn, input.ParentID, input.EnvironmentID)
 	if err != nil {
 		return &models.CodeFolders{}, errors.New("Create folder - build parent folder failed")
 	}
@@ -89,7 +89,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 		return "", errors.New("Requires permissions.")
 	}
 
-	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID)
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID)
 
 	// Make sure there is a path
 	if strings.TrimSpace(folderpath) == "" {
@@ -255,7 +255,7 @@ func (r *mutationResolver) UploadFileNode(ctx context.Context, environmentID str
 	}
 
 	// Folder excludes code directory
-	parentFolder, err := filesystem.FolderConstructByID(database.DBConn, folderID)
+	parentFolder, err := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID)
 	if err != nil {
 		return "", errors.New("Create folder - build parent folder failed")
 	}
@@ -289,7 +289,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 		return "", errors.New("Requires permissions.")
 	}
 
-	folderpath, _ := filesystem.FileConstructByID(database.DBConn, fileID)
+	folderpath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID)
 
 	// Make sure there is a path
 	if strings.TrimSpace(folderpath) == "" {
@@ -329,7 +329,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	}
 
 	// Delete file from folder
-	filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID)
+	filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID)
 
 	err = os.Remove(config.CodeDirectory + filepath)
 	if err != nil {

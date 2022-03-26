@@ -73,7 +73,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		pf := ""
 
 		if len(foldersdata) > 0 {
-			pf, _ = filesystem.FolderConstructByID(database.DBConn, foldersdata[0].ParentID)
+			pf, _ = filesystem.FolderConstructByID(database.DBConn, foldersdata[0].ParentID, environmentID)
 		}
 		parentfolder <- pf
 	}()

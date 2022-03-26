@@ -27,7 +27,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 	var parentfolder models.CodeFolders
 	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ?", environmentID, pipelineID, "pipeline").First(&parentfolder)
 
-	pfolder, _ := FolderConstructByID(database.DBConn, parentfolder.FolderID)
+	pfolder, _ := FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID)
 
 	var output []FolderNodeUpdate
 	database.DBConn.Raw(`

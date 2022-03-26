@@ -7,13 +7,13 @@ import (
 	"gorm.io/gorm"
 )
 
-func FolderConstructByID(db *gorm.DB, id string) (string, error) {
+func FolderConstructByID(db *gorm.DB, id string, environmentID string) (string, error) {
 
 	var filepath string
 
 	var currentFolder models.CodeFolders
 
-	db.Where("folder_id=?", id).First(&currentFolder)
+	db.Where("folder_id=? and environment_id = ?", id, environmentID).First(&currentFolder)
 
 	if currentFolder.FolderID != id {
 		return "", errors.New("File record not found.")
