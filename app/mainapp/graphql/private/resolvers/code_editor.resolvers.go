@@ -89,6 +89,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 		return "", errors.New("Requires permissions.")
 	}
 
+	// Also checks that folder belongs to environment ID
 	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID)
 
 	// Make sure there is a path
@@ -136,82 +137,39 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 
 	// 3. ----- Delete folder and all its contents from the database
 
-	// Folder ids of to be deleted folders are stored here. Initialized with the parent folder
-	foldersIDsToDelete := []string{folderID}
+	/* We will simply remove the folder record and let all child folders remain - even if stale */
 
-	// Initialize recursive function to walk the folder to be deleted
-	// and get ids for all child folders
-	var getFolderIdsFromDB func(folderID string) (string, error)
+	// Delete folders from the database only two levels - actual folder and as parent to other folders - rest will remain as stale
 
-	fo := []models.CodeFolders{}
+	delme := []models.CodeFolders{}
 
-	getFolderIdsFromDB = func(folderID string) (string, error) {
-
-		// Get folder's child folders
-		err := database.DBConn.Where("parent_id = ?", folderID).Find(&fo).Error
-		if err != nil {
-			return "", errors.New(err.Error())
+	err = database.DBConn.Where("folder_id = ? and environment_id =?", folderID, environmentID).Delete(&delme).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
 		}
-
-		// Append ids of all child folders to the to be deleted slice
-		for _, item := range fo {
-			foldersIDsToDelete = append(foldersIDsToDelete, item.FolderID)
-		}
-
-		// Recursively re-run the function for all child folders
-		for _, item := range fo {
-			getFolderIdsFromDB(item.FolderID)
-		}
-
-		return "", nil
-
+		return "", errors.New("Delete folder database error.")
 	}
 
-	getFolderIdsFromDB(folderID)
+	delme = []models.CodeFolders{}
 
-	// File ids of to be deleted files are stored here.
-	fileIDsToDelete := []string{}
-
-	for _, item := range foldersIDsToDelete {
-		f := []models.CodeFiles{}
-
-		// Find all files in a folder to be deleted
-		err := database.DBConn.Where("folder_id = ?", item).Find(&f).Error
-		if err != nil {
-			return "", errors.New(err.Error())
+	err = database.DBConn.Where("parent_id = ? and environment_id =?", folderID, environmentID).Delete(&delme).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
 		}
-
-		// Append ids of all child files to the to be deleted slice
-		for _, item := range f {
-			fileIDsToDelete = append(fileIDsToDelete, item.FileID)
-		}
-
+		return "", errors.New("Delete folder database error.")
 	}
 
-	// Delete folders from the database
-	for _, id := range foldersIDsToDelete {
-		f := []models.CodeFolders{}
+	// Delete files in database but only first level
+	delfiles := []models.CodeFiles{}
 
-		err := database.DBConn.Where("folder_id = ?", id).Delete(&f).Error
-		if err != nil {
-			if os.Getenv("debug") == "true" {
-				logging.PrintSecretsRedact(err)
-			}
-			return "", errors.New("Delete folder database error.")
+	err = database.DBConn.Where("folder_id = ? and environment_id =?", folderID, environmentID).Delete(&delfiles).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
 		}
-	}
-
-	// Delete files from the database
-	for _, id := range fileIDsToDelete {
-		f := []models.CodeFiles{}
-
-		err := database.DBConn.Where("file_id = ?", id).Delete(&f).Error
-		if err != nil {
-			if os.Getenv("debug") == "true" {
-				logging.PrintSecretsRedact(err)
-			}
-			return "", errors.New("Delete file database error.")
-		}
+		return "", errors.New("Delete file database error.")
 	}
 
 	return "Success", nil
