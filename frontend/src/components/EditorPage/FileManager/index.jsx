@@ -2,22 +2,20 @@ import { faChevronDown, faChevronRight, faFile, faFolder, faPencilAlt, faTimes }
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TreeItem from '@mui/lab/TreeItem';
 import TreeView from '@mui/lab/TreeView';
-import { Autocomplete, Box, Drawer, Grid, IconButton, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Grid, IconButton, TextField, Typography } from '@mui/material';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
-import { useState as useHookState } from '@hookstate/core';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import { useGetWorkerGroupsHook } from '../../DrawerContent/AddPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { faFileAlt } from '@fortawesome/free-regular-svg-icons';
 import { v4 as uuidv4 } from 'uuid';
 import { useSnackbar } from 'notistack';
-import { findNodeById, findNodeByName, getParentId, getPath, isFolder } from './functions';
+import { findNodeById, findNodeByName, getParentId, getPath, isFolder, removeById } from './functions';
 import CustomDragHandle from '../../CustomDragHandle';
 import { Downgraded } from '@hookstate/core';
 import { useGetFilesNode } from '../../../graphql/getFilesNode';
 import { useCreateFolderNode } from '../../../graphql/createFolderNode';
 import { useUploadFileNodeHook } from '../EditorColumn';
-import DeleteFileFolderDrawer from '../../DrawerContent/DeleteFileFolderDrawer';
 
 const MOCK_ROOT_ID = 'all';
 
@@ -32,10 +30,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const [workerGroup, setWorkerGroup] = useState(null);
     const [selected, setSelected] = useState(null);
     const [expanded, setExpanded] = useState([]);
-    const data = useHookState({});
-
-    // Drawer State
-    const [isOpenDelete, setIsOpenDelete] = useState(false);
+    const [data, setData] = useState([]);
 
     // File/folder creation states
     const [isAddingNew, setIsAddingNew] = useState(false);
@@ -50,7 +45,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const editingFileRef = useRef();
 
     // Graphql hook
-    const getFilesNode = useGetFilesNodeHook(rest.pipeline, data);
+    const getFilesNode = useGetFilesNodeHook(rest.pipeline, setData);
+    // const updateFilesNode = useUpdateFilesNodeHook(rest.pipeline.environmentID, rest.pipeline.pipelineID, rest.pipeline.nodeID);
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
     const createFolderNode = useCreateFolderNodeHook(rest.pipeline, selected);
 
@@ -62,11 +58,11 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Set parent name and id for upload file names
     useEffect(() => {
-        Editor.parentName.set(data.name.get());
-        Editor.parentID.set(data.id.get());
+        Editor.parentName.set(data.name);
+        Editor.parentID.set(data.id);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data.id?.get(), data.name?.get()]);
+    }, [data.id, data.name]);
 
     // Check if selected file changed
     useEffect(() => {
@@ -156,7 +152,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         // Check if enter has being pressed
         if (e.charCode === 13) {
             const check = checkFileName(newFileName);
-            const alreadyExistsFile = findNodeByName(data?.children.attach(Downgraded).get(), newFileName);
+            const alreadyExistsFile = findNodeByName(data?.children, newFileName);
 
             if (!check) return;
             if (alreadyExistsFile) {
@@ -183,12 +179,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
         // Push new file to root children
         //Find the ID first
-        const currentSelectedElement = findNodeById(data.children.attach(Downgraded).get(), selected);
-        if (selected === data.id.get()) {
+        const currentSelectedElement = findNodeById(data.children, selected);
+        if (selected === data.id) {
             // If top level folder
-            let newData = { ...data.attach(Downgraded).get() };
+            let newData = { ...data };
             newData.children.push(newFileMock);
-            data.set(newData);
+            setData(newData);
             selectAndOpenNewFile(newFileMock);
             uploadFileNode();
         } else if (currentSelectedElement && currentSelectedElement.children) {
@@ -229,7 +225,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         // Check if enter has being pressed
         if (e.charCode === 13) {
             const check = checkFolderName(newFolderName);
-            const alreadyExistsFolder = findNodeByName(data?.children.attach(Downgraded).get(), newFolderName);
+            const alreadyExistsFolder = findNodeByName(data?.children, newFolderName);
 
             if (!check) return;
             if (alreadyExistsFolder) {
@@ -253,11 +249,11 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
         // Push new file to root children
         //Find the ID first
-        const currentSelectedElement = findNodeById(data.children.attach(Downgraded).get(), selected);
-        if (selected === data.id.get()) {
-            let newData = { ...data.attach(Downgraded).get() };
+        const currentSelectedElement = findNodeById(data.children, selected);
+        if (selected === data.id) {
+            let newData = { ...data };
             newData.children.push(newFolderMock);
-            data.set(newData);
+            setData(newData);
         } else if (currentSelectedElement && currentSelectedElement.children) {
             currentSelectedElement.children.push(newFolderMock);
             selectAndOpenNewFile(newFolderMock);
@@ -289,12 +285,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     const handleEditKeyPress = (e, nodes) => {
         if (e.charCode === 13) {
-            const folder = isFolder(selected, data.attach(Downgraded).get());
-            const elementToChange = findNodeById(data.children.attach(Downgraded).get(), selected);
+            const folder = isFolder(selected, data);
+            const elementToChange = findNodeById(data.children, selected);
 
             if (folder) {
                 const check = checkFolderName(tmpFileName);
-                const alreadyExistsFolder = findNodeByName(data?.children.attach(Downgraded).get(), tmpFileName);
+                const alreadyExistsFolder = findNodeByName(data?.children, tmpFileName);
 
                 if (!check) {
                     setIsEditing(false);
@@ -319,7 +315,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 }
             } else {
                 const check = checkFileName(tmpFileName);
-                const alreadyExistsFile = findNodeByName(data?.children.attach(Downgraded).get(), tmpFileName);
+                const alreadyExistsFile = findNodeByName(data?.children, tmpFileName);
 
                 if (!check) {
                     setIsEditing(false);
@@ -349,18 +345,51 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // ####### Delete ########
     const handleDeleteIconClick = () => {
-        setIsOpenDelete(true);
+        // Check if it's file or folder
+        const isTryingToDeleteFolder = isFolder(selected, data);
+
+        const current = findNodeById(data.children, selected);
+        let message = `Are you sure you want to delete - ${current?.name}?`;
+
+        if (current?.children && current?.children.length > 0) {
+            message += ` ${current?.children.length} file(s) will be removed!`;
+        }
+
+        const askForConfirmation = window.confirm(message);
+
+        if (askForConfirmation === true) {
+            const removed = removeById(data.children, selected);
+            const newData = { ...data, children: removed };
+            setData(newData);
+
+            // Remove child from tabs
+            if (current?.children && current?.children.length > 0) {
+                const tabs = Editor.tabs.attach(Downgraded).get();
+                const newTabs = removeById(tabs, current.children[0].id);
+                checkLastTab(newTabs);
+            }
+        } else {
+            return;
+        }
+
+        // Remove files from tab
+        if (!isTryingToDeleteFolder) {
+            const tabs = Editor.tabs.attach(Downgraded).get();
+            const newTabs = tabs.filter((t) => t.id !== selected);
+
+            checkLastTab(newTabs);
+        }
     };
 
     // ####### Utils ########
     // Checks if selected folder is expanded
     const expandFolder = () => {
-        if (!selected || selected === data.id.get()) {
-            if (expanded?.filter((id) => id === data.id.get()).length > 0) {
+        if (!selected || selected === data.id) {
+            if (expanded?.filter((id) => id === data.id).length > 0) {
                 return;
             } else {
-                setExpanded([...expanded, data.id.get()]);
-                setSelected(data.id.get());
+                setExpanded([...expanded, data.id]);
+                setSelected(data.id);
             }
         } else {
             if (expanded?.filter((id) => id === selected).length > 0) {
@@ -373,16 +402,16 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Check if it is folder of file
     const checkLevel = () => {
-        if (!selected || selected === data.id.get()) return;
+        if (!selected || selected === data.id) return;
 
-        const selectedInfo = findNodeById(data.children.attach(Downgraded).get(), selected);
+        const selectedInfo = findNodeById(data.children, selected);
         if (selectedInfo) {
             if (selectedInfo.children) {
                 // Is folder\
                 return false;
             } else {
                 // Is file
-                const closestParentID = getParentId(data.children.attach(Downgraded).get(), selected);
+                const closestParentID = getParentId(data.children, selected);
                 closestParentID && setSelected(closestParentID);
             }
         }
@@ -499,7 +528,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                     />
                 }
                 onClick={() => handleFileClick(nodes)}>
-                <Box className={`${nodes.id === data.id?.get() ? 'showOnHover' : ''} hidden_controls tree-${nodes.id}`}>
+                <Box className={`${nodes.id === data.id ? 'showOnHover' : ''} hidden_controls tree-${nodes.id}`}>
                     <IconButton aria-label="Edit File" onClick={handleEdit}>
                         <Box component={FontAwesomeIcon} icon={faPencilAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
                     </IconButton>
@@ -551,7 +580,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         Editor.tabs.set((prevTabs) => [...prevTabs, file]);
 
         // Set file path
-        const path = getPath(data.children.attach(Downgraded).get(), selected);
+        const path = getPath(data.children, selected);
         Editor.currentPath.set(path);
     };
 
@@ -612,22 +641,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
                         p: '0 5px',
                     }}>
-                    {renderTree(data.attach(Downgraded).get())}
+                    {renderTree(data)}
                 </TreeView>
             </Box>
 
             {children}
             <CustomDragHandle left={8} />
-            <Drawer anchor="right" open={isOpenDelete} onClose={() => setIsOpenDelete(!isOpenDelete)}>
-                <DeleteFileFolderDrawer
-                    handleClose={() => {
-                        setIsOpenDelete(false);
-                    }}
-                    data={data}
-                    selected={selected}
-                    nodeID={rest.pipeline.nodeID}
-                />
-            </Drawer>
         </div>
     );
 });
@@ -722,7 +741,7 @@ function CustomTreeItem(props) {
 export default FileManagerColumn;
 
 // ----- Custom hook
-export const useGetFilesNodeHook = (pipeline, data) => {
+export const useGetFilesNodeHook = (pipeline, setData) => {
     const environmentID = pipeline.environmentID;
     const pipelineID = pipeline.pipelineID;
     const nodeID = pipeline.nodeID;
@@ -742,7 +761,7 @@ export const useGetFilesNodeHook = (pipeline, data) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            data.set(prepareForFrontEnd(response));
+            setData(prepareForFrontEnd(response));
         }
     };
 };

@@ -278,9 +278,8 @@ func Setup(port string) *fiber.App {
 	// Download code files
 	app.Get("/app/private/code-files/:fileid", func(c *fiber.Ctx) error {
 		fileID := string(c.Params("fileid"))
-		filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID)
 
-		dat, err := os.ReadFile(config.CodeDirectory + filepath)
+		dat, err := os.ReadFile("../../code-files/" + fileID)
 		if err != nil {
 			if os.Getenv("debug") == "true" {
 				logging.PrintSecretsRedact(err)
