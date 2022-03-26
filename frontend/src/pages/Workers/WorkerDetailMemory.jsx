@@ -1,6 +1,7 @@
 import { Grid, Typography } from '@mui/material';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
 import { useEffect, useState } from 'react';
+import { DateTime } from 'luxon';
 import { Line } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
@@ -9,6 +10,7 @@ export const options = {
     animation: {
         duration: 0,
     },
+    maintainAspectRatio: false,
     interaction: {
         mode: 'index',
         intersect: false,
@@ -27,7 +29,7 @@ export const options = {
             min: 0,
             max: 100,
             ticks: {
-                stepSize: 5,
+                stepSize: 25,
             },
         },
     },
@@ -42,9 +44,9 @@ export default function WorkerDetailMemory({ row }) {
         if (row.value[2]) {
             // If labels length is 5, remove the oldest.
             if (labels.length > 4) {
-                setLabels([...labels.slice(1), timeLabel(row.value[2])]);
+                setLabels([...labels.slice(1), timeLabel(row.value[2], row.value[3])]);
             } else {
-                setLabels([...labels, timeLabel(row.value[2])]);
+                setLabels([...labels, timeLabel(row.value[2], row.value[3])]);
             }
 
             // If dataStrem length is 5, remove the oldest.
@@ -88,7 +90,7 @@ export default function WorkerDetailMemory({ row }) {
             </Grid>
 
             <Grid item>
-                <div style={{ position: 'relative', width: '240px' }}>
+                <div style={{ position: 'relative', width: '290px', height: '130px' }}>
                     <Line options={options} data={chartData} />
                 </div>
             </Grid>
@@ -104,7 +106,6 @@ export default function WorkerDetailMemory({ row }) {
  * @return {string} 27:08
  * @example "2022-01-20T13:27:08Z" => "27:08"
  */
-function timeLabel(dateString) {
-    let dd = new Date(dateString);
-    return `${('0' + dd.getMinutes()).slice(-2)}:${('0' + dd.getSeconds()).slice(-2)}`;
+function timeLabel(dateString, zone) {
+    return DateTime.fromISO(dateString, { zone }).toLocaleString(DateTime.TIME_24_WITH_SECONDS);
 }

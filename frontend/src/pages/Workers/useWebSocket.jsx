@@ -11,23 +11,30 @@ if (loc.protocol === 'https:') {
 }
 new_uri += '//' + loc.host;
 
-// console.log("websockets loc:", new_uri)
-if (process.env.REACT_APP_DATAPLANE_ENV == 'build') {
+if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
     new_uri += process.env.REACT_APP_WEBSOCKET_ENDPOINT;
 } else {
     new_uri = process.env.REACT_APP_WEBSOCKET_ENDPOINT;
 }
 
-// console.log("websockets loc2:", new_uri)
-
 const websocketEndpoint = new_uri;
 
 export default function useWebSocket(workerId) {
-    const [socketResponse, setSocketResponse] = useState([]);
     const reconnectOnClose = useRef(true);
     const ws = useRef(null);
 
+    const [, triggerRender] = useState(1);
+    const response = useRef(null);
+
     const { authToken } = useGlobalAuthState();
+
+    // Trigger a render every second.
+    useEffect(() => {
+        const timer = setInterval(() => {
+            triggerRender((a) => a * -1);
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         function connect() {
@@ -48,7 +55,12 @@ export default function useWebSocket(workerId) {
             };
 
             ws.current.onmessage = (e) => {
-                setSocketResponse(JSON.parse(e.data));
+                const resp = JSON.parse(e.data);
+
+                // Store messages in ref to not trigger a render
+                if (resp.WorkerGroup === workerId) {
+                    response.current = { ...response.current, [resp.WorkerID]: resp };
+                }
             };
         }
 
@@ -58,12 +70,9 @@ export default function useWebSocket(workerId) {
             reconnectOnClose.current = false;
             ws.current.close();
         };
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workerId]);
 
-    // Make sure socket response is matching the worked id requested.
-    if (socketResponse.WorkerGroup === workerId) {
-        return socketResponse;
-    } else {
-        return [];
-    }
+    return response.current;
 }

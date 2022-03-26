@@ -268,7 +268,7 @@ github.com/json-iterator/go
 # github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351
 ## explicit
 github.com/kevinburke/ssh_config
-# github.com/klauspost/compress v1.14.4
+# github.com/klauspost/compress v1.15.0
 ## explicit; go 1.15
 github.com/klauspost/compress/flate
 github.com/klauspost/compress/gzip
@@ -440,7 +440,7 @@ github.com/urfave/cli/v2
 # github.com/valyala/bytebufferpool v1.0.0
 ## explicit
 github.com/valyala/bytebufferpool
-# github.com/valyala/fasthttp v1.33.0
+# github.com/valyala/fasthttp v1.34.0
 ## explicit; go 1.12
 github.com/valyala/fasthttp
 github.com/valyala/fasthttp/fasthttpadaptor
