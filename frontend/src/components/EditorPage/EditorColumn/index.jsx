@@ -107,10 +107,11 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         // If no selection, return
         if (!EditorGlobal.selectedFile.value || EditorGlobal.selectedFile.fType.value !== 'file') return;
 
-        // // If file is newly created, return
-        // if (!EditorGlobal.selectedFile.diffValue.value) {
-        //     return;
-        // }
+        // If it isn't a file, return
+        if (EditorGlobal.selectedFile.fType.value !== 'file') return;
+
+        // If newly created, return
+        if (EditorGlobal.selectedFile.id.value.length < 10) return;
 
         // If selected file already has content, return
         if (EditorGlobal.selectedFile.content.value) {
@@ -123,7 +124,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         ) {
             return;
         }
-
         fetch(`${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}`)
             .then(async (response) => {
                 if (response.status !== 200) {

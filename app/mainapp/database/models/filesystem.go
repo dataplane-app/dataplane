@@ -59,3 +59,24 @@ type CodeGitCommits struct {
 	UpdatedAt  *time.Time `json:"updated_at"`
 	DeletedAt  *time.Time `json:"deleted_at,omitempty"`
 }
+
+func (FolderDeleted) IsEntity() {}
+
+func (FolderDeleted) TableName() string {
+	return "folder_deleted"
+}
+
+type FolderDeleted struct {
+	ID            string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"id"`
+	FileID        string     `gorm:"type:varchar(48);" json:"file_id"`
+	FolderID      string     `gorm:"type:varchar(24);" json:"folder_id"`
+	EnvironmentID string     `gorm:"type:varchar(55); " json:"environment_id"`
+	PipelineID    string     `gorm:"type:varchar(55);" json:"pipeline_id"`
+	NodeID        string     `gorm:"type:varchar(55); " json:"node_id"`
+	FileName      string     `gorm:"type:varchar(255); " json:"file_name"`
+	FolderName    string     `gorm:"type:varchar(255);" json:"folder_name"`
+	FType         string     `json:"f_type"` //folder, file, bin
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     *time.Time `json:"updated_at"`
+	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
+}

@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/google/uuid"
@@ -71,7 +72,149 @@ func (r *mutationResolver) MoveFolderNode(ctx context.Context, folderID string, 
 }
 
 func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID string, folderID string, nodeID string, pipelineID string) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID)
+
+	// Make sure there is a path
+	if strings.TrimSpace(folderpath) == "" {
+		return "", errors.New("Missing folder path.")
+	}
+
+	// 1. ----- Put folder in the trash
+
+	id := uuid.New().String()
+
+	// Get folder name
+	f := models.CodeFolders{}
+	err := database.DBConn.Where("folder_id = ?", folderID).Find(&f).Error
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// Zip and put in trash
+	err = filesystem.ZipSource(config.CodeDirectory+folderpath, config.CodeDirectory+"/trash/"+id+"-"+f.FolderName+".zip")
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// Add to database
+	d := models.FolderDeleted{
+		ID:            id,
+		FolderID:      folderID,
+		FolderName:    f.FolderName,
+		EnvironmentID: environmentID,
+		PipelineID:    pipelineID,
+		NodeID:        nodeID,
+		FType:         "folder",
+	}
+	err = database.DBConn.Create(&d).Error
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// 2. ----- Delete folder and all its contents from directory
+	err = os.RemoveAll(config.CodeDirectory + folderpath)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// 3. ----- Delete folder and all its contents from the database
+
+	// Folder ids of to be deleted folders are stored here. Initialized with the parent folder
+	foldersIDsToDelete := []string{folderID}
+
+	// Initialize recursive function to walk the folder to be deleted
+	// and get ids for all child folders
+	var getFolderIdsFromDB func(folderID string) (string, error)
+
+	fo := []models.CodeFolders{}
+
+	getFolderIdsFromDB = func(folderID string) (string, error) {
+
+		// Get folder's child folders
+		err := database.DBConn.Where("parent_id = ?", folderID).Find(&fo).Error
+		if err != nil {
+			return "", errors.New(err.Error())
+		}
+
+		// Append ids of all child folders to the to be deleted slice
+		for _, item := range fo {
+			foldersIDsToDelete = append(foldersIDsToDelete, item.FolderID)
+		}
+
+		// Recursively re-run the function for all child folders
+		for _, item := range fo {
+			getFolderIdsFromDB(item.FolderID)
+		}
+
+		return "", nil
+
+	}
+
+	getFolderIdsFromDB(folderID)
+
+	// File ids of to be deleted files are stored here.
+	fileIDsToDelete := []string{}
+
+	for _, item := range foldersIDsToDelete {
+		f := []models.CodeFiles{}
+
+		// Find all files in a folder to be deleted
+		err := database.DBConn.Where("folder_id = ?", item).Find(&f).Error
+		if err != nil {
+			return "", errors.New(err.Error())
+		}
+
+		// Append ids of all child files to the to be deleted slice
+		for _, item := range f {
+			fileIDsToDelete = append(fileIDsToDelete, item.FileID)
+		}
+
+	}
+
+	// Delete folders from the database
+	for _, id := range foldersIDsToDelete {
+		f := []models.CodeFolders{}
+
+		err := database.DBConn.Where("folder_id = ?", id).Delete(&f).Error
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Delete folder database error.")
+		}
+	}
+
+	// Delete files from the database
+	for _, id := range fileIDsToDelete {
+		f := []models.CodeFiles{}
+
+		err := database.DBConn.Where("file_id = ?", id).Delete(&f).Error
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Delete file database error.")
+		}
+	}
+
+	return "Success", nil
 }
 
 func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID string, folderID string, nodeID string, pipelineID string, newName string) (string, error) {
@@ -173,7 +316,83 @@ func (r *mutationResolver) UploadFileNode(ctx context.Context, environmentID str
 }
 
 func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	folderpath, _ := filesystem.FileConstructByID(database.DBConn, fileID)
+
+	// Make sure there is a path
+	if strings.TrimSpace(folderpath) == "" {
+		return "", errors.New("Missing folder path.")
+	}
+
+	// 1. ----- Put file in the trash
+
+	id := uuid.New().String()
+
+	// Get file name
+	f := models.CodeFiles{}
+	err := database.DBConn.Where("file_id = ?", fileID).Find(&f).Error
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// Zip and put in trash
+	err = filesystem.ZipSource(config.CodeDirectory+folderpath, config.CodeDirectory+"/trash/"+id+"-"+f.FileName+".zip")
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// Add to database
+	d := models.FolderDeleted{
+		ID:            id,
+		FileID:        fileID,
+		FileName:      f.FileName,
+		EnvironmentID: environmentID,
+		PipelineID:    pipelineID,
+		NodeID:        nodeID,
+		FType:         "file",
+	}
+	err = database.DBConn.Create(&d).Error
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// Delete file from folder
+	filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID)
+
+	err = os.Remove(config.CodeDirectory + filepath)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// Delete file from database
+	f = models.CodeFiles{}
+
+	err = database.DBConn.Where("file_id = ?", fileID).Delete(&f).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete file database error.")
+	}
+
+	return "Success", nil
 }
 
 func (r *mutationResolver) RenameFile(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string, newName string) (string, error) {
