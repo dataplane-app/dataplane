@@ -13,7 +13,7 @@ func FolderConstructByID(db *gorm.DB, id string, environmentID string) (string, 
 
 	var currentFolder models.CodeFolders
 
-	db.Where("folder_id=? and environment_id = ?", id, environmentID).First(&currentFolder)
+	db.Where("folder_id=? and environment_id in (?, ?)", id, environmentID, "d_platform").First(&currentFolder)
 
 	if currentFolder.FolderID != id {
 		return "", errors.New("File record not found.")
