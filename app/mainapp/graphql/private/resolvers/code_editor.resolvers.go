@@ -103,7 +103,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 
 	// Get folder name
 	f := models.CodeFolders{}
-	err := database.DBConn.Where("folder_id = ?", folderID).Find(&f).Error
+	err := database.DBConn.Where("folder_id = ? and environment_id = ?", folderID, environmentID).Find(&f).Error
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
@@ -260,7 +260,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 
 	// Get file name
 	f := models.CodeFiles{}
-	err := database.DBConn.Where("file_id = ?", fileID).Find(&f).Error
+	err := database.DBConn.Where("file_id = ? and environment_id = ?", fileID, environmentID).Find(&f).Error
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
@@ -297,7 +297,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	// Delete file from database
 	f = models.CodeFiles{}
 
-	err = database.DBConn.Where("file_id = ?", fileID).Delete(&f).Error
+	err = database.DBConn.Where("file_id = ? and environment_id = ?", fileID, environmentID).Delete(&f).Error
 
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -356,7 +356,7 @@ func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nod
 
 	fo := []*models.CodeFolders{}
 
-	err := database.DBConn.Where("node_id = ?", nodeID).Find(&fo).Error
+	err := database.DBConn.Where("node_id = ? and environment_id = ?", nodeID, environmentID).Find(&fo).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
@@ -366,7 +366,7 @@ func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nod
 
 	fi := []*models.CodeFiles{}
 
-	err = database.DBConn.Where("node_id = ?", nodeID).Find(&fi).Error
+	err = database.DBConn.Where("node_id = ? and environment_id = ?", nodeID, environmentID).Find(&fi).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
