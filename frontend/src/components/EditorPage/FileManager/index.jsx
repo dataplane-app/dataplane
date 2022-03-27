@@ -781,6 +781,7 @@ const useCreateFolderNodeHook = (pipeline, selected) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Folder saved.', { variant: 'success' });
+            EditorGlobal.selectedFile.id.set(response.folderID);
             EditorGlobal.selectedFile.isEditing.set(false);
         }
     };
