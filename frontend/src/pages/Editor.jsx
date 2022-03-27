@@ -8,9 +8,12 @@ import Navbar from '../components/Navbar';
 import { lgLayout, mdLayout, smLayout, xsLayout, xxsLayout } from '../utils/editorLayouts';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import { Downgraded } from '@hookstate/core';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
+import { useSnackbar } from 'notistack';
+import { useGetPipeline } from '../graphql/getPipeline';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -28,10 +31,22 @@ export const globalEditorState = createState({
 export const useGlobalEditorState = () => useHookState(globalEditorState);
 
 const PipelineEditor = () => {
+    const Environment = useGlobalEnvironmentState();
+
     // Hooks
     const history = useHistory();
     const EditorGlobal = useGlobalEditorState();
-    const { state: pipeline } = useLocation();
+    const state = useLocation();
+
+    const search = state.search === '' ? state.pathname : state.search;
+    const searchParams = new URLSearchParams(search);
+    const nodeName = searchParams.get('nodeName');
+    const nodeID = searchParams.get('nodeID');
+    const pipelineID = searchParams.get('pipelineID');
+
+    const [pipeline, setPipeline] = useState({});
+
+    const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
     const editorRef = useRef(null);
 
@@ -48,10 +63,16 @@ const PipelineEditor = () => {
     };
 
     useEffect(() => {
+        if (!Environment.id.get()) return;
         window.addEventListener('beforeunload', handleUnload);
+        setPipeline((p) => ({ nodeName, nodeID, pipelineID }));
+
+        getPipeline(pipelineID);
 
         return () => window.removeEventListener('beforeunload', handleUnload);
-    }, []);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [Environment.id.get()]);
 
     const handleSave = () => {
         // Save code here
@@ -92,28 +113,52 @@ const PipelineEditor = () => {
                 </Grid>
             </Grid>
 
-            <Box sx={{ minHeight: 'calc(100vh - 150px)', position: 'relative' }}>
-                <Box>
-                    <ResponsiveGridLayout
-                        draggableHandle=".drag-handle"
-                        onLayoutChange={(e, _) => console.log('Change layout', e, _)}
-                        isDraggable={true}
-                        verticalCompact
-                        measureBeforeMount={true}
-                        onResizeStop={(e, _) => console.log('Resize', e, _)}
-                        compactType="vertical"
-                        layouts={layouts}
-                        breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-                        cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}>
-                        <FileManagerColumn key="1" pipeline={pipeline} />
-                        {/* <PackageColumn key="2" /> */}
-                        <EditorColumn key="3" ref={editorRef} pipeline={pipeline} />
-                        <LogsColumn key="4" />
-                    </ResponsiveGridLayout>
+            {pipeline.environmentID ? (
+                <Box sx={{ minHeight: 'calc(100vh - 150px)', position: 'relative' }}>
+                    <Box>
+                        <ResponsiveGridLayout
+                            draggableHandle=".drag-handle"
+                            onLayoutChange={(e, _) => console.log('Change layout', e, _)}
+                            isDraggable={true}
+                            verticalCompact
+                            measureBeforeMount={true}
+                            onResizeStop={(e, _) => console.log('Resize', e, _)}
+                            compactType="vertical"
+                            layouts={layouts}
+                            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+                            cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}>
+                            <FileManagerColumn key="1" pipeline={pipeline} />
+                            {/* <PackageColumn key="2" /> */}
+                            <EditorColumn key="3" ref={editorRef} pipeline={pipeline} />
+                            <LogsColumn key="4" />
+                        </ResponsiveGridLayout>
+                    </Box>
                 </Box>
-            </Box>
+            ) : null}
         </Box>
     );
 };
 
 export default PipelineEditor;
+
+// ------ Custom hooks
+const useGetPipelineHook = (environmentID, setPipeline) => {
+    // GraphQL hook
+    const getPipeline = useGetPipeline();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get members
+    return async (pipelineID) => {
+        const response = await getPipeline({ pipelineID, environmentID });
+
+        if (response.r === 'error') {
+            closeSnackbar();
+            enqueueSnackbar("Can't get pipeline: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setPipeline((p) => ({ ...p, ...response }));
+        }
+    };
+};

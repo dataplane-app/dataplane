@@ -124,7 +124,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         ) {
             return;
         }
-        fetch(`${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}`)
+        fetch(`${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}?environment_id=${rest.pipeline.environmentID}`)
             .then(async (response) => {
                 if (response.status !== 200) {
                     const error = (response && response.statusText) || response.status;
@@ -181,7 +181,10 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                     key={tabs.id}
                                     sx={{
                                         border: '1px solid #B9B9B9',
-                                        color: (theme) => theme.palette.editorPage.tabTextColorNotActive,
+                                        color: (theme) =>
+                                            EditorGlobal.selectedFile.get()?.id === tabs.id
+                                                ? theme.palette.editorPage.tabTextColor
+                                                : theme.palette.editorPage.tabTextColorNotActive,
                                         cursor: 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
@@ -204,7 +207,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 {EditorGlobal.tabs.get().length > 0 && EditorGlobal.selectedFile.get() && Object.keys(EditorGlobal.selectedFile.attach(Downgraded).get().length > 0) ? (
                     <Grid container alignItems="center" justifyContent="space-between" sx={{ p: '6px 15px', border: '1px solid #B9B9B9', mb: 2 }}>
                         <Typography fontSize={15}>
-                            {rest.pipeline.nodeName} {'>'} code-files {'>'} clear_the_logs.py
+                            code-files {'>'} {rest.pipeline.nodeName} {'>'} clear_the_logs.py
                         </Typography>
 
                         <Box>
@@ -234,9 +237,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         saveViewState
                         onChange={handleEditorChange}
                         options={{
-                            minimap: {
-                                enabled: false,
-                            },
+                            minimap: { enabled: false },
+                            hideCursorInOverviewRuler: { enabled: true },
                         }}
                     />
                 ) : (
@@ -280,6 +282,7 @@ export const useUploadFileNodeHook = (pipeline) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('File saved.', { variant: 'success' });
+            EditorGlobal.selectedFile.id.set(response);
             EditorGlobal.selectedFile.isEditing.set(false);
         }
     };

@@ -19,8 +19,6 @@ import { useCreateFolderNode } from '../../../graphql/createFolderNode';
 import { useUploadFileNodeHook } from '../EditorColumn';
 import DeleteFileFolderDrawer from '../../DrawerContent/DeleteFileFolderDrawer';
 
-const MOCK_ROOT_ID = 'all';
-
 const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
@@ -50,7 +48,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const editingFileRef = useRef();
 
     // Graphql hook
-    const getFilesNode = useGetFilesNodeHook(rest.pipeline, data);
+    const getFilesNode = useGetFilesNodeHook(rest.pipeline, data, setExpanded);
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
     const createFolderNode = useCreateFolderNodeHook(rest.pipeline, selected);
 
@@ -98,6 +96,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Mui Tree functions
     const handleToggle = (event, nodeIds) => {
+        if (event.target.checked === undefined) return;
         setExpanded(nodeIds);
     };
 
@@ -137,7 +136,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // File
     // Triggers when user click on the new file icon
-    const handleNewFileIconClick = () => {
+    const handleNewFileIconClick = (id) => {
         setIsAddingNew(true);
         setWhatTypeIsCreating('file');
 
@@ -148,7 +147,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         }, 100);
 
         checkLevel();
-        expandFolder();
+        expandFolder(id);
     };
 
     // Triggers when the user is typing a file name
@@ -210,7 +209,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Folder
     // Triggers when user click on the new folder icon
-    const handleNewFolderIconClick = () => {
+    const handleNewFolderIconClick = (id) => {
         setIsAddingNew(true);
         setWhatTypeIsCreating('folder');
 
@@ -221,7 +220,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         }, 100);
 
         checkLevel();
-        expandFolder();
+        expandFolder(id);
     };
 
     // Triggers when the user is typing a folder name
@@ -276,8 +275,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     };
 
     // ####### Edit ########
-    const handleEdit = () => {
-        changeTreeStyling();
+    const handleEdit = (id) => {
+        changeTreeStyling(id);
         setIsEditing(true);
     };
 
@@ -354,21 +353,9 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // ####### Utils ########
     // Checks if selected folder is expanded
-    const expandFolder = () => {
-        if (!selected || selected === data.id.get()) {
-            if (expanded?.filter((id) => id === data.id.get()).length > 0) {
-                return;
-            } else {
-                setExpanded([...expanded, data.id.get()]);
-                setSelected(data.id.get());
-            }
-        } else {
-            if (expanded?.filter((id) => id === selected).length > 0) {
-                return;
-            } else {
-                setExpanded([...expanded, selected]);
-            }
-        }
+    const expandFolder = (id) => {
+        setExpanded([...expanded, id]);
+        setSelected(id);
     };
 
     // Check if it is folder of file
@@ -448,8 +435,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         return folderName;
     };
 
-    const changeTreeStyling = () => {
-        const currentDOMElement = document.getElementById(`file_${selected}`);
+    const changeTreeStyling = (id) => {
+        const currentDOMElement = document.getElementById(`file_${id}`);
 
         if (currentDOMElement && !isEditing) {
             currentDOMElement.focus();
@@ -459,60 +446,73 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         }
     };
 
-    const checkLastTab = (newTabs) => {
-        if (newTabs.length === 0) {
-            Editor.selectedFile.set(null);
-        } else {
-            Editor.selectedFile.set(newTabs[newTabs.length - 1]);
-        }
+    // const checkLastTab = (newTabs) => {
+    //     if (newTabs.length === 0) {
+    //         Editor.selectedFile.set(null);
+    //     } else {
+    //         Editor.selectedFile.set(newTabs[newTabs.length - 1]);
+    //     }
 
-        Editor.tabs.set(newTabs);
-    };
+    //     Editor.tabs.set(newTabs);
+    // };
 
     // Render files and folders to UI
     const renderTree = (nodes) => {
         return (
             <CustomTreeItem
-                className="tree_parent"
+                className={nodes.id === data.id.get() ? 'hidden' : 'tree_parent'}
                 sx={{ mt: 0.5, position: 'relative' }}
                 icon={!nodes.children && <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.tabTextColorNotActive', fontSize: 5 }} />}
                 key={nodes.id}
                 nodeId={nodes.id}
                 ref={selected === nodes.id ? editingFileRef : null}
                 label={
-                    <input
-                        id={`file_${nodes.id}`}
-                        spellcheck="false"
-                        value={tmpFileName && selected === nodes.id ? tmpFileName : tmpFileName === '' && selected === nodes.id ? '' : nodes.name}
-                        onChange={(e) => handleEditFileChange(e, nodes)}
-                        onKeyPress={(e) => handleEditKeyPress(e, nodes)}
-                        className="treeItemInput"
-                        style={{
-                            border: `${selected === nodes.id && isEditing ? '1px solid #000' : 'none'}`,
-                            outline: 'none',
-                            background: 'transparent',
-                            color: `${selected === nodes.id && isEditing ? '#000' : 'transparent'}`,
-                            textShadow: '0 0 0 #000',
-                            cursor: 'pointer',
-                        }}
-                        readOnly={selected !== nodes.id && !isEditing}
-                    />
+                    <>
+                        <input
+                            id={`file_${nodes.id}`}
+                            spellcheck="false"
+                            value={tmpFileName && selected === nodes.id ? tmpFileName : tmpFileName === '' && selected === nodes.id ? '' : nodes.name}
+                            onChange={(e) => handleEditFileChange(e, nodes)}
+                            onKeyPress={(e) => handleEditKeyPress(e, nodes)}
+                            className="treeItemInput"
+                            style={{
+                                border: `${selected === nodes.id && isEditing ? '1px solid #000' : 'none'}`,
+                                outline: 'none',
+                                background: 'transparent',
+                                color: `${selected === nodes.id && isEditing ? '#000' : 'transparent'}`,
+                                textShadow: '0 0 0 #000',
+                                cursor: 'pointer',
+                                paddingLeft: '25px',
+                                marginLeft: '-25px',
+                            }}
+                            readOnly={selected !== nodes.id && !isEditing}
+                        />
+                        <Box className={`showOnHover hidden_controls tree-${nodes.id}`} sx={{ opacity: 0, '&:hover': { opacity: 1 }, paddingLeft: '100px' }}>
+                            <IconButton
+                                aria-label="Edit File"
+                                onClick={() => {
+                                    setSelected(nodes.id);
+                                    handleEdit(nodes.id);
+                                }}>
+                                <Box component={FontAwesomeIcon} icon={faPencilAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
+                            </IconButton>
+                            {nodes.fType !== 'file' ? (
+                                <IconButton aria-label="New File" onClick={() => handleNewFileIconClick(nodes.id)}>
+                                    <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
+                                </IconButton>
+                            ) : null}
+                            {nodes.fType !== 'file' ? (
+                                <IconButton aria-label="New Folder" onClick={() => handleNewFolderIconClick(nodes.id)}>
+                                    <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
+                                </IconButton>
+                            ) : null}
+                            <IconButton aria-label="Remove folder" onClick={handleDeleteIconClick}>
+                                <Box component={FontAwesomeIcon} icon={faTimes} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
+                            </IconButton>
+                        </Box>
+                    </>
                 }
                 onClick={() => handleFileClick(nodes)}>
-                <Box className={`${nodes.id === data.id?.get() ? 'showOnHover' : ''} hidden_controls tree-${nodes.id}`}>
-                    <IconButton aria-label="Edit File" onClick={handleEdit}>
-                        <Box component={FontAwesomeIcon} icon={faPencilAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
-                    </IconButton>
-                    <IconButton aria-label="New File" onClick={handleNewFileIconClick}>
-                        <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
-                    </IconButton>
-                    <IconButton aria-label="New Folder" onClick={handleNewFolderIconClick}>
-                        <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
-                    </IconButton>
-                    <IconButton aria-label="Remove folder" onClick={handleDeleteIconClick}>
-                        <Box component={FontAwesomeIcon} icon={faTimes} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
-                    </IconButton>
-                </Box>
                 {Array.isArray(nodes.children)
                     ? nodes.children.map((node) => {
                           return renderTree(node);
@@ -587,10 +587,10 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                         Files
                     </Typography>
                     <Grid item display="flex" alignItems="center">
-                        <IconButton aria-label="New File" onClick={handleNewFileIconClick}>
+                        <IconButton aria-label="New File" onClick={() => handleNewFileIconClick(data.id.get())}>
                             <Box component={FontAwesomeIcon} icon={faFile} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
                         </IconButton>
-                        <IconButton aria-label="New Folder" onClick={handleNewFolderIconClick}>
+                        <IconButton aria-label="New Folder" onClick={() => handleNewFolderIconClick(data.id.get())}>
                             <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
                         </IconButton>
                     </Grid>
@@ -609,7 +609,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                         flexGrow: 1,
                         maxWidth: 400,
                         overflowY: 'auto',
-
                         p: '0 5px',
                     }}>
                     {renderTree(data.attach(Downgraded).get())}
@@ -626,6 +625,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                     data={data}
                     selected={selected}
                     nodeID={rest.pipeline.nodeID}
+                    pipelineID={rest.pipeline.pipelineID}
                 />
             </Drawer>
         </div>
@@ -698,11 +698,11 @@ export const FILES_STRUCTURE_MOCK = [
     },
 ];
 
-const MOCK_DATA = {
-    id: MOCK_ROOT_ID,
-    name: 'Files',
-    children: FILES_STRUCTURE_MOCK,
-};
+// const MOCK_DATA = {
+//     id: MOCK_ROOT_ID,
+//     name: 'Files',
+//     children: FILES_STRUCTURE_MOCK,
+// };
 
 function CustomTreeItem(props) {
     const { label, ...other } = props;
@@ -722,7 +722,7 @@ function CustomTreeItem(props) {
 export default FileManagerColumn;
 
 // ----- Custom hook
-export const useGetFilesNodeHook = (pipeline, data) => {
+export const useGetFilesNodeHook = (pipeline, data, setExpanded) => {
     const environmentID = pipeline.environmentID;
     const pipelineID = pipeline.pipelineID;
     const nodeID = pipeline.nodeID;
@@ -742,7 +742,9 @@ export const useGetFilesNodeHook = (pipeline, data) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            data.set(prepareForFrontEnd(response));
+            const resp = prepareForFrontEnd(response);
+            data.set(resp);
+            setExpanded([resp.id]);
         }
     };
 };
@@ -780,6 +782,7 @@ const useCreateFolderNodeHook = (pipeline, selected) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Folder saved.', { variant: 'success' });
+            EditorGlobal.selectedFile.id.set(response.folderID);
             EditorGlobal.selectedFile.isEditing.set(false);
         }
     };

@@ -320,7 +320,13 @@ func (r *mutationResolver) UploadFileNode(ctx context.Context, environmentID str
 		return "", errors.New("Failed to save file.")
 	}
 
-	return "Success", nil
+	f := models.CodeFiles{}
+	err = database.DBConn.Where("file_name = ? and folder_id = ? and environment_id = ?", file.Filename, folderID, environmentID).Find(&f).Error
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	return f.FileID, nil
 }
 
 func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string) (string, error) {
