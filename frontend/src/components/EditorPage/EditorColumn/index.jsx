@@ -237,9 +237,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         saveViewState
                         onChange={handleEditorChange}
                         options={{
-                            minimap: {
-                                enabled: false,
-                            },
+                            minimap: { enabled: false },
+                            hideCursorInOverviewRuler: { enabled: true },
                         }}
                     />
                 ) : (
