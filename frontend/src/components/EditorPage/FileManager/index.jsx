@@ -19,8 +19,6 @@ import { useCreateFolderNode } from '../../../graphql/createFolderNode';
 import { useUploadFileNodeHook } from '../EditorColumn';
 import DeleteFileFolderDrawer from '../../DrawerContent/DeleteFileFolderDrawer';
 
-const MOCK_ROOT_ID = 'all';
-
 const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
@@ -448,15 +446,15 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         }
     };
 
-    const checkLastTab = (newTabs) => {
-        if (newTabs.length === 0) {
-            Editor.selectedFile.set(null);
-        } else {
-            Editor.selectedFile.set(newTabs[newTabs.length - 1]);
-        }
+    // const checkLastTab = (newTabs) => {
+    //     if (newTabs.length === 0) {
+    //         Editor.selectedFile.set(null);
+    //     } else {
+    //         Editor.selectedFile.set(newTabs[newTabs.length - 1]);
+    //     }
 
-        Editor.tabs.set(newTabs);
-    };
+    //     Editor.tabs.set(newTabs);
+    // };
 
     // Render files and folders to UI
     const renderTree = (nodes) => {
@@ -484,6 +482,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                                 color: `${selected === nodes.id && isEditing ? '#000' : 'transparent'}`,
                                 textShadow: '0 0 0 #000',
                                 cursor: 'pointer',
+                                paddingLeft: '25px',
+                                marginLeft: '-25px',
                             }}
                             readOnly={selected !== nodes.id && !isEditing}
                         />
@@ -697,11 +697,11 @@ export const FILES_STRUCTURE_MOCK = [
     },
 ];
 
-const MOCK_DATA = {
-    id: MOCK_ROOT_ID,
-    name: 'Files',
-    children: FILES_STRUCTURE_MOCK,
-};
+// const MOCK_DATA = {
+//     id: MOCK_ROOT_ID,
+//     name: 'Files',
+//     children: FILES_STRUCTURE_MOCK,
+// };
 
 function CustomTreeItem(props) {
     const { label, ...other } = props;
