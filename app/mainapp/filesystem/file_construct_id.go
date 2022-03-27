@@ -7,16 +7,16 @@ import (
 	"gorm.io/gorm"
 )
 
-func FileConstructByID(db *gorm.DB, id string) (string, error) {
+func FileConstructByID(db *gorm.DB, id string, environmentID string) (string, error) {
 	var currentFile models.CodeFiles
 
-	db.Where("file_id=?", id).First(&currentFile)
+	db.Select("file_name").Where("file_id=? and environment_id = ?", id, environmentID).First(&currentFile)
 
 	fileName := currentFile.FileName
 	folderID := currentFile.FolderID
 
 	// Folder
-	folderPath, _ := FolderConstructByID(database.DBConn, folderID)
+	folderPath, _ := FolderConstructByID(database.DBConn, folderID, environmentID)
 
 	return folderPath + fileName, nil
 }

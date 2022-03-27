@@ -7,13 +7,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func FolderConstructByID(db *gorm.DB, id string) (string, error) {
+func FolderConstructByID(db *gorm.DB, id string, environmentID string) (string, error) {
 
 	var filepath string
 
 	var currentFolder models.CodeFolders
 
-	db.Where("folder_id=?", id).First(&currentFolder)
+	// Needs to check that environment id is matched for security but equally when it reaches platform level is not excluded.
+	db.Where("folder_id=? and environment_id in (?, ?)", id, environmentID, "d_platform").First(&currentFolder)
 
 	if currentFolder.FolderID != id {
 		return "", errors.New("File record not found.")

@@ -80,7 +80,7 @@ const PipelineEditor = () => {
 
             <Grid container alignItems="center" justifyContent="space-between" mt={5} mb={1} sx={{ pr: 2, pl: 2 }}>
                 <Typography variant="h3">
-                    Code {'>'} {pipeline?.name}
+                    Code {'>'} {pipeline?.name} {'>'} {pipeline?.nodeName}
                 </Typography>
                 <Grid item sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
                     {/* <Button variant="contained" onClick={handleSave}>

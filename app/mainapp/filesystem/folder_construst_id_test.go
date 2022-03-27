@@ -10,7 +10,7 @@ import (
 
 /*
 Run Super secret squirrel function test
-go test -count=1 -timeout 30s -v -run ^TestFolderConstructByID$ dataplane/mainapp/utilities
+go test -count=1 -timeout 30s -v -run ^TestFolderConstructByID$ dataplane/mainapp/filesystem
 */
 func TestFolderConstructByID(t *testing.T) {
 
@@ -19,7 +19,7 @@ func TestFolderConstructByID(t *testing.T) {
 	id := "qAVAMSVX5z"
 
 	start := time.Now()
-	output, err := FolderConstructByID(database.DBConn, id)
+	output, err := FolderConstructByID(database.DBConn, id, id)
 
 	log.Println("Folder construct error:", err)
 
