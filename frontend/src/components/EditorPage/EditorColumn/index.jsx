@@ -124,7 +124,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         ) {
             return;
         }
-        fetch(`${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}`)
+        fetch(`${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}?environment_id=${rest.pipeline.environmentID}`)
             .then(async (response) => {
                 if (response.status !== 200) {
                     const error = (response && response.statusText) || response.status;
