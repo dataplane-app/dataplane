@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -296,6 +296,7 @@ func (r *mutationResolver) UploadFileNode(ctx context.Context, environmentID str
 	file.File.Read(p)
 
 	input := models.CodeFiles{
+		PipelineID:    pipelineID,
 		EnvironmentID: environmentID,
 		NodeID:        nodeID,
 		FileName:      file.Filename,
