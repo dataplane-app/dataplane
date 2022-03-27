@@ -625,6 +625,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                     data={data}
                     selected={selected}
                     nodeID={rest.pipeline.nodeID}
+                    pipelineID={rest.pipeline.pipelineID}
                 />
             </Drawer>
         </div>

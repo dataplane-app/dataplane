@@ -11,7 +11,7 @@ import { useDeleteFolderNode } from '../../../graphql/deleteFolderNode';
 import { useParams } from 'react-router-dom';
 import { useDeleteFileNode } from '../../../graphql/deleteFileNode';
 
-const DeleteFileFolderDrawer = ({ handleClose, data, selected, nodeID }) => {
+const DeleteFileFolderDrawer = ({ handleClose, data, selected, nodeID, pipelineID }) => {
     const Editor = useGlobalEditorState();
 
     const { closeSnackbar } = useSnackbar();
@@ -30,8 +30,8 @@ const DeleteFileFolderDrawer = ({ handleClose, data, selected, nodeID }) => {
     }, []);
 
     // Graphql hooks
-    const deleteFolder = useDeleteFolderNodeHook(nodeID, selected);
-    const deleteFile = useDeleteFileNodeHook(nodeID, selected);
+    const deleteFolder = useDeleteFolderNodeHook(nodeID, selected, pipelineID);
+    const deleteFile = useDeleteFileNodeHook(nodeID, selected, pipelineID);
 
     const handleDelete = async () => {
         // Delete from the database
@@ -111,21 +111,18 @@ const DeleteFileFolderDrawer = ({ handleClose, data, selected, nodeID }) => {
 export default DeleteFileFolderDrawer;
 
 // ------ Custom hooks
-const useDeleteFolderNodeHook = (nodeID, selected) => {
+const useDeleteFolderNodeHook = (nodeID, selected, pipelineID) => {
     // GraphQL hook
     const deleteFolder = useDeleteFolderNode();
 
     // Global environment state
     const Environment = useGlobalEnvironmentState();
 
-    // URI parameter
-    const { pipelineId } = useParams();
-
     const { enqueueSnackbar } = useSnackbar();
 
     // Delete folder
     return async () => {
-        const response = await deleteFolder({ environmentID: Environment.id.get(), pipelineID: pipelineId, nodeID, folderID: selected });
+        const response = await deleteFolder({ environmentID: Environment.id.get(), pipelineID, nodeID, folderID: selected });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't delete folder: " + (response.msg || response.r || response.error), { variant: 'error' });
@@ -138,21 +135,18 @@ const useDeleteFolderNodeHook = (nodeID, selected) => {
     };
 };
 
-const useDeleteFileNodeHook = (nodeID, selected) => {
+const useDeleteFileNodeHook = (nodeID, selected, pipelineID) => {
     // GraphQL hook
     const deleteFile = useDeleteFileNode();
 
     // Global environment state
     const Environment = useGlobalEnvironmentState();
 
-    // URI parameter
-    const { pipelineId } = useParams();
-
     const { enqueueSnackbar } = useSnackbar();
 
     // Delete file
     return async () => {
-        const response = await deleteFile({ environmentID: Environment.id.get(), pipelineID: pipelineId, nodeID, fileID: selected });
+        const response = await deleteFile({ environmentID: Environment.id.get(), pipelineID, nodeID, fileID: selected });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't delete file: " + (response.msg || response.r || response.error), { variant: 'error' });

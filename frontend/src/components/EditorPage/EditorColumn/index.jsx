@@ -283,6 +283,7 @@ export const useUploadFileNodeHook = (pipeline) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('File saved.', { variant: 'success' });
+            EditorGlobal.selectedFile.id.set(response);
             EditorGlobal.selectedFile.isEditing.set(false);
         }
     };
