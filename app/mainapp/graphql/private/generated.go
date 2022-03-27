@@ -63,6 +63,18 @@ type ComplexityRoot struct {
 		ResourceID func(childComplexity int) int
 	}
 
+	CERun struct {
+		CreatedAt     func(childComplexity int) int
+		EndedAt       func(childComplexity int) int
+		EnvironmentID func(childComplexity int) int
+		FileID        func(childComplexity int) int
+		NodeID        func(childComplexity int) int
+		RunID         func(childComplexity int) int
+		RunJSON       func(childComplexity int) int
+		Status        func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
+	}
+
 	CodeFiles struct {
 		Active   func(childComplexity int) int
 		FType    func(childComplexity int) int
@@ -125,8 +137,12 @@ type ComplexityRoot struct {
 		PipelinePermissionsToUser        func(childComplexity int, environmentID string, resourceID string, access []string, userID string) int
 		RemoveUserFromAccessGroup        func(childComplexity int, userID string, accessGroupID string, environmentID string) int
 		RemoveUserFromEnvironment        func(childComplexity int, userID string, environmentID string) int
-		RenameFolder                     func(childComplexity int, environmentID string, folderID string, nodeID string, pipelineID string) int
+		RenameFile                       func(childComplexity int, environmentID string, fileID string, nodeID string, pipelineID string, newName string) int
+		RenameFolder                     func(childComplexity int, environmentID string, folderID string, nodeID string, pipelineID string, newName string) int
+		RunCEFile                        func(childComplexity int, pipelineID string, nodeID string, fileID string, environmentID string) int
+		RunCENode                        func(childComplexity int, pipelineID string, nodeID string, fileID string, environmentID string) int
 		RunPipelines                     func(childComplexity int, pipelineID string, environmentID string) int
+		StopCERun                        func(childComplexity int, pipelineID string, runID string, environmentID string) int
 		StopPipelines                    func(childComplexity int, pipelineID string, runID string, environmentID string) int
 		TurnOnOffPipeline                func(childComplexity int, environmentID string, pipelineID string, online bool) int
 		UpdateAccessGroup                func(childComplexity int, input *AccessGroupsInput) int
@@ -396,11 +412,15 @@ type MutationResolver interface {
 	CreateFolderNode(ctx context.Context, input *FolderNodeInput) (*models.CodeFolders, error)
 	MoveFolderNode(ctx context.Context, folderID string, toFolderID string, environmentID string, pipelineID string) (string, error)
 	DeleteFolderNode(ctx context.Context, environmentID string, folderID string, nodeID string, pipelineID string) (string, error)
-	RenameFolder(ctx context.Context, environmentID string, folderID string, nodeID string, pipelineID string) (string, error)
+	RenameFolder(ctx context.Context, environmentID string, folderID string, nodeID string, pipelineID string, newName string) (string, error)
 	UploadFileNode(ctx context.Context, environmentID string, nodeID string, pipelineID string, folderID string, file graphql.Upload) (string, error)
 	DeleteFileNode(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string) (string, error)
+	RenameFile(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string, newName string) (string, error)
 	MoveFileNode(ctx context.Context, fileID string, toFolderID string, environmentID string, pipelineID string) (string, error)
 	CodeEditorRun(ctx context.Context, environmentID string, nodeID string, pipelineID string, path string) (string, error)
+	RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string) (*CERun, error)
+	RunCENode(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string) (*CERun, error)
+	StopCERun(ctx context.Context, pipelineID string, runID string, environmentID string) (string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 	PipelinePermissionsToUser(ctx context.Context, environmentID string, resourceID string, access []string, userID string) (string, error)
@@ -559,6 +579,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AvailablePermissions.ResourceID(childComplexity), true
+
+	case "CERun.created_at":
+		if e.complexity.CERun.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.CERun.CreatedAt(childComplexity), true
+
+	case "CERun.ended_at":
+		if e.complexity.CERun.EndedAt == nil {
+			break
+		}
+
+		return e.complexity.CERun.EndedAt(childComplexity), true
+
+	case "CERun.environment_id":
+		if e.complexity.CERun.EnvironmentID == nil {
+			break
+		}
+
+		return e.complexity.CERun.EnvironmentID(childComplexity), true
+
+	case "CERun.file_id":
+		if e.complexity.CERun.FileID == nil {
+			break
+		}
+
+		return e.complexity.CERun.FileID(childComplexity), true
+
+	case "CERun.node_id":
+		if e.complexity.CERun.NodeID == nil {
+			break
+		}
+
+		return e.complexity.CERun.NodeID(childComplexity), true
+
+	case "CERun.run_id":
+		if e.complexity.CERun.RunID == nil {
+			break
+		}
+
+		return e.complexity.CERun.RunID(childComplexity), true
+
+	case "CERun.run_json":
+		if e.complexity.CERun.RunJSON == nil {
+			break
+		}
+
+		return e.complexity.CERun.RunJSON(childComplexity), true
+
+	case "CERun.status":
+		if e.complexity.CERun.Status == nil {
+			break
+		}
+
+		return e.complexity.CERun.Status(childComplexity), true
+
+	case "CERun.updated_at":
+		if e.complexity.CERun.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.CERun.UpdatedAt(childComplexity), true
 
 	case "CodeFiles.active":
 		if e.complexity.CodeFiles.Active == nil {
@@ -1002,6 +1085,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RemoveUserFromEnvironment(childComplexity, args["user_id"].(string), args["environment_id"].(string)), true
 
+	case "Mutation.renameFile":
+		if e.complexity.Mutation.RenameFile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_renameFile_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RenameFile(childComplexity, args["environmentID"].(string), args["fileID"].(string), args["nodeID"].(string), args["pipelineID"].(string), args["newName"].(string)), true
+
 	case "Mutation.renameFolder":
 		if e.complexity.Mutation.RenameFolder == nil {
 			break
@@ -1012,7 +1107,31 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RenameFolder(childComplexity, args["environmentID"].(string), args["folderID"].(string), args["nodeID"].(string), args["pipelineID"].(string)), true
+		return e.complexity.Mutation.RenameFolder(childComplexity, args["environmentID"].(string), args["folderID"].(string), args["nodeID"].(string), args["pipelineID"].(string), args["newName"].(string)), true
+
+	case "Mutation.runCEFile":
+		if e.complexity.Mutation.RunCEFile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_runCEFile_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RunCEFile(childComplexity, args["pipelineID"].(string), args["nodeID"].(string), args["fileID"].(string), args["environmentID"].(string)), true
+
+	case "Mutation.runCENode":
+		if e.complexity.Mutation.RunCENode == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_runCENode_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RunCENode(childComplexity, args["pipelineID"].(string), args["nodeID"].(string), args["fileID"].(string), args["environmentID"].(string)), true
 
 	case "Mutation.runPipelines":
 		if e.complexity.Mutation.RunPipelines == nil {
@@ -1025,6 +1144,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.RunPipelines(childComplexity, args["pipelineID"].(string), args["environmentID"].(string)), true
+
+	case "Mutation.stopCERun":
+		if e.complexity.Mutation.StopCERun == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_stopCERun_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.StopCERun(childComplexity, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string)), true
 
 	case "Mutation.stopPipelines":
 		if e.complexity.Mutation.StopPipelines == nil {
@@ -2945,7 +3076,7 @@ extend type Query {
   """
 	Get a node's file structure.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): CodeTree
 }
@@ -2954,58 +3085,101 @@ extend type Mutation {
   """
 	Create a folder structure.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   createFolderNode(input:FolderNodeInput): CodeFolders!
 
     """
 	Move a folder structure.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   moveFolderNode(folderID: String!, toFolderID: String!, environmentID: String!, pipelineID: String!): String!
 
     """
 	Delete a node's folder structure.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   deleteFolderNode(environmentID: String!, folderID: String!, nodeID: String!, pipelineID: String!): String!
 
     """
 	Rename a folder.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
-  renameFolder(environmentID: String!, folderID: String!, nodeID: String!, pipelineID: String!): String!
+  renameFolder(environmentID: String!, folderID: String!, nodeID: String!, pipelineID: String!, newName: String!): String!
 
   """
 	Upload a node file.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   uploadFileNode(environmentID: String!, nodeID: String!, pipelineID: String!, folderID: String!, file:Upload!): String!
 
     """
 	Delete a file.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   deleteFileNode(environmentID: String!, fileID: String!, nodeID: String!, pipelineID: String!): String!
 
-	"""
-	Move a file.
+  """
+	Rename a file.
 	+ **Route**: Private
     + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+	"""
+  renameFile(environmentID: String!, fileID: String!, nodeID: String!, pipelineID: String!, newName: String!): String!
+
+  """
+	Move a file.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   moveFileNode(fileID: String! toFolderID: String!, environmentID: String!, pipelineID: String!): String!
 
   """
 	Run script.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   codeEditorRun(environmentID: String!, nodeID: String!, pipelineID: String!, path:String!): String!
+}
+`, BuiltIn: false},
+	{Name: "resolvers/code_editor_run.graphqls", Input: `
+type CERun {
+    run_id: String!
+    node_id: String!
+    file_id: String!
+    status: String!
+    environment_id: String!
+    run_json: Any!
+    created_at: Time!
+    ended_at: Time
+    updated_at: Time
+}
+
+extend type Mutation {
+    """
+    Run code editor file.
+    + **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
+    """
+    runCEFile(pipelineID: String!, nodeID: String!, fileID: String!, environmentID: String!): CERun!
+
+    """
+    Run code editor node.
+    + **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
+    """
+    runCENode(pipelineID: String!, nodeID: String!, fileID: String!, environmentID: String!): CERun!
+
+    """
+    Stop code editor file.
+    + **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
+    """
+    stopCERun(pipelineID: String!, runID: String!, environmentID: String!): String!
 }
 `, BuiltIn: false},
 	{Name: "resolvers/me.graphqls", Input: `input AddUpdateMeInput {
@@ -4449,6 +4623,57 @@ func (ec *executionContext) field_Mutation_removeUserFromEnvironment_args(ctx co
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_renameFile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["fileID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fileID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["fileID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["nodeID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["nodeID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg3
+	var arg4 string
+	if tmp, ok := rawArgs["newName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newName"))
+		arg4, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["newName"] = arg4
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_renameFolder_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4488,6 +4713,99 @@ func (ec *executionContext) field_Mutation_renameFolder_args(ctx context.Context
 		}
 	}
 	args["pipelineID"] = arg3
+	var arg4 string
+	if tmp, ok := rawArgs["newName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newName"))
+		arg4, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["newName"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_runCEFile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["nodeID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["nodeID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["fileID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fileID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["fileID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_runCENode_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["nodeID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["nodeID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["fileID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fileID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["fileID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg3
 	return args, nil
 }
 
@@ -4512,6 +4830,39 @@ func (ec *executionContext) field_Mutation_runPipelines_args(ctx context.Context
 		}
 	}
 	args["environmentID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_stopCERun_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["runID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["runID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg2
 	return args, nil
 }
 
@@ -6115,6 +6466,315 @@ func (ec *executionContext) _AvailablePermissions_Access(ctx context.Context, fi
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _CERun_run_id(ctx context.Context, field graphql.CollectedField, obj *CERun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CERun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RunID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CERun_node_id(ctx context.Context, field graphql.CollectedField, obj *CERun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CERun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NodeID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CERun_file_id(ctx context.Context, field graphql.CollectedField, obj *CERun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CERun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CERun_status(ctx context.Context, field graphql.CollectedField, obj *CERun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CERun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CERun_environment_id(ctx context.Context, field graphql.CollectedField, obj *CERun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CERun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvironmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CERun_run_json(ctx context.Context, field graphql.CollectedField, obj *CERun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CERun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RunJSON, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalNAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CERun_created_at(ctx context.Context, field graphql.CollectedField, obj *CERun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CERun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CERun_ended_at(ctx context.Context, field graphql.CollectedField, obj *CERun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CERun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CERun_updated_at(ctx context.Context, field graphql.CollectedField, obj *CERun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CERun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _CodeFiles_fileID(ctx context.Context, field graphql.CollectedField, obj *models.CodeFiles) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7678,7 +8338,7 @@ func (ec *executionContext) _Mutation_renameFolder(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RenameFolder(rctx, args["environmentID"].(string), args["folderID"].(string), args["nodeID"].(string), args["pipelineID"].(string))
+		return ec.resolvers.Mutation().RenameFolder(rctx, args["environmentID"].(string), args["folderID"].(string), args["nodeID"].(string), args["pipelineID"].(string), args["newName"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7779,6 +8439,48 @@ func (ec *executionContext) _Mutation_deleteFileNode(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_renameFile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_renameFile_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RenameFile(rctx, args["environmentID"].(string), args["fileID"].(string), args["nodeID"].(string), args["pipelineID"].(string), args["newName"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_moveFileNode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7847,6 +8549,132 @@ func (ec *executionContext) _Mutation_codeEditorRun(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().CodeEditorRun(rctx, args["environmentID"].(string), args["nodeID"].(string), args["pipelineID"].(string), args["path"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_runCEFile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_runCEFile_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RunCEFile(rctx, args["pipelineID"].(string), args["nodeID"].(string), args["fileID"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*CERun)
+	fc.Result = res
+	return ec.marshalNCERun2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCERun(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_runCENode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_runCENode_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RunCENode(rctx, args["pipelineID"].(string), args["nodeID"].(string), args["fileID"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*CERun)
+	fc.Result = res
+	return ec.marshalNCERun2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCERun(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_stopCERun(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_stopCERun_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().StopCERun(rctx, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -17187,6 +18015,111 @@ func (ec *executionContext) _AvailablePermissions(ctx context.Context, sel ast.S
 	return out
 }
 
+var cERunImplementors = []string{"CERun"}
+
+func (ec *executionContext) _CERun(ctx context.Context, sel ast.SelectionSet, obj *CERun) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cERunImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CERun")
+		case "run_id":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CERun_run_id(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "node_id":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CERun_node_id(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "file_id":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CERun_file_id(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "status":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CERun_status(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "environment_id":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CERun_environment_id(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "run_json":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CERun_run_json(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "created_at":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CERun_created_at(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "ended_at":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CERun_ended_at(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "updated_at":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CERun_updated_at(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var codeFilesImplementors = []string{"CodeFiles"}
 
 func (ec *executionContext) _CodeFiles(ctx context.Context, sel ast.SelectionSet, obj *models.CodeFiles) graphql.Marshaler {
@@ -17721,6 +18654,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "renameFile":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_renameFile(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "moveFileNode":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_moveFileNode(ctx, field)
@@ -17734,6 +18677,36 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "codeEditorRun":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_codeEditorRun(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "runCEFile":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_runCEFile(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "runCENode":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_runCENode(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "stopCERun":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_stopCERun(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
@@ -20873,6 +21846,20 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNCERun2dataplaneᚋmainappᚋgraphqlᚋprivateᚐCERun(ctx context.Context, sel ast.SelectionSet, v CERun) graphql.Marshaler {
+	return ec._CERun(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCERun2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCERun(ctx context.Context, sel ast.SelectionSet, v *CERun) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CERun(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNCodeFiles2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFilesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.CodeFiles) graphql.Marshaler {

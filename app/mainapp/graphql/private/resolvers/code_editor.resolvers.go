@@ -5,15 +5,14 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/filesystem"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -109,7 +108,7 @@ func (r *mutationResolver) MoveFolderNode(ctx context.Context, folderID string, 
 
 	// Update folder's parent in the database
 	err = database.DBConn.Model(&models.CodeFolders{}).
-		Where("folder_id = ?", folderID).Update("parent_id", toFolderID).Error
+		Where("folder_id = ? and environment_id = ?", folderID, environmentID).Update("parent_id", toFolderID).Error
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
@@ -225,8 +224,52 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 	return "Success", nil
 }
 
-func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID string, folderID string, nodeID string, pipelineID string) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID string, folderID string, nodeID string, pipelineID string, newName string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	// Get parent's folder id
+	f := models.CodeFolders{}
+	err := database.DBConn.Where("folder_id = ? and environment_id = ?", folderID, environmentID).Find(&f).Error
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	parentFolderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.ParentID, environmentID)
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID)
+
+	// Make sure there is a path
+	if strings.TrimSpace(folderpath) == "" || strings.TrimSpace(parentFolderpath) == "" {
+		return "", errors.New("Missing folder path.")
+	}
+
+	// 1. ----- Rename folder in the directory
+	err = os.Rename(config.CodeDirectory+folderpath, config.CodeDirectory+parentFolderpath+folderID+"_"+newName)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// 2. ----- Rename folder in the database
+	err = database.DBConn.Model(&models.CodeFolders{}).Where("folder_id = ? and environment_id = ?", folderID, environmentID).Update("folder_name", newName).Error
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	return "Success", nil
 }
 
 func (r *mutationResolver) UploadFileNode(ctx context.Context, environmentID string, nodeID string, pipelineID string, folderID string, file graphql.Upload) (string, error) {
@@ -253,6 +296,7 @@ func (r *mutationResolver) UploadFileNode(ctx context.Context, environmentID str
 	file.File.Read(p)
 
 	input := models.CodeFiles{
+		PipelineID:    pipelineID,
 		EnvironmentID: environmentID,
 		NodeID:        nodeID,
 		FileName:      file.Filename,
@@ -358,6 +402,54 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete file database error.")
+	}
+
+	return "Success", nil
+}
+
+func (r *mutationResolver) RenameFile(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string, newName string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	// Get parent's folder id
+	f := models.CodeFiles{}
+	err := database.DBConn.Where("file_id = ? and environment_id = ?", fileID, environmentID).Find(&f).Error
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.FolderID, environmentID)
+	filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID)
+
+	// Make sure there is a path
+	if strings.TrimSpace(filepath) == "" || strings.TrimSpace(folderpath) == "" {
+		return "", errors.New("Missing folder path.")
+	}
+
+	// // 1. ----- Rename file in the directory
+	err = os.Rename(config.CodeDirectory+filepath, config.CodeDirectory+folderpath+newName)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// // 2. ----- Rename file in the database
+	err = database.DBConn.Model(&models.CodeFiles{}).Where("file_id = ? and environment_id = ?", fileID, environmentID).Update("file_name", newName).Error
+	if err != nil {
+		return "", errors.New(err.Error())
 	}
 
 	return "Success", nil

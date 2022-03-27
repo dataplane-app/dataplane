@@ -5,11 +5,11 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/filesystem"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
