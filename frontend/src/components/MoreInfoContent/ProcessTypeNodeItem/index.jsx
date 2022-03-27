@@ -8,11 +8,7 @@ const ProcessTypeNodeItem = (props) => {
     const FlowState = useGlobalFlowState();
 
     const handleCodeClick = () => {
-        history.push({
-            pathname: `/editor/${FlowState.pipelineInfo.attach(Downgraded).get()?.pipelineID}`,
-            state: { ...FlowState.pipelineInfo.attach(Downgraded).get(), nodeID: props.nodeId, nodeName: props.nodeName },
-        });
-
+        history.push(`/editor/_?_&pipelineID=${FlowState.pipelineInfo.attach(Downgraded).get()?.pipelineID}&nodeID=${props.nodeId}&nodeName=${props.nodeName}`);
         props.handleCloseMenu();
     };
 
