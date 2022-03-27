@@ -17,6 +17,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/google/uuid"
@@ -108,8 +109,12 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 		return "", errors.New(err.Error())
 	}
 
+	v, _ := time.Now().UTC().MarshalText()
+
+	deleteFolder := config.CodeDirectory + folderpath
+
 	// Zip and put in trash
-	err = filesystem.ZipSource(config.CodeDirectory+folderpath, config.CodeDirectory+"/trash/"+id+"-"+f.FolderName+".zip")
+	err = filesystem.ZipSource(deleteFolder, config.CodeDirectory+"/trash/"+string(v)+"-"+id+"-"+f.FolderName+".zip")
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
@@ -130,7 +135,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 	}
 
 	// 2. ----- Delete folder and all its contents from directory
-	err = os.RemoveAll(config.CodeDirectory + folderpath)
+	err = os.RemoveAll(deleteFolder)
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
@@ -265,12 +270,6 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 		return "", errors.New(err.Error())
 	}
 
-	// Zip and put in trash
-	err = filesystem.ZipSource(config.CodeDirectory+folderpath, config.CodeDirectory+"/trash/"+id+"-"+f.FileName+".zip")
-	if err != nil {
-		return "", errors.New(err.Error())
-	}
-
 	// Add to database
 	d := models.FolderDeleted{
 		ID:            id,
@@ -289,7 +288,17 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	// Delete file from folder
 	filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID)
 
-	err = os.Remove(config.CodeDirectory + filepath)
+	v, _ := time.Now().UTC().MarshalText()
+
+	deleteFile := config.CodeDirectory + filepath
+
+	// Zip and put in trash
+	err = filesystem.ZipSource(deleteFile, config.CodeDirectory+"/trash/"+string(v)+"-"+id+"-"+f.FileName+".zip")
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	err = os.Remove(deleteFile)
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
