@@ -19,7 +19,7 @@ import (
 
 func Migrate() {
 
-	migrateVersion := "0.0.19"
+	migrateVersion := "0.0.21"
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -98,6 +98,7 @@ func Migrate() {
 			&models.CodeFiles{},
 			&models.CodeGitCommits{},
 			&models.FolderDeleted{},
+			&models.CodeRun{},
 		)
 		if err1 != nil {
 			panic(err1)
