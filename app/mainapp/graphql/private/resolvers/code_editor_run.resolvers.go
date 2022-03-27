@@ -7,13 +7,15 @@ import (
 	"context"
 	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/runcode"
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
+	"dataplane/mainapp/logging"
 	"errors"
 	"fmt"
 )
 
-func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string) (*privategraphql.CERun, error) {
+func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string) (*privategraphql.CERun, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -31,8 +33,11 @@ func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nod
 		return &privategraphql.CERun{}, errors.New("Requires permissions.")
 	}
 
-	runData, err := runcode.RunCodeFile("workerGroup", fileID, environmentID, pipelineID, nodeID, "nodeTypeDesc")
+	runData, err := runcode.RunCodeFile(workerGroup, fileID, environmentID, pipelineID, nodeID, nodeTypeDesc)
 	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
 		return nil, errors.New("Failed to run code.")
 	}
 

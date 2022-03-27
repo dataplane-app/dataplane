@@ -144,6 +144,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 			runSend = models.CodeRun{
 				RunID:         runid,
 				NodeID:        nodeID,
+				FileID:        filesdata.FileID,
 				CreatedAt:     time.Now().UTC(),
 				EnvironmentID: envID,
 				WorkerGroup:   workerGroup,
@@ -154,7 +155,10 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 				FolderID:      folderIDMap,
 			}
 
-			UpdateCodeRunNoStatus(runSend)
+			err2 := database.DBConn.Create(&runSend)
+			if err2.Error != nil {
+				logging.PrintSecretsRedact(err2.Error.Error())
+			}
 
 			var response runtask.TaskResponse
 
@@ -206,6 +210,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 		_, errnats := messageq.MsgReply("coderunupdate", TaskFinal, &response)
 		if errnats != nil {
 			logging.PrintSecretsRedact(errnats)
+			return models.CodeRun{}, errors.New("No workers available")
 		}
 
 		runSend.Status = TaskFinal.Status

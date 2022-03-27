@@ -17,7 +17,7 @@ func UpdateCodeRun(msg models.CodeRun) {
 
 	err2 := database.DBConn.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "run_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"end_dt", "status", "reason", "worker_id"}),
+		DoUpdates: clause.AssignmentColumns([]string{"ended_at", "status", "reason"}),
 	}).Create(&msg)
 	if err2.Error != nil {
 		logging.PrintSecretsRedact(err2.Error.Error())
@@ -36,7 +36,7 @@ func UpdateCodeRunNoStatus(msg models.CodeRun) {
 
 	err2 := database.DBConn.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "run_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"end_dt", "start_dt", "worker_id"}),
+		DoUpdates: clause.AssignmentColumns([]string{"ended_at", "created_at"}),
 	}).Create(&msg)
 	if err2.Error != nil {
 		logging.PrintSecretsRedact(err2.Error.Error())
