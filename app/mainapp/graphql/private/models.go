@@ -50,6 +50,18 @@ type AddUsersInput struct {
 	Timezone  string `json:"timezone"`
 }
 
+type CERun struct {
+	RunID         string      `json:"run_id"`
+	NodeID        string      `json:"node_id"`
+	FileID        string      `json:"file_id"`
+	Status        string      `json:"status"`
+	EnvironmentID string      `json:"environment_id"`
+	RunJSON       interface{} `json:"run_json"`
+	CreatedAt     time.Time   `json:"created_at"`
+	EndedAt       *time.Time  `json:"ended_at"`
+	UpdatedAt     *time.Time  `json:"updated_at"`
+}
+
 type ChangePasswordInput struct {
 	Password string `json:"password"`
 	UserID   string `json:"user_id"`

@@ -39,7 +39,7 @@ extend type Query {
   """
 	Get a node's file structure.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): CodeTree
 }
@@ -48,56 +48,56 @@ extend type Mutation {
   """
 	Create a folder structure.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   createFolderNode(input:FolderNodeInput): CodeFolders!
 
     """
 	Move a folder structure.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   moveFolderNode(folderID: String!, toFolderID: String!, environmentID: String!, pipelineID: String!): String!
 
     """
 	Delete a node's folder structure.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   deleteFolderNode(environmentID: String!, folderID: String!, nodeID: String!, pipelineID: String!): String!
 
     """
 	Rename a folder.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   renameFolder(environmentID: String!, folderID: String!, nodeID: String!, pipelineID: String!): String!
 
   """
 	Upload a node file.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   uploadFileNode(environmentID: String!, nodeID: String!, pipelineID: String!, folderID: String!, file:Upload!): String!
 
     """
 	Delete a file.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   deleteFileNode(environmentID: String!, fileID: String!, nodeID: String!, pipelineID: String!): String!
 
 	"""
 	Move a file.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   moveFileNode(fileID: String! toFolderID: String!, environmentID: String!, pipelineID: String!): String!
 
   """
 	Run script.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   codeEditorRun(environmentID: String!, nodeID: String!, pipelineID: String!, path:String!): String!
 }
