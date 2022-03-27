@@ -131,6 +131,10 @@ code {
     visibility: visible;
 }
 
+.hidden > div {
+    display: none;
+}
+
 .tree_parent .MuiTreeItem-iconContainer svg {
     font-size: 15px;
 }
