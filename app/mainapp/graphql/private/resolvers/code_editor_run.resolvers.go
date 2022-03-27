@@ -5,7 +5,8 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/code_editor/runcode"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"errors"
@@ -30,7 +31,20 @@ func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nod
 		return &privategraphql.CERun{}, errors.New("Requires permissions.")
 	}
 
-	panic(fmt.Errorf("not implemented"))
+	runData, err := runcode.RunCodeFile("workerGroup", fileID, environmentID, pipelineID, nodeID, "nodeTypeDesc")
+	if err != nil {
+		return nil, errors.New("Failed to run code.")
+	}
+
+	return &privategraphql.CERun{
+		RunID:         runData.RunID,
+		NodeID:        runData.NodeID,
+		FileID:        runData.FileID,
+		Status:        runData.Status,
+		EnvironmentID: runData.EnvironmentID,
+		CreatedAt:     runData.CreatedAt,
+		EndedAt:       &runData.EndedAt,
+	}, nil
 }
 
 func (r *mutationResolver) RunCENode(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string) (*privategraphql.CERun, error) {

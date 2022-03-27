@@ -124,7 +124,7 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		if f.Level == "node" {
 
 			dir := parentfolderdata + f.FolderID + "_" + f.FolderName
-			log.Println(dir)
+			// log.Println(dir)
 
 			folderMap[f.NodeID] = dir
 			folderNodeMap[f.NodeID] = f.FolderID
