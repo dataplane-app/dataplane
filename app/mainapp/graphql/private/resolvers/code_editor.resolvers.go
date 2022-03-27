@@ -108,7 +108,7 @@ func (r *mutationResolver) MoveFolderNode(ctx context.Context, folderID string, 
 
 	// Update folder's parent in the database
 	err = database.DBConn.Model(&models.CodeFolders{}).
-		Where("folder_id = ?", folderID).Update("parent_id", toFolderID).Error
+		Where("folder_id = ? and environment_id = ?", folderID, environmentID).Update("parent_id", toFolderID).Error
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
@@ -244,7 +244,7 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 
 	// Get parent's folder id
 	f := models.CodeFolders{}
-	err := database.DBConn.Where("folder_id = ?", folderID).Find(&f).Error
+	err := database.DBConn.Where("folder_id = ? and environment_id = ?", folderID, environmentID).Find(&f).Error
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
@@ -427,7 +427,7 @@ func (r *mutationResolver) RenameFile(ctx context.Context, environmentID string,
 
 	// Get parent's folder id
 	f := models.CodeFiles{}
-	err := database.DBConn.Where("file_id = ?", fileID).Find(&f).Error
+	err := database.DBConn.Where("file_id = ? and environment_id = ?", fileID, environmentID).Find(&f).Error
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
