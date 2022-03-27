@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -68,8 +69,52 @@ func (r *mutationResolver) CreateFolderNode(ctx context.Context, input *privateg
 	return &rFolderout, nil
 }
 
-func (r *mutationResolver) MoveFolderNode(ctx context.Context, folderID string, toFolderID string) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *mutationResolver) MoveFolderNode(ctx context.Context, folderID string, toFolderID string, environmentID string, pipelineID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	// Move folder in the directory
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID)
+	tofolderpath, _ := filesystem.FolderConstructByID(database.DBConn, toFolderID, environmentID)
+
+	// Make sure there is a path
+	if strings.TrimSpace(folderpath) == "" || strings.TrimSpace(tofolderpath) == "" {
+		return "", errors.New("Missing folder path.")
+	}
+
+	oldDir := config.CodeDirectory + folderpath
+	newDir := config.CodeDirectory + tofolderpath
+
+	cmd := exec.Command("cp", "--recursive", oldDir, newDir)
+	cmd.Run()
+
+	err := os.RemoveAll(oldDir)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// Update folder's parent in the database
+	err = database.DBConn.Model(&models.CodeFolders{}).
+		Where("folder_id = ?", folderID).Update("parent_id", toFolderID).Error
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	return "Success", nil
 }
 
 func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID string, folderID string, nodeID string, pipelineID string) (string, error) {
@@ -318,8 +363,58 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	return "Success", nil
 }
 
-func (r *mutationResolver) MoveFileNode(ctx context.Context, fileID string, toFolderID string) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *mutationResolver) MoveFileNode(ctx context.Context, fileID string, toFolderID string, environmentID string, pipelineID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	// Move folder in the directory
+	folderpathWithFile, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID)
+	tofolderpath, _ := filesystem.FolderConstructByID(database.DBConn, toFolderID, environmentID)
+
+	// Make sure there is a path
+	if strings.TrimSpace(folderpathWithFile) == "" || strings.TrimSpace(tofolderpath) == "" {
+		return "", errors.New("Missing folder path.")
+	}
+
+	f := models.CodeFiles{}
+
+	// Get filename
+	err := database.DBConn.Where("file_id = ? and environment_id = ?", fileID, environmentID).Find(&f).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrive user database error.")
+	}
+
+	// Move file in the directory
+	err = os.Rename(config.CodeDirectory+folderpathWithFile, config.CodeDirectory+tofolderpath+f.FileName)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	// Update files's parent in the database
+	err = database.DBConn.Model(&models.CodeFiles{}).
+		Where("file_id = ? and environment_id = ?", fileID, environmentID).Update("folder_id", toFolderID).Error
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	return "Success", nil
 }
 
 func (r *mutationResolver) CodeEditorRun(ctx context.Context, environmentID string, nodeID string, pipelineID string, path string) (string, error) {
