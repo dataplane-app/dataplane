@@ -10,7 +10,7 @@ import (
 func FileConstructByID(db *gorm.DB, id string, environmentID string) (string, error) {
 	var currentFile models.CodeFiles
 
-	db.Select("file_name").Where("file_id=? and environment_id = ?", id, environmentID).First(&currentFile)
+	db.Select("file_name", "folder_id").Where("file_id=? and environment_id = ?", id, environmentID).First(&currentFile)
 
 	fileName := currentFile.FileName
 	folderID := currentFile.FolderID
