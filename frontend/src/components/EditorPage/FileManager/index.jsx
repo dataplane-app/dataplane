@@ -31,7 +31,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const [selected, setSelected] = useState(null);
     const [expanded, setExpanded] = useState([]);
     const data = useHookState({});
-    console.log('🚀 ~ file: index.jsx ~ line 34 ~ FileManagerColumn ~ data', data.value);
 
     // Drawer State
     const [isOpenDelete, setIsOpenDelete] = useState(false);
