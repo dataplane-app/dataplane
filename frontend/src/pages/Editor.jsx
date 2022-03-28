@@ -43,6 +43,7 @@ const PipelineEditor = () => {
     const nodeName = searchParams.get('nodeName');
     const nodeID = searchParams.get('nodeID');
     const pipelineID = searchParams.get('pipelineID');
+    const NodeTypeDesc = searchParams.get('NodeTypeDesc');
 
     const [pipeline, setPipeline] = useState({});
 
@@ -65,7 +66,7 @@ const PipelineEditor = () => {
     useEffect(() => {
         if (!Environment.id.get()) return;
         window.addEventListener('beforeunload', handleUnload);
-        setPipeline((p) => ({ nodeName, nodeID, pipelineID }));
+        setPipeline((p) => ({ nodeName, nodeID, pipelineID, NodeTypeDesc }));
 
         getPipeline(pipelineID);
 

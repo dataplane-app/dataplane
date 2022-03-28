@@ -290,7 +290,7 @@ const useRunCEFileHook = (pipeline) => {
     const pipelineID = pipeline.pipelineID;
     const nodeID = pipeline.nodeID;
     const workerGroup = pipeline.workerGroup;
-    const NodeTypeDesc = pipeline.node_type_desc;
+    const NodeTypeDesc = pipeline.NodeTypeDesc;
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
     const fileID = EditorGlobal.selectedFile?.id?.get();
