@@ -48,7 +48,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 	var CommandsList []Runner
 
 	if config.Debug == "true" {
-		log.Printf("starting code run with id %s - node: %s run: %s\n", msg.NodeID, msg.RunID)
+		log.Printf("starting code run with run: %s\n", msg.RunID)
 	}
 
 	// lock node for run
@@ -119,7 +119,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		// Detect if folder is being requested
 		if strings.Contains(v.Command, "${{nodedirectory}}") {
 
-			directoryRun := config.CodeDirectory + msg.Folder + "/"
+			directoryRun := config.CodeDirectory + msg.Folder
 			// log.Println(directoryRun)
 
 			// construct the directory if the directory cant be found
@@ -136,9 +136,15 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			// Overwrite command with injected directory
 			v.Command = strings.ReplaceAll(v.Command, "${{nodedirectory}}", directoryRun)
 
+			if config.Debug == "true" {
+				log.Println("Run command: ", v.Command)
+			}
+
 		}
 
 		// log.Println("command:", v)
+		// log.Println("shell used:", config.DPworkerCMD)
+
 		var cmd *exec.Cmd
 		switch config.DPworkerCMD {
 		case "/bin/bash":
@@ -277,7 +283,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		TasksStatus.Set(msg.RunID, "run")
 
 		if os.Getenv("debug") == "true" {
-			// log.Println("tasks before pid:", Tasks)
+			// log.Println("tasks before pid:", task)
 		}
 		err := cmd.Start()
 		if err != nil {

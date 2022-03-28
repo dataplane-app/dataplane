@@ -64,7 +64,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 	var commands []string
 	switch nodeTypeDesc {
 	case "python":
-		commands = append(commands, "python3 ${{nodedirectory}}"+filesdata.FileName)
+		commands = append(commands, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
 	default:
 		return models.CodeRun{}, errors.New("Code run type not found.")
 	}

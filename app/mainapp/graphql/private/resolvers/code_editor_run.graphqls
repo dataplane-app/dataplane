@@ -19,12 +19,6 @@ extend type Mutation {
     """
     runCEFile(pipelineID: String!, nodeID: String!, fileID: String!, environmentID: String!, NodeTypeDesc: String!, workerGroup: String!): CERun!
 
-    """
-    Run code editor node.
-    + **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
-    """
-    runCENode(pipelineID: String!, nodeID: String!, fileID: String!, environmentID: String!): CERun!
 
     """
     Stop code editor file.
