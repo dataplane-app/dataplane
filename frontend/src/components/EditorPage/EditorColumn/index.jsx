@@ -10,7 +10,7 @@ import CustomDragHandle from '../../CustomDragHandle';
 import { useUploadFileNode } from '../../../graphql/uploadFileNode';
 import { useSnackbar } from 'notistack';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
-import { useCodeEditorRun } from '../../../graphql/codeEditorRun';
+import { useRunCEFile } from '../../../graphql/runCEFile';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
@@ -34,7 +34,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Graphql hook
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
-    const codeEditorRun = useCodeEditorRunHook(rest.pipeline);
+    const codeEditorRun = useRunCEFileHook(rest.pipeline);
 
     const handleEditorOnMount = (editor) => {
         editorRef.current = editor;
@@ -211,16 +211,20 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         </Typography>
 
                         <Box>
-                            <Button onClick={uploadFileNode} variant="contained" color="primary" sx={{ mr: 2 }}>
+                            <Button onClick={uploadFileNode} variant="text" color="primary">
                                 Save
                             </Button>
 
-                            <Chip
+                            <Button onClick={codeEditorRun} variant="text" color="primary">
+                                Run
+                            </Button>
+
+                            {/* <Chip
                                 avatar={<Box component={FontAwesomeIcon} sx={{ color: '#ffffff!important', fontSize: 18 }} icon={faPlayCircle} />}
                                 label="Play"
                                 onClick={() => codeEditorRun()}
                                 sx={{ mr: 0, bgcolor: 'primary.main', color: '#fff', fontWeight: 600 }}
-                            />
+                            /> */}
                         </Box>
                     </Grid>
                 ) : null}
@@ -288,24 +292,24 @@ export const useUploadFileNodeHook = (pipeline) => {
     };
 };
 
-const useCodeEditorRunHook = (pipeline) => {
+const useRunCEFileHook = (pipeline) => {
     const environmentID = pipeline.environmentID;
     const pipelineID = pipeline.pipelineID;
     const nodeID = pipeline.nodeID;
-
+    const workerGroup = pipeline.workerGroup;
+    const NodeTypeDesc = pipeline.node_type_desc;
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
+    const fileID = EditorGlobal.selectedFile?.id?.get();
 
     // GraphQL hook
-    const codeEditorRun = useCodeEditorRun();
+    const runCEFile = useRunCEFile();
 
     const { enqueueSnackbar } = useSnackbar();
 
     // Run script
     return async () => {
-        const path = `${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`;
-
-        const response = await codeEditorRun({ environmentID, pipelineID, nodeID, path });
+        const response = await runCEFile({ environmentID, pipelineID, nodeID, fileID, NodeTypeDesc, workerGroup });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
