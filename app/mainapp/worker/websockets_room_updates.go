@@ -59,6 +59,14 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 			log.Println("Wildcards not allowed")
 			return
 		}
+	case "coderunfilelogs." + id:
+		room = "coderunfile-logs"
+		subjectmsg = "coderunfilelogs." + id
+
+		if strings.Contains(id, "*") {
+			log.Println("Wildcards not allowed")
+			return
+		}
 	default:
 		log.Println("subject not found")
 		return

@@ -105,6 +105,13 @@ type ComplexityRoot struct {
 		Name        func(childComplexity int) int
 	}
 
+	LogsCodeRun struct {
+		CreatedAt func(childComplexity int) int
+		Log       func(childComplexity int) int
+		LogType   func(childComplexity int) int
+		UID       func(childComplexity int) int
+	}
+
 	LogsWorkers struct {
 		CreatedAt func(childComplexity int) int
 		Log       func(childComplexity int) int
@@ -293,6 +300,7 @@ type ComplexityRoot struct {
 		GetAccessGroupUsers           func(childComplexity int, environmentID string, accessGroupID string) int
 		GetAccessGroups               func(childComplexity int, userID string, environmentID string) int
 		GetAllPreferences             func(childComplexity int) int
+		GetCodeFileRunLogs            func(childComplexity int, runID string, pipelineID string, environmentID string) int
 		GetEnvironment                func(childComplexity int, environmentID string) int
 		GetEnvironments               func(childComplexity int) int
 		GetNodeLogs                   func(childComplexity int, runID string, pipelineID string, nodeID string, environmentID string) int
@@ -478,6 +486,7 @@ type QueryResolver interface {
 	GetPipelines(ctx context.Context, environmentID string) ([]*Pipelines, error)
 	GetPipelineFlow(ctx context.Context, pipelineID string, environmentID string) (*PipelineFlow, error)
 	GetNodeLogs(ctx context.Context, runID string, pipelineID string, nodeID string, environmentID string) ([]*models.LogsWorkers, error)
+	GetCodeFileRunLogs(ctx context.Context, runID string, pipelineID string, environmentID string) ([]*models.LogsCodeRun, error)
 	GetAllPreferences(ctx context.Context) ([]*Preferences, error)
 	GetOnePreference(ctx context.Context, preference string) (*Preferences, error)
 	PipelineTasksRun(ctx context.Context, pipelineID string, runID string, environmentID string) ([]*WorkerTasks, error)
@@ -766,6 +775,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Environments.Name(childComplexity), true
+
+	case "LogsCodeRun.created_at":
+		if e.complexity.LogsCodeRun.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.LogsCodeRun.CreatedAt(childComplexity), true
+
+	case "LogsCodeRun.log":
+		if e.complexity.LogsCodeRun.Log == nil {
+			break
+		}
+
+		return e.complexity.LogsCodeRun.Log(childComplexity), true
+
+	case "LogsCodeRun.log_type":
+		if e.complexity.LogsCodeRun.LogType == nil {
+			break
+		}
+
+		return e.complexity.LogsCodeRun.LogType(childComplexity), true
+
+	case "LogsCodeRun.uid":
+		if e.complexity.LogsCodeRun.UID == nil {
+			break
+		}
+
+		return e.complexity.LogsCodeRun.UID(childComplexity), true
 
 	case "LogsWorkers.created_at":
 		if e.complexity.LogsWorkers.CreatedAt == nil {
@@ -2092,6 +2129,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetAllPreferences(childComplexity), true
+
+	case "Query.getCodeFileRunLogs":
+		if e.complexity.Query.GetCodeFileRunLogs == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getCodeFileRunLogs_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetCodeFileRunLogs(childComplexity, args["runID"].(string), args["pipelineID"].(string), args["environmentID"].(string)), true
 
 	case "Query.getEnvironment":
 		if e.complexity.Query.GetEnvironment == nil {
@@ -3495,7 +3544,14 @@ extend type Mutation {
   turnOnOffPipeline(environmentID: String!, pipelineID: String!, online: Boolean!): String!
 }
 `, BuiltIn: false},
-	{Name: "resolvers/piplinelogs.graphqls", Input: `    type LogsWorkers {
+	{Name: "resolvers/piplinelogs.graphqls", Input: `type LogsWorkers {
+	created_at: Time!
+    uid: String!
+	log: String!
+	log_type: String!
+}
+
+type LogsCodeRun {
 	created_at: Time!
     uid: String!
 	log: String!
@@ -3504,11 +3560,18 @@ extend type Mutation {
     
 extend type Query{
 """
-Get logs for node.
+Get logs for node on pipeline run.
 + **Route**: Private
 + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
 """
 getNodeLogs(runID: String!, pipelineID: String!, nodeID: String!, environmentID: String!): [LogsWorkers!]
+
+"""
+Get logs for file on code run.
++ **Route**: Private
++ **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
+"""
+getCodeFileRunLogs(runID: String!, pipelineID: String!, environmentID: String!): [LogsCodeRun!]
 }`, BuiltIn: false},
 	{Name: "resolvers/preferences.graphqls", Input: `input AddPreferencesInput {
   preference: String!
@@ -5551,6 +5614,39 @@ func (ec *executionContext) field_Query_getAccessGroups_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_getCodeFileRunLogs_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["runID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["runID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_getEnvironment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -7353,6 +7449,146 @@ func (ec *executionContext) _Environments_active(ctx context.Context, field grap
 	res := resTmp.(bool)
 	fc.Result = res
 	return ec.marshalOBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogsCodeRun_created_at(ctx context.Context, field graphql.CollectedField, obj *models.LogsCodeRun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "LogsCodeRun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogsCodeRun_uid(ctx context.Context, field graphql.CollectedField, obj *models.LogsCodeRun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "LogsCodeRun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogsCodeRun_log(ctx context.Context, field graphql.CollectedField, obj *models.LogsCodeRun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "LogsCodeRun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Log, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogsCodeRun_log_type(ctx context.Context, field graphql.CollectedField, obj *models.LogsCodeRun) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "LogsCodeRun",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LogType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LogsWorkers_created_at(ctx context.Context, field graphql.CollectedField, obj *models.LogsWorkers) (ret graphql.Marshaler) {
@@ -13405,6 +13641,45 @@ func (ec *executionContext) _Query_getNodeLogs(ctx context.Context, field graphq
 	return ec.marshalOLogsWorkers2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsWorkersᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_getCodeFileRunLogs(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getCodeFileRunLogs_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetCodeFileRunLogs(rctx, args["runID"].(string), args["pipelineID"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.LogsCodeRun)
+	fc.Result = res
+	return ec.marshalOLogsCodeRun2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsCodeRunᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_getAllPreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -18292,6 +18567,67 @@ func (ec *executionContext) _Environments(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var logsCodeRunImplementors = []string{"LogsCodeRun"}
+
+func (ec *executionContext) _LogsCodeRun(ctx context.Context, sel ast.SelectionSet, obj *models.LogsCodeRun) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, logsCodeRunImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LogsCodeRun")
+		case "created_at":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._LogsCodeRun_created_at(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "uid":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._LogsCodeRun_uid(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "log":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._LogsCodeRun_log(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "log_type":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._LogsCodeRun_log_type(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var logsWorkersImplementors = []string{"LogsWorkers"}
 
 func (ec *executionContext) _LogsWorkers(ctx context.Context, sel ast.SelectionSet, obj *models.LogsWorkers) graphql.Marshaler {
@@ -20398,6 +20734,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "getCodeFileRunLogs":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getCodeFileRunLogs(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "getAllPreferences":
 			field := field
 
@@ -21908,6 +22264,16 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) marshalNLogsCodeRun2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsCodeRun(ctx context.Context, sel ast.SelectionSet, v *models.LogsCodeRun) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._LogsCodeRun(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNLogsWorkers2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsWorkers(ctx context.Context, sel ast.SelectionSet, v *models.LogsWorkers) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -22811,6 +23177,53 @@ func (ec *executionContext) unmarshalOFolderNodeInput2ᚖdataplaneᚋmainappᚋg
 	}
 	res, err := ec.unmarshalInputFolderNodeInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOLogsCodeRun2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsCodeRunᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.LogsCodeRun) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLogsCodeRun2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsCodeRun(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOLogsWorkers2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsWorkersᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.LogsWorkers) graphql.Marshaler {
