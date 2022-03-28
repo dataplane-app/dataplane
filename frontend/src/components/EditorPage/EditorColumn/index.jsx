@@ -213,7 +213,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 {EditorGlobal.tabs.get().length > 0 && EditorGlobal.selectedFile.get() && Object.keys(EditorGlobal.selectedFile.attach(Downgraded).get().length > 0) ? (
                     <Grid container alignItems="center" justifyContent="space-between" sx={{ p: '6px 15px', border: '1px solid #B9B9B9', mb: 2 }}>
                         <Typography fontSize={15}>
-                            code-files {'>'} {rest.pipeline.nodeName} {'>'} clear_the_logs.py
+                            {EditorGlobal.currentPath.get().map((folderName) => folderName + ' > ')}
+                            {EditorGlobal.selectedFile.name.value}
                         </Typography>
 
                         <Box>

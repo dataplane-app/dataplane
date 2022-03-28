@@ -47,7 +47,7 @@ export function getParentId(array, id, parentId) {
 }
 
 export function getPath(object, id) {
-    if (object.id === id) return [object.name];
+    if (object.id === id) return [];
     else if (object.children || Array.isArray(object)) {
         let children = Array.isArray(object) ? object : object.children;
         for (let child of children) {
@@ -93,21 +93,21 @@ export function removeById(arr, targetId) {
 /**
  * Check to see if name exists within the same folder
  */
-export function checkNameExist(nodes, id, desiredName) {
+export function checkNameExist(nodes, parentId, desiredName) {
     let names = [];
 
-    function findNode(nodes, id) {
+    function findNode(nodes, parentId) {
         for (let i = 0; i < nodes.length; i++) {
-            if (nodes[i].parentID === id) {
+            if (nodes[i].parentID === parentId) {
                 names.push(nodes[i].name);
             }
             if (nodes[i].children) {
-                findNode(nodes[i].children, id);
+                findNode(nodes[i].children, parentId);
             }
         }
     }
 
-    findNode(nodes, id);
+    findNode(nodes, parentId);
 
     return names.some((a) => a === desiredName);
 }

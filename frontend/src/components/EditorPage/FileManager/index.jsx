@@ -543,9 +543,11 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
         const prevTabs = Editor.tabs.get();
 
-        // Check if file is alreay open
+        // Check if file is already open
         if (prevTabs.filter((tab) => tab.id === file.id).length > 0) {
             Editor.selectedFile.set(file);
+            const path = getPath(data.children.attach(Downgraded).get(), file.id);
+            Editor.currentPath.set(path);
             return;
         }
 
@@ -553,7 +555,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         Editor.tabs.set((prevTabs) => [...prevTabs, file]);
 
         // Set file path
-        const path = getPath(data.children.attach(Downgraded).get(), selected);
+        const path = getPath(data.children.attach(Downgraded).get(), file.id);
         Editor.currentPath.set(path);
     };
 
