@@ -296,6 +296,10 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 		return "", errors.New("Failed to update folder in database.")
 	}
 
+	if os.Getenv("debug") == "true" {
+		logging.PrintSecretsRedact("Rename: ", config.CodeDirectory+folderpath, " -> ", config.CodeDirectory+parentFolderpath+folderID+"_"+newName)
+	}
+
 	return "Success", nil
 }
 
@@ -426,7 +430,10 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	// Zip and put in trash
 	err = filesystem.ZipSource(deleteFile, config.CodeDirectory+"/trash/"+string(v)+"-"+id+"-"+f.FileName+".zip")
 	if err != nil {
-		return "", errors.New(err.Error())
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to zip backup before deletion.")
 	}
 
 	err = os.Remove(deleteFile)
@@ -504,6 +511,10 @@ func (r *mutationResolver) RenameFile(ctx context.Context, environmentID string,
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Rename file in database failed.")
+	}
+
+	if os.Getenv("debug") == "true" {
+		logging.PrintSecretsRedact("Rename: ", config.CodeDirectory+filepath, " -> ", config.CodeDirectory+folderpath+newName)
 	}
 
 	return "Success", nil

@@ -33,7 +33,7 @@ func (CodeFiles) TableName() string {
 
 type CodeFiles struct {
 	FileID        string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
-	FolderID      string     `gorm:"type:varchar(24);" json:"folder_id"`
+	FolderID      string     `gorm:"type:varchar(24); index:idx_fileunique,unique;" json:"folder_id"`
 	EnvironmentID string     `gorm:"type:varchar(55); index:idx_fileunique,unique;" json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55);" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); index:idx_fileunique,unique;" json:"node_id"`
