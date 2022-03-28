@@ -218,13 +218,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                             <Button onClick={codeEditorRun} variant="text" color="primary">
                                 Run
                             </Button>
-
-                            {/* <Chip
-                                avatar={<Box component={FontAwesomeIcon} sx={{ color: '#ffffff!important', fontSize: 18 }} icon={faPlayCircle} />}
-                                label="Play"
-                                onClick={() => codeEditorRun()}
-                                sx={{ mr: 0, bgcolor: 'primary.main', color: '#fff', fontWeight: 600 }}
-                            /> */}
                         </Box>
                     </Grid>
                 ) : null}
