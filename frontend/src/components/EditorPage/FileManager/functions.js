@@ -89,3 +89,25 @@ export function removeById(arr, targetId) {
         []
     );
 }
+
+/**
+ * Check to see if name exists within the same folder
+ */
+export function checkNameExist(nodes, id, desiredName) {
+    let names = [];
+
+    function findNode(nodes, id) {
+        for (let i = 0; i < nodes.length; i++) {
+            if (nodes[i].parentID === id) {
+                names.push(nodes[i].name);
+            }
+            if (nodes[i].children) {
+                findNode(nodes[i].children, id);
+            }
+        }
+    }
+
+    findNode(nodes, id);
+
+    return names.some((a) => a === desiredName);
+}

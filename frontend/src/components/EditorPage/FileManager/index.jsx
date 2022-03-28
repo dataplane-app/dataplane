@@ -11,7 +11,7 @@ import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { faFileAlt } from '@fortawesome/free-regular-svg-icons';
 import { v4 as uuidv4 } from 'uuid';
 import { useSnackbar } from 'notistack';
-import { findNodeById, findNodeByName, getParentId, getPath, isFolder } from './functions';
+import { checkNameExist, findNodeById, findNodeByName, getParentId, getPath, isFolder } from './functions';
 import CustomDragHandle from '../../CustomDragHandle';
 import { Downgraded } from '@hookstate/core';
 import { useGetFilesNode } from '../../../graphql/getFilesNode';
@@ -31,6 +31,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const [selected, setSelected] = useState(null);
     const [expanded, setExpanded] = useState([]);
     const data = useHookState({});
+    console.log('🚀 ~ file: index.jsx ~ line 34 ~ FileManagerColumn ~ data', data.value);
 
     // Drawer State
     const [isOpenDelete, setIsOpenDelete] = useState(false);
@@ -155,7 +156,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         // Check if enter has being pressed
         if (e.charCode === 13) {
             const check = checkFileName(newFileName);
-            const alreadyExistsFile = findNodeByName(data?.children.attach(Downgraded).get(), newFileName);
+            const alreadyExistsFile = checkNameExist(data?.children.attach(Downgraded).get(), selected, newFileName);
 
             if (!check) return;
             if (alreadyExistsFile) {
@@ -228,7 +229,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         // Check if enter has being pressed
         if (e.charCode === 13) {
             const check = checkFolderName(newFolderName);
-            const alreadyExistsFolder = findNodeByName(data?.children.attach(Downgraded).get(), newFolderName);
+            const alreadyExistsFolder = checkNameExist(data?.children.attach(Downgraded).get(), selected, newFolderName);
 
             if (!check) return;
             if (alreadyExistsFolder) {
@@ -293,7 +294,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
             if (folder) {
                 const check = checkFolderName(tmpFileName);
-                const alreadyExistsFolder = findNodeByName(data?.children.attach(Downgraded).get(), tmpFileName);
+                const alreadyExistsFolder = checkNameExist(data?.children.attach(Downgraded).get(), selected, tmpFileName);
 
                 if (!check) {
                     setIsEditing(false);
@@ -318,7 +319,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 }
             } else {
                 const check = checkFileName(tmpFileName);
-                const alreadyExistsFile = findNodeByName(data?.children.attach(Downgraded).get(), tmpFileName);
+                const alreadyExistsFile = checkNameExist(data?.children.attach(Downgraded).get(), selected, tmpFileName);
 
                 if (!check) {
                     setIsEditing(false);
