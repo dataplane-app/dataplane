@@ -441,6 +441,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         if (currentDOMElement && !isEditing) {
             currentDOMElement.focus();
             currentDOMElement.select();
+            const length = currentDOMElement.value.length;
+            currentDOMElement.setSelectionRange(length, length);
         } else {
             currentDOMElement.style.border = 'none';
         }
