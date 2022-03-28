@@ -29,3 +29,15 @@ type CodeRun struct {
 	EndedAt       time.Time      `json:"ended_at"`
 	UpdatedAt     *time.Time     `json:"updated_at"`
 }
+
+func (CodeRunLock) IsEntity() {}
+
+func (CodeRunLock) TableName() string {
+	return "code_run_lock"
+}
+
+type CodeRunLock struct {
+	RunID     string    `gorm:"PRIMARY_KEY;type:varchar(48);" json:"run_id"`
+	FileID    string    `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
+	CreatedAt time.Time `json:"created_at"`
+}

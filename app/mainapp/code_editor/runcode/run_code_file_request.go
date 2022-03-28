@@ -20,6 +20,10 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
+type Command struct {
+	Command string `json:command`
+}
+
 /*
 Task status: Queue, Allocated, Started, Failed, Success
 */
@@ -35,7 +39,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 	parentfolderdata := ""
 	var err error
 	if filesdata.FolderID != "" {
-		parentfolderdata, err = filesystem.FileConstructByID(database.DBConn, filesdata.FileID, envID)
+		parentfolderdata, err = filesystem.FolderConstructByID(database.DBConn, filesdata.FolderID, envID)
 		if err != nil {
 			return models.CodeRun{}, errors.New("File record not found")
 		}
@@ -60,7 +64,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 	var commands []string
 	switch nodeTypeDesc {
 	case "python":
-		commands = append(commands, "python3 ${{nodedirectory}}"+filesdata.FileName)
+		commands = append(commands, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
 	default:
 		return models.CodeRun{}, errors.New("Code run type not found.")
 	}
@@ -164,7 +168,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 
 			// log.Println("Task channel: ", "task."+workerGroup+"."+loadbalanceNext)
 
-			_, errnats := messageq.MsgReply("coderun."+workerGroup+"."+loadbalanceNext, runSend, &response)
+			_, errnats := messageq.MsgReply("runcodefile."+workerGroup+"."+loadbalanceNext, runSend, &response)
 
 			if errnats != nil {
 				log.Println("Send to worker error nats:", errnats)
