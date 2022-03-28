@@ -487,7 +487,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                             }}
                             readOnly={selected !== nodes.id && !isEditing}
                         />
-                        <Box className={`showOnHover hidden_controls tree-${nodes.id}`} sx={{ opacity: 0, '&:hover': { opacity: 1 }, paddingLeft: '100px' }}>
+                        <Box className={`showOnHover hidden_controls tree-${nodes.id}`} sx={{ opacity: 0, '&:hover': { opacity: 1 } }}>
                             <IconButton
                                 aria-label="Edit File"
                                 onClick={() => {
@@ -609,7 +609,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                         flexGrow: 1,
                         maxWidth: 400,
                         overflowY: 'auto',
-                        p: '0 5px',
+                        marginLeft: '-12px',
                     }}>
                     {renderTree(data.attach(Downgraded).get())}
                 </TreeView>
