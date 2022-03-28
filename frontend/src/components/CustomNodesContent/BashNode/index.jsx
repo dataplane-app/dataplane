@@ -86,7 +86,7 @@ const BashNode = (props) => {
 
                 <Box mt={0}>
                     <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
-                        {isEditorPage ? <ProcessTypeEditorModeItem /> : <ProcessTypeNodeItem nodeId={props.id} nodeName={props.data.name} />}
+                        {isEditorPage ? <ProcessTypeEditorModeItem /> : <ProcessTypeNodeItem nodeId={props.id} nodeName={props.data.name} NodeTypeDesc={'python'} />}
                     </MoreInfoMenu>
                 </Box>
             </Grid>

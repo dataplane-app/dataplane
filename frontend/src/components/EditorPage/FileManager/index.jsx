@@ -11,7 +11,7 @@ import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { faFileAlt } from '@fortawesome/free-regular-svg-icons';
 import { v4 as uuidv4 } from 'uuid';
 import { useSnackbar } from 'notistack';
-import { findNodeById, findNodeByName, getParentId, getPath, isFolder } from './functions';
+import { checkNameExist, findNodeById, findNodeByName, getParentId, getPath, isFolder } from './functions';
 import CustomDragHandle from '../../CustomDragHandle';
 import { Downgraded } from '@hookstate/core';
 import { useGetFilesNode } from '../../../graphql/getFilesNode';
@@ -155,7 +155,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         // Check if enter has being pressed
         if (e.charCode === 13) {
             const check = checkFileName(newFileName);
-            const alreadyExistsFile = findNodeByName(data?.children.attach(Downgraded).get(), newFileName);
+            const alreadyExistsFile = checkNameExist(data?.children.attach(Downgraded).get(), selected, newFileName);
 
             if (!check) return;
             if (alreadyExistsFile) {
@@ -228,7 +228,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         // Check if enter has being pressed
         if (e.charCode === 13) {
             const check = checkFolderName(newFolderName);
-            const alreadyExistsFolder = findNodeByName(data?.children.attach(Downgraded).get(), newFolderName);
+            const alreadyExistsFolder = checkNameExist(data?.children.attach(Downgraded).get(), selected, newFolderName);
 
             if (!check) return;
             if (alreadyExistsFolder) {
@@ -293,7 +293,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
             if (folder) {
                 const check = checkFolderName(tmpFileName);
-                const alreadyExistsFolder = findNodeByName(data?.children.attach(Downgraded).get(), tmpFileName);
+                const alreadyExistsFolder = checkNameExist(data?.children.attach(Downgraded).get(), selected, tmpFileName);
 
                 if (!check) {
                     setIsEditing(false);
@@ -318,7 +318,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 }
             } else {
                 const check = checkFileName(tmpFileName);
-                const alreadyExistsFile = findNodeByName(data?.children.attach(Downgraded).get(), tmpFileName);
+                const alreadyExistsFile = checkNameExist(data?.children.attach(Downgraded).get(), selected, tmpFileName);
 
                 if (!check) {
                     setIsEditing(false);
@@ -441,6 +441,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         if (currentDOMElement && !isEditing) {
             currentDOMElement.focus();
             currentDOMElement.select();
+            const length = currentDOMElement.value.length;
+            currentDOMElement.setSelectionRange(length, length);
         } else {
             currentDOMElement.style.border = 'none';
         }
@@ -487,7 +489,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                             }}
                             readOnly={selected !== nodes.id && !isEditing}
                         />
-                        <Box className={`showOnHover hidden_controls tree-${nodes.id}`} sx={{ opacity: 0, '&:hover': { opacity: 1 }, paddingLeft: '100px' }}>
+                        <Box className={`showOnHover hidden_controls tree-${nodes.id}`} sx={{ opacity: 0, '&:hover': { opacity: 1 } }}>
                             <IconButton
                                 aria-label="Edit File"
                                 onClick={() => {
@@ -541,9 +543,11 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
         const prevTabs = Editor.tabs.get();
 
-        // Check if file is alreay open
+        // Check if file is already open
         if (prevTabs.filter((tab) => tab.id === file.id).length > 0) {
             Editor.selectedFile.set(file);
+            const path = getPath(data.children.attach(Downgraded).get(), file.id);
+            Editor.currentPath.set(path);
             return;
         }
 
@@ -551,7 +555,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         Editor.tabs.set((prevTabs) => [...prevTabs, file]);
 
         // Set file path
-        const path = getPath(data.children.attach(Downgraded).get(), selected);
+        const path = getPath(data.children.attach(Downgraded).get(), file.id);
         Editor.currentPath.set(path);
     };
 
@@ -609,7 +613,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                         flexGrow: 1,
                         maxWidth: 400,
                         overflowY: 'auto',
-                        p: '0 5px',
+                        marginLeft: '-12px',
                     }}>
                     {renderTree(data.attach(Downgraded).get())}
                 </TreeView>

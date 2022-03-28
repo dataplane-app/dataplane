@@ -10,13 +10,18 @@ import CustomDragHandle from '../../CustomDragHandle';
 import { useUploadFileNode } from '../../../graphql/uploadFileNode';
 import { useSnackbar } from 'notistack';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
-import { useCodeEditorRun } from '../../../graphql/codeEditorRun';
+import { useRunCEFile } from '../../../graphql/runCEFile';
+import { useStopCERun } from '../../../graphql/stopCERun';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
 const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Editor state
     const [, setEditorInstance] = useState(null);
+
+    // Run state
+    const [isRunning, setIsRunning] = useState(false);
+    const [runID, setRunID] = useState(null);
 
     // Theme hook
     const theme = useTheme();
@@ -34,7 +39,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Graphql hook
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
-    const codeEditorRun = useCodeEditorRunHook(rest.pipeline);
+    const codeEditorRun = useRunCEFileHook(rest.pipeline, setRunID, setIsRunning);
+    const codeEditorStop = useStopCEFileHook(rest.pipeline, runID, setIsRunning);
 
     const handleEditorOnMount = (editor) => {
         editorRef.current = editor;
@@ -205,22 +211,26 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 </Grid>
 
                 {EditorGlobal.tabs.get().length > 0 && EditorGlobal.selectedFile.get() && Object.keys(EditorGlobal.selectedFile.attach(Downgraded).get().length > 0) ? (
-                    <Grid container alignItems="center" justifyContent="space-between" sx={{ p: '6px 15px', border: '1px solid #B9B9B9', mb: 2 }}>
-                        <Typography fontSize={15}>
-                            code-files {'>'} {rest.pipeline.nodeName} {'>'} clear_the_logs.py
+                    <Grid container alignItems="center" justifyContent="space-between" sx={{ p: '0px 15px', border: '1px solid #B9B9B9', mb: 2 }}>
+                        <Typography fontSize={'0.75rem'}>
+                            {EditorGlobal.currentPath.get().map((folderName) => folderName + ' > ')}
+                            {EditorGlobal.selectedFile.name.value}
                         </Typography>
 
                         <Box>
-                            <Button onClick={uploadFileNode} variant="contained" color="primary" sx={{ mr: 2 }}>
+                            <Button onClick={uploadFileNode} variant="text" color="primary">
                                 Save
                             </Button>
 
-                            <Chip
-                                avatar={<Box component={FontAwesomeIcon} sx={{ color: '#ffffff!important', fontSize: 18 }} icon={faPlayCircle} />}
-                                label="Play"
-                                onClick={() => codeEditorRun()}
-                                sx={{ mr: 0, bgcolor: 'primary.main', color: '#fff', fontWeight: 600 }}
-                            />
+                            {isRunning ? (
+                                <Button onClick={codeEditorStop} variant="text" color="error">
+                                    Stop
+                                </Button>
+                            ) : (
+                                <Button onClick={codeEditorRun} variant="text" color="primary">
+                                    Run
+                                </Button>
+                            )}
                         </Box>
                     </Grid>
                 ) : null}
@@ -288,24 +298,50 @@ export const useUploadFileNodeHook = (pipeline) => {
     };
 };
 
-const useCodeEditorRunHook = (pipeline) => {
+const useRunCEFileHook = (pipeline, setRunID, setIsRunning) => {
     const environmentID = pipeline.environmentID;
     const pipelineID = pipeline.pipelineID;
     const nodeID = pipeline.nodeID;
-
+    const workerGroup = pipeline.workerGroup;
+    const NodeTypeDesc = pipeline.NodeTypeDesc;
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
+    const fileID = EditorGlobal.selectedFile?.id?.get();
 
     // GraphQL hook
-    const codeEditorRun = useCodeEditorRun();
+    const runCEFile = useRunCEFile();
 
     const { enqueueSnackbar } = useSnackbar();
 
     // Run script
     return async () => {
-        const path = `${EditorGlobal.parentID.value}_${EditorGlobal.parentName.value}_${EditorGlobal.selectedFile.name.value}`;
+        const response = await runCEFile({ environmentID, pipelineID, nodeID, fileID, NodeTypeDesc, workerGroup });
 
-        const response = await codeEditorRun({ environmentID, pipelineID, nodeID, path });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            setIsRunning(true);
+            setRunID(response.run_id);
+        }
+    };
+};
+
+const useStopCEFileHook = (pipeline, runID, setIsRunning) => {
+    const environmentID = pipeline.environmentID;
+    const pipelineID = pipeline.pipelineID;
+
+    // GraphQL hook
+    const stopCEFile = useStopCERun();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Run script
+    return async () => {
+        setIsRunning(false);
+        const response = await stopCEFile({ environmentID, pipelineID, runID });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
