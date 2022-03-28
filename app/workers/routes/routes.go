@@ -6,6 +6,7 @@ import (
 	"dataplane/workers/database/models"
 	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
+	runcodeworker "dataplane/workers/runcode"
 	"dataplane/workers/runtask"
 	"dataplane/workers/secrets"
 	"dataplane/workers/workerhealth"
@@ -143,6 +144,7 @@ func Setup(port string) *fiber.App {
 	/* ---- Listen for tasks ------- */
 	secrets.ListenSecretUpdates()
 	runtask.ListenTasks()
+	runcodeworker.ListenRunCode()
 
 	/* Every 5 seconds tell mainapp about my status
 	Needs to be called after listen for tasks to avoid timing issues when accepting tasks

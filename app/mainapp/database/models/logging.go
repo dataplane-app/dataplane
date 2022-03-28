@@ -61,3 +61,19 @@ type LogsSend struct {
 	Log       string    `json:"log"`
 	LogType   string    `json:"log_type"` //info, error, debug
 }
+
+func (LogsCodeRun) IsEntity() {}
+
+func (LogsCodeRun) TableName() string {
+	return "logs_code_run"
+}
+
+type LogsCodeRun struct {
+	CreatedAt     time.Time `json:"created_at"`
+	EnvironmentID string    `gorm:"index:idx_coderun;type:varchar(64);" json:"environment_id"`
+	UID           string    `gorm:"type:varchar(64);" json:"uid"`
+	RunID         string    `gorm:"index:idx_coderun;type:varchar(64);" json:"run_id"`
+	NodeID        string    `gorm:"index:idx_coderun;type:varchar(64);" json:"node_id"`
+	Log           string    `json:"log"`
+	LogType       string    `json:"log_type"` //info, error, debug
+}

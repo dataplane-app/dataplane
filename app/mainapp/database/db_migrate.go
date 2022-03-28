@@ -19,7 +19,7 @@ import (
 
 func Migrate() {
 
-	migrateVersion := "0.0.21"
+	migrateVersion := "0.0.23"
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -89,6 +89,7 @@ func Migrate() {
 			// &models.Workers{},
 			&models.WorkerSecrets{},
 			&models.LogsWorkers{},
+			&models.LogsCodeRun{},
 			&models.WorkerTasks{},
 			&models.WorkerTaskLock{},
 			&models.PlatformLeader{},
@@ -99,6 +100,7 @@ func Migrate() {
 			&models.CodeGitCommits{},
 			&models.FolderDeleted{},
 			&models.CodeRun{},
+			&models.CodeRunLock{},
 		)
 		if err1 != nil {
 			panic(err1)
@@ -119,6 +121,14 @@ func Migrate() {
 		}
 
 		hypertable = "SELECT create_hypertable('logs_workers', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
+
+		if hypertable != "" && os.Getenv("database") == "timescaledb" {
+			if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
+				panic(err)
+			}
+		}
+
+		hypertable = "SELECT create_hypertable('logs_code_run', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
 
 		if hypertable != "" && os.Getenv("database") == "timescaledb" {
 			if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
