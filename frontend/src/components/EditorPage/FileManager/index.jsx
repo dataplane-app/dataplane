@@ -11,13 +11,15 @@ import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { faFileAlt } from '@fortawesome/free-regular-svg-icons';
 import { v4 as uuidv4 } from 'uuid';
 import { useSnackbar } from 'notistack';
-import { checkNameExist, findNodeById, findNodeByName, getParentId, getPath, isFolder } from './functions';
+import { checkNameExist, findNodeById, getParentId, getPath, isFolder } from './functions';
 import CustomDragHandle from '../../CustomDragHandle';
 import { Downgraded } from '@hookstate/core';
 import { useGetFilesNode } from '../../../graphql/getFilesNode';
 import { useCreateFolderNode } from '../../../graphql/createFolderNode';
 import { useUploadFileNodeHook } from '../EditorColumn';
 import DeleteFileFolderDrawer from '../../DrawerContent/DeleteFileFolderDrawer';
+import { useRenameFile } from '../../../graphql/renameFile';
+import { useRenameFolder } from '../../../graphql/renameFolder';
 
 const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Global environment state with hookstate
@@ -51,6 +53,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const getFilesNode = useGetFilesNodeHook(rest.pipeline, data, setExpanded);
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
     const createFolderNode = useCreateFolderNodeHook(rest.pipeline, selected);
+    const renameFile = useRenameFileHook(rest.pipeline, selected);
+    const renameFolder = useRenameFolderHook(rest.pipeline, selected);
 
     // Set worker group on load
     useEffect(() => {
@@ -310,7 +314,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 if (elementToChange) {
                     elementToChange.name = tmpFileName;
 
-                    // updateFilesNode(elementToChange, `Changed folder name to ${tmpFileName}!`);
+                    renameFolder(elementToChange);
 
                     setTmpFileName(null);
                     setIsEditing(false);
@@ -335,7 +339,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 if (elementToChange) {
                     elementToChange.name = tmpFileName;
 
-                    // updateFilesNode(elementToChange, `Changed file name to ${tmpFileName}!`);
+                    renameFile(elementToChange);
 
                     setTmpFileName(null);
                     setIsEditing(false);
@@ -788,6 +792,64 @@ const useCreateFolderNodeHook = (pipeline, selected) => {
             enqueueSnackbar('Folder saved.', { variant: 'success' });
             EditorGlobal.selectedFile.id.set(response.folderID);
             EditorGlobal.selectedFile.isEditing.set(false);
+        }
+    };
+};
+
+const useRenameFileHook = (pipeline, data, setExpanded) => {
+    const environmentID = pipeline.environmentID;
+    const pipelineID = pipeline.pipelineID;
+    const nodeID = pipeline.nodeID;
+
+    // GraphQL hook
+    const renameFile = useRenameFile();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Rename file
+    return async (element) => {
+        const newName = element.name;
+        const fileID = element.id;
+
+        const response = await renameFile({ environmentID, pipelineID, nodeID, fileID, newName });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't rename file: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            const resp = prepareForFrontEnd(response);
+            data.set(resp);
+            setExpanded([resp.id]);
+        }
+    };
+};
+
+const useRenameFolderHook = (pipeline, data, setExpanded) => {
+    const environmentID = pipeline.environmentID;
+    const pipelineID = pipeline.pipelineID;
+    const nodeID = pipeline.nodeID;
+
+    // GraphQL hook
+    const renameFolder = useRenameFolder();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Rename folder
+    return async (element) => {
+        const newName = element.name;
+        const folderID = element.id;
+
+        const response = await renameFolder({ environmentID, pipelineID, nodeID, folderID, newName });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't rename folder: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            const resp = prepareForFrontEnd(response);
+            data.set(resp);
+            setExpanded([resp.id]);
         }
     };
 };
