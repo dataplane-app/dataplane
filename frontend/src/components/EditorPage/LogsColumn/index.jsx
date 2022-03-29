@@ -111,7 +111,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                     </Box>
                 ) : null} */}
             </Box>
-            <Box height="calc(100% - 74px)" width="100%">
+            <Box height="calc(100% - 68px)" width="100%">
                 <ScrollFollow
                     startFollowing={true}
                     render={({ follow, onScroll }) => (
