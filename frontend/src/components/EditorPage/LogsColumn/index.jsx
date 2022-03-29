@@ -73,7 +73,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     }, [EditorGlobal.selectedFile?.id?.value]);
     return (
         <div {...rest}>
-            <Box sx={{ background: '#222', color: '#d6d6d6' }} display="flex" alignItems="flex-start" flexDirection="column" pl={6} pr={4} pt={3}>
+            <Box sx={{ background: '#222', color: '#d6d6d6' }} display="flex" alignItems="flex-start" flexDirection="column" pl={6} pr={4} pt={3} pb={2}>
                 <Box display="flex" alignItems="center" width={'100%'} mb={1}>
                     <Box component={FontAwesomeIcon} fontSize={24} color="secondary.main" icon={faRunning} mr={2} />
                     <Box>
