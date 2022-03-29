@@ -72,5 +72,5 @@ func GraphQLRequestPrivateUpload(token string, url string, folderID string, envI
 	}
 	fmt.Println(string(body))
 
-	return
+	return body, res
 }

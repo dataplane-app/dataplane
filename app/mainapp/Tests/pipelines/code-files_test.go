@@ -21,8 +21,8 @@ go test -p 1 -v -count=1 -run TestPipelines dataplane/mainapp/Tests/codefiles
 * Create pipeline
 * Add pipeline flow
 
-* Create folder node -
-* Upload file node   - 	WIP
+* Create folder node
+* Upload file node
 
 * Delete pipeline flow
 * Delete pipeline
@@ -229,6 +229,28 @@ func TestCodeFiles(t *testing.T) {
 	}
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add file 200 status code")
+
+	// -------- Delete file -------------
+	uploadedFileID := jsoniter.Get(response, "data", "uploadFileNode").ToString()
+
+	mutation = `mutation {
+		deleteFileNode(
+					fileID: "` + uploadedFileID + `",
+					environmentID: "` + envID + `",
+					pipelineID: "` + id + `",
+					nodeID: "nodeID"
+				)
+			}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete file 200 status code")
 
 	// -------- Delete pipeline flow -------------
 	mutation = `mutation {
