@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ConsoleLogHelper from '../../../Helper/logger';
+import { useGlobalEditorState } from '../../../pages/Editor';
 import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 
 var loc = window.location,
@@ -25,13 +26,19 @@ export default function useWebSocketLog(environmentId, run_id, setKeys) {
     const reconnectOnClose = useRef(true);
     const ws = useRef(null);
 
+    // Global editor state
+    const EditorGlobal = useGlobalEditorState();
+
     useEffect(() => {
         if (!run_id) return;
 
         function connect() {
             ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=coderunfilelogs.${run_id}&id=${run_id}`);
 
-            ws.current.onopen = () => ConsoleLogHelper('ws opened');
+            ws.current.onopen = () => {
+                EditorGlobal.runState.set('Running');
+                ConsoleLogHelper('ws opened');
+            };
             ws.current.onclose = () => {
                 // Exit if closing the connection was intentional
                 if (!reconnectOnClose.current) {
@@ -52,6 +59,9 @@ export default function useWebSocketLog(environmentId, run_id, setKeys) {
                 setKeys((k) => [...k, resp.uid]);
                 let text = `${formatDate(resp.created_at)} ${resp.log}`;
                 setSocketResponse(text);
+                if (resp.log === 'Fail' || resp.log === 'Success') {
+                    EditorGlobal.runState.set(resp.log);
+                }
             };
         }
 

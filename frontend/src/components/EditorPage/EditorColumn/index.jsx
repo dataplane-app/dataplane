@@ -181,6 +181,18 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         }
     };
 
+    // Set Run/Stop button
+    let runState = EditorGlobal.runState.get();
+    useEffect(() => {
+        if (runState === 'Running') {
+            setIsRunning(true);
+        } else if (runState === 'Success') {
+            setIsRunning(true);
+        } else if (runState === 'Fail') {
+            setIsRunning(true);
+        }
+    }, [runState]);
+
     return (
         <div {...rest}>
             <Box
