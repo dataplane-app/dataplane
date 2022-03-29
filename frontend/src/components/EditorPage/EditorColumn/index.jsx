@@ -129,6 +129,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Handle tab change
     useEffect(() => {
+        EditorGlobal.runState.set(null);
         // If no selection, return
         if (!EditorGlobal.selectedFile.value || EditorGlobal.selectedFile.fType.value !== 'file') return;
 
@@ -180,6 +181,18 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             uploadFileNode();
         }
     };
+
+    // Set Run/Stop button
+    let runState = EditorGlobal.runState.get();
+    useEffect(() => {
+        if (runState === 'Running') {
+            setIsRunning(true);
+        } else if (runState === 'Success') {
+            setIsRunning(false);
+        } else if (runState === 'Fail') {
+            setIsRunning(false);
+        }
+    }, [runState]);
 
     return (
         <div {...rest}>
