@@ -24,18 +24,20 @@ go test -p 1 -v -count=1 -run TestPipelines dataplane/mainapp/Tests/codefiles
 * Create pipeline
 * Add pipeline flow
 
-* Create folder
+* Create folder 2
+* Create folder 1
 * Rename folder
 * Upload file
+* Move file
 * Rename file
 * Get Files node
 * Delete file
 * Delete folder
 
-
 * Delete pipeline flow
 * Delete pipeline
 * Delete environment
+* Delete temoprary environment folder
 
 */
 func TestCodeFiles(t *testing.T) {
@@ -200,6 +202,46 @@ func TestCodeFiles(t *testing.T) {
 				environmentID: "` + envID + `",
 				pipelineID: "` + id + `",
 				nodeID: "nodeID",
+				folderName: "Folder2",
+				fType: "folder",
+				active: true
+			}
+			){
+				folderID
+				parentID
+				folderName
+				level
+				fType
+				active
+			}
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+	Folder2ID := jsoniter.Get(response, "data", "createFolderNode", "folderID").ToString()
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add folder 200 status code")
+
+	// -------- Create folder -------------
+	// Get parent's folder id
+	err = database.DBConn.Where("folder_name = ? AND pipeline_id = ?", "TestNodePython", id).Find(&f).Error
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	mutation = `mutation {
+		createFolderNode(
+			input: {
+				folderID: "Folder1-ID",
+				parentID: "` + f.FolderID + `",
+				environmentID: "` + envID + `",
+				pipelineID: "` + id + `",
+				nodeID: "nodeID",
 				folderName: "Folder",
 				fType: "folder",
 				active: true
@@ -262,6 +304,28 @@ func TestCodeFiles(t *testing.T) {
 
 	log.Println(string(response))
 	uploadedFileID := jsoniter.Get(response, "data", "uploadFileNode").ToString()
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add file 200 status code")
+
+	// -------- Move file -------------
+
+	mutation = `mutation {
+			moveFileNode(
+						fileID: "` + uploadedFileID + `",
+						toFolderID: "` + Folder2ID + `",
+						environmentID: "` + envID + `",
+						pipelineID: "` + id + `"
+						
+					)
+				}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
