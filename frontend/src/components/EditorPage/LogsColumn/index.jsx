@@ -1,18 +1,76 @@
 import { faCheckCircle, faExclamationCircle, faRunning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Typography } from '@mui/material';
-import { forwardRef } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
 import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 import CustomDragHandle from '../../CustomDragHandle';
-import { RunningSpinner } from '../../DrawerContent/LogsDrawer/AdjustIcon';
-
-const url = 'https://gist.githubusercontent.com/shadow-fox/5356157/raw/1b63df47e885d415705d175b7f6b87989f9d4214/mongolog';
+import { RunningSpinner } from './RunningSpinner';
+import useWebSocketLog, { formatDate } from './useWebSocketLog';
+import { useGetCodeFileRunLogs } from '../../../graphql/getCodeFileRunLogs';
+import { useSnackbar } from 'notistack';
+import { useParams } from 'react-router-dom';
+import { useGlobalEditorState } from '../../../pages/Editor';
 
 const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
+    const environmentID = rest.environmentID;
+    const pipelineID = rest.pipelineID;
+
+    const [websocketResp, setWebsocketResp] = useState('');
+    const [filteredGraphqlResp, setFilteredGraphqlResp] = useState('');
+    const [graphQlResp, setGraphQlResp] = useState([]);
+    const [keys, setKeys] = useState([]);
+
     // Global state
     const RunState = useGlobalRunState();
 
+    // Global editor state
+    const EditorGlobal = useGlobalEditorState();
+
+    // Instantiate websocket
+    const webSocket = useWebSocketLog(environmentID, EditorGlobal.runID.get(), setKeys);
+
+    useEffect(() => {
+        setWebsocketResp((t) => t + webSocket + '\n');
+    }, [webSocket]);
+
+    useEffect(() => {
+        setWebsocketResp('');
+        setFilteredGraphqlResp('');
+    }, []);
+
+    // Prepare filtered graphQL response
+    useEffect(() => {
+        let text = '';
+        graphQlResp.forEach((log) => {
+            if (!websocketResp.includes(log.uid)) {
+                text += `\n${formatDate(log.created_at)} ${log.log}`;
+            }
+        });
+        text = text.replace(/\n/, '');
+
+        setFilteredGraphqlResp(text);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [graphQlResp]);
+
+    // Graphql Hook
+    const getNodeLogs = useGetNodeLogsHook(environmentID, pipelineID, EditorGlobal.runID.get(), setGraphQlResp, keys);
+
+    useEffect(() => {
+        if (!EditorGlobal.runID.get()) return;
+        setWebsocketResp('');
+        setFilteredGraphqlResp('');
+        getNodeLogs();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [EditorGlobal.runID.get()]);
+
+    // Handle tab change
+    useEffect(() => {
+        setWebsocketResp('');
+        setFilteredGraphqlResp('');
+    }, [EditorGlobal.selectedFile?.id?.value]);
     return (
         <div {...rest}>
             <Box sx={{ background: '#222', color: '#d6d6d6' }} display="flex" alignItems="flex-start" flexDirection="column" pl={6} pr={4} pt={3} pb={2}>
@@ -26,7 +84,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                     </Box>
                 </Box>
 
-                {RunState.selectedNodeStatus.get() === 'Success' ? (
+                {/* {RunState.selectedNodeStatus.get() === 'Success' ? (
                     <Box color="status.pipelineOnline" display="flex" alignItems="center" mt={0.5}>
                         <Box component={FontAwesomeIcon} fontSize={18} color="status.pipelineOnline" icon={faCheckCircle} />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
@@ -51,12 +109,14 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                             Failed
                         </Typography>
                     </Box>
-                ) : null}
+                ) : null} */}
             </Box>
             <Box height="calc(100% - 74px)" width="100%">
                 <ScrollFollow
                     startFollowing={true}
-                    render={({ follow, onScroll }) => <LazyLog url={url} style={{ paddingBottom: 20 }} stream follow={follow} onScroll={onScroll} />}
+                    render={({ follow, onScroll }) => (
+                        <LazyLog style={{ paddingBottom: 20 }} enableSearch text={filteredGraphqlResp + '\n' + websocketResp} follow={follow} onScroll={onScroll} />
+                    )}
                 />
             </Box>
             {children}
@@ -66,3 +126,25 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
 });
 
 export default LogsColumn;
+
+// ----- Custom Hooks
+const useGetNodeLogsHook = (environmentID, pipelineID, runID, setGraphQlResp, keys) => {
+    // GraphQL hook
+    const getNodeLogs = useGetCodeFileRunLogs();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get logs
+    return async () => {
+        const response = await getNodeLogs({ environmentID, pipelineID, runID });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get logs: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            const resp250 = response.slice(response.length - 250);
+            setGraphQlResp(resp250.filter((a) => !keys.includes(a.uid)));
+        }
+    };
+};
