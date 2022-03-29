@@ -2,6 +2,7 @@ package pipelinetests
 
 import (
 	"dataplane/mainapp/Tests/testutils"
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"log"
@@ -23,13 +24,16 @@ go test -p 1 -v -count=1 -run TestPipelines dataplane/mainapp/Tests/codefiles
 
 * Create folder node
 * Upload file node
+* Rename file node
+* Delete file node
 
 * Delete pipeline flow
 * Delete pipeline
+* Delete environment
 
 */
 func TestCodeFiles(t *testing.T) {
-
+	config.LoadConfig()
 	database.DBConnect()
 
 	graphQLUrl := testutils.GraphQLUrlPublic
@@ -223,6 +227,7 @@ func TestCodeFiles(t *testing.T) {
 	response, httpResponse = testutils.GraphQLRequestPrivateUpload(accessToken, graphQLUrlPrivate, folder1ID, envID, id, "nodeID", t)
 
 	log.Println(string(response))
+	uploadedFileID := jsoniter.Get(response, "data", "uploadFileNode").ToString()
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -230,9 +235,28 @@ func TestCodeFiles(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add file 200 status code")
 
-	// -------- Delete file -------------
-	uploadedFileID := jsoniter.Get(response, "data", "uploadFileNode").ToString()
+	// -------- Rename file -------------
+	mutation = `mutation {
+			renameFile(
+						fileID: "` + uploadedFileID + `",
+						environmentID: "` + envID + `",
+						pipelineID: "` + id + `",
+						nodeID: "nodeID",
+						newName: "dp-entrypoint_Renamed.py"
+					)
+				}`
 
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete file 200 status code")
+
+	// -------- Delete file -------------
 	mutation = `mutation {
 		deleteFileNode(
 					fileID: "` + uploadedFileID + `",
@@ -294,4 +318,22 @@ func TestCodeFiles(t *testing.T) {
 	}
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete pipeline 200 status code")
+
+	// -------- Delte environment -------------
+
+	mutation = `mutation {
+		updateDeleteEnvironment(
+			environment_id: "` + envID + `")
+			}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete environment 200 status code")
+
 }
