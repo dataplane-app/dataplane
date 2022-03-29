@@ -75,6 +75,24 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		return "", errors.New("Retrieve pipeline database error")
 	}
 
+	pipelineNodes := []*models.PipelineNodes{}
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&pipelineNodes).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline database error")
+	}
+
+	pipelineEdges := []*models.PipelineEdges{}
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&pipelineEdges).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline database error")
+	}
+
 	// Obtain folder structure for pipeline
 	pipelineFolder := models.CodeFolders{}
 	err = database.DBConn.Where("pipeline_id = ? and environment_id = ? and level = ?", pipelineID, fromEnvironmentID, "pipeline").First(&pipelineFolder).Error
@@ -103,6 +121,8 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	}
 
 	// Copy pipeline, nodes and edges
+
+	// Pipeline
 	createPipeline := models.DeployPipelines{
 		PipelineID:        "d-" + pipeline.PipelineID,
 		Version:           version,
@@ -118,7 +138,68 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		Json:              pipeline.Json,
 		UpdateLock:        true,
 	}
+
+	// Nodes
+	deployNodes := []*models.DeployPipelineNodes{}
+	for _, node := range pipelineNodes {
+		deployNodes = append(deployNodes, &models.DeployPipelineNodes{
+			NodeID:        "d-" + node.NodeID,
+			PipelineID:    createPipeline.PipelineID,
+			Version:       createPipeline.Version,
+			Name:          node.Name,
+			EnvironmentID: createPipeline.EnvironmentID,
+			NodeType:      node.NodeType,
+			NodeTypeDesc:  node.NodeTypeDesc,
+			TriggerOnline: node.TriggerOnline,
+			Description:   node.Description,
+			Commands:      node.Commands,
+			Meta:          node.Meta,
+
+			// Needs to be recalculated
+			Dependency:  node.Dependency,
+			Destination: node.Destination,
+
+			// Needs to updated via front end sub nodes
+			WorkerGroup: workerGroup,
+			Active:      node.Active,
+		})
+	}
+
+	// Edges
+	deployEdges := []*models.DeployPipelineEdges{}
+	for _, edge := range pipelineEdges {
+		deployEdges = append(deployEdges, &models.DeployPipelineEdges{
+			EdgeID:        "d-" + edge.EdgeID,
+			PipelineID:    createPipeline.PipelineID,
+			Version:       createPipeline.Version,
+			From:          "d-" + edge.From,
+			To:            "d-" + edge.To,
+			EnvironmentID: createPipeline.EnvironmentID,
+			Meta:          edge.Meta,
+			Active:        edge.Active,
+		})
+	}
+
+	// Pipeline create
 	err = database.DBConn.Create(&createPipeline).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to create deployment pipeline.")
+	}
+
+	// Nodes create
+	err = database.DBConn.Create(&deployNodes).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to create deployment pipeline.")
+	}
+
+	// Edges create
+	err = database.DBConn.Create(&deployEdges).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
