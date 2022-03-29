@@ -32,7 +32,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const webSocket = useWebSocketLog(environmentID, EditorGlobal.runID.get(), setKeys);
 
     useEffect(() => {
-        if (hasGetNodeLogsRun === 0) {
+        if (hasGetNodeLogsRun === 0 && EditorGlobal.runID.get()) {
             setHasGetNodeLogsRun(1);
             getNodeLogs();
         }
