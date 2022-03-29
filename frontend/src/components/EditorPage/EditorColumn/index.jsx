@@ -21,7 +21,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Run state
     const [isRunning, setIsRunning] = useState(false);
-    const [runID, setRunID] = useState(null);
 
     // Theme hook
     const theme = useTheme();
@@ -39,8 +38,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Graphql hook
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
-    const codeEditorRun = useRunCEFileHook(rest.pipeline, setRunID, setIsRunning);
-    const codeEditorStop = useStopCEFileHook(rest.pipeline, runID, setIsRunning);
+    const codeEditorRun = useRunCEFileHook(rest.pipeline, setIsRunning);
+    const codeEditorStop = useStopCEFileHook(rest.pipeline, EditorGlobal.runID.get(), setIsRunning);
 
     const handleEditorOnMount = (editor) => {
         editorRef.current = editor;
@@ -298,7 +297,7 @@ export const useUploadFileNodeHook = (pipeline) => {
     };
 };
 
-const useRunCEFileHook = (pipeline, setRunID, setIsRunning) => {
+const useRunCEFileHook = (pipeline, setIsRunning) => {
     const environmentID = pipeline.environmentID;
     const pipelineID = pipeline.pipelineID;
     const nodeID = pipeline.nodeID;
@@ -324,7 +323,7 @@ const useRunCEFileHook = (pipeline, setRunID, setIsRunning) => {
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             setIsRunning(true);
-            setRunID(response.run_id);
+            EditorGlobal.runID.set(response.run_id);
         }
     };
 };
