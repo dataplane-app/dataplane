@@ -15,7 +15,7 @@ func (DeployPipelines) TableName() string {
 type DeployPipelines struct {
 	PipelineID        string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"pipeline_id"`
 	Version           string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"version"`
-	DeployActive      string         `json:"deploy_active"`
+	DeployActive      bool           `json:"deploy_active"`
 	Name              string         `gorm:"type:varchar(255);" json:"name"`
 	EnvironmentID     string         `json:"environment_id"`
 	FromEnvironmentID string         `json:"from_environment_id"`

@@ -13,8 +13,9 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/utilities"
 	"errors"
-	"log"
 	"os"
+
+	"gorm.io/gorm"
 )
 
 func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string) (string, error) {
@@ -49,11 +50,24 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	}
 
 	// Does version already exists?
+	deploypipeline := models.DeployPipelines{}
+	err := database.DBConn.Where("pipeline_id = ? and version = ? and environment_id = ?", "d-"+pipelineID, version, toEnvironmentID).First(&deploypipeline).Error
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline database error")
+	}
+
+	if deploypipeline.PipelineID != "" {
+		return "", errors.New("Deployment version already found.")
+	}
 
 	// Obtain pipeline details
-	// ----- Get pipeline nodes
+	// ----- Get pipeline
 	pipeline := models.Pipelines{}
-	err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).First(&pipeline).Error
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).First(&pipeline).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
@@ -76,10 +90,10 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 
 	foldertocopy = config.CodeDirectory + foldertocopy
 	destinationfolder := config.CodeDirectory + pfolder + "deployments/" + pipelineFolder.FolderID + "_" + pipelineFolder.FolderName + "/" + version + "/"
-	log.Println("Folder to copy:", foldertocopy)
-	log.Println("Destination folder:", destinationfolder)
+	// log.Println("Folder to copy:", foldertocopy)
+	// log.Println("Destination folder:", destinationfolder)
 
-	// Create a folder for the version
+	// Create a folder for the version and copy files across
 	err = utilities.CopyDirectory(foldertocopy, destinationfolder)
 	if err != nil {
 		if os.Getenv("debug") == "true" {
@@ -88,9 +102,29 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		return "", errors.New("Failed to copy deployment files.")
 	}
 
-	// Copy the files across using file walk
-
 	// Copy pipeline, nodes and edges
+	createPipeline := models.DeployPipelines{
+		PipelineID:        "d-" + pipeline.PipelineID,
+		Version:           version,
+		DeployActive:      false,
+		Name:              pipeline.Name,
+		EnvironmentID:     toEnvironmentID,
+		FromEnvironmentID: fromEnvironmentID,
+		FromPipelineID:    pipeline.PipelineID,
+		Description:       pipeline.Description,
+		Active:            pipeline.Active,
+		WorkerGroup:       workerGroup,
+		Meta:              pipeline.Meta,
+		Json:              pipeline.Json,
+		UpdateLock:        true,
+	}
+	err = database.DBConn.Create(&createPipeline).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to create deployment pipeline.")
+	}
 
 	// Copy folder structure
 	folders := []*models.CodeFolders{}
@@ -102,6 +136,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		return "", errors.New("Retrieve pipeline folders database error")
 	}
 
-	// Switch to active
+	// Switch to active and take off update lock
+
 	return "OK", nil
 }
