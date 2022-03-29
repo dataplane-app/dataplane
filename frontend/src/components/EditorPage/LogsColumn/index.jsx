@@ -20,6 +20,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const [filteredGraphqlResp, setFilteredGraphqlResp] = useState('');
     const [graphQlResp, setGraphQlResp] = useState([]);
     const [keys, setKeys] = useState([]);
+    const [hasGetNodeLogsRun, setHasGetNodeLogsRun] = useState(0);
 
     // Global state
     const RunState = useGlobalRunState();
@@ -31,12 +32,20 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const webSocket = useWebSocketLog(environmentID, EditorGlobal.runID.get(), setKeys);
 
     useEffect(() => {
+        if (hasGetNodeLogsRun === 0) {
+            setHasGetNodeLogsRun(1);
+            getNodeLogs();
+        }
+
         setWebsocketResp((t) => t + webSocket + '\n');
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [webSocket]);
 
     useEffect(() => {
         setWebsocketResp('');
-        setFilteredGraphqlResp('');
+        setGraphQlResp([]);
+        setHasGetNodeLogsRun(0);
     }, []);
 
     // Prepare filtered graphQL response
@@ -60,8 +69,8 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     useEffect(() => {
         if (!EditorGlobal.runID.get()) return;
         setWebsocketResp('');
-        setFilteredGraphqlResp('');
-        getNodeLogs();
+        setGraphQlResp([]);
+        setHasGetNodeLogsRun(0);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.runID.get()]);
