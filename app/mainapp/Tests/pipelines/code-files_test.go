@@ -2,11 +2,13 @@ package pipelinetests
 
 import (
 	"dataplane/mainapp/Tests/testutils"
+	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
@@ -129,6 +131,15 @@ func TestCodeFiles(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create pipeline 200 status code")
 	id := jsoniter.Get(response, "data", "addPipeline").ToString()
 
+	// Get environment folder path
+	f := models.CodeFolders{}
+	err := database.DBConn.Where("pipeline_id = ? and level = ?", id, "pipeline").Find(&f).Error
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.ParentID, envID)
+	deleteFolder := config.CodeDirectory + folderpath
+
 	// -------- Add pipeline flow -------------
 	mutation = `mutation {
 		addUpdatePipelineFlow(
@@ -176,8 +187,7 @@ func TestCodeFiles(t *testing.T) {
 
 	// -------- Create folder -------------
 	// Get parent's folder id
-	f := models.CodeFolders{}
-	err := database.DBConn.Where("folder_name = ? AND pipeline_id = ?", "TestNodePython", id).Find(&f).Error
+	err = database.DBConn.Where("folder_name = ? AND pipeline_id = ?", "TestNodePython", id).Find(&f).Error
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -399,8 +409,7 @@ func TestCodeFiles(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete pipeline 200 status code")
 
-	// -------- Delte environment -------------
-
+	// -------- Delete environment -------------
 	mutation = `mutation {
 		updateDeleteEnvironment(
 			environment_id: "` + envID + `")
@@ -416,4 +425,9 @@ func TestCodeFiles(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete environment 200 status code")
 
+	// -------- Remove Temporary environment
+	err = os.RemoveAll(deleteFolder)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 }
