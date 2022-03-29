@@ -220,7 +220,7 @@ func TestCodeFiles(t *testing.T) {
 				)
 			}`
 
-	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+	response, httpResponse = testutils.GraphQLRequestPrivateUpload(accessToken, graphQLUrlPrivate, folder1ID, envID, id, "nodeID", t)
 
 	log.Println(string(response))
 
