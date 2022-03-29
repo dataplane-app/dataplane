@@ -1,8 +1,8 @@
-import { Box, Button, Chip, Grid, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, Button, Grid, IconButton, Typography, useTheme } from '@mui/material';
 import { forwardRef, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlayCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import { Downgraded } from '@hookstate/core';
 import { useState } from 'react';
@@ -12,12 +12,15 @@ import { useSnackbar } from 'notistack';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import { useRunCEFile } from '../../../graphql/runCEFile';
 import { useStopCERun } from '../../../graphql/stopCERun';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
 const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Editor state
     const [, setEditorInstance] = useState(null);
+    const [tabValue, setTabValue] = useState(0);
 
     // Run state
     const [isRunning, setIsRunning] = useState(false);
@@ -41,6 +44,21 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
     const codeEditorRun = useRunCEFileHook(rest.pipeline, setRunID, setIsRunning);
     const codeEditorStop = useStopCEFileHook(rest.pipeline, runID, setIsRunning);
+
+    useEffect(() => {
+        const fileIndex = EditorGlobal.tabs
+            .get()
+            .map((tabs) => tabs.id)
+            .indexOf(EditorGlobal.selectedFile.attach(Downgraded).get()?.id);
+
+        if (fileIndex !== -1) {
+            setTabValue(fileIndex);
+        } else {
+            setTabValue(0);
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [EditorGlobal.tabs.get()]);
 
     const handleEditorOnMount = (editor) => {
         editorRef.current = editor;
@@ -71,7 +89,9 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         EditorGlobal.selectedFile.set(tab);
     };
 
-    const handleTabClose = (tab) => {
+    const handleTabClose = (tab, e) => {
+        setTabValue(0);
+        e.stopPropagation();
         const tabs = EditorGlobal.tabs.attach(Downgraded).get();
 
         // Check to see if it's unsaved
@@ -177,37 +197,41 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                     overflow: 'hidden',
                 }}>
                 <Grid container flexWrap="noWrap" sx={{ width: rest?.style?.width, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
-                    {EditorGlobal.tabs
-                        .attach(Downgraded)
-                        .get()
-                        ?.reverse()
-                        ?.map((tabs) => {
-                            return (
-                                <Box
-                                    key={tabs.id}
-                                    sx={{
-                                        border: '1px solid #B9B9B9',
-                                        color: (theme) =>
-                                            EditorGlobal.selectedFile.get()?.id === tabs.id
-                                                ? theme.palette.editorPage.tabTextColor
-                                                : theme.palette.editorPage.tabTextColorNotActive,
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        borderBottomWidth: EditorGlobal.selectedFile.get()?.id === tabs.id ? 4 : 1,
-                                        borderBottomColor: EditorGlobal.selectedFile.get()?.id === tabs.id ? 'primary.main' : '#B9B9B9',
-                                    }}>
-                                    <Typography onClick={() => handleTabClick(tabs)} sx={{ padding: '8px 11px' }} fontSize={15}>
-                                        {tabs?.name}
-                                    </Typography>
-                                    {tabs.isEditing && <Box sx={{ width: 8, height: 8, mt: 0.5, backgroundColor: 'secondary.main', borderRadius: '50%' }} />}
-                                    <IconButton aria-label="close" sx={{ ml: 2 }} onClick={() => handleTabClose(tabs)}>
-                                        <Box component={FontAwesomeIcon} icon={faTimes} sx={{ fontSize: 13 }} />
-                                    </IconButton>
-                                </Box>
-                            );
-                        })}
+                    <Tabs value={tabValue} onChange={(ev, newValue) => setTabValue(newValue)} variant="scrollable" scrollButtons={false}>
+                        {EditorGlobal.tabs
+                            .attach(Downgraded)
+                            .get()
+                            ?.reverse()
+                            ?.map((tabs, idx) => {
+                                return (
+                                    <Tab
+                                        key={tabs.id}
+                                        onClick={() => handleTabClick(tabs)}
+                                        label={tabs?.name}
+                                        value={idx}
+                                        icon={
+                                            <IconButton aria-label="close" onClick={(e) => handleTabClose(tabs, e)}>
+                                                <Box component={FontAwesomeIcon} icon={faTimes} sx={{ fontSize: 13 }} />
+                                            </IconButton>
+                                        }
+                                        iconPosition="end"
+                                        sx={{
+                                            border: '1px solid #B9B9B9',
+                                            color: (theme) =>
+                                                EditorGlobal.selectedFile.get()?.id === tabs.id
+                                                    ? theme.palette.editorPage.tabTextColor
+                                                    : theme.palette.editorPage.tabTextColorNotActive,
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            minHeight: 'auto',
+                                            pr: '4px',
+                                        }}
+                                    />
+                                );
+                            })}
+                    </Tabs>
                 </Grid>
 
                 {EditorGlobal.tabs.get().length > 0 && EditorGlobal.selectedFile.get() && Object.keys(EditorGlobal.selectedFile.attach(Downgraded).get().length > 0) ? (
