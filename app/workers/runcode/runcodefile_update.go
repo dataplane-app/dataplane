@@ -9,6 +9,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm/clause"
 )
 
@@ -60,6 +61,15 @@ func UpdateRunCodeFile(msg modelmain.CodeRun) {
 		}
 
 	}
+
+	sendmsg := modelmain.LogsSend{
+		CreatedAt: time.Now().UTC(),
+		UID:       uuid.NewString(),
+		Log:       msg.Status,
+		LogType:   "action",
+	}
+
+	messageq.MsgSend("coderunfilelogs."+msg.RunID, sendmsg)
 
 	// }()
 

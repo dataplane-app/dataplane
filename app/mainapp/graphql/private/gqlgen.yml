@@ -41,6 +41,8 @@ models:
    model: dataplane/mainapp/database/models.PipelineRuns
  LogsWorkers:
    model: dataplane/mainapp/database/models.LogsWorkers
+ LogsCodeRun:
+   model: dataplane/mainapp/database/models.LogsCodeRun
  CodeFolders:
    model: dataplane/mainapp/database/models.CodeFolders
  CodeFiles:

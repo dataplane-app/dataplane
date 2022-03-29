@@ -8,7 +8,7 @@ import Navbar from '../components/Navbar';
 import { lgLayout, mdLayout, smLayout, xsLayout, xxsLayout } from '../utils/editorLayouts';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import { Downgraded } from '@hookstate/core';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
@@ -26,6 +26,7 @@ export const globalEditorState = createState({
     currentPath: [],
     parentID: null,
     parentName: null,
+    runID: null,
 });
 
 export const useGlobalEditorState = () => useHookState(globalEditorState);
@@ -88,6 +89,18 @@ const PipelineEditor = () => {
         }
     };
 
+    const handleClose = () => {
+        EditorGlobal.set({
+            selectedFile: null,
+            tabs: [],
+            editor: null,
+            currentPath: [],
+            parentID: null,
+            parentName: null,
+            runID: null,
+        });
+        history.push(`/pipelines/view/${pipeline.pipelineID}`);
+    };
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <AppBar
@@ -108,7 +121,7 @@ const PipelineEditor = () => {
                     {/* <Button variant="contained" onClick={handleSave}>
                         Save
                     </Button> */}
-                    <Button variant="outlined" sx={{ ml: 2, backgroundColor: 'background.main' }} onClick={() => history.push(`/pipelines/view/${pipeline.pipelineID}`)}>
+                    <Button variant="outlined" sx={{ ml: 2, backgroundColor: 'background.main' }} onClick={handleClose}>
                         Close
                     </Button>
                 </Grid>
@@ -131,7 +144,7 @@ const PipelineEditor = () => {
                             <FileManagerColumn key="1" pipeline={pipeline} />
                             {/* <PackageColumn key="2" /> */}
                             <EditorColumn key="3" ref={editorRef} pipeline={pipeline} />
-                            <LogsColumn key="4" />
+                            <LogsColumn key="4" environmentID={Environment.id.get()} pipelineID={pipelineID} />
                         </ResponsiveGridLayout>
                     </Box>
                 </Box>
