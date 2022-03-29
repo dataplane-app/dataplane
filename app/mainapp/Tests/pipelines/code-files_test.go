@@ -23,6 +23,7 @@ go test -p 1 -v -count=1 -run TestPipelines dataplane/mainapp/Tests/codefiles
 * Add pipeline flow
 
 * Create folder node
+* Rename folder node
 * Upload file node
 * Rename file node
 * Delete file node
@@ -186,7 +187,7 @@ func TestCodeFiles(t *testing.T) {
 				environmentID: "` + envID + `",
 				pipelineID: "` + id + `",
 				nodeID: "nodeID",
-				folderName: "Folder1",
+				folderName: "Folder",
 				fType: "folder",
 				active: true
 			}
@@ -203,6 +204,7 @@ func TestCodeFiles(t *testing.T) {
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
 
 	log.Println(string(response))
+	renamedFolderID := jsoniter.Get(response, "data", "createFolderNode", "folderID").ToString()
 
 	if strings.Contains(string(response), `"errors":`) {
 		t.Errorf("Error in graphql response")
@@ -210,13 +212,32 @@ func TestCodeFiles(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add folder 200 status code")
 
+	// -------- Rename folder -------------
+	mutation = `mutation {
+		renameFolder(
+						folderID: "` + renamedFolderID + `",
+						environmentID: "` + envID + `",
+						pipelineID: "` + id + `",
+						nodeID: "nodeID",
+						newName: "Folder1"
+					)
+				}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Rename folder 200 status code")
+
 	// -------- Create file -------------
-	folder1ID := jsoniter.Get(response, "data", "createFolderNode", "folderID").ToString()
-	// emptyFile, err := os.Create("emptyFile.txt")
 
 	mutation = `mutation {
 		uploadFileNode(
-					folderID: "` + folder1ID + `",
+					folderID: "` + renamedFolderID + `",
 					environmentID: "` + envID + `",
 					pipelineID: "` + id + `",
 					nodeID: "nodeID",
@@ -224,7 +245,7 @@ func TestCodeFiles(t *testing.T) {
 				)
 			}`
 
-	response, httpResponse = testutils.GraphQLRequestPrivateUpload(accessToken, graphQLUrlPrivate, folder1ID, envID, id, "nodeID", t)
+	response, httpResponse = testutils.GraphQLRequestPrivateUpload(accessToken, graphQLUrlPrivate, renamedFolderID, envID, id, "nodeID", t)
 
 	log.Println(string(response))
 	uploadedFileID := jsoniter.Get(response, "data", "uploadFileNode").ToString()
@@ -254,7 +275,7 @@ func TestCodeFiles(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
-	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete file 200 status code")
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Rename file 200 status code")
 
 	// -------- Delete file -------------
 	mutation = `mutation {
