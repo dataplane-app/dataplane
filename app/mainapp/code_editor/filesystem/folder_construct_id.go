@@ -3,7 +3,6 @@ package filesystem
 import (
 	"dataplane/mainapp/database/models"
 	"errors"
-	"log"
 
 	"gorm.io/gorm"
 )
@@ -45,7 +44,7 @@ func FolderConstructByID(db *gorm.DB, id string, environmentID string, subfolder
 				filepath = currentFolder.FolderID + "_" + currentFolder.FolderName + "/" + filepath
 			}
 
-			log.Println(currentFolder.Level, currentFolder.FolderID+"_"+currentFolder.FolderName+"/"+filepath)
+			// log.Println(currentFolder.Level, currentFolder.FolderID+"_"+currentFolder.FolderName+"/"+filepath)
 
 			if currentFolder.Level == "platform" {
 				break

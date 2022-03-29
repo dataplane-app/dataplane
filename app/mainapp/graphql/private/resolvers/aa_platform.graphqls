@@ -1,3 +1,7 @@
+scalar Any
+scalar Upload
+scalar Time
+
 type Environments {
   id: String!
   name: String!

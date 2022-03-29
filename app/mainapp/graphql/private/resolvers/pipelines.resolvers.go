@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -958,7 +958,7 @@ func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, 
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return nil, errors.New("retrive pipeline nodes database error")
+		return nil, errors.New("Retrieve pipeline nodes database error")
 	}
 
 	// ----- Get pipeline edges

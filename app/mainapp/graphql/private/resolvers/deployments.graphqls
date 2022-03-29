@@ -1,0 +1,99 @@
+type Deployments {
+  pipelineID: String!
+  version: String!
+	name: String!
+  environmentID: String!
+  description: String!
+  active: Boolean!
+  online: Boolean!
+  current: String!
+  workerGroup: String!
+  created_at: Time!
+  updated_at: Time!
+  node_type: String!
+  node_type_desc: String!
+  schedule: String!
+  schedule_type: String!
+}
+
+
+
+# ----- Get flow
+type DeploymentNodes {
+	nodeID:        String!       
+	pipelineID:    String!  
+  version:       String!       
+	name:          String!         
+	environmentID: String!         
+	nodeType:      String!   
+  nodeTypeDesc:  String!   
+  triggerOnline: Boolean!
+	description:   String!         
+  commands:      Any!
+	meta:          Any! 
+  workerGroup:   String!
+	active:        Boolean!           
+}
+
+type DeploymentEdges {
+  edgeID:        String!       
+	pipelineID:    String!    
+  version:       String!     
+	from:          String!         
+	to:            String!         
+	environmentID: String!         
+	meta:          Any! 
+	active:        Boolean!           
+}
+
+type DeploymentFlow {
+  edges: [DeploymentEdges!]!
+  nodes: [DeploymentNodes!]!
+}
+
+
+# extend type Query {
+#   """
+#   Get deployment.
+#   + **Route**: Private
+#   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+#   """
+#   getDeployment(pipelineID: String!, environmentID: String!): Deployments
+
+#   """
+#   Get deployments.
+#   + **Route**: Private
+#   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+#   """
+#   getDeployments(environmentID: String!): [Deployments]
+
+#   """
+#   Get pipeline flows.
+#   + **Route**: Private
+#   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+#   """
+#   getDeploymentFlow(pipelineID: String!, environmentID: String!): DeploymentFlow
+# }
+
+extend type Mutation {
+  """
+  Deploy a pipeline.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines
+  """
+  addDeployment(pipelineID: String!, fromEnvironmentID: String!, toEnvironmentID: String!, version: String!, workerGroup: String! ): String!
+
+  # """
+  # Delete pipeline.
+  # + **Route**: Private
+  # + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  # """
+  # deleteDeployment(environmentID: String!, pipelineID: String! ): String!
+
+  # """
+  # Turn on or off trigger node.
+  # + **Route**: Private
+  # + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  # """
+  # turnOnOffDeployment(environmentID: String!, pipelineID: String!, online: Boolean!): String!
+}
