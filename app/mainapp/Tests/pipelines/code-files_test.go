@@ -27,6 +27,8 @@ go test -p 1 -v -count=1 -run TestPipelines dataplane/mainapp/Tests/codefiles
 * Upload file node
 * Rename file node
 * Delete file node
+* Delete folder node
+
 
 * Delete pipeline flow
 * Delete pipeline
@@ -296,6 +298,26 @@ func TestCodeFiles(t *testing.T) {
 	}
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete file 200 status code")
+
+	// -------- Delete folder -------------
+	mutation = `mutation {
+					deleteFolderNode(
+							folderID: "` + renamedFolderID + `",
+							environmentID: "` + envID + `",
+							pipelineID: "` + id + `",
+							nodeID: "nodeID"
+						)
+					}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete folder 200 status code")
 
 	// -------- Delete pipeline flow -------------
 	mutation = `mutation {
