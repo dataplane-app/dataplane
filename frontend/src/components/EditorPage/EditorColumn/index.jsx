@@ -187,9 +187,9 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         if (runState === 'Running') {
             setIsRunning(true);
         } else if (runState === 'Success') {
-            setIsRunning(true);
+            setIsRunning(false);
         } else if (runState === 'Fail') {
-            setIsRunning(true);
+            setIsRunning(false);
         }
     }, [runState]);
 
