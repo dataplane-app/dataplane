@@ -5,6 +5,7 @@ import (
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
+	"dataplane/mainapp/database/migrations"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
@@ -62,7 +63,7 @@ func Setup(port string) *fiber.App {
 	messageq.NATSConnect()
 
 	// ------- RUN MIGRATIONS ------
-	database.Migrate()
+	migrations.Migrate()
 
 	// ----- Load platformID ------
 	u := models.Platform{}
@@ -153,9 +154,12 @@ func Setup(port string) *fiber.App {
 			}
 
 			// Should create a directory as follows code_directory/
-			parentfolder, _ = filesystem.FolderConstructByID(database.DBConn, platformFolder.FolderID, x.ID)
+			parentfolder, _ = filesystem.FolderConstructByID(database.DBConn, platformFolder.FolderID, x.ID, "")
 			log.Println("Parent folder environment:", parentfolder)
 			filesystem.CreateFolder(envdir, parentfolder)
+
+			// Setup sub directories
+			filesystem.CreateFolderSubs(database.DBConn, x.ID)
 
 		}
 
@@ -279,7 +283,7 @@ func Setup(port string) *fiber.App {
 	app.Get("/app/private/code-files/:fileid", func(c *fiber.Ctx) error {
 		fileID := string(c.Params("fileid"))
 		environmentID := string(c.Query("environment_id"))
-		filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID)
+		filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
 
 		dat, err := os.ReadFile(config.CodeDirectory + filepath)
 		if err != nil {

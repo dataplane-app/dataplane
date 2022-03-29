@@ -17,7 +17,7 @@ type FolderNodeUpdate struct {
 	Action       string `json:"action"`
 }
 
-func FolderNodeAddUpdate(pipelineID string, environmentID string) {
+func FolderNodeAddUpdate(pipelineID string, environmentID string, subfolder string) {
 
 	/*
 		Pipeline nodes have been updated.
@@ -27,7 +27,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string) {
 	var parentfolder models.CodeFolders
 	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ?", environmentID, pipelineID, "pipeline").First(&parentfolder)
 
-	pfolder, _ := FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID)
+	pfolder, _ := FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, subfolder)
 
 	var output []FolderNodeUpdate
 	database.DBConn.Raw(`

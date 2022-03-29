@@ -39,7 +39,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 	parentfolderdata := ""
 	var err error
 	if filesdata.FolderID != "" {
-		parentfolderdata, err = filesystem.FolderConstructByID(database.DBConn, filesdata.FolderID, envID)
+		parentfolderdata, err = filesystem.FolderConstructByID(database.DBConn, filesdata.FolderID, envID, "pipelines")
 		if err != nil {
 			return models.CodeRun{}, errors.New("File record not found")
 		}

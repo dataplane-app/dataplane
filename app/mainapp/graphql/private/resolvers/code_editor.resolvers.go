@@ -55,7 +55,7 @@ func (r *mutationResolver) CreateFolderNode(ctx context.Context, input *privateg
 		Active:        input.Active,
 	}
 
-	parentFolder, err := filesystem.FolderConstructByID(database.DBConn, input.ParentID, input.EnvironmentID)
+	parentFolder, err := filesystem.FolderConstructByID(database.DBConn, input.ParentID, input.EnvironmentID, "pipelines")
 	if err != nil {
 		return &models.CodeFolders{}, errors.New("Create folder - build parent folder failed")
 	}
@@ -87,8 +87,8 @@ func (r *mutationResolver) MoveFolderNode(ctx context.Context, folderID string, 
 	}
 
 	// Move folder in the directory
-	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID)
-	tofolderpath, _ := filesystem.FolderConstructByID(database.DBConn, toFolderID, environmentID)
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID, "pipelines")
+	tofolderpath, _ := filesystem.FolderConstructByID(database.DBConn, toFolderID, environmentID, "pipelines")
 
 	// Make sure there is a path
 	if strings.TrimSpace(folderpath) == "" || strings.TrimSpace(tofolderpath) == "" {
@@ -141,7 +141,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 	}
 
 	// Also checks that folder belongs to environment ID
-	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID)
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID, "pipelines")
 
 	// Make sure there is a path
 	if strings.TrimSpace(folderpath) == "" {
@@ -270,8 +270,8 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 		return "", errors.New("Failed to get folder.")
 	}
 
-	parentFolderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.ParentID, environmentID)
-	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID)
+	parentFolderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.ParentID, environmentID, "pipelines")
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID, "pipelines")
 
 	// Make sure there is a path
 	if strings.TrimSpace(folderpath) == "" || strings.TrimSpace(parentFolderpath) == "" {
@@ -338,7 +338,7 @@ func (r *mutationResolver) UploadFileNode(ctx context.Context, environmentID str
 	}
 
 	// Folder excludes code directory
-	parentFolder, err := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID)
+	parentFolder, err := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID, "pipelines")
 	if err != nil {
 		return "", errors.New("Create folder - build parent folder failed")
 	}
@@ -381,7 +381,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 		return "", errors.New("Requires permissions.")
 	}
 
-	folderpath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID)
+	folderpath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
 
 	// Make sure there is a path
 	if strings.TrimSpace(folderpath) == "" {
@@ -421,7 +421,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	}
 
 	// Delete file from folder
-	filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID)
+	filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
 
 	v, _ := time.Now().UTC().MarshalText()
 
@@ -487,8 +487,8 @@ func (r *mutationResolver) RenameFile(ctx context.Context, environmentID string,
 		return "", errors.New("Failed to file's folder.")
 	}
 
-	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.FolderID, environmentID)
-	filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID)
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.FolderID, environmentID, "pipelines")
+	filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
 
 	// Make sure there is a path
 	if strings.TrimSpace(filepath) == "" || strings.TrimSpace(folderpath) == "" {
@@ -539,8 +539,8 @@ func (r *mutationResolver) MoveFileNode(ctx context.Context, fileID string, toFo
 	}
 
 	// Move folder in the directory
-	folderpathWithFile, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID)
-	tofolderpath, _ := filesystem.FolderConstructByID(database.DBConn, toFolderID, environmentID)
+	folderpathWithFile, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
+	tofolderpath, _ := filesystem.FolderConstructByID(database.DBConn, toFolderID, environmentID, "pipelines")
 
 	// Make sure there is a path
 	if strings.TrimSpace(folderpathWithFile) == "" || strings.TrimSpace(tofolderpath) == "" {

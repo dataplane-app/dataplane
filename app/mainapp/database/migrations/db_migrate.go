@@ -1,4 +1,4 @@
-package database
+package migrations
 
 import (
 	"dataplane/mainapp/database/models"
@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	// "gorm.io/gorm/clause"
+	"dataplane/mainapp/code_editor/filesystem"
+
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
@@ -19,7 +21,7 @@ import (
 
 func Migrate() {
 
-	migrateVersion := "0.0.24"
+	migrateVersion := "0.0.26"
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -101,6 +103,13 @@ func Migrate() {
 			&models.FolderDeleted{},
 			&models.CodeRun{},
 			&models.CodeRunLock{},
+
+			// Deployments
+			&models.DeployPipelines{},
+			&models.DeployPipelineNodes{},
+			&models.DeployPipelineEdges{},
+			&models.DeployCodeFolders{},
+			&models.DeployCodeFiles{},
 		)
 		if err1 != nil {
 			panic(err1)
@@ -134,6 +143,13 @@ func Migrate() {
 			if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
 				panic(err)
 			}
+		}
+
+		// Create any sub folders
+		var environs []*models.Environment
+		dbConn.Find(&environs)
+		for _, env := range environs {
+			filesystem.CreateFolderSubs(dbConn, env.ID)
 		}
 
 	}

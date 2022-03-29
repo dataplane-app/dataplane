@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -77,12 +77,15 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 	}
 
 	// Should create a directory as follows code_directory/
-	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, e.ID)
+	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, e.ID, "")
 	filesystem.CreateFolder(dir, pfolder)
 
 	if config.Debug == "true" {
 		log.Println("Environment dir created.")
 	}
+
+	// Create sub folders
+	filesystem.CreateFolderSubs(database.DBConn, e.ID)
 
 	return &models.Environment{
 		ID:          e.ID,
@@ -133,7 +136,7 @@ func (r *mutationResolver) UpdateEnvironment(ctx context.Context, input *private
 	var parentfolder models.CodeFolders
 	database.DBConn.Where("level = ?", "platform").First(&parentfolder)
 
-	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, input.ID)
+	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, input.ID, "")
 
 	var oldfolder models.CodeFolders
 	database.DBConn.Where("environment_id = ? and level = ?", input.ID, "environment").First(&oldfolder)
