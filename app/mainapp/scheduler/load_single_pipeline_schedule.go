@@ -29,7 +29,7 @@ func mytask(nodeID string, pipelineID string, environmentID string, timezone str
 		return
 	}
 
-	_, err := pipelines.RunPipeline(pipelineID, environmentID)
+	_, err := pipelines.RunPipeline(pipelineID, environmentID, "pipeline")
 	if err != nil {
 		if config.SchedulerDebug == "true" {
 			logging.PrintSecretsRedact("Pipeline schedule run error:", err)

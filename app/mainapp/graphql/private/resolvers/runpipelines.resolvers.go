@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, environmentID string) (*models.PipelineRuns, error) {
+func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, environmentID string, runType string) (*models.PipelineRuns, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -35,7 +35,7 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 		return &models.PipelineRuns{}, errors.New("requires permissions")
 	}
 
-	resp, err := pipelines.RunPipeline(pipelineID, environmentID)
+	resp, err := pipelines.RunPipeline(pipelineID, environmentID, runType)
 	if err != nil {
 		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
@@ -47,7 +47,7 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 	return &resp, nil
 }
 
-func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string, runID string, environmentID string) (*models.PipelineRuns, error) {
+func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string, runID string, environmentID string, runType string) (*models.PipelineRuns, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 

@@ -198,9 +198,9 @@ type ComplexityRoot struct {
 		RenameFile                       func(childComplexity int, environmentID string, fileID string, nodeID string, pipelineID string, newName string) int
 		RenameFolder                     func(childComplexity int, environmentID string, folderID string, nodeID string, pipelineID string, newName string) int
 		RunCEFile                        func(childComplexity int, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string) int
-		RunPipelines                     func(childComplexity int, pipelineID string, environmentID string) int
+		RunPipelines                     func(childComplexity int, pipelineID string, environmentID string, runType string) int
 		StopCERun                        func(childComplexity int, pipelineID string, runID string, environmentID string) int
-		StopPipelines                    func(childComplexity int, pipelineID string, runID string, environmentID string) int
+		StopPipelines                    func(childComplexity int, pipelineID string, runID string, environmentID string, runType string) int
 		TurnOnOffPipeline                func(childComplexity int, environmentID string, pipelineID string, online bool) int
 		UpdateAccessGroup                func(childComplexity int, input *AccessGroupsInput) int
 		UpdateActivateEnvironment        func(childComplexity int, environmentID string) int
@@ -311,6 +311,7 @@ type ComplexityRoot struct {
 		PipelineID    func(childComplexity int) int
 		RunID         func(childComplexity int) int
 		RunJSON       func(childComplexity int) int
+		RunType       func(childComplexity int) int
 		Status        func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 	}
@@ -491,8 +492,8 @@ type MutationResolver interface {
 	DeletePipeline(ctx context.Context, environmentID string, pipelineID string) (string, error)
 	TurnOnOffPipeline(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
-	RunPipelines(ctx context.Context, pipelineID string, environmentID string) (*models.PipelineRuns, error)
-	StopPipelines(ctx context.Context, pipelineID string, runID string, environmentID string) (*models.PipelineRuns, error)
+	RunPipelines(ctx context.Context, pipelineID string, environmentID string, runType string) (*models.PipelineRuns, error)
+	StopPipelines(ctx context.Context, pipelineID string, runID string, environmentID string, runType string) (*models.PipelineRuns, error)
 	CreateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
 	UpdateSecret(ctx context.Context, input *UpdateSecretsInput) (*models.Secrets, error)
 	UpdateSecretValue(ctx context.Context, secret string, value string, environmentID string) (*string, error)
@@ -1496,7 +1497,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RunPipelines(childComplexity, args["pipelineID"].(string), args["environmentID"].(string)), true
+		return e.complexity.Mutation.RunPipelines(childComplexity, args["pipelineID"].(string), args["environmentID"].(string), args["RunType"].(string)), true
 
 	case "Mutation.stopCERun":
 		if e.complexity.Mutation.StopCERun == nil {
@@ -1520,7 +1521,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.StopPipelines(childComplexity, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string)), true
+		return e.complexity.Mutation.StopPipelines(childComplexity, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string), args["RunType"].(string)), true
 
 	case "Mutation.turnOnOffPipeline":
 		if e.complexity.Mutation.TurnOnOffPipeline == nil {
@@ -2238,6 +2239,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PipelineRuns.RunJSON(childComplexity), true
+
+	case "PipelineRuns.run_type":
+		if e.complexity.PipelineRuns.RunType == nil {
+			break
+		}
+
+		return e.complexity.PipelineRuns.RunType(childComplexity), true
 
 	case "PipelineRuns.status":
 		if e.complexity.PipelineRuns.Status == nil {
@@ -3596,10 +3604,6 @@ type DeploymentFlow {
   nodes: [DeploymentNodes!]!
 }
 
-# type WorkerGroupsNodesArray {
-#   WGN: [WorkerGroupsNodes]
-# }
-
 input WorkerGroupsNodes {
   NodeID: String!
   WorkerGroup: String!
@@ -4056,6 +4060,7 @@ extend type Mutation {
     pipeline_id: String!
     status: String!
     environment_id: String!
+    run_type: String!
     run_json: Any!
     created_at: Time!
     ended_at: Time
@@ -4099,14 +4104,14 @@ extend type Mutation {
     + **Route**: Private
     + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
-    runPipelines(pipelineID: String!, environmentID: String!): PipelineRuns!
+    runPipelines(pipelineID: String!, environmentID: String!, RunType: String!): PipelineRuns!
 
     """
     Stop pipeline flow.
     + **Route**: Private
     + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
-    stopPipelines(pipelineID: String!, runID: String!, environmentID: String!): PipelineRuns!
+    stopPipelines(pipelineID: String!, runID: String!, environmentID: String!, RunType: String!): PipelineRuns!
 }
 `, BuiltIn: false},
 	{Name: "resolvers/secrets.graphqls", Input: `type Secrets {
@@ -5355,6 +5360,15 @@ func (ec *executionContext) field_Mutation_runPipelines_args(ctx context.Context
 		}
 	}
 	args["environmentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["RunType"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("RunType"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["RunType"] = arg2
 	return args, nil
 }
 
@@ -5421,6 +5435,15 @@ func (ec *executionContext) field_Mutation_stopPipelines_args(ctx context.Contex
 		}
 	}
 	args["environmentID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["RunType"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("RunType"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["RunType"] = arg3
 	return args, nil
 }
 
@@ -11239,7 +11262,7 @@ func (ec *executionContext) _Mutation_runPipelines(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RunPipelines(rctx, args["pipelineID"].(string), args["environmentID"].(string))
+		return ec.resolvers.Mutation().RunPipelines(rctx, args["pipelineID"].(string), args["environmentID"].(string), args["RunType"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11281,7 +11304,7 @@ func (ec *executionContext) _Mutation_stopPipelines(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().StopPipelines(rctx, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string))
+		return ec.resolvers.Mutation().StopPipelines(rctx, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string), args["RunType"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13885,6 +13908,41 @@ func (ec *executionContext) _PipelineRuns_environment_id(ctx context.Context, fi
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.EnvironmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PipelineRuns_run_type(ctx context.Context, field graphql.CollectedField, obj *models.PipelineRuns) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PipelineRuns",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RunType, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -22353,6 +22411,16 @@ func (ec *executionContext) _PipelineRuns(ctx context.Context, sel ast.Selection
 		case "environment_id":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._PipelineRuns_environment_id(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "run_type":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._PipelineRuns_run_type(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

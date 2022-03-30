@@ -20,7 +20,7 @@ type Command struct {
 	Command string `json:command`
 }
 
-func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, error) {
+func RunPipeline(pipelineID string, environmentID string, RunType string) (models.PipelineRuns, error) {
 
 	// start := time.Now().UTC()
 

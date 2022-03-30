@@ -17,6 +17,7 @@ type WorkerTasks struct {
 	CreatedAt     time.Time      `json:"created_at"`
 	EnvironmentID string         `json:"environment_id"`
 	RunID         string         `gorm:"index:idx_task_runid;index:idx_task_nodeid;" json:"run_id"`
+	RunType       string         `json:"run_type"`
 	WorkerGroup   string         `json:"worker_group"`
 	WorkerID      string         `json:"worker_id"`
 	PipelineID    string         `json:"pipeline_id"`
