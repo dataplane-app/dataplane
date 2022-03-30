@@ -171,7 +171,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		ActivateAccessGroup              func(childComplexity int, accessGroupID string, environmentID string) int
-		AddDeployment                    func(childComplexity int, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string) int
+		AddDeployment                    func(childComplexity int, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*WorkerGroupsNodes) int
 		AddEnvironment                   func(childComplexity int, input *AddEnvironmentInput) int
 		AddPipeline                      func(childComplexity int, name string, environmentID string, description string, workerGroup string) int
 		AddSecretToWorkerGroup           func(childComplexity int, environmentID string, workerGroup string, secret string) int
@@ -478,7 +478,7 @@ type MutationResolver interface {
 	CodeEditorRun(ctx context.Context, environmentID string, nodeID string, pipelineID string, path string) (string, error)
 	RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string) (*CERun, error)
 	StopCERun(ctx context.Context, pipelineID string, runID string, environmentID string) (string, error)
-	AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string) (string, error)
+	AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*WorkerGroupsNodes) (string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 	PipelinePermissionsToUser(ctx context.Context, environmentID string, resourceID string, access []string, userID string) (string, error)
@@ -1172,7 +1172,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddDeployment(childComplexity, args["pipelineID"].(string), args["fromEnvironmentID"].(string), args["toEnvironmentID"].(string), args["version"].(string), args["workerGroup"].(string)), true
+		return e.complexity.Mutation.AddDeployment(childComplexity, args["pipelineID"].(string), args["fromEnvironmentID"].(string), args["toEnvironmentID"].(string), args["version"].(string), args["workerGroup"].(string), args["liveactive"].(bool), args["nodeWorkerGroup"].([]*WorkerGroupsNodes)), true
 
 	case "Mutation.addEnvironment":
 		if e.complexity.Mutation.AddEnvironment == nil {
@@ -3596,6 +3596,15 @@ type DeploymentFlow {
   nodes: [DeploymentNodes!]!
 }
 
+# type WorkerGroupsNodesArray {
+#   WGN: [WorkerGroupsNodes]
+# }
+
+input WorkerGroupsNodes {
+  NodeID: String!
+  WorkerGroup: String!
+}
+
 
 # extend type Query {
 #   """
@@ -3626,7 +3635,7 @@ extend type Mutation {
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines
   """
-  addDeployment(pipelineID: String!, fromEnvironmentID: String!, toEnvironmentID: String!, version: String!, workerGroup: String! ): String!
+  addDeployment(pipelineID: String!, fromEnvironmentID: String!, toEnvironmentID: String!, version: String!, workerGroup: String!, liveactive: Boolean!, nodeWorkerGroup: [WorkerGroupsNodes]): String!
 
   # """
   # Delete pipeline.
@@ -4428,6 +4437,24 @@ func (ec *executionContext) field_Mutation_addDeployment_args(ctx context.Contex
 		}
 	}
 	args["workerGroup"] = arg4
+	var arg5 bool
+	if tmp, ok := rawArgs["liveactive"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("liveactive"))
+		arg5, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["liveactive"] = arg5
+	var arg6 []*WorkerGroupsNodes
+	if tmp, ok := rawArgs["nodeWorkerGroup"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeWorkerGroup"))
+		arg6, err = ec.unmarshalOWorkerGroupsNodes2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroupsNodes(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["nodeWorkerGroup"] = arg6
 	return args, nil
 }
 
@@ -10675,7 +10702,7 @@ func (ec *executionContext) _Mutation_addDeployment(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddDeployment(rctx, args["pipelineID"].(string), args["fromEnvironmentID"].(string), args["toEnvironmentID"].(string), args["version"].(string), args["workerGroup"].(string))
+		return ec.resolvers.Mutation().AddDeployment(rctx, args["pipelineID"].(string), args["fromEnvironmentID"].(string), args["toEnvironmentID"].(string), args["version"].(string), args["workerGroup"].(string), args["liveactive"].(bool), args["nodeWorkerGroup"].([]*WorkerGroupsNodes))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -19861,6 +19888,37 @@ func (ec *executionContext) unmarshalInputUpdateUsersInput(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputWorkerGroupsNodes(ctx context.Context, obj interface{}) (WorkerGroupsNodes, error) {
+	var it WorkerGroupsNodes
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "NodeID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("NodeID"))
+			it.NodeID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "WorkerGroup":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("WorkerGroup"))
+			it.WorkerGroup, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputupdatePlatformInput(ctx context.Context, obj interface{}) (UpdatePlatformInput, error) {
 	var it UpdatePlatformInput
 	asMap := map[string]interface{}{}
@@ -26234,6 +26292,34 @@ func (ec *executionContext) marshalOWorkerGroup2ᚖdataplaneᚋmainappᚋgraphql
 		return graphql.Null
 	}
 	return ec._WorkerGroup(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOWorkerGroupsNodes2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroupsNodes(ctx context.Context, v interface{}) ([]*WorkerGroupsNodes, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*WorkerGroupsNodes, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOWorkerGroupsNodes2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroupsNodes(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOWorkerGroupsNodes2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroupsNodes(ctx context.Context, v interface{}) (*WorkerGroupsNodes, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputWorkerGroupsNodes(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOWorkers2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx context.Context, sel ast.SelectionSet, v []*Workers) graphql.Marshaler {

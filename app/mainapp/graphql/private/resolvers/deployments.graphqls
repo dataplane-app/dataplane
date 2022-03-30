@@ -51,6 +51,11 @@ type DeploymentFlow {
   nodes: [DeploymentNodes!]!
 }
 
+input WorkerGroupsNodes {
+  NodeID: String!
+  WorkerGroup: String!
+}
+
 
 # extend type Query {
 #   """
@@ -81,7 +86,7 @@ extend type Mutation {
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines
   """
-  addDeployment(pipelineID: String!, fromEnvironmentID: String!, toEnvironmentID: String!, version: String!, workerGroup: String! ): String!
+  addDeployment(pipelineID: String!, fromEnvironmentID: String!, toEnvironmentID: String!, version: String!, workerGroup: String!, liveactive: Boolean!, nodeWorkerGroup: [WorkerGroupsNodes]): String!
 
   # """
   # Delete pipeline.

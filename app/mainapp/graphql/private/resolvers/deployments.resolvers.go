@@ -10,15 +10,17 @@ import (
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/utilities"
+	"encoding/json"
 	"errors"
 	"os"
 
 	"gorm.io/gorm"
 )
 
-func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string) (string, error) {
+func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*privategraphql.WorkerGroupsNodes) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -39,8 +41,8 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	perms = []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: fromEnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: fromEnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: fromEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: fromEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "deploy", EnvironmentID: fromEnvironmentID},
 	}
 
 	permOutcome, _, _, _ = permissions.MultiplePermissionChecks(perms)
@@ -93,6 +95,24 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		return "", errors.New("Retrieve pipeline database error")
 	}
 
+	folders := []*models.CodeFolders{}
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&folders).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline folders database error")
+	}
+
+	files := []*models.CodeFiles{}
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&files).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline folders database error")
+	}
+
 	// Obtain folder structure for pipeline
 	pipelineFolder := models.CodeFolders{}
 	err = database.DBConn.Where("pipeline_id = ? and environment_id = ? and level = ?", pipelineID, fromEnvironmentID, "pipeline").First(&pipelineFolder).Error
@@ -139,31 +159,9 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		UpdateLock:        true,
 	}
 
-	// Nodes
-	deployNodes := []*models.DeployPipelineNodes{}
-	for _, node := range pipelineNodes {
-		deployNodes = append(deployNodes, &models.DeployPipelineNodes{
-			NodeID:        "d-" + node.NodeID,
-			PipelineID:    createPipeline.PipelineID,
-			Version:       createPipeline.Version,
-			Name:          node.Name,
-			EnvironmentID: createPipeline.EnvironmentID,
-			NodeType:      node.NodeType,
-			NodeTypeDesc:  node.NodeTypeDesc,
-			TriggerOnline: node.TriggerOnline,
-			Description:   node.Description,
-			Commands:      node.Commands,
-			Meta:          node.Meta,
-
-			// Needs to be recalculated
-			Dependency:  node.Dependency,
-			Destination: node.Destination,
-
-			// Needs to updated via front end sub nodes
-			WorkerGroup: workerGroup,
-			Active:      node.Active,
-		})
-	}
+	// Recalculate edge dependencies and destinations with new d- ID
+	var destinations = make(map[string][]string)
+	var dependencies = make(map[string][]string)
 
 	// Edges
 	deployEdges := []*models.DeployPipelineEdges{}
@@ -177,6 +175,105 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 			EnvironmentID: createPipeline.EnvironmentID,
 			Meta:          edge.Meta,
 			Active:        edge.Active,
+		})
+
+		// map out dependencies and destinations
+		destinations["d-"+edge.From] = append(destinations["d-"+edge.From], "d-"+edge.To)
+		dependencies["d-"+edge.To] = append(dependencies["d-"+edge.To], "d-"+edge.From)
+	}
+
+	// Map
+	var nodeworkergroupmap = make(map[string]string)
+	for _, nwg := range nodeWorkerGroup {
+		nodeworkergroupmap[nwg.NodeID] = nwg.WorkerGroup
+	}
+	// Nodes
+	var online bool
+	deployNodes := []*models.DeployPipelineNodes{}
+	for _, node := range pipelineNodes {
+
+		dependJSON, err := json.Marshal(dependencies["d-"+node.NodeID])
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
+		destinationJSON, err := json.Marshal(destinations["d-"+node.NodeID])
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
+		var workergroupassign string
+		if _, ok := nodeworkergroupmap[node.NodeID]; ok {
+			workergroupassign = nodeworkergroupmap[node.NodeID]
+		} else {
+			workergroupassign = workerGroup
+		}
+
+		//Assign an online value
+		if node.NodeTypeDesc == "play" {
+			online = true
+		} else {
+			if node.NodeType == "trigger" {
+				online = liveactive
+			} else {
+				online = node.TriggerOnline
+			}
+
+		}
+
+		deployNodes = append(deployNodes, &models.DeployPipelineNodes{
+			NodeID:        "d-" + node.NodeID,
+			PipelineID:    createPipeline.PipelineID,
+			Version:       createPipeline.Version,
+			Name:          node.Name,
+			EnvironmentID: createPipeline.EnvironmentID,
+			NodeType:      node.NodeType,
+			NodeTypeDesc:  node.NodeTypeDesc,
+			TriggerOnline: online,
+			Description:   node.Description,
+			Commands:      node.Commands,
+			Meta:          node.Meta,
+
+			// Needs to be recalculated
+			Dependency:  dependJSON,
+			Destination: destinationJSON,
+
+			// Needs to updated via front end sub nodes
+			WorkerGroup: workergroupassign,
+			Active:      node.Active,
+		})
+	}
+
+	// folders
+	deployFolders := []*models.DeployCodeFolders{}
+	for _, n := range folders {
+		deployFolders = append(deployFolders, &models.DeployCodeFolders{
+			FolderID:      n.FolderID,
+			ParentID:      n.ParentID,
+			EnvironmentID: createPipeline.EnvironmentID,
+			PipelineID:    createPipeline.PipelineID,
+			Version:       createPipeline.Version,
+			NodeID:        "d-" + n.NodeID,
+			FolderName:    n.FolderName,
+			Level:         n.Level,
+			FType:         n.FType,
+			Active:        n.Active,
+		})
+	}
+
+	deployFiles := []*models.DeployCodeFiles{}
+	for _, n := range files {
+		deployFiles = append(deployFiles, &models.DeployCodeFiles{
+			FileID:        n.FileID,
+			FolderID:      n.FolderID,
+			EnvironmentID: createPipeline.EnvironmentID,
+			PipelineID:    createPipeline.PipelineID,
+			Version:       createPipeline.Version,
+			NodeID:        "d-" + n.NodeID,
+			FileName:      n.FileName,
+			Level:         n.Level,
+			FType:         n.FType,
+			Active:        n.Active,
 		})
 	}
 
@@ -207,17 +304,40 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		return "", errors.New("Failed to create deployment pipeline.")
 	}
 
-	// Copy folder structure
-	folders := []*models.CodeFolders{}
-	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&folders).Error
+	// Folders create
+	err = database.DBConn.Create(&deployFolders).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return "", errors.New("Retrieve pipeline folders database error")
+		return "", errors.New("Failed to create deployment pipeline.")
+	}
+
+	// Files create
+	err = database.DBConn.Create(&deployFiles).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to create deployment pipeline.")
 	}
 
 	// Switch to active and take off update lock
+	err = database.DBConn.Exec(`
+	update deploy_pipelines set 
+	deploy_active = CASE 
+      WHEN version = ?  THEN true
+      ELSE false
+	END,
+	update_lock = false
+	where pipeline_id = ? and environment_id = ?
+	`, version, "d-"+pipelineID, toEnvironmentID).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to create deployment pipeline.")
+	}
 
 	return "OK", nil
 }

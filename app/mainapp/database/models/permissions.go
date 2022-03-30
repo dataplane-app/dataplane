@@ -50,8 +50,11 @@ var ResourceType = []*ResourceTypeStruct{
 	{Code: "environment_edit_workers", Level: "environment", Label: "Manage workers", Access: "write"},
 	{Code: "environment_view_workers", Level: "environment", Label: "View workers", Access: "read"},
 
-	// Deployments
+	// To Deployments
 	{Code: "environment_deploy_here", Level: "environment", Label: "Deploy pipelines to this environment", Access: "write"},
+
+	// From deployments
+	{Code: "environment_deploy_all_pipelines", Level: "environment", Label: "Deploy pipelines from this environment", Access: "write"},
 
 	// Specific level
 	// {Code: "specific_worker", Level: "specific", Label: "Worker - ${{worker_name}}",},

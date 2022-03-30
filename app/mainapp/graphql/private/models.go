@@ -264,6 +264,11 @@ type WorkerGroup struct {
 	WorkerType  string    `json:"WorkerType"`
 }
 
+type WorkerGroupsNodes struct {
+	NodeID      string `json:"NodeID"`
+	WorkerGroup string `json:"WorkerGroup"`
+}
+
 type WorkerTasks struct {
 	TaskID        string     `json:"task_id"`
 	EnvironmentID string     `json:"environment_id"`
