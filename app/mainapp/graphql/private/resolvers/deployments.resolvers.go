@@ -10,6 +10,7 @@ import (
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
+	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/utilities"
 	"encoding/json"
@@ -19,7 +20,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string) (string, error) {
+func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*privategraphql.WorkerGroupsNodes) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -40,8 +41,8 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	perms = []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: fromEnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: fromEnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: fromEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: fromEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "deploy", EnvironmentID: fromEnvironmentID},
 	}
 
 	permOutcome, _, _, _ = permissions.MultiplePermissionChecks(perms)
@@ -181,7 +182,13 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		dependencies["d-"+edge.To] = append(dependencies["d-"+edge.To], "d-"+edge.From)
 	}
 
+	// Map
+	var nodeworkergroupmap = make(map[string]string)
+	for _, nwg := range nodeWorkerGroup {
+		nodeworkergroupmap[nwg.NodeID] = nwg.WorkerGroup
+	}
 	// Nodes
+	var online bool
 	deployNodes := []*models.DeployPipelineNodes{}
 	for _, node := range pipelineNodes {
 
@@ -195,6 +202,25 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 			logging.PrintSecretsRedact(err)
 		}
 
+		var workergroupassign string
+		if _, ok := nodeworkergroupmap[node.NodeID]; ok {
+			workergroupassign = nodeworkergroupmap[node.NodeID]
+		} else {
+			workergroupassign = workerGroup
+		}
+
+		//Assign an online value
+		if node.NodeTypeDesc == "play" {
+			online = true
+		} else {
+			if node.NodeType == "trigger" {
+				online = liveactive
+			} else {
+				online = node.TriggerOnline
+			}
+
+		}
+
 		deployNodes = append(deployNodes, &models.DeployPipelineNodes{
 			NodeID:        "d-" + node.NodeID,
 			PipelineID:    createPipeline.PipelineID,
@@ -203,7 +229,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 			EnvironmentID: createPipeline.EnvironmentID,
 			NodeType:      node.NodeType,
 			NodeTypeDesc:  node.NodeTypeDesc,
-			TriggerOnline: node.TriggerOnline,
+			TriggerOnline: online,
 			Description:   node.Description,
 			Commands:      node.Commands,
 			Meta:          node.Meta,
@@ -213,7 +239,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 			Destination: destinationJSON,
 
 			// Needs to updated via front end sub nodes
-			WorkerGroup: workerGroup,
+			WorkerGroup: workergroupassign,
 			Active:      node.Active,
 		})
 	}
