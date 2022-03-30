@@ -12,6 +12,7 @@ import (
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/utilities"
+	"encoding/json"
 	"errors"
 	"os"
 
@@ -93,6 +94,24 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		return "", errors.New("Retrieve pipeline database error")
 	}
 
+	folders := []*models.CodeFolders{}
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&folders).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline folders database error")
+	}
+
+	files := []*models.CodeFiles{}
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&files).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline folders database error")
+	}
+
 	// Obtain folder structure for pipeline
 	pipelineFolder := models.CodeFolders{}
 	err = database.DBConn.Where("pipeline_id = ? and environment_id = ? and level = ?", pipelineID, fromEnvironmentID, "pipeline").First(&pipelineFolder).Error
@@ -139,9 +158,43 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		UpdateLock:        true,
 	}
 
+	// Recalculate edge dependencies and destinations with new d- ID
+	var destinations = make(map[string][]string)
+	var dependencies = make(map[string][]string)
+
+	// Edges
+	deployEdges := []*models.DeployPipelineEdges{}
+	for _, edge := range pipelineEdges {
+		deployEdges = append(deployEdges, &models.DeployPipelineEdges{
+			EdgeID:        "d-" + edge.EdgeID,
+			PipelineID:    createPipeline.PipelineID,
+			Version:       createPipeline.Version,
+			From:          "d-" + edge.From,
+			To:            "d-" + edge.To,
+			EnvironmentID: createPipeline.EnvironmentID,
+			Meta:          edge.Meta,
+			Active:        edge.Active,
+		})
+
+		// map out dependencies and destinations
+		destinations["d-"+edge.From] = append(destinations["d-"+edge.From], "d-"+edge.To)
+		dependencies["d-"+edge.To] = append(dependencies["d-"+edge.To], "d-"+edge.From)
+	}
+
 	// Nodes
 	deployNodes := []*models.DeployPipelineNodes{}
 	for _, node := range pipelineNodes {
+
+		dependJSON, err := json.Marshal(dependencies["d-"+node.NodeID])
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
+		destinationJSON, err := json.Marshal(destinations["d-"+node.NodeID])
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
+
 		deployNodes = append(deployNodes, &models.DeployPipelineNodes{
 			NodeID:        "d-" + node.NodeID,
 			PipelineID:    createPipeline.PipelineID,
@@ -156,8 +209,8 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 			Meta:          node.Meta,
 
 			// Needs to be recalculated
-			Dependency:  node.Dependency,
-			Destination: node.Destination,
+			Dependency:  dependJSON,
+			Destination: destinationJSON,
 
 			// Needs to updated via front end sub nodes
 			WorkerGroup: workerGroup,
@@ -165,18 +218,36 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		})
 	}
 
-	// Edges
-	deployEdges := []*models.DeployPipelineEdges{}
-	for _, edge := range pipelineEdges {
-		deployEdges = append(deployEdges, &models.DeployPipelineEdges{
-			EdgeID:        "d-" + edge.EdgeID,
+	// folders
+	deployFolders := []*models.DeployCodeFolders{}
+	for _, n := range folders {
+		deployFolders = append(deployFolders, &models.DeployCodeFolders{
+			FolderID:      n.FolderID,
+			ParentID:      n.ParentID,
+			EnvironmentID: createPipeline.EnvironmentID,
 			PipelineID:    createPipeline.PipelineID,
 			Version:       createPipeline.Version,
-			From:          "d-" + edge.From,
-			To:            "d-" + edge.To,
+			NodeID:        "d-" + n.NodeID,
+			FolderName:    n.FolderName,
+			Level:         n.Level,
+			FType:         n.FType,
+			Active:        n.Active,
+		})
+	}
+
+	deployFiles := []*models.DeployCodeFiles{}
+	for _, n := range files {
+		deployFiles = append(deployFiles, &models.DeployCodeFiles{
+			FileID:        n.FileID,
+			FolderID:      n.FolderID,
 			EnvironmentID: createPipeline.EnvironmentID,
-			Meta:          edge.Meta,
-			Active:        edge.Active,
+			PipelineID:    createPipeline.PipelineID,
+			Version:       createPipeline.Version,
+			NodeID:        "d-" + n.NodeID,
+			FileName:      n.FileName,
+			Level:         n.Level,
+			FType:         n.FType,
+			Active:        n.Active,
 		})
 	}
 
@@ -207,17 +278,40 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		return "", errors.New("Failed to create deployment pipeline.")
 	}
 
-	// Copy folder structure
-	folders := []*models.CodeFolders{}
-	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&folders).Error
+	// Folders create
+	err = database.DBConn.Create(&deployFolders).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return "", errors.New("Retrieve pipeline folders database error")
+		return "", errors.New("Failed to create deployment pipeline.")
+	}
+
+	// Files create
+	err = database.DBConn.Create(&deployFiles).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to create deployment pipeline.")
 	}
 
 	// Switch to active and take off update lock
+	err = database.DBConn.Exec(`
+	update deploy_pipelines set 
+	deploy_active = CASE 
+      WHEN version = ?  THEN true
+      ELSE false
+	END,
+	update_lock = false
+	where pipeline_id = ? and environment_id = ?
+	`, version, "d-"+pipelineID, toEnvironmentID).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to create deployment pipeline.")
+	}
 
 	return "OK", nil
 }

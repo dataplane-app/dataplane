@@ -21,6 +21,7 @@ print("Node id: ` + node.NodeID + `")`
 		input := models.CodeFiles{
 			EnvironmentID: node.EnvironmentID,
 			NodeID:        node.NodeID,
+			PipelineID:    node.PipelineID,
 			FileName:      "dp-entrypoint.py",
 			Active:        true,
 			Level:         "node_file",

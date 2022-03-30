@@ -39,8 +39,8 @@ func (DeployPipelineNodes) TableName() string {
 
 type DeployPipelineNodes struct {
 	NodeID        string         `gorm:"PRIMARY_KEY;type:varchar(128);" json:"node_id"`
-	PipelineID    string         `gorm:"index:idx_deployid_nodes;" json:"pipeline_id"`
-	Version       string         `gorm:"index:idx_deployid_nodes;type:varchar(64);" json:"version"`
+	Version       string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"version"`
+	PipelineID    string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"pipeline_id"`
 	Name          string         `gorm:"type:varchar(255);" json:"name"`
 	EnvironmentID string         `json:"environment_id"`
 	NodeType      string         `json:"node_type"`      //trigger, process, checkpoint
@@ -68,8 +68,8 @@ func (DeployPipelineEdges) TableName() string {
 
 type DeployPipelineEdges struct {
 	EdgeID        string         `gorm:"PRIMARY_KEY;type:varchar(128);" json:"edge_id"`
+	Version       string         `gorm:"PRIMARY_KEY;index:idx_deployid_nodes_edges;" json:"version"`
 	PipelineID    string         `gorm:"index:idx_deployid_nodes_edges;" json:"pipeline_id"`
-	Version       string         `gorm:"index:idx_deployid_nodes_edges;" json:"version"`
 	From          string         `gorm:"index:idx_deployid_edge;" json:"from"`
 	To            string         `gorm:"index:idx_deployid_edge;" json:"to"`
 	EnvironmentID string         `json:"environment_id"`
@@ -88,10 +88,10 @@ func (DeployCodeFolders) TableName() string {
 
 type DeployCodeFolders struct {
 	FolderID      string     `gorm:"PRIMARY_KEY;type:varchar(24);" json:"folder_id"`
+	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64); index:idx_deployfolderunique,unique;" json:"version"`
 	ParentID      string     `gorm:"type:varchar(24);" json:"parent_id"`
 	EnvironmentID string     `gorm:"type:varchar(55); index:idx_deployfolderunique,unique;" json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55); index:idx_deployfolderunique,unique;" json:"pipeline_id"`
-	Version       string     `gorm:"type:varchar(64); index:idx_deployfolderunique,unique;" json:"version"`
 	NodeID        string     `gorm:"type:varchar(55); index:idx_deployfolderunique,unique;" json:"node_id"`
 	FolderName    string     `gorm:"type:varchar(255);" json:"folder_name"`
 	Level         string     `gorm:"index:idx_deployfolderunique,unique;" json:"level" ` //platform, environment, node, other
@@ -110,10 +110,10 @@ func (DeployCodeFiles) TableName() string {
 
 type DeployCodeFiles struct {
 	FileID        string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
+	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64); index:idx_deployfileunique,unique;" json:"version"`
 	FolderID      string     `gorm:"type:varchar(24); index:idx_deployfileunique,unique;" json:"folder_id"`
 	EnvironmentID string     `gorm:"type:varchar(55); index:idx_deployfileunique,unique;" json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55); index:idx_deployfileunique,unique;" json:"pipeline_id"`
-	Version       string     `gorm:"type:varchar(64); index:idx_deployfileunique,unique;" json:"version"`
 	NodeID        string     `gorm:"type:varchar(55); index:idx_deployfileunique,unique;" json:"node_id"`
 	FileName      string     `gorm:"type:varchar(255); index:idx_deployfileunique,unique;" json:"file_name"`
 	Level         string     `json:"level" ` //platform, environment, node, other
@@ -132,11 +132,11 @@ func (DeployFolderDeleted) TableName() string {
 
 type DeployFolderDeleted struct {
 	ID            string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"id"`
+	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"version"`
 	FileID        string     `gorm:"type:varchar(48);" json:"file_id"`
 	FolderID      string     `gorm:"type:varchar(24);" json:"folder_id"`
 	EnvironmentID string     `gorm:"type:varchar(55); " json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55);" json:"pipeline_id"`
-	Version       string     `gorm:"type:varchar(64);" json:"version"`
 	NodeID        string     `gorm:"type:varchar(55); " json:"node_id"`
 	FileName      string     `gorm:"type:varchar(255); " json:"file_name"`
 	FolderName    string     `gorm:"type:varchar(255);" json:"folder_name"`
