@@ -164,7 +164,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 
 	// Get environment folder id
 	ef := models.CodeFolders{}
-	err = database.DBConn.Select("folder_id").Where("environment_id = ?", environmentID).Find(&ef).Error
+	err = database.DBConn.Select("folder_id").Where("environment_id = ? and level = ?", environmentID, "environment").Find(&ef).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
@@ -436,7 +436,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 
 	// Get environment folder id
 	fo := models.CodeFolders{}
-	err = database.DBConn.Select("folder_id").Where("environment_id = ?", environmentID).Find(&fo).Error
+	err = database.DBConn.Select("folder_id").Where("environment_id = ? and level = ?", environmentID, "environment").Find(&fo).Error
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
