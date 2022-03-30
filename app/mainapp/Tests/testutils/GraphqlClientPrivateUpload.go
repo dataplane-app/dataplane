@@ -2,7 +2,6 @@ package testutils
 
 import (
 	"bytes"
-	"dataplane/mainapp/config"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -22,12 +21,15 @@ func GraphQLRequestPrivateUpload(token string, url string, folderID string, envI
 	_ = writer.WriteField("operations", "{\"query\":\"\\n    mutation uploadFileNode($environmentID: String!, $nodeID: String!, $pipelineID: String!, $folderID: String!, $file: Upload!) {\\n        uploadFileNode(environmentID: $environmentID, nodeID: $nodeID, pipelineID: $pipelineID, folderID: $folderID, file: $file)\\n    }\\n\",\"variables\":{\"environmentID\":\""+envID+"\",\"pipelineID\":\""+pipelineID+"\",\"nodeID\":\""+nodeID+"\",\"folderID\":\""+folderID+"\",\"file\":null}}\n")
 	_ = writer.WriteField("map", "{\"1\":[\"variables.file\"]}")
 
-	file, errFile3 := os.Open(config.CodeDirectory + "dp-entrypoint.py")
+	// file, errFile3 := os.Open(config.CodeDirectory + "dp-entrypoint.py")
 
+	file, errFile3 := os.CreateTemp("", "dp-entrypoint.py") // in Go version older than 1.17 you can use ioutil.TempFile
 	if errFile3 != nil {
 		fmt.Println(errFile3)
 		return
 	}
+	defer file.Close()
+	defer os.Remove(file.Name())
 
 	defer file.Close()
 

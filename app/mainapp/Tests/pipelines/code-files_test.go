@@ -19,7 +19,7 @@ import (
 
 /*
 For individual tests - in separate window run: go run server.go
-go test -p 1 -v -count=1 -run TestPipelines dataplane/mainapp/Tests/codefiles
+go test -p 1 -v -count=1 -run TestCodeFiles dataplane/mainapp/Tests/pipelines
 * Login
 * Create pipeline
 * Add pipeline flow
@@ -27,6 +27,7 @@ go test -p 1 -v -count=1 -run TestPipelines dataplane/mainapp/Tests/codefiles
 * Create folder 2
 * Create folder 1
 * Rename folder
+* Move folder
 * Upload file
 * Move file
 * Rename file
@@ -81,9 +82,7 @@ func TestCodeFiles(t *testing.T) {
 	pipelineId := testutils.TextEscape(faker.UUIDHyphenated())
 
 	// -------- clean data -------
-	// database.DBConn.Where("environment_id =?", envID).Delete(&models.PipelineNodes{})
-	// database.DBConn.Where("environment_id =?", envID).Delete(&models.PipelineEdges{})
-	// database.DBConn.Where("environment_id =?", envID).Delete(&models.Pipelines{})
+	database.DBConn.Where("node_id =?", "nodeID").Delete(&models.PipelineNodes{})
 	database.DBConn.Where("name =?", "test_Code_Files_Environment").Delete(&models.Environment{})
 	// -------- Add environment -------------
 
@@ -514,4 +513,7 @@ func TestCodeFiles(t *testing.T) {
 	if err != nil {
 		t.Errorf(err.Error())
 	}
+	// -------- Remove zombie folders
+	database.DBConn.Where("environment_id = ? ", envID).Delete(&models.CodeFolders{})
+
 }
