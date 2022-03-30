@@ -19,6 +19,7 @@ import LogoutUser from './pages/Logout';
 import MemberDetail from './pages/MemberDetail';
 import NotFound from './pages/NotFound';
 import Pipelines from './pages/Pipelines';
+import Deployments from './pages/Deployments';
 import Workers from './pages/Workers/Workers';
 import WorkerDetail from './pages/Workers/WorkerDetail';
 import SecretDetail from './pages/SecretDetail';
@@ -139,6 +140,7 @@ function App() {
                                             '/pipelines/view/:pipelineId',
                                             '/pipelines/permissions/:pipelineId',
                                             '/pipelines/flow/:pipelineId',
+                                            '/deployments',
                                             '/support',
                                             '/feedback',
                                         ]}>
@@ -146,6 +148,9 @@ function App() {
                                             <Layout>
                                                 <Route exact path="/">
                                                     <Pipelines />
+                                                </Route>
+                                                <Route exact path="/deployments">
+                                                    <Deployments />
                                                 </Route>
                                                 <Route exact path="/workers">
                                                     <Workers />
