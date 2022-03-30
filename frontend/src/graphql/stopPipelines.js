@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation stopPipelines($pipelineID: String!, $runID: String!, $environmentID: String!) {
-        stopPipelines(pipelineID: $pipelineID, runID: $runID, environmentID: $environmentID) {
+    mutation stopPipelines($pipelineID: String!, $runID: String!, $environmentID: String!, $RunType: String!) {
+        stopPipelines(pipelineID: $pipelineID, runID: $runID, environmentID: $environmentID, RunType: $RunType) {
             run_id
             pipeline_id
             status

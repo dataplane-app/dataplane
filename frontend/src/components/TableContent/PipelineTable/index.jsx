@@ -219,7 +219,7 @@ export const useRunPipelinesHook = () => {
     // Run pipeline flow
     return async (environmentID, pipelineID) => {
         // First get pipeline flow graph
-        const rawResponse = await getPipelineFlow({ pipelineID, environmentID });
+        const rawResponse = await getPipelineFlow({ pipelineID, environmentID, RunType: 'pipeline' });
         const run_json = prepareInputForFrontend(rawResponse);
         if (run_json.length === 0) return;
 
