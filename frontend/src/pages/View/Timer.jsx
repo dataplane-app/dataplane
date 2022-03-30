@@ -145,6 +145,7 @@ export const useRunPipelinesHook = () => {
         const response = await runPipelines({
             pipelineID: pipelineId,
             environmentID,
+            RunType: 'pipeline',
         });
 
         if (response.r === 'error') {
@@ -171,7 +172,7 @@ const useStopPipelinesHook = (setPrevRunTime) => {
 
     // Stop pipeline flow
     return async (environmentID, runID) => {
-        const response = await stopPipelines({ pipelineID: pipelineId, environmentID, runID });
+        const response = await stopPipelines({ pipelineID: pipelineId, environmentID, runID, RunType: 'pipeline' });
 
         if (response.r === 'error') {
             closeSnackbar();
