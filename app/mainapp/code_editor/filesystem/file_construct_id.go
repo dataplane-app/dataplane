@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func FileConstructByID(db *gorm.DB, id string, environmentID string) (string, error) {
+func FileConstructByID(db *gorm.DB, id string, environmentID string, subfolder string) (string, error) {
 	var currentFile models.CodeFiles
 
 	db.Select("file_name", "folder_id").Where("file_id=? and environment_id = ?", id, environmentID).First(&currentFile)
@@ -16,7 +16,7 @@ func FileConstructByID(db *gorm.DB, id string, environmentID string) (string, er
 	folderID := currentFile.FolderID
 
 	// Folder
-	folderPath, _ := FolderConstructByID(database.DBConn, folderID, environmentID)
+	folderPath, _ := FolderConstructByID(database.DBConn, folderID, environmentID, subfolder)
 
 	return folderPath + fileName, nil
 }

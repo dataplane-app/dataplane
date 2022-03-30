@@ -2,6 +2,7 @@ package logme
 
 import (
 	"dataplane/mainapp/database"
+	"dataplane/mainapp/database/migrations"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"errors"
@@ -19,7 +20,7 @@ go test -timeout 30s -count=1 -v -run ^TestPlatformLoggerFunction$ dataplane/log
 func TestPlatformLoggerFunction(t *testing.T) {
 
 	database.DBConnect()
-	database.Migrate()
+	migrations.Migrate()
 	logging.MapSecrets()
 	err := errors.New("Something is wrong - " + os.Getenv("secret_db_host"))
 	success := PlatformLogger(models.LogsPlatform{

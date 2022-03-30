@@ -106,10 +106,11 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	}
 
 	// Should create a directory as follows code_directory/
-	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID)
-	foldercreate, _, _ := filesystem.CreateFolder(pipelinedir, pfolder)
+	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
 
-	thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID)
+	foldercreate, _, _ := filesystem.CreateFolder(pipelinedir, pfolder+"pipelines/")
+
+	thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID, "pipelines")
 
 	git.PlainInit(config.CodeDirectory+thisfolder, false)
 
@@ -153,7 +154,7 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 	var parentfolder models.CodeFolders
 	database.DBConn.Where("level = ? and environment_id = ?", "environment", environmentID).First(&parentfolder)
 
-	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID)
+	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
 
 	// log.Println("Parent folder:", pfolder)
 
@@ -182,7 +183,7 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 		FType:         "folder",
 		Active:        true,
 	}
-	filesystem.UpdateFolder(oldfolder.FolderID, OLDinput, Newinput, pfolder)
+	filesystem.UpdateFolder(oldfolder.FolderID, OLDinput, Newinput, pfolder+"pipelines/")
 
 	return "Success", nil
 }
@@ -488,7 +489,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	// pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
 
-	filesystem.FolderNodeAddUpdate(pipelineID, environmentID)
+	filesystem.FolderNodeAddUpdate(pipelineID, environmentID, "pipelines")
 
 	// ----- unlock the pipeline
 	err = database.DBConn.Model(&models.Pipelines{}).Where("pipeline_id = ?", pipelineID).Update("update_lock", false).Error
@@ -957,7 +958,7 @@ func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, 
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return nil, errors.New("retrive pipeline nodes database error")
+		return nil, errors.New("Retrieve pipeline nodes database error")
 	}
 
 	// ----- Get pipeline edges

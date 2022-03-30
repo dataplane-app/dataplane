@@ -126,7 +126,7 @@ func RunHubRooms() {
 			// delete(clientsq, connection)
 			if os.Getenv("messagedebug") == "true" {
 				log.Println("connection for room:" + register.room + " unregistered")
-				log.Println("connections:", clientsq)
+				// log.Println("connections:", clientsq)
 			}
 		}
 	}

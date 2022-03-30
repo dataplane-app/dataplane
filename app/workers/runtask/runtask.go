@@ -163,7 +163,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 				if config.Debug == "true" {
 					log.Println("Directory not found - reconstructing:", directoryRun)
 				}
-				newdir, err := filesystem.FolderConstructByID(database.DBConn, msg.FolderID, msg.EnvironmentID)
+				newdir, err := filesystem.FolderConstructByID(database.DBConn, msg.FolderID, msg.EnvironmentID, "pipelines")
 				if err == nil {
 					directoryRun = config.CodeDirectory + newdir
 				}

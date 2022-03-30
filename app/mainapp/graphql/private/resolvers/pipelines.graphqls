@@ -1,5 +1,3 @@
-scalar Any
-
 type Pipelines {
   pipelineID: String!
 	name: String!

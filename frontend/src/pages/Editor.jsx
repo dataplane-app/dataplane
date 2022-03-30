@@ -27,6 +27,7 @@ export const globalEditorState = createState({
     parentID: null,
     parentName: null,
     runID: null,
+    runState: null,
 });
 
 export const useGlobalEditorState = () => useHookState(globalEditorState);
@@ -98,6 +99,7 @@ const PipelineEditor = () => {
             parentID: null,
             parentName: null,
             runID: null,
+            runState: null,
         });
         history.push(`/pipelines/view/${pipeline.pipelineID}`);
     };

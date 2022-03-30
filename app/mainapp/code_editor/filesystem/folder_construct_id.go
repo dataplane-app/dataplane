@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func FolderConstructByID(db *gorm.DB, id string, environmentID string) (string, error) {
+func FolderConstructByID(db *gorm.DB, id string, environmentID string, subfolder string) (string, error) {
 
 	var filepath string
 
@@ -32,7 +32,20 @@ func FolderConstructByID(db *gorm.DB, id string, environmentID string) (string, 
 			currentFolder.FolderID = currentFolder.ParentID
 			db.First(&currentFolder)
 
-			filepath = currentFolder.FolderID + "_" + currentFolder.FolderName + "/" + filepath
+			if subfolder != "" {
+
+				// Add in sub folder such as pipelines:
+				if currentFolder.Level == "environment" {
+					filepath = currentFolder.FolderID + "_" + currentFolder.FolderName + "/" + subfolder + "/" + filepath
+				} else {
+					filepath = currentFolder.FolderID + "_" + currentFolder.FolderName + "/" + filepath
+				}
+			} else {
+				filepath = currentFolder.FolderID + "_" + currentFolder.FolderName + "/" + filepath
+			}
+
+			// log.Println(currentFolder.Level, currentFolder.FolderID+"_"+currentFolder.FolderName+"/"+filepath)
+
 			if currentFolder.Level == "platform" {
 				break
 			}
