@@ -7,6 +7,15 @@ Logout uses access token derived from the refresh token. This removes all refres
 go run mainapp/Tests/mainTest.go
 ```
 
+### Run a production worker
+```shell
+export worker_group=python_prod
+export worker_env=Production
+export dataplane_worker_port=9010
+cd app/workers
+go run worker.go
+```
+
 ### Build front end to embed in app
 ```shell
 cd frontend

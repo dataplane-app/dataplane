@@ -89,6 +89,7 @@ type PipelineRuns struct {
 	Reason        string         `json:"reason"`
 	EnvironmentID string         `json:"environment_id"`
 	RunType       string         `json:"run_type"` //deploy or pipeline
+	DeployVersion string         `json:"deploy_version"`
 	RunJSON       datatypes.JSON `json:"run_json"`
 	CreatedAt     time.Time      `json:"created_at"`
 	EndedAt       time.Time      `json:"ended_at"`

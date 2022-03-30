@@ -31,6 +31,7 @@ type WorkerTasks struct {
 	Status        string         `json:"status"`
 	Reason        string         `json:"reason"`
 	Commands      datatypes.JSON `json:"commands"`
+	Version       string         `json:"version"`
 }
 
 func (WorkerTaskLock) IsEntity() {}

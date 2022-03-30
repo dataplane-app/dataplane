@@ -9,6 +9,7 @@ import (
 	"dataplane/workers/config"
 	"dataplane/workers/runtask"
 	"encoding/json"
+	"errors"
 	"log"
 	"os"
 	"strconv"
@@ -203,6 +204,8 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 		if err3 != nil {
 			logging.PrintSecretsRedact(err3.Error())
 		}
+
+		return errors.New("Worker failed.")
 
 	}
 
