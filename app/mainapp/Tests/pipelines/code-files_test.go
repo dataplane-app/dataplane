@@ -288,6 +288,26 @@ func TestCodeFiles(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Rename folder 200 status code")
 
+	// -------- Move folder -------------
+	mutation = `mutation {
+			moveFolderNode(
+							folderID: "` + renamedFolderID + `",
+							environmentID: "` + envID + `",
+							pipelineID: "` + id + `",
+							toFolderID: "` + Folder2ID + `"
+						)
+					}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Move folder 200 status code")
+
 	// -------- Create file -------------
 
 	mutation = `mutation {
