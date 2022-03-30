@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -162,12 +162,24 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 		return "", errors.New("Failed to get folder.")
 	}
 
+	// Get environment folder id
+	ef := models.CodeFolders{}
+	err = database.DBConn.Select("folder_id").Where("environment_id = ?", environmentID).Find(&ef).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to get folder id from database.")
+	}
+
 	v, _ := time.Now().UTC().MarshalText()
 
+	trashParent, _ := filesystem.FolderConstructByID(database.DBConn, ef.FolderID, environmentID, "")
+	trashPath := config.CodeDirectory + trashParent + "trash/"
 	deleteFolder := config.CodeDirectory + folderpath
 
 	// Zip and put in trash
-	err = filesystem.ZipSource(deleteFolder, config.CodeDirectory+"/trash/"+string(v)+"-"+id+"-"+f.FolderName+".zip")
+	err = filesystem.ZipSource(deleteFolder, trashPath+string(v)+"-"+id+"-"+f.FolderName+".zip")
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
@@ -421,14 +433,27 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	}
 
 	// Delete file from folder
+
+	// Get environment folder id
+	fo := models.CodeFolders{}
+	err = database.DBConn.Select("folder_id").Where("environment_id = ?", environmentID).Find(&fo).Error
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to get folder id from database.")
+	}
+
 	filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
+	trashParent, _ := filesystem.FolderConstructByID(database.DBConn, fo.FolderID, environmentID, "")
 
 	v, _ := time.Now().UTC().MarshalText()
 
 	deleteFile := config.CodeDirectory + filepath
+	trashPath := config.CodeDirectory + trashParent + "trash/"
 
 	// Zip and put in trash
-	err = filesystem.ZipSource(deleteFile, config.CodeDirectory+"/trash/"+string(v)+"-"+id+"-"+f.FileName+".zip")
+	err = filesystem.ZipSource(deleteFile, trashPath+string(v)+"-"+id+"-"+f.FileName+".zip")
 	if err != nil {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
