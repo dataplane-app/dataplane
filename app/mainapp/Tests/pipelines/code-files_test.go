@@ -139,7 +139,7 @@ func TestCodeFiles(t *testing.T) {
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.ParentID, envID)
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.ParentID, envID, "")
 	deleteFolder := config.CodeDirectory + folderpath
 
 	// -------- Add pipeline flow -------------
