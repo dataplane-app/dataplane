@@ -27,13 +27,13 @@ go test -p 1 -v -count=1 -run TestCodeFiles dataplane/mainapp/Tests/pipelines
 * Create folder 2
 * Create folder 1
 * Rename folder
-* Move folder
-* Upload file
-* Move file
-* Rename file
+* Move folder -   Tree integrity check
+* Upload file -   Tree integrity check
+* Move file   -   Tree integrity check
+* Rename file -   Tree integrity check
 * Get Files node
-* Delete file
-* Delete folder
+* Delete file -   Tree integrity check
+* Delete folder - Tree integrity check
 
 * Delete pipeline flow
 * Delete pipeline
@@ -73,11 +73,6 @@ func TestCodeFiles(t *testing.T) {
 	}
 
 	assert.Equalf(t, http.StatusOK, httpLoginResponse.StatusCode, "Login user 200 status code")
-
-	// envID := testutils.TestEnvironmentID
-	// if testutils.TestEnvironmentID == "" {
-	// 	envID = "test-environment-id"
-	// }
 
 	pipelineId := testutils.TextEscape(faker.UUIDHyphenated())
 
@@ -188,7 +183,8 @@ func TestCodeFiles(t *testing.T) {
 
 	// -------- Create folder -------------
 	// Get parent's folder id
-	err = database.DBConn.Where("folder_name = ? AND pipeline_id = ?", "TestNodePython", id).Find(&f).Error
+	nf := models.CodeFolders{}
+	err = database.DBConn.Where("folder_name = ? AND pipeline_id = ?", "TestNodePython", id).Find(&nf).Error
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -197,7 +193,7 @@ func TestCodeFiles(t *testing.T) {
 		createFolderNode(
 			input: {
 				folderID: "Folder1-ID",
-				parentID: "` + f.FolderID + `",
+				parentID: "` + nf.FolderID + `",
 				environmentID: "` + envID + `",
 				pipelineID: "` + id + `",
 				nodeID: "nodeID",
@@ -227,17 +223,12 @@ func TestCodeFiles(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add folder 200 status code")
 
 	// -------- Create folder -------------
-	// Get parent's folder id
-	err = database.DBConn.Where("folder_name = ? AND pipeline_id = ?", "TestNodePython", id).Find(&f).Error
-	if err != nil {
-		t.Errorf(err.Error())
-	}
 
 	mutation = `mutation {
 		createFolderNode(
 			input: {
 				folderID: "Folder1-ID",
-				parentID: "` + f.FolderID + `",
+				parentID: "` + nf.FolderID + `",
 				environmentID: "` + envID + `",
 				pipelineID: "` + id + `",
 				nodeID: "nodeID",
@@ -285,6 +276,7 @@ func TestCodeFiles(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
+	testutils.TreeIntegrityCheck(envID, id, "default", t)
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Rename folder 200 status code")
 
 	// -------- Move folder -------------
@@ -305,6 +297,7 @@ func TestCodeFiles(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
+	testutils.TreeIntegrityCheck(envID, id, "afterMoveFolder", t)
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Move folder 200 status code")
 
 	// -------- Create file -------------
@@ -328,6 +321,7 @@ func TestCodeFiles(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
+	testutils.TreeIntegrityCheck(envID, id, "afterFileCreated", t)
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add file 200 status code")
 
 	// -------- Move file -------------
@@ -350,6 +344,7 @@ func TestCodeFiles(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
+	testutils.TreeIntegrityCheck(envID, id, "afterFileMoved", t)
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add file 200 status code")
 
 	// -------- Rename file -------------
@@ -371,6 +366,7 @@ func TestCodeFiles(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
+	testutils.TreeIntegrityCheck(envID, id, "afterFileRenamed", t)
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Rename file 200 status code")
 
 	// -------- Get files node -------------
@@ -427,6 +423,7 @@ func TestCodeFiles(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
+	testutils.TreeIntegrityCheck(envID, id, "afterFileDeleted", t)
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete file 200 status code")
 
 	// -------- Delete folder -------------
@@ -447,6 +444,7 @@ func TestCodeFiles(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
+	testutils.TreeIntegrityCheck(envID, id, "afterFolderDeleted", t)
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete folder 200 status code")
 
 	// -------- Delete pipeline flow -------------
@@ -515,5 +513,4 @@ func TestCodeFiles(t *testing.T) {
 	}
 	// -------- Remove zombie folders
 	database.DBConn.Where("environment_id = ? ", envID).Delete(&models.CodeFolders{})
-
 }
