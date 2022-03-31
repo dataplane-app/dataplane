@@ -212,15 +212,14 @@ const Deploy = () => {
                             </Typography>
 
                             {nonDefaultWGNodes.get().map((a) => (
-                                <>
-                                    <Typography key={a.name} mt={3} component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
+                                <Box key={a.name}>
+                                    <Typography mt={3} component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
                                         {a.name}
                                     </Typography>
-                                    <Typography key={a.nodeID} mb={1} variant="body1" color="text.primary" fontWeight="400" fontSize="0.875rem" maxWidth={480}>
+                                    <Typography mb={1} variant="body1" color="text.primary" fontWeight="400" fontSize="0.875rem" maxWidth={480}>
                                         {a.description}
                                     </Typography>
                                     <Autocomplete
-                                        key={a.workerGroup}
                                         options={availableWorkerGroups}
                                         getOptionLabel={(option) => option.WorkerGroup}
                                         onInputChange={(event, newValue) => {
@@ -231,7 +230,7 @@ const Deploy = () => {
                                             <TextField {...params} label="Worker group" size="small" sx={{ fontSize: '.75rem', display: 'flex', width: '212px' }} />
                                         )}
                                     />
-                                </>
+                                </Box>
                             ))}
                         </Grid>
                     ) : null}
