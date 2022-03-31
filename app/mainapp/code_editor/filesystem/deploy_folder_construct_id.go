@@ -22,7 +22,16 @@ func DeployFolderConstructByID(db *gorm.DB, id string, environmentID string, sub
 		return "", errors.New("File record not found.")
 	}
 
-	filepath = currentFolder.FolderID + "_" + currentFolder.FolderName
+	var stopfolder bool
+
+	stopfolder = false
+	switch currentFolder.Level {
+	case "pipeline":
+		filepath = currentFolder.FolderID + "_" + currentFolder.FolderName + "/" + version
+		stopfolder = true
+	default:
+		filepath = currentFolder.FolderID + "_" + currentFolder.FolderName
+	}
 
 	// log.Println(filepath, currentFolder.ParentID)
 
@@ -31,7 +40,13 @@ func DeployFolderConstructByID(db *gorm.DB, id string, environmentID string, sub
 
 		for i := 1; i < 100; i++ {
 
+			if stopfolder {
+				break
+			}
+
 			currentFolder.FolderID = currentFolder.ParentID
+
+			// log.Println(currentFolder.Level, filepath)
 			// Looks for the parent folder
 			/* If it runs at pipeline or node level use deploy folder, other wise use pipeline folder*/
 
@@ -41,8 +56,8 @@ func DeployFolderConstructByID(db *gorm.DB, id string, environmentID string, sub
 
 				// Add in sub folder such as pipelines:
 				switch currentFolder.Level {
-				case "environment":
-					filepath = currentFolder.FolderID + "_" + currentFolder.FolderName + "/" + subfolder + "/" + filepath
+				// case "environment":
+				// 	filepath = currentFolder.FolderID + "_" + currentFolder.FolderName + "/" + subfolder + "/" + filepath
 				case "pipeline":
 					filepath = currentFolder.FolderID + "_" + currentFolder.FolderName + "/" + version + "/" + filepath
 				default:

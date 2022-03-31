@@ -16,9 +16,9 @@ func TestDeployFolderConstructByID(t *testing.T) {
 
 	database.DBConnect()
 
-	id := "Rc0Pp2H"
+	id := "83mtTEA"
 	envID := "bcaea011-0711-4086-9082-5f9a20c8d8a4"
-	version := "0.0.7"
+	version := "0.0.8"
 
 	start := time.Now()
 	output, err := DeployFolderConstructByID(database.DBConn, id, envID, "deployments", version)
