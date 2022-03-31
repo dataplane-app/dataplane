@@ -53,7 +53,6 @@ func UpdateRunCodeFile(msg modelmain.CodeRun) {
 
 	}
 
-	// log.Println("msg: ", "taskupdate."+msg.EnvironmentID+"."+msg.RunID)
 	errnat := messageq.MsgSend("coderunupdate."+msg.EnvironmentID+"."+msg.RunID, msg)
 	if errnat != nil {
 		if config.Debug == "true" {

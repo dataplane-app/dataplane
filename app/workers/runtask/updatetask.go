@@ -52,7 +52,6 @@ func UpdateWorkerTasks(msg modelmain.WorkerTasks) {
 
 	}
 
-	// log.Println("msg: ", "taskupdate."+msg.EnvironmentID+"."+msg.RunID)
 	errnat := messageq.MsgSend("taskupdate."+msg.EnvironmentID+"."+msg.RunID, msg)
 	if errnat != nil {
 		if config.Debug == "true" {
