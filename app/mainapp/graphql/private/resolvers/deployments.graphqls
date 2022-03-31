@@ -91,7 +91,7 @@ extend type Query {
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
-  getNonDefaultWGNodes(pipelineID: String!, environmentID: String!): [NonDefaultNodes]
+  getNonDefaultWGNodes(pipelineID: String!, fromEnvironmentID: String!, toEnvironmentID: String!): [NonDefaultNodes]
 }
 
 extend type Mutation {

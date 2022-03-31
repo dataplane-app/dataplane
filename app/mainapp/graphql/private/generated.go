@@ -372,7 +372,7 @@ type ComplexityRoot struct {
 		GetEnvironment                func(childComplexity int, environmentID string) int
 		GetEnvironments               func(childComplexity int) int
 		GetNodeLogs                   func(childComplexity int, runID string, pipelineID string, nodeID string, environmentID string) int
-		GetNonDefaultWGNodes          func(childComplexity int, pipelineID string, environmentID string) int
+		GetNonDefaultWGNodes          func(childComplexity int, pipelineID string, fromEnvironmentID string, toEnvironmentID string) int
 		GetOnePreference              func(childComplexity int, preference string) int
 		GetPipeline                   func(childComplexity int, pipelineID string, environmentID string) int
 		GetPipelineFlow               func(childComplexity int, pipelineID string, environmentID string) int
@@ -546,7 +546,7 @@ type QueryResolver interface {
 	FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*CodeTree, error)
 	GetDeployment(ctx context.Context, pipelineID string, environmentID string) (*Deployments, error)
 	GetDeployments(ctx context.Context, environmentID string) ([]*Deployments, error)
-	GetNonDefaultWGNodes(ctx context.Context, pipelineID string, environmentID string) ([]*NonDefaultNodes, error)
+	GetNonDefaultWGNodes(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string) ([]*NonDefaultNodes, error)
 	Me(ctx context.Context) (*models.Users, error)
 	MyPipelinePermissions(ctx context.Context) ([]*PipelinePermissionsOutput, error)
 	UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*PipelinePermissionsOutput, error)
@@ -2642,7 +2642,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetNonDefaultWGNodes(childComplexity, args["pipelineID"].(string), args["environmentID"].(string)), true
+		return e.complexity.Query.GetNonDefaultWGNodes(childComplexity, args["pipelineID"].(string), args["fromEnvironmentID"].(string), args["toEnvironmentID"].(string)), true
 
 	case "Query.getOnePreference":
 		if e.complexity.Query.GetOnePreference == nil {
@@ -3759,14 +3759,14 @@ input WorkerGroupsNodes {
 
 extend type Query {
   """
-  Get deployment.
+  Get the latest active deployment.
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
   getDeployment(pipelineID: String!, environmentID: String!): Deployments
 
   """
-  Get deployments.
+  Get all deployments.
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
@@ -3777,7 +3777,7 @@ extend type Query {
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
-  getNonDefaultWGNodes(pipelineID: String!, environmentID: String!): [NonDefaultNodes]
+  getNonDefaultWGNodes(pipelineID: String!, fromEnvironmentID: String!, toEnvironmentID: String!): [NonDefaultNodes]
 }
 
 extend type Mutation {
@@ -6433,14 +6433,23 @@ func (ec *executionContext) field_Query_getNonDefaultWGNodes_args(ctx context.Co
 	}
 	args["pipelineID"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["environmentID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+	if tmp, ok := rawArgs["fromEnvironmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fromEnvironmentID"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["environmentID"] = arg1
+	args["fromEnvironmentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["toEnvironmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toEnvironmentID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["toEnvironmentID"] = arg2
 	return args, nil
 }
 
@@ -15829,7 +15838,7 @@ func (ec *executionContext) _Query_getNonDefaultWGNodes(ctx context.Context, fie
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetNonDefaultWGNodes(rctx, args["pipelineID"].(string), args["environmentID"].(string))
+		return ec.resolvers.Query().GetNonDefaultWGNodes(rctx, args["pipelineID"].(string), args["fromEnvironmentID"].(string), args["toEnvironmentID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

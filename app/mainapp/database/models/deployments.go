@@ -17,7 +17,7 @@ type DeployPipelines struct {
 	Version           string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"version"`
 	DeployActive      bool           `json:"deploy_active"`
 	Name              string         `gorm:"type:varchar(255);" json:"name"`
-	EnvironmentID     string         `json:"environment_id"`
+	EnvironmentID     string         `gorm:"PRIMARY_KEY;" json:"environment_id"`
 	FromEnvironmentID string         `json:"from_environment_id"`
 	FromPipelineID    string         `json:"from_pipeline_id"`
 	Description       string         `json:"description"`
@@ -42,7 +42,7 @@ type DeployPipelineNodes struct {
 	Version       string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"version"`
 	PipelineID    string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"pipeline_id"`
 	Name          string         `gorm:"type:varchar(255);" json:"name"`
-	EnvironmentID string         `json:"environment_id"`
+	EnvironmentID string         `gorm:"PRIMARY_KEY;" json:"environment_id"`
 	NodeType      string         `json:"node_type"`      //trigger, process, checkpoint
 	NodeTypeDesc  string         `json:"node_type_desc"` //python, bash, play, scheduler, checkpoint, api
 	TriggerOnline bool           `gorm:"default:false;" json:"trigger_online"`
@@ -72,7 +72,7 @@ type DeployPipelineEdges struct {
 	PipelineID    string         `gorm:"index:idx_deployid_nodes_edges;" json:"pipeline_id"`
 	From          string         `gorm:"index:idx_deployid_edge;" json:"from"`
 	To            string         `gorm:"index:idx_deployid_edge;" json:"to"`
-	EnvironmentID string         `json:"environment_id"`
+	EnvironmentID string         `gorm:"PRIMARY_KEY;" json:"environment_id"`
 	Meta          datatypes.JSON `json:"meta"`
 	Active        bool           `json:"active"`
 	CreatedAt     time.Time      `json:"created_at"`
@@ -90,7 +90,7 @@ type DeployCodeFolders struct {
 	FolderID      string     `gorm:"PRIMARY_KEY;type:varchar(24);" json:"folder_id"`
 	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64); index:idx_deployfolderunique,unique;" json:"version"`
 	ParentID      string     `gorm:"type:varchar(24);" json:"parent_id"`
-	EnvironmentID string     `gorm:"type:varchar(55); index:idx_deployfolderunique,unique;" json:"environment_id"`
+	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(55); index:idx_deployfolderunique,unique;" json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55); index:idx_deployfolderunique,unique;" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); index:idx_deployfolderunique,unique;" json:"node_id"`
 	FolderName    string     `gorm:"type:varchar(255);" json:"folder_name"`
@@ -112,7 +112,7 @@ type DeployCodeFiles struct {
 	FileID        string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
 	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64); index:idx_deployfileunique,unique;" json:"version"`
 	FolderID      string     `gorm:"type:varchar(24); index:idx_deployfileunique,unique;" json:"folder_id"`
-	EnvironmentID string     `gorm:"type:varchar(55); index:idx_deployfileunique,unique;" json:"environment_id"`
+	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(55); index:idx_deployfileunique,unique;" json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55); index:idx_deployfileunique,unique;" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); index:idx_deployfileunique,unique;" json:"node_id"`
 	FileName      string     `gorm:"type:varchar(255); index:idx_deployfileunique,unique;" json:"file_name"`
@@ -135,7 +135,7 @@ type DeployFolderDeleted struct {
 	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"version"`
 	FileID        string     `gorm:"type:varchar(48);" json:"file_id"`
 	FolderID      string     `gorm:"type:varchar(24);" json:"folder_id"`
-	EnvironmentID string     `gorm:"type:varchar(55); " json:"environment_id"`
+	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(55); " json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55);" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); " json:"node_id"`
 	FileName      string     `gorm:"type:varchar(255); " json:"file_name"`

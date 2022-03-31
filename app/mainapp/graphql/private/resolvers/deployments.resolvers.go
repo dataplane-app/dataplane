@@ -15,7 +15,6 @@ import (
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 
 	"gorm.io/gorm"
@@ -629,6 +628,61 @@ order by a.created_at desc`
 	return p, nil
 }
 
-func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID string, environmentID string) ([]*privategraphql.NonDefaultNodes, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string) ([]*privategraphql.NonDefaultNodes, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	var resp []*privategraphql.NonDefaultNodes
+
+	// ----- Deploy To Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: toEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_here", ResourceID: platformID, Access: "write", EnvironmentID: toEnvironmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return []*privategraphql.NonDefaultNodes{}, errors.New("Requires permissions: environment_deploy_here")
+	}
+
+	// ----- Deploy from Permissions
+	perms = []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: fromEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: fromEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "deploy", EnvironmentID: fromEnvironmentID},
+	}
+
+	permOutcome, _, _, _ = permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return []*privategraphql.NonDefaultNodes{}, errors.New("Requires permissions: environment_deploy_all_pipelines")
+	}
+
+	var pipelineNodes []*models.PipelineNodes
+	err := database.DBConn.Debug().Where("pipeline_id =? and environment_id =? and (worker_group = '') IS FALSE", pipelineID, fromEnvironmentID).Find(&pipelineNodes).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+			return []*privategraphql.NonDefaultNodes{}, errors.New("Error retrieving node specific worker groups, try again.")
+		}
+	}
+
+	for _, n := range pipelineNodes {
+		resp = append(resp, &privategraphql.NonDefaultNodes{
+			NodeID:        n.NodeID,
+			PipelineID:    n.PipelineID,
+			Name:          n.Name,
+			EnvironmentID: n.EnvironmentID,
+			NodeType:      n.NodeType,
+			NodeTypeDesc:  n.NodeTypeDesc,
+			TriggerOnline: n.TriggerOnline,
+			Description:   n.Description,
+			WorkerGroup:   n.WorkerGroup,
+			Active:        n.Active,
+		})
+	}
+	return resp, nil
 }
