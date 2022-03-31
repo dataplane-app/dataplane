@@ -4,8 +4,9 @@ type Deployments {
 	name: String!
   environmentID: String!
   description: String!
-  active: Boolean!
   online: Boolean!
+  active: Boolean!
+  deploy_active: Boolean!
   current: String!
   workerGroup: String!
   created_at: Time!
@@ -107,7 +108,7 @@ extend type Mutation {
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
   """
-  deleteDeployment(environmentID: String!, pipelineID: String! ): String!
+  deleteDeployment(environmentID: String!, pipelineID: String!, version: String!): String!
 
   """
   Turn on or off trigger node.
