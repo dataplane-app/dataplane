@@ -23,7 +23,6 @@ const Deploy = () => {
     const [selectedEnvironment, setSelectedEnvironment] = useState(null);
     const [availableEnvironments, setAvailableEnvironments] = useState([]);
     const [availableWorkerGroups, setAvailableWorkerGroups] = useState([]);
-    const [selectedWorkerGroup, setSelectedWorkerGroup] = useState(null);
     const [pipeline, setPipeline] = useState(null);
     const [live, setLive] = useState(true);
     const nonDefaultWGNodes = useHookState([]);
@@ -69,6 +68,7 @@ const Deploy = () => {
     };
 
     const onSubmit = (data) => {
+        if (!selectedEnvironment) return;
         const nodeWorkerGroup = nonDefaultWGNodes.get().map((a) => ({
             NodeID: a.nodeID,
             WorkerGroup: a.workerGroup,
@@ -78,7 +78,7 @@ const Deploy = () => {
             fromEnvironmentID: Environment.id?.get(),
             toEnvironmentID: selectedEnvironment.id,
             version: `${data.major}.${data.minor}.${data.patch}`,
-            workerGroup: selectedWorkerGroup.WorkerGroup,
+            workerGroup: data.workerGroup,
             liveactive: live,
             nodeWorkerGroup,
         };
@@ -111,7 +111,6 @@ const Deploy = () => {
 
                         <Grid mt={2} display="flex" alignItems="center">
                             <Autocomplete
-                                id="available_environments_autocomplete"
                                 onChange={(event, newValue) => {
                                     setSelectedEnvironment(newValue);
                                 }}
@@ -186,13 +185,21 @@ const Deploy = () => {
                                 <Typography sx={{ ml: 2, fontSize: 16, color: 'status.pipelineOnlineText' }}>Live on deployment</Typography>
                             </Grid>
 
-                            <Autocomplete
-                                options={availableWorkerGroups}
-                                getOptionLabel={(option) => option.WorkerGroup}
-                                value={selectedWorkerGroup}
-                                onChange={(event, newValue) => setSelectedWorkerGroup(newValue)}
-                                renderInput={(params) => <TextField {...params} label="Default worker group" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
-                            />
+                            {availableWorkerGroups.length > 0 ? (
+                                <Autocomplete
+                                    options={availableWorkerGroups}
+                                    getOptionLabel={(option) => option.WorkerGroup}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Default worker group"
+                                            size="small"
+                                            sx={{ fontSize: '.75rem', display: 'flex' }}
+                                            {...register('workerGroup', { required: true })}
+                                        />
+                                    )}
+                                />
+                            ) : null}
 
                             <Grid mt={4} display="flex" alignItems="center">
                                 <Button type="submit" variant="contained" color="primary" style={{ width: '100%' }}>
