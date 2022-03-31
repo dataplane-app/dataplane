@@ -231,7 +231,7 @@ const Deploy = () => {
                                         getOptionLabel={(option) => option.WorkerGroup}
                                         onInputChange={(event, newValue) => {
                                             let idx = nonDefaultWGNodes.get().findIndex((b) => b.nodeID === a.nodeID);
-                                            nonDefaultWGNodes.merge((p) => ({ [idx]: { ...p[idx], workerGroup: newValue } }));
+                                            nonDefaultWGNodes[idx].merge({ workerGroup: newValue });
                                         }}
                                         renderInput={(params) => (
                                             <TextField {...params} label="Worker group" size="small" sx={{ fontSize: '.75rem', display: 'flex', width: '212px' }} />
