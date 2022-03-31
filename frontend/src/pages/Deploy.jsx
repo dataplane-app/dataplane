@@ -130,7 +130,7 @@ const Deploy = () => {
                             </Typography>
 
                             <Grid container alignItems="center" flexWrap="nowrap" justifyContent="flex-start" mt={2}>
-                                <Grid item display="flex" alignItems="center" direction="column">
+                                <Grid item display="flex" alignItems="center" sx={{ flexDirection: 'column' }}>
                                     <Typography variant="subtitle1" fontWeight={500} mb={0.6}>
                                         Major
                                     </Typography>
@@ -146,7 +146,7 @@ const Deploy = () => {
                                         {...register('major', { required: true })}
                                     />
                                 </Grid>
-                                <Grid item display="flex" alignItems="center" direction="column" ml={2} mr={2}>
+                                <Grid item display="flex" alignItems="center" sx={{ flexDirection: 'column' }} ml={2} mr={2}>
                                     <Typography variant="subtitle1" fontWeight={500} mb={0.6}>
                                         Minor
                                     </Typography>
@@ -163,7 +163,7 @@ const Deploy = () => {
                                         {...register('minor', { required: true })}
                                     />
                                 </Grid>
-                                <Grid item display="flex" alignItems="center" direction="column">
+                                <Grid item display="flex" alignItems="center" sx={{ flexDirection: 'column' }}>
                                     <Typography variant="subtitle1" fontWeight={500} mb={0.6}>
                                         Patch
                                     </Typography>
