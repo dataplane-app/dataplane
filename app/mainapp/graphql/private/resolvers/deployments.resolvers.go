@@ -599,7 +599,7 @@ where a.environment_id = ?
 order by a.created_at desc
 `
 
-		err := database.DBConn.Debug().Raw(
+		err := database.DBConn.Raw(
 			query, environmentID).Scan(&p).Error
 
 		if err != nil {
@@ -667,7 +667,7 @@ where
 a.environment_id = ?
 order by a.created_at desc`
 
-		err := database.DBConn.Debug().Raw(
+		err := database.DBConn.Raw(
 			query, currentUser, currentUser, environmentID).Scan(&p).Error
 
 		if err != nil {
