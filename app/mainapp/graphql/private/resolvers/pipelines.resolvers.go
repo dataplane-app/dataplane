@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -69,7 +69,7 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	}
 
 	// Give access permissions for the user who added the pipeline
-	AccessTypes := models.AccessTypes
+	AccessTypes := models.PipelineAccessTypes
 
 	for _, access := range AccessTypes {
 		_, err := permissions.CreatePermission(

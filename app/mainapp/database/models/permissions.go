@@ -55,14 +55,18 @@ var ResourceType = []*ResourceTypeStruct{
 
 	// From deployments
 	{Code: "environment_deploy_all_pipelines", Level: "environment", Label: "Deploy pipelines from this environment", Access: "write"},
+	{Code: "environment_all_deployments", Level: "environment", Label: "View all deployments", Access: "read"},
 
 	// Specific level
 	// {Code: "specific_worker", Level: "specific", Label: "Worker - ${{worker_name}}",},
 	{Code: "specific_pipeline", Level: "specific", Label: "Pipeline - ${{pipeline_name}}"},
+	{Code: "specific_deployment", Level: "specific", Label: "Deployment- ${{deployment_name}}"},
 }
 
 /* Access: what type of access does the user have to the resource - read, write */
-var AccessTypes = []string{"read", "write", "run", "deploy", "assign_pipeline_permission"}
+var AccessTypes = []string{"read", "write", "run", "deploy", "assign_pipeline_permission", "assign_deployment_permission"}
+var PipelineAccessTypes = []string{"read", "write", "run", "deploy", "assign_pipeline_permission"}
+var DeploymentAccessTypes = []string{"read", "write", "run", "assign_deployment_permission"}
 
 // -------------- Permissions
 

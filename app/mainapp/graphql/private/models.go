@@ -138,6 +138,20 @@ type FolderNodeInput struct {
 	Active        bool   `json:"active"`
 }
 
+type NonDefaultNodes struct {
+	NodeID        string `json:"nodeID"`
+	PipelineID    string `json:"pipelineID"`
+	Version       string `json:"version"`
+	Name          string `json:"name"`
+	EnvironmentID string `json:"environmentID"`
+	NodeType      string `json:"nodeType"`
+	NodeTypeDesc  string `json:"nodeTypeDesc"`
+	TriggerOnline bool   `json:"triggerOnline"`
+	Description   string `json:"description"`
+	WorkerGroup   string `json:"workerGroup"`
+	Active        bool   `json:"active"`
+}
+
 type PipelineEdgesInput struct {
 	EdgeID string                  `json:"edgeID"`
 	From   string                  `json:"from"`

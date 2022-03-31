@@ -31,6 +31,7 @@ type WorkerTasks struct {
 	Status        string         `json:"status"`
 	Reason        string         `json:"reason"`
 	Commands      datatypes.JSON `json:"commands"`
+	Version       string         `json:"version"`
 }
 
 func (WorkerTaskLock) IsEntity() {}
@@ -57,6 +58,8 @@ type WorkerTaskSend struct {
 	Folder        string    `json:"folder"`
 	FolderID      string    `json:"folder_id"`
 	Commands      []string  `json:"commands"`
+	Version       string    `json:"version"`
+	RunType       string    `json:"run_type"`
 }
 
 type WorkerPipelineNext struct {

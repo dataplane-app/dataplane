@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm/clause"
 )
 
 func CreatePermission(
@@ -57,14 +58,6 @@ func CreatePermission(
 		return response, errors.New("Permission access type check failed")
 	}
 
-	/*
-		am I allowed to create this permission?
-		On first sign up, platform admin needs to be set
-	*/
-	if platformAdmin != true {
-
-	}
-
 	// map data
 	response = models.Permissions{
 		ID:            uuid.NewString(),
@@ -78,7 +71,7 @@ func CreatePermission(
 	}
 
 	// create permisssion
-	err := database.DBConn.Create(&response).Error
+	err := database.DBConn.Clauses(clause.OnConflict{DoNothing: true}).Create(&response).Error
 	if err != nil {
 		return models.Permissions{}, errors.New("Permissions - database create error")
 	}

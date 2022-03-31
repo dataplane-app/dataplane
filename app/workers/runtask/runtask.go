@@ -41,6 +41,8 @@ var TasksStatus = cmap.New()
 // Worker function to run task
 func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
+	// log.Println("Type:", msg.RunType, msg.Version)
+
 	var statusUpdate string
 	var TasksStatusWG string
 	var TasksRun Task
@@ -159,14 +161,26 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			// log.Println(directoryRun)
 
 			// construct the directory if the directory cant be found
+			var newdir string
 			if _, err := os.Stat(directoryRun); os.IsNotExist(err) {
 				if config.Debug == "true" {
-					log.Println("Directory not found - reconstructing:", directoryRun)
+					log.Println("Directory not found:", directoryRun)
 				}
-				newdir, err := filesystem.FolderConstructByID(database.DBConn, msg.FolderID, msg.EnvironmentID, "pipelines")
+				switch msg.RunType {
+				case "deployment":
+					newdir, err = filesystem.DeployFolderConstructByID(database.DBConn, msg.FolderID, msg.EnvironmentID, "deployments", msg.Version)
+				default:
+					newdir, err = filesystem.FolderConstructByID(database.DBConn, msg.FolderID, msg.EnvironmentID, "pipelines")
+				}
+
+				if config.Debug == "true" {
+					log.Println("Reconstructed:", config.CodeDirectory+newdir)
+				}
+
 				if err == nil {
 					directoryRun = config.CodeDirectory + newdir
 				}
+
 			}
 
 			// Overwrite command with injected directory

@@ -16,11 +16,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Command struct {
-	Command string `json:command`
-}
-
-func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, error) {
+func RunDeployment(pipelineID string, environmentID string) (models.PipelineRuns, error) {
 
 	// start := time.Now().UTC()
 
@@ -30,14 +26,18 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	var triggerData = make(map[string]*models.WorkerTasks)
 
 	// Retrieve pipeline details
-	pipelinedata := models.Pipelines{}
-	err := database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).First(&pipelinedata).Error
+	pipelinedata := models.DeployPipelines{}
+	err := database.DBConn.Where("pipeline_id = ? and environment_id =? and deploy_active=?", pipelineID, environmentID, true).First(&pipelinedata).Error
 	if err != nil {
 
 		if config.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+			logging.PrintSecretsRedact("Find deployment", err)
 		}
 		return models.PipelineRuns{}, err
+	}
+
+	if config.Debug == "true" {
+		logging.PrintSecretsRedact("Deployment run version:", pipelinedata.Version)
 	}
 
 	// Retrieve folders
@@ -50,7 +50,8 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		EnvironmentID: environmentID,
 		CreatedAt:     time.Now().UTC(),
 		RunJSON:       pipelinedata.Json,
-		RunType:       "pipeline",
+		RunType:       "deployment",
+		DeployVersion: pipelinedata.Version,
 	}
 
 	err = database.DBConn.Create(&run).Error
@@ -63,36 +64,36 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	}
 
 	// ------ Obtain folders
-	folders := make(chan []models.CodeFolders)
+	folders := make(chan []models.DeployCodeFolders)
 	parentfolder := make(chan string)
-	foldersdata := []models.CodeFolders{}
+	foldersdata := []models.DeployCodeFolders{}
 
 	go func() {
-		database.DBConn.Where("pipeline_id = ? and environment_id =? and level = ?", pipelineID, environmentID, "node").Find(&foldersdata)
+		database.DBConn.Where("pipeline_id = ? and environment_id =? and level = ? and version=?", pipelineID, environmentID, "node", pipelinedata.Version).Find(&foldersdata)
 		folders <- foldersdata
 
 		pf := ""
 
 		if len(foldersdata) > 0 {
-			pf, _ = filesystem.FolderConstructByID(database.DBConn, foldersdata[0].ParentID, environmentID, "pipelines")
+			pf, _ = filesystem.DeployFolderConstructByID(database.DBConn, foldersdata[0].ParentID, environmentID, "deployments", foldersdata[0].Version)
 		}
 		parentfolder <- pf
 	}()
 
 	// Chart a course
-	nodes := make(chan []*models.PipelineNodes)
-	nodesdata := []*models.PipelineNodes{}
+	nodes := make(chan []*models.DeployPipelineNodes)
+	nodesdata := []*models.DeployPipelineNodes{}
 
 	go func() {
 
-		database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Find(&nodesdata)
+		database.DBConn.Where("pipeline_id = ? and environment_id =? and version=?", pipelineID, environmentID, pipelinedata.Version).Find(&nodesdata)
 		nodes <- nodesdata
 	}()
 
-	edges := make(chan []*models.PipelineEdges)
-	edgesdata := []*models.PipelineEdges{}
+	edges := make(chan []*models.DeployPipelineEdges)
+	edgesdata := []*models.DeployPipelineEdges{}
 	go func() {
-		database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Find(&edgesdata)
+		database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, pipelinedata.Version).Find(&edgesdata)
 		edges <- edgesdata
 	}()
 
@@ -122,9 +123,13 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 	var folderNodeMap = make(map[string]string)
 	for _, f := range foldersdata {
 
+		dir := ""
+
 		if f.Level == "node" {
 
-			dir := parentfolderdata + f.FolderID + "_" + f.FolderName
+			dir = parentfolderdata + f.FolderID + "_" + f.FolderName
+
+			log.Println("Send dir:", parentfolderdata, f.FolderID+"_"+f.FolderName, dir)
 			// log.Println(dir)
 
 			folderMap[f.NodeID] = dir
@@ -204,7 +209,8 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 			Destination:   destinationJSON,
 			Folder:        folderMap[s.NodeID],
 			FolderID:      folderNodeMap[s.NodeID],
-			RunType:       "pipeline",
+			RunType:       "deployment",
+			Version:       s.Version,
 		}
 
 		if nodeType == "start" {
@@ -252,7 +258,6 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 
 		json.Unmarshal(triggerData[s].Commands, &commandsJson)
 
-		// x = x + 1
 		for _, c := range commandsJson {
 			commandsend = append(commandsend, c.Command)
 		}
@@ -264,7 +269,8 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 		// 	ex = "exit 1;"
 		// }
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
-		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], "", "pipeline")
+
+		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], triggerData[s].Version, "deployment")
 		if err != nil {
 			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)

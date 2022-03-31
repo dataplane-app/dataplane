@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -35,7 +35,18 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 		return &models.PipelineRuns{}, errors.New("requires permissions")
 	}
 
-	resp, err := pipelines.RunPipeline(pipelineID, environmentID, runType)
+	var err error
+	var resp models.PipelineRuns
+
+	switch runType {
+	case "pipeline":
+		resp, err = pipelines.RunPipeline(pipelineID, environmentID)
+	case "deployment":
+		resp, err = pipelines.RunDeployment(pipelineID, environmentID)
+	default:
+		return &resp, errors.New("Run type not provided.")
+	}
+
 	if err != nil {
 		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)

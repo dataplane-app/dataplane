@@ -35,6 +35,20 @@ type DeploymentNodes {
 	active:        Boolean!           
 }
 
+type NonDefaultNodes {
+	nodeID:        String!       
+	pipelineID:    String!  
+  version:       String!       
+	name:          String!         
+	environmentID: String!         
+	nodeType:      String!   
+  nodeTypeDesc:  String!   
+  triggerOnline: Boolean!
+	description:   String!
+  workerGroup:   String!
+	active:        Boolean!           
+}
+
 type DeploymentEdges {
   edgeID:        String!       
 	pipelineID:    String!    
@@ -57,28 +71,28 @@ input WorkerGroupsNodes {
 }
 
 
-# extend type Query {
-#   """
-#   Get deployment.
-#   + **Route**: Private
-#   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
-#   """
-#   getDeployment(pipelineID: String!, environmentID: String!): Deployments
+extend type Query {
+  """
+  Get the latest active deployment.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getDeployment(pipelineID: String!, environmentID: String!): Deployments
 
-#   """
-#   Get deployments.
-#   + **Route**: Private
-#   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
-#   """
-#   getDeployments(environmentID: String!): [Deployments]
+  """
+  Get all deployments.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getDeployments(environmentID: String!): [Deployments]
 
-#   """
-#   Get pipeline flows.
-#   + **Route**: Private
-#   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
-#   """
-#   getDeploymentFlow(pipelineID: String!, environmentID: String!): DeploymentFlow
-# }
+  """
+  Get list of non-default worker groups for a single pipeline.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getNonDefaultWGNodes(pipelineID: String!, environmentID: String!): [NonDefaultNodes]
+}
 
 extend type Mutation {
   """
