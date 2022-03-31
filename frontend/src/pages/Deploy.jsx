@@ -118,7 +118,7 @@ const Deploy = () => {
                                 options={availableEnvironments}
                                 getOptionLabel={(option) => option.name}
                                 renderInput={(params) => (
-                                    <TextField {...params} label="Environment" id="available_environments" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
+                                    <TextField {...params} label="Environment" required id="available_environments" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
                                 )}
                             />
                         </Grid>
