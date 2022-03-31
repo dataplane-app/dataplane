@@ -208,7 +208,7 @@ const Deploy = () => {
 
                                 <Grid container alignItems="center" mt={4} mb={4}>
                                     <IOSSwitch onClick={() => setLive(!live)} checked={live} inputProps={{ 'aria-label': 'controlled' }} />
-                                    <Typography sx={{ ml: 2, fontSize: 16, color: 'status.pipelineOnlineText' }}>Live on deployment</Typography>
+                                    <Typography sx={{ ml: 2, fontSize: 16, color: live ? 'status.pipelineOnlineText' : 'error.main' }}>{live ? 'Online' : 'Offline'}</Typography>
                                 </Grid>
 
                                 {deployment ? (
