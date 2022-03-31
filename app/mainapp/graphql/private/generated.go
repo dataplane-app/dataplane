@@ -226,6 +226,20 @@ type ComplexityRoot struct {
 		UploadFileNode                   func(childComplexity int, environmentID string, nodeID string, pipelineID string, folderID string, file graphql.Upload) int
 	}
 
+	NonDefaultNodes struct {
+		Active        func(childComplexity int) int
+		Description   func(childComplexity int) int
+		EnvironmentID func(childComplexity int) int
+		Name          func(childComplexity int) int
+		NodeID        func(childComplexity int) int
+		NodeType      func(childComplexity int) int
+		NodeTypeDesc  func(childComplexity int) int
+		PipelineID    func(childComplexity int) int
+		TriggerOnline func(childComplexity int) int
+		Version       func(childComplexity int) int
+		WorkerGroup   func(childComplexity int) int
+	}
+
 	Permissions struct {
 		Access        func(childComplexity int) int
 		Active        func(childComplexity int) int
@@ -353,9 +367,12 @@ type ComplexityRoot struct {
 		GetAccessGroups               func(childComplexity int, userID string, environmentID string) int
 		GetAllPreferences             func(childComplexity int) int
 		GetCodeFileRunLogs            func(childComplexity int, runID string, pipelineID string, environmentID string) int
+		GetDeployment                 func(childComplexity int, pipelineID string, environmentID string) int
+		GetDeployments                func(childComplexity int, environmentID string) int
 		GetEnvironment                func(childComplexity int, environmentID string) int
 		GetEnvironments               func(childComplexity int) int
 		GetNodeLogs                   func(childComplexity int, runID string, pipelineID string, nodeID string, environmentID string) int
+		GetNonDefaultWGNodes          func(childComplexity int, pipelineID string, environmentID string) int
 		GetOnePreference              func(childComplexity int, preference string) int
 		GetPipeline                   func(childComplexity int, pipelineID string, environmentID string) int
 		GetPipelineFlow               func(childComplexity int, pipelineID string, environmentID string) int
@@ -527,6 +544,9 @@ type QueryResolver interface {
 	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error)
 	GetAccessGroupUsers(ctx context.Context, environmentID string, accessGroupID string) ([]*models.Users, error)
 	FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*CodeTree, error)
+	GetDeployment(ctx context.Context, pipelineID string, environmentID string) (*Deployments, error)
+	GetDeployments(ctx context.Context, environmentID string) ([]*Deployments, error)
+	GetNonDefaultWGNodes(ctx context.Context, pipelineID string, environmentID string) ([]*NonDefaultNodes, error)
 	Me(ctx context.Context) (*models.Users, error)
 	MyPipelinePermissions(ctx context.Context) ([]*PipelinePermissionsOutput, error)
 	UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*PipelinePermissionsOutput, error)
@@ -1799,6 +1819,83 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UploadFileNode(childComplexity, args["environmentID"].(string), args["nodeID"].(string), args["pipelineID"].(string), args["folderID"].(string), args["file"].(graphql.Upload)), true
 
+	case "NonDefaultNodes.active":
+		if e.complexity.NonDefaultNodes.Active == nil {
+			break
+		}
+
+		return e.complexity.NonDefaultNodes.Active(childComplexity), true
+
+	case "NonDefaultNodes.description":
+		if e.complexity.NonDefaultNodes.Description == nil {
+			break
+		}
+
+		return e.complexity.NonDefaultNodes.Description(childComplexity), true
+
+	case "NonDefaultNodes.environmentID":
+		if e.complexity.NonDefaultNodes.EnvironmentID == nil {
+			break
+		}
+
+		return e.complexity.NonDefaultNodes.EnvironmentID(childComplexity), true
+
+	case "NonDefaultNodes.name":
+		if e.complexity.NonDefaultNodes.Name == nil {
+			break
+		}
+
+		return e.complexity.NonDefaultNodes.Name(childComplexity), true
+
+	case "NonDefaultNodes.nodeID":
+		if e.complexity.NonDefaultNodes.NodeID == nil {
+			break
+		}
+
+		return e.complexity.NonDefaultNodes.NodeID(childComplexity), true
+
+	case "NonDefaultNodes.nodeType":
+		if e.complexity.NonDefaultNodes.NodeType == nil {
+			break
+		}
+
+		return e.complexity.NonDefaultNodes.NodeType(childComplexity), true
+
+	case "NonDefaultNodes.nodeTypeDesc":
+		if e.complexity.NonDefaultNodes.NodeTypeDesc == nil {
+			break
+		}
+
+		return e.complexity.NonDefaultNodes.NodeTypeDesc(childComplexity), true
+
+	case "NonDefaultNodes.pipelineID":
+		if e.complexity.NonDefaultNodes.PipelineID == nil {
+			break
+		}
+
+		return e.complexity.NonDefaultNodes.PipelineID(childComplexity), true
+
+	case "NonDefaultNodes.triggerOnline":
+		if e.complexity.NonDefaultNodes.TriggerOnline == nil {
+			break
+		}
+
+		return e.complexity.NonDefaultNodes.TriggerOnline(childComplexity), true
+
+	case "NonDefaultNodes.version":
+		if e.complexity.NonDefaultNodes.Version == nil {
+			break
+		}
+
+		return e.complexity.NonDefaultNodes.Version(childComplexity), true
+
+	case "NonDefaultNodes.workerGroup":
+		if e.complexity.NonDefaultNodes.WorkerGroup == nil {
+			break
+		}
+
+		return e.complexity.NonDefaultNodes.WorkerGroup(childComplexity), true
+
 	case "Permissions.Access":
 		if e.complexity.Permissions.Access == nil {
 			break
@@ -2480,6 +2577,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetCodeFileRunLogs(childComplexity, args["runID"].(string), args["pipelineID"].(string), args["environmentID"].(string)), true
 
+	case "Query.getDeployment":
+		if e.complexity.Query.GetDeployment == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getDeployment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetDeployment(childComplexity, args["pipelineID"].(string), args["environmentID"].(string)), true
+
+	case "Query.getDeployments":
+		if e.complexity.Query.GetDeployments == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getDeployments_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetDeployments(childComplexity, args["environmentID"].(string)), true
+
 	case "Query.getEnvironment":
 		if e.complexity.Query.GetEnvironment == nil {
 			break
@@ -2510,6 +2631,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetNodeLogs(childComplexity, args["runID"].(string), args["pipelineID"].(string), args["nodeID"].(string), args["environmentID"].(string)), true
+
+	case "Query.getNonDefaultWGNodes":
+		if e.complexity.Query.GetNonDefaultWGNodes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getNonDefaultWGNodes_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetNonDefaultWGNodes(childComplexity, args["pipelineID"].(string), args["environmentID"].(string)), true
 
 	case "Query.getOnePreference":
 		if e.complexity.Query.GetOnePreference == nil {
@@ -3588,6 +3721,20 @@ type DeploymentNodes {
 	active:        Boolean!           
 }
 
+type NonDefaultNodes {
+	nodeID:        String!       
+	pipelineID:    String!  
+  version:       String!       
+	name:          String!         
+	environmentID: String!         
+	nodeType:      String!   
+  nodeTypeDesc:  String!   
+  triggerOnline: Boolean!
+	description:   String!
+  workerGroup:   String!
+	active:        Boolean!           
+}
+
 type DeploymentEdges {
   edgeID:        String!       
 	pipelineID:    String!    
@@ -3610,28 +3757,28 @@ input WorkerGroupsNodes {
 }
 
 
-# extend type Query {
-#   """
-#   Get deployment.
-#   + **Route**: Private
-#   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
-#   """
-#   getDeployment(pipelineID: String!, environmentID: String!): Deployments
+extend type Query {
+  """
+  Get deployment.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getDeployment(pipelineID: String!, environmentID: String!): Deployments
 
-#   """
-#   Get deployments.
-#   + **Route**: Private
-#   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
-#   """
-#   getDeployments(environmentID: String!): [Deployments]
+  """
+  Get deployments.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getDeployments(environmentID: String!): [Deployments]
 
-#   """
-#   Get pipeline flows.
-#   + **Route**: Private
-#   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
-#   """
-#   getDeploymentFlow(pipelineID: String!, environmentID: String!): DeploymentFlow
-# }
+  """
+  Get list of non-default worker groups for a single pipeline.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getNonDefaultWGNodes(pipelineID: String!, environmentID: String!): [NonDefaultNodes]
+}
 
 extend type Mutation {
   """
@@ -4103,6 +4250,7 @@ extend type Mutation {
     Run pipeline flow.
     + **Route**: Private
     + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
+    + RunType is either deployment or pipeline
     """
     runPipelines(pipelineID: String!, environmentID: String!, RunType: String!): PipelineRuns!
 
@@ -6176,6 +6324,45 @@ func (ec *executionContext) field_Query_getCodeFileRunLogs_args(ctx context.Cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_getDeployment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getDeployments_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_getEnvironment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -6230,6 +6417,30 @@ func (ec *executionContext) field_Query_getNodeLogs_args(ctx context.Context, ra
 		}
 	}
 	args["environmentID"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getNonDefaultWGNodes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
 	return args, nil
 }
 
@@ -11789,6 +12000,391 @@ func (ec *executionContext) _Mutation_deleteSecretFromWorkerGroup(ctx context.Co
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _NonDefaultNodes_nodeID(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NonDefaultNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NodeID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NonDefaultNodes_pipelineID(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NonDefaultNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PipelineID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NonDefaultNodes_version(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NonDefaultNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Version, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NonDefaultNodes_name(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NonDefaultNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NonDefaultNodes_environmentID(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NonDefaultNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvironmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NonDefaultNodes_nodeType(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NonDefaultNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NodeType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NonDefaultNodes_nodeTypeDesc(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NonDefaultNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NodeTypeDesc, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NonDefaultNodes_triggerOnline(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NonDefaultNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TriggerOnline, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NonDefaultNodes_description(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NonDefaultNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NonDefaultNodes_workerGroup(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NonDefaultNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkerGroup, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NonDefaultNodes_active(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NonDefaultNodes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Permissions_ID(ctx context.Context, field graphql.CollectedField, obj *models.Permissions) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -15128,6 +15724,123 @@ func (ec *executionContext) _Query_filesNode(ctx context.Context, field graphql.
 	res := resTmp.(*CodeTree)
 	fc.Result = res
 	return ec.marshalOCodeTree2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCodeTree(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getDeployment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getDeployment_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetDeployment(rctx, args["pipelineID"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*Deployments)
+	fc.Result = res
+	return ec.marshalODeployments2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getDeployments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getDeployments_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetDeployments(rctx, args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*Deployments)
+	fc.Result = res
+	return ec.marshalODeployments2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getNonDefaultWGNodes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getNonDefaultWGNodes_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetNonDefaultWGNodes(rctx, args["pipelineID"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*NonDefaultNodes)
+	fc.Result = res
+	return ec.marshalONonDefaultNodes2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐNonDefaultNodes(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -21621,6 +22334,137 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
+var nonDefaultNodesImplementors = []string{"NonDefaultNodes"}
+
+func (ec *executionContext) _NonDefaultNodes(ctx context.Context, sel ast.SelectionSet, obj *NonDefaultNodes) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, nonDefaultNodesImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NonDefaultNodes")
+		case "nodeID":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NonDefaultNodes_nodeID(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pipelineID":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NonDefaultNodes_pipelineID(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "version":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NonDefaultNodes_version(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NonDefaultNodes_name(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "environmentID":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NonDefaultNodes_environmentID(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "nodeType":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NonDefaultNodes_nodeType(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "nodeTypeDesc":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NonDefaultNodes_nodeTypeDesc(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "triggerOnline":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NonDefaultNodes_triggerOnline(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "description":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NonDefaultNodes_description(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "workerGroup":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NonDefaultNodes_workerGroup(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "active":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NonDefaultNodes_active(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var permissionsImplementors = []string{"Permissions"}
 
 func (ec *executionContext) _Permissions(ctx context.Context, sel ast.SelectionSet, obj *models.Permissions) graphql.Marshaler {
@@ -22935,6 +23779,66 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_filesNode(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getDeployment":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getDeployment(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getDeployments":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getDeployments(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getNonDefaultWGNodes":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getNonDefaultWGNodes(ctx, field)
 				return res
 			}
 
@@ -25682,6 +26586,54 @@ func (ec *executionContext) unmarshalODataInput2ᚖdataplaneᚋmainappᚋgraphql
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalODeployments2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx context.Context, sel ast.SelectionSet, v []*Deployments) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalODeployments2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalODeployments2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx context.Context, sel ast.SelectionSet, v *Deployments) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Deployments(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOEnvironments2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx context.Context, sel ast.SelectionSet, v []*models.Environment) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -25830,6 +26782,54 @@ func (ec *executionContext) marshalOLogsWorkers2ᚕᚖdataplaneᚋmainappᚋdata
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalONonDefaultNodes2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐNonDefaultNodes(ctx context.Context, sel ast.SelectionSet, v []*NonDefaultNodes) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalONonDefaultNodes2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐNonDefaultNodes(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalONonDefaultNodes2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐNonDefaultNodes(ctx context.Context, sel ast.SelectionSet, v *NonDefaultNodes) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._NonDefaultNodes(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsAccessGUsersOutput) graphql.Marshaler {
