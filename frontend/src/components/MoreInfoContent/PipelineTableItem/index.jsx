@@ -44,6 +44,10 @@ const PipelineItemTable = (props) => {
         handleCloseMenu();
     };
 
+    const handleDeploy = () => {
+        history.push(`/pipelines/deploy/${id}`);
+    };
+
     return (
         <>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={manageEdit}>
@@ -52,7 +56,7 @@ const PipelineItemTable = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={permissionClick}>
                 Permissions
             </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleDeploy}>
                 Deploy
             </MenuItem>
             {nodeTypeDesc !== 'play' ? (

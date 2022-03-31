@@ -48,7 +48,7 @@ const Deployments = () => {
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
-
+    return <Box></Box>;
     return (
         <Box className="page" position="relative">
             <Box sx={{ width: { xl: '85%' } }}>

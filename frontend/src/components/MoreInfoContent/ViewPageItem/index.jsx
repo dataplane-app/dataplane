@@ -40,6 +40,10 @@ const ViewPageItem = (props) => {
         props.setIsOpenAnalytics(true);
     };
 
+    const handleDeploy = () => {
+        history.push(`/pipelines/deploy/${pipelineId}`);
+    };
+
     return (
         <>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
@@ -51,7 +55,7 @@ const ViewPageItem = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleAnalytics}>
                 Analytics
             </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleDeploy}>
                 Deploy
             </MenuItem>
             {props.pipeline.node_type_desc !== 'play' ? (

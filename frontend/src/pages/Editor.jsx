@@ -168,9 +168,9 @@ const useGetPipelineHook = (environmentID, setPipeline) => {
     return async (pipelineID) => {
         const response = await getPipeline({ pipelineID, environmentID });
 
-        if (response.r === 'error') {
+        if (response.r || response.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't get pipeline: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't get pipeline: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
