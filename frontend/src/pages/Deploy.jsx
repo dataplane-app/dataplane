@@ -39,7 +39,7 @@ const Deploy = () => {
 
     // Graphql Hooks
     const getEnvironments = useGetEnvironmentsHook(setAvailableEnvironments);
-    const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setAvailableWorkerGroups, selectedEnvironment);
+    const getWorkerGroups = useGetWorkerGroupsHook(setAvailableWorkerGroups, selectedEnvironment);
     const getNonDefaultWGNodes = useGetNonDefaultWGNodesHook(nonDefaultWGNodes, selectedEnvironment);
     const addDeployment = useAddDeploymentHook();
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
@@ -57,7 +57,7 @@ const Deploy = () => {
         if (!selectedEnvironment) return;
         getNonDefaultWGNodes(Environment.id?.get(), selectedEnvironment.id);
         getDeployment();
-        getWorkerGroups();
+        getWorkerGroups(selectedEnvironment.id);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedEnvironment]);
@@ -368,14 +368,14 @@ const useGetDeploymentHook = (environmentID, pipelineID, setDeployment) => {
 };
 
 // ------- Custom Hooks
-const useGetWorkerGroupsHook = (environmentID, setWorkerGroups, selectedEnvironment) => {
+const useGetWorkerGroupsHook = (setWorkerGroups, selectedEnvironment) => {
     // GraphQL hook
     const getAccessGroupUsers = useGetWorkerGroups();
 
     const { enqueueSnackbar } = useSnackbar();
 
     // Get worker groups
-    return async () => {
+    return async (environmentID) => {
         const response = await getAccessGroupUsers({ environmentID });
 
         if (response === null) {
