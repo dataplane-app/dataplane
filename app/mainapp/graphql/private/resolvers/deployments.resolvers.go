@@ -16,6 +16,7 @@ import (
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 
@@ -412,6 +413,14 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	return "OK", nil
 }
 
+func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID string, pipelineID string, version string) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *queryResolver) GetDeployment(ctx context.Context, pipelineID string, environmentID string) (*privategraphql.Deployments, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -450,15 +459,15 @@ b.online,
 scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a left join (
-	select node_type, node_type_desc, pipeline_id, trigger_online as online from deploy_pipeline_nodes where node_type='trigger'
-) b on a.pipeline_id=b.pipeline_id
-left join scheduler on scheduler.pipeline_id = a.pipeline_id
-where a.pipeline_id = ? and a.deploy_active=true
+	select node_type, node_type_desc, pipeline_id, trigger_online as online, environment_id from deploy_pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id and a.environment_id = b.environment_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id and scheduler.environment_id = a.environment_id
+where a.pipeline_id = ? and a.deploy_active=true and a.environment_id=?
 order by a.created_at desc
 `
 
 		err := database.DBConn.Raw(
-			query, pipelineID).Scan(&p).Error
+			query, pipelineID, environmentID).Scan(&p).Error
 
 		if err != nil {
 			if os.Getenv("debug") == "true" {
@@ -487,8 +496,8 @@ scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a 
 left join (
-	select node_type, node_type_desc, pipeline_id, trigger_online as online from deploy_pipeline_nodes where node_type='trigger'
-) b on a.pipeline_id=b.pipeline_id
+	select node_type, node_type_desc, pipeline_id, trigger_online as online, environment_id from deploy_pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id and a.environment_id = b.environment_id
 inner join (
   select distinct resource_id, environment_id from (
 	(select 
@@ -521,13 +530,13 @@ inner join (
 	) x
 
 ) p on p.resource_id = a.pipeline_id and p.environment_id = a.environment_id
-left join scheduler on scheduler.pipeline_id = a.pipeline_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id and scheduler.environment_id = a.environment_id
 where 
-a.pipeline_id = ? and a.deploy_active=true
+a.pipeline_id = ? and a.deploy_active=true and a.environment_id=?
 order by a.created_at desc`
 
 		err := database.DBConn.Raw(
-			query, currentUser, currentUser, pipelineID).Scan(&p).Error
+			query, currentUser, currentUser, pipelineID, environmentID).Scan(&p).Error
 
 		if err != nil {
 			if os.Getenv("debug") == "true" {
@@ -575,20 +584,22 @@ a.description,
 a.active,
 a.worker_group,
 a.created_at,
+a.version,
+a.deploy_active,
 b.node_type,
 b.node_type_desc,
 b.online,
 scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a left join (
-	select node_type, node_type_desc, pipeline_id, trigger_online as online from deploy_pipeline_nodes where node_type='trigger'
-) b on a.pipeline_id=b.pipeline_id
-left join scheduler on scheduler.pipeline_id = a.pipeline_id
+	select node_type, node_type_desc, pipeline_id, trigger_online as online, version, environment_id from deploy_pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id and a.version = b.version and a.environment_id = b.environment_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id and scheduler.environment_id = a.environment_id
 where a.environment_id = ?
 order by a.created_at desc
 `
 
-		err := database.DBConn.Raw(
+		err := database.DBConn.Debug().Raw(
 			query, environmentID).Scan(&p).Error
 
 		if err != nil {
@@ -608,6 +619,8 @@ a.description,
 a.active,
 a.worker_group,
 a.created_at,
+a.version,
+a.deploy_active,
 b.node_type,
 b.node_type_desc,
 b.online,
@@ -615,8 +628,8 @@ scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a 
 left join (
-	select node_type, node_type_desc, pipeline_id, trigger_online as online from deploy_pipeline_nodes where node_type='trigger'
-) b on a.pipeline_id=b.pipeline_id
+	select node_type, node_type_desc, pipeline_id, trigger_online as online, version, environment_id from deploy_pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id and a.version = b.version and a.environment_id = b.environment_id
 inner join (
   select distinct resource_id, environment_id from (
 	(select 
@@ -649,12 +662,12 @@ inner join (
 	) x
 
 ) p on p.resource_id = a.pipeline_id and p.environment_id = a.environment_id
-left join scheduler on scheduler.pipeline_id = a.pipeline_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id and scheduler.environment_id = a.environment_id
 where 
 a.environment_id = ?
 order by a.created_at desc`
 
-		err := database.DBConn.Raw(
+		err := database.DBConn.Debug().Raw(
 			query, currentUser, currentUser, environmentID).Scan(&p).Error
 
 		if err != nil {
@@ -708,7 +721,7 @@ func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID str
 	}
 
 	var pipelineNodes []*models.PipelineNodes
-	err := database.DBConn.Debug().Where("pipeline_id =? and environment_id =? and (worker_group = '') IS FALSE", pipelineID, fromEnvironmentID).Find(&pipelineNodes).Error
+	err := database.DBConn.Where("pipeline_id =? and environment_id =? and (worker_group = '') IS FALSE", pipelineID, fromEnvironmentID).Find(&pipelineNodes).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
