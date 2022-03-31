@@ -43,7 +43,7 @@ const Deploy = () => {
     const getNonDefaultWGNodes = useGetNonDefaultWGNodesHook(nonDefaultWGNodes, selectedEnvironment);
     const addDeployment = useAddDeploymentHook();
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
-    const getDeployment = useGetDeploymentHook(Environment.id.get(), 'd-' + pipelineId, setDeployment);
+    const getDeployment = useGetDeploymentHook(selectedEnvironment?.id, 'd-' + pipelineId, setDeployment);
 
     useEffect(() => {
         if (!Environment.id?.get()) return;
@@ -80,6 +80,8 @@ const Deploy = () => {
             reset({ major: '0', minor: '0', patch: '0', workerGroup: null });
             setLive(true);
         }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [deployment]);
 
     // // Set worker group on load
@@ -207,8 +209,12 @@ const Deploy = () => {
                                 </Grid>
 
                                 <Grid container alignItems="center" mt={4} mb={4}>
-                                    <IOSSwitch onClick={() => setLive(!live)} checked={live} inputProps={{ 'aria-label': 'controlled' }} />
-                                    <Typography sx={{ ml: 2, fontSize: 16, color: live ? 'status.pipelineOnlineText' : 'error.main' }}>{live ? 'Online' : 'Offline'}</Typography>
+                                    {deployment.node_type_desc !== 'play' ? (
+                                        <IOSSwitch onClick={() => setLive(!live)} checked={live} inputProps={{ 'aria-label': 'controlled' }} />
+                                    ) : null}
+                                    <Typography sx={{ ml: deployment.node_type_desc !== 'play' ? 2 : 0, fontSize: 16, color: live ? 'status.pipelineOnlineText' : 'error.main' }}>
+                                        {live ? 'Online' : 'Offline'}
+                                    </Typography>
                                 </Grid>
 
                                 {deployment ? (
