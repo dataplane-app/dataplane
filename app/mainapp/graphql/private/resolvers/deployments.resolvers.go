@@ -12,9 +12,11 @@ import (
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 
 	"gorm.io/gorm"
@@ -23,6 +25,7 @@ import (
 func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*privategraphql.WorkerGroupsNodes) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
+	var triggerType string = ""
 
 	// ----- Deploy To Permissions
 	perms := []models.Permissions{
@@ -221,6 +224,10 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 
 		}
 
+		if node.NodeType == "trigger" && node.NodeTypeDesc == "schedule" {
+			triggerType = "schedule"
+		}
+
 		deployNodes = append(deployNodes, &models.DeployPipelineNodes{
 			NodeID:        "d-" + node.NodeID,
 			PipelineID:    createPipeline.PipelineID,
@@ -296,30 +303,36 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	}
 
 	// Edges create
-	err = database.DBConn.Create(&deployEdges).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
+	if len(deployEdges) > 0 {
+		err = database.DBConn.Create(&deployEdges).Error
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to create deployment pipeline.")
 		}
-		return "", errors.New("Failed to create deployment pipeline.")
 	}
 
 	// Folders create
-	err = database.DBConn.Create(&deployFolders).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
+	if len(deployFolders) > 0 {
+		err = database.DBConn.Create(&deployFolders).Error
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to create deployment pipeline.")
 		}
-		return "", errors.New("Failed to create deployment pipeline.")
 	}
 
 	// Files create
-	err = database.DBConn.Create(&deployFiles).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
+	if len(deployFiles) > 0 {
+		err = database.DBConn.Create(&deployFiles).Error
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to create deployment pipeline.")
 		}
-		return "", errors.New("Failed to create deployment pipeline.")
 	}
 
 	// Switch to active and take off update lock
@@ -359,6 +372,39 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 				logging.PrintSecretsRedact(err)
 			}
 			return "", errors.New("Add permission to user database error.")
+		}
+
+	}
+
+	// Add back to schedule
+	// ======= Update the schedule trigger ==========
+	if triggerType == "schedule" {
+		// Add back to schedule
+		var plSchedules []*models.Scheduler
+		err := database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, fromEnvironmentID).Find(&plSchedules).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			log.Println("Removal of changed trigger schedules:", err)
+		}
+
+		if len(plSchedules) > 0 {
+			for _, psc := range plSchedules {
+
+				pipelineSchedules := models.Scheduler{
+					NodeID:        "d-" + psc.NodeID,
+					PipelineID:    "d-" + psc.PipelineID,
+					EnvironmentID: toEnvironmentID,
+					ScheduleType:  psc.ScheduleType,
+					Schedule:      psc.Schedule,
+					Timezone:      psc.Timezone,
+					Online:        online,
+					RunType:       "deployment",
+				}
+				// Add back to schedule
+				err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
+				if err != nil {
+					logging.PrintSecretsRedact("NATS error:", err)
+				}
+			}
 		}
 
 	}

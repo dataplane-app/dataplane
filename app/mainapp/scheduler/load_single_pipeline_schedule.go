@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func mytask(nodeID string, pipelineID string, environmentID string, timezone string) {
+func mytask(nodeID string, pipelineID string, environmentID string, timezone string, runType string) {
 
 	if config.SchedulerDebug == "true" {
 		log.Println("Schedule run:", nodeID, timezone)
@@ -29,7 +29,17 @@ func mytask(nodeID string, pipelineID string, environmentID string, timezone str
 		return
 	}
 
-	_, err := pipelines.RunPipeline(pipelineID, environmentID)
+	var err error
+	switch runType {
+	case "pipeline":
+		_, err = pipelines.RunPipeline(pipelineID, environmentID)
+	case "deployment":
+		_, err = pipelines.RunDeployment(pipelineID, environmentID)
+	default:
+		log.Println("Run type not provided in scheduler.")
+		return
+	}
+
 	if err != nil {
 		if config.SchedulerDebug == "true" {
 			logging.PrintSecretsRedact("Pipeline schedule run error:", err)
@@ -54,7 +64,7 @@ func LoadSingleSchedule(s models.Scheduler) {
 				PipelineScheduler = tmp.(*gocron.Scheduler)
 			}
 
-			PSJob, _ := PipelineScheduler.Cron(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, s.Timezone)
+			PSJob, _ := PipelineScheduler.Cron(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, s.Timezone, s.RunType)
 			config.PipelineSchedulerJob.Set(s.NodeID, PSJob)
 		}
 	case "cronseconds":
@@ -67,7 +77,7 @@ func LoadSingleSchedule(s models.Scheduler) {
 				PipelineScheduler = tmp.(*gocron.Scheduler)
 			}
 
-			PSJob, _ := PipelineScheduler.CronWithSeconds(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, "UTC")
+			PSJob, _ := PipelineScheduler.CronWithSeconds(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, "UTC", s.RunType)
 			config.PipelineSchedulerJob.Set(s.NodeID, PSJob)
 
 		}
@@ -75,7 +85,7 @@ func LoadSingleSchedule(s models.Scheduler) {
 	}
 
 	if config.SchedulerDebug == "true" {
-		log.Println("Scheduler add: ", s.Timezone, s.NodeID, "Online:", s.Online)
+		log.Println("Scheduler add: ", s.Timezone, s.NodeID, "Online:", s.Online, s.RunType)
 	}
 
 }
