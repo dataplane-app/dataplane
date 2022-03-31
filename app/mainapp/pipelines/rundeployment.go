@@ -75,7 +75,7 @@ func RunDeployment(pipelineID string, environmentID string) (models.PipelineRuns
 		pf := ""
 
 		if len(foldersdata) > 0 {
-			pf, _ = filesystem.FolderConstructByID(database.DBConn, foldersdata[0].ParentID, environmentID, "deployments")
+			pf, _ = filesystem.DeployFolderConstructByID(database.DBConn, foldersdata[0].ParentID, environmentID, "deployments", foldersdata[0].Version)
 		}
 		parentfolder <- pf
 	}()
@@ -123,9 +123,13 @@ func RunDeployment(pipelineID string, environmentID string) (models.PipelineRuns
 	var folderNodeMap = make(map[string]string)
 	for _, f := range foldersdata {
 
+		dir := ""
+
 		if f.Level == "node" {
 
-			dir := parentfolderdata + f.FolderID + "_" + f.FolderName
+			dir = parentfolderdata + f.FolderID + "_" + f.FolderName
+
+			log.Println("Send dir:", parentfolderdata, f.FolderID+"_"+f.FolderName, dir)
 			// log.Println(dir)
 
 			folderMap[f.NodeID] = dir
@@ -266,7 +270,7 @@ func RunDeployment(pipelineID string, environmentID string) (models.PipelineRuns
 		// }
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
 
-		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID])
+		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], triggerData[s].Version, "deployment")
 		if err != nil {
 			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)
