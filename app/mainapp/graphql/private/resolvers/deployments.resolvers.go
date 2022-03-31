@@ -384,7 +384,7 @@ from deploy_pipelines a left join (
 	select node_type, node_type_desc, pipeline_id, trigger_online as online from deploy_pipeline_nodes where node_type='trigger'
 ) b on a.pipeline_id=b.pipeline_id
 left join scheduler on scheduler.pipeline_id = a.pipeline_id
-where a.pipeline_id = ?
+where a.pipeline_id = ? and a.deploy_active=true
 order by a.created_at desc
 `
 
@@ -454,7 +454,7 @@ inner join (
 ) p on p.resource_id = a.pipeline_id and p.environment_id = a.environment_id
 left join scheduler on scheduler.pipeline_id = a.pipeline_id
 where 
-a.pipeline_id = ?
+a.pipeline_id = ? and a.deploy_active=true
 order by a.created_at desc`
 
 		err := database.DBConn.Raw(

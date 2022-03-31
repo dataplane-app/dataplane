@@ -73,14 +73,14 @@ input WorkerGroupsNodes {
 
 extend type Query {
   """
-  Get deployment.
+  Get the latest active deployment.
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
   getDeployment(pipelineID: String!, environmentID: String!): Deployments
 
   """
-  Get deployments.
+  Get all deployments.
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
