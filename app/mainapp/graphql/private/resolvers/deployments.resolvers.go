@@ -340,6 +340,30 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		return "", errors.New("Failed to create deployment pipeline.")
 	}
 
+	// Give current user full permissions
+	// Give access permissions for the user who added the pipeline
+	AccessTypes := models.DeploymentAccessTypes
+
+	for _, access := range AccessTypes {
+		_, err := permissions.CreatePermission(
+			"user",
+			currentUser,
+			"specific_deployment",
+			"d-"+pipelineID,
+			access,
+			toEnvironmentID,
+			false,
+		)
+
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Add permission to user database error.")
+		}
+
+	}
+
 	return "OK", nil
 }
 
