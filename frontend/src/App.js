@@ -19,6 +19,7 @@ import LogoutUser from './pages/Logout';
 import MemberDetail from './pages/MemberDetail';
 import NotFound from './pages/NotFound';
 import Pipelines from './pages/Pipelines';
+import Deployments from './pages/Deployments';
 import Workers from './pages/Workers/Workers';
 import WorkerDetail from './pages/Workers/WorkerDetail';
 import SecretDetail from './pages/SecretDetail';
@@ -33,6 +34,7 @@ import PipelinesPermission from './pages/PipelinesPermission';
 import createCustomTheme from './theme';
 import UseCheckTheme from './hooks/useCheckTheme';
 import Flow from './pages/Flow';
+import Deploy from './pages/Deploy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
@@ -139,6 +141,8 @@ function App() {
                                             '/pipelines/view/:pipelineId',
                                             '/pipelines/permissions/:pipelineId',
                                             '/pipelines/flow/:pipelineId',
+                                            '/pipelines/deploy/:pipelineId',
+                                            '/deployments',
                                             '/support',
                                             '/feedback',
                                         ]}>
@@ -146,6 +150,9 @@ function App() {
                                             <Layout>
                                                 <Route exact path="/">
                                                     <Pipelines />
+                                                </Route>
+                                                <Route exact path="/deployments">
+                                                    <Deployments />
                                                 </Route>
                                                 <Route exact path="/workers">
                                                     <Workers />
@@ -191,6 +198,9 @@ function App() {
                                                 </Route>
                                                 <Route exact path="/pipelines/flow/:pipelineId">
                                                     <Flow />
+                                                </Route>
+                                                <Route exact path="/pipelines/deploy/:pipelineId">
+                                                    <Deploy />
                                                 </Route>
                                                 <Route
                                                     exact

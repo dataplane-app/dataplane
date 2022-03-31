@@ -259,7 +259,7 @@ export const useGetPipelineFlowHook = (pipeline) => {
 };
 
 // ------ Custom hooks
-const useGetPipelineHook = (environmentID, setPipeline) => {
+export const useGetPipelineHook = (environmentID, setPipeline) => {
     // GraphQL hook
     const getPipeline = useGetPipeline();
 
@@ -274,9 +274,9 @@ const useGetPipelineHook = (environmentID, setPipeline) => {
     return async () => {
         const response = await getPipeline({ pipelineID: pipelineId, environmentID });
 
-        if (response.r === 'error') {
+        if (response.r || response.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't get pipeline: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't get pipeline: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
