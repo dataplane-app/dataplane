@@ -1,32 +1,30 @@
-import { Box, Typography, Grid, Button, Drawer } from '@mui/material';
+import { Box, Typography, Grid, Button, Drawer, Chip } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import { useTable, useGlobalFilter } from 'react-table';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
 import { faClock } from '@fortawesome/free-regular-svg-icons';
-import PipelineItemTable from '../../MoreInfoContent/PipelineTableItem';
+import DeploymentsTableItem from './DeploymentsTableItem';
 import { useHistory } from 'react-router-dom';
-import MoreInfoMenuPipeline from '../../MoreInfoMenuPipeline';
-import { useGlobalFlowState } from '../../../pages/Flow';
-import { useRunPipelines } from '../../../graphql/runPipelines';
-import { useGlobalRunState } from '../../../pages/View/useWebSocket';
+import MoreInfoMenu from '../../components/MoreInfoMenuPipeline';
+import { useGlobalFlowState } from '../Flow';
+import { useRunPipelines } from '../../graphql/runPipelines';
+import { useGlobalRunState } from '../View/useWebSocket';
 import { useSnackbar } from 'notistack';
-import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
-import { prepareInputForFrontend } from '../../../pages/View';
-import DeletePipelineDrawer from '../../DrawerContent/DeletePipelineDrawer';
-import CustomChip from '../../CustomChip';
-import TurnOffPipelineDrawer from '../../DrawerContent/TurnOffPipelineDrawer';
+import CustomChip from '../../components/CustomChip';
 import cronstrue from 'cronstrue';
-import { useGlobalAuthState } from '../../../Auth/UserAuth';
+import { useGlobalAuthState } from '../../Auth/UserAuth';
+import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
+import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
+import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
 
-const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
+const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDeployments }) => {
     // React router
     const history = useHistory();
 
-    // Table item states
-    const [isOpenManage, setIsOpenManage] = useState(false);
-
     const FlowState = useGlobalFlowState();
+    const Environments = useGlobalEnvironmentsState();
+    const Environment = useGlobalEnvironmentState();
 
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
@@ -35,6 +33,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
     const [isOpenDeletePipeline, setIsOpenDeletePipeline] = useState(false);
     const [pipelineName, setPipelineName] = useState('');
     const [pipelineId, setPipelineId] = useState('');
+    const [version, setVersion] = useState('');
 
     // GraphQL hook
     const runPipelines = useRunPipelinesHook();
@@ -49,25 +48,25 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
         () => [
             {
                 Header: 'Manage',
-                accessor: (row) => [row.name, row.pipelineID, row.online, row.environmentID, row.node_type_desc],
+                accessor: (row) => [row.name, row.pipelineID, row.online, row.environmentID, row.node_type_desc, row.version],
                 Cell: (row) => (
                     <Grid item sx={{ flex: 1, ml: -1 }} display="flex" alignItems="center" justifyContent="center">
-                        <MoreInfoMenuPipeline
+                        <MoreInfoMenu
                             onClick={() => {
                                 setPipelineName(row.value[0]);
                                 setPipelineId(row.value[1]);
+                                setVersion(row.value[5]);
                             }}>
-                            <PipelineItemTable //
-                                id={row.value[1]}
+                            <DeploymentsTableItem
+                                id={row.value[1]} // Deployment id
                                 name={row.value[0]}
                                 online={row.value[2]}
                                 environmentID={row.value[3]}
                                 nodeTypeDesc={row.value[4]}
                                 setIsOpenDeletePipeline={setIsOpenDeletePipeline}
-                                getPipelines={getPipelines}
-                                pipeline={row.cell.row.original}
+                                getDeployments={getDeployments}
                             />
-                        </MoreInfoMenuPipeline>
+                        </MoreInfoMenu>
                     </Grid>
                 ),
             },
@@ -80,9 +79,9 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                             variant="text"
                             sx={{ fontWeight: 400 }}
                             onClick={() => {
-                                history.push({ pathname: `/pipelines/view/${row.value.pipelineID}`, state: row.value });
+                                history.push({ pathname: `/pipelines/view/${row.value.pipelineID.slice(2)}`, state: row.value });
                                 FlowState.isRunning.set(true);
-                                runPipelines(environmentID, row.value.pipelineID, 'pipeline');
+                                runPipelines(environmentID, row.value.pipelineID.slice(2), 'deployment');
                             }}>
                             Run
                         </Button>
@@ -107,6 +106,43 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                 accessor: 'online',
                 Cell: (row) => {
                     return row.value ? <CustomChip label={'Online'} customColor="green" /> : <CustomChip label="Offline" customColor="red" />;
+                },
+            },
+            {
+                Header: 'Deployed',
+                accessor: (row) => [row.online, row.version],
+                Cell: (row) => {
+                    const online = row.value[0];
+                    const version = row.value[1];
+                    return <Chip style={{ borderRadius: 5, fontWeight: 700, backgroundColor: online ? '#7B61FF' : '#B9B9B9', color: '#FFF' }} label={`Deployed v${version}`} />;
+                },
+            },
+            {
+                Header: 'Edit',
+                accessor: (row) => [row.fromEnvironmentID, row.pipelineID],
+                Cell: (row) => {
+                    const fromEnvironmentName = Environments.get().filter((a) => a.id === row.value[0])[0].name;
+                    return (
+                        <Button
+                            onClick={() => {
+                                Environment.set({ id: row.value[0], name: fromEnvironmentName });
+                                history.push({ pathname: `/pipelines/flow/${row.value[1].slice(2)}`, state: row.value });
+                            }}>
+                            Edit: {fromEnvironmentName}
+                        </Button>
+                    );
+                },
+            },
+            {
+                Header: 'Previous',
+                accessor: (row) => [row.online],
+                Cell: (row) => {
+                    // row.value
+                    return !row.value[0] ? (
+                        <Typography variant="body2" color="editorPage.fileManagerIcon">
+                            Previous version
+                        </Typography>
+                    ) : null;
                 },
             },
         ],
@@ -152,7 +188,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                                             item
                                             onClick={() => {
                                                 FlowState.pipelineInfo.set(row.original);
-                                                history.push(`/pipelines/view/${row.original.pipelineID}`);
+                                                history.push(`/pipelines/view/${row.original.pipelineID.slice(2)}`);
                                             }}>
                                             <Typography variant="h3" color="cyan.main">
                                                 {row.original.name}
@@ -179,23 +215,24 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                     })}
                 </Box>
                 <Drawer anchor="right" open={isOpenDeletePipeline} onClose={() => setIsOpenDeletePipeline(!isOpenDeletePipeline)}>
-                    <DeletePipelineDrawer
+                    <DeleteDeploymentDrawer
                         pipelineName={pipelineName}
                         handleClose={() => {
                             setIsOpenDeletePipeline(false);
                         }}
-                        getPipelines={getPipelines}
+                        getDeployments={getDeployments}
                         pipelineID={pipelineId}
+                        version={version}
                     />
                 </Drawer>
 
                 <Drawer anchor="right" open={FlowState.isOpenTurnOffPipelineDrawer.get()} onClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)}>
-                    <TurnOffPipelineDrawer
+                    <TurnOffDeploymentDrawer
                         handleClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)} //
                         pipelineID={pipelineId}
                         environmentID={environmentID}
                         name={pipelineName}
-                        getPipelineFlow={getPipelines}
+                        getDeployments={getDeployments}
                     />
                 </Drawer>
             </Box>
@@ -203,36 +240,28 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
     );
 };
 
-export default PipelineTable;
+export default DeploymentsTable;
 
 // Custom GraphQL hook
 export const useRunPipelinesHook = () => {
     // GraphQL hooks
-    const getPipelineFlow = useGetPipelineFlow();
     const runPipelines = useRunPipelines();
 
     // Global state
     const RunState = useGlobalRunState();
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const { enqueueSnackbar } = useSnackbar();
 
-    // Run pipeline flow
+    // Run deployment
     return async (environmentID, pipelineID, RunType) => {
-        // First get pipeline flow graph
-        const rawResponse = await getPipelineFlow({ pipelineID, environmentID, RunType: 'pipeline' });
-        const run_json = prepareInputForFrontend(rawResponse);
-        if (run_json.length === 0) return;
-
-        // Then run pipeline flow
         const response = await runPipelines({
             pipelineID,
             environmentID,
             RunType,
         });
 
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't run flow: " + response.msg, { variant: 'error' });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't run deployment: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
