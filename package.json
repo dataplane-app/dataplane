@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "env-cmd": "^10.1.0",
+    "global": "^4.4.0"
+  }
+}
