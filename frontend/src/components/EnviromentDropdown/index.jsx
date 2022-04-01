@@ -29,12 +29,14 @@ const EnviromentDropdown = () => {
     const [selectedEnviroment, setSelectedEnviroment] = React.useState('');
     const [environments, setEnvironments] = React.useState([]);
     const GlobalEnvironments = useGlobalEnvironmentsState();
+    const dropdownWidth = React.useRef(null);
 
     const open = Boolean(anchorEl);
 
     const handleClick = (event) => {
         if (environments.length < 2) return;
         setAnchorEl(event.currentTarget);
+        dropdownWidth.current = event.currentTarget.offsetWidth;
     };
     const handleClose = () => {
         setAnchorEl(null);
@@ -167,18 +169,6 @@ const EnviromentDropdown = () => {
                             ml: -0.5,
                             mr: 1,
                         },
-                        '&:before': {
-                            content: '""',
-                            display: 'block',
-                            position: 'absolute',
-                            top: 0,
-                            right: 14,
-                            width: 10,
-                            height: 10,
-                            bgcolor: 'background.secondary',
-                            transform: 'translateY(-50%) rotate(45deg)',
-                            zIndex: 0,
-                        },
                     },
                 }}
                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
@@ -187,7 +177,7 @@ const EnviromentDropdown = () => {
                     ? environments
                           .filter((filterId) => filterId.id !== selectedEnviroment)
                           .map((env) => (
-                              <MenuItem onClick={() => onSelectEnvironment(env)} key={env.id}>
+                              <MenuItem onClick={() => onSelectEnvironment(env)} key={env.id} sx={{ width: dropdownWidth.current }}>
                                   <Box
                                       display="flex"
                                       backgroundColor="primary.main"

@@ -13,11 +13,13 @@ const UserDropdown = ({ me }) => {
     const history = useHistory();
 
     const [anchorEl, setAnchorEl] = React.useState(null);
+    const dropdownWidth = React.useRef(null);
 
     const open = Boolean(anchorEl);
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
+        dropdownWidth.current = event.currentTarget.offsetWidth;
     };
     const handleClose = () => {
         setAnchorEl(null);
@@ -65,26 +67,15 @@ const UserDropdown = ({ me }) => {
                             width: 32,
                             height: 32,
                             ml: -0.5,
-                            mr: 1,
-                        },
-                        '&:before': {
-                            content: '""',
-                            display: 'block',
-                            position: 'absolute',
-                            top: 0,
-                            right: 14,
-                            width: 10,
-                            height: 10,
-                            bgcolor: 'background.paper',
-                            transform: 'translateY(-50%) rotate(45deg)',
-                            zIndex: 0,
                         },
                     },
                 }}
                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
-                <MenuItem onClick={() => history.push(`/myaccount/${me.user_id}`)}>My account</MenuItem>
-                <MenuItem style={{ margin: 'auto' }} onClick={() => history.push(`/logout`)}>
+                <MenuItem onClick={() => history.push(`/myaccount/${me.user_id}`)} sx={{ width: dropdownWidth.current }}>
+                    My account
+                </MenuItem>
+                <MenuItem style={{ margin: 'auto' }} onClick={() => history.push(`/logout`)} sx={{ width: dropdownWidth.current }}>
                     Logout
                 </MenuItem>
             </Menu>
