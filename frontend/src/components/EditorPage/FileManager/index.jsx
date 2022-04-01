@@ -492,9 +492,10 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                             }}
                             readOnly={selected !== nodes.id && !isEditing}
                         />
-                        <Box className={`showOnHover hidden_controls tree-${nodes.id}`} sx={{ opacity: 0, '&:hover': { opacity: 1 } }}>
+                        <Box className={`showOnHover hidden_controls tree-${nodes.id}`} sx={{ pointerEvents: 'none', width: '100%', display: 'flex' }}>
                             <IconButton
                                 aria-label="Edit File"
+                                sx={{ ml: 'auto', pointerEvents: 'all' }}
                                 onClick={() => {
                                     setSelected(nodes.id);
                                     handleEdit(nodes.id);
@@ -502,16 +503,16 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                                 <Box component={FontAwesomeIcon} icon={faPencilAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
                             </IconButton>
                             {nodes.fType !== 'file' ? (
-                                <IconButton aria-label="New File" onClick={() => handleNewFileIconClick(nodes.id)}>
+                                <IconButton sx={{ pointerEvents: 'all' }} aria-label="New File" onClick={() => handleNewFileIconClick(nodes.id)}>
                                     <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
                                 </IconButton>
                             ) : null}
                             {nodes.fType !== 'file' ? (
-                                <IconButton aria-label="New Folder" onClick={() => handleNewFolderIconClick(nodes.id)}>
+                                <IconButton sx={{ pointerEvents: 'all' }} aria-label="New Folder" onClick={() => handleNewFolderIconClick(nodes.id)}>
                                     <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
                                 </IconButton>
                             ) : null}
-                            <IconButton aria-label="Remove folder" onClick={handleDeleteIconClick}>
+                            <IconButton sx={{ pointerEvents: 'all' }} aria-label="Remove folder" onClick={handleDeleteIconClick}>
                                 <Box component={FontAwesomeIcon} icon={faTimes} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
                             </IconButton>
                         </Box>
