@@ -15,7 +15,7 @@ const Layout = ({ children }) => {
                 elevation={0}
                 position="fixed"
                 sx={{ zIndex: (theme) => theme.zIndex.drawer, background: (theme) => theme.palette.background.secondary, borderBottom: 1, borderColor: 'divider' }}>
-                <Toolbar>
+                <Toolbar style={{ padding: 0 }}>
                     <Navbar />
                 </Toolbar>
             </AppBar>
@@ -27,13 +27,13 @@ const Layout = ({ children }) => {
                     zIndex: 1100,
                     [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', backgroundColor: 'background.main' },
                 }}>
-                <Toolbar />
+                <Toolbar style={{ padding: 0 }} />
                 <Box sx={{ overflow: 'auto', height: '100%' }}>
                     <Sidebar />
                 </Box>
             </Drawer>
             <Box component="main" sx={{ flexGrow: 1, p: 4 }} background="background.main">
-                <Toolbar />
+                <Toolbar style={{ padding: 0 }} />
                 {children}
             </Box>
         </Box>
