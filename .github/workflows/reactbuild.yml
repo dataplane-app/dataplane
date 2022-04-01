@@ -31,5 +31,6 @@ jobs:
         git config --global user.email 'saul-data@users.noreply.github.com'
         git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
         git checkout "${GITHUB_REF:11}"
+        git add -A
         git commit -am "Automated React build"
         git push
