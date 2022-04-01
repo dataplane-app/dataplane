@@ -67,7 +67,6 @@ const UserDropdown = ({ me }) => {
                             width: 32,
                             height: 32,
                             ml: -0.5,
-                            mr: 1,
                         },
                     },
                 }}
