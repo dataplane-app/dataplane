@@ -20,8 +20,8 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        # cache: 'yarn'
-        # cache-dependency-path: frontend/package-lock.json
+        cache: 'yarn'
+        cache-dependency-path: frontend/yarn.lock
     - run: yarn add global env-cmd
     - run: cd frontend && yarn
     - run: cd frontend && yarn build
@@ -31,5 +31,5 @@ jobs:
         git config --global user.email 'saul-data@users.noreply.github.com'
         git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
         git checkout "${GITHUB_REF:11}"
-        git commit -am "Automated report"
+        git commit -am "Automated React build"
         git push
