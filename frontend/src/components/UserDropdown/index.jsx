@@ -31,7 +31,7 @@ const UserDropdown = ({ me }) => {
                     backgroundColor="secondary.main"
                     alignItems="center"
                     padding={2}
-                    borderRadius=".5rem"
+                    borderRadius="0.625rem"
                     justifyContent="center"
                     color="white"
                     width="2.25rem"

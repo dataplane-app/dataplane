@@ -109,7 +109,7 @@ const PipelineEditor = () => {
                 elevation={0}
                 position="fixed"
                 sx={{ zIndex: (theme) => theme.zIndex.drawer, background: (theme) => theme.palette.background.secondary, borderBottom: 1, borderColor: 'divider' }}>
-                <Toolbar>
+                <Toolbar style={{ padding: 0 }}>
                     <Navbar />
                 </Toolbar>
             </AppBar>
