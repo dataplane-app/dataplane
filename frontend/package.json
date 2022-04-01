@@ -54,7 +54,7 @@
     },
     "scripts": {
         "start": "env-cmd -f ./src/enviroment/env.development react-scripts start --watch-poll",
-        "build": "BUILD_PATH=../app/mainapp/frontbuild env-cmd -f ./src/enviroment/env.build react-scripts build",
+        "build": "CI=false BUILD_PATH=../app/mainapp/frontbuild env-cmd -f ./src/enviroment/env.build react-scripts build",
         "dockerbuild": "env-cmd -f ./src/enviroment/env.build react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject"
