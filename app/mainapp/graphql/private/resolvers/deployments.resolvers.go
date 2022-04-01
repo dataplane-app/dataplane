@@ -391,7 +391,9 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	if triggerType == "schedule" {
 		// Add back to schedule
 		var plSchedules []*models.Scheduler
-		err := database.DBConn.Debug().Where("pipeline_id = ? and environment_id =?", pipelineID, fromEnvironmentID).Find(&plSchedules).Error
+
+		// Adding an existing schedule from pipeline into deployment - needs to select pipeline
+		err := database.DBConn.Where("pipeline_id = ? and environment_id =? and run_type=?", pipelineID, fromEnvironmentID, "pipeline").Find(&plSchedules).Error
 		if err != nil && err != gorm.ErrRecordNotFound {
 			log.Println("Removal of changed trigger schedules:", err)
 		}
@@ -485,7 +487,7 @@ func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentI
 	if p.NodeTypeDesc == "schedule" {
 
 		var plSchedules []*models.Scheduler
-		err := database.DBConn.Debug().Where("pipeline_id = ? and environment_id =? and run_type=?", pipelineID, environmentID, "deployment").Find(&plSchedules).Error
+		err := database.DBConn.Where("pipeline_id = ? and environment_id =? and run_type=?", pipelineID, environmentID, "deployment").Find(&plSchedules).Error
 		if err != nil && err != gorm.ErrRecordNotFound {
 			log.Println("Removal of changed trigger schedules:", err)
 		}
