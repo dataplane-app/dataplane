@@ -50,7 +50,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const editingFileRef = useRef();
 
     // Graphql hook
-    const getFilesNode = useGetFilesNodeHook(rest.pipeline, data, setExpanded);
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
     const createFolderNode = useCreateFolderNodeHook(rest.pipeline, selected);
     const renameFile = useRenameFileHook(rest.pipeline, selected);
@@ -563,6 +562,9 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         Editor.currentPath.set(path);
     };
 
+    // Graphql hook
+    const getFilesNode = useGetFilesNodeHook(rest.pipeline, data, setExpanded, handleFileClick);
+
     return (
         <div {...rest}>
             <Box>
@@ -730,7 +732,7 @@ function CustomTreeItem(props) {
 export default FileManagerColumn;
 
 // ----- Custom hook
-export const useGetFilesNodeHook = (pipeline, data, setExpanded) => {
+export const useGetFilesNodeHook = (pipeline, data, setExpanded, handleFileClick) => {
     const environmentID = pipeline.environmentID;
     const pipelineID = pipeline.pipelineID;
     const nodeID = pipeline.nodeID;
@@ -753,6 +755,7 @@ export const useGetFilesNodeHook = (pipeline, data, setExpanded) => {
             const resp = prepareForFrontEnd(response);
             data.set(resp);
             setExpanded([resp.id]);
+            handleFileClick(resp.children.filter((a) => a.name === 'dp-entrypoint.py')[0]);
         }
     };
 };
