@@ -16,7 +16,6 @@ import (
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"os"
 
@@ -425,7 +424,149 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 }
 
 func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID string, pipelineID string, version string) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("requires permissions")
+	}
+
+	// Obtain deployment details
+	d := models.DeployPipelines{}
+	err := database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).First(&d).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete deployment database error.")
+	}
+
+	// Delete the deployment
+	p := models.DeployPipelines{}
+
+	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete deployment database error.")
+	}
+
+	// Delete pipeline's nodes
+	n := models.DeployPipelineNodes{}
+
+	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&n).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete deployment nodes database error.")
+	}
+
+	// Delete pipeline's edges
+	e := models.DeployPipelineEdges{}
+
+	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&e).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete deployment edges database error.")
+	}
+
+	// Scheduler - remove from leader and from database
+	// ----- Delete schedules
+	if d.DeployActive == true {
+		var plSchedules []*models.Scheduler
+		err = database.DBConn.Where("pipeline_id = ? and environment_id =? and run_type = ?", pipelineID, environmentID, "deployment").Find(&plSchedules).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			log.Println("Removal schedules in database - delete pipeline:", err)
+		}
+
+		if len(plSchedules) > 0 {
+			for _, psc := range plSchedules {
+				err := messageq.MsgSend("pipeline-scheduler-delete", psc)
+				if err != nil {
+					logging.PrintSecretsRedact("NATS error:", err)
+				}
+			}
+		}
+	}
+
+	// Remove directory
+	// 2. ----- Delete folder and all its contents from directory
+	// Also checks that folder belongs to environment ID
+	folders := models.DeployCodeFolders{}
+	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ? and level=?", pipelineID, environmentID, version, "pipeline").First(&folders).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete deployment edges database error.")
+	}
+	folderpath, _ := filesystem.DeployFolderConstructByID(database.DBConn, folders.FolderID, environmentID, "deployments", version)
+	deleteFolder := config.CodeDirectory + folderpath
+	if _, err := os.Stat(deleteFolder); os.IsNotExist(err) {
+
+		if config.Debug == "true" {
+			log.Println("Directory doesnt exists, skipping delete folder: ", deleteFolder)
+		}
+
+	} else {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact("Deleting folder: ", deleteFolder)
+		}
+		err = os.RemoveAll(deleteFolder)
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to remove folder and contents.")
+		}
+	}
+
+	// Remove folders
+	f := models.DeployCodeFolders{}
+
+	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&f).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete deployment edges database error.")
+	}
+
+	// Remove files
+	fi := models.DeployCodeFiles{}
+
+	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&fi).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete deployment edges database error.")
+	}
+
+	// Remove directory
+
+	response := "Pipeline deleted"
+	return response, nil
 }
 
 func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error) {
