@@ -11,6 +11,8 @@ __pycache__/
 
 code-files/
 
+.VSCodeCounter/
+
 # C extensions
 *.so
 
