@@ -20,8 +20,8 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'yarn'
-        cache-dependency-path: frontend/yarn.lock
+        # cache: 'yarn'
+        # cache-dependency-path: frontend/yarn.lock
     - run: yarn add global env-cmd
     - run: cd frontend && yarn
     - run: cd frontend && yarn build
