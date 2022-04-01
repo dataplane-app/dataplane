@@ -1,4 +1,4 @@
-import { Box, Grid, Typography, Button, Drawer } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 import Search from '../../components/Search';
 import CustomChip from '../../components/CustomChip';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
@@ -70,15 +70,6 @@ const Deployments = () => {
                     <DeploymentsTable data={deployments} filter={filter} setPipelineCount={setPipelineCount} environmentID={Environment.id.get()} getDeployments={getDeployments} />
                 </Grid>
             </Box>
-
-            {/* <Drawer anchor="right" open={isOpenCreatePipeline} onClose={() => setIsOpenCreatePipeline(!isOpenCreatePipeline)}>
-                <AddPipelineDrawer
-                    environmentID={Environment.id.get()}
-                    handleClose={() => {
-                        setIsOpenCreatePipeline(false);
-                    }}
-                />
-            </Drawer> */}
         </Box>
     );
 };
