@@ -4,27 +4,12 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    query getDeployment($environmentID: String!, $pipelineID: String!) {
-        getDeployment(environmentID: $environmentID, pipelineID: $pipelineID) {
-            pipelineID
-            version
-            name
-            environmentID
-            fromEnvironmentID
-            description
-            active
-            online
-            current
-            workerGroup
-            node_type
-            node_type_desc
-            schedule
-            schedule_type
-        }
+    mutation deleteDeployment($pipelineID: String!, $environmentID: String!, $version: String!) {
+        deleteDeployment(environmentID: $environmentID, pipelineID: $pipelineID, version: $version)
     }
 `;
 
-export const useGetDeployment = () => {
+export const useDeleteDeployment = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -39,7 +24,7 @@ export const useGetDeployment = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.getDeployment;
+            return res?.deleteDeployment;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

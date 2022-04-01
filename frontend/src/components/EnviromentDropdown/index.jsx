@@ -40,6 +40,13 @@ const EnviromentDropdown = () => {
         setAnchorEl(null);
     };
 
+    // Set selected environment in dropdown when global environment changes
+    React.useEffect(() => {
+        setSelectedEnviroment(GlobalEnvironmentID.id.get());
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [GlobalEnvironmentID.id.get()]);
+
     // Retrieve environments on load
     React.useEffect(() => {
         let active = true;

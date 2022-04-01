@@ -44,7 +44,7 @@ export default function Timer({ environmentID, setElements, pipeline }) {
     const handleTimerStart = () => {
         FlowState.isRunning.set(true);
         RunState.set({ pipelineRunsTrigger: 1 });
-        runPipelines(environmentID, pipelineId);
+        runPipelines(environmentID, pipelineId, 'pipeline');
         setPrevRunTime();
     };
 
@@ -141,11 +141,11 @@ export const useRunPipelinesHook = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Run pipeline flow
-    return async (environmentID, pipelineId) => {
+    return async (environmentID, pipelineId, RunType) => {
         const response = await runPipelines({
             pipelineID: pipelineId,
             environmentID,
-            RunType: 'pipeline',
+            RunType,
         });
 
         if (response.r === 'error') {

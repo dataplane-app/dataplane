@@ -74,7 +74,7 @@ const Deploy = () => {
                 patch: deployment.version.split('.')[2],
                 workerGroup: deployment.workerGroup,
             });
-            setLive(true);
+            setLive(deployment.online);
         } else {
             setWorkerGroup(null);
             reset({ major: '0', minor: '0', patch: '0', workerGroup: null });

@@ -110,22 +110,23 @@ type DeploymentNodes struct {
 }
 
 type Deployments struct {
-	PipelineID    string    `json:"pipelineID"`
-	Version       string    `json:"version"`
-	Name          string    `json:"name"`
-	EnvironmentID string    `json:"environmentID"`
-	Description   string    `json:"description"`
-	Online        bool      `json:"online"`
-	Active        bool      `json:"active"`
-	DeployActive  bool      `json:"deploy_active"`
-	Current       string    `json:"current"`
-	WorkerGroup   string    `json:"workerGroup"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-	NodeType      string    `json:"node_type"`
-	NodeTypeDesc  string    `json:"node_type_desc"`
-	Schedule      string    `json:"schedule"`
-	ScheduleType  string    `json:"schedule_type"`
+	PipelineID        string    `json:"pipelineID"`
+	Version           string    `json:"version"`
+	Name              string    `json:"name"`
+	FromEnvironmentID string    `json:"fromEnvironmentID"`
+	EnvironmentID     string    `json:"environmentID"`
+	Description       string    `json:"description"`
+	Online            bool      `json:"online"`
+	Active            bool      `json:"active"`
+	DeployActive      bool      `json:"deploy_active"`
+	Current           string    `json:"current"`
+	WorkerGroup       string    `json:"workerGroup"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	NodeType          string    `json:"node_type"`
+	NodeTypeDesc      string    `json:"node_type_desc"`
+	Schedule          string    `json:"schedule"`
+	ScheduleType      string    `json:"schedule_type"`
 }
 
 type FolderNodeInput struct {
