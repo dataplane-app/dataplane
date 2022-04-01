@@ -131,22 +131,23 @@ type ComplexityRoot struct {
 	}
 
 	Deployments struct {
-		Active        func(childComplexity int) int
-		CreatedAt     func(childComplexity int) int
-		Current       func(childComplexity int) int
-		DeployActive  func(childComplexity int) int
-		Description   func(childComplexity int) int
-		EnvironmentID func(childComplexity int) int
-		Name          func(childComplexity int) int
-		NodeType      func(childComplexity int) int
-		NodeTypeDesc  func(childComplexity int) int
-		Online        func(childComplexity int) int
-		PipelineID    func(childComplexity int) int
-		Schedule      func(childComplexity int) int
-		ScheduleType  func(childComplexity int) int
-		UpdatedAt     func(childComplexity int) int
-		Version       func(childComplexity int) int
-		WorkerGroup   func(childComplexity int) int
+		Active            func(childComplexity int) int
+		CreatedAt         func(childComplexity int) int
+		Current           func(childComplexity int) int
+		DeployActive      func(childComplexity int) int
+		Description       func(childComplexity int) int
+		EnvironmentID     func(childComplexity int) int
+		FromEnvironmentID func(childComplexity int) int
+		Name              func(childComplexity int) int
+		NodeType          func(childComplexity int) int
+		NodeTypeDesc      func(childComplexity int) int
+		Online            func(childComplexity int) int
+		PipelineID        func(childComplexity int) int
+		Schedule          func(childComplexity int) int
+		ScheduleType      func(childComplexity int) int
+		UpdatedAt         func(childComplexity int) int
+		Version           func(childComplexity int) int
+		WorkerGroup       func(childComplexity int) int
 	}
 
 	Environments struct {
@@ -1028,6 +1029,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Deployments.EnvironmentID(childComplexity), true
+
+	case "Deployments.fromEnvironmentID":
+		if e.complexity.Deployments.FromEnvironmentID == nil {
+			break
+		}
+
+		return e.complexity.Deployments.FromEnvironmentID(childComplexity), true
 
 	case "Deployments.name":
 		if e.complexity.Deployments.Name == nil {
@@ -3724,6 +3732,7 @@ extend type Mutation {
   pipelineID: String!
   version: String!
 	name: String!
+  fromEnvironmentID: String!
   environmentID: String!
   description: String!
   online: Boolean!
@@ -9063,6 +9072,41 @@ func (ec *executionContext) _Deployments_name(ctx context.Context, field graphql
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Deployments_fromEnvironmentID(ctx context.Context, field graphql.CollectedField, obj *Deployments) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Deployments",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FromEnvironmentID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -21749,6 +21793,16 @@ func (ec *executionContext) _Deployments(ctx context.Context, sel ast.SelectionS
 		case "name":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Deployments_name(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "fromEnvironmentID":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Deployments_fromEnvironmentID(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

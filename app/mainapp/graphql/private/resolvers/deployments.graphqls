@@ -2,6 +2,7 @@ type Deployments {
   pipelineID: String!
   version: String!
 	name: String!
+  fromEnvironmentID: String!
   environmentID: String!
   description: String!
   online: Boolean!

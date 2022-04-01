@@ -10,6 +10,7 @@ const query = gql`
             version
             name
             environmentID
+            fromEnvironmentID
             description
             active
             online
