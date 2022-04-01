@@ -134,6 +134,7 @@ type ComplexityRoot struct {
 		Active        func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		Current       func(childComplexity int) int
+		DeployActive  func(childComplexity int) int
 		Description   func(childComplexity int) int
 		EnvironmentID func(childComplexity int) int
 		Name          func(childComplexity int) int
@@ -184,6 +185,7 @@ type ComplexityRoot struct {
 		CreateUser                       func(childComplexity int, input *AddUsersInput) int
 		DeactivateAccessGroup            func(childComplexity int, accessGroupID string, environmentID string) int
 		DeleteAccessGroup                func(childComplexity int, accessGroupID string, environmentID string) int
+		DeleteDeployment                 func(childComplexity int, environmentID string, pipelineID string, version string) int
 		DeleteFileNode                   func(childComplexity int, environmentID string, fileID string, nodeID string, pipelineID string) int
 		DeleteFolderNode                 func(childComplexity int, environmentID string, folderID string, nodeID string, pipelineID string) int
 		DeletePermissionToUser           func(childComplexity int, userID string, permissionID string, environmentID string) int
@@ -201,6 +203,7 @@ type ComplexityRoot struct {
 		RunPipelines                     func(childComplexity int, pipelineID string, environmentID string, runType string) int
 		StopCERun                        func(childComplexity int, pipelineID string, runID string, environmentID string) int
 		StopPipelines                    func(childComplexity int, pipelineID string, runID string, environmentID string, runType string) int
+		TurnOnOffDeployment              func(childComplexity int, environmentID string, pipelineID string, online bool) int
 		TurnOnOffPipeline                func(childComplexity int, environmentID string, pipelineID string, online bool) int
 		UpdateAccessGroup                func(childComplexity int, input *AccessGroupsInput) int
 		UpdateActivateEnvironment        func(childComplexity int, environmentID string) int
@@ -497,6 +500,8 @@ type MutationResolver interface {
 	RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string) (*CERun, error)
 	StopCERun(ctx context.Context, pipelineID string, runID string, environmentID string) (string, error)
 	AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*WorkerGroupsNodes) (string, error)
+	DeleteDeployment(ctx context.Context, environmentID string, pipelineID string, version string) (string, error)
+	TurnOnOffDeployment(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 	PipelinePermissionsToUser(ctx context.Context, environmentID string, resourceID string, access []string, userID string) (string, error)
@@ -1003,6 +1008,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Deployments.Current(childComplexity), true
 
+	case "Deployments.deploy_active":
+		if e.complexity.Deployments.DeployActive == nil {
+			break
+		}
+
+		return e.complexity.Deployments.DeployActive(childComplexity), true
+
 	case "Deployments.description":
 		if e.complexity.Deployments.Description == nil {
 			break
@@ -1339,6 +1351,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteAccessGroup(childComplexity, args["access_group_id"].(string), args["environmentID"].(string)), true
 
+	case "Mutation.deleteDeployment":
+		if e.complexity.Mutation.DeleteDeployment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteDeployment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteDeployment(childComplexity, args["environmentID"].(string), args["pipelineID"].(string), args["version"].(string)), true
+
 	case "Mutation.deleteFileNode":
 		if e.complexity.Mutation.DeleteFileNode == nil {
 			break
@@ -1542,6 +1566,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.StopPipelines(childComplexity, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string), args["RunType"].(string)), true
+
+	case "Mutation.turnOnOffDeployment":
+		if e.complexity.Mutation.TurnOnOffDeployment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_turnOnOffDeployment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TurnOnOffDeployment(childComplexity, args["environmentID"].(string), args["pipelineID"].(string), args["online"].(bool)), true
 
 	case "Mutation.turnOnOffPipeline":
 		if e.complexity.Mutation.TurnOnOffPipeline == nil {
@@ -3690,8 +3726,9 @@ extend type Mutation {
 	name: String!
   environmentID: String!
   description: String!
-  active: Boolean!
   online: Boolean!
+  active: Boolean!
+  deploy_active: Boolean!
   current: String!
   workerGroup: String!
   created_at: Time!
@@ -3788,19 +3825,19 @@ extend type Mutation {
   """
   addDeployment(pipelineID: String!, fromEnvironmentID: String!, toEnvironmentID: String!, version: String!, workerGroup: String!, liveactive: Boolean!, nodeWorkerGroup: [WorkerGroupsNodes]): String!
 
-  # """
-  # Delete pipeline.
-  # + **Route**: Private
-  # + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
-  # """
-  # deleteDeployment(environmentID: String!, pipelineID: String! ): String!
+  """
+  Delete pipeline.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  """
+  deleteDeployment(environmentID: String!, pipelineID: String!, version: String!): String!
 
-  # """
-  # Turn on or off trigger node.
-  # + **Route**: Private
-  # + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
-  # """
-  # turnOnOffDeployment(environmentID: String!, pipelineID: String!, online: Boolean!): String!
+  """
+  Turn on or off trigger node.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  """
+  turnOnOffDeployment(environmentID: String!, pipelineID: String!, online: Boolean!): String!
 }
 `, BuiltIn: false},
 	{Name: "resolvers/me.graphqls", Input: `input AddUpdateMeInput {
@@ -4926,6 +4963,39 @@ func (ec *executionContext) field_Mutation_deleteAccessGroup_args(ctx context.Co
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteDeployment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["version"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["version"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteFileNode_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -5592,6 +5662,39 @@ func (ec *executionContext) field_Mutation_stopPipelines_args(ctx context.Contex
 		}
 	}
 	args["RunType"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_turnOnOffDeployment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg1
+	var arg2 bool
+	if tmp, ok := rawArgs["online"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("online"))
+		arg2, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["online"] = arg2
 	return args, nil
 }
 
@@ -9046,6 +9149,41 @@ func (ec *executionContext) _Deployments_description(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Deployments_online(ctx context.Context, field graphql.CollectedField, obj *Deployments) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Deployments",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Online, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Deployments_active(ctx context.Context, field graphql.CollectedField, obj *Deployments) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -9081,7 +9219,7 @@ func (ec *executionContext) _Deployments_active(ctx context.Context, field graph
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Deployments_online(ctx context.Context, field graphql.CollectedField, obj *Deployments) (ret graphql.Marshaler) {
+func (ec *executionContext) _Deployments_deploy_active(ctx context.Context, field graphql.CollectedField, obj *Deployments) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9099,7 +9237,7 @@ func (ec *executionContext) _Deployments_online(ctx context.Context, field graph
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Online, nil
+		return obj.DeployActive, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10946,6 +11084,90 @@ func (ec *executionContext) _Mutation_addDeployment(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().AddDeployment(rctx, args["pipelineID"].(string), args["fromEnvironmentID"].(string), args["toEnvironmentID"].(string), args["version"].(string), args["workerGroup"].(string), args["liveactive"].(bool), args["nodeWorkerGroup"].([]*WorkerGroupsNodes))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteDeployment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteDeployment_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteDeployment(rctx, args["environmentID"].(string), args["pipelineID"].(string), args["version"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_turnOnOffDeployment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_turnOnOffDeployment_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().TurnOnOffDeployment(rctx, args["environmentID"].(string), args["pipelineID"].(string), args["online"].(bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -21554,6 +21776,16 @@ func (ec *executionContext) _Deployments(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "online":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Deployments_online(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "active":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Deployments_active(ctx, field, obj)
@@ -21564,9 +21796,9 @@ func (ec *executionContext) _Deployments(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "online":
+		case "deploy_active":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Deployments_online(ctx, field, obj)
+				return ec._Deployments_deploy_active(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -22110,6 +22342,26 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "addDeployment":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_addDeployment(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteDeployment":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteDeployment(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "turnOnOffDeployment":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_turnOnOffDeployment(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)

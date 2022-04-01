@@ -39,11 +39,11 @@ const Deploy = () => {
 
     // Graphql Hooks
     const getEnvironments = useGetEnvironmentsHook(setAvailableEnvironments);
-    const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setAvailableWorkerGroups, selectedEnvironment);
+    const getWorkerGroups = useGetWorkerGroupsHook(setAvailableWorkerGroups, selectedEnvironment);
     const getNonDefaultWGNodes = useGetNonDefaultWGNodesHook(nonDefaultWGNodes, selectedEnvironment);
     const addDeployment = useAddDeploymentHook();
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
-    const getDeployment = useGetDeploymentHook(Environment.id.get(), 'd-' + pipelineId, setDeployment);
+    const getDeployment = useGetDeploymentHook(selectedEnvironment?.id, 'd-' + pipelineId, setDeployment);
 
     useEffect(() => {
         if (!Environment.id?.get()) return;
@@ -57,7 +57,7 @@ const Deploy = () => {
         if (!selectedEnvironment) return;
         getNonDefaultWGNodes(Environment.id?.get(), selectedEnvironment.id);
         getDeployment();
-        getWorkerGroups();
+        getWorkerGroups(selectedEnvironment.id);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedEnvironment]);
@@ -80,6 +80,8 @@ const Deploy = () => {
             reset({ major: '0', minor: '0', patch: '0', workerGroup: null });
             setLive(true);
         }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [deployment]);
 
     // // Set worker group on load
@@ -207,8 +209,12 @@ const Deploy = () => {
                                 </Grid>
 
                                 <Grid container alignItems="center" mt={4} mb={4}>
-                                    <IOSSwitch onClick={() => setLive(!live)} checked={live} inputProps={{ 'aria-label': 'controlled' }} />
-                                    <Typography sx={{ ml: 2, fontSize: 16, color: 'status.pipelineOnlineText' }}>Live on deployment</Typography>
+                                    {deployment.node_type_desc !== 'play' ? (
+                                        <IOSSwitch onClick={() => setLive(!live)} checked={live} inputProps={{ 'aria-label': 'controlled' }} />
+                                    ) : null}
+                                    <Typography sx={{ ml: deployment.node_type_desc !== 'play' ? 2 : 0, fontSize: 16, color: live ? 'status.pipelineOnlineText' : 'error.main' }}>
+                                        {live ? 'Online' : 'Offline'}
+                                    </Typography>
                                 </Grid>
 
                                 {deployment ? (
@@ -368,14 +374,14 @@ const useGetDeploymentHook = (environmentID, pipelineID, setDeployment) => {
 };
 
 // ------- Custom Hooks
-const useGetWorkerGroupsHook = (environmentID, setWorkerGroups, selectedEnvironment) => {
+const useGetWorkerGroupsHook = (setWorkerGroups, selectedEnvironment) => {
     // GraphQL hook
     const getAccessGroupUsers = useGetWorkerGroups();
 
     const { enqueueSnackbar } = useSnackbar();
 
     // Get worker groups
-    return async () => {
+    return async (environmentID) => {
         const response = await getAccessGroupUsers({ environmentID });
 
         if (response === null) {

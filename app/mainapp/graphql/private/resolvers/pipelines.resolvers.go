@@ -353,6 +353,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 					Schedule:      schedule,
 					Timezone:      timezone,
 					Online:        online,
+					RunType:       "pipeline",
 				}
 
 			}
@@ -631,7 +632,7 @@ func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID 
 	if p.NodeTypeDesc == "schedule" {
 
 		var plSchedules []*models.Scheduler
-		err := database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&plSchedules).Error
+		err := database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Find(&plSchedules).Error
 		if err != nil && err != gorm.ErrRecordNotFound {
 			log.Println("Removal of changed trigger schedules:", err)
 		}
@@ -647,6 +648,7 @@ func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID 
 					Schedule:      psc.Schedule,
 					Timezone:      psc.Timezone,
 					Online:        online,
+					RunType:       "pipeline",
 				}
 				// Add back to schedule
 				err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)

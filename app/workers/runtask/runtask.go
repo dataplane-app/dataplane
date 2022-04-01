@@ -128,13 +128,6 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		return
 	}
 
-	// var response TaskResponse
-	// _, errnats := messageq.MsgReply("taskupdate", TaskUpdate, &response)
-
-	// if errnats != nil {
-	// 	logging.PrintSecretsRedact("Update task error nats:", errnats)
-	// }
-
 	for _, v := range msg.Commands {
 		// Print the log timestamps
 		clog.PrintTimestamp = true
@@ -443,8 +436,6 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		EndDT:         time.Now().UTC(),
 	}
 	UpdateWorkerTasks(TaskFinal)
-
-	// _, errnats = messageq.MsgReply("taskupdate", TaskFinal, &response)
 
 	if config.Debug == "true" {
 		// log.Println("tasks delete:", msg.TaskID)

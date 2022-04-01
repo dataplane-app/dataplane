@@ -115,8 +115,9 @@ type Deployments struct {
 	Name          string    `json:"name"`
 	EnvironmentID string    `json:"environmentID"`
 	Description   string    `json:"description"`
-	Active        bool      `json:"active"`
 	Online        bool      `json:"online"`
+	Active        bool      `json:"active"`
+	DeployActive  bool      `json:"deploy_active"`
 	Current       string    `json:"current"`
 	WorkerGroup   string    `json:"workerGroup"`
 	CreatedAt     time.Time `json:"created_at"`

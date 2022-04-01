@@ -163,10 +163,13 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 		}
 
 		UpdateWorkerTasks(TaskFinal)
-		response := runtask.TaskResponse{R: "ok"}
-		_, errnats := messageq.MsgReply("taskupdate", TaskFinal, &response)
-		if errnats != nil {
-			logging.PrintSecretsRedact(errnats)
+
+		errnat := messageq.MsgSend("taskupdate."+envID+"."+runid, TaskFinal)
+		if errnat != nil {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(errnat)
+			}
+
 		}
 
 		// If worker recovers but part of the pipeline starts running - cancel any running jobs

@@ -4,8 +4,9 @@ type Deployments {
 	name: String!
   environmentID: String!
   description: String!
-  active: Boolean!
   online: Boolean!
+  active: Boolean!
+  deploy_active: Boolean!
   current: String!
   workerGroup: String!
   created_at: Time!
@@ -102,17 +103,17 @@ extend type Mutation {
   """
   addDeployment(pipelineID: String!, fromEnvironmentID: String!, toEnvironmentID: String!, version: String!, workerGroup: String!, liveactive: Boolean!, nodeWorkerGroup: [WorkerGroupsNodes]): String!
 
-  # """
-  # Delete pipeline.
-  # + **Route**: Private
-  # + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
-  # """
-  # deleteDeployment(environmentID: String!, pipelineID: String! ): String!
+  """
+  Delete pipeline.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  """
+  deleteDeployment(environmentID: String!, pipelineID: String!, version: String!): String!
 
-  # """
-  # Turn on or off trigger node.
-  # + **Route**: Private
-  # + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
-  # """
-  # turnOnOffDeployment(environmentID: String!, pipelineID: String!, online: Boolean!): String!
+  """
+  Turn on or off trigger node.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  """
+  turnOnOffDeployment(environmentID: String!, pipelineID: String!, online: Boolean!): String!
 }

@@ -12,9 +12,12 @@ import (
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
 	"os"
 
 	"gorm.io/gorm"
@@ -23,6 +26,7 @@ import (
 func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*privategraphql.WorkerGroupsNodes) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
+	var triggerType string = ""
 
 	// ----- Deploy To Permissions
 	perms := []models.Permissions{
@@ -221,6 +225,10 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 
 		}
 
+		if node.NodeType == "trigger" && node.NodeTypeDesc == "schedule" {
+			triggerType = "schedule"
+		}
+
 		deployNodes = append(deployNodes, &models.DeployPipelineNodes{
 			NodeID:        "d-" + node.NodeID,
 			PipelineID:    createPipeline.PipelineID,
@@ -296,30 +304,36 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	}
 
 	// Edges create
-	err = database.DBConn.Create(&deployEdges).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
+	if len(deployEdges) > 0 {
+		err = database.DBConn.Create(&deployEdges).Error
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to create deployment pipeline.")
 		}
-		return "", errors.New("Failed to create deployment pipeline.")
 	}
 
 	// Folders create
-	err = database.DBConn.Create(&deployFolders).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
+	if len(deployFolders) > 0 {
+		err = database.DBConn.Create(&deployFolders).Error
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to create deployment pipeline.")
 		}
-		return "", errors.New("Failed to create deployment pipeline.")
 	}
 
 	// Files create
-	err = database.DBConn.Create(&deployFiles).Error
-	if err != nil {
-		if os.Getenv("debug") == "true" {
-			logging.PrintSecretsRedact(err)
+	if len(deployFiles) > 0 {
+		err = database.DBConn.Create(&deployFiles).Error
+		if err != nil {
+			if os.Getenv("debug") == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to create deployment pipeline.")
 		}
-		return "", errors.New("Failed to create deployment pipeline.")
 	}
 
 	// Switch to active and take off update lock
@@ -337,6 +351,15 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to create deployment pipeline.")
+	}
+
+	// Turn off all previous deployments
+	err = database.DBConn.Model(&models.DeployPipelineNodes{}).Where("pipeline_id = ? and environment_id = ? and version <> ? and trigger_online = true", "d-"+pipelineID, toEnvironmentID, version).Update("trigger_online", false).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
 	}
 
 	// Give current user full permissions
@@ -363,7 +386,135 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 
 	}
 
+	// Add back to schedule
+	// ======= Update the schedule trigger ==========
+	if triggerType == "schedule" {
+		// Add back to schedule
+		var plSchedules []*models.Scheduler
+
+		// Adding an existing schedule from pipeline into deployment - needs to select pipeline
+		err := database.DBConn.Where("pipeline_id = ? and environment_id =? and run_type=?", pipelineID, fromEnvironmentID, "pipeline").Find(&plSchedules).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			log.Println("Removal of changed trigger schedules:", err)
+		}
+
+		if len(plSchedules) > 0 {
+			for _, psc := range plSchedules {
+
+				pipelineSchedules := models.Scheduler{
+					NodeID:        "d-" + psc.NodeID,
+					PipelineID:    "d-" + psc.PipelineID,
+					EnvironmentID: toEnvironmentID,
+					ScheduleType:  psc.ScheduleType,
+					Schedule:      psc.Schedule,
+					Timezone:      psc.Timezone,
+					Online:        online,
+					RunType:       "deployment",
+				}
+				// Add back to schedule
+				err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
+				if err != nil {
+					logging.PrintSecretsRedact("NATS error:", err)
+				}
+			}
+		}
+
+	}
+
 	return "OK", nil
+}
+
+func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID string, pipelineID string, version string) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("requires permissions")
+	}
+
+	// Get the latest deployment
+	d := models.DeployPipelines{}
+	err := database.DBConn.Where("pipeline_id = ? AND environment_id = ? and deploy_active = true", pipelineID, environmentID).First(&d).Error
+	if err != nil {
+		return "", errors.New("Deployment record not found")
+	}
+
+	// Get the trigger type
+	p := models.DeployPipelineNodes{}
+	err = database.DBConn.Where("pipeline_id = ? AND node_type = ? and version = ? and environment_id = ?", pipelineID, "trigger", d.Version, environmentID).First(&p).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to retrieve trigger node.")
+	}
+
+	if p.NodeTypeDesc == "play" {
+		online = true
+	}
+
+	// Update deployment node
+	n := models.DeployPipelineNodes{
+		TriggerOnline: online,
+	}
+
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ? AND node_type = ? and version = ?", pipelineID, environmentID, "trigger", d.Version).
+		Select("trigger_online").Updates(&n).Error
+
+	if err != nil {
+		if os.Getenv("debug") == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to update trigger node.")
+	}
+
+	// ---- if the trigger is a scheduler, add or remove from the schedule
+	// ======= Update the schedule trigger ==========
+	if p.NodeTypeDesc == "schedule" {
+
+		var plSchedules []*models.Scheduler
+		err := database.DBConn.Where("pipeline_id = ? and environment_id =? and run_type=?", pipelineID, environmentID, "deployment").Find(&plSchedules).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			log.Println("Removal of changed trigger schedules:", err)
+		}
+
+		if len(plSchedules) > 0 {
+			for _, psc := range plSchedules {
+
+				pipelineSchedules := models.Scheduler{
+					NodeID:        psc.NodeID,
+					PipelineID:    psc.PipelineID,
+					EnvironmentID: psc.EnvironmentID,
+					ScheduleType:  psc.ScheduleType,
+					Schedule:      psc.Schedule,
+					Timezone:      psc.Timezone,
+					Online:        online,
+					RunType:       "deployment",
+				}
+				// Add back to schedule
+				err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
+				if err != nil {
+					logging.PrintSecretsRedact("NATS error:", err)
+				}
+			}
+		}
+	}
+
+	return "Pipeline trigger updated", nil
 }
 
 func (r *queryResolver) GetDeployment(ctx context.Context, pipelineID string, environmentID string) (*privategraphql.Deployments, error) {
@@ -404,15 +555,15 @@ b.online,
 scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a left join (
-	select node_type, node_type_desc, pipeline_id, trigger_online as online from deploy_pipeline_nodes where node_type='trigger'
-) b on a.pipeline_id=b.pipeline_id
-left join scheduler on scheduler.pipeline_id = a.pipeline_id
-where a.pipeline_id = ? and a.deploy_active=true
+	select node_type, node_type_desc, pipeline_id, trigger_online as online, environment_id from deploy_pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id and a.environment_id = b.environment_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id and scheduler.environment_id = a.environment_id
+where a.pipeline_id = ? and a.deploy_active=true and a.environment_id=?
 order by a.created_at desc
 `
 
 		err := database.DBConn.Raw(
-			query, pipelineID).Scan(&p).Error
+			query, pipelineID, environmentID).Scan(&p).Error
 
 		if err != nil {
 			if os.Getenv("debug") == "true" {
@@ -441,8 +592,8 @@ scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a 
 left join (
-	select node_type, node_type_desc, pipeline_id, trigger_online as online from deploy_pipeline_nodes where node_type='trigger'
-) b on a.pipeline_id=b.pipeline_id
+	select node_type, node_type_desc, pipeline_id, trigger_online as online, environment_id from deploy_pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id and a.environment_id = b.environment_id
 inner join (
   select distinct resource_id, environment_id from (
 	(select 
@@ -475,13 +626,13 @@ inner join (
 	) x
 
 ) p on p.resource_id = a.pipeline_id and p.environment_id = a.environment_id
-left join scheduler on scheduler.pipeline_id = a.pipeline_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id and scheduler.environment_id = a.environment_id
 where 
-a.pipeline_id = ? and a.deploy_active=true
+a.pipeline_id = ? and a.deploy_active=true and a.environment_id=?
 order by a.created_at desc`
 
 		err := database.DBConn.Raw(
-			query, currentUser, currentUser, pipelineID).Scan(&p).Error
+			query, currentUser, currentUser, pipelineID, environmentID).Scan(&p).Error
 
 		if err != nil {
 			if os.Getenv("debug") == "true" {
@@ -529,15 +680,17 @@ a.description,
 a.active,
 a.worker_group,
 a.created_at,
+a.version,
+a.deploy_active,
 b.node_type,
 b.node_type_desc,
 b.online,
 scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a left join (
-	select node_type, node_type_desc, pipeline_id, trigger_online as online from deploy_pipeline_nodes where node_type='trigger'
-) b on a.pipeline_id=b.pipeline_id
-left join scheduler on scheduler.pipeline_id = a.pipeline_id
+	select node_type, node_type_desc, pipeline_id, trigger_online as online, version, environment_id from deploy_pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id and a.version = b.version and a.environment_id = b.environment_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id and scheduler.environment_id = a.environment_id
 where a.environment_id = ?
 order by a.created_at desc
 `
@@ -562,6 +715,8 @@ a.description,
 a.active,
 a.worker_group,
 a.created_at,
+a.version,
+a.deploy_active,
 b.node_type,
 b.node_type_desc,
 b.online,
@@ -569,8 +724,8 @@ scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a 
 left join (
-	select node_type, node_type_desc, pipeline_id, trigger_online as online from deploy_pipeline_nodes where node_type='trigger'
-) b on a.pipeline_id=b.pipeline_id
+	select node_type, node_type_desc, pipeline_id, trigger_online as online, version, environment_id from deploy_pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id and a.version = b.version and a.environment_id = b.environment_id
 inner join (
   select distinct resource_id, environment_id from (
 	(select 
@@ -603,7 +758,7 @@ inner join (
 	) x
 
 ) p on p.resource_id = a.pipeline_id and p.environment_id = a.environment_id
-left join scheduler on scheduler.pipeline_id = a.pipeline_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id and scheduler.environment_id = a.environment_id
 where 
 a.environment_id = ?
 order by a.created_at desc`
@@ -662,7 +817,7 @@ func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID str
 	}
 
 	var pipelineNodes []*models.PipelineNodes
-	err := database.DBConn.Debug().Where("pipeline_id =? and environment_id =? and (worker_group = '') IS FALSE", pipelineID, fromEnvironmentID).Find(&pipelineNodes).Error
+	err := database.DBConn.Where("pipeline_id =? and environment_id =? and (worker_group = '') IS FALSE", pipelineID, fromEnvironmentID).Find(&pipelineNodes).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		if os.Getenv("debug") == "true" {
 			logging.PrintSecretsRedact(err)
