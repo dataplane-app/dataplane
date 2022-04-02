@@ -13,7 +13,7 @@ import { useHistory, useParams } from 'react-router-dom';
 import { useAddDeployment } from '../graphql/addDeployment';
 import { useState as useHookState } from '@hookstate/core';
 import { useGetPipelineHook } from './View';
-import { useGetDeployment } from '../graphql/getDeployment';
+import { useGetActiveDeployment } from '../graphql/getActiveDeployment';
 import { useGetWorkerGroups } from '../graphql/getWorkerGroups';
 
 const Deploy = () => {
@@ -44,7 +44,7 @@ const Deploy = () => {
     const getNonDefaultWGNodes = useGetNonDefaultWGNodesHook(nonDefaultWGNodes, selectedEnvironment);
     const addDeployment = useAddDeploymentHook();
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
-    const getDeployment = useGetDeploymentHook(selectedEnvironment?.id, 'd-' + pipelineId, setDeployment);
+    const getActiveDeployment = useGetDeploymentHook(selectedEnvironment?.id, 'd-' + pipelineId, setDeployment);
 
     useEffect(() => {
         if (!Environment.id?.get()) return;
@@ -57,7 +57,7 @@ const Deploy = () => {
     useEffect(() => {
         if (!selectedEnvironment) return;
         getNonDefaultWGNodes(Environment.id?.get(), selectedEnvironment.id);
-        getDeployment();
+        getActiveDeployment();
         getWorkerGroups(selectedEnvironment.id);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -159,8 +159,7 @@ const Deploy = () => {
                                 <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
                                     Version control
                                 </Typography>
-
-                                <Grid container alignItems="center" flexWrap="nowrap" justifyContent="flex-start" mt={2}>
+                                <Grid container alignItems="center" flexWrap="nowrap" justifyContent="flex-start" mt={2} mb={4}>
                                     <Grid item display="flex" alignItems="center" sx={{ flexDirection: 'column' }}>
                                         <Typography variant="subtitle1" fontWeight={500} mb={0.6}>
                                             Major
@@ -212,14 +211,15 @@ const Deploy = () => {
                                     </Grid>
                                 </Grid>
 
-                                <Grid container alignItems="center" mt={4} mb={4}>
-                                    {deployment.node_type_desc !== 'play' ? (
+                                {deployment.node_type_desc !== 'play' ? (
+                                    <Grid container alignItems="center" mb={4}>
                                         <IOSSwitch onClick={() => setLive(!live)} checked={live} inputProps={{ 'aria-label': 'controlled' }} />
-                                    ) : null}
-                                    <Typography sx={{ ml: deployment.node_type_desc !== 'play' ? 2 : 0, fontSize: 16, color: live ? 'status.pipelineOnlineText' : 'error.main' }}>
-                                        {live ? 'Online' : 'Offline'}
-                                    </Typography>
-                                </Grid>
+                                        <Typography
+                                            sx={{ ml: deployment.node_type_desc !== 'play' ? 2 : 0, fontSize: 16, color: live ? 'status.pipelineOnlineText' : 'error.main' }}>
+                                            {live ? 'Online' : 'Offline'}
+                                        </Typography>
+                                    </Grid>
+                                ) : null}
 
                                 {deployment ? (
                                     <Autocomplete
@@ -240,7 +240,6 @@ const Deploy = () => {
                                         )}
                                     />
                                 ) : null}
-
                                 <Grid mt={4} display="flex" alignItems="center">
                                     <Button type="submit" variant="contained" color="primary" style={{ width: '100%' }}>
                                         Deploy
@@ -359,13 +358,13 @@ const useAddDeploymentHook = () => {
 
 const useGetDeploymentHook = (environmentID, pipelineID, setDeployment) => {
     // GraphQL hook
-    const getDeployment = useGetDeployment();
+    const getActiveDeployment = useGetActiveDeployment();
 
     const { enqueueSnackbar } = useSnackbar();
 
-    // Add deployment
+    // Get active deployment
     return async () => {
-        const response = await getDeployment({ environmentID, pipelineID });
+        const response = await getActiveDeployment({ environmentID, pipelineID });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get deployment: " + (response.msg || response.r || response.error), { variant: 'error' });

@@ -369,9 +369,9 @@ type ComplexityRoot struct {
 		GetAccessGroup                func(childComplexity int, userID string, environmentID string, accessGroupID string) int
 		GetAccessGroupUsers           func(childComplexity int, environmentID string, accessGroupID string) int
 		GetAccessGroups               func(childComplexity int, userID string, environmentID string) int
+		GetActiveDeployment           func(childComplexity int, pipelineID string, environmentID string) int
 		GetAllPreferences             func(childComplexity int) int
 		GetCodeFileRunLogs            func(childComplexity int, runID string, pipelineID string, environmentID string) int
-		GetDeployment                 func(childComplexity int, pipelineID string, environmentID string) int
 		GetDeployments                func(childComplexity int, environmentID string) int
 		GetEnvironment                func(childComplexity int, environmentID string) int
 		GetEnvironments               func(childComplexity int) int
@@ -550,7 +550,7 @@ type QueryResolver interface {
 	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error)
 	GetAccessGroupUsers(ctx context.Context, environmentID string, accessGroupID string) ([]*models.Users, error)
 	FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*CodeTree, error)
-	GetDeployment(ctx context.Context, pipelineID string, environmentID string) (*Deployments, error)
+	GetActiveDeployment(ctx context.Context, pipelineID string, environmentID string) (*Deployments, error)
 	GetDeployments(ctx context.Context, environmentID string) ([]*Deployments, error)
 	GetNonDefaultWGNodes(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string) ([]*NonDefaultNodes, error)
 	Me(ctx context.Context) (*models.Users, error)
@@ -2602,6 +2602,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetAccessGroups(childComplexity, args["userID"].(string), args["environmentID"].(string)), true
 
+	case "Query.getActiveDeployment":
+		if e.complexity.Query.GetActiveDeployment == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getActiveDeployment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetActiveDeployment(childComplexity, args["pipelineID"].(string), args["environmentID"].(string)), true
+
 	case "Query.getAllPreferences":
 		if e.complexity.Query.GetAllPreferences == nil {
 			break
@@ -2620,18 +2632,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetCodeFileRunLogs(childComplexity, args["runID"].(string), args["pipelineID"].(string), args["environmentID"].(string)), true
-
-	case "Query.getDeployment":
-		if e.complexity.Query.GetDeployment == nil {
-			break
-		}
-
-		args, err := ec.field_Query_getDeployment_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.GetDeployment(childComplexity, args["pipelineID"].(string), args["environmentID"].(string)), true
 
 	case "Query.getDeployments":
 		if e.complexity.Query.GetDeployments == nil {
@@ -3809,7 +3809,7 @@ extend type Query {
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
-  getDeployment(pipelineID: String!, environmentID: String!): Deployments
+  getActiveDeployment(pipelineID: String!, environmentID: String!): Deployments
 
   """
   Get all deployments.
@@ -6403,6 +6403,30 @@ func (ec *executionContext) field_Query_getAccessGroups_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_getActiveDeployment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_getCodeFileRunLogs_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -6433,30 +6457,6 @@ func (ec *executionContext) field_Query_getCodeFileRunLogs_args(ctx context.Cont
 		}
 	}
 	args["environmentID"] = arg2
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_getDeployment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["pipelineID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["pipelineID"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["environmentID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["environmentID"] = arg1
 	return args, nil
 }
 
@@ -16001,7 +16001,7 @@ func (ec *executionContext) _Query_filesNode(ctx context.Context, field graphql.
 	return ec.marshalOCodeTree2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCodeTree(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_getDeployment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_getActiveDeployment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -16018,7 +16018,7 @@ func (ec *executionContext) _Query_getDeployment(ctx context.Context, field grap
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_getDeployment_args(ctx, rawArgs)
+	args, err := ec.field_Query_getActiveDeployment_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -16026,7 +16026,7 @@ func (ec *executionContext) _Query_getDeployment(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetDeployment(rctx, args["pipelineID"].(string), args["environmentID"].(string))
+		return ec.resolvers.Query().GetActiveDeployment(rctx, args["pipelineID"].(string), args["environmentID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -24104,7 +24104,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "getDeployment":
+		case "getActiveDeployment":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -24113,7 +24113,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_getDeployment(ctx, field)
+				res = ec._Query_getActiveDeployment(ctx, field)
 				return res
 			}
 
