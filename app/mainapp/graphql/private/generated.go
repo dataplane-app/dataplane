@@ -4040,8 +4040,8 @@ extend type Mutation {
 
 # ----- Add/Update flow
 input PositionInput {
-  x: Int!
-  y: Int!
+  x: Float!
+  y: Float!
 }
 
 input DataInput {
@@ -20767,7 +20767,7 @@ func (ec *executionContext) unmarshalInputPositionInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("x"))
-			it.X, err = ec.unmarshalNInt2int(ctx, v)
+			it.X, err = ec.unmarshalNFloat2float64(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -20775,7 +20775,7 @@ func (ec *executionContext) unmarshalInputPositionInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("y"))
-			it.Y, err = ec.unmarshalNInt2int(ctx, v)
+			it.Y, err = ec.unmarshalNFloat2float64(ctx, v)
 			if err != nil {
 				return it, err
 			}

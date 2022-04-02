@@ -17,8 +17,8 @@ type Pipelines {
 
 # ----- Add/Update flow
 input PositionInput {
-  x: Int!
-  y: Int!
+  x: Float!
+  y: Float!
 }
 
 input DataInput {
