@@ -1,20 +1,25 @@
 ![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests)
 
-# <span style="color:#FF5722">Dataplane (Beta)</span>
-⚡️ Extreme performance with a low resource footprint <br />
+If you like Dataplane, give it a star ⭐
+
+## Dataplane (Beta)
+⚡️ Extreme performance with a low resource footprint<br />
 🖐 Drag drop workflow builder<br />
-🧑‍💻 Built in web based Python code editor with real-time logging<br />
+🧑‍💻 Built in Python code editor<br />
 👮 Granular permissions for teams to collaborate with segregated access. <br />
-🐿 Secrets management with logging redaction to safely allow team members to connect to secure resources without revealing passwords. <br />
+🐿 Secrets management with logging redaction allows team members to use secure resources without revealing passwords. <br />
 ⏱ Scheduler with multiple timezone support<br />
 🌍 Setup isolated environments to develop, test & deploy across data mesh domains<br />
 📊 Monitor real-time resource usage by analytical workloads<br />
 ⭐️ Distributed computing with worker groups<br />
-🌳 Add replicas for high availability and scale<br />
-☁️ Cloud native <br />
+🌳 Add more replicas for high availability and scale<br />
+☁️ Cloud native  
+
+<img width="1660" alt="image" src="https://user-images.githubusercontent.com/63714857/161389462-a65928c6-1ab7-4efa-a8d8-06598adfef1b.png">
+
 
 # About the project
-The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with our first beta release. We would love to hear your thoughts and for you to get involved. 
+The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved. 
 
 # Quick start
 Once running, visit the dashboard at http://localhost:9000/webapp/<br /><br />
