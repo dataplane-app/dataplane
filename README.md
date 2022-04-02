@@ -7,7 +7,7 @@ If you like Dataplane, give it a star ⭐
 🖐 Drag drop workflow builder<br />
 🧑‍💻 Built in Python code editor<br />
 👮 Granular permissions for teams to collaborate with segregated access. <br />
-🐿 Secrets management with logging redaction to safely allow team members to connect to secure resources without revealing passwords. <br />
+🐿 Secrets management with logging redaction allows team members to use secure resources without revealing passwords. <br />
 ⏱ Scheduler with multiple timezone support<br />
 🌍 Setup isolated environments to develop, test & deploy across data mesh domains<br />
 📊 Monitor real-time resource usage by analytical workloads<br />
