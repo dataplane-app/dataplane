@@ -94,7 +94,13 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                 Cell: (row) =>
                     row.value.node_type_desc ? (
                         <Box display="flex" alignItems="center">
-                            <Box component={FontAwesomeIcon} fontSize={19} sx={{ color: 'secondary.main' }} icon={row.value === 'play' ? faPlayCircle : faClock} mr={1.5} />
+                            <Box
+                                component={FontAwesomeIcon}
+                                fontSize={19}
+                                sx={{ color: 'secondary.main' }}
+                                icon={row.value.node_type_desc === 'play' ? faPlayCircle : faClock}
+                                mr={1.5}
+                            />
                             <Typography color="secondary.main" variant="body2">
                                 {row.value.node_type_desc[0]?.toUpperCase() + row.value.node_type_desc.slice(1) + ' trigger'}
                                 {row.value.schedule && ' - ' + formatSchedule(row.value.schedule, row.value.schedule_type)}
@@ -137,7 +143,6 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                 Header: 'Previous',
                 accessor: (row) => [row.online],
                 Cell: (row) => {
-                    // row.value
                     return !row.value[0] ? (
                         <Typography variant="body2" color="editorPage.fileManagerIcon">
                             Previous version
