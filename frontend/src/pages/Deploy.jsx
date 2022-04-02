@@ -5,7 +5,7 @@ import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/mat
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { IOSSwitch } from '../components/DrawerContent/SchedulerDrawer/IOSSwitch';
-import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
+import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { useGetEnvironments } from '../graphql/getEnvironments';
 import { useForm } from 'react-hook-form';
 import { useGetNonDefaultWGNodes } from '../graphql/getNonDefaultWGNodes';
@@ -19,6 +19,7 @@ import { useGetWorkerGroups } from '../graphql/getWorkerGroups';
 const Deploy = () => {
     // Environment global state
     const Environment = useGlobalEnvironmentState();
+    const Environments = useGlobalEnvironmentsState();
 
     // Local state
     const [deployment, setDeployment] = useState(null);
@@ -111,7 +112,10 @@ const Deploy = () => {
         };
 
         addDeployment(input);
-        return;
+
+        const toEnvironmentName = Environments.get().filter((a) => a.id === selectedEnvironment.id)[0].name;
+        Environment.set({ id: selectedEnvironment.id, name: toEnvironmentName });
+        history.push('/deployments/');
     };
 
     return (
