@@ -658,7 +658,7 @@ func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentI
 	return "Pipeline trigger updated", nil
 }
 
-func (r *queryResolver) GetDeployment(ctx context.Context, pipelineID string, environmentID string) (*privategraphql.Deployments, error) {
+func (r *queryResolver) GetActiveDeployment(ctx context.Context, pipelineID string, environmentID string) (*privategraphql.Deployments, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
