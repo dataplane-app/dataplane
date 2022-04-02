@@ -80,9 +80,9 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                             variant="text"
                             sx={{ fontWeight: 400 }}
                             onClick={() => {
-                                history.push({ pathname: `/pipelines/view/${row.value.pipelineID.slice(2)}`, state: row.value });
+                                history.push({ pathname: `/deployments/view/${row.value.pipelineID}`, state: row.value });
                                 FlowState.isRunning.set(true);
-                                runPipelines(environmentID, row.value.pipelineID.slice(2), 'deployment');
+                                runPipelines(environmentID, row.value.pipelineID, 'deployment');
                             }}>
                             Run
                         </Button>
@@ -193,7 +193,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                                             item
                                             onClick={() => {
                                                 FlowState.pipelineInfo.set(row.original);
-                                                history.push(`/pipelines/view/${row.original.pipelineID.slice(2)}`);
+                                                history.push(`/deployments/view/${row.original.pipelineID}`);
                                             }}>
                                             <Typography variant="h3" color="cyan.main">
                                                 {row.original.name}

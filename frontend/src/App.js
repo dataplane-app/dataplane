@@ -30,6 +30,7 @@ import TeamGroup from './pages/TeamGroup';
 import Teams from './pages/Teams';
 import PipelineEditor from './pages/Editor';
 import View from './pages/View';
+import DeploymentView from './pages/Deployments/View';
 import PipelinesPermission from './pages/PipelinesPermission';
 import createCustomTheme from './theme';
 import UseCheckTheme from './hooks/useCheckTheme';
@@ -143,6 +144,7 @@ function App() {
                                             '/pipelines/flow/:pipelineId',
                                             '/pipelines/deploy/:pipelineId',
                                             '/deployments',
+                                            '/deployments/view/:deploymentId',
                                             '/support',
                                             '/feedback',
                                         ]}>
@@ -153,6 +155,9 @@ function App() {
                                                 </Route>
                                                 <Route exact path="/deployments">
                                                     <Deployments />
+                                                </Route>
+                                                <Route exact path="/deployments/view/:deploymentId">
+                                                    <DeploymentView />
                                                 </Route>
                                                 <Route exact path="/workers">
                                                     <Workers />
