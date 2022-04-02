@@ -51,6 +51,13 @@ sh:
 i=0; while [ $(($i)) -le 25 ]; do i=$(($i + 1)); sleep 0.5; echo "run $i times"; done;
 ```
 
+```python
+import time
+for x in range(0, 10):
+    print("We're on %d" % (x))
+    time.sleep(2)
+```
+
 ### Number of database connections
 ```sql
 SELECT * FROM pg_stat_database;
