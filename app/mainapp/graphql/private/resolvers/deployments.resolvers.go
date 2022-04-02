@@ -697,8 +697,8 @@ b.online,
 scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a left join (
-	select node_type, node_type_desc, pipeline_id, trigger_online as online, environment_id from deploy_pipeline_nodes where node_type='trigger'
-) b on a.pipeline_id=b.pipeline_id and a.environment_id = b.environment_id
+	select node_type, node_type_desc, pipeline_id, trigger_online as online, environment_id, version from deploy_pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id and a.environment_id = b.environment_id and a.version = b.version
 left join scheduler on scheduler.pipeline_id = a.pipeline_id and scheduler.environment_id = a.environment_id
 where a.pipeline_id = ? and a.deploy_active=true and a.environment_id=?
 order by a.created_at desc
@@ -735,8 +735,8 @@ scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a 
 left join (
-	select node_type, node_type_desc, pipeline_id, trigger_online as online, environment_id from deploy_pipeline_nodes where node_type='trigger'
-) b on a.pipeline_id=b.pipeline_id and a.environment_id = b.environment_id
+	select node_type, node_type_desc, pipeline_id, trigger_online as online, environment_id, version from deploy_pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id and a.environment_id = b.environment_id and a.version = b.version
 inner join (
   select distinct resource_id, environment_id from (
 	(select 
