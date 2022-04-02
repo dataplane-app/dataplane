@@ -1,6 +1,6 @@
 ![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests)
 
-⭐️⭐️⭐️ If you like Dataplane, give it a star ⭐️⭐️⭐️
+If you like Dataplane, give it a star ⭐
 
 # <span style="color:#FF5722">Dataplane (Beta)</span>
 ⚡️ Extreme performance with a low resource footprint <br />
