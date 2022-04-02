@@ -136,7 +136,7 @@ extend type Mutation {
   updatePipeline(pipelineID: String!, name: String!, environmentID: String!, description: String!, workerGroup: String! ): String!
 
   """
-  Update pipeline.
+  Duplicate pipeline.
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines
   """
