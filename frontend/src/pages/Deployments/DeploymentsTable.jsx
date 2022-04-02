@@ -48,7 +48,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
         () => [
             {
                 Header: 'Manage',
-                accessor: (row) => [row.name, row.pipelineID, row.online, row.environmentID, row.node_type_desc, row.version],
+                accessor: (row) => [row.name, row.pipelineID, row.online, row.environmentID, row.node_type_desc, row.version, row.deploy_active],
                 Cell: (row) => (
                     <Grid item sx={{ flex: 1, ml: -1 }} display="flex" alignItems="center" justifyContent="center">
                         <MoreInfoMenu
@@ -65,6 +65,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                                 nodeTypeDesc={row.value[4]}
                                 setIsOpenDeletePipeline={setIsOpenDeletePipeline}
                                 getDeployments={getDeployments}
+                                deploy_active={row.value[6]}
                             />
                         </MoreInfoMenu>
                     </Grid>
