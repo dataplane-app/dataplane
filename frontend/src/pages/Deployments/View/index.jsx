@@ -19,15 +19,17 @@ import TurnOffPipelineDrawer from '../../../components/DrawerContent/TurnOffPipe
 import CustomChip from '../../../components/CustomChip';
 import { useGetPipeline } from '../../../graphql/getPipeline';
 import { Analytics } from './Analytics';
+import { useGetDeployments } from '../../../graphql/getDeployments';
+import { useGetActiveDeployment } from '../../../graphql/getActiveDeployment';
 
 const DeploymentView = () => {
     const Environment = useGlobalEnvironmentState();
 
     // Hooks
     const theme = useTheme();
-    const [pipeline, setPipeline] = useState(null);
+    const [deployment, setDeployment] = useState(null);
     const getPipelineFlow = useGetPipelineFlowHook();
-    const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
+    const getActiveDeployment = useGetActiveDeploymentHook(Environment.id.get(), setDeployment);
 
     // Global states
     const FlowState = useGlobalFlowState();
@@ -59,8 +61,9 @@ const DeploymentView = () => {
 
     // Fetch previous elements
     useEffect(() => {
+        if (!Environment.id.get()) return;
         setIsLoadingFlow(false);
-        getPipeline();
+        getActiveDeployment();
 
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -121,21 +124,21 @@ const DeploymentView = () => {
                 <Grid container alignItems="center" justifyContent="space-between" wrap="nowrap">
                     <Box display="flex" alignItems="center">
                         <Typography component="h2" variant="h2" color="text.primary">
-                            Deployments {'>'} {pipeline?.name}
+                            Deployments {'>'} {deployment?.name}
                         </Typography>
 
                         <Grid display="flex">
                             <Box display="flex" alignItems="center" ml={4} mr={2}>
-                                {pipeline?.online ? <CustomChip label={'Online'} customColor="green" /> : <CustomChip label="Offline" customColor="red" />}
+                                {deployment?.online ? <CustomChip label={'Online'} customColor="green" /> : <CustomChip label="Offline" customColor="red" />}
                             </Box>
 
                             <Box sx={{ top: '0', right: '0' }}>
                                 <MoreInfoMenu iconHorizontal>
                                     <MenuItem
-                                        pipeline={pipeline}
+                                        pipeline={deployment}
                                         getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
-                                        isPipelineOnline={pipeline?.online}
-                                        getPipeline={getPipeline}
+                                        isPipelineOnline={deployment?.online}
+                                        getPipeline={getActiveDeployment}
                                         setIsOpenAnalytics={setIsOpenAnalytics}
                                     />
                                 </MoreInfoMenu>
@@ -145,7 +148,7 @@ const DeploymentView = () => {
                 </Grid>
 
                 {/* Run/Stop button, Chips, Timer */}
-                <ActionLayer setElements={setElements} environmentId={Environment.id.get()} pipeline={pipeline} />
+                <ActionLayer setElements={setElements} environmentId={Environment.id.get()} deployment={deployment} />
             </Box>
             {!FlowState.isOpenLogDrawer.get() && !isOpenAnalytics ? (
                 <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
@@ -209,11 +212,11 @@ const DeploymentView = () => {
             <Drawer anchor="right" open={FlowState.isOpenTurnOffPipelineDrawer.get()} onClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)}>
                 <TurnOffPipelineDrawer
                     handleClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)} //
-                    pipelineID={pipeline?.pipelineID}
-                    environmentID={pipeline?.environmentID}
-                    name={pipeline?.name}
+                    pipelineID={deployment?.pipelineID}
+                    environmentID={deployment?.environmentID}
+                    name={deployment?.name}
                     getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
-                    getPipeline={getPipeline}
+                    getPipeline={getActiveDeployment}
                 />
             </Drawer>
         </Box>
@@ -258,25 +261,25 @@ export const useGetPipelineFlowHook = () => {
 };
 
 // ------ Custom hooks
-export const useGetPipelineHook = (environmentID, setPipeline) => {
+export const useGetActiveDeploymentHook = (environmentID, setPipeline) => {
     // GraphQL hook
-    const getPipeline = useGetPipeline();
+    const getActiveDeployment = useGetActiveDeployment();
 
     // URI parameter
     const { deploymentId } = useParams();
-    const pipelineID = deploymentId.replace('d-', '');
+    const pipelineID = deploymentId;
 
     const FlowState = useGlobalFlowState();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Get members
+    // Get active deployment
     return async () => {
-        const response = await getPipeline({ pipelineID, environmentID });
+        const response = await getActiveDeployment({ pipelineID, environmentID });
 
         if (response.r || response.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't get pipeline: " + (response.msg || response.r || response.error), { variant: 'error' });
+            enqueueSnackbar("Can't get active deployment: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {

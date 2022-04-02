@@ -7,7 +7,7 @@ import { usePipelineTasksRun } from '../../../graphql/getPipelineTasksRun';
 import { useGlobalFlowState } from '../../Flow';
 import { useGlobalRunState } from '../../View/useWebSocket';
 
-export default function RunsDropdown({ environmentID, setElements, setPrevRunTime, pipeline }) {
+export default function RunsDropdown({ environmentID, setElements, setPrevRunTime, deployment }) {
     // Global states
     const RunState = useGlobalRunState();
 
@@ -37,8 +37,8 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
 
     // Set flow status,color on change
     useEffect(() => {
-        if (runs.length === 0 || !pipeline) return;
-        if (pipeline.updated_at < runs[0].updated_at) {
+        if (runs.length === 0 || !deployment) return;
+        if (deployment.updated_at < runs[0].updated_at) {
             setSelectedRun(runs[0]);
             RunState.runStart.set(runs[0].created_at);
             RunState.runEnd.set(runs[0].ended_at);
@@ -46,7 +46,7 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pipeline, runs]);
+    }, [deployment, runs]);
 
     // Update elements on run dropdown change
     useEffect(() => {

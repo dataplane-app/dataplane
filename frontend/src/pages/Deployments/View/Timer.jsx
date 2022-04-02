@@ -11,7 +11,7 @@ import StatusChips from './StatusChips';
 import RunsDropdown from './RunsDropdown';
 import { useGlobalRunState } from '../../View/useWebSocket';
 
-export default function Timer({ environmentID, setElements, pipeline }) {
+export default function Timer({ environmentID, setElements, deployment }) {
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
@@ -113,7 +113,7 @@ export default function Timer({ environmentID, setElements, pipeline }) {
 
                 <StatusChips />
 
-                <RunsDropdown environmentID={environmentID} setElements={setElements} setPrevRunTime={setPrevRunTime} pipeline={pipeline} />
+                <RunsDropdown environmentID={environmentID} setElements={setElements} setPrevRunTime={setPrevRunTime} deployment={deployment} />
 
                 {isRunning ? (
                     <Typography variant="h3" ml={2}>
@@ -213,7 +213,7 @@ export const usePipelineTasksRunHook = () => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            response.map((a) => RunState[a.node_id].set({ status: a.status }));
+            response.map((a) => RunState[a.node_id.replace('d-', '')].set({ status: a.status }));
             RunState.start_dt.set(response.map((a) => a.start_dt)[0]);
             if (response.every((a) => a.status === 'Fail' || a.status === 'Success')) {
                 FlowState.isRunning.set(false);
