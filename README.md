@@ -1,14 +1,14 @@
 ![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests)
 
 # <span style="color:#FF5722">Dataplane</span>
-⚡️ Extreme performance with a low resource footprint
-🖐 Drag drop workflow builder
-⏱ Scheduler with multiple timezone support
-🌍 Setup isolated environments to develop, test & deploy across data mesh domains
-🧑‍💻 Built in Python IDE
-📊 Monitor real-time resource usage by analytical workloads
-⭐️ Distributed computing with worker groups
-🌳 Add replicas for high availability and scale
+⚡️ Extreme performance with a low resource footprint <br />
+🖐 Drag drop workflow builder<br />
+⏱ Scheduler with multiple timezone support<br />
+🌍 Setup isolated environments to develop, test & deploy across data mesh domains<br />
+🧑‍💻 Built in Python IDE<br />
+📊 Monitor real-time resource usage by analytical workloads<br />
+⭐️ Distributed computing with worker groups<br />
+🌳 Add replicas for high availability and scale<br />
 ☁️ Cloud native
 
 # Quick start
