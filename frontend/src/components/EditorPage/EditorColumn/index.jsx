@@ -222,7 +222,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                         label={tabs?.name}
                                         value={idx}
                                         icon={
-                                            <IconButton aria-label="close" onClick={(e) => handleTabClose(tabs, e)}>
+                                            <IconButton aria-label="close" onClick={(e) => handleTabClose(tabs, e)} style={{ marginLeft: 0, paddingLeft: 4 }}>
+                                                {tabs.isEditing && <Box sx={{ width: 8, height: 8, marginRight: 1, backgroundColor: 'secondary.main', borderRadius: '50%' }} />}
                                                 <Box component={FontAwesomeIcon} icon={faTimes} sx={{ fontSize: 13 }} />
                                             </IconButton>
                                         }
