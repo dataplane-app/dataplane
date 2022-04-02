@@ -14,6 +14,7 @@ const query = gql`
             description
             active
             online
+            deploy_active
             current
             workerGroup
             created_at

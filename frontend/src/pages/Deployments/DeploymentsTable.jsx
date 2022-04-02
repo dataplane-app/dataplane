@@ -48,7 +48,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
         () => [
             {
                 Header: 'Manage',
-                accessor: (row) => [row.name, row.pipelineID, row.online, row.environmentID, row.node_type_desc, row.version],
+                accessor: (row) => [row.name, row.pipelineID, row.online, row.environmentID, row.node_type_desc, row.version, row.deploy_active],
                 Cell: (row) => (
                     <Grid item sx={{ flex: 1, ml: -1 }} display="flex" alignItems="center" justifyContent="center">
                         <MoreInfoMenu
@@ -65,6 +65,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                                 nodeTypeDesc={row.value[4]}
                                 setIsOpenDeletePipeline={setIsOpenDeletePipeline}
                                 getDeployments={getDeployments}
+                                deploy_active={row.value[6]}
                             />
                         </MoreInfoMenu>
                     </Grid>
@@ -116,7 +117,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
             },
             {
                 Header: 'Deployed',
-                accessor: (row) => [row.online, row.version],
+                accessor: (row) => [row.deploy_active, row.version],
                 Cell: (row) => {
                     const online = row.value[0];
                     const version = row.value[1];
@@ -140,10 +141,9 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                 },
             },
             {
-                Header: 'Previous',
-                accessor: (row) => [row.online],
+                accessor: 'deploy_active',
                 Cell: (row) => {
-                    return !row.value[0] ? (
+                    return !row.value ? (
                         <Typography variant="body2" color="editorPage.fileManagerIcon">
                             Previous version
                         </Typography>

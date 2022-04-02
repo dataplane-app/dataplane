@@ -11,7 +11,7 @@ const DeploymentTableItem = (props) => {
     const FlowState = useGlobalFlowState();
 
     //Props
-    const { handleCloseMenu, id, name, online, environmentID, nodeTypeDesc, setIsOpenDeletePipeline, getDeployments } = props;
+    const { handleCloseMenu, id, name, online, environmentID, nodeTypeDesc, setIsOpenDeletePipeline, getDeployments, deploy_active } = props;
 
     // Graphql hook
     const turnOnOffDeployment = useTurnOnOffDeploymentHook(id, environmentID, handleCloseMenu, getDeployments);
@@ -40,7 +40,7 @@ const DeploymentTableItem = (props) => {
 
     return (
         <>
-            {nodeTypeDesc !== 'play' ? (
+            {nodeTypeDesc !== 'play' && deploy_active ? (
                 <MenuItem sx={{ color: 'cyan.main' }} onClick={online ? handleTurnOffDeployment : handleTurnOnDeployment}>
                     {online ? 'Turn off' : 'Turn on'}
                 </MenuItem>
