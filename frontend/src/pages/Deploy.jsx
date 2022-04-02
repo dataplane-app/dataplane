@@ -159,7 +159,7 @@ const Deploy = () => {
                                 <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
                                     Version control
                                 </Typography>
-                                <Grid container alignItems="center" flexWrap="nowrap" justifyContent="flex-start" mt={2} mb={4}>
+                                <Grid container alignItems="center" flexWrap="nowrap" justifyContent="flex-start" mt={2} mb={deployment.node_type_desc !== 'play' ? 4 : 8}>
                                     <Grid item display="flex" alignItems="center" sx={{ flexDirection: 'column' }}>
                                         <Typography variant="subtitle1" fontWeight={500} mb={0.6}>
                                             Major
