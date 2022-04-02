@@ -1,5 +1,7 @@
 ![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests)
 
+⭐️⭐️⭐️ If you like Dataplane, give it a star ⭐️⭐️⭐️
+
 # <span style="color:#FF5722">Dataplane (Beta)</span>
 ⚡️ Extreme performance with a low resource footprint <br />
 🖐 Drag drop workflow builder<br />
@@ -14,7 +16,7 @@
 ☁️ Cloud native <br />
 
 # About the project
-The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with our first beta release. We would love to hear your thoughts and for you to get involved. 
+The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved. 
 
 # Quick start
 Once running, visit the dashboard at http://localhost:9000/webapp/<br /><br />
