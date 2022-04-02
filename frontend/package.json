@@ -50,7 +50,8 @@
         "react-table": "^7.7.0",
         "rrule": "^2.6.8",
         "uuid": "^8.3.2",
-        "web-vitals": "^1.0.1"
+        "web-vitals": "^1.0.1",
+        "regex-parser": "^2.2.11"
     },
     "scripts": {
         "start": "env-cmd -f ./src/enviroment/env.development react-scripts start --watch-poll",
