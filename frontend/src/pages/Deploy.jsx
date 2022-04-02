@@ -19,7 +19,6 @@ import { useGetWorkerGroups } from '../graphql/getWorkerGroups';
 const Deploy = () => {
     // Environment global state
     const Environment = useGlobalEnvironmentState();
-    const Environments = useGlobalEnvironmentsState();
 
     // Local state
     const [deployment, setDeployment] = useState(null);
@@ -112,10 +111,6 @@ const Deploy = () => {
         };
 
         addDeployment(input);
-
-        const toEnvironmentName = Environments.get().filter((a) => a.id === selectedEnvironment.id)[0].name;
-        Environment.set({ id: selectedEnvironment.id, name: toEnvironmentName });
-        history.push('/deployments/');
     };
 
     return (
@@ -340,6 +335,11 @@ const useAddDeploymentHook = () => {
     // GraphQL hook
     const addDeployment = useAddDeployment();
 
+    const Environments = useGlobalEnvironmentsState();
+    const Environment = useGlobalEnvironmentState();
+
+    const history = useHistory();
+
     const { enqueueSnackbar } = useSnackbar();
 
     // Add deployment
@@ -352,6 +352,9 @@ const useAddDeploymentHook = () => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
+            const toEnvironmentName = Environments.get().filter((a) => a.id === input.toEnvironmentID)[0].name;
+            Environment.set({ id: input.toEnvironmentID, name: toEnvironmentName });
+            history.push('/deployments/');
         }
     };
 };
