@@ -1,6 +1,7 @@
 import { MenuItem } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
+import { useDuplicatePipeline } from '../../../graphql/duplicatePipeline';
 import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
 import { useGlobalFlowState } from '../../../pages/Flow';
 
@@ -16,6 +17,7 @@ const PipelineItemTable = (props) => {
 
     // Graphql hook
     const turnOnOffPipeline = useTurnOnOffPipelineHook(id, environmentID, handleClose, getPipelines);
+    const duplicatePipeline = useDuplicatePipelineHook(id, environmentID, getPipelines);
 
     const manageEdit = () => {
         FlowState.isEditorPage.get(true);
@@ -48,6 +50,11 @@ const PipelineItemTable = (props) => {
         history.push(`/pipelines/deploy/${id}`);
     };
 
+    const handleDuplicate = () => {
+        duplicatePipeline();
+        handleCloseMenu();
+    };
+
     return (
         <>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={manageEdit}>
@@ -55,6 +62,9 @@ const PipelineItemTable = (props) => {
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={permissionClick}>
                 Permissions
+            </MenuItem>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleDuplicate}>
+                Duplicate
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleDeploy}>
                 Deploy
@@ -95,6 +105,29 @@ const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose, getPip
             enqueueSnackbar('Success', { variant: 'success' });
             getPipelines();
             handleClose();
+        }
+    };
+};
+
+// ------ Custom hook
+const useDuplicatePipelineHook = (pipelineID, environmentID, getPipelines) => {
+    // GraphQL hook
+    const duplicatePipeline = useDuplicatePipeline();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Duplicate pipeline
+    return async () => {
+        const response = await duplicatePipeline({ environmentID, pipelineID });
+
+        if (response.r || response.error) {
+            closeSnackbar();
+            enqueueSnackbar("Can't duplicate pipeline: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getPipelines();
         }
     };
 };
