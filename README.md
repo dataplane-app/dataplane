@@ -1,11 +1,17 @@
-![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests&style=for-the-badge)
+![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests)
 
 # <span style="color:#FF5722">Dataplane</span>
-Dataplane is the super fast, cloud native, scalable, secure and easy to use data platform for data-driven businesses. 
+⚡️ Extreme performance with a low resource footprint
+🖐 Drag drop workflow builder
+⏱ Scheduler with multiple timezone support
+🌍 Setup isolated environments to develop, test & deploy across data mesh domains
+🧑‍💻 Built in Python IDE
+📊 Monitor real-time resource usage by analytical workloads
+⭐️ Distributed computing with worker groups
+🌳 Add replicas for high availability and scale
+☁️ Cloud native
 
-# 🚧🧱👷‍♀️🧰🦺🏗 Under construction 🔨🔧🗜👷‍♂️🚜🪚
-
-# Web UI
+# Quick start
 Once running, visit the dashboard at http://localhost:9000/webapp/<br /><br />
 First time setup: http://localhost:9000/webapp/get-started
 
