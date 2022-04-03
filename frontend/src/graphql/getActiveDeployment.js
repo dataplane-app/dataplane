@@ -16,7 +16,6 @@ const query = gql`
             online
             deploy_active
             current
-            updated_at
             workerGroup
             node_type
             node_type_desc
