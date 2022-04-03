@@ -195,7 +195,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                                             item
                                             onClick={() => {
                                                 FlowState.pipelineInfo.set(row.original);
-                                                history.push(`/deployments/view/${row.original.pipelineID}/${row.original.deploy_active ? '' : row.original.version}`);
+                                                history.push(`/deployments/view/${row.original.pipelineID}/${row.original.version}`);
                                             }}>
                                             <Typography variant="h3" color="cyan.main">
                                                 {row.original.name}
