@@ -61,6 +61,7 @@ const View = () => {
     useEffect(() => {
         setIsLoadingFlow(false);
         getPipeline();
+        // Needed once on page load, flow for the rest of the runs come from pipelineRuns
         getPipelineFlow(Environment.id.get());
 
         document.querySelector('#root div').scrollTo(0, 0);
