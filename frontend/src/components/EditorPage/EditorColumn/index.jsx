@@ -209,7 +209,12 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                     overflow: 'hidden',
                 }}>
                 <Grid container flexWrap="noWrap" sx={{ width: rest?.style?.width, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
-                    <Tabs value={tabValue} onChange={(ev, newValue) => setTabValue(newValue)} variant="scrollable" scrollButtons={false}>
+                    <Tabs
+                        value={tabValue}
+                        onChange={(ev, newValue) => setTabValue(newValue)}
+                        variant="scrollable"
+                        scrollButtons={false}
+                        sx={{ '& .MuiTabs-scroller': { height: '40px' }, minHeight: '40px', '& .MuiTabs-indicator': { height: '4px' } }}>
                         {EditorGlobal.tabs
                             .attach(Downgraded)
                             .get()
@@ -229,7 +234,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                         }
                                         iconPosition="end"
                                         sx={{
-                                            border: '1px solid #B9B9B9',
+                                            borderRight: '1px solid #B9B9B9',
                                             color: (theme) =>
                                                 EditorGlobal.selectedFile.get()?.id === tabs.id
                                                     ? theme.palette.editorPage.tabTextColor
@@ -239,7 +244,9 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                             alignItems: 'center',
                                             justifyContent: 'space-between',
                                             minHeight: 'auto',
+                                            height: '40px',
                                             pr: '4px',
+                                            fontSize: '0.75rem',
                                         }}
                                     />
                                 );
@@ -248,23 +255,27 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 </Grid>
 
                 {EditorGlobal.tabs.get().length > 0 && EditorGlobal.selectedFile.get() && Object.keys(EditorGlobal.selectedFile.attach(Downgraded).get().length > 0) ? (
-                    <Grid container alignItems="center" justifyContent="space-between" sx={{ p: '0px 15px', border: '1px solid #B9B9B9', mb: 2 }}>
+                    <Grid
+                        container
+                        alignItems="center"
+                        justifyContent="space-between"
+                        sx={{ p: '0px 15px', borderTop: '1px solid #B9B9B9', borderBottom: '1px solid #B9B9B9', mb: 2 }}>
                         <Typography fontSize={'0.75rem'}>
                             {EditorGlobal.currentPath.get().map((folderName) => folderName + ' > ')}
                             {EditorGlobal.selectedFile.name.value}
                         </Typography>
 
                         <Box>
-                            <Button onClick={uploadFileNode} variant="text" color="primary">
+                            <Button onClick={uploadFileNode} variant="text" color="primary" sx={{ height: '32px' }}>
                                 Save
                             </Button>
 
                             {isRunning ? (
-                                <Button onClick={codeEditorStop} variant="text" color="error">
+                                <Button onClick={codeEditorStop} variant="text" color="error" sx={{ height: '32px' }}>
                                     Stop
                                 </Button>
                             ) : (
-                                <Button onClick={codeEditorRun} variant="text" color="primary">
+                                <Button onClick={codeEditorRun} variant="text" color="primary" sx={{ height: '32px' }}>
                                     Run
                                 </Button>
                             )}
