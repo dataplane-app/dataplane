@@ -17,7 +17,6 @@ const PipelineItemTable = (props) => {
 
     // Graphql hook
     const turnOnOffPipeline = useTurnOnOffPipelineHook(id, environmentID, handleClose, getPipelines);
-    const duplicatePipeline = useDuplicatePipelineHook(id, environmentID, getPipelines);
 
     const manageEdit = () => {
         FlowState.isEditorPage.get(true);
@@ -51,7 +50,7 @@ const PipelineItemTable = (props) => {
     };
 
     const handleDuplicate = () => {
-        duplicatePipeline();
+        FlowState.isOpenDuplicatePipelineDrawer.set(true);
         handleCloseMenu();
     };
 
@@ -105,29 +104,6 @@ const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose, getPip
             enqueueSnackbar('Success', { variant: 'success' });
             getPipelines();
             handleClose();
-        }
-    };
-};
-
-// ------ Custom hook
-const useDuplicatePipelineHook = (pipelineID, environmentID, getPipelines) => {
-    // GraphQL hook
-    const duplicatePipeline = useDuplicatePipeline();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Duplicate pipeline
-    return async () => {
-        const response = await duplicatePipeline({ environmentID, pipelineID });
-
-        if (response.r || response.error) {
-            closeSnackbar();
-            enqueueSnackbar("Can't duplicate pipeline: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            enqueueSnackbar('Success', { variant: 'success' });
-            getPipelines();
         }
     };
 };
