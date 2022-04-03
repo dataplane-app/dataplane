@@ -48,7 +48,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	var TasksRun Task
 
 	if config.Debug == "true" {
-		log.Printf("starting task with id %s - node: %s run: %s\n", msg.TaskID, msg.NodeID, msg.RunID)
+		log.Printf("starting task with id %s - node: %s run: %s type: %s version: %s \n", msg.TaskID, msg.NodeID, msg.RunID, msg.RunType, msg.Version)
 	}
 
 	// lock node for run

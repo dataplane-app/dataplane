@@ -4,14 +4,13 @@ RUN mkdir -p /go/src/build
 
 WORKDIR /go/src/build
 
-COPY app/go.mod .
-COPY app/go.sum .
+COPY workers/go.mod .
+COPY workers/go.sum .
 RUN go mod download
 
-ADD app /go/src/build/
+ADD workers /go/src/build/
 
-ARG SKAFFOLD_GO_GCFLAGS
-RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane-worker workers/worker.go
+RUN CGO_ENABLED=0 go build -o main worker.go
 
 
 FROM python:alpine3.15
@@ -34,14 +33,14 @@ RUN adduser \
     "${USER}"
 
 
-COPY --from=builder go/src/build/dataplane-worker /workerdev/dataplane-worker
+COPY --from=builder go/src/build/main /workerdev/main
 WORKDIR /workerdev
 
-# COPY ../workers/go.mod /workerdev/go.mod
-# RUN go mod download
+COPY ./workers/go.mod /workerdev/go.mod
+RUN go mod download
 
 # Use an unprivileged user.
-ENV GOTRACEBACK=single
 USER appuser:appuser
 
-CMD ["dataplane-worker"]
+CMD ["main"]
+

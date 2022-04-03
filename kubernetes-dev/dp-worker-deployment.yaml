@@ -37,7 +37,7 @@ spec:
         - name: container
           image: dataplane/dataplane-worker:latest
           command:
-            - "./worker"
+            - "./dataplane-worker"
           ports:
             - containerPort: 9005
           resources:

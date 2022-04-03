@@ -129,7 +129,7 @@ func RunDeployment(pipelineID string, environmentID string) (models.PipelineRuns
 
 			dir = parentfolderdata + f.FolderID + "_" + f.FolderName
 
-			log.Println("Send dir:", parentfolderdata, f.FolderID+"_"+f.FolderName, dir)
+			// log.Println("Send dir:", parentfolderdata, f.FolderID+"_"+f.FolderName, dir)
 			// log.Println(dir)
 
 			folderMap[f.NodeID] = dir
