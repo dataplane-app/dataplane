@@ -19,6 +19,10 @@ func RunNextPipeline() {
 
 		currentNode := models.WorkerTasks{}
 
+		// if msg.NodeID == "4b6ed446-27f0-40c1-88e5-4f5b39c1e5b4" {
+		// 	log.Println("Receive next:", msg.NodeID)
+		// }
+
 		// Get the current node
 		err := database.DBConn.Select("node_id", "destination", "dependency", "status").Where("node_id =? and pipeline_id =? and run_id=?", msg.NodeID, msg.PipelineID, msg.RunID).First(&currentNode).Error
 		if err != nil {
@@ -38,6 +42,11 @@ func RunNextPipeline() {
 		completeCheck := []*models.WorkerTasks{}
 
 		json.Unmarshal(currentNode.Destination, &destinations)
+
+		// if msg.NodeID == "4b6ed446-27f0-40c1-88e5-4f5b39c1e5b4" {
+		// 	log.Println(currentNode.Destination, destinations)
+		// }
+
 		// log.Println(currentNode.Destination, destinations)
 		err = database.DBConn.Where("node_id in (?) and pipeline_id =? and run_id=? and status= ?", destinations, msg.PipelineID, msg.RunID, "Queue").Find(&destinationNodes).Error
 		if err != nil {
@@ -99,7 +108,16 @@ func RunNextPipeline() {
 		for _, s := range destinationNodes {
 
 			// log.Println("Destination:", s.RunID, " -> ", s.NodeID)
+			// if s.NodeID == "ae5ac151-9e03-4186-ab1f-fb6a415bcb82" {
+			// 	log.Println("Destination:", s.RunID, " -> ", s.NodeID, s.Dependency)
+			// }
 
+			// clear the dependency map - to avoid other destination nodes
+			for k := range uniquedependencies {
+				delete(uniquedependencies, k)
+			}
+
+			// Set the dependencies for look up
 			var dependencies []string
 			json.Unmarshal(s.Dependency, &dependencies)
 			for _, v := range dependencies {
@@ -107,6 +125,7 @@ func RunNextPipeline() {
 				uniquedependencies[v] = true
 			}
 
+			uniquedependenciesarray = []string{}
 			for k, _ := range uniquedependencies {
 				uniquedependenciesarray = append(uniquedependenciesarray, k)
 			}
@@ -127,6 +146,13 @@ func RunNextPipeline() {
 			if err != nil {
 				logging.PrintSecretsRedact(err)
 			}
+
+			// if s.NodeID == "ae5ac151-9e03-4186-ab1f-fb6a415bcb82" {
+			// 	if len(dependencyCheck) > 0 {
+			// 		log.Println("Dependency check:", dependencyCheck[0].NodeID, dependencyCheck[0].Status)
+			// 		log.Println("unique dependency array:", uniquedependenciesarray)
+			// 	}
+			// }
 
 			// if err == gorm.ErrRecordNotFound {
 			// 	log.Println("Dependencies check:", err)

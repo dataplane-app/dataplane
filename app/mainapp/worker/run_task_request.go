@@ -121,6 +121,8 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 
 			// log.Println("Task channel: ", "task."+workerGroup+"."+loadbalanceNext)
 
+			// log.Println("Run task", nodeID)
+
 			_, errnats := messageq.MsgReply("task."+workerGroup+"."+loadbalanceNext, tasksend, &response)
 
 			if errnats != nil {
