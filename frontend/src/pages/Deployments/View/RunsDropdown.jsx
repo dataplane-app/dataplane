@@ -7,7 +7,7 @@ import { usePipelineTasksRun } from '../../../graphql/getPipelineTasksRun';
 import { useGlobalFlowState } from '../../Flow';
 import { useGlobalRunState } from '../../View/useWebSocket';
 
-export default function RunsDropdown({ environmentID, setElements, setPrevRunTime, deployment }) {
+export default function RunsDropdown({ environmentID, setElements, deployment }) {
     // Global states
     const RunState = useGlobalRunState();
 
@@ -56,7 +56,7 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
 
         // Set timer on dropdown change. Works only for runs returned from pipeline runs.
         if (selectedRun.ended_at) {
-            setPrevRunTime(displayTimerMs(selectedRun.created_at, selectedRun.ended_at));
+            RunState.prevRunTime.set(displayTimerMs(selectedRun.created_at, selectedRun.ended_at));
         }
 
         RunState.dropdownRunId.set(selectedRun.run_id);
@@ -161,11 +161,11 @@ export const usePipelineTasksRunHook = (selectedRun) => {
                 start_id: RunState.start_dt.get(),
                 run_id: RunState.run_id.get() || RunState.dropdownRunId.get(),
                 pipelineRunsTrigger: RunState.pipelineRunsTrigger.get(),
-                // dropdownRunId: RunState.dropdownRunId.get(),
                 dropdownRunId: selectedRun.run_id,
                 runStart: RunState.runStart.get(),
                 runEnd: RunState.runEnd.get(),
                 selectedNodeStatus: RunState.selectedNodeStatus.get(),
+                prevRunTime: RunState.prevRunTime.get(),
             };
             if (!RunState.run_id.get()) {
                 FlowState.isRunning.set(true);
@@ -181,7 +181,7 @@ export const usePipelineTasksRunHook = (selectedRun) => {
                         type: selectedRun.run_json.filter((b) => b.id === a.node_id.replace('d-', ''))[0].type,
                     })
             );
-            RunState.set(keep); //
+            RunState.set(keep);
         }
     };
 };

@@ -1,52 +1,36 @@
 import { MenuItem } from '@mui/material';
-import { useParams } from 'react-router-dom';
-import { useHistory } from 'react-router-dom';
-import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
 import { useGlobalFlowState } from '../../Flow';
-import { useTurnOnOffDeploymentHook } from '../TurnOffDeploymentDrawer';
+import { useGlobalRunState } from '../../View/useWebSocket';
+import { useRunPipelinesHook } from './Timer';
 
 const DeploymentViewPageItem = (props) => {
-    const history = useHistory();
+    // Global state
+    const FlowState = useGlobalFlowState();
+    const RunState = useGlobalRunState();
 
-    // // Global state
-    // const FlowState = useGlobalFlowState();
-    // const Environment = useGlobalEnvironmentState();
-
-    // URI parameter
-    const { pipelineId } = useParams();
-
-    // // Graphql hook
-    // const turnOnOffPipeline = useTurnOnOffDeploymentHook(pipelineId, Environment.id.get(), props.handleCloseMenu, props.getPipelineFlow, props.getPipeline);
-
-    // // Handle turn off button
-    // const handleTurnOffPipeline = () => {
-    //     props.handleCloseMenu();
-    //     FlowState.isOpenTurnOffPipelineDrawer.set(true);
-    // };
-
-    // // Handle turn on button
-    // const handleTurnOnPipeline = () => {
-    //     turnOnOffPipeline(true);
-    // };
+    // Graphql hook
+    const runPipelines = useRunPipelinesHook();
 
     const handleAnalytics = () => {
         props.handleCloseMenu();
         props.setIsOpenAnalytics(true);
     };
 
+    const handleRun = () => {
+        FlowState.isRunning.set(true);
+        RunState.set({ pipelineRunsTrigger: 1, prevRunTime: null });
+        runPipelines(props.pipeline.environmentID);
+        props.handleCloseMenu();
+    };
+
     return (
         <>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleRun}>
                 Run
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleAnalytics}>
                 Analytics
             </MenuItem>
-            {/* {props.pipeline.node_type_desc !== 'play' ? (
-                <MenuItem sx={{ color: 'cyan.main' }} onClick={props.isPipelineOnline ? handleTurnOffPipeline : handleTurnOnPipeline}>
-                    {props.isPipelineOnline ? 'Turn off' : 'Turn on'}
-                </MenuItem>
-            ) : null} */}
         </>
     );
 };

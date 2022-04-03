@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import ConsoleLogHelper from '../../../Helper/logger';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
-import { createState, useState as useHookState } from '@hookstate/core';
 import { useGlobalFlowState } from '../../Flow';
-import { displayTimer, usePipelineTasksRunHook } from './Timer';
+import { usePipelineTasksRunHook } from './Timer';
 import { useGlobalRunState } from '../../View/useWebSocket';
 
 var loc = window.location,
@@ -15,7 +14,6 @@ if (loc.protocol === 'https:') {
 }
 new_uri += '//' + loc.host;
 
-// console.log("websockets loc:", new_uri)
 if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
     new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
 } else {
@@ -23,10 +21,6 @@ if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
 }
 
 const websocketEndpoint = new_uri;
-
-// Global run state
-// export const globalRunState = createState({ pipelineRunsTrigger: 1, runStart: null, runEnd: null });
-// export const useGlobalRunState = () => useHookState(globalRunState);
 
 export default function useWebSocket(environmentId, runId) {
     const RunState = useGlobalRunState();

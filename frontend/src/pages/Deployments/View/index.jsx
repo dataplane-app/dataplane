@@ -17,9 +17,7 @@ import { edgeTypes, nodeTypes, useGlobalFlowState } from '../../Flow';
 import LogsDrawer from '../../../components/DrawerContent/LogsDrawer';
 import TurnOffPipelineDrawer from '../../../components/DrawerContent/TurnOffPipelineDrawer';
 import CustomChip from '../../../components/CustomChip';
-import { useGetPipeline } from '../../../graphql/getPipeline';
 import { Analytics } from './Analytics';
-import { useGetDeployments } from '../../../graphql/getDeployments';
 import { useGetActiveDeployment } from '../../../graphql/getActiveDeployment';
 
 const DeploymentView = () => {
