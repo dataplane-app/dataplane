@@ -47,7 +47,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     useEffect(() => {
         let text = '';
         graphQlResp.forEach((log) => {
-            if (!websocketResp.includes(log.uid)) {
+            if (!keys.includes(log.uid)) {
                 text += `\n${formatDate(log.created_at)} ${log.log}`;
             }
         });
