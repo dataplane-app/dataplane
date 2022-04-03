@@ -1,4 +1,5 @@
 import { MenuItem } from '@mui/material';
+import { useParams } from 'react-router-dom';
 import { useGlobalFlowState } from '../../Flow';
 import { useGlobalRunState } from '../../View/useWebSocket';
 import { useRunPipelinesHook } from './Timer';
@@ -10,6 +11,9 @@ const DeploymentViewPageItem = (props) => {
 
     // Graphql hook
     const runPipelines = useRunPipelinesHook();
+
+    // URI parameter
+    const { version } = useParams();
 
     const handleAnalytics = () => {
         props.handleCloseMenu();
@@ -25,9 +29,11 @@ const DeploymentViewPageItem = (props) => {
 
     return (
         <>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleRun}>
-                Run
-            </MenuItem>
+            {props.version === version ? (
+                <MenuItem sx={{ color: 'cyan.main' }} onClick={handleRun}>
+                    Run
+                </MenuItem>
+            ) : null}
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleAnalytics}>
                 Analytics
             </MenuItem>
