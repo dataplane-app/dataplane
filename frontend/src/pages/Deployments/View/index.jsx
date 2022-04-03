@@ -2,7 +2,7 @@ import { ActionLayer } from './ActionLayer';
 import { useTheme } from '@emotion/react';
 import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Drawer, Grid, Typography } from '@mui/material';
+import { Box, Chip, Drawer, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
@@ -125,10 +125,22 @@ const DeploymentView = () => {
                             Deployments {'>'} {deployment?.name}
                         </Typography>
 
-                        <Grid display="flex">
+                        <Grid display="flex" alignItems="center">
                             <Box display="flex" alignItems="center" ml={4} mr={2}>
                                 {deployment?.online ? <CustomChip label={'Online'} customColor="green" /> : <CustomChip label="Offline" customColor="red" />}
                             </Box>
+
+                            <Chip
+                                style={{
+                                    borderRadius: 5,
+                                    marginLeft: 5,
+                                    marginRight: 10,
+                                    fontWeight: 700,
+                                    backgroundColor: deployment?.deploy_active ? '#7B61FF' : '#B9B9B9',
+                                    color: '#FFF',
+                                }}
+                                label={`Deployed v${deployment?.version}`}
+                            />
 
                             <Box sx={{ top: '0', right: '0' }}>
                                 <MoreInfoMenu iconHorizontal>

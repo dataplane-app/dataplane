@@ -119,9 +119,11 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                 Header: 'Deployed',
                 accessor: (row) => [row.deploy_active, row.version],
                 Cell: (row) => {
-                    const online = row.value[0];
+                    const deploy_active = row.value[0];
                     const version = row.value[1];
-                    return <Chip style={{ borderRadius: 5, fontWeight: 700, backgroundColor: online ? '#7B61FF' : '#B9B9B9', color: '#FFF' }} label={`Deployed v${version}`} />;
+                    return (
+                        <Chip style={{ borderRadius: 5, fontWeight: 700, backgroundColor: deploy_active ? '#7B61FF' : '#B9B9B9', color: '#FFF' }} label={`Deployed v${version}`} />
+                    );
                 },
             },
             {
