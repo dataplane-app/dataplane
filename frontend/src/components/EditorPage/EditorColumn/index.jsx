@@ -359,7 +359,6 @@ const useRunCEFileHook = (pipeline, setIsRunning) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            enqueueSnackbar('Success', { variant: 'success' });
             setIsRunning(true);
             EditorGlobal.runID.set(response.run_id);
         }
@@ -384,8 +383,6 @@ const useStopCEFileHook = (pipeline, runID, setIsRunning) => {
             enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            enqueueSnackbar('Success', { variant: 'success' });
         }
     };
 };
