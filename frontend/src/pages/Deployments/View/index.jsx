@@ -26,7 +26,6 @@ const DeploymentView = () => {
     // Hooks
     const theme = useTheme();
     const [deployment, setDeployment] = useState(null);
-    console.log('🚀 ~ file: index.jsx ~ line 29 ~ DeploymentView ~ deployment', deployment);
     const getPipelineFlow = useGetPipelineFlowHook();
     const getActiveDeployment = useGetActiveDeploymentHook(Environment.id.get(), setDeployment);
 
