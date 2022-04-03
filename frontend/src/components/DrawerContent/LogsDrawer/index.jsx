@@ -125,11 +125,14 @@ const useGetNodeLogsHook = (environmentID, runID, nodeID, setGraphQlResp, keys) 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // URI parameter
-    const { pipelineId } = useParams();
+    const { pipelineId, deploymentId } = useParams();
+    if (deploymentId) {
+        nodeID = 'd-' + nodeID;
+    }
 
     // Get logs
     return async () => {
-        const response = await getNodeLogs({ environmentID, pipelineID: pipelineId, nodeID, runID });
+        const response = await getNodeLogs({ environmentID, pipelineID: pipelineId || deploymentId, nodeID, runID });
 
         if (response.r === 'error') {
             closeSnackbar();

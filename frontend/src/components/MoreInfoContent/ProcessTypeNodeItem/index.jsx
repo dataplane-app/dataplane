@@ -1,17 +1,16 @@
 import { MenuItem } from '@mui/material';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { useGlobalFlowState } from '../../../pages/Flow';
-import { Downgraded } from '@hookstate/core';
 
 const ProcessTypeNodeItem = (props) => {
     const history = useHistory();
     const FlowState = useGlobalFlowState();
 
+    const { deploymentId, pipelineId } = useParams();
+
     const handleCodeClick = () => {
         history.push(
-            `/editor/_?_&pipelineID=${FlowState.pipelineInfo.attach(Downgraded).get()?.pipelineID}&nodeID=${props.nodeId}&nodeName=${props.nodeName}&NodeTypeDesc=${
-                props.NodeTypeDesc
-            }`
+            `/editor/_?_&pipelineID=${deploymentId?.replace('d-', '') || pipelineId}&nodeID=${props.nodeId}&nodeName=${props.nodeName}&NodeTypeDesc=${props.NodeTypeDesc}`
         );
         props.handleCloseMenu();
     };
