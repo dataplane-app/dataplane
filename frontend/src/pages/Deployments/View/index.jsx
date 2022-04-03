@@ -159,6 +159,7 @@ const DeploymentView = () => {
                                         isPipelineOnline={deployment?.online}
                                         getPipeline={getActiveDeployment}
                                         setIsOpenAnalytics={setIsOpenAnalytics}
+                                        version={deployment?.version}
                                     />
                                 </MoreInfoMenu>
                             </Box>
