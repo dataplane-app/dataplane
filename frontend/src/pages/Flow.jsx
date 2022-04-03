@@ -38,6 +38,7 @@ export const globalFlowState = createState({
     isOpenLogDrawer: false,
     isOpenAPIDrawer: false,
     isOpenTurnOffPipelineDrawer: false,
+    isOpenDuplicatePipelineDrawer: false,
     isOpenUpdatePipelineDrawer: false,
     isEditorPage: false,
     selectedElement: null,

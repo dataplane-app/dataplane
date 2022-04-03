@@ -18,6 +18,7 @@ import CustomChip from '../../CustomChip';
 import TurnOffPipelineDrawer from '../../DrawerContent/TurnOffPipelineDrawer';
 import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
+import DuplicatePipelineDrawer from '../../DrawerContent/DuplicatePipelineDrawer';
 
 const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
     // React router
@@ -202,6 +203,16 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         environmentID={environmentID}
                         name={pipelineName}
                         getPipelineFlow={getPipelines}
+                    />
+                </Drawer>
+
+                <Drawer anchor="right" open={FlowState.isOpenDuplicatePipelineDrawer.get()} onClose={() => FlowState.isOpenDuplicatePipelineDrawer.set(false)}>
+                    <DuplicatePipelineDrawer
+                        handleClose={() => FlowState.isOpenDuplicatePipelineDrawer.set(false)} //
+                        pipelineID={pipelineId}
+                        environmentID={environmentID}
+                        name={pipelineName}
+                        getPipelines={getPipelines}
                     />
                 </Drawer>
             </Box>
