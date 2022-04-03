@@ -19,6 +19,7 @@ import TurnOffPipelineDrawer from '../../components/DrawerContent/TurnOffPipelin
 import CustomChip from '../../components/CustomChip';
 import { useGetPipeline } from '../../graphql/getPipeline';
 import { Analytics } from './Analytics';
+import { Downgraded } from '@hookstate/core';
 
 const View = () => {
     const Environment = useGlobalEnvironmentState();
@@ -48,7 +49,6 @@ const View = () => {
     // Flow states
     const reactFlowWrapper = useRef(null);
     const [, setReactFlowInstance] = useState(null);
-    const [elements, setElements] = useState([]);
     const [panOnDrag, setPanOnDrag] = useState(FlowState.isPanEnable.get());
 
     useEffect(() => {
@@ -57,19 +57,15 @@ const View = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.isPanEnable.get()]);
 
-    // Fetch previous elements
+    // Fetch previous elements on load
     useEffect(() => {
         setIsLoadingFlow(false);
         getPipeline();
+        getPipelineFlow(Environment.id.get());
 
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
-
-    useEffect(() => {
-        getPipelineFlow(Environment.id.get(), setElements);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isEditorPage.get()]);
 
     // Trigger the scale button on keyboard 's' key click
     useEffect(() => {
@@ -88,9 +84,7 @@ const View = () => {
 
     //Flow methods
     const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
-    const onConnect = (params) => {
-        setElements((els) => addEdge({ ...params, type: 'custom' }, els));
-    };
+
     const onConnectStart = () => {
         FlowState.isDragging.set(true);
         document.body.style.cursor = 'grabbing';
@@ -133,7 +127,7 @@ const View = () => {
                                 <MoreInfoMenu iconHorizontal>
                                     <ViewPageItem
                                         pipeline={pipeline}
-                                        getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
+                                        getPipelineFlow={() => getPipelineFlow(Environment.id.get())}
                                         isPipelineOnline={pipeline?.online}
                                         getPipeline={getPipeline}
                                         setIsOpenAnalytics={setIsOpenAnalytics}
@@ -145,11 +139,11 @@ const View = () => {
                 </Grid>
 
                 {/* Run/Stop button, Chips, Timer */}
-                <ActionLayer setElements={setElements} environmentId={Environment.id.get()} pipeline={pipeline} />
+                <ActionLayer environmentId={Environment.id.get()} pipeline={pipeline} />
             </Box>
             {!FlowState.isOpenLogDrawer.get() && !isOpenAnalytics ? (
                 <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
-                    {elements && elements.length > 0 ? (
+                    {FlowState.elements.get()?.length > 0 ? (
                         <ReactFlowProvider>
                             <ReactFlow
                                 zoomOnScroll={false}
@@ -158,13 +152,12 @@ const View = () => {
                                 onMoveStart={onMoveStart}
                                 onMoveEnd={onMoveEnd}
                                 nodeTypes={nodeTypes}
-                                elements={elements}
+                                elements={FlowState.elements.attach(Downgraded).get()}
                                 defaultZoom={FlowState.scale.get()}
                                 nodesDraggable={false}
                                 nodesConnectable={false}
                                 preventScrolling={false}
                                 onLoad={onLoad}
-                                onConnect={onConnect}
                                 onConnectStart={onConnectStart}
                                 onConnectEnd={onConnectEnd}
                                 connectionLineComponent={CustomLine}
@@ -212,7 +205,7 @@ const View = () => {
                     pipelineID={pipeline?.pipelineID}
                     environmentID={pipeline?.environmentID}
                     name={pipeline?.name}
-                    getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
+                    getPipelineFlow={() => getPipelineFlow(Environment.id.get())}
                     getPipeline={getPipeline}
                 />
             </Drawer>
@@ -223,7 +216,7 @@ const View = () => {
 export default View;
 
 // ------ Custom hooks
-export const useGetPipelineFlowHook = (pipeline) => {
+export const useGetPipelineFlowHook = () => {
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
 
@@ -239,7 +232,7 @@ export const useGetPipelineFlowHook = (pipeline) => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get members
-    return async (environmentID, setElements) => {
+    return async (environmentID) => {
         const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
         const response = prepareInputForFrontend(rawResponse);
 
@@ -252,7 +245,6 @@ export const useGetPipelineFlowHook = (pipeline) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setElements(response);
             FlowState.elements.set(response);
         }
     };

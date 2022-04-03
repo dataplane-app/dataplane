@@ -7,9 +7,10 @@ import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
 import { useGlobalFlowState } from '../Flow';
 
-export default function RunsDropdown({ environmentID, setElements, setPrevRunTime, pipeline }) {
+export default function RunsDropdown({ environmentID, setPrevRunTime, pipeline }) {
     // Global states
     const RunState = useGlobalRunState();
+    const FlowState = useGlobalFlowState();
 
     // Local state
     const [selectedRun, setSelectedRun] = useState();
@@ -44,12 +45,15 @@ export default function RunsDropdown({ environmentID, setElements, setPrevRunTim
             RunState.runEnd.set(runs[0].ended_at);
             setIsNewFlow(false);
         }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pipeline, runs]);
 
     // Update elements on run dropdown change
     useEffect(() => {
         if (!selectedRun) return;
-        setElements(selectedRun.run_json);
+        FlowState.elements.set(selectedRun.run_json);
+
         getPipelineTasksRun(selectedRun.run_id, environmentID);
 
         // Set timer on dropdown change. Works only for runs returned from pipeline runs.
