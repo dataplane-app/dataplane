@@ -77,10 +77,11 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                 Cell: (row) => (
                     <Grid container alignItems="flex-start" flexDirection="column" justifyContent="center">
                         <Button
+                            disabled={!row.value.deploy_active}
                             variant="text"
                             sx={{ fontWeight: 400 }}
                             onClick={() => {
-                                history.push({ pathname: `/deployments/view/${row.value.pipelineID}`, state: row.value });
+                                history.push(`/deployments/view/${row.value.pipelineID}/${row.value.version}`);
                                 FlowState.isRunning.set(true);
                                 runPipelines(environmentID, row.value.pipelineID, 'deployment');
                             }}>

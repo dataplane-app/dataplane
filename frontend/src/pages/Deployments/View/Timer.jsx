@@ -103,7 +103,7 @@ export default function Timer({ environmentID, setElements, deployment }) {
                         onClick={handleTimerStop}
                         variant="outlined"
                         color="error"
-                        sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                        sx={{ mr: 3, width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                         Stop
                     </Button>
                 ) : deployment?.version === version ? (
