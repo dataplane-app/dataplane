@@ -144,7 +144,7 @@ function App() {
                                             '/pipelines/flow/:pipelineId',
                                             '/pipelines/deploy/:pipelineId',
                                             '/deployments',
-                                            '/deployments/view/:deploymentId',
+                                            '/deployments/view/:deploymentId/:version?',
                                             '/support',
                                             '/feedback',
                                         ]}>
@@ -156,7 +156,7 @@ function App() {
                                                 <Route exact path="/deployments">
                                                     <Deployments />
                                                 </Route>
-                                                <Route exact path="/deployments/view/:deploymentId">
+                                                <Route path="/deployments/view/:deploymentId/:version?">
                                                     <DeploymentView />
                                                 </Route>
                                                 <Route exact path="/workers">

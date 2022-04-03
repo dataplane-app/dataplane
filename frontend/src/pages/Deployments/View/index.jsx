@@ -32,6 +32,9 @@ const DeploymentView = () => {
     // Global states
     const FlowState = useGlobalFlowState();
 
+    // URI parameter
+    const { version } = useParams();
+
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
     const [, setIsLoadingFlow] = useState(true);
@@ -136,11 +139,17 @@ const DeploymentView = () => {
                                     marginLeft: 5,
                                     marginRight: 10,
                                     fontWeight: 700,
-                                    backgroundColor: deployment?.deploy_active ? '#7B61FF' : '#B9B9B9',
+                                    backgroundColor: !deployment?.deploy_active || version ? '#B9B9B9' : '#7B61FF',
                                     color: '#FFF',
                                 }}
-                                label={`Deployed v${deployment?.version}`}
+                                label={`Deployed v${version ? version : deployment?.version}`}
                             />
+
+                            {version ? (
+                                <Typography ml={2} mr={2} variant="body2" color="editorPage.fileManagerIcon">
+                                    Previous version
+                                </Typography>
+                            ) : null}
 
                             <Box sx={{ top: '0', right: '0' }}>
                                 <MoreInfoMenu iconHorizontal>
