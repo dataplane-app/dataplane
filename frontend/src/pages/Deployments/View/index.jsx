@@ -139,13 +139,13 @@ const DeploymentView = () => {
                                     marginLeft: 5,
                                     marginRight: 10,
                                     fontWeight: 700,
-                                    backgroundColor: !deployment?.deploy_active || version ? '#B9B9B9' : '#7B61FF',
+                                    backgroundColor: deployment?.deploy_active && deployment.version === version ? '#7B61FF' : '#B9B9B9',
                                     color: '#FFF',
                                 }}
                                 label={`Deployed v${version ? version : deployment?.version}`}
                             />
 
-                            {version ? (
+                            {deployment?.version !== version ? (
                                 <Typography ml={2} mr={2} variant="body2" color="editorPage.fileManagerIcon">
                                     Previous version
                                 </Typography>

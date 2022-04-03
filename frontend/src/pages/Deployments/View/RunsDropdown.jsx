@@ -38,12 +38,10 @@ export default function RunsDropdown({ environmentID, setElements, deployment })
     // Set flow status,color on change
     useEffect(() => {
         if (runs.length === 0 || !deployment) return;
-        if (deployment.updated_at < runs[0].updated_at) {
-            setSelectedRun(runs[0]);
-            RunState.runStart.set(runs[0].created_at);
-            RunState.runEnd.set(runs[0].ended_at);
-            setIsNewFlow(false);
-        }
+        setSelectedRun(runs[0]);
+        RunState.runStart.set(runs[0].created_at);
+        RunState.runEnd.set(runs[0].ended_at);
+        setIsNewFlow(false);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [deployment, runs]);
