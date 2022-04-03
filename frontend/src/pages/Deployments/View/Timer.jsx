@@ -26,6 +26,9 @@ export default function Timer({ environmentID, setElements, deployment }) {
     const stopPipelines = useStopPipelinesHook();
     const getPipelineTasksRun = usePipelineTasksRunHook();
 
+    // URI parameter
+    const { version } = useParams();
+
     // Instantiate websocket connection
     useWebSocket(environmentID, RunState.run_id.get());
 
@@ -103,11 +106,11 @@ export default function Timer({ environmentID, setElements, deployment }) {
                         sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                         Stop
                     </Button>
-                ) : (
-                    <Button onClick={handleTimerStart} variant="outlined" sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                ) : deployment?.version === version ? (
+                    <Button onClick={handleTimerStart} variant="outlined" sx={{ mr: 3, width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                         Run
                     </Button>
-                )}
+                ) : null}
 
                 <StatusChips />
 
