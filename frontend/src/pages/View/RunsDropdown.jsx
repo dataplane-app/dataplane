@@ -49,6 +49,10 @@ export default function RunsDropdown({ environmentID, pipeline }) {
     // Set flow status,color on change
     useEffect(() => {
         if (runs.length === 0 || !pipeline) return;
+
+        // Check if the pipeline is older than latest run.
+        // If pipeline is newer, that means there is a new flow.
+        // Don't set a selected run, leave dropdown empty.
         if (pipeline.updated_at < runs[0].updated_at) {
             setSelectedRun(runs[0]);
             RunState.runStart.set(runs[0].created_at);
