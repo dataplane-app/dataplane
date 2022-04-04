@@ -32,15 +32,6 @@ export default function Timer({ environmentID, pipeline }) {
     // Instantiate websocket connection
     useWebSocket(environmentID, RunState.run_id.get());
 
-    // Get current runs status
-    useEffect(() => {
-        if (FlowState.isRunning.get() && RunState.run_id.get() !== '') {
-            getPipelineTasksRun(RunState.run_id.get(), environmentID);
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isRunning.get(), RunState.run_id.get()]);
-
     const handleTimerStart = () => {
         FlowState.isRunning.set(true);
         RunState.set({ pipelineRunsTrigger: 1 });

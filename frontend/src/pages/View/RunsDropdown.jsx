@@ -74,7 +74,7 @@ export default function RunsDropdown({ environmentID, setPrevRunTime, pipeline }
         RunState.dropdownRunId.set(selectedRun.run_id);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedRun]);
+    }, [selectedRun?.run_id]);
 
     return (
         <Grid item alignItems="center" display="flex" width={520}>
