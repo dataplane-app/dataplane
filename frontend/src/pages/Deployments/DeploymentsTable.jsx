@@ -77,12 +77,13 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                 Cell: (row) => (
                     <Grid container alignItems="flex-start" flexDirection="column" justifyContent="center">
                         <Button
+                            disabled={!row.value.deploy_active}
                             variant="text"
                             sx={{ fontWeight: 400 }}
                             onClick={() => {
-                                history.push({ pathname: `/pipelines/view/${row.value.pipelineID.slice(2)}`, state: row.value });
+                                history.push(`/deployments/view/${row.value.pipelineID}/${row.value.version}`);
                                 FlowState.isRunning.set(true);
-                                runPipelines(environmentID, row.value.pipelineID.slice(2), 'deployment');
+                                runPipelines(environmentID, row.value.pipelineID, 'deployment');
                             }}>
                             Run
                         </Button>
@@ -119,9 +120,11 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                 Header: 'Deployed',
                 accessor: (row) => [row.deploy_active, row.version],
                 Cell: (row) => {
-                    const online = row.value[0];
+                    const deploy_active = row.value[0];
                     const version = row.value[1];
-                    return <Chip style={{ borderRadius: 5, fontWeight: 700, backgroundColor: online ? '#7B61FF' : '#B9B9B9', color: '#FFF' }} label={`Deployed v${version}`} />;
+                    return (
+                        <Chip style={{ borderRadius: 5, fontWeight: 700, backgroundColor: deploy_active ? '#7B61FF' : '#B9B9B9', color: '#FFF' }} label={`Deployed v${version}`} />
+                    );
                 },
             },
             {
@@ -193,7 +196,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                                             item
                                             onClick={() => {
                                                 FlowState.pipelineInfo.set(row.original);
-                                                history.push(`/pipelines/view/${row.original.pipelineID.slice(2)}`);
+                                                history.push(`/deployments/view/${row.original.pipelineID}/${row.original.version}`);
                                             }}>
                                             <Typography variant="h3" color="cyan.main">
                                                 {row.original.name}

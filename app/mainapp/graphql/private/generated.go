@@ -192,6 +192,7 @@ type ComplexityRoot struct {
 		DeletePermissionToUser           func(childComplexity int, userID string, permissionID string, environmentID string) int
 		DeletePipeline                   func(childComplexity int, environmentID string, pipelineID string) int
 		DeleteSecretFromWorkerGroup      func(childComplexity int, environmentID string, workerGroup string, secret string) int
+		DuplicatePipeline                func(childComplexity int, pipelineID string, environmentID string) int
 		MoveFileNode                     func(childComplexity int, fileID string, toFolderID string, environmentID string, pipelineID string) int
 		MoveFolderNode                   func(childComplexity int, folderID string, toFolderID string, environmentID string, pipelineID string) int
 		PipelinePermissionsToAccessGroup func(childComplexity int, environmentID string, resourceID string, access []string, accessGroupID string) int
@@ -511,6 +512,7 @@ type MutationResolver interface {
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
 	AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error)
 	UpdatePipeline(ctx context.Context, pipelineID string, name string, environmentID string, description string, workerGroup string) (string, error)
+	DuplicatePipeline(ctx context.Context, pipelineID string, environmentID string) (string, error)
 	AddUpdatePipelineFlow(ctx context.Context, input *PipelineFlowInput, environmentID string, pipelineID string) (string, error)
 	DeletePipeline(ctx context.Context, environmentID string, pipelineID string) (string, error)
 	TurnOnOffPipeline(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error)
@@ -1430,6 +1432,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteSecretFromWorkerGroup(childComplexity, args["environmentID"].(string), args["WorkerGroup"].(string), args["Secret"].(string)), true
+
+	case "Mutation.duplicatePipeline":
+		if e.complexity.Mutation.DuplicatePipeline == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_duplicatePipeline_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DuplicatePipeline(childComplexity, args["pipelineID"].(string), args["environmentID"].(string)), true
 
 	case "Mutation.moveFileNode":
 		if e.complexity.Mutation.MoveFileNode == nil {
@@ -4159,6 +4173,13 @@ extend type Mutation {
   updatePipeline(pipelineID: String!, name: String!, environmentID: String!, description: String!, workerGroup: String! ): String!
 
   """
+  Update pipeline.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines
+  """
+  duplicatePipeline(pipelineID: String!, environmentID: String!): String!
+
+  """
   Update pipeline flow.
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
@@ -5176,6 +5197,30 @@ func (ec *executionContext) field_Mutation_deleteSecretFromWorkerGroup_args(ctx 
 		}
 	}
 	args["Secret"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_duplicatePipeline_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
 	return args, nil
 }
 
@@ -11542,6 +11587,48 @@ func (ec *executionContext) _Mutation_updatePipeline(ctx context.Context, field 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().UpdatePipeline(rctx, args["pipelineID"].(string), args["name"].(string), args["environmentID"].(string), args["description"].(string), args["workerGroup"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_duplicatePipeline(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_duplicatePipeline_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DuplicatePipeline(rctx, args["pipelineID"].(string), args["environmentID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -22490,6 +22577,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updatePipeline":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updatePipeline(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "duplicatePipeline":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_duplicatePipeline(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)

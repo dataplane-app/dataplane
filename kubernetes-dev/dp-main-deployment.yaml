@@ -37,7 +37,7 @@ spec:
         - name: container
           image: dataplane/dataplane-main:latest
           command:
-            - "./main"
+            - "./dataplane"
           ports:
             - containerPort: 9000
           resources:

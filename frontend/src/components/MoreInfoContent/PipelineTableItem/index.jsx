@@ -1,6 +1,7 @@
 import { MenuItem } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
+import { useDuplicatePipeline } from '../../../graphql/duplicatePipeline';
 import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
 import { useGlobalFlowState } from '../../../pages/Flow';
 
@@ -48,6 +49,11 @@ const PipelineItemTable = (props) => {
         history.push(`/pipelines/deploy/${id}`);
     };
 
+    const handleDuplicate = () => {
+        FlowState.isOpenDuplicatePipelineDrawer.set(true);
+        handleCloseMenu();
+    };
+
     return (
         <>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={manageEdit}>
@@ -55,6 +61,9 @@ const PipelineItemTable = (props) => {
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={permissionClick}>
                 Permissions
+            </MenuItem>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleDuplicate}>
+                Duplicate
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleDeploy}>
                 Deploy
