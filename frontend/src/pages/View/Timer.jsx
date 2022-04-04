@@ -19,12 +19,10 @@ export default function Timer({ environmentID, pipeline }) {
     const [elapsed, setElapsed] = useState();
     const [isRunning, setIsRunning] = useState(false);
     const [start, setStart] = useState();
-    const [prevRunTime, setPrevRunTime] = useState();
 
     // GraphQL hooks
     const runPipelines = useRunPipelinesHook();
-    const stopPipelines = useStopPipelinesHook(setPrevRunTime);
-    const getPipelineTasksRun = usePipelineTasksRunHook();
+    const stopPipelines = useStopPipelinesHook();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -35,8 +33,7 @@ export default function Timer({ environmentID, pipeline }) {
     const handleTimerStart = () => {
         FlowState.isRunning.set(true);
         RunState.set({ pipelineRunsTrigger: 1 });
-        runPipelines(environmentID, pipelineId, 'pipeline');
-        setPrevRunTime();
+        runPipelines(environmentID, pipelineId);
     };
 
     const handleTimerStop = () => {
@@ -106,7 +103,7 @@ export default function Timer({ environmentID, pipeline }) {
 
                 <StatusChips />
 
-                <RunsDropdown environmentID={environmentID} setPrevRunTime={setPrevRunTime} pipeline={pipeline} />
+                <RunsDropdown environmentID={environmentID} pipeline={pipeline} />
 
                 {isRunning ? (
                     <Typography variant="h3" ml={2}>
@@ -114,7 +111,7 @@ export default function Timer({ environmentID, pipeline }) {
                     </Typography>
                 ) : (
                     <Typography variant="h3" ml={2}>
-                        {prevRunTime}
+                        {RunState.prevRunTime.get()}
                     </Typography>
                 )}
             </Box>
@@ -132,11 +129,11 @@ export const useRunPipelinesHook = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Run pipeline flow
-    return async (environmentID, pipelineId, RunType) => {
+    return async (environmentID, pipelineId) => {
         const response = await runPipelines({
             pipelineID: pipelineId,
             environmentID,
-            RunType,
+            RunType: 'pipeline',
         });
 
         if (response.r === 'error') {
@@ -150,7 +147,7 @@ export const useRunPipelinesHook = () => {
     };
 };
 
-const useStopPipelinesHook = (setPrevRunTime) => {
+const useStopPipelinesHook = () => {
     // GraphQL hook
     const stopPipelines = useStopPipelines();
 
@@ -171,7 +168,7 @@ const useStopPipelinesHook = (setPrevRunTime) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setPrevRunTime(displayTimer(response.created_at, response.ended_at));
+            RunState.prevRunTime.set(displayTimer(response.created_at, response.ended_at));
             RunState.pipelineRunsTrigger.set((t) => t + 1);
         }
     };

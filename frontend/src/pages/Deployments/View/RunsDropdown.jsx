@@ -7,9 +7,10 @@ import { usePipelineTasksRun } from '../../../graphql/getPipelineTasksRun';
 import { useGlobalFlowState } from '../../Flow';
 import { useGlobalRunState } from '../../View/useWebSocket';
 
-export default function RunsDropdown({ environmentID, setElements, deployment }) {
+export default function RunsDropdown({ environmentID, deployment }) {
     // Global states
     const RunState = useGlobalRunState();
+    const FlowState = useGlobalFlowState();
 
     // Local state
     const [selectedRun, setSelectedRun] = useState();
@@ -20,12 +21,22 @@ export default function RunsDropdown({ environmentID, setElements, deployment })
     const getPipelineRuns = useGetPipelineRunsHook(environmentID, setRuns);
     const getPipelineTasksRun = usePipelineTasksRunHook(selectedRun);
 
-    // Get pipeline runs on load and environment change and after each run.
+    // Get pipeline runs on load and environment change
     useEffect(() => {
+        if (!environmentID) return;
         getPipelineRuns();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [environmentID, RunState.run_id.get()]);
+    }, [environmentID]);
+
+    // Get pipeline runs after each run.
+    useEffect(() => {
+        if (RunState.run_id.get() && FlowState.isRunning.get()) {
+            getPipelineRuns();
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [RunState.run_id.get()]);
 
     // Get pipeline runs on trigger.
     useEffect(() => {
@@ -49,7 +60,8 @@ export default function RunsDropdown({ environmentID, setElements, deployment })
     // Update elements on run dropdown change
     useEffect(() => {
         if (!selectedRun) return;
-        setElements(selectedRun.run_json);
+        FlowState.elements.set(selectedRun.run_json);
+
         getPipelineTasksRun(selectedRun.run_id, environmentID);
 
         // Set timer on dropdown change. Works only for runs returned from pipeline runs.
@@ -60,7 +72,7 @@ export default function RunsDropdown({ environmentID, setElements, deployment })
         RunState.dropdownRunId.set(selectedRun.run_id);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedRun]);
+    }, [selectedRun?.run_id]);
 
     return (
         <Grid item alignItems="center" display="flex" width={520}>
@@ -165,7 +177,7 @@ export const usePipelineTasksRunHook = (selectedRun) => {
                 selectedNodeStatus: RunState.selectedNodeStatus.get(),
                 prevRunTime: RunState.prevRunTime.get(),
             };
-            if (!RunState.run_id.get()) {
+            if (!RunState.runEnd.get()) {
                 FlowState.isRunning.set(true);
             }
 

@@ -7,7 +7,7 @@ import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
 import { useGlobalFlowState } from '../Flow';
 
-export default function RunsDropdown({ environmentID, setPrevRunTime, pipeline }) {
+export default function RunsDropdown({ environmentID, pipeline }) {
     // Global states
     const RunState = useGlobalRunState();
     const FlowState = useGlobalFlowState();
@@ -68,7 +68,7 @@ export default function RunsDropdown({ environmentID, setPrevRunTime, pipeline }
 
         // Set timer on dropdown change. Works only for runs returned from pipeline runs.
         if (selectedRun.ended_at) {
-            setPrevRunTime(displayTimerMs(selectedRun.created_at, selectedRun.ended_at));
+            RunState.prevRunTime.set(displayTimerMs(selectedRun.created_at, selectedRun.ended_at));
         }
 
         RunState.dropdownRunId.set(selectedRun.run_id);
@@ -178,7 +178,7 @@ export const usePipelineTasksRunHook = (selectedRun) => {
                 selectedNodeStatus: RunState.selectedNodeStatus.get(),
             };
             if (!RunState.runEnd.get()) {
-                FlowState.isRunning.set(true); //
+                FlowState.isRunning.set(true);
             }
 
             response.map(
@@ -191,7 +191,7 @@ export const usePipelineTasksRunHook = (selectedRun) => {
                         type: selectedRun.run_json.filter((b) => b.id === a.node_id)[0].type,
                     })
             );
-            RunState.set(keep); //
+            RunState.set(keep);
         }
     };
 };

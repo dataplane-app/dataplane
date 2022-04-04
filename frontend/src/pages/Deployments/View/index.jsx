@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Chip, Drawer, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
-import ReactFlow, { addEdge, ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
+import ReactFlow, { ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
 import { useParams } from 'react-router-dom';
 import CustomLine from '../../../components/CustomNodesContent/CustomLine';
 import PublishPipelineDrawer from '../../../components/DrawerContent/PublishPipelineDrawer';
@@ -18,6 +18,7 @@ import LogsDrawer from '../../../components/DrawerContent/LogsDrawer';
 import TurnOffPipelineDrawer from '../../../components/DrawerContent/TurnOffPipelineDrawer';
 import CustomChip from '../../../components/CustomChip';
 import { Analytics } from './Analytics';
+import { Downgraded } from '@hookstate/core';
 import { useGetActiveDeployment } from '../../../graphql/getActiveDeployment';
 
 const DeploymentView = () => {
@@ -51,7 +52,7 @@ const DeploymentView = () => {
     // Flow states
     const reactFlowWrapper = useRef(null);
     const [, setReactFlowInstance] = useState(null);
-    const [elements, setElements] = useState([]);
+    // const [elements, setElements] = useState([]);
     const [panOnDrag, setPanOnDrag] = useState(FlowState.isPanEnable.get());
 
     useEffect(() => {
@@ -65,15 +66,12 @@ const DeploymentView = () => {
         if (!Environment.id.get()) return;
         setIsLoadingFlow(false);
         getActiveDeployment();
+        // Needed once on page load, flow for the rest of the runs come from pipelineRuns
+        getPipelineFlow(Environment.id.get());
 
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
-
-    useEffect(() => {
-        getPipelineFlow(Environment.id.get(), setElements);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isEditorPage.get()]);
 
     // Trigger the scale button on keyboard 's' key click
     useEffect(() => {
@@ -92,9 +90,7 @@ const DeploymentView = () => {
 
     //Flow methods
     const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
-    const onConnect = (params) => {
-        setElements((els) => addEdge({ ...params, type: 'custom' }, els));
-    };
+
     const onConnectStart = () => {
         FlowState.isDragging.set(true);
         document.body.style.cursor = 'grabbing';
@@ -155,7 +151,7 @@ const DeploymentView = () => {
                                 <MoreInfoMenu iconHorizontal>
                                     <MenuItem
                                         pipeline={deployment}
-                                        getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
+                                        getPipelineFlow={() => getPipelineFlow(Environment.id.get())}
                                         isPipelineOnline={deployment?.online}
                                         getPipeline={getActiveDeployment}
                                         setIsOpenAnalytics={setIsOpenAnalytics}
@@ -168,11 +164,11 @@ const DeploymentView = () => {
                 </Grid>
 
                 {/* Run/Stop button, Chips, Timer */}
-                <ActionLayer setElements={setElements} environmentId={Environment.id.get()} deployment={deployment} />
+                <ActionLayer environmentId={Environment.id.get()} deployment={deployment} />
             </Box>
             {!FlowState.isOpenLogDrawer.get() && !isOpenAnalytics ? (
                 <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
-                    {elements && elements.length > 0 ? (
+                    {FlowState.elements.get()?.length > 0 ? (
                         <ReactFlowProvider>
                             <ReactFlow
                                 zoomOnScroll={false}
@@ -181,13 +177,12 @@ const DeploymentView = () => {
                                 onMoveStart={onMoveStart}
                                 onMoveEnd={onMoveEnd}
                                 nodeTypes={nodeTypes}
-                                elements={elements}
+                                elements={FlowState.elements.attach(Downgraded).get()}
                                 defaultZoom={FlowState.scale.get()}
                                 nodesDraggable={false}
                                 nodesConnectable={false}
                                 preventScrolling={false}
                                 onLoad={onLoad}
-                                onConnect={onConnect}
                                 onConnectStart={onConnectStart}
                                 onConnectEnd={onConnectEnd}
                                 connectionLineComponent={CustomLine}
@@ -235,7 +230,7 @@ const DeploymentView = () => {
                     pipelineID={deployment?.pipelineID}
                     environmentID={deployment?.environmentID}
                     name={deployment?.name}
-                    getPipelineFlow={() => getPipelineFlow(Environment.id.get(), setElements)}
+                    getPipelineFlow={() => getPipelineFlow(Environment.id.get())}
                     getPipeline={getActiveDeployment}
                 />
             </Drawer>
@@ -261,20 +256,18 @@ export const useGetPipelineFlowHook = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get members
-    return async (environmentID, setElements) => {
+    return async (environmentID) => {
         const rawResponse = await getPipelineFlow({ pipelineID, environmentID });
         const response = prepareInputForFrontend(rawResponse);
 
         if (response.length === 0) {
             FlowState.elements.set([]);
-            // history.push(`/pipelines/flow/${pipelineId}`);
         } else if (response.r === 'error') {
             closeSnackbar();
             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setElements(response);
             FlowState.elements.set(response);
         }
     };
