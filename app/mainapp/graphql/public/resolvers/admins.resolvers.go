@@ -7,6 +7,7 @@ import (
 	"context"
 	"dataplane/mainapp/auth"
 	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	publicgraphql "dataplane/mainapp/graphql/public"
@@ -21,7 +22,7 @@ import (
 )
 
 func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraphql.AddAdminsInput) (*publicgraphql.Admin, error) {
-	if os.Getenv("mode") != "development" {
+	if os.Getenv("DP_MODE") != "development" {
 		return nil, errors.New("Not in development mode.")
 	}
 
@@ -72,7 +73,7 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	err = database.DBConn.Updates(&platformData).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		if strings.Contains(err.Error(), "duplicate key") {
@@ -85,7 +86,7 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	err = database.DBConn.Create(&userData).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		if strings.Contains(err.Error(), "duplicate key") {
@@ -119,7 +120,7 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	err = database.DBConn.Create(&preferences).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Register database error.")

@@ -5,7 +5,6 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/gofiber/websocket/v2"
@@ -109,7 +108,7 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 			return
 		}
 
-		if os.Getenv("messagedebug") == "true" {
+		if config.MQDebug == "true" {
 			logging.PrintSecretsRedact("message received from client:", mt, string(message))
 		}
 

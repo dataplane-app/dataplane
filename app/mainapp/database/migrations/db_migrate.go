@@ -1,6 +1,7 @@
 package migrations
 
 import (
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database/models"
 	"fmt"
 	"log"
@@ -34,7 +35,7 @@ func Migrate() {
 	)
 
 	var l logger.LogLevel
-	dbDebug, _ := strconv.ParseBool(os.Getenv("dbdebug"))
+	dbDebug, _ := strconv.ParseBool(os.Getenv("DP_DB_DEBUG"))
 	if dbDebug {
 		l = logger.Info
 		// log.Println("DB logging: Info")
@@ -123,7 +124,7 @@ func Migrate() {
 
 		hypertable := "SELECT create_hypertable('logs_platform', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
 
-		if hypertable != "" && os.Getenv("database") == "timescaledb" {
+		if hypertable != "" && config.DPDatabase == "timescaledb" {
 			if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
 				panic(err)
 			}
@@ -131,7 +132,7 @@ func Migrate() {
 
 		hypertable = "SELECT create_hypertable('logs_workers', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
 
-		if hypertable != "" && os.Getenv("database") == "timescaledb" {
+		if hypertable != "" && config.DPDatabase == "timescaledb" {
 			if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
 				panic(err)
 			}
@@ -139,7 +140,7 @@ func Migrate() {
 
 		hypertable = "SELECT create_hypertable('logs_code_run', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
 
-		if hypertable != "" && os.Getenv("database") == "timescaledb" {
+		if hypertable != "" && config.DPDatabase == "timescaledb" {
 			if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
 				panic(err)
 			}

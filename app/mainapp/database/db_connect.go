@@ -41,7 +41,7 @@ func DB() (*gorm.DB, error) {
 
 	// log.Println(connectionURL)
 	var l logger.LogLevel
-	dbDebug, _ := strconv.ParseBool(os.Getenv("dbdebug"))
+	dbDebug, _ := strconv.ParseBool(os.Getenv("DP_DB_DEBUG"))
 	if dbDebug {
 		l = logger.Info
 		log.Println("ℹ️ DB logging: Info")

@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"os"
 	"strconv"
 	"time"
 
@@ -54,7 +53,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 				var worker models.WorkerStats
 				// log.Println("Workers:", key, val)
 
-				if os.Getenv("debug") == "true" {
+				if config.Debug == "true" {
 					log.Println("worker loaded:", val)
 				}
 
@@ -83,7 +82,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 
 			// if a worker group goes offline in between, choose the next in the load balancer and retry
 
-			if os.Getenv("debug") == "true" {
+			if config.Debug == "true" {
 				log.Println("Worker LB:", onlineWorkers[0].LB, onlineWorkers)
 			}
 
@@ -97,7 +96,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 			}
 
 			// Send the request to the worker
-			if os.Getenv("debug") == "true" {
+			if config.Debug == "true" {
 				log.Println("Selected worker:", onlineWorkers[0].LB, loadbalanceNext)
 			}
 

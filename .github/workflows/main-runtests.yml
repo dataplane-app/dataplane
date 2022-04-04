@@ -70,8 +70,6 @@ jobs:
 
       - name: Run Go Tests
         env: 
-          env: "tests"
-          basepath: "/dataplane"
           secret_db_host: localhost
           secret_db_user: postgres
           secret_db_pwd: "Hello123!"
@@ -80,17 +78,20 @@ jobs:
           secret_db_database: "dataplane"
           secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
           secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
-          database: "timescaledb"
-          mode: "development"
-          debug: "true"
-          dbdebug: "false"
-          messagedebug: "false"
-          worker_heartbeat_seconds: "1"
-          worker_group: "python_1"
-          worker_type: "vm"
-          worker_lb: "roundrobin"
-          worker_env: "Development"
-          dp_cleantasks_days: "60"
-          dp_removelogs_days: "60"
-          dataplane_code_folder: "${{ github.workspace }}/appdev/code-files/"
+          DP_DATABASE: "timescaledb"
+          DP_MODE: "development"
+          DP_DEBUG: "true"
+          DP_DB_DEBUG: "false"
+          DP_MQ_DEBUG: "true"
+          DP_METRIC_DEBUG: "false"
+          DP_SCHEDULER_DEBUG: "true"
+          DP_WORKER_HEARTBEAT_SECONDS: "1"
+          DP_WORKER_GROUP: "python_1"
+          DP_WORKER_CMD: "/bin/bash"
+          DP_WORKER_TYPE: "vm"
+          DP_WORKER_LB: "roundrobin"
+          DP_WORKER_ENV: "Development"
+          DP_CLEANTASKS_DAYS: "60"
+          DP_REMOVELOGS_DAYS: "60"
+          DP_CODE_FOLDER: "${{ github.workspace }}/appdev/code-files/"
         run: cd app/mainapp && time go run Tests/mainTest.go

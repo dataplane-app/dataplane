@@ -23,19 +23,19 @@ var Debug string = "false"
 
 func LoadConfig() {
 
-	Debug = os.Getenv("debug")
+	Debug = os.Getenv("DP_DEBUG")
 	if Debug == "" {
 		Debug = "false"
 	}
 
 	EncryptSecret = os.Getenv("secret_encryption_key")
 
-	WorkerGroup = os.Getenv("worker_group")
-	WorkerType = os.Getenv("worker_type")
-	WorkerEnv = os.Getenv("worker_env")
-	WorkerLB = os.Getenv("worker_lb")
+	WorkerGroup = os.Getenv("DP_WORKER_GROUP")
+	WorkerType = os.Getenv("DP_WORKER_TYPE")
+	WorkerEnv = os.Getenv("DP_WORKER_ENV")
+	WorkerLB = os.Getenv("DP_WORKER_LB")
 	if WorkerLB == "" {
-		os.Setenv("worker_lb", "roundrobin")
+		os.Setenv("DP_WORKER_LB", "roundrobin")
 		WorkerLB = "roundrobin"
 	}
 	DPworkerCMD = os.Getenv("DP_WORKER_CMD")
@@ -43,18 +43,6 @@ func LoadConfig() {
 		DPworkerCMD = os.Getenv("SHELL")
 	}
 
-	CodeDirectory = os.Getenv("dataplane_code_folder")
+	CodeDirectory = os.Getenv("DP_CODE_FOLDER")
 
 }
-
-// if os.Getenv("worker_type") == "" {
-// 	panic("Requires worker_type environment variable")
-// }
-
-// if os.Getenv("worker_env") == "" {
-// 	panic("Requires worker_env environment variable")
-// }
-
-// if os.Getenv("worker_lb") == "" {
-// 	os.Setenv("worker_lb", "roundrobin")
-// }

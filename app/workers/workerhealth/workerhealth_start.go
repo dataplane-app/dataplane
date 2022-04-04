@@ -47,7 +47,7 @@ func WorkerHealthStart() {
 
 	/* Register the worker with mainapp */
 	worker := Worker{
-		WorkerGroup: os.Getenv("worker_group"),
+		WorkerGroup: config.WorkerGroup,
 		WorkerID:    config.WorkerID,
 		Status:      "Online",
 		T:           time.Now().UTC(),
@@ -72,7 +72,7 @@ func WorkerHealthStart() {
 	log.Println("🚚 Submitting workers")
 	WorkerLoad(s)
 
-	i, _ := strconv.Atoi(os.Getenv("worker_heartbeat_seconds"))
+	i, _ := strconv.Atoi(os.Getenv("DP_WORKER_HEARTBEAT_SECONDS"))
 
 	// interval cannot be less than 1 or greater than 120
 	if i < 1 || i > 120 {
@@ -88,7 +88,7 @@ func WorkerHealthStart() {
 		var percentCPUsend float64
 		var percentMemorysend float64
 		var memoryused float64
-		switch os.Getenv("worker_type") {
+		switch config.WorkerType {
 
 		// TODO: Fix container usage
 		case "container":
@@ -132,7 +132,7 @@ func WorkerHealthStart() {
 		// log.Printf("cpu perc:%v | mem percent:%v | mem used :%v | load:%v \n", percentCPUsend, percentMemorysend, memoryused, loadsend)
 
 		workerdata := &WorkerStats{
-			WorkerGroup: os.Getenv("worker_group"),
+			WorkerGroup: config.WorkerGroup,
 			WorkerID:    config.WorkerID,
 			Status:      "Online",
 			CPUPerc:     percentCPUsend,
@@ -141,9 +141,9 @@ func WorkerHealthStart() {
 			Load:        loadsend,
 			T:           time.Now().UTC(),
 			Interval:    i,
-			Env:         os.Getenv("worker_env"),
-			LB:          os.Getenv("worker_lb"),
-			WorkerType:  os.Getenv("worker_type"),
+			Env:         config.WorkerEnv,
+			LB:          config.WorkerLB,
+			WorkerType:  config.WorkerType,
 		}
 
 		// Go type Publisher
@@ -152,7 +152,7 @@ func WorkerHealthStart() {
 			logging.PrintSecretsRedact("NATS error:", err)
 		}
 
-		if os.Getenv("metricdebug") == "true" {
+		if os.Getenv("DP_METRIC_DEBUG") == "true" {
 			// log.Println("Worker health: ", time.Now())
 			log.Printf("cpu perc:%v | mem percent:%v | mem used :%v | load:%v \n", percentCPUsend, percentMemorysend, memoryused, loadsend)
 			// log.Printf("Memory used:%v total:%v | Swap total: %v | Swap free: %v\n",

@@ -57,7 +57,7 @@ func Setup(port string) *fiber.App {
 
 	database.DBConnect()
 	database.GoDBConnect()
-	log.Println("🏃 Running on: ", os.Getenv("env"))
+	log.Println("🏃 Running")
 
 	// -------- NATS Connect -------
 	messageq.NATSConnect()
@@ -106,7 +106,7 @@ func Setup(port string) *fiber.App {
 		err = database.DBConn.Clauses(clause.OnConflict{DoNothing: true}).Create(&environment).Error
 
 		if err != nil {
-			if os.Getenv("debug") == "true" {
+			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			panic("Add initial environments database error.")
@@ -197,7 +197,7 @@ func Setup(port string) *fiber.App {
 	// add timer field to response header
 	app.Use(Timer())
 
-	if os.Getenv("debug") == "true" {
+	if config.Debug == "true" {
 		app.Use(logger.New(
 			logger.Config{
 				Format: "✨ Latency: ${latency} Time:${time} Status: ${status} Path:${path} \n",
@@ -227,7 +227,7 @@ func Setup(port string) *fiber.App {
 	app.Post("/app/private/graphql", auth.TokenAuthMiddle(), PrivateGraphqlHandler())
 
 	// WARNING: This is insecure and only for documentation, do not enable in production
-	if os.Getenv("graphqldocs") == "true" {
+	if os.Getenv("DP_GRAPHQLDOCS") == "true" {
 		app.Post("/private/graphqldocs", PrivateGraphqlHandler())
 		app.Use("/graphqldocs", adaptor.HTTPHandlerFunc(playgroundHandler()))
 	}
@@ -244,7 +244,7 @@ func Setup(port string) *fiber.App {
 		refreshToken := authHeader[1]
 		newRefreshToken, err := auth.RenewAccessToken(refreshToken)
 		if err != nil {
-			if os.Getenv("debug") == "true" {
+			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err.Error())
 			}
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
@@ -287,7 +287,7 @@ func Setup(port string) *fiber.App {
 
 		dat, err := os.ReadFile(config.CodeDirectory + filepath)
 		if err != nil {
-			if os.Getenv("debug") == "true" {
+			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return err

@@ -24,7 +24,7 @@ func LoadWorkers(MainAppID string) {
 
 	messageq.NATSencoded.Subscribe("workerload", func(m *nats.Msg) {
 
-		// if os.Getenv("messagedebug") == "true" {
+		// if config.MQDebug == "true" {
 		// 	logging.PrintSecretsRedact(string(m.Data))
 		// }
 

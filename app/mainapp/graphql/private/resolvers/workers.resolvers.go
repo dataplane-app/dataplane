@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -14,7 +14,6 @@ import (
 	"dataplane/mainapp/messageq"
 	"encoding/json"
 	"errors"
-	"os"
 
 	"github.com/tidwall/buntdb"
 )
@@ -46,7 +45,7 @@ func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environme
 	err := database.DBConn.Create(&workerSecret).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 
@@ -89,7 +88,7 @@ func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, envi
 		Delete(&workerSecret).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 
@@ -228,7 +227,7 @@ func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentID strin
 
 	err := database.DBConn.Where("secret_id = ? and environment_id =?", secret, environmentID).Find(&s).Error
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive users database error.")
@@ -274,7 +273,7 @@ func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentID
 		`, workerGroup, environmentID).Scan(&s).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive users database error.")

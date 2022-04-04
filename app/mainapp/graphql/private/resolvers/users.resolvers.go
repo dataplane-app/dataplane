@@ -6,13 +6,13 @@ package privateresolvers
 import (
 	"context"
 	"dataplane/mainapp/auth"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"errors"
-	"os"
 	"strings"
 
 	validator "github.com/go-playground/validator/v10"
@@ -72,7 +72,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql
 	err = database.DBConn.Create(&userData).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		if strings.Contains(err.Error(), "duplicate key") {
@@ -116,7 +116,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, input *privategraphql
 	}).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("update user database error")
@@ -153,7 +153,7 @@ func (r *mutationResolver) UpdateChangePassword(ctx context.Context, input *priv
 	}).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("database error.")
@@ -194,7 +194,7 @@ func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid stri
 	err := database.DBConn.Where("user_id = ?", userid).First(&u).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive me database error.")
@@ -209,7 +209,7 @@ func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid stri
 		Updates(models.Users{Status: "inactive", Active: false}).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("DeactivateUser database error.")
@@ -245,7 +245,7 @@ func (r *mutationResolver) UpdateActivateUser(ctx context.Context, userid string
 	err := database.DBConn.Where("user_id = ?", userid).First(&u).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive user database error.")
@@ -260,7 +260,7 @@ func (r *mutationResolver) UpdateActivateUser(ctx context.Context, userid string
 		Updates(models.Users{Status: "active", Active: true}).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("ActivateUser database error.")
@@ -300,7 +300,7 @@ func (r *mutationResolver) UpdateDeleteUser(ctx context.Context, userid string) 
 	err := database.DBConn.Where(&models.Users{UserID: userid}).Delete(&u).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("DeleteUser database error.")
@@ -332,7 +332,7 @@ func (r *queryResolver) GetUser(ctx context.Context, userID string) (*models.Use
 
 	err := database.DBConn.Where("user_id = ?", userID).First(&e).Error
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive user database error.")
@@ -360,7 +360,7 @@ func (r *queryResolver) GetUsers(ctx context.Context) ([]*models.Users, error) {
 
 	err := database.DBConn.Find(&e).Error
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive users database error.")

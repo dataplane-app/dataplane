@@ -28,34 +28,43 @@ var Scheduler *gocron.Scheduler
 // Debug
 var Debug string = "false"
 var SchedulerDebug string = "false"
+var MQDebug string = "false"
 
-// Code editor
+// Environment variables
 var CodeDirectory string
+var DPDatabase string = ""
 
 func LoadConfig() {
 
 	// Clean tasks set
 
-	CleanTasks, _ = strconv.Atoi(os.Getenv("dp_cleantasks_days"))
+	CleanTasks, _ = strconv.Atoi(os.Getenv("DP_CLEANTASKS_DAYS"))
 	if CleanTasks == 0 {
 		CleanTasks = 30
 	}
 
-	CleanLogs, _ = strconv.Atoi(os.Getenv("dp_removelogs_days"))
+	CleanLogs, _ = strconv.Atoi(os.Getenv("DP_REMOVELOGS_DAYS"))
 	if CleanLogs == 0 {
 		CleanLogs = 30
 	}
 
-	Debug = os.Getenv("debug")
+	Debug = os.Getenv("DP_DEBUG")
 	if Debug == "" {
 		Debug = "false"
 	}
 
-	SchedulerDebug = os.Getenv("schedulerdebug")
+	SchedulerDebug = os.Getenv("DP_SCHEDULER_DEBUG")
 	if SchedulerDebug == "" {
 		SchedulerDebug = "false"
 	}
 
-	CodeDirectory = os.Getenv("dataplane_code_folder")
+	MQDebug = os.Getenv("DP_MQ_DEBUG")
+	if MQDebug == "" {
+		MQDebug = "false"
+	}
+
+	CodeDirectory = os.Getenv("DP_CODE_FOLDER")
+
+	DPDatabase = os.Getenv("DP_DATABASE")
 
 }

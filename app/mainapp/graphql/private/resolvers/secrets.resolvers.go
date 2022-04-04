@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -15,7 +15,6 @@ import (
 	"dataplane/mainapp/utilities"
 	"errors"
 	"log"
-	"os"
 	"regexp"
 	"strings"
 
@@ -48,7 +47,7 @@ func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraph
 	// Encrypt secret value
 	encryptedSecretValue, err := utilities.Encrypt(input.Value)
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Secret value encryption failed.")
@@ -67,7 +66,7 @@ func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraph
 	err = database.DBConn.Create(&secretData).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 
@@ -108,7 +107,7 @@ func (r *mutationResolver) UpdateSecret(ctx context.Context, input *privategraph
 	err := database.DBConn.Where("secret = ? and environment_id = ?", input.Secret, input.EnvironmentID).Select("description").Updates(&secretData).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Update secret database error.")
@@ -137,7 +136,7 @@ func (r *mutationResolver) UpdateSecretValue(ctx context.Context, secret string,
 	// Encrypt secret value
 	encryptedSecretValue, err := utilities.Encrypt(value)
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Secret value encryption failed.")
@@ -150,7 +149,7 @@ func (r *mutationResolver) UpdateSecretValue(ctx context.Context, secret string,
 	err = database.DBConn.Where("secret = ? and environment_id = ?", secret, environmentID).Updates(&secretData).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Update secret database error.")
@@ -223,7 +222,7 @@ func (r *mutationResolver) UpdateDeleteSecret(ctx context.Context, secret string
 	err := database.DBConn.Where(&models.Secrets{Secret: secret, EnvironmentID: environmentID}).Delete(&s).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Delete secret database error.")
@@ -254,7 +253,7 @@ func (r *queryResolver) GetSecret(ctx context.Context, secret string, environmen
 
 	err := database.DBConn.Where("secret = ? and environment_id =?", secret, environmentID).First(&s).Error
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive secret database error.")
@@ -286,7 +285,7 @@ func (r *queryResolver) GetSecrets(ctx context.Context, environmentID string) ([
 
 	err := database.DBConn.Find(&s).Error
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive secrets database error.")

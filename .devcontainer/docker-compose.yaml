@@ -61,9 +61,7 @@ services:
       - node_modules:/appdev/frontend/node_modules
       - ../:/appdev
     environment:
-      env: "local"
-      dataplane_code_folder: "/appdev/code-files/"
-      basepath: "/dataplane"
+      DP_CODE_FOLDER: "/appdev/code-files/"
       secret_db_host: postgres
       secret_db_user: postgres
       secret_db_pwd: "Hello123!"
@@ -72,24 +70,25 @@ services:
       secret_db_database: "dataplane"
       secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
       secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
-      database: "timescaledb"
-      dataplane_port: "9000"
-      dataplane_nats: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
-      mode: "development"
-      debug: "true"
-      dbdebug: "false"
-      messagedebug: "true"
-      metricdebug: "false"
-      schedulerdebug: "true"
-      worker_heartbeat_seconds: "1"
-      worker_group: "python_1"
+      DP_DATABASE: "timescaledb"
+      DP_PORT: "9000"
+      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_MODE: "development"
+      DP_DEBUG: "true"
+      DP_DB_DEBUG: "false"
+      DP_MQ_DEBUG: "true"
+      DP_METRIC_DEBUG: "false"
+      DP_SCHEDULER_DEBUG: "true"
+      DP_WORKER_HEARTBEAT_SECONDS: "1"
+      DP_WORKER_GROUP: "python_1"
       DP_WORKER_CMD: "/bin/bash"
       # vm, container, kubernetes
-      worker_type: "vm"
-      worker_lb: "roundrobin"
-      worker_env: "Development"
-      dp_cleantasks_days: "60"
-      dp_removelogs_days: "60"
+      DP_WORKER_TYPE: "vm"
+      DP_WORKER_LB: "roundrobin"
+      DP_WORKER_ENV: "Development"
+      DP_CLEANTASKS_DAYS: "60"
+      DP_REMOVELOGS_DAYS: "60"
+      DP_WORKER_PORT: "9005"
 
 networks:
   default:

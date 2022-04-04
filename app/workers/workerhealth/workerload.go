@@ -35,7 +35,7 @@ func WorkerLoad(s *gocron.Scheduler) {
 		loadsend := math.Round(load.Load1*100) / 100
 
 		send := WorkerStats{
-			WorkerGroup: os.Getenv("worker_group"),
+			WorkerGroup: config.WorkerGroup,
 			WorkerID:    config.WorkerID,
 			Status:      "Online",
 			CPUPerc:     percentCPUsend,
@@ -45,12 +45,12 @@ func WorkerLoad(s *gocron.Scheduler) {
 			Interval:    1,
 			T:           time.Now().UTC(),
 			EnvID:       config.EnvID,
-			Env:         os.Getenv("worker_env"),
-			LB:          os.Getenv("worker_lb"),
-			WorkerType:  os.Getenv("worker_type"),
+			Env:         config.WorkerEnv,
+			LB:          config.WorkerLB,
+			WorkerType:  config.WorkerType,
 		}
 		messageq.NATSencoded.Publish("workerload", send)
-		if os.Getenv("workerdebug") == "true" {
+		if os.Getenv("DP_WORKER_DEBUG") == "true" {
 			log.Println("sending:", send)
 		}
 

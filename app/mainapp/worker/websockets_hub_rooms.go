@@ -1,9 +1,9 @@
 package worker
 
 import (
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/logging"
 	"log"
-	"os"
 	"time"
 
 	"github.com/gofiber/websocket/v2"
@@ -44,7 +44,7 @@ func secureTimeoutq(room string, connection *websocket.Conn) {
 				// handle error
 				log.Println(err)
 			}
-			if os.Getenv("messagedebug") == "true" {
+			if config.MQDebug == "true" {
 				log.Println("connection unregistered by SecureTimeout")
 			}
 		}
@@ -75,13 +75,13 @@ func RunHubRooms() {
 
 			go secureTimeoutq(register.room, register.conn)
 			// go func() { Securetimeout <- 0 }()
-			if os.Getenv("messagedebug") == "true" {
+			if config.MQDebug == "true" {
 				log.Println("connection registered")
 			}
 
 		case message := <-broadcastq:
 
-			if os.Getenv("messagedebug") == "true" {
+			if config.MQDebug == "true" {
 				logging.PrintSecretsRedact("room:", message.room, "message received:", string(message.data))
 			}
 
@@ -124,7 +124,7 @@ func RunHubRooms() {
 			}
 			// Remove the client from the hub
 			// delete(clientsq, connection)
-			if os.Getenv("messagedebug") == "true" {
+			if config.MQDebug == "true" {
 				log.Println("connection for room:" + register.room + " unregistered")
 				// log.Println("connections:", clientsq)
 			}

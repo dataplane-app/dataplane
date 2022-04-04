@@ -48,12 +48,8 @@ spec:
               memory: "100Mi"
               cpu: "0.1"
           env:
-            - name: env
-              value: "local"
-            - name: dataplane_code_folder
+            - name: DP_CODE_FOLDER
               value: "/appdev/code-files/"
-            - name: basepath
-              value: "/dataplane"
             - name: secret_db_host
               value: timescaledb-service
             - name: secret_db_user 
@@ -72,34 +68,34 @@ spec:
               value: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
             - name: database
               value: "timescaledb"
-            - name: dataplane_port
+            - name: DP_PORT
               value: "9000"
-            - name: dataplane_nats
+            - name: DP_NATS
               value: "nats://nats-0.nats.default.svc:4222, nats://nats-1.nats.default.svc:4222, nats-3.nats.default.svc:4222"
-            - name: mode
+            - name: DP_MODE
               value: "development"
-            - name: debug
+            - name: DP_DEBUG
               value: "false"
-            - name: dbdebug
+            - name: DP_DB_DEBUG
               value: "false"
-            - name: messagedebug
+            - name: DP_MQ_DEBUG
               value: "false"
-            - name: metricdebug
+            - name: DP_METRIC_DEBUG
               value: "false"
-            - name: schedulerdebug
+            - name: DP_SCHEDULER_DEBUG
               value: "true"
-            - name: worker_heartbeat_seconds
+            - name: DP_WORKER_HEARTBEAT_SECONDS
               value: "1"
-            - name: worker_group
+            - name: DP_WORKER_GROUP
               value: "python_1"
       # vm, container, kubernetes
-            - name: worker_type
+            - name: DP_WORKER_TYPE
               value: "vm"
-            - name: worker_lb
+            - name: DP_WORKER_LB
               value: "roundrobin"
-            - name: worker_env
+            - name: DP_WORKER_ENV
               value: "Development"
-            - name: dp_cleantasks_days
+            - name: DP_CLEANTASKS_DAYS
               value: "60"
-            - name: dp_removelogs_days
+            - name: DP_REMOVELOGS_DAYS
               value: "60"

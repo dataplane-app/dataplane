@@ -1,83 +1,81 @@
-version: '3'
+version: '2.4'
 
 services:
-  postgres:
-    image: timescale/timescaledb:2.5.1-pg14
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "Hello123!"
-      POSTGRES_DB: "dataplane"
+  worker1:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: go run workers/worker.go
+    # command: tail -f /dev/null
+    mem_limit: 512MB
+    cpus: 1.5
     volumes:
-      - dataplane-db-volume:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres" ]
-      interval: 60s
-      retries: 5
-    restart: always
-
-  nats:
-    image: nats:2.7.0-scratch
-    command:
-      - "--debug"
-      - "--cluster"
-      - "nats://0.0.0.0:6222"
-      - "--http_port"
-      - "8222"
-      - "--port"
-      - "4222"
-    ports:
-      - "14222:4222"
-      - "18222:8222"
-
-  nats-r:
-    image: nats:2.7.0-scratch
-    command:
-      - "--debug"
-      - "--cluster"
-      - "nats://0.0.0.0:6222"
-      - "--http_port"
-      - "8222"
-      - "--port"
-      - "4222"
-      - "--routes"
-      - "nats://nats:6222"
-    deploy:
-      replicas: 2
-
-  mainapp:
-    image: dataplane/dataplane:dev-0.0.3
-    ports:
-      - 9010:9010
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "--fail",
-          "http://localhost:9000/healthz"
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - ./:/workerdev
+      - ./examples:/workerfiles
     environment:
-      env: "quickstart"
-      basepath: "/dataplane"
+      DP_CODE_FOLDER: ""
       secret_db_host: postgres
       secret_db_user: postgres
       secret_db_pwd: "Hello123!"
       secret_db_ssl: "disable"
       secret_db_port: "5432"
       secret_db_database: "dataplane"
-      secret_jwt_secret: "117943e9-9d44-49ad-aa4e-9c64004c8993"
-      secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
-      database: "timescaledb"
-      dataplane_port: "9010"
-      mode: "development"
-      debug: "true"
-      dbdebug: "false"
-    depends_on:
-      postgres:
-        condition: service_healthy
+      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+      DP_DATABASE: "timescaledb"
+      DP_PORT: "9000"
+      DP_NATS: nats://nats:4222
+      DP_MODE: "development"
+      DP_DEBUG: "true"
+      DP_DB_DEBUG: "false"
+      DP_MQ_DEBUG: "true"
+      DP_METRIC_DEBUG: "false"
+      DP_SCHEDULER_DEBUG: "true"
+      DP_WORKER_HEARTBEAT_SECONDS: "1"
+      DP_WORKER_GROUP: "python_1"
+      DP_WORKER_CMD: "/bin/bash"
+      DP_WORKER_TYPE: "container"
+      DP_WORKER_LB: "roundrobin"
+      DP_WORKER_ENV: "Development"
+      DP_WORKER_PORT: "9005"
 
-volumes:
-  dataplane-db-volume:
+  worker2:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: go run workers/worker.go
+    mem_limit: 512MB
+    cpus: 1.5
+    # command: tail -f /dev/null
+    volumes:
+      - ./:/workerdev
+      - ./examples:/workerfiles
+    environment:
+      DP_CODE_FOLDER: ""
+      secret_db_host: postgres
+      secret_db_user: postgres
+      secret_db_pwd: "Hello123!"
+      secret_db_ssl: "disable"
+      secret_db_port: "5432"
+      secret_db_database: "dataplane"
+      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+      DP_DATABASE: "timescaledb"
+      DP_PORT: "9001"
+      DP_NATS: nats://nats:4222
+      DP_MODE: "development"
+      DP_DEBUG: "true"
+      DP_DB_DEBUG: "false"
+      DP_MQ_DEBUG: "true"
+      DP_METRIC_DEBUG: "false"
+      DP_SCHEDULER_DEBUG: "true"
+      DP_WORKER_HEARTBEAT_SECONDS: "1"
+      DP_WORKER_GROUP: "python_1"
+      DP_WORKER_CMD: "/bin/bash"
+      DP_WORKER_TYPE: "container"
+      DP_WORKER_LB: "roundrobin"
+      DP_WORKER_ENV: "Development"
+      DP_WORKER_PORT: "9005"
+  
+networks:
+  default:
+    external: true
+    name: dataplane_network

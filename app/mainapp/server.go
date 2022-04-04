@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	port := os.Getenv("dataplane_port")
+	port := os.Getenv("DP_PORT")
 	if port == "" {
 		port = "9000"
 	}

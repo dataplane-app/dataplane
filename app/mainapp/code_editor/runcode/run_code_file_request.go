@@ -88,7 +88,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 				var worker models.WorkerStats
 				// log.Println("Workers:", key, val)
 
-				if os.Getenv("debug") == "true" {
+				if config.Debug == "true" {
 					log.Println("worker loaded:", val)
 				}
 
@@ -117,7 +117,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 
 			// if a worker group goes offline in between, choose the next in the load balancer and retry
 
-			if os.Getenv("debug") == "true" {
+			if config.Debug == "true" {
 				log.Println("Worker LB:", onlineWorkers[0].LB, onlineWorkers)
 			}
 
@@ -131,7 +131,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 			}
 
 			// Send the request to the worker
-			if os.Getenv("debug") == "true" {
+			if config.Debug == "true" {
 				log.Println("Selected worker:", onlineWorkers[0].LB, loadbalanceNext)
 			}
 

@@ -17,7 +17,6 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -59,7 +58,7 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	err := database.DBConn.Create(&e).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		if strings.Contains(err.Error(), "duplicate key") {
@@ -83,7 +82,7 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 		)
 
 		if err != nil {
-			if os.Getenv("debug") == "true" {
+			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return "", errors.New("Add permission to user database error.")
@@ -144,7 +143,7 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 		}).First(&p).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Update pipeline database error.")
@@ -302,7 +301,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	// ----- lock the pipeline
 	err := database.DBConn.Model(&models.Pipelines{}).Where("pipeline_id = ?", pipelineID).Update("update_lock", true).Error
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 
@@ -425,7 +424,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&edge).Error
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 
@@ -437,7 +436,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Delete(&node).Error
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 
@@ -452,7 +451,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	}
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		if strings.Contains(err.Error(), "duplicate key") {
@@ -466,7 +465,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	}
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		if strings.Contains(err.Error(), "duplicate key") {
@@ -488,7 +487,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Updates(&e).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Update pipeline database error.")
@@ -515,7 +514,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	// ----- unlock the pipeline
 	err = database.DBConn.Model(&models.Pipelines{}).Where("pipeline_id = ?", pipelineID).Update("update_lock", false).Error
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 
@@ -548,7 +547,7 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 	err := database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Delete(&p).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete pipeline database error.")
@@ -560,7 +559,7 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 	err = database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Delete(&n).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete pipeline nodes database error.")
@@ -572,7 +571,7 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 	err = database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Delete(&e).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete pipeline edges database error.")
@@ -622,7 +621,7 @@ func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID 
 	err := database.DBConn.Where("pipeline_id = ? AND node_type = ?", pipelineID, "trigger").Find(&p).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to retrieve trigger node.")
@@ -641,7 +640,7 @@ func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID 
 		Select("trigger_online").Updates(&n).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to update trigger node.")
@@ -741,7 +740,7 @@ order by a.created_at desc
 			query, pipelineID).Scan(&p).Error
 
 		if err != nil {
-			if os.Getenv("debug") == "true" {
+			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return nil, errors.New("Retrive pipelines database error.")
@@ -808,7 +807,7 @@ order by a.created_at desc`
 			query, currentUser, currentUser, pipelineID).Scan(&p).Error
 
 		if err != nil {
-			if os.Getenv("debug") == "true" {
+			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 
@@ -870,7 +869,7 @@ order by a.created_at desc
 			query, environmentID).Scan(&p).Error
 
 		if err != nil {
-			if os.Getenv("debug") == "true" {
+			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return nil, errors.New("Retrive pipelines database error.")
@@ -936,7 +935,7 @@ order by a.created_at desc`
 			query, currentUser, currentUser, environmentID).Scan(&p).Error
 
 		if err != nil {
-			if os.Getenv("debug") == "true" {
+			if config.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 
@@ -977,7 +976,7 @@ func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, 
 	err := database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&nodes).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrieve pipeline nodes database error")
@@ -989,7 +988,7 @@ func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, 
 	err = database.DBConn.Where("pipeline_id = ?", pipelineID).Find(&edges).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("retrive pipeline edges database error")

@@ -12,7 +12,6 @@ import (
 	"dataplane/workers/workerhealth"
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"time"
 
@@ -118,7 +117,7 @@ func Setup(port string) *fiber.App {
 	// add timer field to response header
 	app.Use(Timer())
 
-	if os.Getenv("debug") == "true" {
+	if config.Debug == "true" {
 		app.Use(logger.New(
 			logger.Config{
 				Format: "✨ Latency: ${latency} Time:${time} Status: ${status} Path:${path} \n",

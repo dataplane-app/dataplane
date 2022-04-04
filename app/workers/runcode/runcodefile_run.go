@@ -282,7 +282,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		// TasksStatus[msg.TaskID] = "run"
 		TasksStatus.Set(msg.RunID, "run")
 
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			// log.Println("tasks before pid:", task)
 		}
 		err := cmd.Start()
@@ -330,7 +330,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		Tasks.Set(msg.RunID, task)
 		// Tasks[msg.TaskID] = task
 
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			// fmt.Println("PID ", cmd.Process.Pid)
 			// log.Println("tasks after pid:", Tasks)
 			// log.Println(err)
@@ -357,12 +357,12 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		} else {
 			statusUpdate = "Success"
 		}
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			// log.Println(i, err)
 		}
 	}
 
-	if os.Getenv("debug") == "true" {
+	if config.Debug == "true" {
 		// log.Println("Update task as " + statusUpdate + " - " + msg.TaskID)
 	}
 

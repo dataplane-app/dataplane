@@ -2,6 +2,7 @@ package pipelinetests
 
 import (
 	"dataplane/mainapp/Tests/testutils"
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
@@ -9,7 +10,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 
@@ -117,7 +117,7 @@ func TestSpecificPipelines(t *testing.T) {
 	err := database.DBConn.Where("name = ?", `test_`+pipelineId).Find(&p).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		log.Println(errors.New("Retrive pipelines database error."))
@@ -376,7 +376,7 @@ func TestSpecificPipelines(t *testing.T) {
 	err = database.DBConn.Where("access_group_id = ?", accessgroup).Delete(&ag).Error
 
 	if err != nil {
-		if os.Getenv("debug") == "true" {
+		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		log.Println(errors.New("Retrive pipelines database error."))

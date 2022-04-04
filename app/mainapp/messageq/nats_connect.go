@@ -16,7 +16,7 @@ var NATSProtobuf *nats.EncodedConn
 
 func NATSConnect() {
 	var err error
-	NATS, err = nats.Connect(os.Getenv("dataplane_nats"),
+	NATS, err = nats.Connect(os.Getenv("DP_NATS"),
 		nats.RetryOnFailedConnect(true),
 		nats.MaxReconnects(10),
 		nats.ReconnectWait(3*time.Second))

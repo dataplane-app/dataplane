@@ -1,10 +1,10 @@
 package worker
 
 import (
+	"dataplane/mainapp/config"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"log"
-	"os"
 
 	"github.com/gofiber/websocket/v2"
 	"github.com/nats-io/nats.go"
@@ -54,7 +54,7 @@ func WorkerStatsWs(conn *websocket.Conn, subject string) {
 			return
 		}
 
-		if os.Getenv("messagedebug") == "true" {
+		if config.MQDebug == "true" {
 			logging.PrintSecretsRedact("message received from client:", mt, string(message))
 		}
 

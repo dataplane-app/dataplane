@@ -6,7 +6,6 @@ import (
 	"dataplane/workers/config"
 	"dataplane/workers/messageq"
 	"log"
-	"os"
 	"syscall"
 	"time"
 )
@@ -19,7 +18,7 @@ type TaskResponse struct {
 func ListenTasks() {
 
 	// Responding to a task request
-	messageq.NATSencoded.Subscribe("task."+os.Getenv("worker_group")+"."+config.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
+	messageq.NATSencoded.Subscribe("task."+config.WorkerGroup+"."+config.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
 		// log.Println("message:", msg)
 
 		response := "ok"
@@ -66,10 +65,10 @@ func ListenTasks() {
 		}
 	})
 	if config.Debug == "true" {
-		log.Println("🎧 Listening for tasks on subject:", "task."+os.Getenv("worker_group")+"."+config.WorkerID)
+		log.Println("🎧 Listening for tasks on subject:", "task."+config.WorkerGroup+"."+config.WorkerID)
 	}
 
-	messageq.NATSencoded.Subscribe("taskcancel."+os.Getenv("worker_group")+"."+config.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
+	messageq.NATSencoded.Subscribe("taskcancel."+config.WorkerGroup+"."+config.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
 		// Respond to cancelling a task
 		id := msg.TaskID
 
