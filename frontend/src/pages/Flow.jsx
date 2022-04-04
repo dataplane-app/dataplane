@@ -376,7 +376,6 @@ const Flow = () => {
 
                         <Button sx={{ py: '10px', color: 'gray', borderColor: 'transparent' }} onClick={() => FlowState.isOpenUpdatePipelineDrawer.set(true)} variant="text">
                             <Box component={FontAwesomeIcon} icon={faPen} />
-                            <FontAwesomeIcon icon="fas fa-pen" />
                         </Button>
 
                         {isUnsavedWithChanges ? <UnsavedChangesIndicator /> : null}
