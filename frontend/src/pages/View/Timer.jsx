@@ -10,7 +10,7 @@ import useWebSocket, { useGlobalRunState } from './useWebSocket';
 import StatusChips from './StatusChips';
 import RunsDropdown from './RunsDropdown';
 
-export default function Timer({ environmentID, setElements, pipeline }) {
+export default function Timer({ environmentID, pipeline }) {
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
@@ -31,15 +31,6 @@ export default function Timer({ environmentID, setElements, pipeline }) {
 
     // Instantiate websocket connection
     useWebSocket(environmentID, RunState.run_id.get());
-
-    // Get current runs status
-    useEffect(() => {
-        if (FlowState.isRunning.get() && RunState.run_id.get() !== '') {
-            getPipelineTasksRun(RunState.run_id.get(), environmentID);
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isRunning.get(), RunState.run_id.get()]);
 
     const handleTimerStart = () => {
         FlowState.isRunning.set(true);
@@ -115,7 +106,7 @@ export default function Timer({ environmentID, setElements, pipeline }) {
 
                 <StatusChips />
 
-                <RunsDropdown environmentID={environmentID} setElements={setElements} setPrevRunTime={setPrevRunTime} pipeline={pipeline} />
+                <RunsDropdown environmentID={environmentID} setPrevRunTime={setPrevRunTime} pipeline={pipeline} />
 
                 {isRunning ? (
                     <Typography variant="h3" ml={2}>
