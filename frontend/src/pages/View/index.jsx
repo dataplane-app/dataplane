@@ -59,6 +59,7 @@ const View = () => {
 
     // Fetch previous elements on load
     useEffect(() => {
+        if (!Environment.id.get()) return;
         setIsLoadingFlow(false);
         getPipeline();
         // Needed once on page load, flow for the rest of the runs come from pipelineRuns

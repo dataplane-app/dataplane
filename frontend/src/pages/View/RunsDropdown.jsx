@@ -21,12 +21,22 @@ export default function RunsDropdown({ environmentID, setPrevRunTime, pipeline }
     const getPipelineRuns = useGetPipelineRunsHook(environmentID, setRuns);
     const getPipelineTasksRun = usePipelineTasksRunHook(selectedRun);
 
-    // Get pipeline runs on load and environment change and after each run.
+    // Get pipeline runs on load and environment change
     useEffect(() => {
+        if (!environmentID) return;
         getPipelineRuns();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [environmentID, RunState.run_id.get()]);
+    }, [environmentID]);
+
+    // Get pipeline runs after each run.
+    useEffect(() => {
+        if (RunState.run_id.get() && FlowState.isRunning.get()) {
+            getPipelineRuns();
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [RunState.run_id.get()]);
 
     // Get pipeline runs on trigger.
     useEffect(() => {
@@ -162,14 +172,13 @@ export const usePipelineTasksRunHook = (selectedRun) => {
                 start_id: RunState.start_dt.get(),
                 run_id: RunState.run_id.get() || RunState.dropdownRunId.get(),
                 pipelineRunsTrigger: RunState.pipelineRunsTrigger.get(),
-                // dropdownRunId: RunState.dropdownRunId.get(),
                 dropdownRunId: selectedRun.run_id,
                 runStart: RunState.runStart.get(),
                 runEnd: RunState.runEnd.get(),
                 selectedNodeStatus: RunState.selectedNodeStatus.get(),
             };
-            if (!RunState.run_id.get()) {
-                FlowState.isRunning.set(true);
+            if (!RunState.runEnd.get()) {
+                FlowState.isRunning.set(true); //
             }
 
             response.map(
