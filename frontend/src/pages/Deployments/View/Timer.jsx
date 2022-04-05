@@ -9,9 +9,10 @@ import { useGlobalFlowState } from '../../Flow';
 import useWebSocket from './useWebSocket';
 import StatusChips from './StatusChips';
 import RunsDropdown from './RunsDropdown';
+import { Downgraded } from '@hookstate/core';
 import { useGlobalRunState } from '../../View/useWebSocket';
 
-export default function Timer({ environmentID, setElements, deployment }) {
+export default function Timer({ environmentID, deployment }) {
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
@@ -24,7 +25,6 @@ export default function Timer({ environmentID, setElements, deployment }) {
     // GraphQL hooks
     const runPipelines = useRunPipelinesHook();
     const stopPipelines = useStopPipelinesHook();
-    const getPipelineTasksRun = usePipelineTasksRunHook();
 
     // URI parameter
     const { version } = useParams();
@@ -32,18 +32,16 @@ export default function Timer({ environmentID, setElements, deployment }) {
     // Instantiate websocket connection
     useWebSocket(environmentID, RunState.run_id.get());
 
-    // Get current runs status
-    useEffect(() => {
-        if (FlowState.isRunning.get() && RunState.run_id.get() !== '') {
-            getPipelineTasksRun(RunState.run_id.get(), environmentID);
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isRunning.get(), RunState.run_id.get()]);
-
     const handleTimerStart = () => {
         FlowState.isRunning.set(true);
-        RunState.set({ pipelineRunsTrigger: 1, prevRunTime: null });
+
+        // Find key of trigger node
+        let triggerKey = Object.values(FlowState.elements.attach(Downgraded).get()).filter((a) => a.type === 'scheduleNode' || a.type === 'playNode')[0].id;
+        // Set trigger to success so becomes green as the run starts
+        let triggerObj = { [triggerKey]: { status: 'Success' } };
+
+        // Clear run state before a new run
+        RunState.set({ pipelineRunsTrigger: 1, prevRunTime: null, ...triggerObj });
         runPipelines(environmentID);
     };
 
@@ -114,7 +112,7 @@ export default function Timer({ environmentID, setElements, deployment }) {
 
                 <StatusChips />
 
-                <RunsDropdown environmentID={environmentID} setElements={setElements} deployment={deployment} />
+                <RunsDropdown environmentID={environmentID} deployment={deployment} />
 
                 {isRunning ? (
                     <Typography variant="h3" ml={2}>
