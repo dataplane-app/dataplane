@@ -316,7 +316,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         defaultLanguage={EditorGlobal.selectedFile.get()?.language}
                         path={EditorGlobal.selectedFile.get()?.name}
                         defaultValue={EditorGlobal.selectedFile.get()?.content}
-                        value={EditorGlobal.selectedFile.get()?.diffValue || EditorGlobal.selectedFile.get()?.content}
+                        value={EditorGlobal.selectedFile.get()?.diffValue ?? EditorGlobal.selectedFile.get()?.content}
                         theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}
                         height="100%"
                         saveViewState
