@@ -18,10 +18,10 @@ If you like Dataplane, give it a star ⭐
 <img width="1660" alt="image" src="https://user-images.githubusercontent.com/63714857/161389462-a65928c6-1ab7-4efa-a8d8-06598adfef1b.png">
 
 
-# About the project
+## About the project
 The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved. 
 
-# Quick start with Docker
+## Quick start with Docker
 Requires Docker engine installed - https://docs.docker.com/engine/install/<br /><br/>
 Download the quick start docker compose file
 ```shell
@@ -37,7 +37,7 @@ For first time setup, follow the get started process at: http://localhost:9001/w
 To use Dataplane, go to http://localhost:9001/webapp/<br /><br />
 
 
-# Development
+## Development
 We setup a containerised environment in VS code using docker-compose. The idea is to have a simple setup that could simulate a Containerised/Kubernetes setup for basic development in either Mac, Windows or Linux dev environment. 
 
 To run follow these steps
@@ -48,7 +48,7 @@ To run follow these steps
 5. To work outside of the container, click on the green section again and select "Reopen Folder Locally"
 
 
-# License
+## License
 
 The project published in this git repo is released under the Source Available License - Business Source License 1.1 (BSL). The license was chosen to discourage cloud providers offering this project as a data platform service. If you would like to offer Dataplane as a service, we are open to the conversation, come speak to us. For the rest of you (99.999%) who are using the software for your own personal or business needs, you can use the software freely where these restrictions will not apply. 
 
