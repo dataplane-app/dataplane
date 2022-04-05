@@ -2,7 +2,7 @@ import { faChevronDown, faChevronRight, faFile, faFolder, faPencilAlt, faTimes }
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TreeItem from '@mui/lab/TreeItem';
 import TreeView from '@mui/lab/TreeView';
-import { Autocomplete, Box, Drawer, Grid, IconButton, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Drawer, Grid, IconButton, TextField, Typography, useTheme } from '@mui/material';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useState as useHookState } from '@hookstate/core';
 import { useGlobalEditorState } from '../../../pages/Editor';
@@ -461,13 +461,16 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     //     Editor.tabs.set(newTabs);
     // };
 
+    // Theme hook
+    const theme = useTheme();
+
     // Render files and folders to UI
     const renderTree = (nodes) => {
         return (
             <CustomTreeItem
                 className={nodes.id === data.id.get() ? 'hidden' : 'tree_parent'}
                 sx={{ mt: 0.5, position: 'relative' }}
-                icon={!nodes.children && <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.tabTextColorNotActive', fontSize: 5 }} />}
+                icon={!nodes.children && <Box component={FontAwesomeIcon} icon={faFileAlt} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.chevron' }} />}
                 key={nodes.id}
                 nodeId={nodes.id}
                 ref={selected === nodes.id ? editingFileRef : null}
@@ -481,18 +484,18 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                             onKeyPress={(e) => handleEditKeyPress(e, nodes)}
                             className="treeItemInput"
                             style={{
-                                border: `${selected === nodes.id && isEditing ? '1px solid #000' : 'none'}`,
+                                border: 'none',
                                 outline: 'none',
                                 background: 'transparent',
-                                color: `${selected === nodes.id && isEditing ? '#000' : 'transparent'}`,
+                                color: theme.palette.editorPage.fileManagerText,
                                 textShadow: '0 0 0 #000',
                                 cursor: 'pointer',
                                 paddingLeft: '25px',
                                 marginLeft: '-25px',
                             }}
-                            readOnly={selected !== nodes.id && !isEditing}
+                            readOnly={!isEditing}
                         />
-                        <Box className={`showOnHover hidden_controls tree-${nodes.id}`} sx={{ pointerEvents: 'none', width: '100%', display: 'flex' }}>
+                        <Box className={`showOnHover hidden_controls tree-${nodes.id}`} sx={{ pointerEvents: 'none', width: '100%', display: 'flex', mt: '-1px' }}>
                             <IconButton
                                 aria-label="Edit File"
                                 sx={{ ml: 'auto', pointerEvents: 'all' }}
@@ -500,20 +503,20 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                                     setSelected(nodes.id);
                                     handleEdit(nodes.id);
                                 }}>
-                                <Box component={FontAwesomeIcon} icon={faPencilAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
+                                <Box component={FontAwesomeIcon} icon={faPencilAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
                             </IconButton>
                             {nodes.fType !== 'file' ? (
                                 <IconButton sx={{ pointerEvents: 'all' }} aria-label="New File" onClick={() => handleNewFileIconClick(nodes.id)}>
-                                    <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
+                                    <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
                                 </IconButton>
                             ) : null}
                             {nodes.fType !== 'file' ? (
                                 <IconButton sx={{ pointerEvents: 'all' }} aria-label="New Folder" onClick={() => handleNewFolderIconClick(nodes.id)}>
-                                    <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
+                                    <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
                                 </IconButton>
                             ) : null}
                             <IconButton sx={{ pointerEvents: 'all' }} aria-label="Remove folder" onClick={handleDeleteIconClick}>
-                                <Box component={FontAwesomeIcon} icon={faTimes} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 9 }} />
+                                <Box component={FontAwesomeIcon} icon={faTimes} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
                             </IconButton>
                         </Box>
                     </>
@@ -528,7 +531,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                     <input
                         onKeyPress={whatTypeIsCreating === 'file' ? handleNewFileDone : handleNewFolderDone}
                         ref={newFileRef}
-                        style={{ width: '90%', marginLeft: 10 }}
+                        style={{ width: '90%', marginLeft: 10, background: 'transparent', border: 'none', color: theme.palette.editorPage.fileManagerText }}
                         type="text"
                         value={whatTypeIsCreating === 'file' ? newFileName : newFolderName}
                         onChange={(e) => (whatTypeIsCreating === 'file' ? setNewFileName(e.target.value) : setNewFolderName(e.target.value))}
@@ -576,7 +579,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                     onChange={(event, newValue) => {
                         setWorkerGroup(newValue);
                     }}
-                    sx={{ '& fieldset': { borderRadius: 0 } }}
+                    sx={{ '& fieldset': { borderRadius: 0, borderColor: 'editorPage.borderColor' }, '& .MuiAutocomplete-popupIndicator': { color: 'editorPage.fileManagerIcon' } }}
                     renderInput={(params) => <TextField {...params} label="Worker" required size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />
             </Box>
@@ -584,7 +587,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             <Box
                 sx={{
                     backgroundColor: 'background.main',
-                    border: '1px solid  #D3D3D3',
+                    border: 1,
+                    borderColor: 'editorPage.borderColor',
                     position: 'absolute',
                     mt: 1,
                     top: 40,
@@ -608,8 +612,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 </Grid>
 
                 <TreeView
-                    defaultCollapseIcon={<Box component={FontAwesomeIcon} icon={faChevronDown} sx={{ color: 'editorPage.tabTextColorNotActive', fontSize: 5 }} />}
-                    defaultExpandIcon={<Box component={FontAwesomeIcon} icon={faChevronRight} sx={{ color: 'editorPage.tabTextColorNotActive', fontSize: 5 }} />}
+                    defaultCollapseIcon={<Box component={FontAwesomeIcon} icon={faChevronDown} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.chevron' }} />}
+                    defaultExpandIcon={<Box component={FontAwesomeIcon} icon={faChevronRight} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.chevron' }} />}
                     aria-label=""
                     expanded={expanded}
                     selected={selected}

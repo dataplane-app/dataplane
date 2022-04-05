@@ -1,6 +1,6 @@
 import { Box, Button, Grid, IconButton, Typography, useTheme } from '@mui/material';
 import { forwardRef, useEffect, useRef } from 'react';
-import Editor from '@monaco-editor/react';
+import Editor, { useMonaco } from '@monaco-editor/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useGlobalEditorState } from '../../../pages/Editor';
@@ -194,12 +194,30 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         }
     }, [runState]);
 
+    // Editor configs
+    const monaco = useMonaco();
+    useEffect(() => {
+        if (monaco) {
+            monaco.editor.defineTheme('dp-dark', {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [],
+                colors: {
+                    'editor.background': '#0e1928',
+                    'editorLineNumber.foreground': '#3C7790',
+                    'editorLineNumber.activeForeground': '#0E236B',
+                },
+            });
+        }
+    }, [monaco]);
+
     return (
         <div {...rest}>
             <Box
                 sx={{
                     backgroundColor: 'background.main',
-                    border: '1px solid  #D3D3D3',
+                    border: 1,
+                    borderColor: 'editorPage.borderColor',
                     ml: 0.8,
                     position: 'absolute',
                     top: 0,
@@ -214,7 +232,12 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         onChange={(ev, newValue) => setTabValue(newValue)}
                         variant="scrollable"
                         scrollButtons={false}
-                        sx={{ '& .MuiTabs-scroller': { height: '40px' }, minHeight: '40px', '& .MuiTabs-indicator': { height: '4px' } }}>
+                        sx={{
+                            '& .MuiTabs-scroller': { height: '40px' },
+                            minHeight: '40px',
+                            '& .MuiTabs-indicator': { height: '4px' },
+                            '& .Mui-selected': { color: (theme) => `${theme.palette.editorPage.tabTextColor} !important` },
+                        }}>
                         {EditorGlobal.tabs
                             .attach(Downgraded)
                             .get()
@@ -227,18 +250,16 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                         label={tabs?.name}
                                         value={idx}
                                         icon={
-                                            <IconButton aria-label="close" onClick={(e) => handleTabClose(tabs, e)} style={{ marginLeft: 0, paddingLeft: 4 }}>
+                                            <IconButton aria-label="close" onClick={(e) => handleTabClose(tabs, e)} style={{ marginLeft: 0, paddingLeft: 12 }}>
                                                 {tabs.isEditing && <Box sx={{ width: 8, height: 8, marginRight: 1, backgroundColor: 'secondary.main', borderRadius: '50%' }} />}
-                                                <Box component={FontAwesomeIcon} icon={faTimes} sx={{ fontSize: 13 }} />
+                                                <Box component={FontAwesomeIcon} icon={faTimes} sx={{ fontSize: 13 }} color="editorPage.fileManagerIcon" />
                                             </IconButton>
                                         }
                                         iconPosition="end"
                                         sx={{
-                                            borderRight: '1px solid #B9B9B9',
-                                            color: (theme) =>
-                                                EditorGlobal.selectedFile.get()?.id === tabs.id
-                                                    ? theme.palette.editorPage.tabTextColor
-                                                    : theme.palette.editorPage.tabTextColorNotActive,
+                                            borderRight: 1,
+                                            borderColor: 'editorPage.borderColor',
+                                            color: 'editorPage.tabTextColorNotActive',
                                             cursor: 'pointer',
                                             display: 'flex',
                                             alignItems: 'center',
@@ -259,26 +280,32 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         container
                         alignItems="center"
                         justifyContent="space-between"
-                        sx={{ p: '0px 15px', borderTop: '1px solid #B9B9B9', borderBottom: '1px solid #B9B9B9', mb: 2 }}>
+                        sx={{ pl: '15px', borderTop: 1, borderBottom: 1, borderColor: 'editorPage.borderColor', mb: 2 }}>
                         <Typography fontSize={'0.75rem'}>
                             {EditorGlobal.currentPath.get().map((folderName) => folderName + ' > ')}
                             {EditorGlobal.selectedFile.name.value}
                         </Typography>
 
                         <Box>
-                            <Button onClick={uploadFileNode} variant="text" color="primary" sx={{ height: '32px' }}>
-                                Save
-                            </Button>
-
                             {isRunning ? (
-                                <Button onClick={codeEditorStop} variant="text" color="error" sx={{ height: '32px' }}>
+                                <Button onClick={codeEditorStop} variant="text" color="error" sx={{ height: '32px', fontSize: '0.75rem', minWidth: '60px' }}>
                                     Stop
                                 </Button>
                             ) : (
-                                <Button onClick={codeEditorRun} variant="text" color="primary" sx={{ height: '32px' }}>
+                                <Button
+                                    onClick={codeEditorRun}
+                                    variant="text"
+                                    sx={{ height: '32px', color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null, fontSize: '0.75rem', minWidth: '60px' }}>
                                     Run
                                 </Button>
                             )}
+
+                            <Button
+                                onClick={uploadFileNode}
+                                variant="text"
+                                sx={{ height: '32px', color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null, fontSize: '0.75rem', minWidth: '60px' }}>
+                                Save
+                            </Button>
                         </Box>
                     </Grid>
                 ) : null}
@@ -290,7 +317,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         path={EditorGlobal.selectedFile.get()?.name}
                         defaultValue={EditorGlobal.selectedFile.get()?.content}
                         value={EditorGlobal.selectedFile.get()?.diffValue || EditorGlobal.selectedFile.get()?.content}
-                        theme={theme.palette.mode === 'dark' ? 'vs-dark' : 'customTheme'}
+                        theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}
                         height="100%"
                         saveViewState
                         onChange={handleEditorChange}
