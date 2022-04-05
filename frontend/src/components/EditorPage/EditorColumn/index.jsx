@@ -93,12 +93,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         e.stopPropagation();
         const tabs = EditorGlobal.tabs.attach(Downgraded).get();
 
-        // Check to see if it's unsaved
-        if (tab?.isEditing) {
-            alert('Still editing');
-            return;
-        }
-
         const newTabs = tabs.filter((prevtab) => prevtab?.id !== tab?.id);
 
         if (newTabs.length === 0) {
