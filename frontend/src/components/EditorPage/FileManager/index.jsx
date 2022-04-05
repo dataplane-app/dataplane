@@ -467,7 +467,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             <CustomTreeItem
                 className={nodes.id === data.id.get() ? 'hidden' : 'tree_parent'}
                 sx={{ mt: 0.5, position: 'relative' }}
-                icon={!nodes.children && <Box component={FontAwesomeIcon} icon={faFileAlt} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.chevron' }} />}
+                icon={!nodes.children && <Box component={FontAwesomeIcon} icon={faFileAlt} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.fileManagerIcon' }} />}
                 key={nodes.id}
                 nodeId={nodes.id}
                 ref={selected === nodes.id ? editingFileRef : null}
@@ -609,8 +609,8 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 </Grid>
 
                 <TreeView
-                    defaultCollapseIcon={<Box component={FontAwesomeIcon} icon={faChevronDown} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.chevron' }} />}
-                    defaultExpandIcon={<Box component={FontAwesomeIcon} icon={faChevronRight} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.chevron' }} />}
+                    defaultCollapseIcon={<Box component={FontAwesomeIcon} icon={faChevronDown} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.fileManagerIcon' }} />}
+                    defaultExpandIcon={<Box component={FontAwesomeIcon} icon={faChevronRight} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.fileManagerIcon' }} />}
                     aria-label=""
                     expanded={expanded}
                     selected={selected}
