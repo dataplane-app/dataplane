@@ -1,7 +1,6 @@
 ![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests)
 
 If you like Dataplane, give it a star ⭐
-Docker releases: https://hub.docker.com/u/dataplane
 
 ### Dataplane (Beta)
 ⚡️ Extreme performance with a low resource footprint<br />
@@ -35,6 +34,7 @@ docker-compose up
 For first time setup, follow the get started process at: http://localhost:9001/webapp/get-started
 <br />
 To use Dataplane, go to http://localhost:9001/webapp/<br /><br />
+Docker releases: https://hub.docker.com/u/dataplane
 
 
 ### Develop Dataplane code
