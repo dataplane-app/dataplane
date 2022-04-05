@@ -2,7 +2,7 @@
 
 If you like Dataplane, give it a star ⭐
 
-## Dataplane (Beta)
+### Dataplane (Beta)
 ⚡️ Extreme performance with a low resource footprint<br />
 🖐 Drag drop workflow builder<br />
 🧑‍💻 Built in Python code editor<br />
@@ -18,10 +18,10 @@ If you like Dataplane, give it a star ⭐
 <img width="1660" alt="image" src="https://user-images.githubusercontent.com/63714857/161389462-a65928c6-1ab7-4efa-a8d8-06598adfef1b.png">
 
 
-## About the project
+### About the project
 The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved. 
 
-## Quick start with Docker
+### Quick start with Docker
 Requires Docker engine installed - https://docs.docker.com/engine/install/<br /><br/>
 Download the quick start docker compose file
 ```shell
@@ -31,16 +31,15 @@ Run docker compose
 ```shell
 docker-compose up
 ```
-<br />
 For first time setup, follow the get started process at: http://localhost:9001/webapp/get-started
-<br /><br />
+<br />
 To use Dataplane, go to http://localhost:9001/webapp/<br /><br />
 
 
-## Development
-We setup a containerised environment in VS code using docker-compose. The idea is to have a simple setup that could simulate a Containerised/Kubernetes setup for basic development in either Mac, Windows or Linux dev environment. 
+### Develop Dataplane code
+There is a containerised development environment setup for VS code.
 
-To run follow these steps
+To get started with a development setup follow these steps
 1. Install Remote Development in VS Code - extension id: ms-vscode-remote.vscode-remote-extensionpack
 2. Click on the green section with two chevrons bottom left corner of VS code "Open a remote window"
 3. Ensure Docker is running
