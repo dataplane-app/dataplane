@@ -1,6 +1,7 @@
 ![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests)
 
 If you like Dataplane, give it a star ⭐
+Docker releases: https://hub.docker.com/u/dataplane
 
 ### Dataplane (Beta)
 ⚡️ Extreme performance with a low resource footprint<br />
