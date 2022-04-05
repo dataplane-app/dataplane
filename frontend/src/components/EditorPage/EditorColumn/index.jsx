@@ -356,7 +356,7 @@ export const useUploadFileNodeHook = (pipeline) => {
 
     // Upload file
     return async () => {
-        if (!EditorGlobal.selectedFile.diffValue.value) return;
+        if (EditorGlobal.selectedFile.diffValue.value === undefined) return;
 
         const file = new File([EditorGlobal.selectedFile.diffValue.value], EditorGlobal.selectedFile.name.value, {
             type: 'text/plain',
