@@ -76,3 +76,5 @@ If main is affected both remote and local do the following
     - The pipeline is formed correctly
     - Steps found in pipeline are also in steps
     - The graph is acyclical
+
+

@@ -16,32 +16,30 @@ RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane-worker workers/worke
 
 FROM python:alpine3.15
 
-RUN apk update && apk add --no-cache git ca-certificates tzdata && update-ca-certificates
+RUN apk update && apk add --no-cache tzdata
+RUN rm -rf /var/cache/apk/*
 
 # Create appuser
 ENV USER=appuser
 ENV UID=10001
-ARG GITHUB_USER
-ARG GITHUB_TOKEN
 
 RUN adduser \
     --disabled-password \
     --gecos "" \
-    --home "/workerdev" \
+    --home "/dataplane" \
     --shell "/sbin/nologin" \
 #    --no-create-home \
     --uid "${UID}" \
     "${USER}"
 
 
-COPY --from=builder go/src/build/dataplane-worker /workerdev/dataplane-worker
-WORKDIR /workerdev
+COPY --from=builder go/src/build/dataplane-worker /dataplane/dataplane-worker
 
-# COPY ../workers/go.mod /workerdev/go.mod
-# RUN go mod download
+RUN mkdir /dataplane/code-files/ && chown -R appuser:appuser /dataplane
+RUN chmod +w /dataplane/code-files/
 
-# Use an unprivileged user.
-ENV GOTRACEBACK=single
+WORKDIR /dataplane
+
 USER appuser:appuser
 
-CMD ["dataplane-worker"]
+CMD ["./dataplane-worker"]

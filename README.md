@@ -21,9 +21,21 @@ If you like Dataplane, give it a star ⭐
 # About the project
 The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved. 
 
-# Quick start
-Once running, visit the dashboard at http://localhost:9000/webapp/<br /><br />
-First time setup: http://localhost:9000/webapp/get-started
+# Quick start with Docker
+Requires Docker engine installed - https://docs.docker.com/engine/install/<br /><br/>
+Download the quick start docker compose file
+```shell
+curl -LfO 'https://raw.githubusercontent.com/dataplane-app/dataplane/main/quick-start/docker-compose.yaml'
+```
+Run docker compose
+```shell
+docker-compose up
+```
+<br />
+For first time setup, follow the get started process at: http://localhost:9001/webapp/get-started
+<br /><br />
+To use Dataplane, go to http://localhost:9001/webapp/<br /><br />
+
 
 # Development
 We setup a containerised environment in VS code using docker-compose. The idea is to have a simple setup that could simulate a Containerised/Kubernetes setup for basic development in either Mac, Windows or Linux dev environment. 
