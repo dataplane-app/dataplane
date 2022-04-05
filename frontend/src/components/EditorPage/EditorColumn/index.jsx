@@ -253,7 +253,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                         icon={
                                             <IconButton
                                                 aria-label="close"
-                                                id="hello"
                                                 disableRipple
                                                 disableFocusRipple
                                                 onClick={(e) => handleTabClose(tabs, e)}
