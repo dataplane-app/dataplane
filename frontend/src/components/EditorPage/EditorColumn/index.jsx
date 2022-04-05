@@ -227,8 +227,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         variant="scrollable"
                         scrollButtons={false}
                         sx={{
-                            '& .MuiTabs-scroller': { height: '40px' },
-                            minHeight: '40px',
+                            '& .MuiTabs-scroller': { height: '32px' },
+                            minHeight: '32px',
                             '& .MuiTabs-indicator': { height: '4px' },
                             '& .Mui-selected': { color: (theme) => `${theme.palette.editorPage.tabTextColor} !important` },
                         }}>
@@ -265,7 +265,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                             alignItems: 'center',
                                             justifyContent: 'space-between',
                                             minHeight: 'auto',
-                                            height: '40px',
+                                            height: '32px',
                                             pr: '4px',
                                             fontSize: '0.75rem',
                                         }}
