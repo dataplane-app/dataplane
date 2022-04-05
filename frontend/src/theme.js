@@ -51,6 +51,10 @@ const createCustomTheme = (mode) => ({
                       tabTextColor: '#000',
                       tabTextColorNotActive: '#616161',
                       fileManagerIcon: '#8C8C8C',
+                      chevron: '#616161',
+                      fileManagerText: '#000',
+                      logBackground: '#222',
+                      borderColor: '#B9B9B9',
                   },
                   status: {
                       pipelineOnline: '#72B842',
@@ -101,9 +105,13 @@ const createCustomTheme = (mode) => ({
                       tabTextColor: '#fff',
                   },
                   editorPage: {
-                      tabTextColor: '#000',
-                      tabTextColorNotActive: '#616161',
-                      fileManagerIcon: '#8C8C8C',
+                      tabTextColor: '#fff',
+                      tabTextColorNotActive: 'rgba(255, 255, 255, 0.6)',
+                      fileManagerIcon: '#65BEFF',
+                      chevron: '#65BEFF',
+                      fileManagerText: '#fff',
+                      logBackground: '#0E1928',
+                      borderColor: '#264369',
                   },
                   status: {
                       pipelineOnline: '#72B842',
