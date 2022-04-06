@@ -120,14 +120,13 @@ export const useGetDeploymentRunsHook = (environmentID, setRuns) => {
     const getPipelineRuns = useGetDeploymentRuns();
 
     // URI parameter
-    const { deploymentId } = useParams();
-    const pipelineID = deploymentId;
+    const { deploymentId, version } = useParams();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get members
     return async () => {
-        const response = await getPipelineRuns({ pipelineID, environmentID });
+        const response = await getPipelineRuns({ deploymentID: deploymentId, environmentID, version });
 
         if (response.length === 0) {
             setRuns([]);
