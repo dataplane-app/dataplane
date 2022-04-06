@@ -179,7 +179,6 @@ type ComplexityRoot struct {
 		AddSecretToWorkerGroup           func(childComplexity int, environmentID string, workerGroup string, secret string) int
 		AddUpdatePipelineFlow            func(childComplexity int, input *PipelineFlowInput, environmentID string, pipelineID string) int
 		AddUserToEnvironment             func(childComplexity int, userID string, environmentID string) int
-		CodeEditorRun                    func(childComplexity int, environmentID string, nodeID string, pipelineID string, path string) int
 		CreateAccessGroup                func(childComplexity int, environmentID string, name string, description *string) int
 		CreateFolderNode                 func(childComplexity int, input *FolderNodeInput) int
 		CreateSecret                     func(childComplexity int, input *AddSecretsInput) int
@@ -498,7 +497,6 @@ type MutationResolver interface {
 	DeleteFileNode(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string) (string, error)
 	RenameFile(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string, newName string) (string, error)
 	MoveFileNode(ctx context.Context, fileID string, toFolderID string, environmentID string, pipelineID string) (string, error)
-	CodeEditorRun(ctx context.Context, environmentID string, nodeID string, pipelineID string, path string) (string, error)
 	RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string) (*CERun, error)
 	StopCERun(ctx context.Context, pipelineID string, runID string, environmentID string) (string, error)
 	AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*WorkerGroupsNodes) (string, error)
@@ -1276,18 +1274,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddUserToEnvironment(childComplexity, args["user_id"].(string), args["environment_id"].(string)), true
-
-	case "Mutation.codeEditorRun":
-		if e.complexity.Mutation.CodeEditorRun == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_codeEditorRun_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CodeEditorRun(childComplexity, args["environmentID"].(string), args["nodeID"].(string), args["pipelineID"].(string), args["path"].(string)), true
 
 	case "Mutation.createAccessGroup":
 		if e.complexity.Mutation.CreateAccessGroup == nil {
@@ -3704,12 +3690,6 @@ extend type Mutation {
 	"""
   moveFileNode(fileID: String! toFolderID: String!, environmentID: String!, pipelineID: String!): String!
 
-  """
-	Run script.
-	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
-	"""
-  codeEditorRun(environmentID: String!, nodeID: String!, pipelineID: String!, path:String!): String!
 }
 `, BuiltIn: false},
 	{Name: "resolvers/code_editor_run.graphqls", Input: `
@@ -4173,7 +4153,7 @@ extend type Mutation {
   updatePipeline(pipelineID: String!, name: String!, environmentID: String!, description: String!, workerGroup: String! ): String!
 
   """
-  Update pipeline.
+  Duplicate pipeline.
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines
   """
@@ -4822,48 +4802,6 @@ func (ec *executionContext) field_Mutation_addUserToEnvironment_args(ctx context
 		}
 	}
 	args["environment_id"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_codeEditorRun_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["environmentID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["environmentID"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["nodeID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeID"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["nodeID"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["pipelineID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
-		arg2, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["pipelineID"] = arg2
-	var arg3 string
-	if tmp, ok := rawArgs["path"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("path"))
-		arg3, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["path"] = arg3
 	return args, nil
 }
 
@@ -11005,48 +10943,6 @@ func (ec *executionContext) _Mutation_moveFileNode(ctx context.Context, field gr
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().MoveFileNode(rctx, args["fileID"].(string), args["toFolderID"].(string), args["environmentID"].(string), args["pipelineID"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_codeEditorRun(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_codeEditorRun_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CodeEditorRun(rctx, args["environmentID"].(string), args["nodeID"].(string), args["pipelineID"].(string), args["path"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -22443,16 +22339,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "moveFileNode":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_moveFileNode(ctx, field)
-			}
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "codeEditorRun":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_codeEditorRun(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
