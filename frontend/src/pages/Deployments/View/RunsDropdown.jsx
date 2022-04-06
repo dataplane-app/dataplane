@@ -1,6 +1,6 @@
 import { Autocomplete, Grid, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { useGetPipelineRuns } from '../../../graphql/getPipelineRuns';
+import { useGetDeploymentRuns } from '../../../graphql/getDeploymentRuns';
 import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../../graphql/getPipelineTasksRun';
@@ -18,7 +18,7 @@ export default function RunsDropdown({ environmentID, deployment }) {
     const [isNewFlow, setIsNewFlow] = useState(true);
 
     // GraphQL hooks
-    const getPipelineRuns = useGetPipelineRunsHook(environmentID, setRuns);
+    const getPipelineRuns = useGetDeploymentRunsHook(environmentID, setRuns);
     const getPipelineTasksRun = usePipelineTasksRunHook(selectedRun);
 
     // Get pipeline runs on load and environment change
@@ -115,9 +115,9 @@ export default function RunsDropdown({ environmentID, deployment }) {
 }
 
 // ------ Custom hook
-export const useGetPipelineRunsHook = (environmentID, setRuns) => {
+export const useGetDeploymentRunsHook = (environmentID, setRuns) => {
     // GraphQL hook
-    const getPipelineRuns = useGetPipelineRuns();
+    const getPipelineRuns = useGetDeploymentRuns();
 
     // URI parameter
     const { deploymentId } = useParams();
