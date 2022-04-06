@@ -422,14 +422,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
         // Check if has extension
         if (folderName.includes('.')) {
-            enqueueSnackbar(`Cannot add folder name, "." are not allowed for folder`, { variant: 'error' });
-            return;
-        }
-
-        // Check if has spaces
-        if (/\s/.test(folderName)) {
-            enqueueSnackbar(`Cannot create a file called: ${folderName}`, { variant: 'error' });
-            setIsAddingNew(false);
+            enqueueSnackbar(`Cannot add folder name, "." are not allowed for folders`, { variant: 'error' });
             return;
         }
 
