@@ -2,7 +2,7 @@ import { faChevronDown, faChevronRight, faFile, faFolder, faPencilAlt, faTimes }
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import TreeItem from '@mui/lab/TreeItem';
 import TreeView from '@mui/lab/TreeView';
-import { Autocomplete, Box, Drawer, Grid, IconButton, TextField, Typography, useTheme } from '@mui/material';
+import { Autocomplete, Box, Drawer, Grid, IconButton, TextField, Tooltip, Typography, useTheme } from '@mui/material';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useState as useHookState } from '@hookstate/core';
 import { useGlobalEditorState } from '../../../pages/Editor';
@@ -467,7 +467,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         return (
             <CustomTreeItem
                 className={nodes.id === data.id.get() ? 'hidden' : 'tree_parent'}
-                sx={{ mt: 0.5, position: 'relative' }}
+                sx={{ mt: 0.5, position: 'relative', '& .MuiTreeItem-content:hover .showOnHover': { visibility: 'visible' } }}
                 icon={!nodes.children && <Box component={FontAwesomeIcon} icon={faFileAlt} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.fileManagerIcon' }} />}
                 key={nodes.id}
                 nodeId={nodes.id}
@@ -494,28 +494,36 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                             readOnly={!isEditing}
                         />
                         <Box className={`showOnHover hidden_controls tree-${nodes.id}`} sx={{ pointerEvents: 'none', width: '100%', display: 'flex', mt: '-1px' }}>
-                            <IconButton
-                                aria-label="Edit File"
-                                sx={{ ml: 'auto', pointerEvents: 'all' }}
-                                onClick={() => {
-                                    setSelected(nodes.id);
-                                    handleEdit(nodes.id);
-                                }}>
-                                <Box component={FontAwesomeIcon} icon={faPencilAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
-                            </IconButton>
-                            {nodes.fType !== 'file' ? (
-                                <IconButton sx={{ pointerEvents: 'all' }} aria-label="New File" onClick={() => handleNewFileIconClick(nodes.id)}>
-                                    <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
+                            <Tooltip title="Edit" placement="top">
+                                <IconButton
+                                    aria-label="Edit File"
+                                    sx={{ ml: 'auto', pointerEvents: 'all' }}
+                                    onClick={() => {
+                                        setSelected(nodes.id);
+                                        handleEdit(nodes.id);
+                                    }}>
+                                    <Box component={FontAwesomeIcon} icon={faPencilAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
                                 </IconButton>
+                            </Tooltip>
+                            {nodes.fType !== 'file' ? (
+                                <Tooltip title="New file" placement="top">
+                                    <IconButton sx={{ pointerEvents: 'all' }} aria-label="New File" onClick={() => handleNewFileIconClick(nodes.id)}>
+                                        <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
+                                    </IconButton>
+                                </Tooltip>
                             ) : null}
                             {nodes.fType !== 'file' ? (
-                                <IconButton sx={{ pointerEvents: 'all' }} aria-label="New Folder" onClick={() => handleNewFolderIconClick(nodes.id)}>
-                                    <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
-                                </IconButton>
+                                <Tooltip title="New folder" placement="top">
+                                    <IconButton sx={{ pointerEvents: 'all' }} aria-label="New Folder" onClick={() => handleNewFolderIconClick(nodes.id)}>
+                                        <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
+                                    </IconButton>
+                                </Tooltip>
                             ) : null}
-                            <IconButton sx={{ pointerEvents: 'all' }} aria-label="Remove folder" onClick={handleDeleteIconClick}>
-                                <Box component={FontAwesomeIcon} icon={faTimes} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
-                            </IconButton>
+                            <Tooltip title="Delete" placement="top">
+                                <IconButton sx={{ pointerEvents: 'all' }} aria-label="Remove folder" onClick={handleDeleteIconClick}>
+                                    <Box component={FontAwesomeIcon} icon={faTimes} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
+                                </IconButton>
+                            </Tooltip>
                         </Box>
                     </>
                 }
