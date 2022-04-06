@@ -216,6 +216,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         window.setTimeout(() => {
             if (newFileRef) {
                 newFileRef?.current?.focus();
+                setNewFolderName('new folder');
             }
         }, 100);
 
