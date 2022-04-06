@@ -9,9 +9,7 @@ const ProcessTypeNodeItem = (props) => {
     const { deploymentId, pipelineId } = useParams();
 
     const handleCodeClick = () => {
-        history.push(
-            `/editor/_?_&pipelineID=${deploymentId?.replace('d-', '') || pipelineId}&nodeID=${props.nodeId}&nodeName=${props.nodeName}&NodeTypeDesc=${props.NodeTypeDesc}`
-        );
+        history.push(`/editor/${deploymentId?.replace('d-', '') || pipelineId}/${props.nodeId}`);
         props.handleCloseMenu();
     };
 

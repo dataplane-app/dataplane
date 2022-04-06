@@ -8,12 +8,13 @@ import Navbar from '../components/Navbar';
 import { lgLayout, mdLayout, smLayout, xsLayout, xxsLayout } from '../utils/editorLayouts';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import { Downgraded } from '@hookstate/core';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { useSnackbar } from 'notistack';
 import { useGetPipeline } from '../graphql/getPipeline';
+import { useGetNode } from '../graphql/getNode';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -38,14 +39,6 @@ const PipelineEditor = () => {
     // Hooks
     const history = useHistory();
     const EditorGlobal = useGlobalEditorState();
-    const state = useLocation();
-
-    const search = state.search === '' ? state.pathname : state.search;
-    const searchParams = new URLSearchParams(search);
-    const nodeName = searchParams.get('nodeName');
-    const nodeID = searchParams.get('nodeID');
-    const pipelineID = searchParams.get('pipelineID');
-    const NodeTypeDesc = searchParams.get('NodeTypeDesc');
 
     const [pipeline, setPipeline] = useState({});
 
@@ -68,27 +61,13 @@ const PipelineEditor = () => {
     useEffect(() => {
         if (!Environment.id.get()) return;
         window.addEventListener('beforeunload', handleUnload);
-        setPipeline((p) => ({ nodeName, nodeID, pipelineID, NodeTypeDesc }));
 
-        getPipeline(pipelineID);
+        getPipeline();
 
         return () => window.removeEventListener('beforeunload', handleUnload);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
-
-    const handleSave = () => {
-        // Save code here
-        const tabs = EditorGlobal.tabs.attach(Downgraded).get();
-
-        if (tabs && tabs.length > 0) {
-            tabs.map((tab) => {
-                tab.content = tab.diffValue;
-                tab.isEditing = false;
-                return true;
-            });
-        }
-    };
 
     const handleClose = () => {
         EditorGlobal.set({
@@ -120,9 +99,6 @@ const PipelineEditor = () => {
                     Code {'>'} {pipeline?.name} {'>'} {pipeline?.nodeName}
                 </Typography>
                 <Grid item sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
-                    {/* <Button variant="contained" onClick={handleSave}>
-                        Save
-                    </Button> */}
                     <Button variant="outlined" sx={{ ml: 2, backgroundColor: 'background.main' }} onClick={handleClose}>
                         Close
                     </Button>
@@ -146,7 +122,7 @@ const PipelineEditor = () => {
                             <FileManagerColumn key="1" pipeline={pipeline} />
                             {/* <PackageColumn key="2" /> */}
                             <EditorColumn key="3" ref={editorRef} pipeline={pipeline} />
-                            <LogsColumn key="4" environmentID={Environment.id.get()} pipelineID={pipelineID} />
+                            <LogsColumn key="4" environmentID={Environment.id.get()} pipelineID={pipeline.pipelineID} />
                         </ResponsiveGridLayout>
                     </Box>
                 </Box>
@@ -159,22 +135,35 @@ export default PipelineEditor;
 
 // ------ Custom hooks
 const useGetPipelineHook = (environmentID, setPipeline) => {
-    // GraphQL hook
+    // GraphQL hooks
     const getPipeline = useGetPipeline();
+    const getNode = useGetNode();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Get members
-    return async (pipelineID) => {
-        const response = await getPipeline({ pipelineID, environmentID });
+    const { pipelineId, nodeId } = useParams();
 
-        if (response.r || response.error) {
+    return async () => {
+        // Get Node
+        const responseNode = await getNode({ pipelineID: pipelineId, environmentID, nodeID: nodeId });
+
+        if (responseNode.r || responseNode.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't get pipeline: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            enqueueSnackbar("Can't get node: " + (responseNode.msg || responseNode.r || responseNode.error), { variant: 'error' });
+        } else if (responseNode.errors) {
+            responseNode.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        }
+
+        // Get pipeline
+        const responsePipeline = await getPipeline({ pipelineID: pipelineId, environmentID });
+
+        if (responsePipeline.r || responsePipeline.error) {
+            closeSnackbar();
+            enqueueSnackbar("Can't get pipeline: " + (responsePipeline.msg || responsePipeline.r || responsePipeline.error), { variant: 'error' });
+        } else if (responsePipeline.errors) {
+            responsePipeline.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setPipeline((p) => ({ ...p, ...response }));
+            setPipeline({ ...responsePipeline, ...responseNode });
         }
     };
 };

@@ -24,6 +24,7 @@ go test -p 1 -v -count=1 -run TestPipelines dataplane/mainapp/Tests/pipelines
 * Add pipeline flow
 * Update pipeline flow
 * Get pipeline flow
+* Get node
 * Delete pipeline flow
 * Turn off pipeline
 * Delete pipeline
@@ -387,6 +388,36 @@ func TestPipelines(t *testing.T) {
 	}
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get pipeline flow 200 status code")
+
+	// -------- Get node -------------
+	query = `query {
+		getNode(
+			environmentID: "` + envID + `",
+			pipelineID: "test_` + pipelineId + `",
+			nodeID: "nodeID",
+			){
+				nodeID
+				pipelineID
+				name
+				environmentID
+				nodeType
+				nodeTypeDesc
+				workerGroup
+				description
+				active
+				meta
+			}
+		}`
+
+	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
+
+	log.Println(string(response))
+
+	if strings.Contains(string(response), `"errors":`) {
+		t.Errorf("Error in graphql response")
+	}
+
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get node 200 status code")
 
 	// -------- Delete pipeline flow -------------
 	mutation = `mutation {
