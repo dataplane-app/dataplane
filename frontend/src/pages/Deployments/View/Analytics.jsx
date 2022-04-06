@@ -11,7 +11,7 @@ import { useGlobalRunState } from '../../View/useWebSocket';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, TimeScale, TimeSeriesScale);
 
-export function Analytics({ setIsOpenAnalytics }) {
+export function Analytics({ setIsOpenAnalytics, active_deploy }) {
     // Global states
     const RunState = useGlobalRunState();
 
@@ -144,7 +144,9 @@ export function Analytics({ setIsOpenAnalytics }) {
                     <Bar options={options} data={data} />
                 ) : null}
             </div>
-            <Button onClick={() => setIsOpenAnalytics(false)}>Close</Button>
+            <Button onClick={() => setIsOpenAnalytics(false)} variant="outlined" sx={{ position: 'absolute', top: '17px', left: active_deploy ? '1089px' : '995px' }}>
+                Close
+            </Button>
         </Box>
     );
 }
