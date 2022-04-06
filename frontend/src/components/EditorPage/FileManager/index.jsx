@@ -608,12 +608,17 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                         Files
                     </Typography>
                     <Grid item display="flex" alignItems="center">
-                        <IconButton aria-label="New File" onClick={() => handleNewFileIconClick(data.id.get())}>
-                            <Box component={FontAwesomeIcon} icon={faFile} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
-                        </IconButton>
-                        <IconButton aria-label="New Folder" onClick={() => handleNewFolderIconClick(data.id.get())}>
-                            <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
-                        </IconButton>
+                        <Tooltip title="New file" placement="top">
+                            <IconButton aria-label="New File" onClick={() => handleNewFileIconClick(data.id.get())}>
+                                <Box component={FontAwesomeIcon} icon={faFile} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
+                            </IconButton>
+                        </Tooltip>
+
+                        <Tooltip title="New folder" placement="top">
+                            <IconButton aria-label="New Folder" onClick={() => handleNewFolderIconClick(data.id.get())}>
+                                <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
+                            </IconButton>
+                        </Tooltip>
                     </Grid>
                 </Grid>
 
