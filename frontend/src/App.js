@@ -118,7 +118,7 @@ function App() {
                                         <LogoutUser />
                                     </PrivateRoute>
 
-                                    <PrivateRoute exact path="/editor/:pipelineId">
+                                    <PrivateRoute exact path="/editor/:pipelineId/:nodeId">
                                         <PipelineEditor />
                                     </PrivateRoute>
 

@@ -93,12 +93,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         e.stopPropagation();
         const tabs = EditorGlobal.tabs.attach(Downgraded).get();
 
-        // Check to see if it's unsaved
-        if (tab?.isEditing) {
-            alert('Still editing');
-            return;
-        }
-
         const newTabs = tabs.filter((prevtab) => prevtab?.id !== tab?.id);
 
         if (newTabs.length === 0) {
@@ -233,8 +227,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         variant="scrollable"
                         scrollButtons={false}
                         sx={{
-                            '& .MuiTabs-scroller': { height: '40px' },
-                            minHeight: '40px',
+                            '& .MuiTabs-scroller': { height: '32px' },
+                            minHeight: '32px',
                             '& .MuiTabs-indicator': { height: '4px' },
                             '& .Mui-selected': { color: (theme) => `${theme.palette.editorPage.tabTextColor} !important` },
                         }}>
@@ -248,9 +242,15 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                         key={tabs.id}
                                         onClick={() => handleTabClick(tabs)}
                                         label={tabs?.name}
+                                        disableRipple
                                         value={idx}
                                         icon={
-                                            <IconButton aria-label="close" onClick={(e) => handleTabClose(tabs, e)} style={{ marginLeft: 0, paddingLeft: 12 }}>
+                                            <IconButton
+                                                aria-label="close"
+                                                disableRipple
+                                                disableFocusRipple
+                                                onClick={(e) => handleTabClose(tabs, e)}
+                                                style={{ marginLeft: 0, paddingLeft: 12 }}>
                                                 {tabs.isEditing && <Box sx={{ width: 8, height: 8, marginRight: 1, backgroundColor: 'secondary.main', borderRadius: '50%' }} />}
                                                 <Box component={FontAwesomeIcon} icon={faTimes} sx={{ fontSize: 13 }} color="editorPage.fileManagerIcon" />
                                             </IconButton>
@@ -265,7 +265,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                             alignItems: 'center',
                                             justifyContent: 'space-between',
                                             minHeight: 'auto',
-                                            height: '40px',
+                                            height: '32px',
                                             pr: '4px',
                                             fontSize: '0.75rem',
                                         }}
@@ -316,7 +316,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         defaultLanguage={EditorGlobal.selectedFile.get()?.language}
                         path={EditorGlobal.selectedFile.get()?.name}
                         defaultValue={EditorGlobal.selectedFile.get()?.content}
-                        value={EditorGlobal.selectedFile.get()?.diffValue || EditorGlobal.selectedFile.get()?.content}
+                        value={EditorGlobal.selectedFile.get()?.diffValue ?? EditorGlobal.selectedFile.get()?.content}
                         theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}
                         height="100%"
                         saveViewState
@@ -356,7 +356,7 @@ export const useUploadFileNodeHook = (pipeline) => {
 
     // Upload file
     return async () => {
-        if (!EditorGlobal.selectedFile.diffValue.value) return;
+        if (EditorGlobal.selectedFile.diffValue.value === undefined) return;
 
         const file = new File([EditorGlobal.selectedFile.diffValue.value], EditorGlobal.selectedFile.name.value, {
             type: 'text/plain',

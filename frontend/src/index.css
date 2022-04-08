@@ -127,9 +127,9 @@ code {
     visibility: hidden;
 }
 
-.tree_parent:hover .showOnHover {
+/* .tree_parent:hover .showOnHover {
     visibility: visible;
-}
+} */
 
 .hidden > div {
     display: none;
