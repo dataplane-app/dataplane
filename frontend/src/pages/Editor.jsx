@@ -52,7 +52,6 @@ const PipelineEditor = () => {
     const EditorGlobal = useGlobalEditorState();
 
     const [pipeline, setPipeline] = useState({});
-    console.log('🚀 ~ file: Editor.jsx ~ line 44 ~ PipelineEditor ~ pipeline', pipeline);
 
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
