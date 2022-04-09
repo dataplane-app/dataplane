@@ -24,17 +24,19 @@ const PackageColumn = forwardRef(({ children, ...rest }, ref) => {
             <Box
                 sx={{
                     backgroundColor: 'background.main',
-                    border: '1px solid  #D3D3D3',
-                    borderRadius: '7px',
+                    border: 1,
+                    borderColor: 'editorPage.borderColor',
                     p: 1,
                     height: '100%',
                 }}>
                 <Grid container alignItems="center" justifyContent="space-between">
                     <Typography fontSize={12} fontWeight={700}>
-                        Packages
+                        Python packages
                     </Typography>
-                    <Button variant="text" onClick={handleEdit} fontWeight={700} sx={{ color: 'primary.main' }}>
-                        <Typography fontSize={12}>Edit</Typography>
+                    <Button variant="text" onClick={handleEdit} fontWeight={700} sx={{ color: 'primary.main', minWidth: '40px' }}>
+                        <Typography fontSize={12} fontWeight={700}>
+                            Edit
+                        </Typography>
                     </Button>
                 </Grid>
 
