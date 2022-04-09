@@ -41,3 +41,19 @@ type CodeRunLock struct {
 	FileID    string    `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+func (CodePackages) IsEntity() {}
+
+func (CodePackages) TableName() string {
+	return "code_packages"
+}
+
+type CodePackages struct {
+	WorkerGroup   string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"worker_group"`
+	Language      string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"language"`
+	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"environment_id"`
+	Packages      string     `json:"packages"`
+	CreatedAt     time.Time  `json:"created_at"`
+	EndedAt       time.Time  `json:"ended_at"`
+	UpdatedAt     *time.Time `json:"updated_at"`
+}

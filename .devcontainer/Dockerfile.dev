@@ -15,4 +15,6 @@ RUN n 16.8.0
 
 RUN yarn install --modules-folder ./frontend
 
+RUN apt-get install -y python3 python3-pip
+
 RUN apt-get install -y sysstat
