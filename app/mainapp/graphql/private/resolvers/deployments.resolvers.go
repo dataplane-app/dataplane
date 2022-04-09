@@ -22,6 +22,10 @@ import (
 	"gorm.io/gorm"
 )
 
+func (r *deploymentRunsResolver) RunJSON(ctx context.Context, obj *models.PipelineRuns) (interface{}, error) {
+	return obj.RunJSON, nil
+}
+
 func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*privategraphql.WorkerGroupsNodes) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -986,3 +990,41 @@ func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID str
 	}
 	return resp, nil
 }
+
+func (r *queryResolver) GetDeploymentRuns(ctx context.Context, deploymentID string, environmentID string, version string) ([]*models.PipelineRuns, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: deploymentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: deploymentID, Access: "read", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("requires permissions")
+	}
+
+	// Get pipeline runs
+	var pipelineRuns []*models.PipelineRuns
+	err := database.DBConn.Order("created_at desc").Limit(20).
+		Where("pipeline_id = ? and environment_id = ? and deploy_version = ?", deploymentID, environmentID, version).
+		Find(&pipelineRuns).Error
+	if err != nil {
+		logging.PrintSecretsRedact(err.Error())
+	}
+
+	return pipelineRuns, nil
+}
+
+// DeploymentRuns returns privategraphql.DeploymentRunsResolver implementation.
+func (r *Resolver) DeploymentRuns() privategraphql.DeploymentRunsResolver {
+	return &deploymentRunsResolver{r}
+}
+
+type deploymentRunsResolver struct{ *Resolver }

@@ -18,6 +18,20 @@ type Deployments {
   schedule_type: String!
 }
 
+type DeploymentRuns {
+    run_id: String!
+    pipeline_id: String!
+    status: String!
+    environment_id: String!
+    run_type: String!
+    run_json: Any!
+    deploy_version: String!
+    created_at: Time!
+    ended_at: Time
+    updated_at: Time
+}
+
+
 
 
 # ----- Get flow
@@ -94,6 +108,13 @@ extend type Query {
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
   getNonDefaultWGNodes(pipelineID: String!, fromEnvironmentID: String!, toEnvironmentID: String!): [NonDefaultNodes]
+
+  """
+  Get all runs for a specific deployment version.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines
+  """
+  getDeploymentRuns(deploymentID: String!, environmentID: String!, version: String!): [DeploymentRuns!]!
 }
 
 extend type Mutation {

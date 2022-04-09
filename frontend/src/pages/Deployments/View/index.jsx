@@ -208,7 +208,7 @@ const DeploymentView = () => {
                 </Box>
             ) : null}
 
-            {isOpenAnalytics ? <Analytics setIsOpenAnalytics={setIsOpenAnalytics} /> : null}
+            {isOpenAnalytics ? <Analytics setIsOpenAnalytics={setIsOpenAnalytics} active_deploy={deployment.version === version} /> : null}
             <Drawer anchor="right" open={isOpenPublishDrawer} onClose={() => setIsOpenPublishDrawer(!isOpenPublishDrawer)}>
                 <PublishPipelineDrawer handleClose={() => setIsOpenPublishDrawer(false)} />
             </Drawer>

@@ -144,7 +144,9 @@ export function Analytics({ setIsOpenAnalytics }) {
                     <Bar options={options} data={data} />
                 ) : null}
             </div>
-            <Button onClick={() => setIsOpenAnalytics(false)}>Close</Button>
+            <Button onClick={() => setIsOpenAnalytics(false)} variant="outlined" sx={{ position: 'absolute', top: '17px', left: '1089px' }}>
+                Close
+            </Button>
         </Box>
     );
 }
