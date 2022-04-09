@@ -99,10 +99,4 @@ extend type Mutation {
 	"""
   moveFileNode(fileID: String! toFolderID: String!, environmentID: String!, pipelineID: String!): String!
 
-  """
-	Run script.
-	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
-	"""
-  codeEditorRun(environmentID: String!, nodeID: String!, pipelineID: String!, path:String!): String!
 }
