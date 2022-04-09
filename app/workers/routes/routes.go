@@ -129,6 +129,9 @@ func Setup(port string) *fiber.App {
 		// Query:${query}
 	}
 
+	// ------- LOAD packages ------
+	runcodeworker.CodeLoadPackages(config.CodeLanguages, config.CodeLoadPackages, config.EnvID, config.WorkerGroup)
+
 	// Runner
 	// app.Post("/runner", runtask.Runtask())
 

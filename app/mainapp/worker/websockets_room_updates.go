@@ -50,6 +50,11 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 		room = "pipeline-run-updates"
 		subjectmsg = "taskupdate." + environmentID + "." + id
 
+	case "codepackage." + environmentID + "." + id:
+		// fmt.Println("one")
+		room = "code-package-install"
+		subjectmsg = "codepackage." + environmentID + "." + id
+
 	case "workerlogs." + id:
 		room = "worker-logs"
 		subjectmsg = "workerlogs." + id

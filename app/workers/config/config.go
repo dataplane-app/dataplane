@@ -17,6 +17,8 @@ var WorkerEnv string
 var WorkerLB string
 var DPworkerCMD string
 var CodeDirectory string
+var CodeLanguages string
+var CodeLoadPackages string
 
 // Debug
 var Debug string = "false"
@@ -41,6 +43,12 @@ func LoadConfig() {
 	DPworkerCMD = os.Getenv("DP_WORKER_CMD")
 	if DPworkerCMD == "" {
 		DPworkerCMD = os.Getenv("SHELL")
+	}
+
+	CodeLanguages = os.Getenv("DP_WORKER_LANGUAGES")
+	CodeLoadPackages = os.Getenv("DP_WORKER_LOAD_PACKAGES")
+	if CodeLoadPackages == "" {
+		CodeLoadPackages = "false"
 	}
 
 	CodeDirectory = os.Getenv("DP_CODE_FOLDER")
