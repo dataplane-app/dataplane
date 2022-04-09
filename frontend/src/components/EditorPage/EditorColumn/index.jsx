@@ -146,7 +146,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         }
         fetch(`${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}?environment_id=${rest.pipeline.environmentID}&pipeline_id=${rest.pipeline.pipelineID}`, {
             headers: { Authorization: `Bearer ${jwt}` },
-//            withCredentials: true,
+            withCredentials: true,
         })
             .then(async (response) => {
                 if (response.status !== 200) {
