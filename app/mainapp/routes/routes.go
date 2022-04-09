@@ -2,6 +2,7 @@ package routes
 
 import (
 	"dataplane/mainapp/auth"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -280,9 +281,29 @@ func Setup(port string) *fiber.App {
 	}))
 
 	// Download code files
-	app.Get("/app/private/code-files/:fileid", func(c *fiber.Ctx) error {
-		fileID := string(c.Params("fileid"))
+	app.Get("/app/private/code-files/:fileid", auth.TokenAuthMiddle(), func(c *fiber.Ctx) error {
+
 		environmentID := string(c.Query("environment_id"))
+		pipelineID := string(c.Query("pipeline_id"))
+
+		currentUser := c.Locals("currentUser").(string)
+		platformID := c.Locals("platformID").(string)
+
+		// ----- Permissions
+		perms := []models.Permissions{
+			{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+			{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+			{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+			{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+		}
+
+		permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+		if permOutcome == "denied" {
+			return c.Status(fiber.StatusForbidden).SendString("Requires permissions.")
+		}
+
+		fileID := string(c.Params("fileid"))
 		filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
 
 		dat, err := os.ReadFile(config.CodeDirectory + filepath)
