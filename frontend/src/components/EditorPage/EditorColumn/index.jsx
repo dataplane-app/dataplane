@@ -293,33 +293,42 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         container
                         alignItems="center"
                         justifyContent="space-between"
-                        sx={{ pl: '15px', borderTop: 1, borderBottom: 1, borderColor: 'editorPage.borderColor', mb: 2 }}>
+                        sx={{ pl: '15px', borderTop: 1, borderBottom: 1, borderColor: 'editorPage.borderColor', mb: 2, height: '33px' }}>
                         <Typography fontSize={'0.75rem'}>
                             {EditorGlobal.currentPath.get().map((folderName) => folderName + ' > ')}
                             {EditorGlobal.selectedFile.name.value}
                         </Typography>
 
-                        <Box>
-                            {isRunning ? (
-                                <Button onClick={codeEditorStop} variant="text" color="error" sx={{ height: '32px', fontSize: '0.75rem', minWidth: '60px' }}>
-                                    Stop
-                                </Button>
-                            ) : (
+                        {EditorGlobal.selectedFile.id.get() !== 'requirements.txt' ? (
+                            <Box>
+                                {isRunning ? (
+                                    <Button onClick={codeEditorStop} variant="text" color="error" sx={{ height: '32px', fontSize: '0.75rem', minWidth: '60px' }}>
+                                        Stop
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        onClick={codeEditorRun}
+                                        variant="text"
+                                        sx={{ height: '32px', color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null, fontSize: '0.75rem', minWidth: '60px' }}>
+                                        Run
+                                    </Button>
+                                )}
+
                                 <Button
-                                    onClick={codeEditorRun}
+                                    onClick={uploadFileNode}
                                     variant="text"
                                     sx={{ height: '32px', color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null, fontSize: '0.75rem', minWidth: '60px' }}>
-                                    Run
+                                    Save
                                 </Button>
-                            )}
-
+                            </Box>
+                        ) : (
                             <Button
-                                onClick={uploadFileNode}
+                                onClick={() => updateCodePackages(EditorGlobal.selectedFile.diffValue.value)}
                                 variant="text"
                                 sx={{ height: '32px', color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null, fontSize: '0.75rem', minWidth: '60px' }}>
-                                Save
+                                Install
                             </Button>
-                        </Box>
+                        )}
                     </Grid>
                 ) : null}
 
