@@ -323,7 +323,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                             </Box>
                         ) : (
                             <Button
-                                onClick={uploadFileNode}
+                                onClick={() => updateCodePackages(EditorGlobal.selectedFile.diffValue.value)}
                                 variant="text"
                                 sx={{ height: '32px', color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null, fontSize: '0.75rem', minWidth: '60px' }}>
                                 Install
