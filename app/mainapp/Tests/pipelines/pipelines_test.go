@@ -67,7 +67,7 @@ func TestPipelines(t *testing.T) {
 		envID = "test-environment-id"
 	}
 
-	pipelineId := testutils.TextEscape(faker.UUIDHyphenated())
+	pipelineName := testutils.TextEscape(faker.UUIDHyphenated())
 
 	// -------- clean data -------
 	database.DBConn.Where("environment_id =?", envID).Delete(&models.PipelineNodes{})
@@ -77,7 +77,7 @@ func TestPipelines(t *testing.T) {
 
 	mutation := `mutation {
 		addPipeline(
-			name: "test_` + pipelineId + `",
+			name: "test_` + pipelineName + `",
 			environmentID: "` + envID + `",
 			description: "Test",
 			workerGroup: "python_1"
@@ -95,12 +95,12 @@ func TestPipelines(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create pipeline 200 status code")
 
 	// -------- Update pipeline -------------
-	id := jsoniter.Get(response, "data", "addPipeline").ToString()
+	pipelineId := jsoniter.Get(response, "data", "addPipeline").ToString()
 
 	mutation = `mutation {
 		updatePipeline(
-				name: "test_` + pipelineId + `",
-				pipelineID: "` + id + `",
+				name: "test_` + pipelineName + `",
+				pipelineID: "` + pipelineId + `",
 				environmentID: "` + envID + `",
 				description: "Test new description",
 				workerGroup: "python_1"
@@ -174,7 +174,7 @@ func TestPipelines(t *testing.T) {
 	mutation = `mutation {
 		addUpdatePipelineFlow(
 			environmentID: "` + envID + `",
-			pipelineID: "test_` + pipelineId + `",
+			pipelineID: "` + pipelineId + `",
 			input:{
 				nodesInput: [{
 					nodeID: "nodeID",
@@ -259,7 +259,7 @@ func TestPipelines(t *testing.T) {
 	mutation = `mutation {
 		addUpdatePipelineFlow(
 			environmentID: "` + envID + `",
-			pipelineID: "test_` + pipelineId + `",
+			pipelineID: "` + pipelineId + `",
 			input:{
 				nodesInput: [{
 					nodeID: "nodeID",
@@ -353,7 +353,7 @@ func TestPipelines(t *testing.T) {
 	query = `query {
 		getPipelineFlow(
 			environmentID: "` + envID + `",
-			pipelineID: "test_` + pipelineId + `",
+			pipelineID: "` + pipelineId + `",
 			){
 				edges {
 					edgeID
@@ -423,7 +423,7 @@ func TestPipelines(t *testing.T) {
 	mutation = `mutation {
 		addUpdatePipelineFlow(
 			environmentID: "` + envID + `",
-			pipelineID: "test_` + pipelineId + `",
+			pipelineID: "` + pipelineId + `",
 			input:{
 				nodesInput: [],
 				edgesInput: [],
@@ -448,7 +448,7 @@ func TestPipelines(t *testing.T) {
 		turnOnOffPipeline(
 				environmentID: "` + envID + `",
 				online: false,
-				pipelineID: "test_` + pipelineId + `")
+				pipelineID: "` + pipelineId + `")
 				  
 			}`
 
@@ -466,7 +466,7 @@ func TestPipelines(t *testing.T) {
 	mutation = `mutation {
 		deletePipeline(
 				environmentID: "` + envID + `",
-				pipelineID: "test_` + pipelineId + `")
+				pipelineID: "` + pipelineId + `")
 				  
 			}`
 
