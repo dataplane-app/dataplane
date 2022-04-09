@@ -5,7 +5,18 @@ import FileManagerColumn from '../components/EditorPage/FileManager';
 import LogsColumn from '../components/EditorPage/LogsColumn';
 import PackageColumn from '../components/EditorPage/PackagesColumn';
 import Navbar from '../components/Navbar';
-import { lgLayout, mdLayout, smLayout, xsLayout, xxsLayout } from '../utils/editorLayouts';
+import {
+    lgLayoutBash,
+    mdLayoutBash,
+    smLayoutBash,
+    xsLayoutBash,
+    xxsLayoutBash,
+    lgLayoutPython,
+    mdLayoutPython,
+    smLayoutPython,
+    xsLayoutPython,
+    xxsLayoutPython,
+} from '../utils/editorLayouts';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
@@ -46,12 +57,20 @@ const PipelineEditor = () => {
 
     const editorRef = useRef(null);
 
-    const layouts = {
-        lg: lgLayout,
-        md: mdLayout,
-        sm: smLayout,
-        xs: xsLayout,
-        xxs: xxsLayout,
+    const layoutsBash = {
+        lg: lgLayoutBash,
+        md: mdLayoutBash,
+        sm: smLayoutBash,
+        xs: xsLayoutBash,
+        xxs: xxsLayoutBash,
+    };
+
+    const layoutsPython = {
+        lg: lgLayoutPython,
+        md: mdLayoutPython,
+        sm: smLayoutPython,
+        xs: xsLayoutPython,
+        xxs: xxsLayoutPython,
     };
 
     const handleUnload = () => {
@@ -116,11 +135,11 @@ const PipelineEditor = () => {
                             measureBeforeMount={true}
                             onResizeStop={(e, _) => console.log('Resize', e, _)}
                             compactType="vertical"
-                            layouts={layouts}
+                            layouts={pipeline.nodeTypeDesc === 'python' ? layoutsPython : layoutsBash}
                             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                             cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}>
                             <FileManagerColumn key="1" pipeline={pipeline} />
-                            {/* <PackageColumn key="2" /> */}
+                            {pipeline.nodeTypeDesc === 'python' ? <PackageColumn key="2" /> : null}
                             <EditorColumn key="3" ref={editorRef} pipeline={pipeline} />
                             <LogsColumn key="4" environmentID={Environment.id.get()} pipelineID={pipeline.pipelineID} />
                         </ResponsiveGridLayout>
@@ -163,7 +182,7 @@ const useGetPipelineHook = (environmentID, setPipeline) => {
         } else if (responsePipeline.errors) {
             responsePipeline.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setPipeline({ ...responsePipeline, ...responseNode });
+            setPipeline({ ...responseNode, ...responsePipeline });
         }
     };
 };
