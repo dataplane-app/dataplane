@@ -100,6 +100,8 @@ services:
       DP_WORKER_LB: "roundrobin"
       DP_WORKER_ENV: "Development"
       DP_WORKER_PORT: "9005"
+      DP_WORKER_LANGUAGES: "Python"
+      DP_WORKER_LOAD_PACKAGES: "Python"
 
 volumes:
   code-files:

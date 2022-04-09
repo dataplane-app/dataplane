@@ -89,6 +89,8 @@ services:
       DP_CLEANTASKS_DAYS: "60"
       DP_REMOVELOGS_DAYS: "60"
       DP_WORKER_PORT: "9005"
+      DP_WORKER_LANGUAGES: "Python"
+      DP_WORKER_LOAD_PACKAGES: "Python"
 
 networks:
   default:

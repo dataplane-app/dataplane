@@ -103,3 +103,7 @@ spec:
               value: "/bin/sh"
             - name: DP_WORKER_PORT
               value: "9005"
+            - name: DP_WORKER_LANGUAGES
+              value: "Python"
+            - name: DP_WORKER_LOAD_PACKAGES
+              value: "Python"
