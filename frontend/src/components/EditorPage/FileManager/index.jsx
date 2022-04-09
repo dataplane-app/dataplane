@@ -72,6 +72,10 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Check if selected file changed
     useEffect(() => {
         setSelected(Editor.selectedFile.get()?.id);
+
+        if (!data.children.get()) return;
+        const path = getPath(data.children.attach(Downgraded).get(), Editor.selectedFile.get()?.id);
+        Editor.currentPath.set(path);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Editor.selectedFile.get()?.id]);
 
@@ -559,10 +563,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
         Editor.selectedFile.set(file);
         Editor.tabs.set((prevTabs) => [...prevTabs, file]);
-
-        // Set file path
-        const path = getPath(data.children.attach(Downgraded).get(), file.id);
-        Editor.currentPath.set(path);
     };
 
     // Graphql hook
