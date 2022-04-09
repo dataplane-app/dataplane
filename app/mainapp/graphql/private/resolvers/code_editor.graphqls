@@ -21,6 +21,12 @@ type CodeTree {
 	folders: [CodeFolders!]!
 }
 
+type CodePackages {
+    workerGroup: String!
+	language: String!
+	environmentID: String!
+	packages: String!
+}
 
 input FolderNodeInput {
 	folderID: String!
@@ -40,6 +46,13 @@ extend type Query {
     + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): CodeTree
+
+  """
+	Get packages of a python script.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
+	"""
+  getCodePackages( workerGroup: String!, language: String!, environmentID: String!, pipelineID: String!): CodePackages
 }
 
 extend type Mutation {
@@ -99,4 +112,10 @@ extend type Mutation {
 	"""
   moveFileNode(fileID: String! toFolderID: String!, environmentID: String!, pipelineID: String!): String!
 
+  """
+	Update packages of a python script.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
+	"""
+   updateCodePackages(workerGroup: String!, language: String!, packages: String!, environmentID: String!, pipelineID: String!): String!
 }

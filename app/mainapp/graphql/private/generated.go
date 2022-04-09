@@ -94,6 +94,13 @@ type ComplexityRoot struct {
 		ParentID   func(childComplexity int) int
 	}
 
+	CodePackages struct {
+		EnvironmentID func(childComplexity int) int
+		Language      func(childComplexity int) int
+		Packages      func(childComplexity int) int
+		WorkerGroup   func(childComplexity int) int
+	}
+
 	CodeTree struct {
 		Files   func(childComplexity int) int
 		Folders func(childComplexity int) int
@@ -225,6 +232,7 @@ type ComplexityRoot struct {
 		UpdateActivateUser               func(childComplexity int, userid string) int
 		UpdateChangeMyPassword           func(childComplexity int, password string) int
 		UpdateChangePassword             func(childComplexity int, input *ChangePasswordInput) int
+		UpdateCodePackages               func(childComplexity int, workerGroup string, language string, packages string, environmentID string, pipelineID string) int
 		UpdateDeactivateEnvironment      func(childComplexity int, environmentID string) int
 		UpdateDeactivateUser             func(childComplexity int, userid string) int
 		UpdateDeleteEnvironment          func(childComplexity int, environmentID string) int
@@ -386,6 +394,7 @@ type ComplexityRoot struct {
 		GetActiveDeployment           func(childComplexity int, pipelineID string, environmentID string) int
 		GetAllPreferences             func(childComplexity int) int
 		GetCodeFileRunLogs            func(childComplexity int, runID string, pipelineID string, environmentID string) int
+		GetCodePackages               func(childComplexity int, workerGroup string, language string, environmentID string, pipelineID string) int
 		GetDeploymentRuns             func(childComplexity int, deploymentID string, environmentID string, version string) int
 		GetDeployments                func(childComplexity int, environmentID string) int
 		GetEnvironment                func(childComplexity int, environmentID string) int
@@ -516,6 +525,7 @@ type MutationResolver interface {
 	DeleteFileNode(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string) (string, error)
 	RenameFile(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string, newName string) (string, error)
 	MoveFileNode(ctx context.Context, fileID string, toFolderID string, environmentID string, pipelineID string) (string, error)
+	UpdateCodePackages(ctx context.Context, workerGroup string, language string, packages string, environmentID string, pipelineID string) (string, error)
 	RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string) (*CERun, error)
 	StopCERun(ctx context.Context, pipelineID string, runID string, environmentID string) (string, error)
 	AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*WorkerGroupsNodes) (string, error)
@@ -569,6 +579,7 @@ type QueryResolver interface {
 	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error)
 	GetAccessGroupUsers(ctx context.Context, environmentID string, accessGroupID string) ([]*models.Users, error)
 	FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*CodeTree, error)
+	GetCodePackages(ctx context.Context, workerGroup string, language string, environmentID string, pipelineID string) (*CodePackages, error)
 	GetActiveDeployment(ctx context.Context, pipelineID string, environmentID string) (*Deployments, error)
 	GetDeployments(ctx context.Context, environmentID string) ([]*Deployments, error)
 	GetNonDefaultWGNodes(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string) ([]*NonDefaultNodes, error)
@@ -833,6 +844,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CodeFolders.ParentID(childComplexity), true
+
+	case "CodePackages.environmentID":
+		if e.complexity.CodePackages.EnvironmentID == nil {
+			break
+		}
+
+		return e.complexity.CodePackages.EnvironmentID(childComplexity), true
+
+	case "CodePackages.language":
+		if e.complexity.CodePackages.Language == nil {
+			break
+		}
+
+		return e.complexity.CodePackages.Language(childComplexity), true
+
+	case "CodePackages.packages":
+		if e.complexity.CodePackages.Packages == nil {
+			break
+		}
+
+		return e.complexity.CodePackages.Packages(childComplexity), true
+
+	case "CodePackages.workerGroup":
+		if e.complexity.CodePackages.WorkerGroup == nil {
+			break
+		}
+
+		return e.complexity.CodePackages.WorkerGroup(childComplexity), true
 
 	case "CodeTree.files":
 		if e.complexity.CodeTree.Files == nil {
@@ -1749,6 +1788,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateChangePassword(childComplexity, args["input"].(*ChangePasswordInput)), true
+
+	case "Mutation.updateCodePackages":
+		if e.complexity.Mutation.UpdateCodePackages == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateCodePackages_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateCodePackages(childComplexity, args["workerGroup"].(string), args["language"].(string), args["packages"].(string), args["environmentID"].(string), args["pipelineID"].(string)), true
 
 	case "Mutation.updateDeactivateEnvironment":
 		if e.complexity.Mutation.UpdateDeactivateEnvironment == nil {
@@ -2723,6 +2774,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetCodeFileRunLogs(childComplexity, args["runID"].(string), args["pipelineID"].(string), args["environmentID"].(string)), true
+
+	case "Query.getCodePackages":
+		if e.complexity.Query.GetCodePackages == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getCodePackages_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetCodePackages(childComplexity, args["workerGroup"].(string), args["language"].(string), args["environmentID"].(string), args["pipelineID"].(string)), true
 
 	case "Query.getDeploymentRuns":
 		if e.complexity.Query.GetDeploymentRuns == nil {
@@ -3727,6 +3790,12 @@ type CodeTree {
 	folders: [CodeFolders!]!
 }
 
+type CodePackages {
+    workerGroup: String!
+	language: String!
+	environmentID: String!
+	packages: String!
+}
 
 input FolderNodeInput {
 	folderID: String!
@@ -3746,6 +3815,13 @@ extend type Query {
     + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
   filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): CodeTree
+
+  """
+	Get packages of a python script.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
+	"""
+  getCodePackages( workerGroup: String!, language: String!, environmentID: String!, pipelineID: String!): CodePackages
 }
 
 extend type Mutation {
@@ -3805,6 +3881,12 @@ extend type Mutation {
 	"""
   moveFileNode(fileID: String! toFolderID: String!, environmentID: String!, pipelineID: String!): String!
 
+  """
+	Update packages of a python script.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
+	"""
+   updateCodePackages(workerGroup: String!, language: String!, packages: String!, environmentID: String!, pipelineID: String!): String!
 }
 `, BuiltIn: false},
 	{Name: "resolvers/code_editor_run.graphqls", Input: `
@@ -5941,6 +6023,57 @@ func (ec *executionContext) field_Mutation_updateChangePassword_args(ctx context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updateCodePackages_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["workerGroup"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workerGroup"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workerGroup"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["language"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("language"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["language"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["packages"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("packages"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["packages"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg3
+	var arg4 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg4, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg4
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateDeactivateEnvironment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -6583,6 +6716,48 @@ func (ec *executionContext) field_Query_getCodeFileRunLogs_args(ctx context.Cont
 		}
 	}
 	args["environmentID"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getCodePackages_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["workerGroup"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workerGroup"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workerGroup"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["language"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("language"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["language"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg3
 	return args, nil
 }
 
@@ -8298,6 +8473,146 @@ func (ec *executionContext) _CodeFolders_active(ctx context.Context, field graph
 	res := resTmp.(bool)
 	fc.Result = res
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodePackages_workerGroup(ctx context.Context, field graphql.CollectedField, obj *CodePackages) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodePackages",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkerGroup, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodePackages_language(ctx context.Context, field graphql.CollectedField, obj *CodePackages) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodePackages",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Language, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodePackages_environmentID(ctx context.Context, field graphql.CollectedField, obj *CodePackages) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodePackages",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvironmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CodePackages_packages(ctx context.Context, field graphql.CollectedField, obj *CodePackages) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CodePackages",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Packages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CodeTree_files(ctx context.Context, field graphql.CollectedField, obj *CodeTree) (ret graphql.Marshaler) {
@@ -11496,6 +11811,48 @@ func (ec *executionContext) _Mutation_moveFileNode(ctx context.Context, field gr
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().MoveFileNode(rctx, args["fileID"].(string), args["toFolderID"].(string), args["environmentID"].(string), args["pipelineID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateCodePackages(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateCodePackages_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateCodePackages(rctx, args["workerGroup"].(string), args["language"].(string), args["packages"].(string), args["environmentID"].(string), args["pipelineID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -16535,6 +16892,45 @@ func (ec *executionContext) _Query_filesNode(ctx context.Context, field graphql.
 	res := resTmp.(*CodeTree)
 	fc.Result = res
 	return ec.marshalOCodeTree2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCodeTree(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getCodePackages(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getCodePackages_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetCodePackages(rctx, args["workerGroup"].(string), args["language"].(string), args["environmentID"].(string), args["pipelineID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*CodePackages)
+	fc.Result = res
+	return ec.marshalOCodePackages2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCodePackages(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getActiveDeployment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -22043,6 +22439,67 @@ func (ec *executionContext) _CodeFolders(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var codePackagesImplementors = []string{"CodePackages"}
+
+func (ec *executionContext) _CodePackages(ctx context.Context, sel ast.SelectionSet, obj *CodePackages) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, codePackagesImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CodePackages")
+		case "workerGroup":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodePackages_workerGroup(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "language":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodePackages_language(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "environmentID":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodePackages_environmentID(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "packages":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CodePackages_packages(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var codeTreeImplementors = []string{"CodeTree"}
 
 func (ec *executionContext) _CodeTree(ctx context.Context, sel ast.SelectionSet, obj *CodeTree) graphql.Marshaler {
@@ -23098,6 +23555,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "moveFileNode":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_moveFileNode(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateCodePackages":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateCodePackages(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
@@ -24836,6 +25303,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_filesNode(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getCodePackages":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getCodePackages(ctx, field)
 				return res
 			}
 
@@ -27723,6 +28210,13 @@ func (ec *executionContext) unmarshalOChangePasswordInput2ᚖdataplaneᚋmainapp
 	}
 	res, err := ec.unmarshalInputChangePasswordInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOCodePackages2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCodePackages(ctx context.Context, sel ast.SelectionSet, v *CodePackages) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CodePackages(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOCodeTree2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCodeTree(ctx context.Context, sel ast.SelectionSet, v *CodeTree) graphql.Marshaler {

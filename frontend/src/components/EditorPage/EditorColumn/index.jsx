@@ -14,6 +14,7 @@ import { useRunCEFile } from '../../../graphql/runCEFile';
 import { useStopCERun } from '../../../graphql/stopCERun';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import { useUpdateCodePackages } from '../../../graphql/updateCodePackages';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
@@ -43,6 +44,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
     const codeEditorRun = useRunCEFileHook(rest.pipeline, setIsRunning);
     const codeEditorStop = useStopCEFileHook(rest.pipeline, EditorGlobal.runID.get(), setIsRunning);
+    const updateCodePackages = useUpdateCodePackagesHook(rest.pipeline);
 
     useEffect(() => {
         const fileIndex = EditorGlobal.tabs
@@ -125,10 +127,10 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     useEffect(() => {
         EditorGlobal.runState.set(null);
         // If no selection, return
-        if (!EditorGlobal.selectedFile.value || EditorGlobal.selectedFile.fType.value !== 'file') return;
+        if (!EditorGlobal.selectedFile.value || EditorGlobal.selectedFile.fType.value === 'folder') return;
 
-        // If it isn't a file, return
-        if (EditorGlobal.selectedFile.fType.value !== 'file') return;
+        // If it is a folder, return
+        if (EditorGlobal.selectedFile.fType.value === 'folder') return;
 
         // If newly created, return
         if (EditorGlobal.selectedFile.id.value.length < 10) return;
@@ -144,21 +146,24 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         ) {
             return;
         }
-        fetch(`${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}?environment_id=${rest.pipeline.environmentID}&pipeline_id=${rest.pipeline.pipelineID}`, {
-            headers: { Authorization: `Bearer ${jwt}` },
-            withCredentials: true,
-        })
-            .then(async (response) => {
-                if (response.status !== 200) {
-                    const error = (response && response.statusText) || response.status;
-                    return Promise.reject(error);
-                }
-                let fileContent = await response.text();
-                EditorGlobal.selectedFile.content.set(fileContent);
+
+        if (EditorGlobal.selectedFile.fType.value === 'file') {
+            fetch(`${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}?environment_id=${rest.pipeline.environmentID}&pipeline_id=${rest.pipeline.pipelineID}`, {
+                headers: { Authorization: `Bearer ${jwt}` },
+                withCredentials: true,
             })
-            .catch((error) => {
-                enqueueSnackbar("Can't get file: " + error, { variant: 'error' });
-            });
+                .then(async (response) => {
+                    if (response.status !== 200) {
+                        const error = (response && response.statusText) || response.status;
+                        return Promise.reject(error);
+                    }
+                    let fileContent = await response.text();
+                    EditorGlobal.selectedFile.content.set(fileContent);
+                })
+                .catch((error) => {
+                    enqueueSnackbar("Can't get file: " + error, { variant: 'error' });
+                });
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.selectedFile?.id?.value]);
@@ -175,7 +180,12 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         if (e.keyCode === 83 && e.ctrlKey) {
             e.preventDefault();
             if (!EditorGlobal.selectedFile.name.value) return;
-            uploadFileNode();
+            if (EditorGlobal.selectedFile.fType.value === 'file') {
+                uploadFileNode();
+            }
+            if (EditorGlobal.selectedFile.fType.value === 'package') {
+                updateCodePackages(EditorGlobal.selectedFile.diffValue.value);
+            }
         }
     };
 
@@ -430,3 +440,35 @@ const useStopCEFileHook = (pipeline, runID, setIsRunning) => {
     };
 };
 
+const useUpdateCodePackagesHook = (pipeline) => {
+    const environmentID = pipeline.environmentID;
+    const pipelineID = pipeline.pipelineID;
+    const workerGroup = pipeline.workerGroup;
+    const language = pipeline.meta.data.language;
+
+    const EditorGlobal = useGlobalEditorState();
+
+    // GraphQL hook
+    const updateCodePackages = useUpdateCodePackages();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Update packages
+    return async (packages) => {
+        if (EditorGlobal.selectedFile.diffValue.value === undefined) return;
+
+        const response = await updateCodePackages({ environmentID, pipelineID, workerGroup, language, packages });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't update packages: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            // Turns off orange circle
+            EditorGlobal.selectedFile.isEditing.set(false);
+            // Trigger getPackages
+            EditorGlobal.updatePackages.set((a) => a + 1);
+            enqueueSnackbar('File saved.', { variant: 'success' });
+        }
+    };
+};
