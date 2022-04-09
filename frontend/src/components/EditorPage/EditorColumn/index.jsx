@@ -144,7 +144,10 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         ) {
             return;
         }
-        fetch(`${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}?environment_id=${rest.pipeline.environmentID}`)
+        fetch(`${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}?environment_id=${rest.pipeline.environmentID}&pipeline_id=${rest.pipeline.pipelineID}`, {
+            headers: { Authorization: `Bearer ${jwt}` },
+            withCredentials: true,
+        })
             .then(async (response) => {
                 if (response.status !== 200) {
                     const error = (response && response.statusText) || response.status;
@@ -426,3 +429,4 @@ const useStopCEFileHook = (pipeline, runID, setIsRunning) => {
         }
     };
 };
+
