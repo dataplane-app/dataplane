@@ -67,6 +67,13 @@ type ChangePasswordInput struct {
 	UserID   string `json:"user_id"`
 }
 
+type CodePackages struct {
+	WorkerGroup   string `json:"workerGroup"`
+	Language      string `json:"language"`
+	EnvironmentID string `json:"environmentID"`
+	Packages      string `json:"packages"`
+}
+
 type CodeTree struct {
 	Files   []*models.CodeFiles   `json:"files"`
 	Folders []*models.CodeFolders `json:"folders"`
