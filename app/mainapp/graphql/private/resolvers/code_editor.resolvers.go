@@ -12,10 +12,10 @@ import (
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/utilities"
 	"errors"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
 
@@ -99,8 +99,7 @@ func (r *mutationResolver) MoveFolderNode(ctx context.Context, folderID string, 
 	oldDir := config.CodeDirectory + folderpath
 	newDir := config.CodeDirectory + tofolderpath
 
-	cmd := exec.Command("cp", "--recursive", oldDir, newDir)
-	cmd.Run()
+	utilities.CopyDirectory(oldDir, newDir)
 
 	err := os.RemoveAll(oldDir)
 	if err != nil {
