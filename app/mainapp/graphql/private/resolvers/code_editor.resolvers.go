@@ -630,7 +630,6 @@ func (r *mutationResolver) UpdateCodePackages(ctx context.Context, workerGroup s
 		EnvironmentID: environmentID,
 		Packages:      packages,
 	}
-	log.Println("c: ", c)
 
 	err := database.DBConn.
 		Clauses(clause.OnConflict{UpdateAll: true}).
