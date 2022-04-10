@@ -491,7 +491,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                             readOnly={!isEditing}
                         />
                         <Box className={`showOnHover hidden_controls tree-${nodes.id}`} sx={{ pointerEvents: 'none', width: '100%', display: 'flex', mt: '-1px' }}>
-                            <Tooltip title="Edit" placement="top">
+                            <Tooltip title="Edit" placement="bottom" PopperProps={{ sx: { '& .MuiTooltip-tooltipPlacementBottom': { marginTop: '0px !important' } } }}>
                                 <IconButton
                                     aria-label="Edit File"
                                     sx={{ ml: 'auto', pointerEvents: 'all' }}
@@ -503,20 +503,20 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                                 </IconButton>
                             </Tooltip>
                             {nodes.fType !== 'file' ? (
-                                <Tooltip title="New file" placement="top">
+                                <Tooltip title="New file" placement="bottom" PopperProps={{ sx: { '& .MuiTooltip-tooltipPlacementBottom': { marginTop: '0px !important' } } }}>
                                     <IconButton sx={{ pointerEvents: 'all' }} aria-label="New File" onClick={() => handleNewFileIconClick(nodes.id)}>
                                         <Box component={FontAwesomeIcon} icon={faFileAlt} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
                                     </IconButton>
                                 </Tooltip>
                             ) : null}
                             {nodes.fType !== 'file' ? (
-                                <Tooltip title="New folder" placement="top">
+                                <Tooltip title="New folder" placement="bottom" PopperProps={{ sx: { '& .MuiTooltip-tooltipPlacementBottom': { marginTop: '0px !important' } } }}>
                                     <IconButton sx={{ pointerEvents: 'all' }} aria-label="New Folder" onClick={() => handleNewFolderIconClick(nodes.id)}>
                                         <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
                                     </IconButton>
                                 </Tooltip>
                             ) : null}
-                            <Tooltip title="Delete" placement="top">
+                            <Tooltip title="Delete" id="hi" placement="bottom" PopperProps={{ sx: { '& .MuiTooltip-tooltipPlacementBottom': { marginTop: '0px !important' } } }}>
                                 <IconButton sx={{ pointerEvents: 'all' }} aria-label="Remove folder" onClick={handleDeleteIconClick}>
                                     <Box component={FontAwesomeIcon} icon={faTimes} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
                                 </IconButton>
@@ -601,13 +601,13 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                         Files
                     </Typography>
                     <Grid item display="flex" alignItems="center">
-                        <Tooltip title="New file" placement="top">
+                        <Tooltip title="New file" placement="bottom" PopperProps={{ sx: { '& .MuiTooltip-tooltipPlacementBottom': { marginTop: '0px !important' } } }}>
                             <IconButton aria-label="New File" onClick={() => handleNewFileIconClick(data.id.get())}>
                                 <Box component={FontAwesomeIcon} icon={faFile} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
                             </IconButton>
                         </Tooltip>
 
-                        <Tooltip title="New folder" placement="top">
+                        <Tooltip title="New folder" placement="bottom" PopperProps={{ sx: { '& .MuiTooltip-tooltipPlacementBottom': { marginTop: '0px !important' } } }}>
                             <IconButton aria-label="New Folder" onClick={() => handleNewFolderIconClick(data.id.get())}>
                                 <Box component={FontAwesomeIcon} icon={faFolder} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
                             </IconButton>
