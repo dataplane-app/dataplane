@@ -32,6 +32,13 @@ extend type Query {
     """
     pipelineTasksRun(pipelineID: String!, runID: String!, environmentID: String!): [WorkerTasks!]!
 
+        """
+    Get a single pipeline run status.
+    + **Route**: Private
+    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    getSinglepipelineRun(pipelineID: String!, runID: String!, environmentID: String!): PipelineRuns
+
     """
     Get all runs for a specific pipeline.
     + **Route**: Private

@@ -31,6 +31,7 @@ export default function Timer({ environmentID, pipeline }) {
     // Instantiate websocket connection
     useWebSocket(environmentID, RunState.run_id.get());
 
+    // Click Run button and start to run the pipeline
     const handleTimerStart = () => {
         FlowState.isRunning.set(true);
 
@@ -127,9 +128,11 @@ export default function Timer({ environmentID, pipeline }) {
     );
 }
 
-// Custom GraphQL hooks
+// This function runs the pipeline and updates the Global Runstate when button Run gets pressed - not when drop down menu changes
 export const useRunPipelinesHook = () => {
-    // GraphQL hook
+    
+    
+    // GraphQL hook - this is the Graphql to Run the pipeline
     const runPipelines = useRunPipelines();
 
     const RunState = useGlobalRunState();

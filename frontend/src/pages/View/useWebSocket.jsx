@@ -22,7 +22,7 @@ if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
 
 const websocketEndpoint = new_uri;
 
-// Global run state
+// Global run state - run_id gets added to global state when pipeline is run
 export const globalRunState = createState({ pipelineRunsTrigger: 1, runStart: null, runEnd: null, prevRunTime: null });
 export const useGlobalRunState = () => useHookState(globalRunState);
 

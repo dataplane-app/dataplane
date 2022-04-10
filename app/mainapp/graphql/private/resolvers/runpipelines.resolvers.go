@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -162,6 +162,35 @@ func (r *queryResolver) PipelineTasksRun(ctx context.Context, pipelineID string,
 	return currentRun, nil
 }
 
+func (r *queryResolver) GetSinglepipelineRun(ctx context.Context, pipelineID string, runID string, environmentID string) (*models.PipelineRuns, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("requires permissions")
+	}
+
+	// Get pipeline runs
+	var pipelineRun *models.PipelineRuns
+	err := database.DBConn.Where("pipeline_id = ? and environment_id = ? and run_id = ?", pipelineID, environmentID, runID).First(&pipelineRun).Error
+	if err != nil {
+		logging.PrintSecretsRedact(err.Error())
+	}
+
+	return pipelineRun, nil
+}
+
 func (r *queryResolver) GetPipelineRuns(ctx context.Context, pipelineID string, environmentID string) ([]*models.PipelineRuns, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -183,7 +212,7 @@ func (r *queryResolver) GetPipelineRuns(ctx context.Context, pipelineID string, 
 
 	// Get pipeline runs
 	var pipelineRuns []*models.PipelineRuns
-	err := database.DBConn.Order("created_at desc").Limit(20).Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&pipelineRuns).Error
+	err := database.DBConn.Select("run_id", "pipeline_id", "status", "environment_id", "run_type", "created_at", "ended_at", "updated_at").Order("created_at desc").Limit(20).Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&pipelineRuns).Error
 	if err != nil {
 		logging.PrintSecretsRedact(err.Error())
 	}
