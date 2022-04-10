@@ -12,6 +12,7 @@ import (
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
+	"dataplane/mainapp/messageq"
 	"errors"
 	"log"
 	"os"
@@ -640,6 +641,12 @@ func (r *mutationResolver) UpdateCodePackages(ctx context.Context, workerGroup s
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrive packages database error.")
+	}
+
+	// broadcast the update
+	err = messageq.MsgSend("packages-update."+environmentID+"."+workerGroup, c)
+	if err != nil {
+		logging.PrintSecretsRedact("NATS error:", err)
 	}
 
 	return "Success", nil

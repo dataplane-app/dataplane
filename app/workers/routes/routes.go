@@ -147,6 +147,7 @@ func Setup(port string) *fiber.App {
 	secrets.ListenSecretUpdates()
 	runtask.ListenTasks()
 	runcodeworker.ListenRunCode()
+	runcodeworker.CodeLoadPackagesListen()
 
 	/* Every 5 seconds tell mainapp about my status
 	Needs to be called after listen for tasks to avoid timing issues when accepting tasks

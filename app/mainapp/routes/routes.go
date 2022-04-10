@@ -270,7 +270,7 @@ func Setup(port string) *fiber.App {
 		worker.WorkerStatsWs(c, "workerstats."+c.Params("workergroup"))
 	}))
 
-	app.Get("/app/ws/rooms/:environment", websocket.New(func(c *websocket.Conn) {
+	app.Get("/app/ws/rooms/:environment", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
 
 		// log.Println(c.Query("token"))
 		// room := string(c.Params("room"))
