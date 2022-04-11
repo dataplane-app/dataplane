@@ -183,7 +183,8 @@ const useGetPipelineHook = (environmentID, setPipeline) => {
         } else if (responsePipeline.errors) {
             responsePipeline.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setPipeline({ ...responseNode, ...responsePipeline });
+            const nodeName = responseNode.name;
+            setPipeline({ ...responseNode, ...responsePipeline, nodeName });
         }
     };
 };
