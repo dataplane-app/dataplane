@@ -295,7 +295,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         justifyContent="space-between"
                         sx={{ pl: '15px', borderTop: 1, borderBottom: 1, borderColor: 'editorPage.borderColor', mb: 2, height: '33px' }}>
                         <Typography fontSize={'0.75rem'}>
-                            {EditorGlobal.currentPath.get().map((folderName) => folderName + ' > ')}
+                            {EditorGlobal.currentPath?.get()?.map((folderName) => folderName + ' > ')}
                             {EditorGlobal.selectedFile.name.value}
                         </Typography>
 

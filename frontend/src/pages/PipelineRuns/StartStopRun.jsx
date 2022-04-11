@@ -6,20 +6,19 @@ import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
 import { useRunPipelines } from '../../graphql/runPipelines';
 import { useStopPipelines } from '../../graphql/stopPipelines';
 import { useGlobalFlowState } from '../Flow';
-import useWebSocket, { useGlobalRunState } from './useWebSocket';
+import useWebSocket from './useWebSocket';
 import StatusChips from './StatusChips';
-import RunsDropdown from './RunsDropdown';
+import RunsDropdown, { displayTimerMs } from './RunsDropdown';
 import { Downgraded } from '@hookstate/core';
+import { useGlobalRunState } from './GlobalRunState';
 
-export default function Timer({ environmentID, pipeline }) {
+export default function StartStopRun({ environmentID, pipeline }) {
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
 
     // Local state
     const [elapsed, setElapsed] = useState();
-    const [isRunning, setIsRunning] = useState(false);
-    const [start, setStart] = useState();
 
     // GraphQL hooks
     const runPipelines = useRunPipelinesHook();
@@ -34,69 +33,56 @@ export default function Timer({ environmentID, pipeline }) {
     // Click Run button and start to run the pipeline
     const handleTimerStart = () => {
         FlowState.isRunning.set(true);
+        // RunState.runStart.set(null);
 
         // Find key of trigger node
         let triggerKey = Object.values(FlowState.elements.attach(Downgraded).get()).filter((a) => a.type === 'scheduleNode' || a.type === 'playNode')[0].id;
         // Set trigger to success so becomes green as the run starts
-        let triggerObj = { [triggerKey]: { status: 'Success' } };
+        let triggerNode = { [triggerKey]: { status: 'Success' } };
 
         // Clear run state before a new run
-        RunState.set({ pipelineRunsTrigger: 1, ...triggerObj });
+        RunState.merge({
+            nodes: triggerNode,
+            runStart: null,
+            runEnd: null,
+        });
+        // RunState.nodes.set(triggerNode);
         runPipelines(environmentID, pipelineId);
     };
 
     const handleTimerStop = () => {
         FlowState.isRunning.set(false);
-        RunState.start_dt.set(undefined);
         stopPipelines(environmentID, RunState.run_id.get());
     };
 
     // Updates timer every second
     useEffect(() => {
-        if (!start) return;
+        if (!RunState.runStart.get()) return;
+
         let secTimer;
-        if (isRunning) {
+        if (FlowState.isRunning.get()) {
             secTimer = setInterval(() => {
-                setElapsed(displayTimer(start));
+                setElapsed(displayTimer(RunState.runStart.get()));
             }, 500);
         }
 
-        if (!isRunning) {
+        if (RunState.runEnd.get()) {
             clearInterval(secTimer);
+            setElapsed(0);
         }
 
         return () => {
             clearInterval(secTimer);
             setElapsed(0);
-            setStart();
-            setIsRunning(false);
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [start]);
-
-    // Set isRunning state and start state for timer
-    useEffect(() => {
-        if (Object.values(RunState.get())?.some((a) => a?.status === 'Queue')) {
-            setStart(
-                Object.values(RunState.get())
-                    .map((a) => a?.start_dt)
-                    .filter((a) => a)
-                    .sort((a, b) => a?.localeCompare(b))[0]
-            );
-            setIsRunning(true);
-        } else {
-            setIsRunning(false);
-            setStart();
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.get()]);
+    }, [RunState.runStart.get(), RunState.runEnd.get()]);
 
     return (
         <Grid item>
             <Box display="flex" alignItems="center">
-                {isRunning ? (
+                {FlowState.isRunning.get() && RunState.runEnd.get() === null ? (
                     <Button
                         onClick={handleTimerStop}
                         variant="outlined"
@@ -112,15 +98,23 @@ export default function Timer({ environmentID, pipeline }) {
 
                 <StatusChips />
 
-                <RunsDropdown environmentID={environmentID} pipeline={pipeline} />
+                {pipeline && environmentID ? <RunsDropdown environmentID={environmentID} pipeline={pipeline} /> : null}
 
-                {isRunning ? (
-                    <Typography variant="h3" ml={2}>
-                        {elapsed ? elapsed : isRunning ? '' : '00:00:00'}
-                    </Typography>
+                {!RunState.runEnd.get() ? (
+                    // If active run, show live timer
+                    RunState.dropdownRunId.get() === RunState.run_id.get() ? (
+                        <Typography variant="h3" ml={2}>
+                            {elapsed ? elapsed : FlowState.isRunning.get() ? '' : '00:00:00'}
+                        </Typography>
+                    ) : (
+                        // If not active run, show calculated run time
+                        <Typography variant="h3" ml={2}>
+                            {displayTimerMs(RunState.runStart.get(), RunState.runEnd.get())}
+                        </Typography>
+                    )
                 ) : (
                     <Typography variant="h3" ml={2}>
-                        {RunState.prevRunTime.get()}
+                        {displayTimerMs(RunState.runStart.get(), RunState.runEnd.get())}
                     </Typography>
                 )}
             </Box>
@@ -130,8 +124,6 @@ export default function Timer({ environmentID, pipeline }) {
 
 // This function runs the pipeline and updates the Global Runstate when button Run gets pressed - not when drop down menu changes
 export const useRunPipelinesHook = () => {
-    
-    
     // GraphQL hook - this is the Graphql to Run the pipeline
     const runPipelines = useRunPipelines();
 
@@ -154,6 +146,8 @@ export const useRunPipelinesHook = () => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             RunState.run_id.set(response.run_id);
+            RunState.dropdownRunId.set(response.run_id);
+            RunState.runStart.set(response.created_at);
         }
     };
 };
@@ -179,8 +173,8 @@ const useStopPipelinesHook = () => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            RunState.prevRunTime.set(displayTimer(response.created_at, response.ended_at));
-            RunState.pipelineRunsTrigger.set((t) => t + 1);
+            // add if statement to match run id before setting runEnd time
+            RunState.runEnd.set(response.ended_at);
         }
     };
 };
@@ -209,8 +203,7 @@ export const usePipelineTasksRunHook = () => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            response.map((a) => RunState[a.node_id].set({ status: a.status }));
-            RunState.start_dt.set(response.map((a) => a.start_dt)[0]);
+            response.map((a) => RunState.nodes[a.node_id].merge({ status: a.status }));
             if (response.every((a) => a.status === 'Fail' || a.status === 'Success')) {
                 FlowState.isRunning.set(false);
                 RunState.run_id.set(response[0].run_id);

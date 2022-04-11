@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
+import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import ConsoleLogHelper from '../../../Helper/logger';
-import { useGlobalRunState } from '../../../pages/View/useWebSocket';
+import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 
-var loc = window.location, new_uri;
-if (loc.protocol === "https:") {
-    new_uri = "wss:";
+var loc = window.location,
+    new_uri;
+if (loc.protocol === 'https:') {
+    new_uri = 'wss:';
 } else {
-    new_uri = "ws:";
+    new_uri = 'ws:';
 }
-new_uri += "//" + loc.host;
+new_uri += '//' + loc.host;
 
 // console.log("websockets loc:", new_uri)
-if (process.env.REACT_APP_DATAPLANE_ENV == "build"){
+if (process.env.REACT_APP_DATAPLANE_ENV == 'build') {
     new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
-}else{
+} else {
     new_uri = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
 }
 
@@ -27,11 +29,13 @@ export default function useWebSocketLog(environmentId, run_id, node_id, setKeys)
     // Global state
     const RunState = useGlobalRunState();
 
+    const { authToken } = useGlobalAuthState();
+
     useEffect(() => {
         if (RunState.selectedNodeStatus.get() !== 'Run') return;
 
         function connect() {
-            ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=workerlogs.${run_id}.${node_id}&id=${run_id}.${node_id}`);
+            ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=workerlogs.${run_id}.${node_id}&id=${run_id}.${node_id}&token=${authToken.get()}`);
 
             ws.current.onopen = () => ConsoleLogHelper('ws opened');
             ws.current.onclose = () => {

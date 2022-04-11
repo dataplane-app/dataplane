@@ -5,7 +5,7 @@ import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
-import { useGlobalRunState } from '../../../pages/View/useWebSocket';
+import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import { customSourceHandle, customSourceHandleDragging, customTargetHandle } from '../../../utils/handleStyles';
 import ProcessTypeEditorModeItem from '../../MoreInfoContent/ProcessTypeEditorModeItem';
 import ProcessTypeNodeItem from '../../MoreInfoContent/ProcessTypeNodeItem';
@@ -42,16 +42,16 @@ const BashNode = (props) => {
 
     // Set border color on node status change
     useEffect(() => {
-        setBorderColor(getColor(RunState[props.id]?.status?.get()));
+        setBorderColor(getColor(RunState.nodes[props.id]?.status?.get()));
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState[props.id].status?.get()]);
+    }, [RunState.nodes[props.id]?.status?.get()]);
 
     const onClick = () => {
         RunState.node_id.set(props.id);
         RunState.node_name.set(props.data.name);
         RunState.node_description.set(props.data.description);
-        RunState.selectedNodeStatus.set(RunState[props.id].status.get());
+        RunState.selectedNodeStatus.set(RunState.nodes[props.id].status.get());
     };
 
     return (

@@ -4,7 +4,7 @@ import { Box, Grid, Tooltip, Typography, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Handle } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
-import { useGlobalRunState } from '../../../pages/View/useWebSocket';
+import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import customNodeStyle from '../../../utils/customNodeStyle';
 import { customSourceHandle, customSourceHandleDragging } from '../../../utils/handleStyles';
 import PlayTriggerNodeItem from '../../MoreInfoContent/PlayTriggerNodeItem';
@@ -41,10 +41,10 @@ const PlayNode = (props) => {
 
     // Set border color on node status change
     useEffect(() => {
-        setBorderColor(getColor(RunState[props.id]?.status?.get()));
+        setBorderColor(getColor(RunState.nodes[props.id]?.status?.get()));
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState[props.id].status?.get()]);
+    }, [RunState.nodes[props.id]?.status?.get()]);
 
     return (
         <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>

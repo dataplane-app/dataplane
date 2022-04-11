@@ -5,7 +5,6 @@ import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
-import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 import customNodeStyle from '../../../utils/customNodeStyle';
 import { customSourceHandle, customSourceHandleDragging } from '../../../utils/handleStyles';
 import ScheduleTriggerNodeItem from '../../MoreInfoContent/ScheduleTriggerNodeItem';
@@ -13,6 +12,7 @@ import MoreInfoMenu from '../../MoreInfoMenu';
 import { getColor } from '../utils';
 import cronstrue from 'cronstrue';
 import { getTimeZoneOffSet } from '../../DrawerContent/SchedulerDrawer/CronTab';
+import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 
 const ScheduleNode = (props) => {
     // Theme hook
@@ -45,10 +45,10 @@ const ScheduleNode = (props) => {
 
     // Set border color on node status change
     useEffect(() => {
-        setBorderColor(getColor(RunState[props.id]?.status?.get()));
+        setBorderColor(getColor(RunState.nodes[props.id]?.status?.get()));
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState[props.id].status?.get()]);
+    }, [RunState.nodes[props.id]?.status?.get()]);
 
     // Set description
     useEffect(() => {

@@ -9,7 +9,6 @@ import { useHistory } from 'react-router-dom';
 import MoreInfoMenu from '../../components/MoreInfoMenuPipeline';
 import { useGlobalFlowState } from '../Flow';
 import { useRunPipelines } from '../../graphql/runPipelines';
-import { useGlobalRunState } from '../View/useWebSocket';
 import { useSnackbar } from 'notistack';
 import CustomChip from '../../components/CustomChip';
 import cronstrue from 'cronstrue';
@@ -17,6 +16,7 @@ import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
 import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
+import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
 
 const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDeployments }) => {
     // React router

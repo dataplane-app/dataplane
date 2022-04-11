@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../../graphql/getPipelineTasksRun';
 import { useGlobalFlowState } from '../../Flow';
-import { useGlobalRunState } from '../../View/useWebSocket';
+import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 
 export default function RunsDropdown({ environmentID, deployment }) {
     // Global states

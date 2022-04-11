@@ -12,7 +12,7 @@ import { useGetNonDefaultWGNodes } from '../graphql/getNonDefaultWGNodes';
 import { useHistory, useParams } from 'react-router-dom';
 import { useAddDeployment } from '../graphql/addDeployment';
 import { useState as useHookState } from '@hookstate/core';
-import { useGetPipelineHook } from './View';
+import { useGetPipelineHook } from './PipelineRuns';
 import { useGetActiveDeployment } from '../graphql/getActiveDeployment';
 import { useGetWorkerGroups } from '../graphql/getWorkerGroups';
 

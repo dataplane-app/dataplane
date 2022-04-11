@@ -29,7 +29,7 @@ import TeamDetail from './pages/TeamDetail';
 import TeamGroup from './pages/TeamGroup';
 import Teams from './pages/Teams';
 import PipelineEditor from './pages/Editor';
-import View from './pages/View';
+import View from './pages/PipelineRuns';
 import DeploymentView from './pages/Deployments/View';
 import PipelinesPermission from './pages/PipelinesPermission';
 import createCustomTheme from './theme';

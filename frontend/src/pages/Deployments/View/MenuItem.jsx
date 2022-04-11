@@ -1,7 +1,7 @@
 import { MenuItem } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useGlobalFlowState } from '../../Flow';
-import { useGlobalRunState } from '../../View/useWebSocket';
+import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 import { useRunPipelinesHook } from './Timer';
 
 const DeploymentViewPageItem = (props) => {

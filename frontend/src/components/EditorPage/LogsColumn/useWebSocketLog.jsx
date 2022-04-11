@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import ConsoleLogHelper from '../../../Helper/logger';
 import { useGlobalEditorState } from '../../../pages/Editor';
-import { useGlobalRunState } from '../../../pages/View/useWebSocket';
+import { useGlobalRunState } from '../../../pages/PipelineRuns/useWebSocket';
 
 var loc = window.location,
     new_uri;
@@ -29,11 +30,13 @@ export default function useWebSocketLog(environmentId, run_id, setKeys) {
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
 
+    const { authToken } = useGlobalAuthState();
+
     useEffect(() => {
         if (!run_id) return;
 
         function connect() {
-            ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=coderunfilelogs.${run_id}&id=${run_id}`);
+            ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=coderunfilelogs.${run_id}&id=${run_id}&token=${authToken.get()}`);
 
             ws.current.onopen = () => {
                 EditorGlobal.runState.set('Running');

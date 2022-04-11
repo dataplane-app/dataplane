@@ -5,9 +5,9 @@ import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
 import { useGlobalFlowState } from '../Flow';
-import { useGlobalRunState } from '../View/useWebSocket';
 import { useGetDeployments } from '../../graphql/getDeployments';
 import DeploymentsTable from './DeploymentsTable';
+import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
 
 const Deployments = () => {
     // Global states
