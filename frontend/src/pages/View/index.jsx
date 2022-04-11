@@ -62,8 +62,8 @@ const View = () => {
         if (!Environment.id.get()) return;
         setIsLoadingFlow(false);
         getPipeline();
-        // Needed once on page load, flow for the rest of the runs come from pipelineRuns
-        getPipelineFlow(Environment.id.get());
+        // Needed once on page load, flow for the rest of the runs come from singlepipelineRun
+        // getPipelineFlow(Environment.id.get());
 
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps

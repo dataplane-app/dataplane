@@ -4,11 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
 import { useParams } from 'react-router-dom';
 import { useGetNodeLogs } from '../../../graphql/getNodeLogs';
-import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 import { faRunning, faTimes, faCheckCircle, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { RunningSpinner } from './RunningSpinner';
 import useWebSocketLog, { formatDate } from './useWebSocketLog';
+import { useGlobalRunState } from '../../../pages/View/GlobalRunState';
 
 const LogsDrawer = ({ environmentId, handleClose }) => {
     const [websocketResp, setWebsocketResp] = useState('');

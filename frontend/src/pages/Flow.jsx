@@ -24,11 +24,11 @@ import { faExpandArrowsAlt, faPen } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useGlobalAuthState } from '../Auth/UserAuth';
-import { useGlobalRunState } from './View/useWebSocket';
 import { useGetPipelineFlow } from '../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from './View';
 import UpdatePipelineDrawer from '../components/DrawerContent/UpdatePipelineDrawer';
 import { useGetPipeline } from '../graphql/getPipeline';
+import { useGlobalRunState } from './View/GlobalRunState';
 
 export const globalFlowState = createState({
     isRunning: false,

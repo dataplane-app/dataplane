@@ -8,7 +8,7 @@ import { useGetPipelines } from '../graphql/getPipelines';
 import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
 import { useGlobalFlowState } from './Flow';
-import { useGlobalRunState } from './View/useWebSocket';
+import { useGlobalRunState } from './View/GlobalRunState';
 
 const Pipelines = () => {
     // Global states

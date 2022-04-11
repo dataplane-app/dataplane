@@ -10,7 +10,7 @@ import useWebSocket from './useWebSocket';
 import StatusChips from './StatusChips';
 import RunsDropdown from './RunsDropdown';
 import { Downgraded } from '@hookstate/core';
-import { useGlobalRunState } from '../../View/useWebSocket';
+import { useGlobalRunState } from '../../View/GlobalRunState';
 
 export default function Timer({ environmentID, deployment }) {
     // Global state

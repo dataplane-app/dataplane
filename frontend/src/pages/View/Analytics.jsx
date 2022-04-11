@@ -3,11 +3,11 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 import 'chartjs-adapter-luxon';
 import { Bar } from 'react-chartjs-2';
 import { Button } from '@mui/material';
-import { useGlobalRunState } from './useWebSocket';
 import { Downgraded } from '@hookstate/core';
 import { useMe } from '../../graphql/me';
 import { useSnackbar } from 'notistack';
 import { Box } from '@mui/system';
+import { useGlobalRunState } from './GlobalRunState';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, TimeScale, TimeSeriesScale);
 

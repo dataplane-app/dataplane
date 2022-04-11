@@ -9,7 +9,6 @@ import { useHistory } from 'react-router-dom';
 import MoreInfoMenuPipeline from '../../MoreInfoMenuPipeline';
 import { useGlobalFlowState } from '../../../pages/Flow';
 import { useRunPipelines } from '../../../graphql/runPipelines';
-import { useGlobalRunState } from '../../../pages/View/useWebSocket';
 import { useSnackbar } from 'notistack';
 import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from '../../../pages/View';
@@ -19,6 +18,7 @@ import TurnOffPipelineDrawer from '../../DrawerContent/TurnOffPipelineDrawer';
 import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import DuplicatePipelineDrawer from '../../DrawerContent/DuplicatePipelineDrawer';
+import { useGlobalRunState } from '../../../pages/View/GlobalRunState';
 
 const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
     // React router
