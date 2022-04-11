@@ -12,7 +12,7 @@ import MoreInfoMenu from '../../MoreInfoMenu';
 import { getColor } from '../utils';
 import cronstrue from 'cronstrue';
 import { getTimeZoneOffSet } from '../../DrawerContent/SchedulerDrawer/CronTab';
-import { useGlobalRunState } from '../../../pages/View/GlobalRunState';
+import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 
 const ScheduleNode = (props) => {
     // Theme hook

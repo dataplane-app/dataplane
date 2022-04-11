@@ -4,7 +4,7 @@ import { Grid, Tooltip, Typography, useTheme, Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
 import { useGlobalFlowState } from '../../../pages/Flow';
-import { useGlobalRunState } from '../../../pages/View/GlobalRunState';
+import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import customNodeStyle from '../../../utils/customNodeStyle';
 import { customTargetHandle } from '../../../utils/handleStyles';
 import PlayTriggerNodeItem from '../../MoreInfoContent/PlayTriggerNodeItem';

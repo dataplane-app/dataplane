@@ -8,7 +8,7 @@ import { faRunning, faTimes, faCheckCircle, faExclamationCircle } from '@fortawe
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { RunningSpinner } from './RunningSpinner';
 import useWebSocketLog, { formatDate } from './useWebSocketLog';
-import { useGlobalRunState } from '../../../pages/View/GlobalRunState';
+import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 
 const LogsDrawer = ({ environmentId, handleClose }) => {
     const [websocketResp, setWebsocketResp] = useState('');

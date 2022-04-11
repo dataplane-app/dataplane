@@ -16,7 +16,7 @@ import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
 import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
-import { useGlobalRunState } from '../View/GlobalRunState';
+import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
 
 const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDeployments }) => {
     // React router

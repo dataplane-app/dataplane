@@ -12,7 +12,7 @@ import WorkerDetailMemory from './WorkerDetailMemory';
 import useWebSocket from './useWebSocket';
 import { useParams } from 'react-router-dom';
 import { balancerDict } from './Workers';
-import { useMeHook } from '../View/Analytics';
+import { useMeHook } from '../PipelineRuns/Analytics';
 
 const tableWidth = '1140px';
 

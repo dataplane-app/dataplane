@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import ConsoleLogHelper from '../../../Helper/logger';
-import { useGlobalRunState } from '../../../pages/View/GlobalRunState';
+import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 
 var loc = window.location,
     new_uri;

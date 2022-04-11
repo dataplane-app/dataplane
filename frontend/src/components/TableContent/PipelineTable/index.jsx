@@ -11,14 +11,14 @@ import { useGlobalFlowState } from '../../../pages/Flow';
 import { useRunPipelines } from '../../../graphql/runPipelines';
 import { useSnackbar } from 'notistack';
 import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
-import { prepareInputForFrontend } from '../../../pages/View';
+import { prepareInputForFrontend } from '../../../pages/PipelineRuns';
 import DeletePipelineDrawer from '../../DrawerContent/DeletePipelineDrawer';
 import CustomChip from '../../CustomChip';
 import TurnOffPipelineDrawer from '../../DrawerContent/TurnOffPipelineDrawer';
 import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import DuplicatePipelineDrawer from '../../DrawerContent/DuplicatePipelineDrawer';
-import { useGlobalRunState } from '../../../pages/View/GlobalRunState';
+import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 
 const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
     // React router

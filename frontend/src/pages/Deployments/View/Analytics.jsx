@@ -7,7 +7,7 @@ import { Downgraded } from '@hookstate/core';
 import { useMe } from '../../../graphql/me';
 import { useSnackbar } from 'notistack';
 import { Box } from '@mui/system';
-import { useGlobalRunState } from '../../View/GlobalRunState';
+import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, TimeScale, TimeSeriesScale);
 

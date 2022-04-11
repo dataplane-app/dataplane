@@ -7,7 +7,7 @@ import { useSnackbar } from 'notistack';
 import { useGlobalFlowState } from '../Flow';
 import { useGetDeployments } from '../../graphql/getDeployments';
 import DeploymentsTable from './DeploymentsTable';
-import { useGlobalRunState } from '../View/GlobalRunState';
+import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
 
 const Deployments = () => {
     // Global states
