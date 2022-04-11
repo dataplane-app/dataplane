@@ -12,7 +12,7 @@ import RunsDropdown, { displayTimerMs } from './RunsDropdown';
 import { Downgraded } from '@hookstate/core';
 import { useGlobalRunState } from './GlobalRunState';
 
-export default function StartStop({ environmentID, pipeline }) {
+export default function StartStopRun({ environmentID, pipeline }) {
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
