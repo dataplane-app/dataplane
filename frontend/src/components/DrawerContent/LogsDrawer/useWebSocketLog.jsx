@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import ConsoleLogHelper from '../../../Helper/logger';
 import { useGlobalRunState } from '../../../pages/View/GlobalRunState';
 
@@ -28,11 +29,13 @@ export default function useWebSocketLog(environmentId, run_id, node_id, setKeys)
     // Global state
     const RunState = useGlobalRunState();
 
+    const { authToken } = useGlobalAuthState();
+
     useEffect(() => {
         if (RunState.selectedNodeStatus.get() !== 'Run') return;
 
         function connect() {
-            ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=workerlogs.${run_id}.${node_id}&id=${run_id}.${node_id}`);
+            ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=workerlogs.${run_id}.${node_id}&id=${run_id}.${node_id}&token=${authToken.get()}`);
 
             ws.current.onopen = () => ConsoleLogHelper('ws opened');
             ws.current.onclose = () => {
