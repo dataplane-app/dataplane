@@ -215,6 +215,14 @@ func RunPipeline(pipelineID string, environmentID string) (models.PipelineRuns, 
 
 		}
 
+		errnat := messageq.MsgSend("taskupdate."+environmentID+"."+RunID, addTask)
+		if errnat != nil {
+			if config.Debug == "true" {
+				log.Println(errnat)
+			}
+
+		}
+
 		triggerData[s.NodeID] = addTask
 
 		course = append(course, addTask)
