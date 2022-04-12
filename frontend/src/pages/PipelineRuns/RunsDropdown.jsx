@@ -8,15 +8,15 @@ import { useGetSinglepipelineRun } from '../../graphql/getSinglepipelineRun';
 import { useGlobalFlowState } from '../Flow';
 import { useGetPipelineFlowHook } from '.';
 import { useGlobalRunState } from './GlobalRunState';
+import { Downgraded } from '@hookstate/core';
 
-export default function RunsDropdown({ environmentID, pipeline }) {
+export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, selectedRun, setSelectedRun }) {
     // Global states
     const RunState = useGlobalRunState();
+    // console.log('🚀 ~ file: RunsDropdown.jsx ~ line 15 ~ RunsDropdown ~ RunState', RunState.attach(Downgraded).get());
     const FlowState = useGlobalFlowState();
 
     // Local state
-    const [selectedRun, setSelectedRun] = useState(null);
-    const [runs, setRuns] = useState([]);
     const [isNewFlow, setIsNewFlow] = useState(false);
 
     // GraphQL hooks
@@ -48,9 +48,9 @@ export default function RunsDropdown({ environmentID, pipeline }) {
     // Get pipeline runs with each run start.
     useEffect(() => {
         if (RunState.run_id.get() && FlowState.isRunning.get()) {
-            getPipelineRuns();
-            getSinglepipelineRun(RunState.run_id.get());
-            getPipelineTasksRun(RunState.run_id.get(), environmentID);
+            // getPipelineRuns();
+            // getSinglepipelineRun(RunState.run_id.get());
+            // getPipelineTasksRun(RunState.run_id.get(), environmentID);
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -111,7 +111,7 @@ export const useGetPipelineRunsHook = (environmentID, setRuns) => {
     // URI parameter
     const { pipelineId } = useParams();
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const { enqueueSnackbar } = useSnackbar();
 
     // Get members
     return async () => {
@@ -119,15 +119,12 @@ export const useGetPipelineRunsHook = (environmentID, setRuns) => {
 
         if (response.length === 0) {
             setRuns([]);
-        } else if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
+        } else if (response.r || response.error) {
+            enqueueSnackbar("Can't get flow: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setRuns(response);
-            RunState.runStart.set(response[0].created_at);
-            RunState.runEnd.set(response[0].ended_at);
             return [response[0].run_id, response[0].updated_at];
         }
     };
@@ -143,7 +140,7 @@ const useGetSinglepipelineRunHook = (environmentID, setSelectedRun) => {
     // URI parameter
     const { pipelineId } = useParams();
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const { enqueueSnackbar } = useSnackbar();
 
     // Get pipeline run
     return async (runID) => {
@@ -151,21 +148,29 @@ const useGetSinglepipelineRunHook = (environmentID, setSelectedRun) => {
 
         if (response.length === 0) {
             setSelectedRun([]);
-        } else if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get pipeline run: " + response.msg, { variant: 'error' });
+        } else if (response.r || response.error) {
+            enqueueSnackbar("Can't get pipeline run: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
+            // Check if there is an active run when the page loads and set run_id to fire websockets
+            if (response.created_at && !response.ended_at) {
+                FlowState.isRunning.set(true);
+                RunState.run_id.set(response.run_id);
+            }
             setSelectedRun(response);
             FlowState.elements.set(response.run_json);
-            RunState.runStart.set(response.created_at);
-            RunState.runEnd.set(response.ended_at);
+            RunState.runIDs.merge({
+                [response.run_id]: {
+                    runStart: response.created_at,
+                    runEnd: response.ended_at,
+                },
+            });
         }
     };
 };
 
-export const usePipelineTasksRunHook = (selectedRun) => {
+export const usePipelineTasksRunHook = () => {
     // GraphQL hook
     const getPipelineTasksRun = usePipelineTasksRun();
 
@@ -173,9 +178,8 @@ export const usePipelineTasksRunHook = (selectedRun) => {
     const { pipelineId } = useParams();
 
     const RunState = useGlobalRunState();
-    const FlowState = useGlobalFlowState();
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const { enqueueSnackbar } = useSnackbar();
 
     // Update pipeline flow
     return async (runID, environmentID) => {
@@ -183,17 +187,11 @@ export const usePipelineTasksRunHook = (selectedRun) => {
 
         const response = await getPipelineTasksRun({ pipelineID: pipelineId, runID, environmentID });
 
-        if (response.r === 'Unauthorized') {
-            closeSnackbar();
-            enqueueSnackbar(`Can't update flow: ${response.r}`, { variant: 'error' });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't update flow: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            // If there is an active run when the page loads
-            if (RunState.runStart.get() && !RunState.runEnd.get()) {
-                FlowState.isRunning.set(true);
-            }
-
             const nodes = {};
             response.map(
                 (a) =>
@@ -203,7 +201,10 @@ export const usePipelineTasksRunHook = (selectedRun) => {
                         start_dt: a.start_dt,
                     })
             );
-            RunState.nodes.set(nodes);
+            RunState.batch((s) => {
+                s.selectedRunID.set(response[0].run_id);
+                s.runIDs[response[0].run_id].nodes.set(nodes);
+            }, 'tasks-batch');
         }
     };
 };

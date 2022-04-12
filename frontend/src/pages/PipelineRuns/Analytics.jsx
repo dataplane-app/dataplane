@@ -94,8 +94,8 @@ export function Analytics({ setIsOpenAnalytics }) {
                 time: {
                     // unit: 'second',
                 },
-                min: RunState.runStart.get(),
-                max: RunState.runEnd.get(),
+                min: RunState.runStart.get(), // to be changed
+                max: RunState.runEnd.get(), // to be changed
                 grid: {
                     display: false,
                 },

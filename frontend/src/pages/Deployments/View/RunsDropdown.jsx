@@ -7,13 +7,12 @@ import { usePipelineTasksRun } from '../../../graphql/getPipelineTasksRun';
 import { useGlobalFlowState } from '../../Flow';
 import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 
-export default function RunsDropdown({ environmentID, deployment }) {
+export default function RunsDropdown({ environmentID, deployment, selectedRun, setSelectedRun }) {
     // Global states
     const RunState = useGlobalRunState();
     const FlowState = useGlobalFlowState();
 
     // Local state
-    const [selectedRun, setSelectedRun] = useState();
     const [runs, setRuns] = useState([]);
     const [isNewFlow, setIsNewFlow] = useState(true);
 

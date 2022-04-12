@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, environmentID string, runType string) (*models.PipelineRuns, error) {
+func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, environmentID string, runType string, runID string) (*models.PipelineRuns, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -40,7 +40,7 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 
 	switch runType {
 	case "pipeline":
-		resp, err = pipelines.RunPipeline(pipelineID, environmentID)
+		resp, err = pipelines.RunPipeline(pipelineID, environmentID, runID)
 	case "deployment":
 		resp, err = pipelines.RunDeployment(pipelineID, environmentID)
 	default:

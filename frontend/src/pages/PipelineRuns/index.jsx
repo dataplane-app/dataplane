@@ -1,4 +1,3 @@
-import { ActionLayer } from './ActionLayer';
 import { useTheme } from '@emotion/react';
 import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -20,6 +19,7 @@ import CustomChip from '../../components/CustomChip';
 import { useGetPipeline } from '../../graphql/getPipeline';
 import { Analytics } from './Analytics';
 import { Downgraded } from '@hookstate/core';
+import StartStopRun from './StartStopRun';
 
 const View = () => {
     const Environment = useGlobalEnvironmentState();
@@ -62,8 +62,8 @@ const View = () => {
         if (!Environment.id.get()) return;
         setIsLoadingFlow(false);
         getPipeline();
-        // Needed once on page load, flow for the rest of the runs come from singlepipelineRun
-        // getPipelineFlow(Environment.id.get());
+        // Needed once on page load, to redirect to flow page if no flow
+        getPipelineFlow(Environment.id.get());
 
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -140,8 +140,10 @@ const View = () => {
                     </Box>
                 </Grid>
 
-                {/* Run/Stop button, Chips, Timer */}
-                <ActionLayer environmentId={Environment.id.get()} pipeline={pipeline} />
+                {/* Run/Stop button, Chips, Dropdown, Timer */}
+                <Grid mt={4} container alignItems="center" sx={{ width: { xl: '88%' }, flexWrap: 'nowrap' }}>
+                    <StartStopRun environmentID={Environment.id.get()} pipeline={pipeline} />
+                </Grid>
             </Box>
             {!FlowState.isOpenLogDrawer.get() && !isOpenAnalytics ? (
                 <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
