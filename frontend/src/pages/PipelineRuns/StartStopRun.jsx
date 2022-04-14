@@ -46,7 +46,7 @@ export default function StartStopRun({ environmentID, pipeline }) {
             }, 500);
         }
 
-        if (RunState.runIDs[RunState.selectedRunID.get()]?.runEnd.get()) {
+        if (RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get()) {
             clearInterval(secTimer);
             setElapsed(0);
         }

@@ -54,9 +54,6 @@ const PythonNode = (props) => {
 
     const onClick = () => {
         RunState.node_id.set(props.id);
-        RunState.node_name.set(props.data.name);
-        RunState.node_description.set(props.data.description);
-        // RunState.selectedNodeStatus.set(RunState.nodes[props.id].status.get());  <== Fix this
     };
 
     return (
@@ -85,7 +82,12 @@ const PythonNode = (props) => {
 
                 <Grid item>
                     <Typography fontSize={8}>
-                        {RunState[props.id].status?.get() === 'Success' && displayTimer(RunState[props.id].end_dt?.get(), RunState[props.id].start_dt?.get())}
+                        {RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() &&
+                            RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.status?.get() === 'Success' &&
+                            displayTimer(
+                                RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.end_dt.get(),
+                                RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.start_dt.get()
+                            )}
                     </Typography>
                 </Grid>
 

@@ -32,7 +32,7 @@ export default function useWebSocketLog(environmentId, run_id, node_id, setKeys)
     const { authToken } = useGlobalAuthState();
 
     useEffect(() => {
-        if (RunState.selectedNodeStatus.get() !== 'Run') return;
+        if (RunState.runIDs[RunState.selectedRunID.get()].nodes[node_id].status.get() !== 'Run') return;
 
         function connect() {
             ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=workerlogs.${run_id}.${node_id}&id=${run_id}.${node_id}&token=${authToken.get()}`);

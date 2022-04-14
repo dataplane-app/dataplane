@@ -7,6 +7,7 @@ export const globalRunState = createState({
     runTrigger: 0,
     onLoadTrigger: 0,
     onChangeTrigger: 0,
+    node_id: null,
 });
 
 export const useGlobalRunState = () => useHookState(globalRunState);
