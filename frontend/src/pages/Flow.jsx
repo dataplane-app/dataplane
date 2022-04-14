@@ -165,6 +165,7 @@ const Flow = () => {
             runTrigger: 0,
             onLoadTrigger: 0,
             onChangeTrigger: 0,
+            node_id: null,
         });
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
