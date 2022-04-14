@@ -5,7 +5,7 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
 import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
 
-const TurnOffPipelineDrawer = ({ handleClose, name, pipelineID, environmentID, getPipelineFlow, getPipeline }) => {
+const TurnOffPipelineDrawer = ({ handleClose, name, pipelineID, environmentID, getPipeline }) => {
     const { closeSnackbar } = useSnackbar();
 
     // Clear snackbar on load
@@ -15,7 +15,7 @@ const TurnOffPipelineDrawer = ({ handleClose, name, pipelineID, environmentID, g
     }, []);
 
     // Graphql hook
-    const turnOnOffPipeline = useTurnOnOffPipelineHook(pipelineID, environmentID, handleClose, getPipelineFlow, getPipeline);
+    const turnOnOffPipeline = useTurnOnOffPipelineHook(pipelineID, environmentID, handleClose, getPipeline);
 
     return (
         <Box position="relative">
@@ -60,7 +60,7 @@ const TurnOffPipelineDrawer = ({ handleClose, name, pipelineID, environmentID, g
 export default TurnOffPipelineDrawer;
 
 // ------ Custom hook
-export const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose, refreshData, getPipeline) => {
+export const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose, getPipeline) => {
     // GraphQL hook
     const turnOnOffPipeline = useTurnOnOffPipeline();
 
@@ -80,7 +80,6 @@ export const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose,
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             handleClose();
-            refreshData();
             getPipeline();
         }
     };

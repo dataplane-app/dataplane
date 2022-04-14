@@ -159,7 +159,13 @@ const Flow = () => {
         }
 
         // Clear RunState to remove node colors on load
-        RunState.set({ pipelineRunsTrigger: 1 });
+        RunState.set({
+            selectedRunID: null,
+            runIDs: null,
+            runTrigger: 0,
+            onLoadTrigger: 0,
+            onChangeTrigger: 0,
+        });
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.selectedEdge.get()]);
@@ -306,7 +312,6 @@ const Flow = () => {
             updatePipelineFlow(flowElements.elements, Environment.id.get(), pipeline);
             FlowState.isEditorPage.set(false);
             FlowState.selectedElement.set(null);
-            RunState.run_id.set(0);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [reactFlowInstance, jwt]);

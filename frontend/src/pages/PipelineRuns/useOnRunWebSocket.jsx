@@ -3,13 +3,11 @@ import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalFlowState } from '../Flow';
 import { useGlobalRunState } from './GlobalRunState';
-import { usePipelineTasksRunHook } from './RunsDropdown';
 import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { v4 as uuidv4 } from 'uuid';
 import { useRunPipelines } from '../../graphql/runPipelines';
 import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
-import { Downgraded } from '@hookstate/core';
 
 var loc = window.location,
     new_uri;
@@ -28,32 +26,34 @@ if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
 
 const websocketEndpoint = new_uri;
 
-export default function useRunPipelineWebSocket(environmentId, setRuns, setSelectedRun) {
+export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun) {
+    // Global state
     const RunState = useGlobalRunState();
     const FlowState = useGlobalFlowState();
 
-    const getPipelineRuns = useGetPipelineRuns();
-
     // GraphQL hook - this is the Graphql to Run the pipeline
     const runPipelines = useRunPipelines();
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const getPipelineRuns = useGetPipelineRuns();
+
+    const { enqueueSnackbar } = useSnackbar();
+
     // URI parameter
     const { pipelineId } = useParams();
 
+    // Websocket state
     const reconnectOnClose = useRef(true);
     const ws = useRef(null);
-
     const { authToken } = useGlobalAuthState();
 
     return useEffect(() => {
-        if (RunState.runTrigger.get() < 1) return;
+        if (RunState.runTrigger.get() === undefined || RunState.runTrigger.get() < 1) return;
         function connect() {
             const runId = uuidv4();
-            RunState.run_id.set(runId);
-            RunState.runIDs.merge({
-                [runId]: {},
-            });
-            RunState.selectedRunID.set(runId);
+
+            RunState.batch((s) => {
+                s.runIDs.merge({ [runId]: {} });
+                s.selectedRunID.set(runId);
+            }, 'run-batch');
 
             ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=taskupdate.${environmentId}.${runId}&id=${runId}&token=${authToken.get()}`);
 
@@ -72,7 +72,10 @@ export default function useRunPipelineWebSocket(environmentId, setRuns, setSelec
                 } else if (response.errors) {
                     response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
                 } else {
-                    // FlowState.elements.set(response.run_json);
+                    RunState.runIDs[response.run_id].merge({
+                        runStart: response.created_at,
+                        runEnd: response.ended_at,
+                    });
                 }
 
                 // Get a list of all pipeline runs
@@ -87,11 +90,9 @@ export default function useRunPipelineWebSocket(environmentId, setRuns, setSelec
                 } else {
                     setRuns(response);
                     setSelectedRun(response[0]);
-                    // RunState.selectedRunID.set(runId);
                 }
-
-                // getSinglepipelineRun(lastRunId);
             };
+
             ws.current.onclose = () => {
                 // Exit if closing the connection was intentional
                 if (!reconnectOnClose.current) {
@@ -117,18 +118,18 @@ export default function useRunPipelineWebSocket(environmentId, setRuns, setSelec
                             end_dt: response.end_dt,
                         },
                     });
-                    RunState.run_id.set(response.run_id);
+                    RunState.selectedRunID.set(response.run_id);
                 }
 
-                if (response.MSG) {
+                if (response.MSG === 'pipeline_complete') {
                     FlowState.isRunning.set(false);
                     reconnectOnClose.current = false;
+
                     RunState.selectedNodeStatus.set(response.status); // to be removed
 
                     RunState.runIDs[response.run_id].runEnd.set(response.ended_at);
-                    ws.current.close();
 
-                    // getPipelineTasksRun(response.run_id, environmentId);
+                    ws.current.close();
                 }
             };
         }

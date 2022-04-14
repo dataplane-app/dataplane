@@ -43,8 +43,11 @@ const BashNode = (props) => {
     // Set border color on node status change
     let nodeStatus = RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() && RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status?.get();
     useEffect(() => {
-        if (!nodeStatus) return;
-        setBorderColor(getColor(RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status.get()));
+        if (nodeStatus) {
+            setBorderColor(getColor(RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status.get()));
+        } else {
+            setBorderColor(getColor());
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nodeStatus]);

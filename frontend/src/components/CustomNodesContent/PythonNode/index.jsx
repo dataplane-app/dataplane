@@ -43,9 +43,6 @@ const PythonNode = (props) => {
     // Set border color on node status change
     let nodeStatus = RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() && RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status?.get();
     useEffect(() => {
-        // if (!nodeStatus) return;
-        // setBorderColor(getColor(RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status.get()));
-
         if (nodeStatus) {
             setBorderColor(getColor(RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status.get()));
         } else {
@@ -59,7 +56,7 @@ const PythonNode = (props) => {
         RunState.node_id.set(props.id);
         RunState.node_name.set(props.data.name);
         RunState.node_description.set(props.data.description);
-        RunState.selectedNodeStatus.set(RunState.nodes[props.id].status.get());
+        // RunState.selectedNodeStatus.set(RunState.nodes[props.id].status.get());  <== Fix this
     };
 
     return (

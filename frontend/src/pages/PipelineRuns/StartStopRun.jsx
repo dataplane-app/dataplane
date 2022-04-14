@@ -2,16 +2,12 @@ import { Box, Button, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useRunPipelines } from '../../graphql/runPipelines';
 import { useStopPipelines } from '../../graphql/stopPipelines';
 import { useGlobalFlowState } from '../Flow';
-import useWebSocket from './useWebSocket';
 import StatusChips from './StatusChips';
 import RunsDropdown, { displayTimerMs, usePipelineTasksRunHook } from './RunsDropdown';
-import { Downgraded } from '@hookstate/core';
 import { useGlobalRunState } from './GlobalRunState';
-import { v4 as uuidv4 } from 'uuid';
-import useRunPipelineWebSocket from './useRunPipelineWebSocket';
+import useOnRunWebSocket from './useOnRunWebSocket';
 
 export default function StartStopRun({ environmentID, pipeline }) {
     // Global state
@@ -24,46 +20,25 @@ export default function StartStopRun({ environmentID, pipeline }) {
     const [selectedRun, setSelectedRun] = useState(null);
 
     // GraphQL hooks
-    const runPipelines = useRunPipelinesHook();
     const getPipelineTasksRun = usePipelineTasksRunHook();
     const stopPipelines = useStopPipelinesHook(getPipelineTasksRun);
 
-    // URI parameter
-    const { pipelineId } = useParams();
-
-    // Instantiate websocket connection
-    // useWebSocket(environmentID, RunState.run_id.get());
-    useRunPipelineWebSocket(environmentID, setRuns, setSelectedRun);
+    // Instantiate websocket for start/stop run
+    useOnRunWebSocket(environmentID, setRuns, setSelectedRun);
 
     // Click Run button and start to run the pipeline
     const handleTimerStart = () => {
         FlowState.isRunning.set(true);
-
-        // Find key of trigger node
-        let triggerKey = Object.values(FlowState.elements.attach(Downgraded).get()).filter((a) => a.type === 'scheduleNode' || a.type === 'playNode')[0].id;
-        // Set trigger to success so becomes green as the run starts
-        let triggerNode = { [triggerKey]: { status: 'Success' } };
-
-        // Clear run state before a new run
-        RunState.merge({
-            nodes: triggerNode,
-            runStart: null,
-            runEnd: null,
-        });
-
-        // runPipelines(environmentID, pipelineId);
         RunState.runTrigger.set((t) => t + 1);
     };
 
     const handleTimerStop = () => {
+        stopPipelines(environmentID, RunState.selectedRunID.get());
         FlowState.isRunning.set(false);
-        stopPipelines(environmentID, RunState.run_id.get());
     };
 
     // Updates timer every second
     useEffect(() => {
-        if (!RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get()) return;
-
         let secTimer;
         if (FlowState.isRunning.get()) {
             secTimer = setInterval(() => {
@@ -82,7 +57,7 @@ export default function StartStopRun({ environmentID, pipeline }) {
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get(), RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get()]);
+    }, [FlowState.isRunning.get()]);
 
     return (
         <Grid item>
@@ -129,41 +104,6 @@ export default function StartStopRun({ environmentID, pipeline }) {
         </Grid>
     );
 }
-
-// This function runs the pipeline and updates the Global Runstate when button Run gets pressed - not when drop down menu changes
-export const useRunPipelinesHook = () => {
-    // GraphQL hook - this is the Graphql to Run the pipeline
-    const runPipelines = useRunPipelines();
-
-    const RunState = useGlobalRunState();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    const RunID = uuidv4();
-
-    // Run pipeline flow
-    return async (environmentID, pipelineId) => {
-        RunState.run_id.set(RunID);
-
-        const response = await runPipelines({
-            pipelineID: pipelineId,
-            environmentID,
-            RunType: 'pipeline',
-            RunID,
-        });
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't run flow: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            // RunState.run_id.set(response.run_id);
-            RunState.dropdownRunId.set(response.run_id);
-            // RunState.runStart.set(response.created_at);
-        }
-    };
-};
 
 const useStopPipelinesHook = (getPipelineTasksRun) => {
     // GraphQL hook

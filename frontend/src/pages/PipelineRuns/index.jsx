@@ -5,13 +5,12 @@ import { Box, Drawer, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
-import { useHistory, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import CustomLine from '../../components/CustomNodesContent/CustomLine';
 import PublishPipelineDrawer from '../../components/DrawerContent/PublishPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import ViewPageItem from '../../components/MoreInfoContent/ViewPageItem';
 import MoreInfoMenu from '../../components/MoreInfoMenu';
-import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
 import { edgeTypes, nodeTypes, useGlobalFlowState } from '../Flow';
 import LogsDrawer from '../../components/DrawerContent/LogsDrawer';
 import TurnOffPipelineDrawer from '../../components/DrawerContent/TurnOffPipelineDrawer';
@@ -27,7 +26,6 @@ const View = () => {
     // Hooks
     const theme = useTheme();
     const [pipeline, setPipeline] = useState(null);
-    const getPipelineFlow = useGetPipelineFlowHook(pipeline);
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
     // Global states
@@ -62,8 +60,6 @@ const View = () => {
         if (!Environment.id.get()) return;
         setIsLoadingFlow(false);
         getPipeline();
-        // Needed once on page load, to redirect to flow page if no flow
-        getPipelineFlow(Environment.id.get());
 
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -127,13 +123,7 @@ const View = () => {
 
                             <Box sx={{ top: '0', right: '0' }}>
                                 <MoreInfoMenu iconHorizontal>
-                                    <ViewPageItem
-                                        pipeline={pipeline}
-                                        getPipelineFlow={() => getPipelineFlow(Environment.id.get())}
-                                        isPipelineOnline={pipeline?.online}
-                                        getPipeline={getPipeline}
-                                        setIsOpenAnalytics={setIsOpenAnalytics}
-                                    />
+                                    <ViewPageItem pipeline={pipeline} isPipelineOnline={pipeline?.online} getPipeline={getPipeline} setIsOpenAnalytics={setIsOpenAnalytics} />
                                 </MoreInfoMenu>
                             </Box>
                         </Grid>
@@ -209,7 +199,6 @@ const View = () => {
                     pipelineID={pipeline?.pipelineID}
                     environmentID={pipeline?.environmentID}
                     name={pipeline?.name}
-                    getPipelineFlow={() => getPipelineFlow(Environment.id.get())}
                     getPipeline={getPipeline}
                 />
             </Drawer>
@@ -218,41 +207,6 @@ const View = () => {
 };
 
 export default View;
-
-// ------ Custom hooks
-export const useGetPipelineFlowHook = () => {
-    // GraphQL hook
-    const getPipelineFlow = useGetPipelineFlow();
-
-    // React router
-    const history = useHistory();
-
-    // Global state
-    const FlowState = useGlobalFlowState();
-
-    // URI parameter
-    const { pipelineId } = useParams();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Get members
-    return async (environmentID) => {
-        const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
-        const response = prepareInputForFrontend(rawResponse);
-
-        if (response.length === 0) {
-            FlowState.elements.set([]);
-            history.push(`/pipelines/flow/${pipelineId}`);
-        } else if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            FlowState.elements.set(response);
-        }
-    };
-};
 
 // ------ Custom hooks
 export const useGetPipelineHook = (environmentID, setPipeline) => {
