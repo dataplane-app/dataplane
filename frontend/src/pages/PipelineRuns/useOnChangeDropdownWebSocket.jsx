@@ -3,11 +3,8 @@ import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalFlowState } from '../Flow';
 import { useGlobalRunState } from './GlobalRunState';
-import { usePipelineTasksRunHook } from './RunsDropdown';
 import { useParams } from 'react-router-dom';
-import { useGetSinglepipelineRun } from '../../graphql/getSinglepipelineRun';
 import { useSnackbar } from 'notistack';
-import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
 import { useGetSinglepipelineRunAndTasks } from '../../graphql/getSinglepipelineRunAndTasks';
 
 var loc = window.location,
@@ -97,6 +94,8 @@ export default function useOnChangeDropdownWebSocket(environmentId, setSelectedR
                                 status: a.status,
                                 end_dt: a.end_dt,
                                 start_dt: a.start_dt,
+                                name: singleRunResponse.run_json.filter((b) => b.id === a.node_id)[0].data.name,
+                                type: singleRunResponse.run_json.filter((b) => b.id === a.node_id)[0].type,
                             })
                     );
                     RunState.batch((s) => {

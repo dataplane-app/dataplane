@@ -116,6 +116,8 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
                             status: response.status,
                             start_dt: response.start_dt,
                             end_dt: response.end_dt,
+                            name: FlowState.elements.get().filter((a) => a.id === response.node_id)[0].data.name,
+                            type: FlowState.elements.get().filter((a) => a.id === response.node_id)[0].type,
                         },
                     });
                     RunState.selectedRunID.set(response.run_id);
