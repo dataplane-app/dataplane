@@ -96,6 +96,7 @@ export default function useOnChangeDropdownWebSocket(environmentId, setSelectedR
                                 start_dt: a.start_dt,
                                 name: singleRunResponse.run_json.filter((b) => b.id === a.node_id)[0].data.name,
                                 type: singleRunResponse.run_json.filter((b) => b.id === a.node_id)[0].type,
+                                updated_by: 'graphql',
                             })
                     );
                     RunState.batch((s) => {
@@ -137,6 +138,9 @@ export default function useOnChangeDropdownWebSocket(environmentId, setSelectedR
                             status: response.status,
                             start_dt: response.start_dt,
                             end_dt: response.end_dt,
+                            name: FlowState.elements.get().filter((a) => a.id === response.node_id)[0].data.name,
+                            type: FlowState.elements.get().filter((a) => a.id === response.node_id)[0].type,
+                            updated_by: 'websockets',
                         },
                     });
                 }
@@ -144,7 +148,6 @@ export default function useOnChangeDropdownWebSocket(environmentId, setSelectedR
                 if (response.MSG === 'pipeline_complete') {
                     FlowState.isRunning.set(false);
                     reconnectOnClose.current = false;
-                    RunState.selectedNodeStatus.set(response.status); // to be removed
 
                     RunState.runIDs[response.run_id].runEnd.set(response.ended_at);
                     ws.current.close();
