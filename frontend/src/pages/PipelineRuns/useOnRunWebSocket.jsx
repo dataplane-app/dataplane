@@ -74,7 +74,6 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
                 } else {
                     RunState.runIDs[response.run_id].merge({
                         runStart: response.created_at,
-                        runEnd: response.ended_at,
                     });
                 }
 
@@ -133,10 +132,9 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
 
                 if (response.MSG === 'pipeline_complete') {
                     FlowState.isRunning.set(false);
-                    reconnectOnClose.current = false;
-
                     RunState.runIDs[response.run_id].runEnd.set(response.ended_at);
 
+                    reconnectOnClose.current = false;
                     ws.current.close();
                 }
             };

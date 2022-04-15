@@ -5,7 +5,6 @@ import { useGlobalFlowState } from '../Flow';
 import { useGlobalRunState } from './GlobalRunState';
 import { useHistory, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
 import { prepareInputForFrontend } from '.';
 import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
 import { useGetSinglepipelineRunAndTasks } from '../../graphql/getSinglepipelineRunAndTasks';
@@ -157,9 +156,9 @@ export default function useOnPageLoadWebSocket(environmentId, setSelectedRun, se
 
                 if (response.MSG === 'pipeline_complete') {
                     FlowState.isRunning.set(false);
-                    reconnectOnClose.current = false;
-
                     RunState.runIDs[response.run_id].runEnd.set(response.ended_at);
+
+                    reconnectOnClose.current = false;
                     ws.current.close();
                 }
             };

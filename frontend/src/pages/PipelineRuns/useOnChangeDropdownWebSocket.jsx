@@ -155,12 +155,10 @@ export default function useOnChangeDropdownWebSocket(environmentId, setSelectedR
 
                 if (response.MSG === 'pipeline_complete') {
                     FlowState.isRunning.set(false);
-                    reconnectOnClose.current = false;
-
                     RunState.runIDs[response.run_id].runEnd.set(response.ended_at);
-                    ws.current.close();
 
-                    // getPipelineTasksRun(response.run_id, environmentId);
+                    reconnectOnClose.current = false;
+                    ws.current.close();
                 }
             };
         }
