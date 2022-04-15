@@ -109,6 +109,8 @@ const useStopPipelinesHook = (getPipelineTasksRun) => {
     // GraphQL hook
     const stopPipelines = useStopPipelines();
 
+    const RunState = useGlobalRunState();
+
     // URI parameter
     const { pipelineId } = useParams();
 
@@ -124,7 +126,9 @@ const useStopPipelinesHook = (getPipelineTasksRun) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            // add if statement to match run id before setting runEnd time
+            RunState.runIDs[response.run_id].merge({
+                runEnd: response.ended_at,
+            });
             getPipelineTasksRun(response.run_id, environmentID);
         }
     };
