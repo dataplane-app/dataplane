@@ -139,6 +139,7 @@ export function displayTimer(startDate, endDate = new Date()) {
     if (typeof endDate === 'string') {
         endDate = new Date(endDate);
     }
+    if (!startDate) return '';
     var ticks = Math.floor((endDate - new Date(startDate)) / 1000);
     var hh = Math.floor(ticks / 3600);
     var mm = Math.floor((ticks % 3600) / 60);
