@@ -62,7 +62,7 @@ export default function StartStopRun({ environmentID, pipeline }) {
     return (
         <Grid item>
             <Box display="flex" alignItems="center">
-                {FlowState.isRunning.get() && RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get() === null ? (
+                {FlowState.isRunning.get() && !RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get() ? (
                     <Button
                         onClick={handleTimerStop}
                         variant="outlined"
