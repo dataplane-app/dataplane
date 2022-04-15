@@ -109,6 +109,14 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
             ws.current.onmessage = (e) => {
                 const response = JSON.parse(e.data);
 
+                ConsoleLogHelper(
+                    '🧲',
+                    FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.data.name ||
+                        FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.type ||
+                        response.MSG,
+                    response.status
+                );
+
                 // Add only if a node message, not MSG.
                 if (response.node_id) {
                     RunState.runIDs[response.run_id].nodes.merge({
