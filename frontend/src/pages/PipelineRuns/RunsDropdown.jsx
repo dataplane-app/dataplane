@@ -30,7 +30,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
     useEffect(() => {
         (async () => {
-            let [lastRunTime, runID] = await getPipelineRuns();
+            let [lastRunTime, runID] = await getPipelineRuns(getPipelineFlow);
 
             // If the pipeline has a new flow, get only the flow and return
             const isNewFlow = pipeline.updated_at > lastRunTime;
