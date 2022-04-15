@@ -141,7 +141,6 @@ export default function useOnPageLoadWebSocket(environmentId, setSelectedRun, se
                             end_dt: response.end_dt,
                         },
                     });
-                    RunState.selectedRunID.set(response.run_id);
                 }
 
                 if (response.MSG === 'pipeline_complete') {

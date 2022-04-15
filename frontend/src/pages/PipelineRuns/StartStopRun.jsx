@@ -42,7 +42,7 @@ export default function StartStopRun({ environmentID, pipeline }) {
         let secTimer;
         if (FlowState.isRunning.get()) {
             secTimer = setInterval(() => {
-                setElapsed(displayTimer(RunState.runIDs[RunState.selectedRunID.get()]?.runStart.get()));
+                setElapsed(displayTimer(RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get()));
             }, 500);
         }
 

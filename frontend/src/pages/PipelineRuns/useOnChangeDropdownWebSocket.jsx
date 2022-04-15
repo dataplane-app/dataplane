@@ -113,6 +113,7 @@ export default function useOnChangeDropdownWebSocket(environmentId, setSelectedR
                     FlowState.isRunning.set(true);
                 }
             };
+
             ws.current.onclose = () => {
                 // Exit if closing the connection was intentional
                 if (!reconnectOnClose.current) {
@@ -138,7 +139,6 @@ export default function useOnChangeDropdownWebSocket(environmentId, setSelectedR
                             end_dt: response.end_dt,
                         },
                     });
-                    RunState.selectedRunID.set(response.run_id);
                 }
 
                 if (response.MSG === 'pipeline_complete') {

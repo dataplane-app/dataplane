@@ -120,7 +120,6 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
                             type: FlowState.elements.get().filter((a) => a.id === response.node_id)[0].type,
                         },
                     });
-                    RunState.selectedRunID.set(response.run_id);
                 }
 
                 if (response.MSG === 'pipeline_complete') {
