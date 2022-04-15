@@ -14,7 +14,6 @@ import useOnPageLoadWebSocket from './useOnPageLoadWebSocket';
 export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, selectedRun, setSelectedRun }) {
     // Global states
     const RunState = useGlobalRunState();
-    console.log('🚀 ~ End...', RunState.runIDs[RunState.selectedRunID?.value]?.runEnd.get());
 
     // Local state
     const [isNewFlow, setIsNewFlow] = useState(false);
