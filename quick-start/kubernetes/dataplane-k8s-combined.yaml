@@ -1,0 +1,409 @@
+apiVersion: v1
+data:
+  nats.conf: |
+    pid_file: "/var/run/nats/nats.pid"
+    http: 8222
+    cluster {
+      port: 6222
+      routes [
+        nats://nats-0.nats.default.svc:6222
+        nats://nats-1.nats.default.svc:6222
+        nats://nats-2.nats.default.svc:6222
+      ]
+      cluster_advertise: $CLUSTER_ADVERTISE
+      connect_retries: 30
+    }
+    leafnodes {
+      port: 7422
+    }
+kind: ConfigMap
+metadata:
+  name: nats-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dataplane-main
+  name: dataplane-main
+  namespace: default
+spec:
+  ports:
+  - name: tcp
+    port: 9000
+    protocol: TCP
+    targetPort: 9000
+  selector:
+    app: dataplane-main
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dataplane-worker
+  name: dataplane-worker
+  namespace: default
+spec:
+  ports:
+  - name: tcp
+    port: 9005
+    protocol: TCP
+    targetPort: 9005
+  selector:
+    app: dataplane-worker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: timescaledb
+  name: timescaledb-service
+  namespace: default
+spec:
+  ports:
+  - name: http
+    port: 5432
+    protocol: TCP
+    targetPort: 5432
+  selector:
+    app: timescaledb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nats
+  name: nats
+spec:
+  ports:
+  - name: client
+    port: 4222
+  - name: cluster
+    port: 6222
+  - name: monitor
+    port: 8222
+  - name: metrics
+    port: 7777
+  - name: leafnodes
+    port: 7422
+  - name: gateways
+    port: 7522
+  selector:
+    app: nats
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: timescaledb
+  namespace: default
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dataplane-main
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dataplane-main
+  template:
+    metadata:
+      labels:
+        app: dataplane-main
+    spec:
+      containers:
+      - command:
+        - ./dataplane
+        env:
+        - name: DP_CODE_FOLDER
+          value: /appdev/code-files/
+        - name: secret_db_host
+          value: timescaledb-service
+        - name: secret_db_user
+          value: postgres
+        - name: secret_db_pwd
+          value: Hello123!
+        - name: secret_db_ssl
+          value: disable
+        - name: secret_db_port
+          value: "5432"
+        - name: secret_db_database
+          value: dataplane
+        - name: secret_jwt_secret
+          value: 117943e8-9d43-49ac-aa4d-9c64004c8992
+        - name: secret_encryption_key
+          value: '%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB'
+        - name: database
+          value: timescaledb
+        - name: DP_PORT
+          value: "9000"
+        - name: DP_NATS
+          value: nats://nats-0.nats.default.svc:4222, nats://nats-1.nats.default.svc:4222,
+            nats-3.nats.default.svc:4222
+        - name: DP_MODE
+          value: development
+        - name: DP_DEBUG
+          value: "false"
+        - name: DP_DB_DEBUG
+          value: "false"
+        - name: DP_MQ_DEBUG
+          value: "false"
+        - name: DP_METRIC_DEBUG
+          value: "false"
+        - name: DP_SCHEDULER_DEBUG
+          value: "true"
+        - name: DP_WORKER_HEARTBEAT_SECONDS
+          value: "1"
+        - name: DP_WORKER_GROUP
+          value: python_1
+        - name: DP_WORKER_TYPE
+          value: vm
+        - name: DP_WORKER_LB
+          value: roundrobin
+        - name: DP_WORKER_ENV
+          value: Development
+        - name: DP_CLEANTASKS_DAYS
+          value: "60"
+        - name: DP_REMOVELOGS_DAYS
+          value: "60"
+        image: dataplane/dataplane-main:latest
+        name: container
+        ports:
+        - containerPort: 9000
+        resources:
+          limits:
+            cpu: "0.2"
+            memory: 200Mi
+          requests:
+            cpu: "0.1"
+            memory: 100Mi
+      securityContext:
+        runAsGroup: 10001
+        runAsUser: 10001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dataplane-worker
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: dataplane-worker
+  template:
+    metadata:
+      labels:
+        app: dataplane-worker
+    spec:
+      containers:
+      - command:
+        - ./dataplane-worker
+        env:
+        - name: DP_CODE_FOLDER
+          value: /appdev/code-files/
+        - name: secret_db_host
+          value: timescaledb-service
+        - name: secret_db_user
+          value: postgres
+        - name: secret_db_pwd
+          value: Hello123!
+        - name: secret_db_ssl
+          value: disable
+        - name: secret_db_port
+          value: "5432"
+        - name: secret_db_database
+          value: dataplane
+        - name: secret_jwt_secret
+          value: 117943e8-9d43-49ac-aa4d-9c64004c8992
+        - name: secret_encryption_key
+          value: '%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB'
+        - name: database
+          value: timescaledb
+        - name: DP_PORT
+          value: "9000"
+        - name: DP_NATS
+          value: nats://nats-0.nats.default.svc:4222, nats://nats-1.nats.default.svc:4222,
+            nats-3.nats.default.svc:4222
+        - name: DP_MODE
+          value: development
+        - name: DP_DEBUG
+          value: "false"
+        - name: DP_DB_DEBUG
+          value: "false"
+        - name: DP_MQ_DEBUG
+          value: "false"
+        - name: DP_METRIC_DEBUG
+          value: "false"
+        - name: DP_SCHEDULER_DEBUG
+          value: "true"
+        - name: DP_WORKER_HEARTBEAT_SECONDS
+          value: "1"
+        - name: DP_WORKER_GROUP
+          value: python_1
+        - name: DP_WORKER_TYPE
+          value: vm
+        - name: DP_WORKER_LB
+          value: roundrobin
+        - name: DP_WORKER_ENV
+          value: Development
+        - name: DP_CLEANTASKS_DAYS
+          value: "60"
+        - name: DP_REMOVELOGS_DAYS
+          value: "60"
+        - name: DP_WORKER_CMD
+          value: /bin/sh
+        - name: DP_WORKER_PORT
+          value: "9005"
+        - name: DP_WORKER_LANGUAGES
+          value: Python
+        - name: DP_WORKER_LOAD_PACKAGES
+          value: Python
+        image: dataplane/dataplane-worker:latest
+        name: container
+        ports:
+        - containerPort: 9005
+        resources:
+          limits:
+            cpu: "0.4"
+            memory: 500Mi
+          requests:
+            cpu: "0.1"
+            memory: 100Mi
+      securityContext:
+        runAsGroup: 10001
+        runAsUser: 10001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: timescaledb
+  name: timescaledb
+spec:
+  selector:
+    matchLabels:
+      app: timescaledb
+  template:
+    metadata:
+      labels:
+        app: timescaledb
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: Hello123!
+        - name: POSTGRES_DB
+          value: dataplane
+        - name: PGDATA
+          value: /var/lib/postgresql/data/tdbdata
+        image: timescale/timescaledb:2.5.1-pg14
+        name: container
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: timescaledb-persistent-storage
+          subPath: data
+      securityContext:
+        fsGroup: 70
+        runAsGroup: 70
+        runAsUser: 70
+      volumes:
+      - name: timescaledb-persistent-storage
+        persistentVolumeClaim:
+          claimName: timescaledb
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: nats
+  name: nats
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nats
+  serviceName: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+      - command:
+        - nats-server
+        - --config
+        - /etc/nats-config/nats.conf
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CLUSTER_ADVERTISE
+          value: $(POD_NAME).nats.$(POD_NAMESPACE).svc
+        image: nats:2.7.4-alpine
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - /nats-server -sl=ldm=/var/run/nats/nats.pid && /bin/sleep 60
+        name: nats
+        ports:
+        - containerPort: 4222
+          name: client
+        - containerPort: 7422
+          name: leafnodes
+        - containerPort: 6222
+          name: cluster
+        - containerPort: 8222
+          name: monitor
+        - containerPort: 7777
+          name: metrics
+        volumeMounts:
+        - mountPath: /etc/nats-config
+          name: config-volume
+        - mountPath: /var/run/nats
+          name: pid
+      shareProcessNamespace: true
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - configMap:
+          name: nats-config
+        name: config-volume
+      - emptyDir: {}
+        name: pid
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  name: dp-ingress
+spec:
+  rules:
+  - host: dataplane.info
+    http:
+      paths:
+      - backend:
+          service:
+            name: dataplane-main
+            port:
+              number: 9000
+        path: /
+        pathType: Prefix
