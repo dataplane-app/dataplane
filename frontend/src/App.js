@@ -147,6 +147,7 @@ function App() {
                                             '/deployments/view/:deploymentId/:version?',
                                             '/support',
                                             '/feedback',
+                                            '/learn',
                                         ]}>
                                         <Switch>
                                             <Layout>
@@ -220,6 +221,14 @@ function App() {
                                                     path="/feedback"
                                                     component={() => {
                                                         window.open('https://github.com/dataplane-app/dataplane/discussions', '_blank');
+                                                        return null;
+                                                    }}
+                                                />
+                                                <Route
+                                                    exact
+                                                    path="/learn"
+                                                    component={() => {
+                                                        window.open('https://learn.dataplane.app', '_blank');
                                                         return null;
                                                     }}
                                                 />
