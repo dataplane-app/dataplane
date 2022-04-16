@@ -1,6 +1,7 @@
 import { Box, Button, Grid, IconButton, Typography, useTheme } from '@mui/material';
 import { forwardRef, useEffect, useRef } from 'react';
 import Editor, { useMonaco } from '@monaco-editor/react';
+import { loader } from "@monaco-editor/react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useGlobalEditorState } from '../../../pages/Editor';
@@ -18,7 +19,12 @@ import { useUpdateCodePackages } from '../../../graphql/updateCodePackages';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
+// loader.config({ monaco });
+
+
+
 const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
+
     // Editor state
     const [, setEditorInstance] = useState(null);
     const [tabValue, setTabValue] = useState(0);
