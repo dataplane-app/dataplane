@@ -51,6 +51,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
     // Update elements on run dropdown change
     const handleDropdownChange = (run) => {
+        setSelectedRun(run);
         RunState.merge((r) => ({
             selectedRunID: run.run_id,
             onChangeTrigger: r.onChangeTrigger + 1,
