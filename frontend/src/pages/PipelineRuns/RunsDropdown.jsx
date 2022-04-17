@@ -10,10 +10,14 @@ import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from '.';
 import useOnChangeDropdownWebSocket from './useOnChangeDropdownWebSocket';
 import useOnPageLoadWebSocket from './useOnPageLoadWebSocket';
+import { formatDateNoZone } from '../../utils/formatDate';
+import { useGlobalMeState } from '../../components/Navbar';
 
 export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, selectedRun, setSelectedRun }) {
     // Global states
     const RunState = useGlobalRunState();
+    const MeData = useGlobalMeState();
+    console.log('🚀 ~ file: RunsDropdown.jsx ~ line 21 ~ RunsDropdown ~ MeData', MeData);
 
     // Local state
     const [isNewFlow, setIsNewFlow] = useState(false);
@@ -69,7 +73,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                     sx={{ minWidth: '520px' }}
                     options={runs}
                     isOptionEqualToValue={(option, value) => option.run_id === value.run_id}
-                    getOptionLabel={(a) => formatDate(a.created_at) + ' - ' + a.run_id}
+                    getOptionLabel={(a) => formatDateNoZone(a.created_at, MeData.timezone.get()) + ' - ' + a.run_id}
                     renderInput={(params) => <TextField {...params} label="Run" id="run" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />
             ) : null}
@@ -82,7 +86,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                     sx={{ minWidth: '520px' }}
                     options={runs}
                     isOptionEqualToValue={(option, value) => option.run_id === value.run_id}
-                    getOptionLabel={(a) => formatDate(a.created_at) + ' - ' + a.run_id}
+                    getOptionLabel={(a) => formatDateNoZone(a.created_at, MeData.timezone.get()) + ' - ' + a.run_id}
                     renderInput={(params) => <TextField {...params} label="Run" id="run" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />
             ) : null}
@@ -192,16 +196,6 @@ const useGetPipelineFlowHook = () => {
         }
     };
 };
-
-// ----- Utility functions
-function formatDate(date) {
-    if (!date) return;
-    date = new Date(date);
-    let day = new Intl.DateTimeFormat('en', { day: 'numeric' }).format(date);
-    let monthYear = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short' }).format(date);
-    let time = new Intl.DateTimeFormat('en', { hourCycle: 'h23', hour: '2-digit', minute: 'numeric', second: 'numeric' }).format(date);
-    return `${day} ${monthYear} ${time}`;
-}
 
 export function displayTimerMs(end, start) {
     if (!end || !start) return null;
