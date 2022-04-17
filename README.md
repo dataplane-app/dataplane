@@ -1,6 +1,6 @@
 ![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests)
 
-If you like Dataplane, give it a star ⭐
+If you like Dataplane, give it a star ⭐<br />
 
 ### Dataplane (Beta)
 ⚡️ Extreme performance with a low resource footprint<br />
@@ -17,9 +17,11 @@ If you like Dataplane, give it a star ⭐
 
 <img width="1660" alt="image" src="https://user-images.githubusercontent.com/63714857/161389462-a65928c6-1ab7-4efa-a8d8-06598adfef1b.png">
 
-
 ### About the project
-The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved. 
+The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved. <br />
+
+Website: https://dataplane.app/ <br />
+Documentation: https://learn.dataplane.app/ <br />
 
 ### Quick start with Docker
 Requires Docker engine installed - https://docs.docker.com/engine/install/<br /><br/>
