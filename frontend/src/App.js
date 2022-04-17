@@ -30,7 +30,7 @@ import TeamGroup from './pages/TeamGroup';
 import Teams from './pages/Teams';
 import PipelineEditor from './pages/Editor';
 import View from './pages/PipelineRuns';
-import DeploymentView from './pages/Deployments/View';
+import DeploymentView from './pages/Deployments/DeploymentRuns';
 import PipelinesPermission from './pages/PipelinesPermission';
 import createCustomTheme from './theme';
 import UseCheckTheme from './hooks/useCheckTheme';
