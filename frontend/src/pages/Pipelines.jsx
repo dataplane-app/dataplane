@@ -42,15 +42,8 @@ const Pipelines = () => {
             elements: [],
             triggerDelete: 1,
         });
-
-        RunState.set({
-            selectedRunID: null,
-            runIDs: null,
-            runTrigger: 0,
-            onLoadTrigger: 0,
-            onChangeTrigger: 0,
-            node_id: null,
-        });
+        // const dropdownRunId = RunState.dropdownRunId.get();
+        // RunState.set({ runTrigger: 1, dropdownRunId });
         document.querySelector('#root div').scrollTo(0, 0);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps

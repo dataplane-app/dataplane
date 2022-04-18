@@ -46,9 +46,7 @@ export const useGetSinglepipelineRunAndTasks = () => {
             const res = await client.request(query, input);
             return [res?.getSinglepipelineRun, res?.pipelineTasksRun];
         } catch (error) {
-            let getSinglepipelineRun = error.response.data?.getSinglepipelineRun || error.response;
-            let pipelineTasksRun = error.response.data?.pipelineTasksRun || error.response;
-            return [getSinglepipelineRun, pipelineTasksRun];
+            return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }
     };
 };
