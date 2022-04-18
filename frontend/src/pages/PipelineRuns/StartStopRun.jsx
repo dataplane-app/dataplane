@@ -50,6 +50,7 @@ export default function StartStopRun({ environmentID, pipeline }) {
         runPipelines(environmentID, pipelineId);
     };
 
+    // Click the stop button and run the stopPipelines function - with the selected RunID
     const handleTimerStop = () => {
         FlowState.isRunning.set(false);
         stopPipelines(environmentID, RunState.run_id.get());
