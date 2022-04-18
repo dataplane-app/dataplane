@@ -196,11 +196,7 @@ const DeploymentView = () => {
                                 </Box>
                             </ReactFlow>
                         </ReactFlowProvider>
-                    ) : (
-                        <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Typography>Create a pipeline by dragging the components here</Typography>
-                        </Box>
-                    )}
+                    ) : null}
                 </Box>
             ) : null}
 
