@@ -195,7 +195,7 @@ const View = () => {
                     pipelineID={pipeline?.pipelineID}
                     environmentID={pipeline?.environmentID}
                     name={pipeline?.name}
-                    getPipeline={getPipeline}
+                    getPipelines={getPipeline}
                 />
             </Drawer>
         </Box>

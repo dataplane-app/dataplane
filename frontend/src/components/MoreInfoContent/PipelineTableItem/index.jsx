@@ -1,7 +1,6 @@
 import { MenuItem } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
-import { useDuplicatePipeline } from '../../../graphql/duplicatePipeline';
 import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
 import { useGlobalFlowState } from '../../../pages/Flow';
 
@@ -13,10 +12,10 @@ const PipelineItemTable = (props) => {
     const FlowState = useGlobalFlowState();
 
     //Props
-    const { handleCloseMenu, handleClose, id, name, environmentID, setIsOpenDeletePipeline, nodeTypeDesc, getPipelines } = props;
+    const { handleCloseMenu, id, name, environmentID, setIsOpenDeletePipeline, nodeTypeDesc, getPipelines } = props;
 
     // Graphql hook
-    const turnOnOffPipeline = useTurnOnOffPipelineHook(id, environmentID, handleClose, getPipelines);
+    const turnOnOffPipeline = useTurnOnOffPipelineHook(id, environmentID, handleCloseMenu, getPipelines);
 
     const manageEdit = () => {
         FlowState.isEditorPage.get(true);
