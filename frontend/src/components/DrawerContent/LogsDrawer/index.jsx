@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { RunningSpinner } from './RunningSpinner';
 import useWebSocketLog, { formatDate } from './useWebSocketLog';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
+import { useGlobalFlowState } from '../../../pages/Flow';
 
 const LogsDrawer = ({ environmentId, handleClose }) => {
     const [websocketResp, setWebsocketResp] = useState('');
@@ -18,9 +19,10 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
 
     // Global state
     const RunState = useGlobalRunState();
+    const FlowState = useGlobalFlowState();
 
     // Instantiate websocket
-    const webSocket = useWebSocketLog(environmentId, RunState.dropdownRunId.get(), RunState.node_id.get(), setKeys);
+    const webSocket = useWebSocketLog(environmentId, RunState.selectedRunID.get(), RunState.node_id.get(), setKeys);
 
     useEffect(() => {
         setWebsocketResp((t) => t + webSocket + '\n');
@@ -42,14 +44,14 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
     }, [graphQlResp]);
 
     // Graphql Hook
-    const getNodeLogs = useGetNodeLogsHook(environmentId, RunState.dropdownRunId.get(), RunState.node_id.get(), setGraphQlResp, keys);
+    const getNodeLogs = useGetNodeLogsHook(environmentId, RunState.selectedRunID.get(), RunState.node_id.get(), setGraphQlResp, keys);
 
     useEffect(() => {
-        if (!RunState.dropdownRunId.get() || !RunState.node_id.get()) return;
+        if (!RunState.selectedRunID.get() || !RunState.node_id.get()) return;
         getNodeLogs();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.run_id.get(), RunState.node_id.get()]);
+    }, [RunState.selectedRunID.get(), RunState.node_id.get()]);
 
     return (
         <>
@@ -58,9 +60,9 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     <Box component={FontAwesomeIcon} fontSize={24} color="secondary.main" icon={faRunning} mr={2} />
                     <Box>
                         <Typography fontSize="0.875rem" fontWeight={900}>
-                            {RunState.node_name.get()}
+                            {FlowState.elements.get().filter((a) => a.id === RunState.node_id.get())[0].data.name}
                         </Typography>
-                        <Typography fontSize="0.75rem">{RunState.node_description.get()}</Typography>
+                        <Typography fontSize="0.75rem">{FlowState.elements.get().filter((a) => a.id === RunState.node_id.get())[0].data.description}</Typography>
                     </Box>
                     <Button
                         onClick={handleClose}
@@ -76,7 +78,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Button>
                 </Box>
 
-                {RunState.selectedNodeStatus.get() === 'Success' ? (
+                {RunState.runIDs[RunState.selectedRunID.get()].nodes[RunState.node_id.get()].status.get() === 'Success' ? (
                     <Box color="status.pipelineOnline" display="flex" alignItems="center" mt={0.5}>
                         <Box component={FontAwesomeIcon} fontSize={18} color="status.pipelineOnline" icon={faCheckCircle} />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
@@ -85,7 +87,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Box>
                 ) : null}
 
-                {RunState.selectedNodeStatus.get() === 'Run' ? (
+                {RunState.runIDs[RunState.selectedRunID.get()].nodes[RunState.node_id.get()].status.get() === 'Run' ? (
                     <Box color="#65BEFF" display="flex" alignItems="center" mt={0.5}>
                         <RunningSpinner />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
@@ -94,7 +96,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Box>
                 ) : null}
 
-                {RunState.selectedNodeStatus.get() === 'Fail' ? (
+                {RunState.runIDs[RunState.selectedRunID.get()].nodes[RunState.node_id.get()].status.get() === 'Fail' ? (
                     <Box color="#F80000" display="flex" alignItems="center" mt={0.5}>
                         <Box component={FontAwesomeIcon} fontSize={18} color="#F80000" icon={faExclamationCircle} />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import ConsoleLogHelper from '../../../Helper/logger';
 import { useGlobalEditorState } from '../../../pages/Editor';
-import { useGlobalRunState } from '../../../pages/PipelineRuns/useWebSocket';
 
 var loc = window.location,
     new_uri;

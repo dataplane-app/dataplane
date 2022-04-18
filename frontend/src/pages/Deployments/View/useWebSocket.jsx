@@ -3,7 +3,7 @@ import ConsoleLogHelper from '../../../Helper/logger';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import { useGlobalFlowState } from '../../Flow';
 import { usePipelineTasksRunHook } from './Timer';
-import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
+import { useGlobalRunState } from './GlobalRunState';
 
 var loc = window.location,
     new_uri;

@@ -9,6 +9,7 @@ import (
 	"log"
 
 	"github.com/go-co-op/gocron"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -28,11 +29,11 @@ func mytask(nodeID string, pipelineID string, environmentID string, timezone str
 		log.Println("Lock could not be obtained", nodeID, err2.Error.Error())
 		return
 	}
-
+	runID := uuid.NewString()
 	var err error
 	switch runType {
 	case "pipeline":
-		_, err = pipelines.RunPipeline(pipelineID, environmentID)
+		_, err = pipelines.RunPipeline(pipelineID, environmentID, runID)
 	case "deployment":
 		_, err = pipelines.RunDeployment(pipelineID, environmentID)
 	default:
