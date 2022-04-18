@@ -9,13 +9,17 @@ const ProcessTypeNodeItem = (props) => {
     const { deploymentId, pipelineId } = useParams();
 
     const handleCodeClick = () => {
-        history.push(`/editor/${deploymentId?.replace('d-', '') || pipelineId}/${props.nodeId}`);
+        history.push(`/editor/${deploymentId?.replace('d-', '') || pipelineId}/${deploymentId ? props.nodeId.replace('d-', '') : props.nodeId}`);
         props.handleCloseMenu();
     };
 
     const handleOpenLog = () => {
         props.handleCloseMenu();
-        FlowState.isOpenLogDrawer.set(true);
+        if (props.nodeId.substring(0, 2) === 'd-') {
+            FlowState.isOpenDepLogDrawer.set(true);
+        } else {
+            FlowState.isOpenLogDrawer.set(true);
+        }
     };
 
     return (

@@ -1,16 +1,12 @@
 import { MenuItem } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useGlobalFlowState } from '../../Flow';
-import { useGlobalRunState } from './GlobalRunState';
-import { useRunPipelinesHook } from './Timer';
+import { useGlobalDeploymentState } from './GlobalDeploymentState';
 
 const DeploymentViewPageItem = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
-    const RunState = useGlobalRunState();
-
-    // Graphql hook
-    const runPipelines = useRunPipelinesHook();
+    const DeploymentState = useGlobalDeploymentState();
 
     // URI parameter
     const { version } = useParams();
@@ -21,9 +17,8 @@ const DeploymentViewPageItem = (props) => {
     };
 
     const handleRun = () => {
-        FlowState.isRunning.set(true);
-        RunState.set({ pipelineRunsTrigger: 1, prevRunTime: null });
-        runPipelines(props.pipeline.environmentID);
+        DeploymentState.isRunning.set(true);
+        DeploymentState.runTrigger.set((t) => t + 1);
         props.handleCloseMenu();
     };
 

@@ -1,49 +1,42 @@
 import { Autocomplete, Grid, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
+import { useGetDeploymentRuns } from '../../../graphql/getDeploymentRuns';
 import { useHistory, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
-import { useGlobalFlowState } from '../Flow';
-import { useGlobalRunState } from './GlobalRunState';
-import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
+import { usePipelineTasksRun } from '../../../graphql/getPipelineTasksRun';
+import { useGlobalFlowState } from '../../Flow';
+import { useGlobalDeploymentState } from './GlobalDeploymentState';
+import { useGlobalMeState } from '../../../components/Navbar';
 import { prepareInputForFrontend } from '.';
+import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
+import useOnPageLoadWebSocket, { addDdash } from './useOnPageLoadWebSocket';
 import useOnChangeDropdownWebSocket from './useOnChangeDropdownWebSocket';
-import useOnPageLoadWebSocket from './useOnPageLoadWebSocket';
-import { formatDateNoZone } from '../../utils/formatDate';
-import { useGlobalMeState } from '../../components/Navbar';
+import { formatDateNoZone } from '../../../utils/formatDate';
 
-export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, selectedRun, setSelectedRun }) {
+export default function RunsDropdown({ environmentID, deployment, runs, setRuns, selectedRun, setSelectedRun }) {
     // Global states
-    const RunState = useGlobalRunState();
+    const DeploymentState = useGlobalDeploymentState();
     const MeData = useGlobalMeState();
 
-    // Local state
-    const [isNewFlow, setIsNewFlow] = useState(false);
-
-    // Graphql hook
-    const getPipelineRuns = useGetPipelineRunsHook(environmentID, setRuns, setIsNewFlow, pipeline.updated_at);
-    const getPipelineFlow = useGetPipelineFlowHook(pipeline.pipelineID);
+    // GraphQL hooks
+    const getDeploymentRuns = useGetDeploymentRunsHook(environmentID, setRuns);
+    const getPipelineFlow = useGetPipelineFlowHook(deployment.pipelineID);
 
     // Instantiate websocket for on page load
-    useOnPageLoadWebSocket(environmentID, setSelectedRun, setRuns, setIsNewFlow, pipeline.updated_at);
+    useOnPageLoadWebSocket(environmentID, setSelectedRun, setRuns);
 
     // Instantiate websocket for dropdown change
     useOnChangeDropdownWebSocket(environmentID, setSelectedRun);
 
+    // Get pipeline runs on load
     useEffect(() => {
         (async () => {
-            let [lastRunTime, runID] = await getPipelineRuns(getPipelineFlow);
+            let runID = await getDeploymentRuns(getPipelineFlow);
 
-            // If the pipeline has a new flow, get only the flow and return
-            const isNewFlow = pipeline.updated_at > lastRunTime;
-            if (isNewFlow) {
-                setIsNewFlow(true);
-                getPipelineFlow(environmentID);
-                return;
-            }
+            // No runID means, there are no runs yet, return.
+            if (!runID) return;
 
-            RunState.merge({
+            DeploymentState.merge({
                 selectedRunID: runID,
                 onLoadTrigger: 1,
             });
@@ -55,7 +48,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     // Update elements on run dropdown change
     const handleDropdownChange = (run) => {
         setSelectedRun(run);
-        RunState.merge((r) => ({
+        DeploymentState.merge((r) => ({
             selectedRunID: run.run_id,
             onChangeTrigger: r.onChangeTrigger + 1,
         }));
@@ -63,20 +56,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
     return (
         <Grid item alignItems="center" display="flex" width={520}>
-            {selectedRun && !isNewFlow ? (
-                <Autocomplete
-                    id="run_autocomplete"
-                    onChange={(event, newValue) => handleDropdownChange(newValue)}
-                    value={selectedRun}
-                    disableClearable
-                    sx={{ minWidth: '520px' }}
-                    options={runs}
-                    isOptionEqualToValue={(option, value) => option.run_id === value.run_id}
-                    getOptionLabel={(a) => formatDateNoZone(a.created_at, MeData.timezone.get()) + ' - ' + a.run_id}
-                    renderInput={(params) => <TextField {...params} label="Run" id="run" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
-                />
-            ) : null}
-            {isNewFlow ? (
+            {selectedRun ? (
                 <Autocomplete
                     id="run_autocomplete"
                     onChange={(event, newValue) => handleDropdownChange(newValue)}
@@ -94,22 +74,21 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 }
 
 // ------ Custom hook
-export const useGetPipelineRunsHook = (environmentID, setRuns) => {
+export const useGetDeploymentRunsHook = (environmentID, setRuns) => {
     // GraphQL hook
-    const getPipelineRuns = useGetPipelineRuns();
+    const getDeploymentRuns = useGetDeploymentRuns();
 
     // URI parameter
-    const { pipelineId } = useParams();
+    const { deploymentId, version } = useParams();
 
     const { enqueueSnackbar } = useSnackbar();
 
     // Get runs
     return async (getPipelineFlow) => {
-        const response = await getPipelineRuns({ pipelineID: pipelineId, environmentID });
+        const response = await getDeploymentRuns({ deploymentID: deploymentId, environmentID, version });
 
         if (response.length === 0) {
             setRuns([]);
-            // If there are no runs to get flow info, run getPipelineFlow instead
             getPipelineFlow(environmentID);
             return;
         } else if (response.r || response.error) {
@@ -118,7 +97,7 @@ export const useGetPipelineRunsHook = (environmentID, setRuns) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setRuns(response);
-            return [response[0]?.updated_at, response[0].run_id];
+            return response[0].run_id;
         }
     };
 };
@@ -128,9 +107,9 @@ export const usePipelineTasksRunHook = () => {
     const getPipelineTasksRun = usePipelineTasksRun();
 
     // URI parameter
-    const { pipelineId } = useParams();
+    const { deploymentId } = useParams();
 
-    const RunState = useGlobalRunState();
+    const DeploymentState = useGlobalDeploymentState();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -138,7 +117,7 @@ export const usePipelineTasksRunHook = () => {
     return async (runID, environmentID) => {
         if (!runID) return;
 
-        const response = await getPipelineTasksRun({ pipelineID: pipelineId, runID, environmentID });
+        const response = await getPipelineTasksRun({ pipelineID: deploymentId, runID, environmentID });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get tasks: " + (response.msg || response.r || response.error), { variant: 'error' });
@@ -154,7 +133,7 @@ export const usePipelineTasksRunHook = () => {
                         start_dt: a.start_dt,
                     })
             );
-            RunState.batch((s) => {
+            DeploymentState.batch((s) => {
                 s.selectedRunID.set(response[0].run_id);
                 s.runIDs[response[0].run_id].nodes.set(nodes);
             }, 'tasks-batch');
@@ -166,32 +145,26 @@ const useGetPipelineFlowHook = () => {
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
 
-    // React router
-    const history = useHistory();
-
     // Global state
     const FlowState = useGlobalFlowState();
 
     // URI parameter
-    const { pipelineId } = useParams();
+    const { deploymentId } = useParams();
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const { enqueueSnackbar } = useSnackbar();
 
     // Get members
     return async (environmentID) => {
-        const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
+        const rawResponse = await getPipelineFlow({ pipelineID: deploymentId.replace('d-', ''), environmentID });
         const response = prepareInputForFrontend(rawResponse);
 
-        if (response.length === 0) {
-            FlowState.elements.set([]);
-            history.push(`/pipelines/flow/${pipelineId}`);
-        } else if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get flow: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            FlowState.elements.set(response);
+            FlowState.elements.set(addDdash(response));
+            return;
         }
     };
 };

@@ -13,6 +13,7 @@ import { getColor } from '../utils';
 import cronstrue from 'cronstrue';
 import { getTimeZoneOffSet } from '../../DrawerContent/SchedulerDrawer/CronTab';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
+import { useGlobalDeploymentState } from '../../../pages/Deployments/DeploymentRuns/GlobalDeploymentState';
 
 const ScheduleNode = (props) => {
     // Theme hook
@@ -21,6 +22,7 @@ const ScheduleNode = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
+    const DeploymentState = useGlobalDeploymentState();
 
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
@@ -51,6 +53,15 @@ const ScheduleNode = (props) => {
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nodeStatus]);
+
+    let dNodeStatus =
+        DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.get() && DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status?.get();
+    useEffect(() => {
+        if (!dNodeStatus) return;
+        setBorderColor(getColor(DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status.get()));
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dNodeStatus]);
 
     // Set description
     useEffect(() => {

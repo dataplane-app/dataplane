@@ -17,12 +17,15 @@ import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../com
 import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
 import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
 import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
+import { useGlobalDeploymentState } from './DeploymentRuns/GlobalDeploymentState';
 
 const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDeployments }) => {
     // React router
     const history = useHistory();
 
     const FlowState = useGlobalFlowState();
+    const DeploymentState = useGlobalDeploymentState();
+
     const Environments = useGlobalEnvironmentsState();
     const Environment = useGlobalEnvironmentState();
 
@@ -82,7 +85,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                             sx={{ fontWeight: 400 }}
                             onClick={() => {
                                 history.push(`/deployments/view/${row.value.pipelineID}/${row.value.version}`);
-                                FlowState.isRunning.set(true);
+                                DeploymentState.isRunning.set(true);
                                 runPipelines(environmentID, row.value.pipelineID, 'deployment');
                             }}>
                             Run

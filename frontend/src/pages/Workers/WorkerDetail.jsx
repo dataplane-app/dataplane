@@ -12,7 +12,7 @@ import WorkerDetailMemory from './WorkerDetailMemory';
 import useWebSocket from './useWebSocket';
 import { useParams } from 'react-router-dom';
 import { balancerDict } from './Workers';
-import { useMeHook } from '../PipelineRuns/Analytics';
+import { useGlobalMeState } from '../../components/Navbar';
 
 const tableWidth = '1140px';
 
@@ -25,19 +25,17 @@ export default function WorkerDetail() {
 
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
+    const MeData = useGlobalMeState();
 
     // Users state
     const [data, setData] = useState([]);
-    const [timezone, setTimezone] = useState('');
 
     // Custom hook
     const getWorkers = useGetWorkersHook(Environment.id.get(), setData, workerId);
-    const getMe = useMeHook(setTimezone);
 
     // Get workers on load and environment change
     useEffect(() => {
         getWorkers();
-        getMe();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.name.get()]);
@@ -57,21 +55,21 @@ export default function WorkerDetail() {
         () => [
             {
                 Header: 'Worker',
-                accessor: (row) => [row.WorkerID, row.Status, formatDate(row.T, timezone)],
+                accessor: (row) => [row.WorkerID, row.Status, formatDate(row.T, MeData.timezone.get())],
                 Cell: (row) => <CustomWorker row={row} />,
             },
             {
                 Header: 'CPU',
-                accessor: (row) => [row.CPUPerc, row.Load, row.T, timezone],
+                accessor: (row) => [row.CPUPerc, row.Load, row.T, MeData.timezone.get()],
                 Cell: (row) => <WorkerDetailCPU row={row} />,
             },
             {
                 Header: 'Memory',
-                accessor: (row) => [row.MemoryPerc, formatMemory(row.MemoryUsed), row.T, timezone],
+                accessor: (row) => [row.MemoryPerc, formatMemory(row.MemoryUsed), row.T, MeData.timezone.get()],
                 Cell: (row) => <WorkerDetailMemory row={row} />,
             },
         ],
-        [timezone]
+        [MeData.timezone.get()]
     );
 
     // Use the state and functions returned from useTable to build your UI

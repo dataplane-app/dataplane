@@ -36,6 +36,7 @@ export const globalFlowState = createState({
     isOpenConfigureDrawer: false,
     isOpenCommandDrawer: false,
     isOpenLogDrawer: false,
+    isOpenDepLogDrawer: false,
     isOpenAPIDrawer: false,
     isOpenTurnOffPipelineDrawer: false,
     isOpenDuplicatePipelineDrawer: false,

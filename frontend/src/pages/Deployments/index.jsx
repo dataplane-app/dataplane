@@ -7,13 +7,13 @@ import { useSnackbar } from 'notistack';
 import { useGlobalFlowState } from '../Flow';
 import { useGetDeployments } from '../../graphql/getDeployments';
 import DeploymentsTable from './DeploymentsTable';
-import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
+import { useGlobalDeploymentState } from './DeploymentRuns/GlobalDeploymentState';
 
 const Deployments = () => {
     // Global states
     const Environment = useGlobalEnvironmentState();
     const FlowState = useGlobalFlowState();
-    const RunState = useGlobalRunState();
+    const DeploymentState = useGlobalDeploymentState();
 
     // Local state
     const [deployments, setDeployments] = useState([]);
@@ -38,8 +38,15 @@ const Deployments = () => {
             elements: [],
             triggerDelete: 1,
         });
-        const dropdownRunId = RunState.dropdownRunId.get();
-        RunState.set({ pipelineRunsTrigger: 1, dropdownRunId });
+
+        DeploymentState.set({
+            selectedRunID: null,
+            runIDs: null,
+            runTrigger: 0,
+            onLoadTrigger: 0,
+            onChangeTrigger: 0,
+            node_id: null,
+        });
         document.querySelector('#root div').scrollTo(0, 0);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps

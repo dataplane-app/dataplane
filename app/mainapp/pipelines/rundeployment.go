@@ -16,7 +16,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func RunDeployment(pipelineID string, environmentID string) (models.PipelineRuns, error) {
+func RunDeployment(pipelineID string, environmentID string, runID string) (models.PipelineRuns, error) {
 
 	// start := time.Now().UTC()
 
@@ -44,7 +44,7 @@ func RunDeployment(pipelineID string, environmentID string) (models.PipelineRuns
 
 	// Create a run
 	run := models.PipelineRuns{
-		RunID:         uuid.NewString(),
+		RunID:         runID,
 		PipelineID:    pipelineID,
 		Status:        "Running",
 		EnvironmentID: environmentID,
