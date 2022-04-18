@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../../graphql/getPipelineTasksRun';
 import { useGlobalFlowState } from '../../Flow';
-import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
+import { useGlobalRunState } from './GlobalRunState';
 
 export default function RunsDropdown({ environmentID, deployment }) {
     // Global states
@@ -13,9 +13,9 @@ export default function RunsDropdown({ environmentID, deployment }) {
     const FlowState = useGlobalFlowState();
 
     // Local state
-    const [selectedRun, setSelectedRun] = useState();
     const [runs, setRuns] = useState([]);
     const [isNewFlow, setIsNewFlow] = useState(true);
+    const [selectedRun, setSelectedRun] = useState(null);
 
     // GraphQL hooks
     const getPipelineRuns = useGetDeploymentRunsHook(environmentID, setRuns);

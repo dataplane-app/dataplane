@@ -44,11 +44,13 @@ const ScheduleNode = (props) => {
     }, [FlowState.selectedElement.get()]);
 
     // Set border color on node status change
+    let nodeStatus = RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() && RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status?.get();
     useEffect(() => {
-        setBorderColor(getColor(RunState.nodes[props.id]?.status?.get()));
+        if (!nodeStatus) return;
+        setBorderColor(getColor(RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status.get()));
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.nodes[props.id]?.status?.get()]);
+    }, [nodeStatus]);
 
     // Set description
     useEffect(() => {

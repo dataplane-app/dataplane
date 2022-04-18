@@ -18,7 +18,7 @@ import TurnOffPipelineDrawer from '../../DrawerContent/TurnOffPipelineDrawer';
 import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import DuplicatePipelineDrawer from '../../DrawerContent/DuplicatePipelineDrawer';
-import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
+import { v4 as uuidv4 } from 'uuid';
 
 const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
     // React router
@@ -224,36 +224,22 @@ export default PipelineTable;
 
 // Custom GraphQL hook
 export const useRunPipelinesHook = () => {
-    // GraphQL hooks
-    const getPipelineFlow = useGetPipelineFlow();
+    // GraphQL hook
     const runPipelines = useRunPipelines();
 
-    // Global state
-    const RunState = useGlobalRunState();
+    const RunID = uuidv4();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Run pipeline flow
     return async (environmentID, pipelineID, RunType) => {
-        // First get pipeline flow graph
-        const rawResponse = await getPipelineFlow({ pipelineID, environmentID, RunType: 'pipeline' });
-        const run_json = prepareInputForFrontend(rawResponse);
-        if (run_json.length === 0) return;
-
-        // Then run pipeline flow
-        const response = await runPipelines({
-            pipelineID,
-            environmentID,
-            RunType,
-        });
+        const response = await runPipelines({ pipelineID, environmentID, RunType, RunID });
 
         if (response.r === 'error') {
             closeSnackbar();
-            enqueueSnackbar("Can't run flow: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't run pipeline: " + response.msg, { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            RunState.run_id.set(response.run_id);
         }
     };
 };

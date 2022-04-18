@@ -222,7 +222,7 @@ type ComplexityRoot struct {
 		RenameFile                       func(childComplexity int, environmentID string, fileID string, nodeID string, pipelineID string, newName string) int
 		RenameFolder                     func(childComplexity int, environmentID string, folderID string, nodeID string, pipelineID string, newName string) int
 		RunCEFile                        func(childComplexity int, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string) int
-		RunPipelines                     func(childComplexity int, pipelineID string, environmentID string, runType string) int
+		RunPipelines                     func(childComplexity int, pipelineID string, environmentID string, runType string, runID string) int
 		StopCERun                        func(childComplexity int, pipelineID string, runID string, environmentID string) int
 		StopPipelines                    func(childComplexity int, pipelineID string, runID string, environmentID string, runType string) int
 		TurnOnOffDeployment              func(childComplexity int, environmentID string, pipelineID string, online bool) int
@@ -545,7 +545,7 @@ type MutationResolver interface {
 	DeletePipeline(ctx context.Context, environmentID string, pipelineID string) (string, error)
 	TurnOnOffPipeline(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
-	RunPipelines(ctx context.Context, pipelineID string, environmentID string, runType string) (*models.PipelineRuns, error)
+	RunPipelines(ctx context.Context, pipelineID string, environmentID string, runType string, runID string) (*models.PipelineRuns, error)
 	StopPipelines(ctx context.Context, pipelineID string, runID string, environmentID string, runType string) (*models.PipelineRuns, error)
 	CreateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
 	UpdateSecret(ctx context.Context, input *UpdateSecretsInput) (*models.Secrets, error)
@@ -1681,7 +1681,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RunPipelines(childComplexity, args["pipelineID"].(string), args["environmentID"].(string), args["RunType"].(string)), true
+		return e.complexity.Mutation.RunPipelines(childComplexity, args["pipelineID"].(string), args["environmentID"].(string), args["RunType"].(string), args["RunID"].(string)), true
 
 	case "Mutation.stopCERun":
 		if e.complexity.Mutation.StopCERun == nil {
@@ -4545,7 +4545,7 @@ extend type Mutation {
     + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
     + RunType is either deployment or pipeline
     """
-    runPipelines(pipelineID: String!, environmentID: String!, RunType: String!): PipelineRuns!
+    runPipelines(pipelineID: String!, environmentID: String!, RunType: String!, RunID: String!): PipelineRuns!
 
     """
     Stop pipeline flow.
@@ -5825,6 +5825,15 @@ func (ec *executionContext) field_Mutation_runPipelines_args(ctx context.Context
 		}
 	}
 	args["RunType"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["RunID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("RunID"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["RunID"] = arg3
 	return args, nil
 }
 
@@ -12695,7 +12704,7 @@ func (ec *executionContext) _Mutation_runPipelines(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RunPipelines(rctx, args["pipelineID"].(string), args["environmentID"].(string), args["RunType"].(string))
+		return ec.resolvers.Mutation().RunPipelines(rctx, args["pipelineID"].(string), args["environmentID"].(string), args["RunType"].(string), args["RunID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

@@ -27,20 +27,18 @@ export function Analytics({ setIsOpenAnalytics }) {
     // Get user's timezone on load
     useEffect(() => {
         getMe();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Set nodes on dropdown change
     useEffect(() => {
         if (!timezone) return;
-        setNodes(
-            Object.entries(RunState.attach(Downgraded).get())
-                .filter(([key, value]) => value?.status && value?.end_dt && value?.start_dt)
-                .map((a) => a[1])
-                .sort((a, b) => a.start_dt?.localeCompare(b.start_dt))
-        );
+        RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.attach(Downgraded).get() &&
+            setNodes(Object.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.attach(Downgraded).get()).sort((a, b) => a.start_dt?.localeCompare(b.start_dt)));
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.dropdownRunId.get(), timezone]);
+    }, [RunState.selectedRunID.get(), timezone]);
 
     // Set labels, chart height on nodes change
     useEffect(() => {
@@ -75,7 +73,7 @@ export function Analytics({ setIsOpenAnalytics }) {
                 displayColors: false,
                 callbacks: {
                     label: function (context) {
-                        return timeElapsed(context.raw[0], context.raw[1]);
+                        return timeElapsed(context.raw[0], context.raw[1]) + context.raw[0];
                     },
                     // afterTitle: function (context) {
                     //     return 'hi';
@@ -94,8 +92,8 @@ export function Analytics({ setIsOpenAnalytics }) {
                 time: {
                     // unit: 'second',
                 },
-                min: RunState.runStart.get(),
-                max: RunState.runEnd.get(),
+                min: RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get(),
+                max: RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get(),
                 grid: {
                     display: false,
                 },
@@ -128,7 +126,9 @@ export function Analytics({ setIsOpenAnalytics }) {
                     // categoryPercentage: 0.3,
                     // maxBarThickness: 8,
                     // minBarLength: 20,
-                    data: nodes.map((a) => (!a['start_dt'] || !a['end_dt'] ? null : [a['start_dt'], a['end_dt']])),
+                    data: Object.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes.get())
+                        .sort((a, b) => a.start_dt.localeCompare(b.start_dt))
+                        .map((a) => [a.start_dt, a.end_dt]),
                     backgroundColor: '#0073C6',
                 },
             ],

@@ -41,17 +41,19 @@ const BashNode = (props) => {
     }, [FlowState.selectedElement.get()]);
 
     // Set border color on node status change
+    let nodeStatus = RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() && RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status?.get();
     useEffect(() => {
-        setBorderColor(getColor(RunState.nodes[props.id]?.status?.get()));
+        if (nodeStatus) {
+            setBorderColor(getColor(RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status.get()));
+        } else {
+            setBorderColor(getColor());
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.nodes[props.id]?.status?.get()]);
+    }, [nodeStatus]);
 
     const onClick = () => {
         RunState.node_id.set(props.id);
-        RunState.node_name.set(props.data.name);
-        RunState.node_description.set(props.data.description);
-        RunState.selectedNodeStatus.set(RunState.nodes[props.id].status.get());
     };
 
     return (
@@ -80,7 +82,12 @@ const BashNode = (props) => {
 
                 <Grid item>
                     <Typography fontSize={8}>
-                        {RunState[props.id].status?.get() === 'Success' && displayTimer(RunState[props.id].end_dt?.get(), RunState[props.id].start_dt?.get())}
+                        {RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() &&
+                            RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.status?.get() === 'Success' &&
+                            displayTimer(
+                                RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.end_dt.get(),
+                                RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.start_dt.get()
+                            )}
                     </Typography>
                 </Grid>
 

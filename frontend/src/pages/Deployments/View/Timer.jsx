@@ -10,7 +10,8 @@ import useWebSocket from './useWebSocket';
 import StatusChips from './StatusChips';
 import RunsDropdown from './RunsDropdown';
 import { Downgraded } from '@hookstate/core';
-import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
+import { v4 as uuidv4 } from 'uuid';
+import { useGlobalRunState } from './GlobalRunState';
 
 export default function Timer({ environmentID, deployment }) {
     // Global state
@@ -21,6 +22,7 @@ export default function Timer({ environmentID, deployment }) {
     const [elapsed, setElapsed] = useState();
     const [isRunning, setIsRunning] = useState(false);
     const [start, setStart] = useState();
+    const [selectedRun, setSelectedRun] = useState(null);
 
     // GraphQL hooks
     const runPipelines = useRunPipelinesHook();
@@ -141,12 +143,15 @@ export const useRunPipelinesHook = () => {
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
+    const runId = uuidv4();
+
     // Run pipeline flow
     return async (environmentID) => {
         const response = await runPipelines({
             pipelineID,
             environmentID,
             RunType: 'deployment',
+            RunID: runId,
         });
 
         if (response.r === 'error') {
