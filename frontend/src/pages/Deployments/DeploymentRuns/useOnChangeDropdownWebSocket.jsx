@@ -113,7 +113,7 @@ export default function useOnChangeDropdownWebSocket(environmentId, setSelectedR
                     ws.current.close();
                 } else {
                     // Needed for Stop button to show
-                    FlowState.isRunning.set(true);
+                    DeploymentState.isRunning.set(true);
                 }
             };
 
@@ -156,7 +156,7 @@ export default function useOnChangeDropdownWebSocket(environmentId, setSelectedR
                 }
 
                 if (response.MSG === 'pipeline_complete') {
-                    FlowState.isRunning.set(false);
+                    DeploymentState.isRunning.set(false);
                     DeploymentState.runIDs[response.run_id].runEnd.set(response.ended_at);
 
                     reconnectOnClose.current = false;

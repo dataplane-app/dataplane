@@ -117,7 +117,7 @@ export default function useOnPageLoadWebSocket(environmentId, setSelectedRun, se
                     ws.current.close();
                 } else {
                     // Needed for Stop button to show
-                    FlowState.isRunning.set(true);
+                    DeploymentState.isRunning.set(true);
                 }
             };
 
@@ -160,7 +160,7 @@ export default function useOnPageLoadWebSocket(environmentId, setSelectedRun, se
                 }
 
                 if (response.MSG === 'pipeline_complete') {
-                    FlowState.isRunning.set(false);
+                    DeploymentState.isRunning.set(false);
                     DeploymentState.runIDs[response.run_id].runEnd.set(response.ended_at);
 
                     reconnectOnClose.current = false;

@@ -8,6 +8,7 @@ export const globalDeploymentState = createState({
     onLoadTrigger: 0,
     onChangeTrigger: 0,
     node_id: null,
+    isRunning: false,
 });
 
 export const useGlobalDeploymentState = () => useHookState(globalDeploymentState);

@@ -3,7 +3,6 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useStopPipelines } from '../../../graphql/stopPipelines';
-import { useGlobalFlowState } from '../../Flow';
 import StatusChips from './StatusChips';
 import RunsDropdown, { usePipelineTasksRunHook } from './RunsDropdown';
 import { useGlobalDeploymentState } from './GlobalDeploymentState';
@@ -12,7 +11,6 @@ import { displayTimerMs } from '../../PipelineRuns/RunsDropdown';
 
 export default function StartStopRun({ environmentID, deployment }) {
     // Global state
-    const FlowState = useGlobalFlowState();
     const DeploymentState = useGlobalDeploymentState();
 
     // Local state
@@ -31,19 +29,19 @@ export default function StartStopRun({ environmentID, deployment }) {
     useOnRunWebSocket(environmentID, setRuns, setSelectedRun);
 
     const handleTimerStart = () => {
-        FlowState.isRunning.set(true);
+        DeploymentState.isRunning.set(true);
         DeploymentState.runTrigger.set((t) => t + 1);
     };
 
     const handleTimerStop = () => {
         stopPipelines(environmentID, DeploymentState.selectedRunID.get());
-        FlowState.isRunning.set(false);
+        DeploymentState.isRunning.set(false);
     };
 
     // Updates timer every second
     useEffect(() => {
         let secTimer;
-        if (FlowState.isRunning.get()) {
+        if (DeploymentState.isRunning.get()) {
             secTimer = setInterval(() => {
                 setElapsed(displayTimer(DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runStart?.get()));
             }, 500);
@@ -60,12 +58,12 @@ export default function StartStopRun({ environmentID, deployment }) {
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isRunning.get()]);
+    }, [DeploymentState.isRunning.get()]);
 
     return (
         <Grid item>
             <Box display="flex" alignItems="center">
-                {FlowState.isRunning.get() && !DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runEnd?.get() ? (
+                {DeploymentState.isRunning.get() && !DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runEnd?.get() ? (
                     <Button
                         onClick={handleTimerStop}
                         variant="outlined"
@@ -87,9 +85,9 @@ export default function StartStopRun({ environmentID, deployment }) {
 
                 {!DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runEnd?.get() ? (
                     // If looking at an active run, show live timer
-                    FlowState.isRunning.get() ? (
+                    DeploymentState.isRunning.get() ? (
                         <Typography variant="h3" ml={2}>
-                            {elapsed ? elapsed : FlowState.isRunning.get() ? '' : '00:00:00'}
+                            {elapsed ? elapsed : DeploymentState.isRunning.get() ? '' : '00:00:00'}
                         </Typography>
                     ) : (
                         // If looking at a previous run during an active run

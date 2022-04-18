@@ -17,7 +17,7 @@ const DeploymentViewPageItem = (props) => {
     };
 
     const handleRun = () => {
-        FlowState.isRunning.set(true);
+        DeploymentState.isRunning.set(true);
         DeploymentState.runTrigger.set((t) => t + 1);
         props.handleCloseMenu();
     };

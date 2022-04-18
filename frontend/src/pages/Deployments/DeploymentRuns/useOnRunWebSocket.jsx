@@ -131,7 +131,7 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
                 }
 
                 if (response.MSG === 'pipeline_complete') {
-                    FlowState.isRunning.set(false);
+                    DeploymentState.isRunning.set(false);
                     DeploymentState.runIDs[response.run_id].runEnd.set(response.ended_at);
 
                     reconnectOnClose.current = false;
