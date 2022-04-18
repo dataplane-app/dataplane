@@ -17,7 +17,6 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     // Global states
     const RunState = useGlobalRunState();
     const MeData = useGlobalMeState();
-    console.log('🚀 ~ file: RunsDropdown.jsx ~ line 21 ~ RunsDropdown ~ MeData', MeData);
 
     // Local state
     const [isNewFlow, setIsNewFlow] = useState(false);
@@ -104,7 +103,7 @@ export const useGetPipelineRunsHook = (environmentID, setRuns) => {
 
     const { enqueueSnackbar } = useSnackbar();
 
-    // Get members
+    // Get runs
     return async (getPipelineFlow) => {
         const response = await getPipelineRuns({ pipelineID: pipelineId, environmentID });
 
@@ -114,7 +113,7 @@ export const useGetPipelineRunsHook = (environmentID, setRuns) => {
             getPipelineFlow(environmentID);
             return;
         } else if (response.r || response.error) {
-            enqueueSnackbar("Can't get flow: " + (response.msg || response.r || response.error), { variant: 'error' });
+            enqueueSnackbar("Can't get runs: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
@@ -135,14 +134,14 @@ export const usePipelineTasksRunHook = () => {
 
     const { enqueueSnackbar } = useSnackbar();
 
-    // Update pipeline flow
+    // Get tasks
     return async (runID, environmentID) => {
         if (!runID) return;
 
         const response = await getPipelineTasksRun({ pipelineID: pipelineId, runID, environmentID });
 
         if (response.r || response.error) {
-            enqueueSnackbar("Can't update flow: " + (response.msg || response.r || response.error), { variant: 'error' });
+            enqueueSnackbar("Can't get tasks: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {

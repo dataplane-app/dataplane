@@ -1,4 +1,3 @@
-import { ActionLayer } from './ActionLayer';
 import { useTheme } from '@emotion/react';
 import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,14 +11,14 @@ import PublishPipelineDrawer from '../../../components/DrawerContent/PublishPipe
 import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
 import MenuItem from './MenuItem';
 import MoreInfoMenu from '../../../components/MoreInfoMenu';
-import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
 import { edgeTypes, nodeTypes, useGlobalFlowState } from '../../Flow';
-import LogsDrawer from '../../../components/DrawerContent/LogsDrawer';
 import TurnOffPipelineDrawer from '../../../components/DrawerContent/TurnOffPipelineDrawer';
 import CustomChip from '../../../components/CustomChip';
 import { Analytics } from './Analytics';
 import { Downgraded } from '@hookstate/core';
 import { useGetActiveDeployment } from '../../../graphql/getActiveDeployment';
+import StartStopRun from './StartStopRun';
+import LogsDrawer from './LogsDrawer';
 
 const DeploymentView = () => {
     const Environment = useGlobalEnvironmentState();
@@ -27,7 +26,6 @@ const DeploymentView = () => {
     // Hooks
     const theme = useTheme();
     const [deployment, setDeployment] = useState(null);
-    const getPipelineFlow = useGetPipelineFlowHook();
     const getActiveDeployment = useGetActiveDeploymentHook(Environment.id.get(), setDeployment);
 
     // Global states
@@ -52,7 +50,6 @@ const DeploymentView = () => {
     // Flow states
     const reactFlowWrapper = useRef(null);
     const [, setReactFlowInstance] = useState(null);
-    // const [elements, setElements] = useState([]);
     const [panOnDrag, setPanOnDrag] = useState(FlowState.isPanEnable.get());
 
     useEffect(() => {
@@ -61,13 +58,11 @@ const DeploymentView = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [FlowState.isPanEnable.get()]);
 
-    // Fetch previous elements
+    // Fetch previous elements on load
     useEffect(() => {
         if (!Environment.id.get()) return;
         setIsLoadingFlow(false);
         getActiveDeployment();
-        // Needed once on page load, flow for the rest of the runs come from pipelineRuns
-        getPipelineFlow(Environment.id.get());
 
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -151,7 +146,6 @@ const DeploymentView = () => {
                                 <MoreInfoMenu iconHorizontal>
                                     <MenuItem
                                         pipeline={deployment}
-                                        getPipelineFlow={() => getPipelineFlow(Environment.id.get())}
                                         isPipelineOnline={deployment?.online}
                                         getPipeline={getActiveDeployment}
                                         setIsOpenAnalytics={setIsOpenAnalytics}
@@ -163,10 +157,12 @@ const DeploymentView = () => {
                     </Box>
                 </Grid>
 
-                {/* Run/Stop button, Chips, Timer */}
-                <ActionLayer environmentId={Environment.id.get()} deployment={deployment} />
+                {/* Run/Stop button, Chips, Dropdown, Timer */}
+                <Grid mt={4} container alignItems="center" sx={{ width: { xl: '88%' }, flexWrap: 'nowrap' }}>
+                    <StartStopRun environmentID={Environment.id.get()} deployment={deployment} />
+                </Grid>
             </Box>
-            {!FlowState.isOpenLogDrawer.get() && !isOpenAnalytics ? (
+            {!FlowState.isOpenDepLogDrawer.get() && !isOpenAnalytics ? (
                 <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
                     {FlowState.elements.get()?.length > 0 ? (
                         <ReactFlowProvider>
@@ -220,9 +216,9 @@ const DeploymentView = () => {
                     [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82, height: 'calc(100% - 82px)', background: '#222', paddingBottom: 2 },
                 }}
                 anchor="right"
-                open={FlowState.isOpenLogDrawer.get()}
-                onClose={() => FlowState.isOpenLogDrawer.set(false)}>
-                <LogsDrawer handleClose={() => FlowState.isOpenLogDrawer.set(false)} environmentId={Environment.id.get()} />
+                open={FlowState.isOpenDepLogDrawer.get()}
+                onClose={() => FlowState.isOpenDepLogDrawer.set(false)}>
+                <LogsDrawer handleClose={() => FlowState.isOpenDepLogDrawer.set(false)} environmentId={Environment.id.get()} />
             </Drawer>
             <Drawer anchor="right" open={FlowState.isOpenTurnOffPipelineDrawer.get()} onClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)}>
                 <TurnOffPipelineDrawer
@@ -230,7 +226,6 @@ const DeploymentView = () => {
                     pipelineID={deployment?.pipelineID}
                     environmentID={deployment?.environmentID}
                     name={deployment?.name}
-                    getPipelineFlow={() => getPipelineFlow(Environment.id.get())}
                     getPipeline={getActiveDeployment}
                 />
             </Drawer>
@@ -241,40 +236,7 @@ const DeploymentView = () => {
 export default DeploymentView;
 
 // ------ Custom hooks
-export const useGetPipelineFlowHook = () => {
-    // GraphQL hook
-    const getPipelineFlow = useGetPipelineFlow();
-
-    // Global state
-    const FlowState = useGlobalFlowState();
-
-    // URI parameter
-    const { deploymentId } = useParams();
-
-    const pipelineID = deploymentId.replace('d-', '');
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Get members
-    return async (environmentID) => {
-        const rawResponse = await getPipelineFlow({ pipelineID, environmentID });
-        const response = prepareInputForFrontend(rawResponse);
-
-        if (response.length === 0) {
-            FlowState.elements.set([]);
-        } else if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            FlowState.elements.set(response);
-        }
-    };
-};
-
-// ------ Custom hooks
-export const useGetActiveDeploymentHook = (environmentID, setPipeline) => {
+export const useGetActiveDeploymentHook = (environmentID, setDeployment) => {
     // GraphQL hook
     const getActiveDeployment = useGetActiveDeployment();
 
@@ -296,7 +258,7 @@ export const useGetActiveDeploymentHook = (environmentID, setPipeline) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setPipeline(response);
+            setDeployment(response);
             FlowState.pipelineInfo.set(response);
         }
     };

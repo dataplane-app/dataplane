@@ -4,41 +4,30 @@ import 'chartjs-adapter-luxon';
 import { Bar } from 'react-chartjs-2';
 import { Button } from '@mui/material';
 import { Downgraded } from '@hookstate/core';
-import { useMe } from '../../graphql/me';
-import { useSnackbar } from 'notistack';
 import { Box } from '@mui/system';
 import { useGlobalRunState } from './GlobalRunState';
+import { useGlobalMeState } from '../../components/Navbar';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, TimeScale, TimeSeriesScale);
 
 export function Analytics({ setIsOpenAnalytics }) {
     // Global states
     const RunState = useGlobalRunState();
+    const MeData = useGlobalMeState();
 
     const [labels, setLabels] = useState([]);
     const [nodes, setNodes] = useState([]);
     const [data, setData] = useState(null);
     const [height, setHeight] = useState(100);
-    const [timezone, setTimezone] = useState('');
-
-    // Graphql hook
-    const getMe = useMeHook(setTimezone);
-
-    // Get user's timezone on load
-    useEffect(() => {
-        getMe();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     // Set nodes on dropdown change
     useEffect(() => {
-        if (!timezone) return;
+        if (!MeData.timezone.get()) return;
         RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.attach(Downgraded).get() &&
             setNodes(Object.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.attach(Downgraded).get()).sort((a, b) => a.start_dt?.localeCompare(b.start_dt)));
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.selectedRunID.get(), timezone]);
+    }, [RunState.selectedRunID.get(), MeData.timezone.get()]);
 
     // Set labels, chart height on nodes change
     useEffect(() => {
@@ -73,7 +62,7 @@ export function Analytics({ setIsOpenAnalytics }) {
                 displayColors: false,
                 callbacks: {
                     label: function (context) {
-                        return timeElapsed(context.raw[0], context.raw[1]) + context.raw[0];
+                        return timeElapsed(context.raw[0], context.raw[1]);
                     },
                     // afterTitle: function (context) {
                     //     return 'hi';
@@ -86,7 +75,7 @@ export function Analytics({ setIsOpenAnalytics }) {
                 type: 'time',
                 adapters: {
                     date: {
-                        zone: timezone,
+                        zone: MeData.timezone.get(),
                     },
                 },
                 time: {
@@ -170,25 +159,3 @@ function pad(n, width) {
     const num = n + '';
     return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
 }
-
-// ----- Custom hook
-export const useMeHook = (setTimezone) => {
-    // GraphQL hook
-    const getMe = useMe();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Get timezone
-    return async () => {
-        const response = await getMe();
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get timezone: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            setTimezone(response.timezone);
-        }
-    };
-};

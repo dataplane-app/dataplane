@@ -4,6 +4,7 @@ import { Grid, Tooltip, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
+import { useGlobalDeploymentState } from '../../../pages/Deployments/DeploymentRuns/GlobalDeploymentState';
 import { useGlobalFlowState } from '../../../pages/Flow';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import { customSourceHandle, customSourceHandleDragging, customTargetHandle } from '../../../utils/handleStyles';
@@ -19,6 +20,7 @@ const BashNode = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
+    const DeploymentState = useGlobalDeploymentState();
 
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
@@ -42,6 +44,8 @@ const BashNode = (props) => {
 
     // Set border color on node status change
     let nodeStatus = RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() && RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status?.get();
+    let dNodeStatus =
+        DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.get() && DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status?.get();
     useEffect(() => {
         if (nodeStatus) {
             setBorderColor(getColor(RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status.get()));
@@ -52,6 +56,15 @@ const BashNode = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nodeStatus]);
 
+    useEffect(() => {
+        if (dNodeStatus) {
+            setBorderColor(getColor(DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status.get()));
+        } else {
+            setBorderColor(getColor());
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dNodeStatus]);
     const onClick = () => {
         RunState.node_id.set(props.id);
     };
@@ -81,14 +94,25 @@ const BashNode = (props) => {
                 </Grid>
 
                 <Grid item>
-                    <Typography fontSize={8}>
-                        {RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() &&
-                            RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.status?.get() === 'Success' &&
-                            displayTimer(
-                                RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.end_dt.get(),
-                                RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.start_dt.get()
-                            )}
-                    </Typography>
+                    {props.id.substring(0, 2) === 'd-' ? (
+                        <Typography fontSize={8}>
+                            {DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.get() &&
+                                DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.status?.get() === 'Success' &&
+                                displayTimer(
+                                    DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.end_dt.get(),
+                                    DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.start_dt.get()
+                                )}
+                        </Typography>
+                    ) : (
+                        <Typography fontSize={8}>
+                            {RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() &&
+                                RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.status?.get() === 'Success' &&
+                                displayTimer(
+                                    RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.end_dt.get(),
+                                    RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.start_dt.get()
+                                )}
+                        </Typography>
+                    )}
                 </Grid>
 
                 <Box mt={0}>

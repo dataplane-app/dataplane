@@ -1,7 +1,7 @@
 import { createState, useState as useHookState } from '@hookstate/core';
 
 // Global run state - run_id gets added to global state when pipeline is run
-export const globalRunState = createState({
+export const globalDeploymentState = createState({
     selectedRunID: null,
     runIDs: null,
     runTrigger: 0,
@@ -10,4 +10,4 @@ export const globalRunState = createState({
     node_id: null,
 });
 
-export const useGlobalRunState = () => useHookState(globalRunState);
+export const useGlobalDeploymentState = () => useHookState(globalDeploymentState);

@@ -1,112 +1,71 @@
 import { Autocomplete, Grid, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useGetDeploymentRuns } from '../../../graphql/getDeploymentRuns';
-import { useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../../graphql/getPipelineTasksRun';
 import { useGlobalFlowState } from '../../Flow';
-import { useGlobalRunState } from './GlobalRunState';
+import { useGlobalDeploymentState } from './GlobalDeploymentState';
+import { useGlobalMeState } from '../../../components/Navbar';
+import { prepareInputForFrontend } from '.';
+import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
+import useOnPageLoadWebSocket, { addDdash } from './useOnPageLoadWebSocket';
+import useOnChangeDropdownWebSocket from './useOnChangeDropdownWebSocket';
+import { formatDateNoZone } from '../../../utils/formatDate';
 
-export default function RunsDropdown({ environmentID, deployment }) {
+export default function RunsDropdown({ environmentID, deployment, runs, setRuns, selectedRun, setSelectedRun }) {
     // Global states
-    const RunState = useGlobalRunState();
-    const FlowState = useGlobalFlowState();
-
-    // Local state
-    const [runs, setRuns] = useState([]);
-    const [isNewFlow, setIsNewFlow] = useState(true);
-    const [selectedRun, setSelectedRun] = useState(null);
+    const DeploymentState = useGlobalDeploymentState();
+    const MeData = useGlobalMeState();
 
     // GraphQL hooks
-    const getPipelineRuns = useGetDeploymentRunsHook(environmentID, setRuns);
-    const getPipelineTasksRun = usePipelineTasksRunHook(selectedRun);
+    const getDeploymentRuns = useGetDeploymentRunsHook(environmentID, setRuns);
+    const getPipelineFlow = useGetPipelineFlowHook(deployment.pipelineID);
 
-    // Get pipeline runs on load and environment change
+    // Instantiate websocket for on page load
+    useOnPageLoadWebSocket(environmentID, setSelectedRun, setRuns);
+
+    // Instantiate websocket for dropdown change
+    useOnChangeDropdownWebSocket(environmentID, setSelectedRun);
+
+    // Get pipeline runs on load
     useEffect(() => {
-        if (!environmentID) return;
-        getPipelineRuns();
+        (async () => {
+            let runID = await getDeploymentRuns(getPipelineFlow);
+
+            // No runID means, there are no runs yet, return.
+            if (!runID) return;
+
+            DeploymentState.merge({
+                selectedRunID: runID,
+                onLoadTrigger: 1,
+            });
+        })();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [environmentID]);
-
-    // Get pipeline runs after each run.
-    useEffect(() => {
-        if (RunState.run_id.get() && FlowState.isRunning.get()) {
-            getPipelineRuns();
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.run_id.get()]);
-
-    // Get pipeline runs on trigger.
-    useEffect(() => {
-        if (RunState.pipelineRunsTrigger.get() < 2) return;
-        getPipelineRuns();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.pipelineRunsTrigger.get()]);
-
-    // Set flow status,color on change
-    useEffect(() => {
-        if (runs.length === 0 || !deployment) return;
-        setSelectedRun(runs[0]);
-        RunState.runStart.set(runs[0].created_at);
-        RunState.runEnd.set(runs[0].ended_at);
-        setIsNewFlow(false);
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [deployment, runs]);
+    }, []);
 
     // Update elements on run dropdown change
-    useEffect(() => {
-        if (!selectedRun) return;
-        FlowState.elements.set(selectedRun.run_json);
-
-        getPipelineTasksRun(selectedRun.run_id, environmentID);
-
-        // Set timer on dropdown change. Works only for runs returned from pipeline runs.
-        if (selectedRun.ended_at) {
-            RunState.prevRunTime.set(displayTimerMs(selectedRun.created_at, selectedRun.ended_at));
-        }
-
-        RunState.dropdownRunId.set(selectedRun.run_id);
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedRun?.run_id]);
+    const handleDropdownChange = (run) => {
+        setSelectedRun(run);
+        DeploymentState.merge((r) => ({
+            selectedRunID: run.run_id,
+            onChangeTrigger: r.onChangeTrigger + 1,
+        }));
+    };
 
     return (
         <Grid item alignItems="center" display="flex" width={520}>
-            {selectedRun && !isNewFlow ? (
+            {selectedRun ? (
                 <Autocomplete
                     id="run_autocomplete"
-                    onChange={(event, newValue) => {
-                        setSelectedRun(newValue);
-                        RunState.runStart.set(newValue.created_at);
-                        RunState.runEnd.set(newValue.ended_at);
-                    }}
+                    onChange={(event, newValue) => handleDropdownChange(newValue)}
                     value={selectedRun}
                     disableClearable
                     sx={{ minWidth: '520px' }}
                     options={runs}
                     isOptionEqualToValue={(option, value) => option.run_id === value.run_id}
-                    getOptionLabel={(a) => formatDate(a.created_at) + ' - ' + a.run_id}
-                    renderInput={(params) => <TextField {...params} label="Run" id="run" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
-                />
-            ) : null}
-            {isNewFlow ? (
-                <Autocomplete
-                    id="run_autocomplete"
-                    onChange={(event, newValue) => {
-                        setSelectedRun(newValue);
-                        RunState.runStart.set(newValue.created_at);
-                        RunState.runEnd.set(newValue.ended_at);
-                    }}
-                    value={selectedRun}
-                    disableClearable
-                    sx={{ minWidth: '520px' }}
-                    options={runs}
-                    isOptionEqualToValue={(option, value) => option.run_id === value.run_id}
-                    getOptionLabel={(a) => formatDate(a.created_at) + ' - ' + a.run_id}
+                    getOptionLabel={(a) => formatDateNoZone(a.created_at, MeData.timezone.get()) + ' - ' + a.run_id}
                     renderInput={(params) => <TextField {...params} label="Run" id="run" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />
             ) : null}
@@ -117,95 +76,100 @@ export default function RunsDropdown({ environmentID, deployment }) {
 // ------ Custom hook
 export const useGetDeploymentRunsHook = (environmentID, setRuns) => {
     // GraphQL hook
-    const getPipelineRuns = useGetDeploymentRuns();
+    const getDeploymentRuns = useGetDeploymentRuns();
 
     // URI parameter
     const { deploymentId, version } = useParams();
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const { enqueueSnackbar } = useSnackbar();
 
-    // Get members
-    return async () => {
-        const response = await getPipelineRuns({ deploymentID: deploymentId, environmentID, version });
+    // Get runs
+    return async (getPipelineFlow) => {
+        const response = await getDeploymentRuns({ deploymentID: deploymentId, environmentID, version });
 
         if (response.length === 0) {
             setRuns([]);
-        } else if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
+            getPipelineFlow(environmentID);
+            return;
+        } else if (response.r || response.error) {
+            enqueueSnackbar("Can't get runs: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setRuns(response);
+            return response[0].run_id;
         }
     };
 };
 
-export const usePipelineTasksRunHook = (selectedRun) => {
+export const usePipelineTasksRunHook = () => {
     // GraphQL hook
     const getPipelineTasksRun = usePipelineTasksRun();
 
     // URI parameter
     const { deploymentId } = useParams();
 
-    const RunState = useGlobalRunState();
-    const FlowState = useGlobalFlowState();
+    const DeploymentState = useGlobalDeploymentState();
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const { enqueueSnackbar } = useSnackbar();
 
-    // Update pipeline flow
+    // Get tasks
     return async (runID, environmentID) => {
         if (!runID) return;
 
         const response = await getPipelineTasksRun({ pipelineID: deploymentId, runID, environmentID });
 
-        if (response.r === 'Unauthorized') {
-            closeSnackbar();
-            enqueueSnackbar(`Can't update flow: ${response.r}`, { variant: 'error' });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get tasks: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            // Keeping only start_id and run_id and removing rest of the nodes before adding this run's nodes.
-            const keep = {
-                start_id: RunState.start_dt.get(),
-                run_id: RunState.run_id.get() || RunState.dropdownRunId.get(),
-                pipelineRunsTrigger: RunState.pipelineRunsTrigger.get(),
-                dropdownRunId: selectedRun.run_id,
-                runStart: RunState.runStart.get(),
-                runEnd: RunState.runEnd.get(),
-                selectedNodeStatus: RunState.selectedNodeStatus.get(),
-                prevRunTime: RunState.prevRunTime.get(),
-            };
-            if (!RunState.runEnd.get()) {
-                FlowState.isRunning.set(true);
-            }
-
+            const nodes = {};
             response.map(
                 (a) =>
-                    (keep[a.node_id.replace('d-', '')] = {
+                    (nodes[a.node_id] = {
                         status: a.status,
                         end_dt: a.end_dt,
                         start_dt: a.start_dt,
-                        name: selectedRun.run_json.filter((b) => b.id === a.node_id.replace('d-', ''))[0].data.name,
-                        type: selectedRun.run_json.filter((b) => b.id === a.node_id.replace('d-', ''))[0].type,
                     })
             );
-            RunState.set(keep);
+            DeploymentState.batch((s) => {
+                s.selectedRunID.set(response[0].run_id);
+                s.runIDs[response[0].run_id].nodes.set(nodes);
+            }, 'tasks-batch');
         }
     };
 };
 
-// ----- Utility functions
-function formatDate(date) {
-    if (!date) return;
-    date = new Date(date);
-    let day = new Intl.DateTimeFormat('en', { day: 'numeric' }).format(date);
-    let monthYear = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short' }).format(date);
-    let time = new Intl.DateTimeFormat('en', { hourCycle: 'h23', hour: '2-digit', minute: 'numeric', second: 'numeric' }).format(date);
-    return `${day} ${monthYear} ${time}`;
-}
+const useGetPipelineFlowHook = () => {
+    // GraphQL hook
+    const getPipelineFlow = useGetPipelineFlow();
 
-function displayTimerMs(end, start) {
+    // Global state
+    const FlowState = useGlobalFlowState();
+
+    // URI parameter
+    const { deploymentId } = useParams();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get members
+    return async (environmentID) => {
+        const rawResponse = await getPipelineFlow({ pipelineID: deploymentId.replace('d-', ''), environmentID });
+        const response = prepareInputForFrontend(rawResponse);
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get flow: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            FlowState.elements.set(addDdash(response));
+            return;
+        }
+    };
+};
+
+export function displayTimerMs(end, start) {
     if (!end || !start) return null;
 
     var ticks = (new Date(start) - new Date(end)) / 1000;

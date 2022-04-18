@@ -35,7 +35,7 @@ func mytask(nodeID string, pipelineID string, environmentID string, timezone str
 	case "pipeline":
 		_, err = pipelines.RunPipeline(pipelineID, environmentID, runID)
 	case "deployment":
-		_, err = pipelines.RunDeployment(pipelineID, environmentID)
+		_, err = pipelines.RunDeployment(pipelineID, environmentID, runID)
 	default:
 		log.Println("Run type not provided in scheduler.")
 		return
