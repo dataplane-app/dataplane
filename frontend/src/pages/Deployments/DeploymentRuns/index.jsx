@@ -222,7 +222,7 @@ const DeploymentView = () => {
                     pipelineID={deployment?.pipelineID}
                     environmentID={deployment?.environmentID}
                     name={deployment?.name}
-                    getPipeline={getActiveDeployment}
+                    getPipelines={getActiveDeployment}
                 />
             </Drawer>
         </Box>

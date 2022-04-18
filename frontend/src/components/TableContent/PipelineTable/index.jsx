@@ -24,9 +24,6 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
     // React router
     const history = useHistory();
 
-    // Table item states
-    const [isOpenManage, setIsOpenManage] = useState(false);
-
     const FlowState = useGlobalFlowState();
 
     const authState = useGlobalAuthState();
@@ -202,7 +199,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         pipelineID={pipelineId}
                         environmentID={environmentID}
                         name={pipelineName}
-                        getPipelineFlow={getPipelines}
+                        getPipelines={getPipelines}
                     />
                 </Drawer>
 
