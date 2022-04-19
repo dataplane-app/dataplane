@@ -29,7 +29,6 @@ export default function StartStopRun({ environmentID, deployment }) {
     useOnRunWebSocket(environmentID, setRuns, setSelectedRun);
 
     const handleTimerStart = () => {
-        DeploymentState.isRunning.set(true);
         DeploymentState.runTrigger.set((t) => t + 1);
     };
 

@@ -64,6 +64,9 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
                 s.selectedRunID.set(runId);
             }, 'run-batch');
 
+            // Need to set isRunning to true when we set a new selectedRunID on RunState
+            FlowState.isRunning.set(true);
+
             ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=taskupdate.${environmentId}.${runId}&id=${runId}&token=${authToken.get()}`);
 
             ws.current.onopen = async () => {

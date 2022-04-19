@@ -8,17 +8,13 @@ import DeploymentsTableItem from './DeploymentsTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenu from '../../components/MoreInfoMenuPipeline';
 import { useGlobalFlowState } from '../Flow';
-import { useRunPipelines } from '../../graphql/runPipelines';
-import { useSnackbar } from 'notistack';
 import CustomChip from '../../components/CustomChip';
 import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
 import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
-import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
 import { useGlobalDeploymentState } from './DeploymentRuns/GlobalDeploymentState';
-import { v4 as uuidv4 } from 'uuid';
 
 const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDeployments }) => {
     // React router
@@ -38,9 +34,6 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
     const [pipelineName, setPipelineName] = useState('');
     const [pipelineId, setPipelineId] = useState('');
     const [version, setVersion] = useState('');
-
-    // GraphQL hook
-    const runPipelines = useRunPipelinesHook();
 
     useEffect(() => {
         setGlobalFilter(filter);
@@ -86,8 +79,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                             sx={{ fontWeight: 400 }}
                             onClick={() => {
                                 history.push(`/deployments/view/${row.value.pipelineID}/${row.value.version}`);
-                                DeploymentState.isRunning.set(true);
-                                runPipelines(environmentID, row.value.pipelineID, 'deployment');
+                                DeploymentState.tableRunTrigger.set(1);
                             }}>
                             Run
                         </Button>
@@ -253,37 +245,6 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
 };
 
 export default DeploymentsTable;
-
-// Custom GraphQL hook
-export const useRunPipelinesHook = () => {
-    // GraphQL hooks
-    const runPipelines = useRunPipelines();
-
-    const RunID = uuidv4();
-
-    // Global state
-    const RunState = useGlobalRunState();
-
-    const { enqueueSnackbar } = useSnackbar();
-
-    // Run deployment
-    return async (environmentID, pipelineID, RunType) => {
-        const response = await runPipelines({
-            pipelineID,
-            environmentID,
-            RunType,
-            RunID,
-        });
-
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't run deployment: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            RunState.run_id.set(response.run_id);
-        }
-    };
-};
 
 // Utility function
 function formatSchedule(schedule, type) {
