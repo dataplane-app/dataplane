@@ -18,6 +18,7 @@ import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
 import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
 import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
 import { useGlobalDeploymentState } from './DeploymentRuns/GlobalDeploymentState';
+import { v4 as uuidv4 } from 'uuid';
 
 const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDeployments }) => {
     // React router
@@ -258,6 +259,8 @@ export const useRunPipelinesHook = () => {
     // GraphQL hooks
     const runPipelines = useRunPipelines();
 
+    const RunID = uuidv4();
+
     // Global state
     const RunState = useGlobalRunState();
 
@@ -269,6 +272,7 @@ export const useRunPipelinesHook = () => {
             pipelineID,
             environmentID,
             RunType,
+            RunID,
         });
 
         if (response.r || response.error) {

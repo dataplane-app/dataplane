@@ -142,7 +142,7 @@ export default function useOnPageLoadWebSocket(environmentId, setSelectedRun, se
 
                 // Add only if a node message, not MSG.
                 if (response.node_id) {
-                    RunState.runIDs[response.run_id].nodes.merge({
+                    RunState.runIDs[response.run_id]?.nodes.merge({
                         [response.node_id]: {
                             status: response.status,
                             start_dt: response.start_dt,
