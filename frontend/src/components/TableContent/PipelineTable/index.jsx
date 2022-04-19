@@ -10,8 +10,6 @@ import MoreInfoMenuPipeline from '../../MoreInfoMenuPipeline';
 import { useGlobalFlowState } from '../../../pages/Flow';
 import { useRunPipelines } from '../../../graphql/runPipelines';
 import { useSnackbar } from 'notistack';
-import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
-import { prepareInputForFrontend } from '../../../pages/PipelineRuns';
 import DeletePipelineDrawer from '../../DrawerContent/DeletePipelineDrawer';
 import CustomChip from '../../CustomChip';
 import TurnOffPipelineDrawer from '../../DrawerContent/TurnOffPipelineDrawer';
@@ -20,7 +18,7 @@ import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import DuplicatePipelineDrawer from '../../DrawerContent/DuplicatePipelineDrawer';
 import { v4 as uuidv4 } from 'uuid';
 
-const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
+const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipelines }) => {
     // React router
     const history = useHistory();
 
@@ -66,7 +64,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                                 environmentID={row.value[3]}
                                 nodeTypeDesc={row.value[4]}
                                 setIsOpenDeletePipeline={setIsOpenDeletePipeline}
-                                getPipelines={getPipelines}
+                                setPipelines={setPipelines}
                                 pipeline={row.cell.row.original}
                             />
                         </MoreInfoMenuPipeline>
@@ -192,8 +190,9 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         handleClose={() => {
                             setIsOpenDeletePipeline(false);
                         }}
-                        getPipelines={getPipelines}
+                        setPipelines={setPipelines}
                         pipelineID={pipelineId}
+                        environmentID={environmentID}
                     />
                 </Drawer>
 
@@ -203,7 +202,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         pipelineID={pipelineId}
                         environmentID={environmentID}
                         name={pipelineName}
-                        getPipelines={getPipelines}
+                        setPipelines={setPipelines}
                     />
                 </Drawer>
 

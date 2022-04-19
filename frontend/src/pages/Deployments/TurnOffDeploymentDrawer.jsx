@@ -4,8 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
 import { useTurnOnOffDeployment } from '../../graphql/turnOnOffDeployment';
+import { useGetDeployments } from '../../graphql/getDeployments';
 
-const TurnOffDeploymentDrawer = ({ handleClose, name, pipelineID, environmentID, getDeployments }) => {
+const TurnOffDeploymentDrawer = ({ handleClose, name, pipelineID, environmentID, setDeployments }) => {
     const { closeSnackbar } = useSnackbar();
 
     // Clear snackbar on load
@@ -15,6 +16,7 @@ const TurnOffDeploymentDrawer = ({ handleClose, name, pipelineID, environmentID,
     }, []);
 
     // Graphql hook
+    const getDeployments = useGetDeploymentsHook(setDeployments, environmentID);
     const turnOnOffDeployment = useTurnOnOffDeploymentHook(pipelineID, environmentID, handleClose, getDeployments);
 
     return (
@@ -76,8 +78,27 @@ export const useTurnOnOffDeploymentHook = (pipelineID, environmentID, handleClos
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
-            handleClose();
             getDeployments();
+            handleClose();
         }
     };
 };
+
+function useGetDeploymentsHook(setDeployments, environmentID) {
+    // GraphQL hook
+    const getPipelines = useGetDeployments();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get deployments
+    return async () => {
+        const response = await getPipelines({ environmentID });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get deployments: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setDeployments(response);
+        }
+    };
+}

@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useDuplicatePipeline } from '../../../graphql/duplicatePipeline';
+import { useGetPipelines } from '../../../graphql/getPipelines';
 
 const DuplicatePipelineDrawer = ({ handleClose, environmentID, pipelineID, name, getPipelines, description, workerGroup }) => {
     // React hook form
@@ -25,6 +26,7 @@ const DuplicatePipelineDrawer = ({ handleClose, environmentID, pipelineID, name,
     const [workerGroups, setWorkerGroups] = useState([]);
 
     // Custom GraphQL hook
+    const getPipelines = useGetPipelinesHook(setPipelines, environmentID);
     const duplicatePipeline = useDuplicatePipelineHook(pipelineID, environmentID, getPipelines, handleClose);
     const getWorkerGroups = useGetWorkerGroupsHook(Environment.id.get(), setWorkerGroups);
 
@@ -137,3 +139,23 @@ export const useGetWorkerGroupsHook = (environmentID, setWorkerGroups) => {
         }
     };
 };
+
+function useGetPipelinesHook(setPipelines, environmentID) {
+    // GraphQL hook
+    const getPipelines = useGetPipelines();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get pipelines
+    return async () => {
+        const response = await getPipelines({ environmentID });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get pipelines: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setPipelines(response);
+        }
+    };
+}
