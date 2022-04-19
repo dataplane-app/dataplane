@@ -5,8 +5,9 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
 import { useDeletePipeline } from '../../../graphql/deletePipeline';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
+import { useGetPipelines } from '../../../graphql/getPipelines';
 
-const DeletePipelineDrawer = ({ pipelineName, handleClose, getPipelines, pipelineID }) => {
+const DeletePipelineDrawer = ({ pipelineName, handleClose, setPipelines, pipelineID, environmentID }) => {
     const { closeSnackbar } = useSnackbar();
 
     // Clear snackbar on load
@@ -16,6 +17,7 @@ const DeletePipelineDrawer = ({ pipelineName, handleClose, getPipelines, pipelin
     }, []);
 
     // Graphql hook
+    const getPipelines = useGetPipelinesHook(setPipelines, environmentID);
     const deletePipeline = useDeletePipelineHook(pipelineID, handleClose, getPipelines);
 
     return (
@@ -82,3 +84,23 @@ const useDeletePipelineHook = (pipelineID, handleClose, getPipelines) => {
         }
     };
 };
+
+function useGetPipelinesHook(setPipelines, environmentID) {
+    // GraphQL hook
+    const getPipelines = useGetPipelines();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get pipelines
+    return async () => {
+        const response = await getPipelines({ environmentID });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get pipelines: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setPipelines(response);
+        }
+    };
+}

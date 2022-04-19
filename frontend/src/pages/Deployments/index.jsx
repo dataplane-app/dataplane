@@ -74,7 +74,7 @@ const Deployments = () => {
                         <Search placeholder="Find a deployment" onChange={(e) => setFilter(e)} width="290px" />
                     </Grid>
 
-                    <DeploymentsTable data={deployments} filter={filter} setPipelineCount={setPipelineCount} environmentID={Environment.id.get()} getDeployments={getDeployments} />
+                    <DeploymentsTable data={deployments} filter={filter} setPipelineCount={setPipelineCount} environmentID={Environment.id.get()} setDeployments={setDeployments} />
                 </Grid>
             </Box>
         </Box>

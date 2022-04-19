@@ -1,5 +1,7 @@
 import { MenuItem } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
+import { useGetDeployments } from '../../graphql/getDeployments';
 import { useGlobalFlowState } from '../Flow';
 import { useTurnOnOffDeploymentHook } from './TurnOffDeploymentDrawer';
 
@@ -11,9 +13,10 @@ const DeploymentTableItem = (props) => {
     const FlowState = useGlobalFlowState();
 
     //Props
-    const { handleCloseMenu, id, name, online, environmentID, nodeTypeDesc, setIsOpenDeletePipeline, getDeployments, deploy_active } = props;
+    const { handleCloseMenu, id, name, online, environmentID, nodeTypeDesc, setIsOpenDeletePipeline, setDeployments, deploy_active } = props;
 
     // Graphql hook
+    const getDeployments = useGetDeploymentsHook(setDeployments, environmentID);
     const turnOnOffDeployment = useTurnOnOffDeploymentHook(id, environmentID, handleCloseMenu, getDeployments);
 
     const permissionClick = () => {
@@ -56,3 +59,22 @@ const DeploymentTableItem = (props) => {
 };
 
 export default DeploymentTableItem;
+
+function useGetDeploymentsHook(setDeployments, environmentID) {
+    // GraphQL hook
+    const getPipelines = useGetDeployments();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get deployments
+    return async () => {
+        const response = await getPipelines({ environmentID });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get deployments: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setDeployments(response);
+        }
+    };
+}

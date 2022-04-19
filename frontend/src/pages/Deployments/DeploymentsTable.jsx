@@ -16,7 +16,7 @@ import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
 import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
 import { useGlobalDeploymentState } from './DeploymentRuns/GlobalDeploymentState';
 
-const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDeployments }) => {
+const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDeployments }) => {
     // React router
     const history = useHistory();
 
@@ -61,7 +61,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                                 environmentID={row.value[3]}
                                 nodeTypeDesc={row.value[4]}
                                 setIsOpenDeletePipeline={setIsOpenDeletePipeline}
-                                getDeployments={getDeployments}
+                                setDeployments={setDeployments}
                                 deploy_active={row.value[6]}
                             />
                         </MoreInfoMenu>
@@ -224,9 +224,10 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                         handleClose={() => {
                             setIsOpenDeletePipeline(false);
                         }}
-                        getDeployments={getDeployments}
+                        setDeployments={setDeployments}
                         pipelineID={pipelineId}
                         version={version}
+                        environmentID={environmentID}
                     />
                 </Drawer>
 
@@ -236,7 +237,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                         pipelineID={pipelineId}
                         environmentID={environmentID}
                         name={pipelineName}
-                        getDeployments={getDeployments}
+                        setDeployments={setDeployments}
                     />
                 </Drawer>
             </Box>

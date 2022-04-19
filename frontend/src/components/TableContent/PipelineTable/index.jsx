@@ -16,7 +16,7 @@ import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import DuplicatePipelineDrawer from '../../DrawerContent/DuplicatePipelineDrawer';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 
-const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
+const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipelines }) => {
     // React router
     const history = useHistory();
 
@@ -56,7 +56,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                                 environmentID={row.value[3]}
                                 nodeTypeDesc={row.value[4]}
                                 setIsOpenDeletePipeline={setIsOpenDeletePipeline}
-                                getPipelines={getPipelines}
+                                setPipelines={setPipelines}
                                 pipeline={row.cell.row.original}
                             />
                         </MoreInfoMenuPipeline>
@@ -181,8 +181,9 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         handleClose={() => {
                             setIsOpenDeletePipeline(false);
                         }}
-                        getPipelines={getPipelines}
+                        setPipelines={setPipelines}
                         pipelineID={pipelineId}
+                        environmentID={environmentID}
                     />
                 </Drawer>
 
@@ -192,7 +193,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         pipelineID={pipelineId}
                         environmentID={environmentID}
                         name={pipelineName}
-                        getPipelines={getPipelines}
+                        setPipelines={setPipelines}
                     />
                 </Drawer>
 
@@ -202,7 +203,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         pipelineID={pipelineId}
                         environmentID={environmentID}
                         name={pipelineName}
-                        getPipelines={getPipelines}
+                        setPipelines={setPipelines}
                     />
                 </Drawer>
             </Box>
