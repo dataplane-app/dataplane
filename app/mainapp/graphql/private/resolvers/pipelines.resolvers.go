@@ -269,6 +269,8 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	// log.Println("Folder to copy:", foldertocopy)
 	// log.Println("Destination folder:", destinationfolder)
 
+	// ----------- Reconstruct IDs ----------
+
 	pipelineIDNew := uuid.New().String()
 
 	e := models.Pipelines{
@@ -277,20 +279,9 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 		Description:   description,
 		EnvironmentID: environmentID,
 		WorkerGroup:   workerGroup,
+		Meta:          pipeline.Meta,
 		Active:        true,
 		UpdateLock:    true,
-	}
-
-	err = database.DBConn.Create(&e).Error
-
-	if err != nil {
-		if config.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		if strings.Contains(err.Error(), "duplicate key") {
-			return "", errors.New("Pipeline already exists.")
-		}
-		return "", errors.New("Add pipeline database error.")
 	}
 
 	// Give access permissions for the user who added the pipeline
@@ -301,7 +292,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 			"user",
 			currentUser,
 			"specific_pipeline",
-			pipelineID,
+			pipelineIDNew,
 			access,
 			environmentID,
 			false,
@@ -372,27 +363,47 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	// }
 
 	// // Recalculate edge dependencies and destinations with new d- ID
-	// var destinations = make(map[string][]string)
-	// var dependencies = make(map[string][]string)
+	var destinations = make(map[string][]string)
+	var dependencies = make(map[string][]string)
+	var edgeOLDNew = make(map[string]string)
+	var nodesOLDNew = make(map[string]string)
+
+	// Convert pipeline json to string
+	var jsonstring string
+	// json.Unmarshal([]byte(pipeline.Json), &jsonstring)
+
+	jsonstring = string(pipeline.Json)
+
+	jsonstring = strings.ReplaceAll(jsonstring, pipelineID, e.PipelineID)
+
+	// remap the edge IDs
+	for _, edge := range pipelineEdges {
+		edgeOLDNew[edge.EdgeID] = uuid.NewString()
+		jsonstring = strings.ReplaceAll(jsonstring, edge.EdgeID, edgeOLDNew[edge.EdgeID])
+	}
+
+	for _, node := range pipelineNodes {
+		nodesOLDNew[node.NodeID] = uuid.NewString()
+		jsonstring = strings.ReplaceAll(jsonstring, node.NodeID, nodesOLDNew[node.NodeID])
+	}
 
 	// // Edges
-	// deployEdges := []*models.DeployPipelineEdges{}
-	// for _, edge := range pipelineEdges {
-	// 	deployEdges = append(deployEdges, &models.DeployPipelineEdges{
-	// 		EdgeID:        "d-" + edge.EdgeID,
-	// 		PipelineID:    createPipeline.PipelineID,
-	// 		Version:       createPipeline.Version,
-	// 		From:          "d-" + edge.From,
-	// 		To:            "d-" + edge.To,
-	// 		EnvironmentID: createPipeline.EnvironmentID,
-	// 		Meta:          edge.Meta,
-	// 		Active:        edge.Active,
-	// 	})
+	deployEdges := []*models.PipelineEdges{}
+	for _, edge := range pipelineEdges {
+		deployEdges = append(deployEdges, &models.PipelineEdges{
+			EdgeID:        edgeOLDNew[edge.EdgeID],
+			PipelineID:    pipelineID,
+			From:          nodesOLDNew[edge.From],
+			To:            nodesOLDNew[edge.To],
+			EnvironmentID: environmentID,
+			Meta:          edge.Meta,
+			Active:        edge.Active,
+		})
 
-	// 	// map out dependencies and destinations
-	// 	destinations["d-"+edge.From] = append(destinations["d-"+edge.From], "d-"+edge.To)
-	// 	dependencies["d-"+edge.To] = append(dependencies["d-"+edge.To], "d-"+edge.From)
-	// }
+		// map out dependencies and destinations
+		destinations[nodesOLDNew[edge.From]] = append(destinations[nodesOLDNew[edge.From]], nodesOLDNew[edge.To])
+		dependencies[nodesOLDNew[edge.To]] = append(dependencies[nodesOLDNew[edge.To]], nodesOLDNew[edge.From])
+	}
 
 	// // Map
 	// var nodeworkergroupmap = make(map[string]string)
@@ -401,64 +412,63 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	// }
 	// // Nodes
 	// var online bool
-	// deployNodes := []*models.DeployPipelineNodes{}
-	// for _, node := range pipelineNodes {
+	deployNodes := []*models.PipelineNodes{}
+	for _, node := range pipelineNodes {
 
-	// 	dependJSON, err := json.Marshal(dependencies["d-"+node.NodeID])
-	// 	if err != nil {
-	// 		logging.PrintSecretsRedact(err)
-	// 	}
+		dependJSON, err := json.Marshal(dependencies[nodesOLDNew[node.NodeID]])
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
 
-	// 	destinationJSON, err := json.Marshal(destinations["d-"+node.NodeID])
-	// 	if err != nil {
-	// 		logging.PrintSecretsRedact(err)
-	// 	}
+		destinationJSON, err := json.Marshal(destinations[nodesOLDNew[node.NodeID]])
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+		}
 
-	// 	var workergroupassign string
-	// 	if _, ok := nodeworkergroupmap[node.NodeID]; ok {
-	// 		workergroupassign = nodeworkergroupmap[node.NodeID]
-	// 	} else {
-	// 		workergroupassign = workerGroup
-	// 	}
+		// 	var workergroupassign string
+		// 	if _, ok := nodeworkergroupmap[node.NodeID]; ok {
+		// 		workergroupassign = nodeworkergroupmap[node.NodeID]
+		// 	} else {
+		// 		workergroupassign = workerGroup
+		// 	}
 
-	// 	//Assign an online value
-	// 	if node.NodeTypeDesc == "play" {
-	// 		online = true
-	// 	} else {
-	// 		if node.NodeType == "trigger" {
-	// 			online = liveactive
-	// 		} else {
-	// 			online = node.TriggerOnline
-	// 		}
+		// 	//Assign an online value
+		// 	if node.NodeTypeDesc == "play" {
+		// 		online = true
+		// 	} else {
+		// 		if node.NodeType == "trigger" {
+		// 			online = liveactive
+		// 		} else {
+		// 			online = node.TriggerOnline
+		// 		}
 
-	// 	}
+		// 	}
 
-	// 	if node.NodeType == "trigger" && node.NodeTypeDesc == "schedule" {
-	// 		triggerType = "schedule"
-	// 	}
+		// if node.NodeType == "trigger" && node.NodeTypeDesc == "schedule" {
+		// 	triggerType = "schedule"
+		// }
 
-	// 	deployNodes = append(deployNodes, &models.DeployPipelineNodes{
-	// 		NodeID:        "d-" + node.NodeID,
-	// 		PipelineID:    createPipeline.PipelineID,
-	// 		Version:       createPipeline.Version,
-	// 		Name:          node.Name,
-	// 		EnvironmentID: createPipeline.EnvironmentID,
-	// 		NodeType:      node.NodeType,
-	// 		NodeTypeDesc:  node.NodeTypeDesc,
-	// 		TriggerOnline: online,
-	// 		Description:   node.Description,
-	// 		Commands:      node.Commands,
-	// 		Meta:          node.Meta,
+		deployNodes = append(deployNodes, &models.PipelineNodes{
+			NodeID:        nodesOLDNew[node.NodeID],
+			PipelineID:    pipelineID,
+			Name:          node.Name,
+			EnvironmentID: environmentID,
+			NodeType:      node.NodeType,
+			NodeTypeDesc:  node.NodeTypeDesc,
+			TriggerOnline: node.TriggerOnline,
+			Description:   node.Description,
+			Commands:      node.Commands,
+			Meta:          node.Meta,
 
-	// 		// Needs to be recalculated
-	// 		Dependency:  dependJSON,
-	// 		Destination: destinationJSON,
+			// Needs to be recalculated
+			Dependency:  dependJSON,
+			Destination: destinationJSON,
 
-	// 		// Needs to updated via front end sub nodes
-	// 		WorkerGroup: workergroupassign,
-	// 		Active:      node.Active,
-	// 	})
-	// }
+			// Needs to updated via front end sub nodes
+			WorkerGroup: node.WorkerGroup,
+			Active:      node.Active,
+		})
+	}
 
 	// // folders
 	// deployFolders := []*models.DeployCodeFolders{}
@@ -492,35 +502,43 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	// 		Active:        n.Active,
 	// 	})
 	// }
+	log.Println(jsonstring)
+	var res interface{}
+	json.Unmarshal([]byte(jsonstring), &res)
+	pipelineJSON, err := json.Marshal(res)
+	if err != nil {
+		logging.PrintSecretsRedact(err)
+	}
+	e.Json = pipelineJSON
 
 	// // Pipeline create
-	// err = database.DBConn.Create(&createPipeline).Error
-	// if err != nil {
-	// 	if config.Debug == "true" {
-	// 		logging.PrintSecretsRedact(err)
-	// 	}
-	// 	return "", errors.New("Failed to create deployment pipeline.")
-	// }
+	err = database.DBConn.Create(&e).Error
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to create duplicate pipeline.")
+	}
 
 	// // Nodes create
-	// err = database.DBConn.Create(&deployNodes).Error
-	// if err != nil {
-	// 	if config.Debug == "true" {
-	// 		logging.PrintSecretsRedact(err)
-	// 	}
-	// 	return "", errors.New("Failed to create deployment pipeline.")
-	// }
+	err = database.DBConn.Create(&deployNodes).Error
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to create duplicate pipeline.")
+	}
 
 	// // Edges create
-	// if len(deployEdges) > 0 {
-	// 	err = database.DBConn.Create(&deployEdges).Error
-	// 	if err != nil {
-	// 		if config.Debug == "true" {
-	// 			logging.PrintSecretsRedact(err)
-	// 		}
-	// 		return "", errors.New("Failed to create deployment pipeline.")
-	// 	}
-	// }
+	if len(deployEdges) > 0 {
+		err = database.DBConn.Create(&deployEdges).Error
+		if err != nil {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to create duplicate pipeline.")
+		}
+	}
 
 	// // Folders create
 	// if len(deployFolders) > 0 {
