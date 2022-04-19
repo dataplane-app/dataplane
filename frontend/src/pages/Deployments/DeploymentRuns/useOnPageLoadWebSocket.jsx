@@ -119,6 +119,14 @@ export default function useOnPageLoadWebSocket(environmentId, setSelectedRun, se
                     // Needed for Stop button to show
                     DeploymentState.isRunning.set(true);
                 }
+
+                // Start a run if page loaded by clicking run on the pipelines table
+                if (DeploymentState.tableRunTrigger.get() === 1) {
+                    DeploymentState.merge({
+                        runTrigger: 1,
+                        tableRunTrigger: 0,
+                    });
+                }
             };
 
             ws.current.onclose = () => {

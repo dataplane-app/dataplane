@@ -5,8 +5,9 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
 import { useDeleteDeployment } from '../../graphql/deleteDeployment';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
+import { useGetDeployments } from '../../graphql/getDeployments';
 
-const DeleteDeploymentDrawer = ({ pipelineName, handleClose, getDeployments, pipelineID, version }) => {
+const DeleteDeploymentDrawer = ({ pipelineName, handleClose, setDeployments, pipelineID, version, environmentID }) => {
     const { closeSnackbar } = useSnackbar();
 
     // Clear snackbar on load
@@ -16,6 +17,7 @@ const DeleteDeploymentDrawer = ({ pipelineName, handleClose, getDeployments, pip
     }, []);
 
     // Graphql hook
+    const getDeployments = useGetDeploymentsHook(setDeployments, environmentID);
     const deleteDeployment = useDeleteDeploymentHook(pipelineID, handleClose, getDeployments, version);
 
     return (
@@ -79,3 +81,23 @@ const useDeleteDeploymentHook = (pipelineID, handleClose, getDeployments, versio
         }
     };
 };
+
+function useGetDeploymentsHook(setDeployments, environmentID) {
+    // GraphQL hook
+    const getPipelines = useGetDeployments();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get deployments
+    return async () => {
+        const response = await getPipelines({ environmentID });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get deployments: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setDeployments(response);
+        }
+    };
+}

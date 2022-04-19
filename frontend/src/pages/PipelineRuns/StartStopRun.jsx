@@ -28,7 +28,6 @@ export default function StartStopRun({ environmentID, pipeline }) {
 
     // Click Run button and start to run the pipeline
     const handleTimerStart = () => {
-        FlowState.isRunning.set(true);
         RunState.runTrigger.set((t) => t + 1);
     };
 

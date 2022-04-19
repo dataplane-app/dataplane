@@ -8,23 +8,20 @@ import PipelineItemTable from '../../MoreInfoContent/PipelineTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenuPipeline from '../../MoreInfoMenuPipeline';
 import { useGlobalFlowState } from '../../../pages/Flow';
-import { useRunPipelines } from '../../../graphql/runPipelines';
-import { useSnackbar } from 'notistack';
-import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
-import { prepareInputForFrontend } from '../../../pages/PipelineRuns';
 import DeletePipelineDrawer from '../../DrawerContent/DeletePipelineDrawer';
 import CustomChip from '../../CustomChip';
 import TurnOffPipelineDrawer from '../../DrawerContent/TurnOffPipelineDrawer';
 import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import DuplicatePipelineDrawer from '../../DrawerContent/DuplicatePipelineDrawer';
-import { v4 as uuidv4 } from 'uuid';
+import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 
-const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipelines }) => {
+const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipelines }) => {
     // React router
     const history = useHistory();
 
     const FlowState = useGlobalFlowState();
+    const RunState = useGlobalRunState();
 
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
@@ -33,9 +30,6 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
     const [isOpenDeletePipeline, setIsOpenDeletePipeline] = useState(false);
     const [pipelineName, setPipelineName] = useState('');
     const [pipelineId, setPipelineId] = useState('');
-
-    // GraphQL hook
-    const runPipelines = useRunPipelinesHook();
 
     useEffect(() => {
         setGlobalFilter(filter);
@@ -62,7 +56,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                                 environmentID={row.value[3]}
                                 nodeTypeDesc={row.value[4]}
                                 setIsOpenDeletePipeline={setIsOpenDeletePipeline}
-                                getPipelines={getPipelines}
+                                setPipelines={setPipelines}
                                 pipeline={row.cell.row.original}
                             />
                         </MoreInfoMenuPipeline>
@@ -79,8 +73,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                             sx={{ fontWeight: 400 }}
                             onClick={() => {
                                 history.push({ pathname: `/pipelines/view/${row.value.pipelineID}`, state: row.value });
-                                FlowState.isRunning.set(true);
-                                runPipelines(environmentID, row.value.pipelineID, 'pipeline');
+                                RunState.tableRunTrigger.set(1);
                             }}>
                             Run
                         </Button>
@@ -188,8 +181,9 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         handleClose={() => {
                             setIsOpenDeletePipeline(false);
                         }}
-                        getPipelines={getPipelines}
+                        setPipelines={setPipelines}
                         pipelineID={pipelineId}
+                        environmentID={environmentID}
                     />
                 </Drawer>
 
@@ -199,7 +193,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         pipelineID={pipelineId}
                         environmentID={environmentID}
                         name={pipelineName}
-                        getPipelines={getPipelines}
+                        setPipelines={setPipelines}
                     />
                 </Drawer>
 
@@ -209,7 +203,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         pipelineID={pipelineId}
                         environmentID={environmentID}
                         name={pipelineName}
-                        getPipelines={getPipelines}
+                        setPipelines={setPipelines}
                     />
                 </Drawer>
             </Box>
@@ -218,28 +212,6 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
 };
 
 export default PipelineTable;
-
-// Custom GraphQL hook
-export const useRunPipelinesHook = () => {
-    // GraphQL hook
-    const runPipelines = useRunPipelines();
-
-    const RunID = uuidv4();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Run pipeline flow
-    return async (environmentID, pipelineID, RunType) => {
-        const response = await runPipelines({ pipelineID, environmentID, RunType, RunID });
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't run pipeline: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        }
-    };
-};
 
 // Utility function
 function formatSchedule(schedule, type) {

@@ -8,18 +8,15 @@ import DeploymentsTableItem from './DeploymentsTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenu from '../../components/MoreInfoMenuPipeline';
 import { useGlobalFlowState } from '../Flow';
-import { useRunPipelines } from '../../graphql/runPipelines';
-import { useSnackbar } from 'notistack';
 import CustomChip from '../../components/CustomChip';
 import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
 import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
-import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
 import { useGlobalDeploymentState } from './DeploymentRuns/GlobalDeploymentState';
 
-const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDeployments }) => {
+const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDeployments }) => {
     // React router
     const history = useHistory();
 
@@ -37,9 +34,6 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
     const [pipelineName, setPipelineName] = useState('');
     const [pipelineId, setPipelineId] = useState('');
     const [version, setVersion] = useState('');
-
-    // GraphQL hook
-    const runPipelines = useRunPipelinesHook();
 
     useEffect(() => {
         setGlobalFilter(filter);
@@ -67,7 +61,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                                 environmentID={row.value[3]}
                                 nodeTypeDesc={row.value[4]}
                                 setIsOpenDeletePipeline={setIsOpenDeletePipeline}
-                                getDeployments={getDeployments}
+                                setDeployments={setDeployments}
                                 deploy_active={row.value[6]}
                             />
                         </MoreInfoMenu>
@@ -85,8 +79,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                             sx={{ fontWeight: 400 }}
                             onClick={() => {
                                 history.push(`/deployments/view/${row.value.pipelineID}/${row.value.version}`);
-                                DeploymentState.isRunning.set(true);
-                                runPipelines(environmentID, row.value.pipelineID, 'deployment');
+                                DeploymentState.tableRunTrigger.set(1);
                             }}>
                             Run
                         </Button>
@@ -231,9 +224,10 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                         handleClose={() => {
                             setIsOpenDeletePipeline(false);
                         }}
-                        getDeployments={getDeployments}
+                        setDeployments={setDeployments}
                         pipelineID={pipelineId}
                         version={version}
+                        environmentID={environmentID}
                     />
                 </Drawer>
 
@@ -243,7 +237,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
                         pipelineID={pipelineId}
                         environmentID={environmentID}
                         name={pipelineName}
-                        getDeployments={getDeployments}
+                        setDeployments={setDeployments}
                     />
                 </Drawer>
             </Box>
@@ -252,34 +246,6 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, getDe
 };
 
 export default DeploymentsTable;
-
-// Custom GraphQL hook
-export const useRunPipelinesHook = () => {
-    // GraphQL hooks
-    const runPipelines = useRunPipelines();
-
-    // Global state
-    const RunState = useGlobalRunState();
-
-    const { enqueueSnackbar } = useSnackbar();
-
-    // Run deployment
-    return async (environmentID, pipelineID, RunType) => {
-        const response = await runPipelines({
-            pipelineID,
-            environmentID,
-            RunType,
-        });
-
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't run deployment: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            RunState.run_id.set(response.run_id);
-        }
-    };
-};
 
 // Utility function
 function formatSchedule(schedule, type) {
