@@ -10,12 +10,13 @@ import { useGetCodeFileRunLogs } from '../../../graphql/getCodeFileRunLogs';
 import { useSnackbar } from 'notistack';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import { useTheme } from '@mui/system';
+import useInstallWebSocketLog from './useInstallWebSocketLog';
 
 const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const environmentID = rest.environmentID;
     const pipelineID = rest.pipelineID;
 
-    const [websocketResp, setWebsocketResp] = useState('');
+    const [websocketResp, setWebsocketResp] = useState('\n');
     const [filteredGraphqlResp, setFilteredGraphqlResp] = useState('');
     const [graphQlResp, setGraphQlResp] = useState([]);
     const [keys, setKeys] = useState([]);
@@ -26,6 +27,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Instantiate websocket
     const webSocket = useWebSocketLog(environmentID, EditorGlobal.runID.get(), setKeys);
+    const webSocketInstall = useInstallWebSocketLog(environmentID, rest.workerGroup);
 
     useEffect(() => {
         if (hasGetNodeLogsRun === 0 && EditorGlobal.runID.get()) {
@@ -37,6 +39,12 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [webSocket]);
+
+    useEffect(() => {
+        setWebsocketResp((t) => t + webSocketInstall + '\n');
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [webSocketInstall]);
 
     useEffect(() => {
         setWebsocketResp('');
@@ -118,6 +126,24 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                             </Typography>
                         </Box>
                     ) : null}
+
+                    {/* {EditorGlobal.installState.get() === 'Running' ? (
+                        <Box color="#65BEFF" display="flex" alignItems="center">
+                            <RunningSpinner />
+                            <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
+                                Running
+                            </Typography>
+                        </Box>
+                    ) : null}
+
+                    {EditorGlobal.installState.get() === 'Fail' ? (
+                        <Box color="#F80000" display="flex" alignItems="center">
+                            <Box component={FontAwesomeIcon} fontSize={18} color="#F80000" icon={faExclamationCircle} />
+                            <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
+                                Failed
+                            </Typography>
+                        </Box>
+                    ) : null} */}
                 </Box>
                 <Box
                     height="calc(100% - 44px)"
@@ -132,7 +158,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                         render={({ follow, onScroll }) => (
                             <LazyLog
                                 enableSearch
-                                text={filteredGraphqlResp + '\n' + websocketResp}
+                                text={filteredGraphqlResp + websocketResp}
                                 follow={follow}
                                 onScroll={onScroll}
                                 style={{ background: theme.palette.editorPage.logBackground }}

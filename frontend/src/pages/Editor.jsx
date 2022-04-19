@@ -19,9 +19,8 @@ import {
 } from '../utils/editorLayouts';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
-import { Downgraded } from '@hookstate/core';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { useSnackbar } from 'notistack';
 import { useGetPipeline } from '../graphql/getPipeline';
@@ -40,6 +39,7 @@ export const globalEditorState = createState({
     parentName: null,
     runID: null,
     runState: null,
+    installState: null,
     updatePackages: 1,
 });
 
@@ -142,7 +142,7 @@ const PipelineEditor = () => {
                             <FileManagerColumn key="1" pipeline={pipeline} />
                             {pipeline.nodeTypeDesc === 'python' ? <PackageColumn key="2" pipeline={pipeline} /> : null}
                             <EditorColumn key="3" ref={editorRef} pipeline={pipeline} />
-                            <LogsColumn key="4" environmentID={Environment.id.get()} pipelineID={pipeline.pipelineID} />
+                            <LogsColumn key="4" environmentID={Environment.id.get()} pipelineID={pipeline.pipelineID} workerGroup={pipeline.workerGroup} />
                         </ResponsiveGridLayout>
                     </Box>
                 </Box>
