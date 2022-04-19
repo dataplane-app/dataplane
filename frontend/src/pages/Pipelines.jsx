@@ -25,7 +25,7 @@ const Pipelines = () => {
     const [pipelineCount, setPipelineCount] = useState();
 
     // Custom GraphQL hook
-    const getPipelines = useGetPipelines_(setPipelines, Environment.id.get());
+    const getPipelines = useGetPipelinesHook(setPipelines, Environment.id.get());
 
     // Get pipelines and clear flow state on load and when environment changes
     useEffect(() => {
@@ -82,7 +82,7 @@ const Pipelines = () => {
                         </Button>
                     </Grid>
 
-                    <PipelineTable data={pipelines} filter={filter} setPipelineCount={setPipelineCount} environmentID={Environment.id.get()} getPipelines={getPipelines} />
+                    <PipelineTable data={pipelines} filter={filter} setPipelineCount={setPipelineCount} environmentID={Environment.id.get()} setPipelines={setPipelines} />
                 </Grid>
             </Box>
 
@@ -102,7 +102,7 @@ export default Pipelines;
 
 // ---------- Custom Hook
 
-function useGetPipelines_(setPipelines, environmentID) {
+function useGetPipelinesHook(setPipelines, environmentID) {
     // GraphQL hook
     const getPipelines = useGetPipelines();
 
@@ -112,8 +112,8 @@ function useGetPipelines_(setPipelines, environmentID) {
     return async () => {
         const response = await getPipelines({ environmentID });
 
-        if (response.r === 'error') {
-            enqueueSnackbar("Can't get pipelines: " + response.msg, { variant: 'error' });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get pipelines: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {

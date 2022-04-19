@@ -1,6 +1,7 @@
 import { MenuItem } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
+import { useGetPipelines } from '../../../graphql/getPipelines';
 import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
 import { useGlobalFlowState } from '../../../pages/Flow';
 
@@ -12,9 +13,10 @@ const PipelineItemTable = (props) => {
     const FlowState = useGlobalFlowState();
 
     //Props
-    const { handleCloseMenu, id, name, environmentID, setIsOpenDeletePipeline, nodeTypeDesc, getPipelines } = props;
+    const { handleCloseMenu, id, name, environmentID, setIsOpenDeletePipeline, nodeTypeDesc, setPipelines } = props;
 
     // Graphql hook
+    const getPipelines = useGetPipelinesHook(setPipelines, environmentID);
     const turnOnOffPipeline = useTurnOnOffPipelineHook(id, environmentID, handleCloseMenu, getPipelines);
 
     const manageEdit = () => {
@@ -106,3 +108,23 @@ const useTurnOnOffPipelineHook = (pipelineID, environmentID, handleClose, getPip
         }
     };
 };
+
+function useGetPipelinesHook(setPipelines, environmentID) {
+    // GraphQL hook
+    const getPipelines = useGetPipelines();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get pipelines
+    return async () => {
+        const response = await getPipelines({ environmentID });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get pipelines: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setPipelines(response);
+        }
+    };
+}
