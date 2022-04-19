@@ -209,7 +209,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipel
                         name={pipelineName}
                         description={pipelineDescription}
                         workerGroup={pipelineWorkerGroup}
-                        getPipelines={getPipelines}
+                        setPipelines={setPipelines}
                     />
                 </Drawer>
             </Box>

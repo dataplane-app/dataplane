@@ -9,7 +9,7 @@ import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useDuplicatePipeline } from '../../../graphql/duplicatePipeline';
 import { useGetPipelines } from '../../../graphql/getPipelines';
 
-const DuplicatePipelineDrawer = ({ handleClose, environmentID, pipelineID, name, getPipelines, description, workerGroup }) => {
+const DuplicatePipelineDrawer = ({ handleClose, environmentID, pipelineID, name, setPipelines, description, workerGroup }) => {
     // React hook form
     const { register, handleSubmit } = useForm({
         defaultValues: {
