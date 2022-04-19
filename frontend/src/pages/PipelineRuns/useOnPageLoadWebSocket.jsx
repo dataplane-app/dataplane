@@ -114,6 +114,14 @@ export default function useOnPageLoadWebSocket(environmentId, setSelectedRun, se
                     // Needed for Stop button to show
                     FlowState.isRunning.set(true);
                 }
+
+                // Start a run if page loaded by clicking run on the pipelines table
+                if (RunState.tableRunTrigger.get() === 1) {
+                    RunState.merge({
+                        runTrigger: 1,
+                        tableRunTrigger: 0,
+                    });
+                }
             };
 
             ws.current.onclose = () => {
@@ -142,7 +150,7 @@ export default function useOnPageLoadWebSocket(environmentId, setSelectedRun, se
 
                 // Add only if a node message, not MSG.
                 if (response.node_id) {
-                    RunState.runIDs[response.run_id].nodes.merge({
+                    RunState.runIDs[response.run_id]?.nodes.merge({
                         [response.node_id]: {
                             status: response.status,
                             start_dt: response.start_dt,

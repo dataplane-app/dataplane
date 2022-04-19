@@ -50,10 +50,22 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
         function connect() {
             const runId = uuidv4();
 
+            // Temporary fix, to be removed
+            let ids = FlowState.elements
+                .get()
+                .filter((a) => a.type === 'pythonNode' || a.type === 'bashNode' || a.type === 'checkpointNode')
+                .map((a) => a.id);
+            let nodes = {};
+            ids.map((a) => (nodes[a] = { status: 'Queue' }));
+            //
+
             DeploymentState.batch((s) => {
-                s.runIDs.merge({ [runId]: {} });
+                s.runIDs.merge({ [runId]: { nodes } }); // nodes to be removed, should be s.runIDs.merge({ [runId]: {} });
                 s.selectedRunID.set(runId);
             }, 'run-batch');
+
+            // Need to set isRunning to true when we set a new selectedRunID on RunState
+            DeploymentState.isRunning.set(true);
 
             ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=taskupdate.${environmentId}.${runId}&id=${runId}&token=${authToken.get()}`);
 
@@ -107,6 +119,10 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
 
             ws.current.onmessage = (e) => {
                 const response = JSON.parse(e.data);
+
+                // To be removed
+                if (response.status === 'Queue') return;
+                //
 
                 ConsoleLogHelper(
                     '🧲',
