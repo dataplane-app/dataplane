@@ -6,6 +6,7 @@ import (
 	modelmain "dataplane/mainapp/database/models"
 	"dataplane/workers/config"
 	"dataplane/workers/database"
+	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
 	"log"
 	"os"
@@ -142,6 +143,18 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 
 		// Wait for the command to finish
 		cmd.Wait()
+
+		// send message that trigger node has run - for websockets
+		errnat := messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, map[string]interface{}{
+			"MSG":    "python_install_complete",
+			"status": "Success",
+		})
+		if errnat != nil {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(errnat)
+			}
+
+		}
 
 		log.Println("📦 Loaded "+language+" packages in", packagesfile)
 	}
