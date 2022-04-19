@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -187,7 +187,7 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 	return "Success", nil
 }
 
-func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID string, environmentID string) (string, error) {
+func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID string, name string, environmentID string, description string, workerGroup string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -203,6 +203,431 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	if permOutcome == "denied" {
 		return "", errors.New("Requires permissions.")
 	}
+
+	// Obtain pipeline details
+	// ----- Get pipeline
+	pipeline := models.Pipelines{}
+	err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).First(&pipeline).Error
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Duplicate pipeline: Retrieve pipeline database error")
+	}
+
+	pipelineNodes := []*models.PipelineNodes{}
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&pipelineNodes).Error
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline database error")
+	}
+
+	pipelineEdges := []*models.PipelineEdges{}
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&pipelineEdges).Error
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline database error")
+	}
+
+	folders := []*models.CodeFolders{}
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&folders).Error
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline folders database error")
+	}
+
+	files := []*models.CodeFiles{}
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&files).Error
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline folders database error")
+	}
+
+	// Obtain folder structure for pipeline
+	pipelineFolder := models.CodeFolders{}
+	err = database.DBConn.Where("pipeline_id = ? and environment_id = ? and level = ?", pipelineID, environmentID, "pipeline").First(&pipelineFolder).Error
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline folders database error")
+	}
+
+	// pfolderExisting, _ := filesystem.FolderConstructByID(database.DBConn, pipelineFolder.ParentID, environmentID, "")
+	foldertocopy, _ := filesystem.FolderConstructByID(database.DBConn, pipelineFolder.FolderID, environmentID, "pipelines")
+
+	foldertocopy = config.CodeDirectory + foldertocopy
+	// destinationfolder := config.CodeDirectory + pfolderExisting + "deployments/" + pipelineFolder.FolderID + "_" + pipelineFolder.FolderName + "/" + version + "/"
+	// log.Println("Folder to copy:", foldertocopy)
+	// log.Println("Destination folder:", destinationfolder)
+
+	pipelineIDNew := uuid.New().String()
+
+	e := models.Pipelines{
+		PipelineID:    pipelineIDNew,
+		Name:          name,
+		Description:   description,
+		EnvironmentID: environmentID,
+		WorkerGroup:   workerGroup,
+		Active:        true,
+		UpdateLock:    true,
+	}
+
+	err = database.DBConn.Create(&e).Error
+
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		if strings.Contains(err.Error(), "duplicate key") {
+			return "", errors.New("Pipeline already exists.")
+		}
+		return "", errors.New("Add pipeline database error.")
+	}
+
+	// Give access permissions for the user who added the pipeline
+	AccessTypes := models.PipelineAccessTypes
+
+	for _, access := range AccessTypes {
+		_, err := permissions.CreatePermission(
+			"user",
+			currentUser,
+			"specific_pipeline",
+			pipelineID,
+			access,
+			environmentID,
+			false,
+		)
+
+		if err != nil {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Add permission to user database error.")
+		}
+
+	}
+
+	var parentfolder models.CodeFolders
+	database.DBConn.Where("environment_id = ? and level = ?", environmentID, "environment").First(&parentfolder)
+
+	// Create folder structure for pipeline
+	pipelinedir := models.CodeFolders{
+		EnvironmentID: environmentID,
+		PipelineID:    pipelineIDNew,
+		ParentID:      parentfolder.FolderID,
+		FolderName:    e.Name,
+		Level:         "pipeline",
+		FType:         "folder",
+		Active:        true,
+	}
+
+	// Should create a directory as follows code_directory/
+	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
+
+	foldercreate, _, _ := filesystem.CreateFolder(pipelinedir, pfolder+"pipelines/")
+
+	thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID, "pipelines")
+
+	git.PlainInit(config.CodeDirectory+thisfolder, false)
+
+	// ---------- Move across all the files --------------
+
+	// destinationfolder := config.CodeDirectory + thisfolder
+
+	// // Create a folder for the version and copy files across
+	// err = utilities.CopyDirectory(foldertocopy, destinationfolder)
+	// if err != nil {
+	// 	if config.Debug == "true" {
+	// 		logging.PrintSecretsRedact(err)
+	// 	}
+	// 	return "", errors.New("Failed to copy deployment files.")
+	// }
+
+	// Copy pipeline, nodes and edges
+
+	// Pipeline
+	// updatePipeline := models.Pipelines{
+	// 	PipelineID:        "d-" + pipeline.PipelineID,
+	// 	Version:           version,
+	// 	DeployActive:      false,
+	// 	Name:              pipeline.Name,
+	// 	EnvironmentID:     toEnvironmentID,
+	// 	FromEnvironmentID: fromEnvironmentID,
+	// 	FromPipelineID:    pipeline.PipelineID,
+	// 	Description:       pipeline.Description,
+	// 	Active:            pipeline.Active,
+	// 	WorkerGroup:       workerGroup,
+	// 	Meta:              pipeline.Meta,
+	// 	Json:              pipeline.Json,
+	// 	UpdateLock:        true,
+	// }
+
+	// // Recalculate edge dependencies and destinations with new d- ID
+	// var destinations = make(map[string][]string)
+	// var dependencies = make(map[string][]string)
+
+	// // Edges
+	// deployEdges := []*models.DeployPipelineEdges{}
+	// for _, edge := range pipelineEdges {
+	// 	deployEdges = append(deployEdges, &models.DeployPipelineEdges{
+	// 		EdgeID:        "d-" + edge.EdgeID,
+	// 		PipelineID:    createPipeline.PipelineID,
+	// 		Version:       createPipeline.Version,
+	// 		From:          "d-" + edge.From,
+	// 		To:            "d-" + edge.To,
+	// 		EnvironmentID: createPipeline.EnvironmentID,
+	// 		Meta:          edge.Meta,
+	// 		Active:        edge.Active,
+	// 	})
+
+	// 	// map out dependencies and destinations
+	// 	destinations["d-"+edge.From] = append(destinations["d-"+edge.From], "d-"+edge.To)
+	// 	dependencies["d-"+edge.To] = append(dependencies["d-"+edge.To], "d-"+edge.From)
+	// }
+
+	// // Map
+	// var nodeworkergroupmap = make(map[string]string)
+	// for _, nwg := range nodeWorkerGroup {
+	// 	nodeworkergroupmap[nwg.NodeID] = nwg.WorkerGroup
+	// }
+	// // Nodes
+	// var online bool
+	// deployNodes := []*models.DeployPipelineNodes{}
+	// for _, node := range pipelineNodes {
+
+	// 	dependJSON, err := json.Marshal(dependencies["d-"+node.NodeID])
+	// 	if err != nil {
+	// 		logging.PrintSecretsRedact(err)
+	// 	}
+
+	// 	destinationJSON, err := json.Marshal(destinations["d-"+node.NodeID])
+	// 	if err != nil {
+	// 		logging.PrintSecretsRedact(err)
+	// 	}
+
+	// 	var workergroupassign string
+	// 	if _, ok := nodeworkergroupmap[node.NodeID]; ok {
+	// 		workergroupassign = nodeworkergroupmap[node.NodeID]
+	// 	} else {
+	// 		workergroupassign = workerGroup
+	// 	}
+
+	// 	//Assign an online value
+	// 	if node.NodeTypeDesc == "play" {
+	// 		online = true
+	// 	} else {
+	// 		if node.NodeType == "trigger" {
+	// 			online = liveactive
+	// 		} else {
+	// 			online = node.TriggerOnline
+	// 		}
+
+	// 	}
+
+	// 	if node.NodeType == "trigger" && node.NodeTypeDesc == "schedule" {
+	// 		triggerType = "schedule"
+	// 	}
+
+	// 	deployNodes = append(deployNodes, &models.DeployPipelineNodes{
+	// 		NodeID:        "d-" + node.NodeID,
+	// 		PipelineID:    createPipeline.PipelineID,
+	// 		Version:       createPipeline.Version,
+	// 		Name:          node.Name,
+	// 		EnvironmentID: createPipeline.EnvironmentID,
+	// 		NodeType:      node.NodeType,
+	// 		NodeTypeDesc:  node.NodeTypeDesc,
+	// 		TriggerOnline: online,
+	// 		Description:   node.Description,
+	// 		Commands:      node.Commands,
+	// 		Meta:          node.Meta,
+
+	// 		// Needs to be recalculated
+	// 		Dependency:  dependJSON,
+	// 		Destination: destinationJSON,
+
+	// 		// Needs to updated via front end sub nodes
+	// 		WorkerGroup: workergroupassign,
+	// 		Active:      node.Active,
+	// 	})
+	// }
+
+	// // folders
+	// deployFolders := []*models.DeployCodeFolders{}
+	// for _, n := range folders {
+	// 	deployFolders = append(deployFolders, &models.DeployCodeFolders{
+	// 		FolderID:      n.FolderID,
+	// 		ParentID:      n.ParentID,
+	// 		EnvironmentID: createPipeline.EnvironmentID,
+	// 		PipelineID:    createPipeline.PipelineID,
+	// 		Version:       createPipeline.Version,
+	// 		NodeID:        "d-" + n.NodeID,
+	// 		FolderName:    n.FolderName,
+	// 		Level:         n.Level,
+	// 		FType:         n.FType,
+	// 		Active:        n.Active,
+	// 	})
+	// }
+
+	// deployFiles := []*models.DeployCodeFiles{}
+	// for _, n := range files {
+	// 	deployFiles = append(deployFiles, &models.DeployCodeFiles{
+	// 		FileID:        n.FileID,
+	// 		FolderID:      n.FolderID,
+	// 		EnvironmentID: createPipeline.EnvironmentID,
+	// 		PipelineID:    createPipeline.PipelineID,
+	// 		Version:       createPipeline.Version,
+	// 		NodeID:        "d-" + n.NodeID,
+	// 		FileName:      n.FileName,
+	// 		Level:         n.Level,
+	// 		FType:         n.FType,
+	// 		Active:        n.Active,
+	// 	})
+	// }
+
+	// // Pipeline create
+	// err = database.DBConn.Create(&createPipeline).Error
+	// if err != nil {
+	// 	if config.Debug == "true" {
+	// 		logging.PrintSecretsRedact(err)
+	// 	}
+	// 	return "", errors.New("Failed to create deployment pipeline.")
+	// }
+
+	// // Nodes create
+	// err = database.DBConn.Create(&deployNodes).Error
+	// if err != nil {
+	// 	if config.Debug == "true" {
+	// 		logging.PrintSecretsRedact(err)
+	// 	}
+	// 	return "", errors.New("Failed to create deployment pipeline.")
+	// }
+
+	// // Edges create
+	// if len(deployEdges) > 0 {
+	// 	err = database.DBConn.Create(&deployEdges).Error
+	// 	if err != nil {
+	// 		if config.Debug == "true" {
+	// 			logging.PrintSecretsRedact(err)
+	// 		}
+	// 		return "", errors.New("Failed to create deployment pipeline.")
+	// 	}
+	// }
+
+	// // Folders create
+	// if len(deployFolders) > 0 {
+	// 	err = database.DBConn.Create(&deployFolders).Error
+	// 	if err != nil {
+	// 		if config.Debug == "true" {
+	// 			logging.PrintSecretsRedact(err)
+	// 		}
+	// 		return "", errors.New("Failed to create deployment pipeline.")
+	// 	}
+	// }
+
+	// // Files create
+	// if len(deployFiles) > 0 {
+	// 	err = database.DBConn.Create(&deployFiles).Error
+	// 	if err != nil {
+	// 		if config.Debug == "true" {
+	// 			logging.PrintSecretsRedact(err)
+	// 		}
+	// 		return "", errors.New("Failed to create deployment pipeline.")
+	// 	}
+	// }
+
+	// // Switch to active and take off update lock
+	// err = database.DBConn.Exec(`
+	// update deploy_pipelines set
+	// deploy_active = CASE
+	//   WHEN version = ?  THEN true
+	//   ELSE false
+	// END,
+	// update_lock = false
+	// where pipeline_id = ? and environment_id = ?
+	// `, version, "d-"+pipelineID, toEnvironmentID).Error
+	// if err != nil {
+	// 	if config.Debug == "true" {
+	// 		logging.PrintSecretsRedact(err)
+	// 	}
+	// 	return "", errors.New("Failed to create deployment pipeline.")
+	// }
+
+	// // Turn off all previous deployments
+	// err = database.DBConn.Model(&models.DeployPipelineNodes{}).Where("pipeline_id = ? and environment_id = ? and version <> ? and trigger_online = true", "d-"+pipelineID, toEnvironmentID, version).Update("trigger_online", false).Error
+
+	// if err != nil {
+	// 	if config.Debug == "true" {
+	// 		logging.PrintSecretsRedact(err)
+	// 	}
+	// }
+
+	// // Give current user full permissions
+	// // Give access permissions for the user who added the pipeline
+	// AccessTypes := models.DeploymentAccessTypes
+
+	// for _, access := range AccessTypes {
+	// 	_, err := permissions.CreatePermission(
+	// 		"user",
+	// 		currentUser,
+	// 		"specific_deployment",
+	// 		"d-"+pipelineID,
+	// 		access,
+	// 		toEnvironmentID,
+	// 		false,
+	// 	)
+
+	// 	if err != nil {
+	// 		if config.Debug == "true" {
+	// 			logging.PrintSecretsRedact(err)
+	// 		}
+	// 		return "", errors.New("Add permission to user database error.")
+	// 	}
+
+	// }
+
+	// // Add back to schedule
+	// // ======= Update the schedule trigger ==========
+	// if triggerType == "schedule" {
+	// 	// Add back to schedule
+	// 	var plSchedules []*models.Scheduler
+
+	// 	// Adding an existing schedule from pipeline into deployment - needs to select pipeline
+	// 	err := database.DBConn.Where("pipeline_id = ? and environment_id =? and run_type=?", pipelineID, fromEnvironmentID, "pipeline").Find(&plSchedules).Error
+	// 	if err != nil && err != gorm.ErrRecordNotFound {
+	// 		log.Println("Removal of changed trigger schedules:", err)
+	// 	}
+
+	// 	if len(plSchedules) > 0 {
+	// 		for _, psc := range plSchedules {
+
+	// 			pipelineSchedules := models.Scheduler{
+	// 				NodeID:        "d-" + psc.NodeID,
+	// 				PipelineID:    "d-" + psc.PipelineID,
+	// 				EnvironmentID: toEnvironmentID,
+	// 				ScheduleType:  psc.ScheduleType,
+	// 				Schedule:      psc.Schedule,
+	// 				Timezone:      psc.Timezone,
+	// 				Online:        online,
+	// 				RunType:       "deployment",
+	// 			}
+	// 			// Add back to schedule
+	// 			err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
+	// 			if err != nil {
+	// 				logging.PrintSecretsRedact("NATS error:", err)
+	// 			}
+	// 		}
+	// 	}
+
+	// }
 
 	return "Success", nil
 }
