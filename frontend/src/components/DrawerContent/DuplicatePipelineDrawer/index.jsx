@@ -8,9 +8,15 @@ import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useDuplicatePipeline } from '../../../graphql/duplicatePipeline';
 
-const DuplicatePipelineDrawer = ({ handleClose, environmentID, pipelineID, name, getPipelines }) => {
+const DuplicatePipelineDrawer = ({ handleClose, environmentID, pipelineID, name, getPipelines, description, workerGroup }) => {
     // React hook form
-    const { register, handleSubmit } = useForm();
+    const { register, handleSubmit } = useForm({
+        defaultValues: {
+            name: name + ' [Duplicate]',
+            description: description,
+            workerGroup: workerGroup,
+        },
+    });
 
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
@@ -30,7 +36,7 @@ const DuplicatePipelineDrawer = ({ handleClose, environmentID, pipelineID, name,
     }, []);
 
     return (
-        <form onSubmit={handleSubmit(duplicatePipeline)}>
+        <form onSubmit={handleSubmit((data) => duplicatePipeline(data.name, data.description, data.workerGroup))}>
             <Box position="relative">
                 <Box sx={{ p: '4.125rem' }}>
                     <Box position="absolute" top="26px" right="39px" display="flex" alignItems="center">
@@ -54,20 +60,23 @@ const DuplicatePipelineDrawer = ({ handleClose, environmentID, pipelineID, name,
                         />
                         <TextField label="Description" id="description" size="small" sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
 
-                        <Autocomplete
-                            options={workerGroups}
-                            getOptionLabel={(option) => option.WorkerGroup}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params} //
-                                    label="Worker group"
-                                    required
-                                    size="small"
-                                    sx={{ fontSize: '.75rem', display: 'flex' }}
-                                    {...register('workerGroup', { required: true })}
-                                />
-                            )}
-                        />
+                        {workerGroups.length > 0 ? (
+                            <Autocomplete
+                                options={workerGroups}
+                                getOptionLabel={(option) => option.WorkerGroup}
+                                defaultValue={workerGroups.filter((a) => a.WorkerGroup === workerGroup)[0]}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params} //
+                                        label="Worker group"
+                                        required
+                                        size="small"
+                                        sx={{ fontSize: '.75rem', display: 'flex' }}
+                                        {...register('workerGroup', { required: true })}
+                                    />
+                                )}
+                            />
+                        ) : null}
 
                         <Grid mt={4} display="flex" alignItems="center">
                             <Button type="submit" required variant="contained" color="primary" style={{ width: '100%' }}>
@@ -91,8 +100,8 @@ const useDuplicatePipelineHook = (pipelineID, environmentID, getPipelines, handl
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Duplicate pipeline
-    return async () => {
-        const response = await duplicatePipeline({ environmentID, pipelineID });
+    return async (name, description, workerGroup) => {
+        const response = await duplicatePipeline({ environmentID, pipelineID, name, description, workerGroup });
 
         if (response.r || response.error) {
             closeSnackbar();

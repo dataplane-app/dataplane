@@ -33,6 +33,8 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
     const [isOpenDeletePipeline, setIsOpenDeletePipeline] = useState(false);
     const [pipelineName, setPipelineName] = useState('');
     const [pipelineId, setPipelineId] = useState('');
+    const [pipelineDescription, setPipelineDescription] = useState('');
+    const [pipelineWorkerGroup, setPipelineWorkerGroup] = useState('');
 
     // GraphQL hook
     const runPipelines = useRunPipelinesHook();
@@ -47,13 +49,15 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
         () => [
             {
                 Header: 'Manage',
-                accessor: (row) => [row.name, row.pipelineID, row.online, row.environmentID, row.node_type_desc],
+                accessor: (row) => [row.name, row.pipelineID, row.online, row.environmentID, row.node_type_desc, row.description, row.workerGroup],
                 Cell: (row) => (
                     <Grid item sx={{ flex: 1, ml: -1 }} display="flex" alignItems="center" justifyContent="center">
                         <MoreInfoMenuPipeline
                             onClick={() => {
                                 setPipelineName(row.value[0]);
                                 setPipelineId(row.value[1]);
+                                setPipelineDescription(row.value[5]);
+                                setPipelineWorkerGroup(row.value[6]);
                             }}>
                             <PipelineItemTable //
                                 id={row.value[1]}
@@ -209,6 +213,8 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, getPipel
                         pipelineID={pipelineId}
                         environmentID={environmentID}
                         name={pipelineName}
+                        description={pipelineDescription}
+                        workerGroup={pipelineWorkerGroup}
                         getPipelines={getPipelines}
                     />
                 </Drawer>
