@@ -58,6 +58,8 @@ const View = () => {
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
     // Global states
+    // Flowstate = graph structure, elements contain the actual structure
+    // Runstate = run updates on graph structure
     const FlowState = useGlobalPipelineRun();
     const RunState = useGlobalRunState();
 
@@ -181,6 +183,8 @@ const View = () => {
             </Box>
             {!FlowState.isOpenLogDrawer.get() && !isOpenAnalytics ? (
                 <Box mt={7} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
+
+                    {console.log("flow state length:", FlowState.elements.get()?.length)}
                     {FlowState.elements.get()?.length > 0 ? (
                         <ReactFlowProvider>
                             <ReactFlow

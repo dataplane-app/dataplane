@@ -13,6 +13,11 @@ import useOnPageLoadWebSocket from './useOnPageLoadWebSocket';
 import { formatDateNoZone } from '../../utils/formatDate';
 import { useGlobalMeState } from '../../components/Navbar';
 
+
+/*
+Input:
+runs, setRuns - state set at RunNavBar level but are set inside this component
+*/
 export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, selectedRun, setSelectedRun }) {
     // Global states
     const RunState = useGlobalPipelineRun();
@@ -21,25 +26,57 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     // Local state
     const [isNewFlow, setIsNewFlow] = useState(false);
 
-    // Graphql hook
-    const getPipelineRuns = useGetPipelineRunsHook(environmentID, setRuns, setIsNewFlow, pipeline.updated_at);
-    const getPipelineFlow = useGetPipelineFlowHook(pipeline.pipelineID);
+    // Graphql
+    const getPipelineRuns = useGetPipelineRuns();
+    // const getPipelineRuns = useGetPipelineRunsHook(environmentID, setRuns, setIsNewFlow, pipeline.updated_at);
+    // const getPipelineFlow = useGetPipelineFlowHook(pipeline.pipelineID);
+
+    const { enqueueSnackbar } = useSnackbar();
 
     // Instantiate websocket for on page load
-    useOnPageLoadWebSocket(environmentID, setSelectedRun, setRuns, setIsNewFlow, pipeline.updated_at);
+    // useOnPageLoadWebSocket(environmentID, setSelectedRun, setRuns, setIsNewFlow, pipeline.updated_at);
 
     // Instantiate websocket for dropdown change
-    useOnChangeDropdownWebSocket(environmentID, setSelectedRun);
+    // useOnChangeDropdownWebSocket(environmentID, setSelectedRun);
 
     useEffect(() => {
         (async () => {
-            let [lastRunTime, runID] = await getPipelineRuns(getPipelineFlow);
+
+            // --------  1. Retrieve the the previous runs:
+            const response = await getPipelineRuns({ pipelineID: pipeline.pipelineID, environmentID });
+
+            console.log("Runs response:", response)
+    
+            if (response.length === 0) {
+                setRuns([]);
+                // If there are no runs to get flow info, run getPipelineFlow instead
+                // getPipelineFlow(environmentID);
+            } else if (response.r || response.error) {
+                enqueueSnackbar("Can't get runs: " + (response.msg || response.r || response.error), { variant: 'error' });
+            } else if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            } else {
+                setRuns(response);
+                // return [response[0]?.updated_at, response[0].run_id];
+            }
+
+            let lastRunTime = response[0]?.updated_at
+            let runID = response[0].run_id
+
+            // On page load select the latest response
+            setSelectedRun(response[0])
+
+            // Get the flow of the latest run or if no flow then get structure
+
+
+
+            // 2. Retrieve the latest run
 
             // If the pipeline has a new flow, get only the flow and return
             const isNewFlow = pipeline.updated_at > lastRunTime;
             if (isNewFlow) {
                 setIsNewFlow(true);
-                getPipelineFlow(environmentID);
+                // getPipelineFlow(environmentID);
                 return;
             }
 
@@ -93,121 +130,41 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     );
 }
 
-// ------ Custom hook
-export const useGetPipelineRunsHook = (environmentID, setRuns) => {
-    // GraphQL hook
-    const getPipelineRuns = useGetPipelineRuns();
 
-    // URI parameter
-    const { pipelineId } = useParams();
 
-    const { enqueueSnackbar } = useSnackbar();
 
-    // Get runs
-    return async (getPipelineFlow) => {
-        const response = await getPipelineRuns({ pipelineID: pipelineId, environmentID });
+// const useGetPipelineFlowHook = () => {
+//     // GraphQL hook
+//     const getPipelineFlow = useGetPipelineFlow();
 
-        if (response.length === 0) {
-            setRuns([]);
-            // If there are no runs to get flow info, run getPipelineFlow instead
-            getPipelineFlow(environmentID);
-            return;
-        } else if (response.r || response.error) {
-            enqueueSnackbar("Can't get runs: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            setRuns(response);
-            return [response[0]?.updated_at, response[0].run_id];
-        }
-    };
-};
+//     // React router
+//     const history = useHistory();
 
-export const usePipelineTasksRunHook = () => {
-    // GraphQL hook
-    const getPipelineTasksRun = usePipelineTasksRun();
+//     // Global state
+//     const FlowState = useGlobalPipelineRun();
 
-    // URI parameter
-    const { pipelineId } = useParams();
+//     // URI parameter
+//     const { pipelineId } = useParams();
 
-    const RunState = useGlobalRunState();
+//     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    const { enqueueSnackbar } = useSnackbar();
+//     // Get members
+//     return async (environmentID) => {
+//         const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
+//         const response = prepareInputForFrontend(rawResponse);
 
-    // Get tasks
-    return async (runID, environmentID) => {
-        if (!runID) return;
+//         if (response.length === 0) {
+//             FlowState.elements.set([]);
+//             history.push(`/pipelines/flow/${pipelineId}`);
+//         } else if (response.r === 'error') {
+//             closeSnackbar();
+//             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
+//         } else if (response.errors) {
+//             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+//         } else {
+//             FlowState.elements.set(response);
+//         }
+//     };
+// };
 
-        const response = await getPipelineTasksRun({ pipelineID: pipelineId, runID, environmentID });
 
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't get tasks: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            const nodes = {};
-            response.map(
-                (a) =>
-                    (nodes[a.node_id] = {
-                        status: a.status,
-                        end_dt: a.end_dt,
-                        start_dt: a.start_dt,
-                    })
-            );
-            RunState.batch((s) => {
-                s.selectedRunID.set(response[0].run_id);
-                s.runIDs[response[0].run_id].nodes.set(nodes);
-            }, 'tasks-batch');
-        }
-    };
-};
-
-const useGetPipelineFlowHook = () => {
-    // GraphQL hook
-    const getPipelineFlow = useGetPipelineFlow();
-
-    // React router
-    const history = useHistory();
-
-    // Global state
-    const FlowState = useGlobalPipelineRun();
-
-    // URI parameter
-    const { pipelineId } = useParams();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Get members
-    return async (environmentID) => {
-        const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
-        const response = prepareInputForFrontend(rawResponse);
-
-        if (response.length === 0) {
-            FlowState.elements.set([]);
-            history.push(`/pipelines/flow/${pipelineId}`);
-        } else if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            FlowState.elements.set(response);
-        }
-    };
-};
-
-export function displayTimerMs(end, start) {
-    if (!end || !start) return null;
-
-    var ticks = (new Date(start) - new Date(end)) / 1000;
-    var hh = Math.floor(ticks / 3600);
-    var mm = Math.floor((ticks % 3600) / 60);
-    var ss = (ticks % 60).toFixed(3);
-
-    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(Math.floor(ss), 2) + '.' + ss.split('.')[1];
-}
-
-function pad(n, width) {
-    const num = n + '';
-    return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
-}

@@ -5,11 +5,13 @@ import { useParams } from 'react-router-dom';
 import { useStopPipelines } from '../../graphql/stopPipelines';
 import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import StatusChips from './StatusChips';
-import RunsDropdown, { displayTimerMs, usePipelineTasksRunHook } from './RunsDropdown';
+import RunsDropdown from './RunsDropdown';
 import { useGlobalRunState } from './GlobalRunState';
 import EventRunButton from './EventRunButton'
 import { v4 as uuidv4 } from 'uuid';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
+import { usePipelineTasksRunHook } from './UpdateColours';
+import { displayTimer, displayTimerMs } from '../../utils/formatDate';
 
 
 var loc = window.location,
@@ -37,6 +39,8 @@ export default function RunNavBar({ environmentID, pipeline }) {
 
     // Local state
     const [elapsed, setElapsed] = useState();
+
+    // Set by RunsDropdown.jsx - on page load and on click run
     const [runs, setRuns] = useState([]);
     const [selectedRun, setSelectedRun] = useState(null);
     const [Running, setRunning] = useState(false);
@@ -188,22 +192,3 @@ const useStopPipelinesHook = (getPipelineTasksRun) => {
         }
     };
 };
-
-// Utility function
-export function displayTimer(startDate, endDate = new Date()) {
-    if (typeof endDate === 'string') {
-        endDate = new Date(endDate);
-    }
-    if (!startDate) return '';
-    var ticks = Math.floor((endDate - new Date(startDate)) / 1000);
-    var hh = Math.floor(ticks / 3600);
-    var mm = Math.floor((ticks % 3600) / 60);
-    var ss = ticks % 60;
-
-    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(ss, 2);
-}
-
-function pad(n, width) {
-    const num = n + '';
-    return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
-}

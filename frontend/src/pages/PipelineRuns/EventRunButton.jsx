@@ -78,11 +78,11 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
             };
 
             wsconnect.onmessage = (e) => {
-                ConsoleLogHelper('msg rcvd');
+                ConsoleLogHelper('msg rcvd', e.data);
                 
                 const response = JSON.parse(e.data);
 
-                // console.log("message:", response.status)
+                console.log("message:", response)
 
                 ConsoleLogHelper(
                     '🧲',
