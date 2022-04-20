@@ -392,7 +392,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	for _, edge := range pipelineEdges {
 		deployEdges = append(deployEdges, &models.PipelineEdges{
 			EdgeID:        edgeOLDNew[edge.EdgeID],
-			PipelineID:    pipelineID,
+			PipelineID:    pipelineIDNew,
 			From:          nodesOLDNew[edge.From],
 			To:            nodesOLDNew[edge.To],
 			EnvironmentID: environmentID,
@@ -450,7 +450,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 
 		deployNodes = append(deployNodes, &models.PipelineNodes{
 			NodeID:        nodesOLDNew[node.NodeID],
-			PipelineID:    pipelineID,
+			PipelineID:    pipelineIDNew,
 			Name:          node.Name,
 			EnvironmentID: environmentID,
 			NodeType:      node.NodeType,
@@ -707,7 +707,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			To:            p.To,
 			EnvironmentID: environmentID,
 			Meta:          edgeMeta,
-			Active:        p.Active,
+			Active:        true,
 		})
 
 		// map out dependencies and destinations
@@ -855,7 +855,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			Meta:          nodeMeta,
 			Dependency:    dependJSON,
 			Destination:   destinationJSON,
-			Active:        p.Active,
+			Active:        true,
 			TriggerOnline: online,
 		})
 
