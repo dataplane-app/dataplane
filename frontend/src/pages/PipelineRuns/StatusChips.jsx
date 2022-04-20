@@ -1,12 +1,12 @@
 import { Grid } from '@mui/material';
 import CustomChip from '../../components/CustomChip';
-import { useGlobalFlowState } from '../PipelineEdit';
+import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import { useGlobalRunState } from './GlobalRunState';
 
 export default function StatusChips() {
     // Global state
     const RunState = useGlobalRunState();
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
 
     return (
         <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }} ml={3} mr={1}>

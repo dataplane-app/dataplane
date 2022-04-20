@@ -4,7 +4,7 @@ import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
 import { useHistory, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
-import { useGlobalFlowState } from '../PipelineEdit';
+import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import { useGlobalRunState } from './GlobalRunState';
 import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from '.';
@@ -15,7 +15,7 @@ import { useGlobalMeState } from '../../components/Navbar';
 
 export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, selectedRun, setSelectedRun }) {
     // Global states
-    const RunState = useGlobalRunState();
+    const RunState = useGlobalPipelineRun();
     const MeData = useGlobalMeState();
 
     // Local state
@@ -170,7 +170,7 @@ const useGetPipelineFlowHook = () => {
     const history = useHistory();
 
     // Global state
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
 
     // URI parameter
     const { pipelineId } = useParams();

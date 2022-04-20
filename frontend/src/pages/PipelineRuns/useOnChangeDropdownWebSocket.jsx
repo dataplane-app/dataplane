@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
-import { useGlobalFlowState } from '../PipelineEdit';
+import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import { useGlobalRunState } from './GlobalRunState';
 import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
@@ -26,7 +26,7 @@ const websocketEndpoint = new_uri;
 
 export default function useOnChangeDropdownWebSocket(environmentId, setSelectedRun) {
     const RunState = useGlobalRunState();
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
 
     // GraphQL hook
     const getSinglepipelineRunAndTasks = useGetSinglepipelineRunAndTasks();

@@ -3,10 +3,10 @@ import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import { useGlobalRunState } from './GlobalRunState';
-import { useHistory, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { prepareInputForFrontend } from '.';
-import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
+// import { prepareInputForFrontend } from '.';
+// import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
 import { useGetSinglepipelineRunAndTasks } from '../../graphql/getSinglepipelineRunAndTasks';
 
 var loc = window.location,
@@ -183,36 +183,36 @@ export default function useOnPageLoadWebSocket(environmentId, setSelectedRun, se
     }, [RunState.onLoadTrigger.get()]);
 }
 
-const useGetPipelineFlowHook = () => {
-    // GraphQL hook
-    const getPipelineFlow = useGetPipelineFlow();
+// const useGetPipelineFlowHook = () => {
+//     // GraphQL hook
+//     const getPipelineFlow = useGetPipelineFlow();
 
-    // React router
-    const history = useHistory();
+//     // React router
+//     const history = useHistory();
 
-    // Global state
-    const FlowState = useGlobalPipelineRun();
+//     // Global state
+//     const FlowState = useGlobalPipelineRun();
 
-    // URI parameter
-    const { pipelineId } = useParams();
+//     // URI parameter
+//     const { pipelineId } = useParams();
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+//     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Get members
-    return async (environmentID) => {
-        const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
-        const response = prepareInputForFrontend(rawResponse);
+//     // Get members
+//     return async (environmentID) => {
+//         const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
+//         const response = prepareInputForFrontend(rawResponse);
 
-        if (response.length === 0) {
-            FlowState.elements.set([]);
-            history.push(`/pipelines/flow/${pipelineId}`);
-        } else if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            FlowState.elements.set(response);
-        }
-    };
-};
+//         if (response.length === 0) {
+//             FlowState.elements.set([]);
+//             history.push(`/pipelines/flow/${pipelineId}`);
+//         } else if (response.r === 'error') {
+//             closeSnackbar();
+//             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
+//         } else if (response.errors) {
+//             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+//         } else {
+//             FlowState.elements.set(response);
+//         }
+//     };
+// };

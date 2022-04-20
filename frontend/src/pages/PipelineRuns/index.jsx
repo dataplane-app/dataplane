@@ -19,6 +19,7 @@ import { useGetPipeline } from '../../graphql/getPipeline';
 import { Analytics } from './Analytics';
 import { Downgraded } from '@hookstate/core';
 import RunNavBar from './RunNavBar';
+import { useGlobalRunState } from './GlobalRunState';
 
 // Node types
 import ApiNode from '../../components/CustomNodesContent/ApiNode';
@@ -58,6 +59,20 @@ const View = () => {
 
     // Global states
     const FlowState = useGlobalPipelineRun();
+    const RunState = useGlobalRunState();
+
+    // On page load, clear the global run state
+    useEffect(() => {
+        RunState.set({
+            selectedRunID: null,
+            runObject: null,
+            runTrigger: 0,
+            tableRunTrigger: 0,
+            onLoadTrigger: 0,
+            onChangeTrigger: 0
+        })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
@@ -160,6 +175,7 @@ const View = () => {
 
                 {/* Run navbar includes --- Run/Stop button, Chips, Dropdown, Timer */}
                 <Grid mt={4} container alignItems="center" sx={{ width: { xl: '88%' }, flexWrap: 'nowrap' }}>
+                    {/* <WebsocketConnect /> */}
                     <RunNavBar environmentID={Environment.id.get()} pipeline={pipeline} />
                 </Grid>
             </Box>

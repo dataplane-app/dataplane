@@ -7,46 +7,81 @@ import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import StatusChips from './StatusChips';
 import RunsDropdown, { displayTimerMs, usePipelineTasksRunHook } from './RunsDropdown';
 import { useGlobalRunState } from './GlobalRunState';
-import useOnRunWebSocket from './useOnRunWebSocket';
+import EventRunButton from './EventRunButton'
+import { v4 as uuidv4 } from 'uuid';
+import { useGlobalAuthState } from '../../Auth/UserAuth';
+
+
+var loc = window.location,
+    new_uri;
+if (loc.protocol === 'https:') {
+    new_uri = 'wss:';
+} else {
+    new_uri = 'ws:';
+}
+new_uri += '//' + loc.host;
+
+if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
+    new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+} else {
+    new_uri = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+}
+
+const websocketEndpoint = new_uri;
 
 export default function RunNavBar({ environmentID, pipeline }) {
     // Global state
     const FlowState = useGlobalPipelineRun();
     const RunState = useGlobalRunState();
+    const { authToken } = useGlobalAuthState();
 
     // Local state
     const [elapsed, setElapsed] = useState();
     const [runs, setRuns] = useState([]);
     const [selectedRun, setSelectedRun] = useState(null);
+    const [Running, setRunning] = useState(false);
+    const [wsconnect, setWsConnect] = useState();
+    const [runId, setRunId] = useState("");
 
     // GraphQL hooks - not run at this point
     const getPipelineTasksRun = usePipelineTasksRunHook();
     const stopPipelines = useStopPipelinesHook(getPipelineTasksRun);
 
     // Instantiate websocket for start/stop run - not opening websockets yet
-    useOnRunWebSocket(environmentID, setRuns, setSelectedRun);
+    // useOnRunWebSocket(environmentID, setRuns, setSelectedRun);
 
     // Click Run button and start to run the pipeline
     const handleTimerStart = () => {
         RunState.runTrigger.set((t) => t + 1);
     };
 
-    const RunPipeline = () => {
+    EventRunButton(environmentID, pipeline?.pipelineID, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect, setWsConnect)
+
+    const RunButtonClick = () => {
 
         // 1. Generate run ID
+        const runId = uuidv4();
+
+        console.log("run clicked")
 
         // 2. Open websockets
-
-
+        /* 
+        Inputs:
+        setRuns - dropdown menu, on run will bring back the latest 20
+        setSelectedRun - set the run to the latest run on button press
+        */
+        const authtokenget = authToken.get()
+        const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${runId}&id=${runId}&token=${authtokenget}`
+        const ws = new WebSocket(wsurl);
+        setWsConnect(ws)
+        setRunId(runId)
+        setRunning(true)
+        // 
+        
+        // ------- Handled inside EventRunButton ----------
         // 3. Call Run pipeline
-
-
         // 4. Start timer
-
-
         // 5. Get pipeline runs
-
-
         // 6. Update run dropdown menu
 
     }
@@ -91,7 +126,7 @@ export default function RunNavBar({ environmentID, pipeline }) {
                         Stop
                     </Button>
                 ) : (
-                    <Button onClick={RunPipeline} variant="outlined" sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                    <Button onClick={RunButtonClick} variant="outlined" sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                         Run
                     </Button>
                 )}

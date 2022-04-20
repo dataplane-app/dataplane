@@ -117,7 +117,7 @@ export const UserAuth = ({ children, Env, loginUrl, refreshTokenUrl, logoutUrl, 
 
 useEffect(() => {
   const interval = setInterval(() => {
-    console.log('Logs every 5 seconds');
+    // console.log('Logs every 5 seconds');
     if (Authstate.privateRoute.get() === true) {
         let decodedToken = decodedAccessToken(Authstate.authToken.get());
         if (decodedToken === undefined) {

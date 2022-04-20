@@ -1,32 +1,13 @@
 import { useEffect, useRef } from 'react';
 import ConsoleLogHelper from '../../Helper/logger';
-import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import { useGlobalRunState } from './GlobalRunState';
-import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { v4 as uuidv4 } from 'uuid';
 import { useRunPipelines } from '../../graphql/runPipelines';
 import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
 
-var loc = window.location,
-    new_uri;
-if (loc.protocol === 'https:') {
-    new_uri = 'wss:';
-} else {
-    new_uri = 'ws:';
-}
-new_uri += '//' + loc.host;
 
-if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
-    new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
-} else {
-    new_uri = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
-}
-
-const websocketEndpoint = new_uri;
-
-export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun) {
+export default function EventRunButton(environmentId, pipelineId, runId, setRuns, setSelectedRun,  Running, setRunning, wsconnect, setWsConnect) {
     // Global state
     const RunState = useGlobalRunState();
     const FlowState = useGlobalPipelineRun();
@@ -37,43 +18,22 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
 
     const { enqueueSnackbar } = useSnackbar();
 
-    // Get pipeline ID from parameter
-    const { pipelineId } = useParams();
-
     // Websocket state
     const reconnectOnClose = useRef(true);
-    const ws = useRef(null);
-    const { authToken } = useGlobalAuthState();
 
     return useEffect(() => {
-        if (RunState.runTrigger.get() === undefined || RunState.runTrigger.get() < 1) return;
+
         function connect() {
-            const runId = uuidv4();
 
-            // Temporary fix, to be removed
-            let ids = FlowState.elements
-                .get()
-                .filter((a) => a.type === 'pythonNode' || a.type === 'bashNode' || a.type === 'checkpointNode')
-                .map((a) => a.id);
-            let nodes = {};
-            ids.map((a) => (nodes[a] = { status: 'Queue' }));
-            //
-
-            RunState.batch((s) => {
-                s.runIDs.merge({ [runId]: { nodes } }); // nodes to be removed, should be s.runIDs.merge({ [runId]: {} });
-                s.selectedRunID.set(runId);
-            }, 'run-batch');
-
-            // Need to set isRunning to true when we set a new selectedRunID on RunState
+            // 1. Set the run state as running
             FlowState.isRunning.set(true);
 
-            ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=taskupdate.${environmentId}.${runId}&id=${runId}&token=${authToken.get()}`);
-
-            ws.current.onopen = async () => {
+            // 3. On websocket open - trigger run
+            wsconnect.onopen = () => {
                 ConsoleLogHelper('ws opened');
 
                 // Run pipeline
-                let response = await runPipelines({
+                let response = runPipelines({
                     pipelineID: pipelineId,
                     environmentID: environmentId,
                     RunType: 'pipeline',
@@ -84,13 +44,13 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
                 } else if (response.errors) {
                     response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
                 } else {
-                    RunState.runIDs[response.run_id].merge({
+                    RunState.runObject.merge({
                         runStart: response.created_at,
                     });
                 }
 
                 // Get a list of all pipeline runs
-                response = await getPipelineRuns({ pipelineID: pipelineId, environmentID: environmentId });
+                response = getPipelineRuns({ pipelineID: pipelineId, environmentID: environmentId });
 
                 if (response?.length === 0) {
                     setRuns([]);
@@ -104,7 +64,7 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
                 }
             };
 
-            ws.current.onclose = () => {
+            wsconnect.onclose = () => {
                 // Exit if closing the connection was intentional
                 if (!reconnectOnClose.current) {
                     return;
@@ -117,12 +77,12 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
                 }, 1000);
             };
 
-            ws.current.onmessage = (e) => {
+            wsconnect.onmessage = (e) => {
+                ConsoleLogHelper('msg rcvd');
+                
                 const response = JSON.parse(e.data);
 
-                // To be removed
-                if (response.status === 'Queue') return;
-                //
+                // console.log("message:", response.status)
 
                 ConsoleLogHelper(
                     '🧲',
@@ -134,7 +94,7 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
 
                 // Add only if a node message, not MSG.
                 if (response.node_id) {
-                    RunState.runIDs[response.run_id].nodes.merge({
+                    RunState.runObject.nodes.merge({
                         [response.node_id]: {
                             status: response.status,
                             start_dt: response.start_dt,
@@ -148,21 +108,26 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
 
                 if (response.MSG === 'pipeline_complete') {
                     FlowState.isRunning.set(false);
-                    RunState.runIDs[response.run_id].runEnd.set(response.ended_at);
+                    RunState.runObject.runEnd.set(response.ended_at);
 
                     reconnectOnClose.current = false;
-                    ws.current.close();
+                    wsconnect.close();
+                    setRunning(false)
                 }
             };
         }
 
+        if (Running === true){
         connect();
+        
 
         return () => {
             reconnectOnClose.current = false;
-            ws.current.close();
+            wsconnect.close();
+            setRunning(false)
         };
+    }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState.runTrigger.get()]);
+    }, [runId]);
 }
