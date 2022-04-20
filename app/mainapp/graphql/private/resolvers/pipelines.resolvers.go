@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -392,6 +393,8 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	}
 
 	var foldercheck models.CodeFolders
+	var existingPipelineFolderID string
+	var existingPipelineFolderName string
 
 	// Regenerate folder IDs
 	for _, n := range folders {
@@ -399,6 +402,8 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 		// Use ID of created pipeline folder if at pipeline level
 		if n.Level == "pipeline" {
 			folderIDOLDNew[n.FolderID] = foldercreate.FolderID
+			existingPipelineFolderID = n.FolderID
+			existingPipelineFolderName = n.FolderName
 		} else {
 			for i := 1; i < 5; i++ {
 
@@ -422,7 +427,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 			}
 		}
 
-		log.Println("FolderID Map", n.FolderID, folderIDOLDNew[n.FolderID])
+		// log.Println("FolderID Map", n.FolderID, folderIDOLDNew[n.FolderID])
 
 	}
 
@@ -598,6 +603,43 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 		}
 	}
 
+	// Rename the folders
+	for _, n := range folders {
+
+		if n.Level != "pipeline" {
+			fromFolder, _ := filesystem.FolderConstructByID(database.DBConn, n.FolderID, environmentID, "pipelines")
+			toFolder, _ := filesystem.FolderConstructByID(database.DBConn, folderIDOLDNew[n.FolderID], environmentID, "pipelines")
+
+			// The folders are already copied into the new directoy, we need to reference that directory and not the existing one
+
+			log.Println("From:", fromFolder)
+			// log.Println("From:", existingPipelineFolderID, folderIDOLDNew[existingPipelineFolderID])
+
+			fromFolder = strings.ReplaceAll(config.CodeDirectory+fromFolder, existingPipelineFolderID+"_"+existingPipelineFolderName, folderIDOLDNew[existingPipelineFolderID]+"_"+foldercreate.FolderName)
+
+			log.Println("From:", fromFolder)
+
+			toFolder = config.CodeDirectory + toFolder
+
+			if _, err := os.Stat(fromFolder); os.IsNotExist(err) {
+				// path/to/whatever does not exist
+				if config.Debug == "true" {
+					log.Println("Update directory doesn't exist: ", fromFolder)
+				}
+				return "", errors.New("Failed to find existing pipeline directory. Duplicated pipeline will not work.")
+
+			} else {
+				err = os.Rename(fromFolder, toFolder)
+				if err != nil {
+					log.Println("Rename pipeline dir err:", err)
+				}
+				if config.Debug == "true" {
+					log.Println("Directory change: ", fromFolder, "->", toFolder)
+				}
+			}
+		}
+
+	}
 	// // Files create
 	// if len(deployFiles) > 0 {
 	// 	err = database.DBConn.Create(&deployFiles).Error
