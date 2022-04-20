@@ -23,6 +23,7 @@ import (
 	git "github.com/go-git/go-git/v5"
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"gorm.io/gorm"
 )
 
@@ -310,7 +311,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	var parentfolder models.CodeFolders
 	database.DBConn.Where("environment_id = ? and level = ?", environmentID, "environment").First(&parentfolder)
 
-	// Create folder structure for pipeline
+	// Create folder structure for pipeline based on environment ID
 	pipelinedir := models.CodeFolders{
 		EnvironmentID: environmentID,
 		PipelineID:    pipelineIDNew,
@@ -326,22 +327,23 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 
 	foldercreate, _, _ := filesystem.CreateFolder(pipelinedir, pfolder+"pipelines/")
 
+	// Takes folder ID generated from create folder
 	thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID, "pipelines")
 
 	git.PlainInit(config.CodeDirectory+thisfolder, false)
 
 	// ---------- Move across all the files --------------
 
-	// destinationfolder := config.CodeDirectory + thisfolder
+	destinationfolder := config.CodeDirectory + thisfolder
 
 	// // Create a folder for the version and copy files across
-	// err = utilities.CopyDirectory(foldertocopy, destinationfolder)
-	// if err != nil {
-	// 	if config.Debug == "true" {
-	// 		logging.PrintSecretsRedact(err)
-	// 	}
-	// 	return "", errors.New("Failed to copy deployment files.")
-	// }
+	err = utilities.CopyDirectory(foldertocopy, destinationfolder)
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Failed to copy deployment files.")
+	}
 
 	// Copy pipeline, nodes and edges
 
@@ -367,6 +369,8 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	var dependencies = make(map[string][]string)
 	var edgeOLDNew = make(map[string]string)
 	var nodesOLDNew = make(map[string]string)
+	var folderIDOLDNew = make(map[string]string)
+	var foldersOLDNew = make(map[string]models.FolderDuplicate)
 
 	// Convert pipeline json to string
 	var jsonstring string
@@ -385,6 +389,41 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	for _, node := range pipelineNodes {
 		nodesOLDNew[node.NodeID] = uuid.NewString()
 		jsonstring = strings.ReplaceAll(jsonstring, node.NodeID, nodesOLDNew[node.NodeID])
+	}
+
+	var foldercheck models.CodeFolders
+
+	// Regenerate folder IDs
+	for _, n := range folders {
+
+		// Use ID of created pipeline folder if at pipeline level
+		if n.Level == "pipeline" {
+			folderIDOLDNew[n.FolderID] = foldercreate.FolderID
+		} else {
+			for i := 1; i < 5; i++ {
+
+				id, err := gonanoid.Generate("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 7)
+				if err != nil {
+					if config.Debug == "true" {
+						log.Println("Directory id error:", err)
+					}
+					continue
+				}
+
+				database.DBConn.Select("folder_id").Where("folder_id=?", id).First(&foldercheck)
+
+				// Check if ID already exists
+				if foldercheck.FolderID != "" {
+					continue
+				}
+
+				folderIDOLDNew[n.FolderID] = id
+
+			}
+		}
+
+		log.Println("FolderID Map", n.FolderID, folderIDOLDNew[n.FolderID])
+
 	}
 
 	// // Edges
@@ -471,21 +510,29 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	}
 
 	// // folders
-	// deployFolders := []*models.DeployCodeFolders{}
-	// for _, n := range folders {
-	// 	deployFolders = append(deployFolders, &models.DeployCodeFolders{
-	// 		FolderID:      n.FolderID,
-	// 		ParentID:      n.ParentID,
-	// 		EnvironmentID: createPipeline.EnvironmentID,
-	// 		PipelineID:    createPipeline.PipelineID,
-	// 		Version:       createPipeline.Version,
-	// 		NodeID:        "d-" + n.NodeID,
-	// 		FolderName:    n.FolderName,
-	// 		Level:         n.Level,
-	// 		FType:         n.FType,
-	// 		Active:        n.Active,
-	// 	})
-	// }
+	deployFolders := []*models.CodeFolders{}
+	for _, n := range folders {
+
+		foldersOLDNew[n.FolderID] = models.FolderDuplicate{}
+
+		// Pipeline level has already been created
+		if n.Level != "pipeline" {
+			deployFolders = append(deployFolders, &models.CodeFolders{
+				FolderID:      folderIDOLDNew[n.FolderID],
+				ParentID:      folderIDOLDNew[n.ParentID],
+				EnvironmentID: environmentID,
+				PipelineID:    pipelineIDNew,
+				NodeID:        nodesOLDNew[n.NodeID],
+				FolderName:    n.FolderName,
+				Level:         n.Level,
+				FType:         n.FType,
+				Active:        n.Active,
+			})
+
+			log.Println("ParentID, FolderID", folderIDOLDNew[n.ParentID], folderIDOLDNew[n.FolderID])
+		}
+
+	}
 
 	// deployFiles := []*models.DeployCodeFiles{}
 	// for _, n := range files {
@@ -502,7 +549,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	// 		Active:        n.Active,
 	// 	})
 	// }
-	log.Println(jsonstring)
+	// log.Println(jsonstring)
 	var res interface{}
 	json.Unmarshal([]byte(jsonstring), &res)
 	pipelineJSON, err := json.Marshal(res)
@@ -541,15 +588,15 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	}
 
 	// // Folders create
-	// if len(deployFolders) > 0 {
-	// 	err = database.DBConn.Create(&deployFolders).Error
-	// 	if err != nil {
-	// 		if config.Debug == "true" {
-	// 			logging.PrintSecretsRedact(err)
-	// 		}
-	// 		return "", errors.New("Failed to create deployment pipeline.")
-	// 	}
-	// }
+	if len(deployFolders) > 0 {
+		err = database.DBConn.Create(&deployFolders).Error
+		if err != nil {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to create deployment pipeline.")
+		}
+	}
 
 	// // Files create
 	// if len(deployFiles) > 0 {
