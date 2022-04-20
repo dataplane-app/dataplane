@@ -539,21 +539,20 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 
 	}
 
-	// deployFiles := []*models.DeployCodeFiles{}
-	// for _, n := range files {
-	// 	deployFiles = append(deployFiles, &models.DeployCodeFiles{
-	// 		FileID:        n.FileID,
-	// 		FolderID:      n.FolderID,
-	// 		EnvironmentID: createPipeline.EnvironmentID,
-	// 		PipelineID:    createPipeline.PipelineID,
-	// 		Version:       createPipeline.Version,
-	// 		NodeID:        "d-" + n.NodeID,
-	// 		FileName:      n.FileName,
-	// 		Level:         n.Level,
-	// 		FType:         n.FType,
-	// 		Active:        n.Active,
-	// 	})
-	// }
+	deployFiles := []*models.CodeFiles{}
+	for _, n := range files {
+		deployFiles = append(deployFiles, &models.CodeFiles{
+			FileID:        uuid.NewString(),
+			FolderID:      folderIDOLDNew[n.FolderID],
+			EnvironmentID: environmentID,
+			PipelineID:    pipelineIDNew,
+			NodeID:        nodesOLDNew[n.NodeID],
+			FileName:      n.FileName,
+			Level:         n.Level,
+			FType:         n.FType,
+			Active:        n.Active,
+		})
+	}
 	// log.Println(jsonstring)
 	var res interface{}
 	json.Unmarshal([]byte(jsonstring), &res)
@@ -641,15 +640,15 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 
 	}
 	// // Files create
-	// if len(deployFiles) > 0 {
-	// 	err = database.DBConn.Create(&deployFiles).Error
-	// 	if err != nil {
-	// 		if config.Debug == "true" {
-	// 			logging.PrintSecretsRedact(err)
-	// 		}
-	// 		return "", errors.New("Failed to create deployment pipeline.")
-	// 	}
-	// }
+	if len(deployFiles) > 0 {
+		err = database.DBConn.Create(&deployFiles).Error
+		if err != nil {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to create deployment pipeline.")
+		}
+	}
 
 	// // Switch to active and take off update lock
 	// err = database.DBConn.Exec(`
