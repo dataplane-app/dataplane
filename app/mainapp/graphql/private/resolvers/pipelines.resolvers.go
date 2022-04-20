@@ -449,6 +449,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 		dependencies[nodesOLDNew[edge.To]] = append(dependencies[nodesOLDNew[edge.To]], nodesOLDNew[edge.From])
 	}
 
+	var triggerType string
 	// // Map
 	// var nodeworkergroupmap = make(map[string]string)
 	// for _, nwg := range nodeWorkerGroup {
@@ -488,9 +489,9 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 
 		// 	}
 
-		// if node.NodeType == "trigger" && node.NodeTypeDesc == "schedule" {
-		// 	triggerType = "schedule"
-		// }
+		if node.NodeType == "trigger" && node.NodeTypeDesc == "schedule" {
+			triggerType = "schedule"
+		}
 
 		deployNodes = append(deployNodes, &models.PipelineNodes{
 			NodeID:        nodesOLDNew[node.NodeID],
@@ -611,12 +612,12 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 
 			// The folders are already copied into the new directoy, we need to reference that directory and not the existing one
 
-			log.Println("From:", fromFolder)
+			// log.Println("From:", fromFolder)
 			// log.Println("From:", existingPipelineFolderID, folderIDOLDNew[existingPipelineFolderID])
 
 			fromFolder = strings.ReplaceAll(config.CodeDirectory+fromFolder, existingPipelineFolderID+"_"+existingPipelineFolderName, folderIDOLDNew[existingPipelineFolderID]+"_"+foldercreate.FolderName)
 
-			log.Println("From:", fromFolder)
+			// log.Println("From:", fromFolder)
 
 			toFolder = config.CodeDirectory + toFolder
 
@@ -650,90 +651,40 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 		}
 	}
 
-	// // Switch to active and take off update lock
-	// err = database.DBConn.Exec(`
-	// update deploy_pipelines set
-	// deploy_active = CASE
-	//   WHEN version = ?  THEN true
-	//   ELSE false
-	// END,
-	// update_lock = false
-	// where pipeline_id = ? and environment_id = ?
-	// `, version, "d-"+pipelineID, toEnvironmentID).Error
-	// if err != nil {
-	// 	if config.Debug == "true" {
-	// 		logging.PrintSecretsRedact(err)
-	// 	}
-	// 	return "", errors.New("Failed to create deployment pipeline.")
-	// }
-
-	// // Turn off all previous deployments
-	// err = database.DBConn.Model(&models.DeployPipelineNodes{}).Where("pipeline_id = ? and environment_id = ? and version <> ? and trigger_online = true", "d-"+pipelineID, toEnvironmentID, version).Update("trigger_online", false).Error
-
-	// if err != nil {
-	// 	if config.Debug == "true" {
-	// 		logging.PrintSecretsRedact(err)
-	// 	}
-	// }
-
-	// // Give current user full permissions
-	// // Give access permissions for the user who added the pipeline
-	// AccessTypes := models.DeploymentAccessTypes
-
-	// for _, access := range AccessTypes {
-	// 	_, err := permissions.CreatePermission(
-	// 		"user",
-	// 		currentUser,
-	// 		"specific_deployment",
-	// 		"d-"+pipelineID,
-	// 		access,
-	// 		toEnvironmentID,
-	// 		false,
-	// 	)
-
-	// 	if err != nil {
-	// 		if config.Debug == "true" {
-	// 			logging.PrintSecretsRedact(err)
-	// 		}
-	// 		return "", errors.New("Add permission to user database error.")
-	// 	}
-
-	// }
-
 	// // Add back to schedule
 	// // ======= Update the schedule trigger ==========
-	// if triggerType == "schedule" {
-	// 	// Add back to schedule
-	// 	var plSchedules []*models.Scheduler
+	if triggerType == "schedule" {
+		// Add back to schedule
+		var plSchedules []*models.Scheduler
 
-	// 	// Adding an existing schedule from pipeline into deployment - needs to select pipeline
-	// 	err := database.DBConn.Where("pipeline_id = ? and environment_id =? and run_type=?", pipelineID, fromEnvironmentID, "pipeline").Find(&plSchedules).Error
-	// 	if err != nil && err != gorm.ErrRecordNotFound {
-	// 		log.Println("Removal of changed trigger schedules:", err)
-	// 	}
+		// Adding an existing schedule from pipeline into deployment - needs to select pipeline
+		err := database.DBConn.Where("pipeline_id = ? and environment_id =? and run_type=?", pipelineID, environmentID, "pipeline").Find(&plSchedules).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			log.Println("Removal of changed trigger schedules:", err)
+		}
 
-	// 	if len(plSchedules) > 0 {
-	// 		for _, psc := range plSchedules {
+		if len(plSchedules) > 0 {
+			for _, psc := range plSchedules {
 
-	// 			pipelineSchedules := models.Scheduler{
-	// 				NodeID:        "d-" + psc.NodeID,
-	// 				PipelineID:    "d-" + psc.PipelineID,
-	// 				EnvironmentID: toEnvironmentID,
-	// 				ScheduleType:  psc.ScheduleType,
-	// 				Schedule:      psc.Schedule,
-	// 				Timezone:      psc.Timezone,
-	// 				Online:        online,
-	// 				RunType:       "deployment",
-	// 			}
-	// 			// Add back to schedule
-	// 			err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
-	// 			if err != nil {
-	// 				logging.PrintSecretsRedact("NATS error:", err)
-	// 			}
-	// 		}
-	// 	}
+				pipelineSchedules := models.Scheduler{
+					NodeID:        nodesOLDNew[psc.NodeID],
+					PipelineID:    pipelineIDNew,
+					EnvironmentID: environmentID,
+					ScheduleType:  psc.ScheduleType,
+					Schedule:      psc.Schedule,
+					Timezone:      psc.Timezone,
+					Online:        psc.Online,
+					RunType:       "pipeline",
+				}
+				// Add back to schedule
+				err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
+				if err != nil {
+					logging.PrintSecretsRedact("NATS error:", err)
+				}
+			}
+		}
 
-	// }
+	}
 
 	return "Success", nil
 }
