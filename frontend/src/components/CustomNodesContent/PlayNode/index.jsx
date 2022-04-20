@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Tooltip, Typography, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Handle } from 'react-flow-renderer';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import customNodeStyle from '../../../utils/customNodeStyle';
 import { customSourceHandle, customSourceHandleDragging } from '../../../utils/handleStyles';

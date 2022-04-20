@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { Downgraded } from '@hookstate/core';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useSnackbar } from 'notistack';

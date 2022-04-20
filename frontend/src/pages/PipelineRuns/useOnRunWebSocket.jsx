@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
-import { useGlobalFlowState } from '../Flow';
+import { useGlobalFlowState } from '../PipelineEdit';
 import { useGlobalRunState } from './GlobalRunState';
 import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
@@ -37,7 +37,7 @@ export default function useOnRunWebSocket(environmentId, setRuns, setSelectedRun
 
     const { enqueueSnackbar } = useSnackbar();
 
-    // URI parameter
+    // Get pipeline ID from parameter
     const { pipelineId } = useParams();
 
     // Websocket state

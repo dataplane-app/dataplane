@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
-import { useGlobalFlowState } from '../Flow';
+import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import { useGlobalRunState } from './GlobalRunState';
 import { useHistory, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
@@ -28,7 +28,7 @@ const websocketEndpoint = new_uri;
 
 export default function useOnPageLoadWebSocket(environmentId, setSelectedRun, setRuns, setIsNewFlow, pipelineLastUpdate) {
     const RunState = useGlobalRunState();
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -191,7 +191,7 @@ const useGetPipelineFlowHook = () => {
     const history = useHistory();
 
     // Global state
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
 
     // URI parameter
     const { pipelineId } = useParams();

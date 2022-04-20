@@ -3,15 +3,15 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useStopPipelines } from '../../graphql/stopPipelines';
-import { useGlobalFlowState } from '../Flow';
+import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import StatusChips from './StatusChips';
 import RunsDropdown, { displayTimerMs, usePipelineTasksRunHook } from './RunsDropdown';
 import { useGlobalRunState } from './GlobalRunState';
 import useOnRunWebSocket from './useOnRunWebSocket';
 
-export default function StartStopRun({ environmentID, pipeline }) {
+export default function RunNavBar({ environmentID, pipeline }) {
     // Global state
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
     const RunState = useGlobalRunState();
 
     // Local state
@@ -19,17 +19,37 @@ export default function StartStopRun({ environmentID, pipeline }) {
     const [runs, setRuns] = useState([]);
     const [selectedRun, setSelectedRun] = useState(null);
 
-    // GraphQL hooks
+    // GraphQL hooks - not run at this point
     const getPipelineTasksRun = usePipelineTasksRunHook();
     const stopPipelines = useStopPipelinesHook(getPipelineTasksRun);
 
-    // Instantiate websocket for start/stop run
+    // Instantiate websocket for start/stop run - not opening websockets yet
     useOnRunWebSocket(environmentID, setRuns, setSelectedRun);
 
     // Click Run button and start to run the pipeline
     const handleTimerStart = () => {
         RunState.runTrigger.set((t) => t + 1);
     };
+
+    const RunPipeline = () => {
+
+        // 1. Generate run ID
+
+        // 2. Open websockets
+
+
+        // 3. Call Run pipeline
+
+
+        // 4. Start timer
+
+
+        // 5. Get pipeline runs
+
+
+        // 6. Update run dropdown menu
+
+    }
 
     // Click the stop button and run the stopPipelines function - with the selected RunID
     const handleTimerStop = () => {
@@ -71,7 +91,7 @@ export default function StartStopRun({ environmentID, pipeline }) {
                         Stop
                     </Button>
                 ) : (
-                    <Button onClick={handleTimerStart} variant="outlined" sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                    <Button onClick={RunPipeline} variant="outlined" sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                         Run
                     </Button>
                 )}

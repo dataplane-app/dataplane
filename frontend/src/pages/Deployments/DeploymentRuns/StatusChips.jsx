@@ -1,6 +1,6 @@
 import { Grid } from '@mui/material';
 import CustomChip from '../../../components/CustomChip';
-import { useGlobalFlowState } from '../../Flow';
+import { useGlobalFlowState } from '../../PipelineEdit';
 import { useGlobalDeploymentState } from './GlobalDeploymentState';
 
 export default function StatusChips() {

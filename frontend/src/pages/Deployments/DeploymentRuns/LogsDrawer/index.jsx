@@ -8,7 +8,7 @@ import { faRunning, faTimes, faCheckCircle, faExclamationCircle } from '@fortawe
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { RunningSpinner } from './RunningSpinner';
 import useWebSocketLog, { formatDate } from './useWebSocketLog';
-import { useGlobalFlowState } from '../../../../pages/Flow';
+import { useGlobalFlowState } from '../../../PipelineEdit';
 import { useGlobalDeploymentState } from '../GlobalDeploymentState';
 
 const LogsDrawer = ({ environmentId, handleClose }) => {

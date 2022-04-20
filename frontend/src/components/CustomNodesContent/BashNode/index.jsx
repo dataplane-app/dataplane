@@ -5,7 +5,7 @@ import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
 import { useGlobalDeploymentState } from '../../../pages/Deployments/DeploymentRuns/GlobalDeploymentState';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import { customSourceHandle, customSourceHandleDragging, customTargetHandle } from '../../../utils/handleStyles';
 import ProcessTypeEditorModeItem from '../../MoreInfoContent/ProcessTypeEditorModeItem';

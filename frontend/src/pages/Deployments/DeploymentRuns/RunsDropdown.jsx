@@ -4,7 +4,7 @@ import { useGetDeploymentRuns } from '../../../graphql/getDeploymentRuns';
 import { useHistory, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../../graphql/getPipelineTasksRun';
-import { useGlobalFlowState } from '../../Flow';
+import { useGlobalFlowState } from '../../PipelineEdit';
 import { useGlobalDeploymentState } from './GlobalDeploymentState';
 import { useGlobalMeState } from '../../../components/Navbar';
 import { prepareInputForFrontend } from '.';

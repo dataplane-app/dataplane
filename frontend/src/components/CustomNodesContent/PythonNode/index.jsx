@@ -4,7 +4,7 @@ import { Grid, Tooltip, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import { useGlobalDeploymentState } from '../../../pages/Deployments/DeploymentRuns/GlobalDeploymentState';
 import { customSourceHandle, customSourceHandleDragging, customTargetHandle } from '../../../utils/handleStyles';

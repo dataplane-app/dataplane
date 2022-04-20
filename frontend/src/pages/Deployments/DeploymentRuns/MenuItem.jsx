@@ -1,6 +1,6 @@
 import { MenuItem } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import { useGlobalFlowState } from '../../Flow';
+import { useGlobalFlowState } from '../../PipelineEdit';
 import { useGlobalDeploymentState } from './GlobalDeploymentState';
 
 const DeploymentViewPageItem = (props) => {

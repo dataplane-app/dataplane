@@ -11,25 +11,53 @@ import PublishPipelineDrawer from '../../components/DrawerContent/PublishPipelin
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import ViewPageItem from '../../components/MoreInfoContent/ViewPageItem';
 import MoreInfoMenu from '../../components/MoreInfoMenu';
-import { edgeTypes, nodeTypes, useGlobalFlowState } from '../Flow';
+import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import LogsDrawer from '../../components/DrawerContent/LogsDrawer';
 import TurnOffPipelineDrawer from '../../components/DrawerContent/TurnOffPipelineDrawer';
 import CustomChip from '../../components/CustomChip';
 import { useGetPipeline } from '../../graphql/getPipeline';
 import { Analytics } from './Analytics';
 import { Downgraded } from '@hookstate/core';
-import StartStopRun from './StartStopRun';
+import RunNavBar from './RunNavBar';
+
+// Node types
+import ApiNode from '../../components/CustomNodesContent/ApiNode';
+import PythonNode from '../../components/CustomNodesContent/PythonNode';
+import BashNode from '../../components/CustomNodesContent/BashNode';
+import CustomEdge from '../../components/CustomNodesContent/CustomEdge';
+import PlayNode from '../../components/CustomNodesContent/PlayNode';
+import ScheduleNode from '../../components/CustomNodesContent/ScheduleNode';
+import CheckpointNode from '../../components/CustomNodesContent/CheckpointNode';
+
+export const nodeTypes = {
+    scheduleNode: ScheduleNode,
+    playNode: PlayNode,
+    apiNode: ApiNode,
+    pythonNode: PythonNode,
+    bashNode: BashNode,
+    checkpointNode: CheckpointNode,
+};
+export const edgeTypes = {
+    custom: CustomEdge,
+};
 
 const View = () => {
+
+    // Retrieve global environments from drop down - selected environment ID
     const Environment = useGlobalEnvironmentState();
 
     // Hooks
     const theme = useTheme();
+
+    // Local state for Pipeline comes from GraphQL getPipeline
     const [pipeline, setPipeline] = useState(null);
+
+    // Get the name and status of name and title at top of page
+    // This calls the getPipeline to get the pipeline details for this specific pipeline
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
     // Global states
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
 
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
@@ -130,9 +158,9 @@ const View = () => {
                     </Box>
                 </Grid>
 
-                {/* Run/Stop button, Chips, Dropdown, Timer */}
+                {/* Run navbar includes --- Run/Stop button, Chips, Dropdown, Timer */}
                 <Grid mt={4} container alignItems="center" sx={{ width: { xl: '88%' }, flexWrap: 'nowrap' }}>
-                    <StartStopRun environmentID={Environment.id.get()} pipeline={pipeline} />
+                    <RunNavBar environmentID={Environment.id.get()} pipeline={pipeline} />
                 </Grid>
             </Box>
             {!FlowState.isOpenLogDrawer.get() && !isOpenAnalytics ? (
@@ -205,18 +233,21 @@ const View = () => {
 export default View;
 
 // ------ Custom hooks
+// To get the the name and title at the top of page and the staus - online / offline. 
 export const useGetPipelineHook = (environmentID, setPipeline) => {
     // GraphQL hook
+    // Calls getPipeline graphql to get this specific pipeline
     const getPipeline = useGetPipeline();
 
     // URI parameter
     const { pipelineId } = useParams();
 
-    const FlowState = useGlobalFlowState();
+
+    const FlowState = useGlobalPipelineRun();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Get members
+    // Get pipeline data
     return async () => {
         const response = await getPipeline({ pipelineID: pipelineId, environmentID });
 
@@ -226,7 +257,11 @@ export const useGetPipelineHook = (environmentID, setPipeline) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
+
+            // Set local pipeline state
             setPipeline(response);
+
+            // Set global pipeline state
             FlowState.pipelineInfo.set(response);
         }
     };

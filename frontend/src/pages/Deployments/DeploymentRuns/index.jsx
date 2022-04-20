@@ -11,7 +11,7 @@ import PublishPipelineDrawer from '../../../components/DrawerContent/PublishPipe
 import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
 import MenuItem from './MenuItem';
 import MoreInfoMenu from '../../../components/MoreInfoMenu';
-import { edgeTypes, nodeTypes, useGlobalFlowState } from '../../Flow';
+import { edgeTypes, nodeTypes, useGlobalFlowState } from '../../PipelineEdit';
 import TurnOffPipelineDrawer from '../../../components/DrawerContent/TurnOffPipelineDrawer';
 import CustomChip from '../../../components/CustomChip';
 import { Analytics } from './Analytics';

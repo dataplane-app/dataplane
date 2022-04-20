@@ -7,7 +7,7 @@ import { faClock } from '@fortawesome/free-regular-svg-icons';
 import DeploymentsTableItem from './DeploymentsTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenu from '../../components/MoreInfoMenuPipeline';
-import { useGlobalFlowState } from '../Flow';
+import { useGlobalFlowState } from '../PipelineEdit';
 import CustomChip from '../../components/CustomChip';
 import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
