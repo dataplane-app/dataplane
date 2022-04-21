@@ -18,7 +18,7 @@ export const usePipelineTasksColoursRun = () => {
 
         const response = await getPipelineTasksRun({ pipelineID: pipelineID, runID, environmentID });
 
-        console.log("tasks response:", response)
+        // console.log("tasks response:", response)
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get tasks: " + (response.msg || response.r || response.error), { variant: 'error' });

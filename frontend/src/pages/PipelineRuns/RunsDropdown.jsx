@@ -37,8 +37,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
     const { enqueueSnackbar } = useSnackbar();
 
-    console.log("Run state:", RunState)
-
+    // ------ On page load get the latest run -------- 
     useEffect(() => {
         (async () => {
 
@@ -102,11 +101,11 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
         (async () => {
             
         if (selectedRun!= null){
-            console.log("I am the selected run:", selectedRun)
+            // console.log("I am the selected run:", selectedRun)
             if (selectedRun.status == "Running"){
 
             }else{
-                console.log("change run:", selectedRun.status)
+                // console.log("change run:", selectedRun.status)
                 const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, selectedRun.run_id, environmentID, false);
             }
         }

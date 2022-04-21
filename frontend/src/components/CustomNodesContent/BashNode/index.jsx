@@ -7,6 +7,7 @@ import { Handle, Position } from 'react-flow-renderer';
 import { useGlobalDeploymentState } from '../../../pages/Deployments/DeploymentRuns/GlobalDeploymentState';
 import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
+import { displayRunTime } from '../../../utils/formatDate';
 import { customSourceHandle, customSourceHandleDragging, customTargetHandle } from '../../../utils/handleStyles';
 import ProcessTypeEditorModeItem from '../../MoreInfoContent/ProcessTypeEditorModeItem';
 import ProcessTypeNodeItem from '../../MoreInfoContent/ProcessTypeNodeItem';
@@ -98,7 +99,7 @@ const BashNode = (props) => {
                         <Typography fontSize={8}>
                             {DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.get() &&
                                 DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.status?.get() === 'Success' &&
-                                displayTimer(
+                                displayRunTime(
                                     DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.end_dt.get(),
                                     DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.start_dt.get()
                                 )}
@@ -107,7 +108,7 @@ const BashNode = (props) => {
                         <Typography fontSize={8}>
                             {RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() &&
                                 RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.status?.get() === 'Success' &&
-                                displayTimer(
+                                displayRunTime(
                                     RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.end_dt.get(),
                                     RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.start_dt.get()
                                 )}
@@ -127,19 +128,3 @@ const BashNode = (props) => {
 
 export default BashNode;
 
-// Utility function
-function displayTimer(end, start) {
-    if (!end || !start) return null;
-    var ticks = Math.floor((new Date(end) - new Date(start)) / 1000);
-    var hh = Math.floor(ticks / 3600);
-    var mm = Math.floor((ticks % 3600) / 60);
-    var ss = ticks % 60;
-    var ms = (new Date(end) - new Date(start)) % 1000;
-
-    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(ss, 2) + '.' + pad(ms, 3);
-}
-
-function pad(n, width) {
-    const num = n + '';
-    return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
-}

@@ -27,9 +27,6 @@ const ProcessTypeNodeItem = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleCodeClick}>
                 Code
             </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
-                Run
-            </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleOpenLog}>
                 Logs
             </MenuItem>

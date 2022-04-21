@@ -47,6 +47,17 @@ export function displayTimer(startDate, endDate = new Date()) {
     return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(ss, 2);
 }
 
+export function displayRunTime(end, start) {
+    if (!end || !start) return null;
+    var ticks = Math.floor((new Date(end) - new Date(start)) / 1000);
+    var hh = Math.floor(ticks / 3600);
+    var mm = Math.floor((ticks % 3600) / 60);
+    var ss = ticks % 60;
+    var ms = (new Date(end) - new Date(start)) % 1000;
+
+    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(ss, 2) + '.' + pad(ms, 3);
+}
+
 function pad(n, width) {
     const num = n + '';
     return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
