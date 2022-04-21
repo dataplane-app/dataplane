@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import { useGlobalRunState } from './GlobalRunState';
+import { Downgraded } from '@hookstate/core';
 
 
 export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
@@ -18,6 +19,8 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
 
             // 1. Set the run state as running
             FlowState.isRunning.set(true);
+
+            console.log("Open trigger")
 
             // 3. On websocket open - trigger run
             wsconnect.onopen = () => {
@@ -73,6 +76,35 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
 
                     reconnectOnClose.current = false;
                     wsconnect.close();
+                    setRunning(false)
+                }
+
+                if (response.status === 'Fail') {
+
+
+                    const nodes = RunState.runObject.nodes.attach(Downgraded).get()
+
+                    // console.log("n", nodes);
+
+                    for (var key in nodes) {
+                        if(nodes[key].status=="Queue"){
+
+                            RunState.runObject.nodes.merge({
+                                [key]: {
+                                    status: "Fail",
+                                    updated_by: 'failure',
+                                },
+                            });
+
+                            // console.log("n", nodes[key]);
+
+                        }
+                    }
+
+                    FlowState.isRunning.set(false);
+                    RunState.runObject.runEnd.set(response.end_dt);
+                    reconnectOnClose.current = false;
+                    // wsconnect.close();
                     setRunning(false)
                 }
             };

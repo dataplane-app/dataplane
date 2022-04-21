@@ -1,7 +1,6 @@
 import { Box, Button, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { useStopPipelines } from '../../graphql/stopPipelines';
 import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import StatusChips from './StatusChips';
@@ -104,22 +103,16 @@ export default function RunNavBar({ environmentID, pipeline }) {
 
     }
 
-    // Click the stop button and run the stopPipelines function - with the selected RunID
-    const handleTimerStop = () => {
-        // stopPipelines(environmentID, RunState.selectedRunID.get());
-        FlowState.isRunning.set(false);
-    };
-
     // Updates timer every second
     useEffect(() => {
         let secTimer;
         if (FlowState.isRunning.get()) {
             secTimer = setInterval(() => {
-                setElapsed(displayTimer(RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get()));
+                setElapsed(displayTimer(RunState.runObject?.runStart?.get()));
             }, 500);
         }
 
-        if (RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get()) {
+        if (RunState.runObject?.runEnd?.get()) {
             clearInterval(secTimer);
             setElapsed(0);
         }
@@ -135,7 +128,8 @@ export default function RunNavBar({ environmentID, pipeline }) {
     return (
         <Grid item>
             <Box display="flex" alignItems="center">
-                {FlowState.isRunning.get() && !RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get() ? (
+                {/* {console.log(FlowState.isRunning.get())} */}
+                {FlowState.isRunning.get() ? (
                     <Button
                         onClick={StopButtonClick}
                         variant="outlined"
@@ -155,7 +149,7 @@ export default function RunNavBar({ environmentID, pipeline }) {
                     <RunsDropdown environmentID={environmentID} pipeline={pipeline} runs={runs} setRuns={setRuns} selectedRun={selectedRun} setSelectedRun={setSelectedRun} />
                 ) : null}
 
-                {!RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get() ? (
+                {!RunState.runObject?.runEnd?.get() ? (
                     // If looking at an active run, show live timer
                     FlowState.isRunning.get() ? (
                         <Typography variant="h3" ml={2}>
@@ -164,13 +158,13 @@ export default function RunNavBar({ environmentID, pipeline }) {
                     ) : (
                         // If looking at a previous run during an active run
                         <Typography variant="h3" ml={2}>
-                            {displayTimerMs(RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get(), RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get())}
+                            {displayTimerMs(RunState.runObject?.runStart?.get(), RunState.runObject?.runEnd?.get())}
                         </Typography>
                     )
                 ) : (
                     // If there is no active run.
                     <Typography variant="h3" ml={2}>
-                        {displayTimerMs(RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get(), RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get())}
+                        {displayTimerMs(RunState.runObject?.runStart?.get(), RunState.runObject?.runEnd?.get())}
                     </Typography>
                 )}
             </Box>

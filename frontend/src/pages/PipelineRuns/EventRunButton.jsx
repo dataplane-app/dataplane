@@ -5,6 +5,7 @@ import { useGlobalRunState } from './GlobalRunState';
 import { useSnackbar } from 'notistack';
 import { useRunPipelines } from '../../graphql/runPipelines';
 import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
+import { Downgraded } from '@hookstate/core';
 
 
 export default function EventRunButton(environmentId, pipelineId, runId, setRuns, setSelectedRun,  Running, setRunning, wsconnect) {
@@ -22,6 +23,8 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
     const reconnectOnClose = useRef(true);
 
     return useEffect(() => {
+
+        console.log("Test: ", FlowState.isRunning.get(), Running)
 
         function connect() {
 
@@ -117,6 +120,35 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
 
                     reconnectOnClose.current = false;
                     wsconnect.close();
+                    setRunning(false)
+                }
+
+                if (response.status === 'Fail') {
+
+
+                    const nodes = RunState.runObject.nodes.attach(Downgraded).get()
+
+                    // console.log("n", nodes);
+
+                    for (var key in nodes) {
+                        if(nodes[key].status=="Queue"){
+
+                            RunState.runObject.nodes.merge({
+                                [key]: {
+                                    status: "Fail",
+                                    updated_by: 'failure',
+                                },
+                            });
+
+                            // console.log("n", nodes[key]);
+
+                        }
+                    }
+
+                    FlowState.isRunning.set(false);
+                    RunState.runObject.runEnd.set(response.end_dt);
+                    reconnectOnClose.current = false;
+                    // wsconnect.close();
                     setRunning(false)
                 }
             };

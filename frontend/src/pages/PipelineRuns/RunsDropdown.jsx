@@ -9,6 +9,7 @@ import { GetPipelineRun } from './PipelineRunStructure';
 import { usePipelineTasksColoursRun } from './UpdatePipelineColours';
 import EventRunOpen from './EventRunOpen';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
+import { useGlobalRunState } from './GlobalRunState';
 
 
 var loc = window.location,
@@ -37,6 +38,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     // const RunState = useGlobalPipelineRun();
     const MeData = useGlobalMeState();
     const { authToken } = useGlobalAuthState();
+    const RunState = useGlobalRunState();
 
     // Local state
     const [isNewFlow, setIsNewFlow] = useState(false);
@@ -52,11 +54,14 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     const [Running, setRunning] = useState(false);
     const [wsconnect, setWsConnect] = useState();
     const [runId, setRunId] = useState("");
+    const [droptrigger, setDroptrigger] = useState(false);
 
     EventRunOpen(runId, Running, setRunning, wsconnect)
 
     // ------ On page load get the latest run -------- 
     useEffect(() => {
+
+        
         (async () => {
 
             // --------  1. Retrieve the the previous runs:
@@ -103,6 +108,26 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                 return;
             }
 
+
+            if (response[0]!= null){
+                // console.log("I am the selected run:", selectedRun)
+                if (response[0].status == "Running"){
+    
+                    const authtokenget = authToken.get()
+                    const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${response[0].run_id}&id=${response[0].run_id}&token=${authtokenget}`
+                    const ws = new WebSocket(wsurl);
+                    setWsConnect(ws)
+                    setRunId(response[0].run_id)
+                    setRunning(true)
+    
+                    const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, response[0].run_id, environmentID, false);
+    
+                }else{
+                    // console.log("change run:", selectedRun.status)
+                    const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, response[0].run_id, environmentID, false);
+                }
+            }
+
         })();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,8 +142,14 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     useEffect(() => {
 
         (async () => {
+
+
+            RunState.set( {
+                selectedRunID: null,
+                runObject: null,
+            })
             
-        if (selectedRun!= null){
+        if (selectedRun!= null && droptrigger === true){
             // console.log("I am the selected run:", selectedRun)
             if (selectedRun.status == "Running"){
 
@@ -138,12 +169,13 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
         }
     })();
 
-    },[selectedRun])
+    },[droptrigger])
 
     // Update elements on run dropdown change
     const handleDropdownChange = (run) => {
 
         // Update the selected run state
+        setDroptrigger(true)
         setSelectedRun(run);
 
         // Retrieve the run structure
