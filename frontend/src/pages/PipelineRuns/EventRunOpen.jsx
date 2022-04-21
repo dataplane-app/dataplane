@@ -13,6 +13,9 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
     // Websocket state
     const reconnectOnClose = useRef(true);
 
+    // console.log("Run in function 1:", Running)
+    // console.log("Run in function 1:", runId)
+
     return useEffect(() => {
 
         function connect() {
@@ -24,7 +27,7 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
 
             // 3. On websocket open - trigger run
             wsconnect.onopen = () => {
-                ConsoleLogHelper('ws opened');
+                ConsoleLogHelper('ws opened - open run');
 
             };
 
@@ -42,7 +45,7 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
             };
 
             wsconnect.onmessage = (e) => {
-                // ConsoleLogHelper('msg rcvd', e.data);
+                //  ConsoleLogHelper('msg rcvd', e.data);
                 
                 const response = JSON.parse(e.data);
 
@@ -104,12 +107,14 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
                     FlowState.isRunning.set(false);
                     RunState.runObject.runEnd.set(response.end_dt);
                     reconnectOnClose.current = false;
-                    // wsconnect.close();
+                    wsconnect.close();
                     setRunning(false)
                 }
             };
         }
 
+
+        console.log("Run in function:", Running)
         if (Running === true){
         connect();
         
@@ -122,5 +127,5 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
     }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [runId]);
+    }, [Running]);
 }

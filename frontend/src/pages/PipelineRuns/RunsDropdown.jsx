@@ -1,6 +1,7 @@
 import { Autocomplete, Grid, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
+import { useGetSinglepipelineRun } from '../../graphql/getSinglepipelineRun';
 import { useSnackbar } from 'notistack';
 import { formatDateNoZone } from '../../utils/formatDate';
 import { useGlobalMeState } from '../../components/Navbar';
@@ -10,6 +11,7 @@ import { usePipelineTasksColoursRun } from './UpdatePipelineColours';
 import EventRunOpen from './EventRunOpen';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalRunState } from './GlobalRunState';
+import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
 
 
 var loc = window.location,
@@ -39,6 +41,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     const MeData = useGlobalMeState();
     const { authToken } = useGlobalAuthState();
     const RunState = useGlobalRunState();
+    const FlowState = useGlobalPipelineRun();
 
     // Local state
     const [isNewFlow, setIsNewFlow] = useState(false);
@@ -47,6 +50,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     const getPipelineRuns = useGetPipelineRuns();
     const getPipelineFlow = GetPipelineFlow();
     const getPipelineRun = GetPipelineRun();
+    const getSinglePipelineRun = useGetSinglepipelineRun();
     const getPipelineTasks = usePipelineTasksColoursRun();
 
     const { enqueueSnackbar } = useSnackbar();
@@ -62,7 +66,9 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     useEffect(() => {
 
         
+        
         (async () => {
+
 
             // --------  1. Retrieve the the previous runs:
             const response = await getPipelineRuns({ pipelineID: pipeline.pipelineID, environmentID });
@@ -110,8 +116,10 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
 
             if (response[0]!= null){
-                // console.log("I am the selected run:", selectedRun)
+                // console.log("I am the selected run:", response[0])
                 if (response[0].status == "Running"){
+
+                    // console.log("Connect:", wsconnect)
     
                     const authtokenget = authToken.get()
                     const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${response[0].run_id}&id=${response[0].run_id}&token=${authtokenget}`
@@ -119,12 +127,16 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                     setWsConnect(ws)
                     setRunId(response[0].run_id)
                     setRunning(true)
+                    FlowState.isRunning.set(true);
     
                     const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, response[0].run_id, environmentID, false);
+
+                    // console.log("open", pipeline.pipelineID, response[0].run_id, environmentID, wsconnect)
     
                 }else{
                     // console.log("change run:", selectedRun.status)
                     const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, response[0].run_id, environmentID, false);
+                    FlowState.isRunning.set(false);
                 }
             }
 
@@ -143,13 +155,18 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
         (async () => {
 
+            // --------  1. Retrieve the selected runs:
+            if (selectedRun!= null && droptrigger === true){
 
-            RunState.set( {
-                selectedRunID: null,
-                runObject: null,
-            })
-            
-        if (selectedRun!= null && droptrigger === true){
+            // console.log("Selected run:", selectedRun.run_id)
+            const responseSingle = await getSinglePipelineRun({ pipelineID: pipeline.pipelineID, environmentID, runID: selectedRun.run_id});
+
+            // console.log("single response:", responseSingle)
+            setSelectedRun(responseSingle)
+        
+
+            // reset drop trigger for next
+            setDroptrigger(false)
             // console.log("I am the selected run:", selectedRun)
             if (selectedRun.status == "Running"){
 
@@ -175,6 +192,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     const handleDropdownChange = (run) => {
 
         // Update the selected run state
+        setRunning(false)
         setDroptrigger(true)
         setSelectedRun(run);
 

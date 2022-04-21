@@ -149,7 +149,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                     RunState.runObject.runEnd.set(response.end_dt);
                     reconnectOnClose.current = false;
                     // wsconnect.close();
-                    setRunning(false)
+                    // setRunning(false)
                 }
             };
         }

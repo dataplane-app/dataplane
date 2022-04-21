@@ -54,9 +54,9 @@ export default function RunNavBar({ environmentID, pipeline }) {
     const stopPipelines = useStopPipelinesHook(getPipelineTasks);
 
     // Click Run button and start to run the pipeline
-    const handleTimerStart = () => {
-        RunState.runTrigger.set((t) => t + 1);
-    };
+    // const handleTimerStart = () => {
+    //     RunState.runTrigger.set((t) => t + 1);
+    // };
 
 
     /*
