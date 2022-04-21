@@ -69,7 +69,9 @@ const PackageColumn = forwardRef(({ children, pipeline, ...rest }, ref) => {
 
                 <Box mt={1.2}>
                     {packages.split('\n').map((a) => (
-                        <Typography variant="subtitle1">{a}</Typography>
+                        <Typography variant="subtitle1" key={a}>
+                            {a}
+                        </Typography>
                     ))}
                 </Box>
             </Box>
