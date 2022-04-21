@@ -14,7 +14,6 @@ import { useRunCEFile } from '../../../graphql/runCEFile';
 import { useStopCERun } from '../../../graphql/stopCERun';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import { useUpdateCodePackages } from '../../../graphql/updateCodePackages';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
@@ -46,7 +45,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
     const codeEditorRun = useRunCEFileHook(rest.pipeline, setIsRunning);
     const codeEditorStop = useStopCEFileHook(rest.pipeline, EditorGlobal.runID.get(), setIsRunning);
-    const updateCodePackages = useUpdateCodePackagesHook(rest.pipeline);
 
     useEffect(() => {
         const fileIndex = EditorGlobal.tabs
@@ -127,6 +125,10 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Handle tab change
     useEffect(() => {
+        // Clear runID tab change, this is to stop websockets if running
+        EditorGlobal.runID.set(null);
+        EditorGlobal.installState.set(null);
+
         EditorGlobal.runState.set(null);
         // If no selection, return
         if (!EditorGlobal.selectedFile.value || EditorGlobal.selectedFile.fType.value === 'folder') return;
@@ -186,7 +188,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 uploadFileNode();
             }
             if (EditorGlobal.selectedFile.fType.value === 'package') {
-                updateCodePackages(EditorGlobal.selectedFile.diffValue.value);
+                EditorGlobal.installState.set('Running');
             }
         }
     };
@@ -196,9 +198,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     useEffect(() => {
         if (runState === 'Running') {
             setIsRunning(true);
-        } else if (runState === 'Success') {
-            setIsRunning(false);
-        } else if (runState === 'Fail') {
+        } else {
             setIsRunning(false);
         }
     }, [runState]);
@@ -326,10 +326,10 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         ) : (
                             <Button
                                 onClick={() => {
-                                    updateCodePackages(EditorGlobal.selectedFile.diffValue.value);
                                     EditorGlobal.installState.set('Running');
                                 }}
                                 variant="text"
+                                disabled={!EditorGlobal.selectedFile.diffValue.get()}
                                 sx={{ height: '32px', color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null, fontSize: '0.75rem', minWidth: '60px' }}>
                                 Install
                             </Button>
@@ -450,39 +450,6 @@ const useStopCEFileHook = (pipeline, runID, setIsRunning) => {
             enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        }
-    };
-};
-
-const useUpdateCodePackagesHook = (pipeline) => {
-    const environmentID = pipeline.environmentID;
-    const pipelineID = pipeline.pipelineID;
-    const workerGroup = pipeline.workerGroup;
-    const language = pipeline.meta.data.language;
-
-    const EditorGlobal = useGlobalEditorState();
-
-    // GraphQL hook
-    const updateCodePackages = useUpdateCodePackages();
-
-    const { enqueueSnackbar } = useSnackbar();
-
-    // Update packages
-    return async (packages) => {
-        if (EditorGlobal.selectedFile.diffValue.value === undefined) return;
-
-        const response = await updateCodePackages({ environmentID, pipelineID, workerGroup, language, packages });
-
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't update packages: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            // Turns off orange circle
-            EditorGlobal.selectedFile.isEditing.set(false);
-            // Trigger getPackages
-            EditorGlobal.updatePackages.set((a) => a + 1);
-            enqueueSnackbar('File saved.', { variant: 'success' });
         }
     };
 };

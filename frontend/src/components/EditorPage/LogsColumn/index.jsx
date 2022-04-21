@@ -10,9 +10,8 @@ import { useGetCodeFileRunLogs } from '../../../graphql/getCodeFileRunLogs';
 import { useSnackbar } from 'notistack';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import { useTheme } from '@mui/system';
-import useInstallWebSocketLog from './useInstallWebSocketLog';
 
-const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
+const LogsColumn = forwardRef(({ children, ...rest }) => {
     const environmentID = rest.environmentID;
     const pipelineID = rest.pipelineID;
 
@@ -21,13 +20,13 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const [graphQlResp, setGraphQlResp] = useState([]);
     const [keys, setKeys] = useState([]);
     const [hasGetNodeLogsRun, setHasGetNodeLogsRun] = useState(0);
+    const [render, setRender] = useState(0);
 
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
 
     // Instantiate websocket
     const webSocket = useWebSocketLog(environmentID, EditorGlobal.runID.get(), setKeys);
-    const webSocketInstall = useInstallWebSocketLog(environmentID, rest.workerGroup);
 
     useEffect(() => {
         if (hasGetNodeLogsRun === 0 && EditorGlobal.runID.get()) {
@@ -39,12 +38,6 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [webSocket]);
-
-    useEffect(() => {
-        setWebsocketResp((t) => t + webSocketInstall + '\n');
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [webSocketInstall]);
 
     useEffect(() => {
         setWebsocketResp('');
@@ -83,6 +76,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     useEffect(() => {
         setWebsocketResp('');
         setFilteredGraphqlResp('');
+        setRender((r) => r + 1);
     }, [EditorGlobal.selectedFile?.id?.value]);
 
     const theme = useTheme();
@@ -100,6 +94,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                 <Box sx={{ background: 'editorPage.logBackground', color: '#d6d6d6' }} display="flex" alignItems="flex-start" flexDirection="row" pl={6} pr={4} pt={3} pb={0}>
                     <Box component={FontAwesomeIcon} fontSize={24} color="secondary.main" icon={faRunning} mr={2} />
 
+                    {/* Code file update status messages */}
                     {EditorGlobal.runState.get() === 'Success' ? (
                         <Box color="status.pipelineOnline" display="flex" alignItems="center">
                             <Box component={FontAwesomeIcon} fontSize={18} color="status.pipelineOnline" icon={faCheckCircle} />
@@ -126,24 +121,6 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                             </Typography>
                         </Box>
                     ) : null}
-
-                    {/* {EditorGlobal.installState.get() === 'Running' ? (
-                        <Box color="#65BEFF" display="flex" alignItems="center">
-                            <RunningSpinner />
-                            <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
-                                Running
-                            </Typography>
-                        </Box>
-                    ) : null}
-
-                    {EditorGlobal.installState.get() === 'Fail' ? (
-                        <Box color="#F80000" display="flex" alignItems="center">
-                            <Box component={FontAwesomeIcon} fontSize={18} color="#F80000" icon={faExclamationCircle} />
-                            <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
-                                Failed
-                            </Typography>
-                        </Box>
-                    ) : null} */}
                 </Box>
                 <Box
                     height="calc(100% - 44px)"
@@ -158,7 +135,8 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                         render={({ follow, onScroll }) => (
                             <LazyLog
                                 enableSearch
-                                text={filteredGraphqlResp + websocketResp}
+                                key={render}
+                                text={filteredGraphqlResp + '\n' + websocketResp}
                                 follow={follow}
                                 onScroll={onScroll}
                                 style={{ background: theme.palette.editorPage.logBackground }}

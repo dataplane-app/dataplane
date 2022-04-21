@@ -467,13 +467,13 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 sx={{ mt: 0.5, position: 'relative', '& .MuiTreeItem-content:hover .showOnHover': { visibility: 'visible' } }}
                 icon={!nodes.children && <Box component={FontAwesomeIcon} icon={faFileAlt} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.fileManagerIcon' }} />}
                 key={nodes.id}
-                nodeId={nodes.id}
+                nodeId={nodes.id || ''}
                 ref={selected === nodes.id ? editingFileRef : null}
                 label={
                     <>
                         <input
                             id={`file_${nodes.id}`}
-                            spellcheck="false"
+                            spellCheck="false"
                             value={tmpFileName && selected === nodes.id ? tmpFileName : tmpFileName === '' && selected === nodes.id ? '' : nodes.name}
                             onChange={(e) => handleEditFileChange(e, nodes)}
                             onKeyPress={(e) => handleEditKeyPress(e, nodes)}

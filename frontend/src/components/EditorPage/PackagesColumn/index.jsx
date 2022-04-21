@@ -5,10 +5,8 @@ import CustomDragHandle from '../../CustomDragHandle';
 import { useSnackbar } from 'notistack';
 import { useGetCodePackages } from '../../../graphql/getCodePackages';
 
-const PackageColumn = forwardRef(({ children, pipeline, ...rest }, ref) => {
+const PackageColumn = forwardRef(({ children, pipeline, packages, setPackages, ...rest }, ref) => {
     const Editor = useGlobalEditorState();
-
-    const [packages, setPackages] = useState('');
 
     const handleEdit = () => {
         const newFolderMock = {

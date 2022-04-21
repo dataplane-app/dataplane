@@ -25,6 +25,7 @@ import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { useSnackbar } from 'notistack';
 import { useGetPipeline } from '../graphql/getPipeline';
 import { useGetNode } from '../graphql/getNode';
+import InstallationLogsColumn from '../components/EditorPage/InstallationLogsColumn';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -52,7 +53,15 @@ const PipelineEditor = () => {
     const history = useHistory();
     const EditorGlobal = useGlobalEditorState();
 
+    let currentTab = 'code';
+    if (EditorGlobal.selectedFile?.id?.value === 'requirements.txt') {
+        currentTab = 'install';
+    }
+
     const [pipeline, setPipeline] = useState({});
+
+    // Packages state for packages component
+    const [packages, setPackages] = useState('');
 
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
@@ -140,9 +149,19 @@ const PipelineEditor = () => {
                             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                             cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}>
                             <FileManagerColumn key="1" pipeline={pipeline} />
-                            {pipeline.nodeTypeDesc === 'python' ? <PackageColumn key="2" pipeline={pipeline} /> : null}
+                            {pipeline.nodeTypeDesc === 'python' ? <PackageColumn key="2" pipeline={pipeline} packages={packages} setPackages={setPackages} /> : null}
                             <EditorColumn key="3" ref={editorRef} pipeline={pipeline} />
-                            <LogsColumn key="4" environmentID={Environment.id.get()} pipelineID={pipeline.pipelineID} workerGroup={pipeline.workerGroup} />
+                            {currentTab === 'code' ? (
+                                <LogsColumn key="4" environmentID={Environment.id.get()} pipelineID={pipeline.pipelineID} workerGroup={pipeline.workerGroup} />
+                            ) : (
+                                <InstallationLogsColumn
+                                    key="4"
+                                    environmentID={Environment.id.get()}
+                                    pipelineID={pipeline.pipelineID}
+                                    workerGroup={pipeline.workerGroup}
+                                    setPackages={setPackages}
+                                />
+                            )}
                         </ResponsiveGridLayout>
                     </Box>
                 </Box>
