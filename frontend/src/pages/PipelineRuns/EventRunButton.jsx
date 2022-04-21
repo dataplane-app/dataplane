@@ -49,8 +49,9 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                     });
                 }
 
+                (async () => {
                 // Get a list of all pipeline runs
-                response = getPipelineRuns({ pipelineID: pipelineId, environmentID: environmentId });
+                response = await getPipelineRuns({ pipelineID: pipelineId, environmentID: environmentId });
 
                 if (response?.length === 0) {
                     setRuns([]);
@@ -62,7 +63,11 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                     setRuns(response);
                     setSelectedRun(response[0]);
                 }
+
+            })()
+            
             };
+
 
             wsconnect.onclose = () => {
                 // Exit if closing the connection was intentional
@@ -78,7 +83,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
             };
 
             wsconnect.onmessage = (e) => {
-                ConsoleLogHelper('msg rcvd', e.data);
+                // ConsoleLogHelper('msg rcvd', e.data);
                 
                 const response = JSON.parse(e.data);
 

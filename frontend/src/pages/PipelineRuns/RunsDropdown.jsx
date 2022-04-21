@@ -153,7 +153,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
     return (
         <Grid item alignItems="center" display="flex" width={520}>
-            {selectedRun && !isNewFlow ? (
+            {runs && ( 
                 <Autocomplete
                     id="run_autocomplete"
                     onChange={(event, newValue) => handleDropdownChange(newValue)}
@@ -165,8 +165,8 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                     getOptionLabel={(a) => formatDateNoZone(a.created_at, MeData.timezone.get()) + ' - ' + a.run_id}
                     renderInput={(params) => <TextField {...params} label="Run" id="run" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />
-            ) : null}
-            {isNewFlow ? (
+            )}
+            {/* {isNewFlow ? (
                 <Autocomplete
                     id="run_autocomplete"
                     onChange={(event, newValue) => handleDropdownChange(newValue)}
@@ -178,7 +178,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                     getOptionLabel={(a) => formatDateNoZone(a.created_at, MeData.timezone.get()) + ' - ' + a.run_id}
                     renderInput={(params) => <TextField {...params} label="Run" id="run" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
                 />
-            ) : null}
+            ) : null} */}
         </Grid>
     );
 }

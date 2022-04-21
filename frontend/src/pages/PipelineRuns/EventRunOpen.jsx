@@ -39,7 +39,7 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
             };
 
             wsconnect.onmessage = (e) => {
-                ConsoleLogHelper('msg rcvd', e.data);
+                // ConsoleLogHelper('msg rcvd', e.data);
                 
                 const response = JSON.parse(e.data);
 

@@ -49,15 +49,15 @@ const getAccessTokenRefreshTime = (token) => {
 
     var half = (token.exp - token.iat) / 1.25;
 
-    ConsoleLogHelper('IAT:', token.iat, ' | Expiry: ', token.exp, ' | Half: ', half, '| Date now: ', Date.now());
+    // ConsoleLogHelper('IAT:', token.iat, ' | Expiry: ', token.exp, ' | Half: ', half, '| Date now: ', Date.now());
 
     // console.log('Half life:', half, token)
 
     if (Date.now() > (token.iat + half) * 1000) {
-        ConsoleLogHelper('Token refreshed');
+        // ConsoleLogHelper('Token refreshed');
         return true;
     } else {
-        ConsoleLogHelper('Token is valid :)');
+        // ConsoleLogHelper('Token is valid :)');
         return false;
     }
 };
@@ -68,7 +68,7 @@ const decodedAccessToken = (accessToken) => {
     let decoded;
     try {
         decoded = decode(accessToken);
-        ConsoleLogHelper('Decoded token:', decoded);
+        // ConsoleLogHelper('Decoded token:', decoded);
         return decoded;
     } catch (ex) {
         ConsoleLogHelper('Decoded token failed:', 'Invalid Access Token, unset state', ex);
@@ -81,36 +81,11 @@ const refreshCountState = createState(0);
 export const UserAuth = ({ children, Env, loginUrl, refreshTokenUrl, logoutUrl, LogincallbackUrl, baseName }) => {
     const Authstate = useHookState(globalAuthState);
 
-    ConsoleLogHelper('Loading state:', Authstate.loadstate.get());
+    // ConsoleLogHelper('Loading state:', Authstate.loadstate.get());
 
     // Time to refresh token?
     // const refresh = useHookState(null)
     const refreshCount = useHookState(refreshCountState);
-
-    // ----- Set a in memory cache for auth tokens -----
-
-    // ----- As the user is active keep checking for half life
-    // const onActive = (e) => {
-    //     ConsoleLogHelper('Called onActive');
-    //     // On activity test if a token is needed?
-    //     if (Authstate.privateRoute.get() === true) {
-    //         let decodedToken = decodedAccessToken(Authstate.authToken.get());
-    //         if (decodedToken === undefined) {
-    //             ConsoleLogHelper('Set Empty for onActivity');
-    //             Authstate.authToken.set('empty');
-    //         } else {
-    //             let x = getAccessTokenRefreshTime(decodedToken);
-    //             // refresh.set(x)
-    //             ConsoleLogHelper('On activity is refresh needed?:', x);
-    //             if (x === true) {
-    //                 ConsoleLogHelper('Refresh count up:', refreshCount.get());
-    //                 refreshCount.set((p) => p + 1);
-    //             }
-    //         }
-    //     }
-    //     // console.log("user is active", e);
-    //     // console.log("time remaining", this.idleTimer.getRemainingTime());
-    // };
 
     // --------- check activity every 5 seconds --------
     const MINUTE_MS = 5000;
@@ -126,9 +101,9 @@ useEffect(() => {
         } else {
             let x = getAccessTokenRefreshTime(decodedToken);
             // refresh.set(x)
-            ConsoleLogHelper('On activity is refresh needed?:', x);
+            // ConsoleLogHelper('On activity is refresh needed?:', x);
             if (x === true) {
-                ConsoleLogHelper('Refresh count up:', refreshCount.get());
+                // ConsoleLogHelper('Refresh count up:', refreshCount.get());
                 refreshCount.set((p) => p + 1);
             }
         }
@@ -143,7 +118,7 @@ useEffect(() => {
 
        
 
-        ConsoleLogHelper('Fire me when token is needed - ID:', refreshCount.get());
+        // ConsoleLogHelper('Fire me when token is needed - ID:', refreshCount.get());
 
         async function fetchToken() {
             Authstate.loadstate.set('loading');
@@ -158,7 +133,7 @@ useEffect(() => {
                     // {withCredentials: true}
                 )
                 .then((resp) => {
-                    ConsoleLogHelper('AccessToken Refreshed', resp.data);
+                    // ConsoleLogHelper('AccessToken Refreshed', resp.data);
                     Authstate.authToken.set(resp.data.access_token);
                     Authstate.loadstate.set('authenticated');
                     return 'OK';
@@ -187,12 +162,6 @@ useEffect(() => {
 
     return (
         <React.Fragment>
-            {/* <IdleTimer
-                element={document}
-                onActive={onActive}
-                debounce={250}
-                timeout={1000} //every 1 seconds
-            /> */}
             <BrowserRouter basename="/webapp">
                 <Switch>
                     <Route path={LogincallbackUrl} exact>
@@ -207,7 +176,7 @@ useEffect(() => {
 
 // This is a wrapper component to set the authState privateRoute flag
 const PrivateRouteChecker = ({ children }) => {
-    ConsoleLogHelper('on private route');
+    // ConsoleLogHelper('on private route');
     let auth = useGlobalAuthState();
     const refreshCount = useHookState(refreshCountState);
 
@@ -216,7 +185,7 @@ const PrivateRouteChecker = ({ children }) => {
 
     // if privateRoute is not yet set set it
     if (auth.privateRoute.get() === false) {
-        ConsoleLogHelper('setting private route now');
+        // ConsoleLogHelper('setting private route now');
         auth.privateRoute.set(true);
         refreshCount.set((v) => v + 1);
         return null;
@@ -224,10 +193,10 @@ const PrivateRouteChecker = ({ children }) => {
 
     // we wait till we get a token
     if (auth.authToken.get() === 'empty') {
-        ConsoleLogHelper('on private route empty token');
+        // ConsoleLogHelper('on private route empty token');
         return null;
     }
-    ConsoleLogHelper('on private route render');
+    // ConsoleLogHelper('on private route render');
 
     return children;
 };
