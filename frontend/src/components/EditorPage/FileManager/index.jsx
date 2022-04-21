@@ -24,7 +24,7 @@ import { useRenameFolder } from '../../../graphql/renameFolder';
 const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
-    const Editor = useGlobalEditorState();
+    const EditorGlobal = useGlobalEditorState();
     const { enqueueSnackbar } = useSnackbar();
 
     // Local state
@@ -63,21 +63,21 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Set parent name and id for upload file names
     useEffect(() => {
-        Editor.parentName.set(data.name.get());
-        Editor.parentID.set(data.id.get());
+        EditorGlobal.parentName.set(data.name.get());
+        EditorGlobal.parentID.set(data.id.get());
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data.id?.get(), data.name?.get()]);
 
     // Check if selected file changed
     useEffect(() => {
-        setSelected(Editor.selectedFile.get()?.id);
+        setSelected(EditorGlobal.selectedFile.get()?.id);
 
         if (!data.children.get()) return;
-        const path = getPath(data.children.attach(Downgraded).get(), Editor.selectedFile.get()?.id);
-        Editor.currentPath.set(path);
+        const path = getPath(data.children.attach(Downgraded).get(), EditorGlobal.selectedFile.get()?.id);
+        EditorGlobal.currentPath.set(path);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [Editor.selectedFile.get()?.id]);
+    }, [EditorGlobal.selectedFile.get()?.id]);
 
     // Check if user clicked outside when adding or editing a new file/folder
     useEffect(() => {
@@ -270,7 +270,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
         }
 
         // updateFilesNode(newFolderMock, `Folder ${newFolderName} created!`);
-        Editor.selectedFile.set(newFolderMock);
+        EditorGlobal.selectedFile.set(newFolderMock);
 
         createFolderNode(newFolderMock);
 
@@ -448,12 +448,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // const checkLastTab = (newTabs) => {
     //     if (newTabs.length === 0) {
-    //         Editor.selectedFile.set(null);
+    //         EditorGlobal.selectedFile.set(null);
     //     } else {
-    //         Editor.selectedFile.set(newTabs[newTabs.length - 1]);
+    //         EditorGlobal.selectedFile.set(newTabs[newTabs.length - 1]);
     //     }
 
-    //     Editor.tabs.set(newTabs);
+    //     EditorGlobal.tabs.set(newTabs);
     // };
 
     // Theme hook
@@ -551,18 +551,18 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             return;
         }
 
-        const prevTabs = Editor.tabs.get();
+        const prevTabs = EditorGlobal.tabs.get();
 
         // Check if file is already open
         if (prevTabs.filter((tab) => tab.id === file.id).length > 0) {
-            Editor.selectedFile.set(file);
+            EditorGlobal.selectedFile.set(file);
             const path = getPath(data.children.attach(Downgraded).get(), file.id);
-            Editor.currentPath.set(path);
+            EditorGlobal.currentPath.set(path);
             return;
         }
 
-        Editor.selectedFile.set(file);
-        Editor.tabs.set((prevTabs) => [...prevTabs, file]);
+        EditorGlobal.selectedFile.set(file);
+        EditorGlobal.tabs.set((prevTabs) => [...prevTabs, file]);
     };
 
     // Graphql hook

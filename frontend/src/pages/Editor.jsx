@@ -41,7 +41,6 @@ export const globalEditorState = createState({
     parentName: null,
     runID: null,
     runState: null,
-    updatePackages: 1,
 });
 
 export const useGlobalEditorState = () => useHookState(globalEditorState);
