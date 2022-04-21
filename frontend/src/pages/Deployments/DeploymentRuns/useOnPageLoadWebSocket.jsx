@@ -5,9 +5,9 @@ import { useGlobalFlowState } from '../../PipelineEdit';
 import { useGlobalDeploymentState } from './GlobalDeploymentState';
 import { useHistory, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { prepareInputForFrontend } from '.';
 import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
 import { useGetSinglepipelineRunAndTasks } from '../../../graphql/getSinglepipelineRunAndTasks';
+import { prepareInputForFrontend } from '../../../utils/PipelinePrepareGraphInput';
 
 var loc = window.location,
     new_uri;

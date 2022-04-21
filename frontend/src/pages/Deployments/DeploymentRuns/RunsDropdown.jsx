@@ -7,11 +7,11 @@ import { usePipelineTasksRun } from '../../../graphql/getPipelineTasksRun';
 import { useGlobalFlowState } from '../../PipelineEdit';
 import { useGlobalDeploymentState } from './GlobalDeploymentState';
 import { useGlobalMeState } from '../../../components/Navbar';
-import { prepareInputForFrontend } from '.';
 import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
 import useOnPageLoadWebSocket, { addDdash } from './useOnPageLoadWebSocket';
 import useOnChangeDropdownWebSocket from './useOnChangeDropdownWebSocket';
 import { formatDateNoZone } from '../../../utils/formatDate';
+import { prepareInputForFrontend } from '../../../utils/PipelinePrepareGraphInput';
 
 export default function RunsDropdown({ environmentID, deployment, runs, setRuns, selectedRun, setSelectedRun }) {
     // Global states

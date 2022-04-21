@@ -7,7 +7,7 @@ import { useRunPipelines } from '../../graphql/runPipelines';
 import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
 
 
-export default function EventRunButton(environmentId, pipelineId, runId, setRuns, setSelectedRun,  Running, setRunning, wsconnect, setWsConnect) {
+export default function EventRunButton(environmentId, pipelineId, runId, setRuns, setSelectedRun,  Running, setRunning, wsconnect) {
     // Global state
     const RunState = useGlobalRunState();
     const FlowState = useGlobalPipelineRun();

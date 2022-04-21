@@ -59,7 +59,13 @@ export default function RunNavBar({ environmentID, pipeline }) {
         RunState.runTrigger.set((t) => t + 1);
     };
 
-    EventRunButton(environmentID, pipeline?.pipelineID, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect, setWsConnect)
+
+    /*
+    On click of run button, this UseEffect state keeps websockets open for run
+    Update drop down menu with the latest run
+    Set the current run for graph to show
+    */
+    EventRunButton(environmentID, pipeline?.pipelineID, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect)
 
     const RunButtonClick = () => {
 

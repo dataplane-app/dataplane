@@ -25,10 +25,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useGlobalAuthState } from '../Auth/UserAuth';
 import { useGetPipelineFlow } from '../graphql/getPipelineFlow';
-import { prepareInputForFrontend } from './PipelineRuns';
 import UpdatePipelineDrawer from '../components/DrawerContent/UpdatePipelineDrawer';
 import { useGetPipeline } from '../graphql/getPipeline';
 import { useGlobalRunState } from './PipelineRuns/GlobalRunState';
+import { prepareInputForFrontend } from '../utils/PipelinePrepareGraphInput';
 
 export const globalFlowState = createState({
     isRunning: false,

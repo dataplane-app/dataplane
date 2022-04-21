@@ -12,6 +12,7 @@ import useOnChangeDropdownWebSocket from './useOnChangeDropdownWebSocket';
 import useOnPageLoadWebSocket from './useOnPageLoadWebSocket';
 import { formatDateNoZone } from '../../utils/formatDate';
 import { useGlobalMeState } from '../../components/Navbar';
+import { GetPipelineFlow } from './PipelineFlowStructure';
 
 
 /*
@@ -29,7 +30,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     // Graphql
     const getPipelineRuns = useGetPipelineRuns();
     // const getPipelineRuns = useGetPipelineRunsHook(environmentID, setRuns, setIsNewFlow, pipeline.updated_at);
-    // const getPipelineFlow = useGetPipelineFlowHook(pipeline.pipelineID);
+    const getPipelineFlow = GetPipelineFlow();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -67,7 +68,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
             setSelectedRun(response[0])
 
             // Get the flow of the latest run or if no flow then get structure
-
+            getPipelineFlow({pipelineId: pipeline.pipelineID, environmentID})
 
 
             // 2. Retrieve the latest run
@@ -132,39 +133,5 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
 
 
-
-// const useGetPipelineFlowHook = () => {
-//     // GraphQL hook
-//     const getPipelineFlow = useGetPipelineFlow();
-
-//     // React router
-//     const history = useHistory();
-
-//     // Global state
-//     const FlowState = useGlobalPipelineRun();
-
-//     // URI parameter
-//     const { pipelineId } = useParams();
-
-//     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-//     // Get members
-//     return async (environmentID) => {
-//         const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
-//         const response = prepareInputForFrontend(rawResponse);
-
-//         if (response.length === 0) {
-//             FlowState.elements.set([]);
-//             history.push(`/pipelines/flow/${pipelineId}`);
-//         } else if (response.r === 'error') {
-//             closeSnackbar();
-//             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });
-//         } else if (response.errors) {
-//             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-//         } else {
-//             FlowState.elements.set(response);
-//         }
-//     };
-// };
 
 
