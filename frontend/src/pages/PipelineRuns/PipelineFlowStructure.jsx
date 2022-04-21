@@ -8,7 +8,8 @@ import { prepareInputForFrontend } from "../../utils/PipelinePrepareGraphInput";
 Get the structure for given pipeline ID and environment ID
 Set the Elements in Flowstate that updates the graph on page
 */
-export const GetPipelineFlow = (pipelineId, environmentID) => {
+export const GetPipelineFlow = () => {
+
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
 
@@ -21,8 +22,11 @@ export const GetPipelineFlow = (pipelineId, environmentID) => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get members
-    return async () => {
-        const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
+    return async (inputs) => {
+
+        console.log("Pipeline ID:", inputs.pipelineId, inputs.environmentID)
+
+        const rawResponse = await getPipelineFlow({ pipelineID: inputs.pipelineId, environmentID: inputs.environmentID });
 
         console.log("Get pipeline structure", rawResponse)
         const response = prepareInputForFrontend(rawResponse);
@@ -31,7 +35,7 @@ export const GetPipelineFlow = (pipelineId, environmentID) => {
             FlowState.elements.set([]);
 
             // If there is no elements then navigate to edit pipelines
-            history.push(`/pipelines/flow/${pipelineId}`);
+            history.push(`/pipelines/flow/${inputs.pipelineId}`);
         } else if (response.r === 'error') {
             closeSnackbar();
             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });

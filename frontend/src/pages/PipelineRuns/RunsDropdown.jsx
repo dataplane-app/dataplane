@@ -46,7 +46,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
             // --------  1. Retrieve the the previous runs:
             const response = await getPipelineRuns({ pipelineID: pipeline.pipelineID, environmentID });
 
-            console.log("Runs response:", response)
+            // console.log("Runs response:", response)
     
             if (response.length === 0) {
                 setRuns([]);
@@ -68,7 +68,8 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
             setSelectedRun(response[0])
 
             // Get the flow of the latest run or if no flow then get structure
-            getPipelineFlow({pipelineId: pipeline.pipelineID, environmentID})
+            console.log("Pipeline ID:", pipeline.pipelineID)
+            const flowstructure = await getPipelineFlow({ pipelineId: pipeline.pipelineID, environmentID});
 
 
             // 2. Retrieve the latest run
