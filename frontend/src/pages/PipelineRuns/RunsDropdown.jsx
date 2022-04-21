@@ -15,7 +15,26 @@ import { useGlobalMeState } from '../../components/Navbar';
 import { GetPipelineFlow } from './PipelineFlowStructure';
 import { GetPipelineRun } from './PipelineRunStructure';
 import { usePipelineTasksColoursRun } from './UpdatePipelineColours';
+import EventRunOpen from './EventRunOpen';
+import { useGlobalAuthState } from '../../Auth/UserAuth';
 
+
+var loc = window.location,
+    new_uri;
+if (loc.protocol === 'https:') {
+    new_uri = 'wss:';
+} else {
+    new_uri = 'ws:';
+}
+new_uri += '//' + loc.host;
+
+if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
+    new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+} else {
+    new_uri = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+}
+
+const websocketEndpoint = new_uri;
 
 /*
 Input:
@@ -23,8 +42,9 @@ runs, setRuns - state set at RunNavBar level but are set inside this component
 */
 export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, selectedRun, setSelectedRun }) {
     // Global states
-    const RunState = useGlobalPipelineRun();
+    // const RunState = useGlobalPipelineRun();
     const MeData = useGlobalMeState();
+    const { authToken } = useGlobalAuthState();
 
     // Local state
     const [isNewFlow, setIsNewFlow] = useState(false);
@@ -36,6 +56,12 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     const getPipelineTasks = usePipelineTasksColoursRun();
 
     const { enqueueSnackbar } = useSnackbar();
+
+    const [Running, setRunning] = useState(false);
+    const [wsconnect, setWsConnect] = useState();
+    const [runId, setRunId] = useState("");
+
+    EventRunOpen(runId, Running, setRunning, wsconnect)
 
     // ------ On page load get the latest run -------- 
     useEffect(() => {
@@ -103,6 +129,15 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
         if (selectedRun!= null){
             // console.log("I am the selected run:", selectedRun)
             if (selectedRun.status == "Running"){
+
+                const authtokenget = authToken.get()
+                const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${selectedRun.run_id}&id=${selectedRun.run_id}&token=${authtokenget}`
+                const ws = new WebSocket(wsurl);
+                setWsConnect(ws)
+                setRunId(selectedRun.run_id)
+                setRunning(true)
+
+                const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, selectedRun.run_id, environmentID, false);
 
             }else{
                 // console.log("change run:", selectedRun.status)
