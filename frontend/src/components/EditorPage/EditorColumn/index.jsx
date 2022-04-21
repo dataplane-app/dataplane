@@ -108,12 +108,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     };
 
     const handleEditorChange = (value) => {
-        if (value !== EditorGlobal.selectedFile.get()?.content) {
-            EditorGlobal.selectedFile.isEditing.set(true);
-            EditorGlobal.selectedFile.diffValue.set(value);
-        } else {
-            EditorGlobal.selectedFile.isEditing.set(false);
-        }
+        EditorGlobal.selectedFile.isEditing.set(true);
+        EditorGlobal.selectedFile.diffValue.set(value);
     };
 
     /*     const renderPath = () => {
