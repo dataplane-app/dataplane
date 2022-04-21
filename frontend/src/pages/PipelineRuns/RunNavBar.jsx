@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 // import { usePipelineTasksRunHook } from './UpdatePipelineColours';
 import { displayTimer, displayTimerMs } from '../../utils/formatDate';
+import { usePipelineTasksColoursRun } from './UpdatePipelineColours';
 
 
 var loc = window.location,
@@ -49,10 +50,9 @@ export default function RunNavBar({ environmentID, pipeline }) {
 
     // GraphQL hooks - not run at this point
     // const getPipelineTasksRun = usePipelineTasksRunHook();
-    // const stopPipelines = useStopPipelinesHook(getPipelineTasksRun);
-
-    // Instantiate websocket for start/stop run - not opening websockets yet
-    // useOnRunWebSocket(environmentID, setRuns, setSelectedRun);
+    
+    const getPipelineTasks = usePipelineTasksColoursRun();
+    const stopPipelines = useStopPipelinesHook(getPipelineTasks);
 
     // Click Run button and start to run the pipeline
     const handleTimerStart = () => {
@@ -96,6 +96,14 @@ export default function RunNavBar({ environmentID, pipeline }) {
 
     }
 
+    const StopButtonClick = () => {
+        FlowState.isRunning.set(false);
+        setRunning(false)
+        // pipelineID, environmentID, runID
+        stopPipelines(pipeline?.pipelineID, environmentID, runId);
+
+    }
+
     // Click the stop button and run the stopPipelines function - with the selected RunID
     const handleTimerStop = () => {
         // stopPipelines(environmentID, RunState.selectedRunID.get());
@@ -129,7 +137,7 @@ export default function RunNavBar({ environmentID, pipeline }) {
             <Box display="flex" alignItems="center">
                 {FlowState.isRunning.get() && !RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get() ? (
                     <Button
-                        onClick={handleTimerStop}
+                        onClick={StopButtonClick}
                         variant="outlined"
                         color="error"
                         sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
@@ -170,20 +178,17 @@ export default function RunNavBar({ environmentID, pipeline }) {
     );
 }
 
-const useStopPipelinesHook = (getPipelineTasksRun) => {
+const useStopPipelinesHook = (getPipelineTasks) => {
     // GraphQL hook
     const stopPipelines = useStopPipelines();
 
     const RunState = useGlobalRunState();
 
-    // URI parameter
-    const { pipelineId } = useParams();
-
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Stop pipeline flow
-    return async (environmentID, runID) => {
-        const response = await stopPipelines({ pipelineID: pipelineId, environmentID, runID, RunType: 'pipeline' });
+    return async (pipelineID, environmentID, runID) => {
+        const response = await stopPipelines({ pipelineID, environmentID, runID, RunType: 'pipeline' });
 
         if (response.r === 'error') {
             closeSnackbar();
@@ -191,10 +196,11 @@ const useStopPipelinesHook = (getPipelineTasksRun) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            RunState.runIDs[response.run_id].merge({
+            RunState.runObject?.merge({
                 runEnd: response.ended_at,
             });
-            getPipelineTasksRun(response.run_id, environmentID);
+            await getPipelineTasks(pipelineID, runID, environmentID, false);
+            // getPipelineTasksRun(response.run_id, environmentID);
         }
     };
 };

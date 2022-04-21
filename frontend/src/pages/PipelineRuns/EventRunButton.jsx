@@ -65,7 +65,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                 }
 
             })()
-            
+
             };
 
 
@@ -89,13 +89,13 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
 
                 // console.log("message:", response)
 
-                ConsoleLogHelper(
-                    '🧲',
-                    FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.data.name ||
-                        FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.type ||
-                        response.MSG,
-                    response.status
-                );
+                // ConsoleLogHelper(
+                //     '🧲',
+                //     FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.data.name ||
+                //         FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.type ||
+                //         response.MSG,
+                //     response.status
+                // );
 
                 // Add only if a node message, not MSG.
                 if (response.node_id) {
