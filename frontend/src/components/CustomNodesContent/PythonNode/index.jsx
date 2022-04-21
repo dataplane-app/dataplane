@@ -28,10 +28,10 @@ const PythonNode = (props) => {
     const [, setIsSelected] = useState(false);
     const [borderColor, setBorderColor] = useState('#c4c4c4');
 
-    let runtype = 'pipeline'
-    if (props.id.substring(0, 2) === 'd-') {
-        runtype = 'deployment'
-    }
+    // let runtype = 'pipeline'
+    // if (props.id.substring(0, 2) === 'd-') {
+    //     runtype = 'deployment'
+    // }
 
     useEffect(() => {
         setIsEditorPage(FlowState.isEditorPage.get());
@@ -51,41 +51,23 @@ const PythonNode = (props) => {
 
     // Set border color on node status change
     let nodeStatus = RunState.runObject?.nodes?.get() && RunState.runObject?.nodes[props.id]?.status?.get();
-    let dNodeStatus =
-        DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.get() && DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status?.get();
+
     useEffect(() => {
 
         // console.log("node status:", nodeStatus)
-        if (runtype === 'pipeline') {
         if (nodeStatus) {
             setBorderColor(getColor(nodeStatus));
-            console.log("node status:", nodeStatus, getColor(nodeStatus))
         } else {
             setBorderColor(getColor());
         }
-    }
+    
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nodeStatus]);
 
-    useEffect(() => {
-
-        if (runtype === 'deployment') {
-        if (dNodeStatus) {
-            setBorderColor(getColor(DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status.get()));
-        } else {
-            setBorderColor(getColor());
-        }
-    }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dNodeStatus]);
-
     const onClick = () => {
-        if (runtype === 'deployment') {
-            DeploymentState.node_id.set(props.id);
-        } else {
+
             RunState.node_id.set(props.id);
-        }
     };
 
     return (
@@ -113,16 +95,6 @@ const PythonNode = (props) => {
                 </Grid>
 
                 <Grid item>
-                    {props.id.substring(0, 2) === 'd-' ? (
-                        <Typography fontSize={8}>
-                            {DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.get() &&
-                                DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.status?.get() === 'Success' &&
-                                displayRunTime(
-                                    DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.end_dt.get(),
-                                    DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.start_dt.get()
-                                )}
-                        </Typography>
-                    ) : (
                         <Typography fontSize={8}>
                             {RunState.runObject?.nodes?.get() &&
                                 RunState.runObject?.nodes[props.id]?.status?.get() === 'Success' &&
@@ -131,7 +103,6 @@ const PythonNode = (props) => {
                                     RunState.runObject?.nodes[props.id]?.start_dt.get()
                                 )}
                         </Typography>
-                    )}
                 </Grid>
 
                 <Box mt={0}>

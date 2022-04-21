@@ -46,22 +46,16 @@ const ScheduleNode = (props) => {
     }, [FlowState.selectedElement.get()]);
 
     // Set border color on node status change
-    let nodeStatus = RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() && RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status?.get();
+    let nodeStatus = RunState.runObject?.nodes?.get() && RunState.runObject?.nodes[props.id].status?.get();
     useEffect(() => {
-        if (!nodeStatus) return;
-        setBorderColor(getColor(RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status.get()));
+        if (nodeStatus) {
+            setBorderColor(getColor(nodeStatus));
+        } else {
+            setBorderColor(getColor());
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nodeStatus]);
-
-    let dNodeStatus =
-        DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.get() && DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status?.get();
-    useEffect(() => {
-        if (!dNodeStatus) return;
-        setBorderColor(getColor(DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status.get()));
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dNodeStatus]);
 
     // Set description
     useEffect(() => {

@@ -44,12 +44,11 @@ const BashNode = (props) => {
     }, [FlowState.selectedElement.get()]);
 
     // Set border color on node status change
-    let nodeStatus = RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() && RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status?.get();
-    let dNodeStatus =
-        DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.get() && DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status?.get();
+    let nodeStatus = RunState.runObject?.nodes?.get() && RunState.runObject?.nodes[props.id].status?.get();
+
     useEffect(() => {
         if (nodeStatus) {
-            setBorderColor(getColor(RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status.get()));
+            setBorderColor(getColor(nodeStatus));
         } else {
             setBorderColor(getColor());
         }
@@ -57,15 +56,7 @@ const BashNode = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nodeStatus]);
 
-    useEffect(() => {
-        if (dNodeStatus) {
-            setBorderColor(getColor(DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status.get()));
-        } else {
-            setBorderColor(getColor());
-        }
 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dNodeStatus]);
     const onClick = () => {
         RunState.node_id.set(props.id);
     };
@@ -95,25 +86,16 @@ const BashNode = (props) => {
                 </Grid>
 
                 <Grid item>
-                    {props.id.substring(0, 2) === 'd-' ? (
+
                         <Typography fontSize={8}>
-                            {DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.get() &&
-                                DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.status?.get() === 'Success' &&
+                            {RunState.runObject?.nodes?.get() &&
+                                RunState.runObject?.nodes[props.id]?.status?.get() === 'Success' &&
                                 displayRunTime(
-                                    DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.end_dt.get(),
-                                    DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.start_dt.get()
+                                    RunState.runObject?.nodes[props.id]?.end_dt.get(),
+                                    RunState.runObject?.nodes[props.id]?.start_dt.get()
                                 )}
                         </Typography>
-                    ) : (
-                        <Typography fontSize={8}>
-                            {RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() &&
-                                RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.status?.get() === 'Success' &&
-                                displayRunTime(
-                                    RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.end_dt.get(),
-                                    RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.start_dt.get()
-                                )}
-                        </Typography>
-                    )}
+
                 </Grid>
 
                 <Box mt={0}>
