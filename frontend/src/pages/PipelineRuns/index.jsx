@@ -68,10 +68,6 @@ const View = () => {
         RunState.set({
             selectedRunID: null,
             runObject: null,
-            runTrigger: 0,
-            tableRunTrigger: 0,
-            onLoadTrigger: 0,
-            onChangeTrigger: 0
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

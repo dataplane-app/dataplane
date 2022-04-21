@@ -4,10 +4,6 @@ import { createState, useState as useHookState } from '@hookstate/core';
 export const globalRunState = createState({
     selectedRunID: null,
     runObject: null,
-    runTrigger: 0,
-    tableRunTrigger: 0,
-    onLoadTrigger: 0,
-    onChangeTrigger: 0
 });
 
 export const useGlobalRunState = () => useHookState(globalRunState);

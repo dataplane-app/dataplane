@@ -10,7 +10,7 @@ import { useGlobalRunState } from './GlobalRunState';
 import EventRunButton from './EventRunButton'
 import { v4 as uuidv4 } from 'uuid';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
-import { usePipelineTasksRunHook } from './UpdateColours';
+// import { usePipelineTasksRunHook } from './UpdatePipelineColours';
 import { displayTimer, displayTimerMs } from '../../utils/formatDate';
 
 
@@ -48,8 +48,8 @@ export default function RunNavBar({ environmentID, pipeline }) {
     const [runId, setRunId] = useState("");
 
     // GraphQL hooks - not run at this point
-    const getPipelineTasksRun = usePipelineTasksRunHook();
-    const stopPipelines = useStopPipelinesHook(getPipelineTasksRun);
+    // const getPipelineTasksRun = usePipelineTasksRunHook();
+    // const stopPipelines = useStopPipelinesHook(getPipelineTasksRun);
 
     // Instantiate websocket for start/stop run - not opening websockets yet
     // useOnRunWebSocket(environmentID, setRuns, setSelectedRun);
@@ -98,7 +98,7 @@ export default function RunNavBar({ environmentID, pipeline }) {
 
     // Click the stop button and run the stopPipelines function - with the selected RunID
     const handleTimerStop = () => {
-        stopPipelines(environmentID, RunState.selectedRunID.get());
+        // stopPipelines(environmentID, RunState.selectedRunID.get());
         FlowState.isRunning.set(false);
     };
 

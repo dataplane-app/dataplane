@@ -14,6 +14,7 @@ import { formatDateNoZone } from '../../utils/formatDate';
 import { useGlobalMeState } from '../../components/Navbar';
 import { GetPipelineFlow } from './PipelineFlowStructure';
 import { GetPipelineRun } from './PipelineRunStructure';
+import { usePipelineTasksColoursRun } from './UpdatePipelineColours';
 
 
 /*
@@ -28,12 +29,15 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     // Local state
     const [isNewFlow, setIsNewFlow] = useState(false);
 
-    // Graphql
+    // Graphql functions
     const getPipelineRuns = useGetPipelineRuns();
     const getPipelineFlow = GetPipelineFlow();
     const getPipelineRun = GetPipelineRun();
+    const getPipelineTasks = usePipelineTasksColoursRun();
 
     const { enqueueSnackbar } = useSnackbar();
+
+    console.log("Run state:", RunState)
 
     useEffect(() => {
         (async () => {
@@ -95,14 +99,18 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     */
     useEffect(() => {
 
+        (async () => {
+            
         if (selectedRun!= null){
             console.log("I am the selected run:", selectedRun)
             if (selectedRun.status == "Running"){
 
             }else{
-                
+                console.log("change run:", selectedRun.status)
+                const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, selectedRun.run_id, environmentID, false);
             }
         }
+    })();
 
     },[selectedRun])
 

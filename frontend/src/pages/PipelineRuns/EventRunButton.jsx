@@ -82,7 +82,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                 
                 const response = JSON.parse(e.data);
 
-                console.log("message:", response)
+                // console.log("message:", response)
 
                 ConsoleLogHelper(
                     '🧲',

@@ -4,22 +4,21 @@ import { usePipelineTasksRun } from "../../graphql/getPipelineTasksRun";
 import { useGlobalRunState } from "./GlobalRunState";
 
 
-export const usePipelineTasksRunHook = () => {
+export const usePipelineTasksColoursRun = () => {
     // GraphQL hook
     const getPipelineTasksRun = usePipelineTasksRun();
-
-    // URI parameter
-    const { pipelineId } = useParams();
-
     const RunState = useGlobalRunState();
-
     const { enqueueSnackbar } = useSnackbar();
 
     // Get tasks
-    return async (runID, environmentID) => {
+    return async (pipelineID, runID, environmentID, running) => {
         if (!runID) return;
 
-        const response = await getPipelineTasksRun({ pipelineID: pipelineId, runID, environmentID });
+        if (running === false){
+
+        const response = await getPipelineTasksRun({ pipelineID: pipelineID, runID, environmentID });
+
+        console.log("tasks response:", response)
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get tasks: " + (response.msg || response.r || response.error), { variant: 'error' });
@@ -35,10 +34,13 @@ export const usePipelineTasksRunHook = () => {
                         start_dt: a.start_dt,
                     })
             );
-            RunState.batch((s) => {
-                s.selectedRunID.set(response[0].run_id);
-                s.runIDs[response[0].run_id].nodes.set(nodes);
-            }, 'tasks-batch');
+
+            RunState.merge({
+                runObject: {
+                    nodes: nodes
+                },
+            })
         }
+    }
     };
 };
