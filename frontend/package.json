@@ -7,12 +7,12 @@
         "@breejs/later": "^4.1.0",
         "@emotion/react": "^11.7.0",
         "@emotion/styled": "^11.6.0",
-        "@hookstate/core": "3.0.13",
         "@fortawesome/fontawesome-svg-core": "^1.2.36",
         "@fortawesome/free-brands-svg-icons": "^5.15.4",
         "@fortawesome/free-regular-svg-icons": "^5.15.4",
         "@fortawesome/free-solid-svg-icons": "^5.15.4",
         "@fortawesome/react-fontawesome": "^0.1.16",
+        "@hookstate/core": "3.0.13",
         "@monaco-editor/react": "^4.3.1",
         "@mui/lab": "^5.0.0-alpha.71",
         "@mui/material": "^5.2.3",
@@ -48,15 +48,16 @@
         "react-router-dom": "5.2.0",
         "react-scripts": "5.0.0",
         "react-table": "^7.7.0",
+        "regex-parser": "^2.2.11",
         "rrule": "^2.6.8",
         "uuid": "^8.3.2",
-        "web-vitals": "^1.0.1",
-        "regex-parser": "^2.2.11"
+        "web-vitals": "^1.0.1"
     },
     "scripts": {
         "start": "env-cmd -f ./src/enviroment/env.development react-scripts start --watch-poll",
         "build": "CI=false BUILD_PATH=../app/mainapp/frontbuild env-cmd -f ./src/enviroment/env.build react-scripts build",
         "dockerbuild": "env-cmd -f ./src/enviroment/env.build react-scripts build",
+        "cypress": "cypress open",
         "test": "react-scripts test",
         "eject": "react-scripts eject"
     },
@@ -80,6 +81,7 @@
     },
     "devDependencies": {
         "autoprefixer": "^9",
+        "cypress": "^9.5.4",
         "prettier": "2.5.1"
     }
 }
