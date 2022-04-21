@@ -63,6 +63,8 @@ export default function useWebSocketLog(environmentId, run_id, setKeys) {
                 setSocketResponse(text);
                 if (resp.log === 'Fail' || resp.log === 'Success') {
                     EditorGlobal.runState.set(resp.log);
+                    reconnectOnClose.current = false;
+                    ws.current.close();
                 }
             };
         }
@@ -72,6 +74,7 @@ export default function useWebSocketLog(environmentId, run_id, setKeys) {
         return () => {
             reconnectOnClose.current = false;
             ws.current.close();
+            ConsoleLogHelper('ws closed');
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
