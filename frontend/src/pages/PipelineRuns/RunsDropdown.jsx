@@ -1,15 +1,7 @@
 import { Autocomplete, Grid, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
-import { useHistory, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
-import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
-import { useGlobalRunState } from './GlobalRunState';
-import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
-import { prepareInputForFrontend } from '.';
-import useOnChangeDropdownWebSocket from './useOnChangeDropdownWebSocket';
-import useOnPageLoadWebSocket from './useOnPageLoadWebSocket';
 import { formatDateNoZone } from '../../utils/formatDate';
 import { useGlobalMeState } from '../../components/Navbar';
 import { GetPipelineFlow } from './PipelineFlowStructure';

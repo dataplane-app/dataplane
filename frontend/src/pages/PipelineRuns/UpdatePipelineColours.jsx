@@ -1,5 +1,4 @@
 import { useSnackbar } from "notistack";
-import { useParams } from "react-router-dom";
 import { usePipelineTasksRun } from "../../graphql/getPipelineTasksRun";
 import { useGlobalRunState } from "./GlobalRunState";
 

@@ -13,7 +13,6 @@ export const GetPipelineRun = () => {
 
     return async (pipelineID, runID, environmentID) => {
 
-            console.log("run vars:", pipelineID, runID, environmentID)
                 // Get single pipelines run and statuses
                 let [singleRunResponse, tasksResponse] = await getPipelineRun({
                     pipelineID: pipelineID,
@@ -30,12 +29,7 @@ export const GetPipelineRun = () => {
                 } else {
                     // setSelectedRun(singleRunResponse);
                     FlowState.elements.set(singleRunResponse.run_json);
-                    // RunState.runIDs.merge({
-                    //     [singleRunResponse.run_id]: {
-                    //         runStart: singleRunResponse.created_at,
-                    //         runEnd: singleRunResponse.ended_at,
-                    //     },
-                    // });
+ 
                 }
             }
             };
