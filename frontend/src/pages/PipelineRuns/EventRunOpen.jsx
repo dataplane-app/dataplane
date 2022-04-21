@@ -22,6 +22,7 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
 
             // 1. Set the run state as running
             FlowState.isRunning.set(true);
+            RunState.selectedRunID.set(runId)
 
             console.log("Open trigger")
 
@@ -114,7 +115,7 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
         }
 
 
-        console.log("Run in function:", Running)
+        // console.log("Run in function:", Running)
         if (Running === true){
         connect();
         

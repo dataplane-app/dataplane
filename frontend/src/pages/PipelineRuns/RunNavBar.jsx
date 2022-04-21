@@ -99,12 +99,19 @@ export default function RunNavBar({ environmentID, pipeline }) {
         FlowState.isRunning.set(false);
         setRunning(false)
         // pipelineID, environmentID, runID
-        stopPipelines(pipeline?.pipelineID, environmentID, runId);
+        stopPipelines(pipeline?.pipelineID, environmentID, RunState.selectedRunID.get());
 
     }
 
+    
+
+    const runstart = RunState.runObject?.runStart?.get()
+    // console.log(runstart)
+
     // Updates timer every second
     useEffect(() => {
+
+        // console.log("Running: ", FlowState.isRunning.get(), RunState.runObject?.get())
         let secTimer;
         if (FlowState.isRunning.get()) {
             secTimer = setInterval(() => {
@@ -123,7 +130,7 @@ export default function RunNavBar({ environmentID, pipeline }) {
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isRunning.get()]);
+    }, [runstart]);
 
     return (
         <Grid item>
@@ -151,17 +158,12 @@ export default function RunNavBar({ environmentID, pipeline }) {
 
                 {!RunState.runObject?.runEnd?.get() ? (
                     // If looking at an active run, show live timer
-                    FlowState.isRunning.get() ? (
                         <Typography variant="h3" ml={2}>
                             {elapsed ? elapsed : FlowState.isRunning.get() ? '' : '00:00:00'}
                         </Typography>
-                    ) : (
-                        // If looking at a previous run during an active run
-                        <Typography variant="h3" ml={2}>
-                            {displayTimerMs(RunState.runObject?.runStart?.get(), RunState.runObject?.runEnd?.get())}
-                        </Typography>
-                    )
+
                 ) : (
+                    
                     // If there is no active run.
                     <Typography variant="h3" ml={2}>
                         {displayTimerMs(RunState.runObject?.runStart?.get(), RunState.runObject?.runEnd?.get())}

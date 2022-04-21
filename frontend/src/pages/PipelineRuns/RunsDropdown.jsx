@@ -85,6 +85,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                 response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
             } else {
                 setRuns(response);
+
                 // return [response[0]?.updated_at, response[0].run_id];
             }
 
@@ -131,12 +132,22 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     
                     const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, response[0].run_id, environmentID, false);
 
+                    // Timer set start date on running
+                    RunState.runObject?.runStart.set(response[0].created_at);
+                    RunState.runObject?.runEnd.set(null);
+
                     // console.log("open", pipeline.pipelineID, response[0].run_id, environmentID, wsconnect)
     
                 }else{
                     // console.log("change run:", selectedRun.status)
                     const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, response[0].run_id, environmentID, false);
                     FlowState.isRunning.set(false);
+                    // console.log("end date:", response[0])
+
+                    // Timer set start and end date
+                    RunState.runObject?.runStart.set(response[0].created_at);
+                    RunState.runObject?.runEnd.set(response[0].ended_at);
+
                 }
             }
 
@@ -179,9 +190,17 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
                 const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, selectedRun.run_id, environmentID, false);
 
+                // Timer set start on run
+                RunState.runObject?.runStart.set(responseSingle.created_at);
+                RunState.runObject?.runEnd.set(null);
+
             }else{
                 // console.log("change run:", selectedRun.status)
                 const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, selectedRun.run_id, environmentID, false);
+
+                // Timer set start and end date
+                RunState.runObject?.runStart.set(responseSingle.created_at);
+                RunState.runObject?.runEnd.set(responseSingle.ended_at);
             }
         }
     })();

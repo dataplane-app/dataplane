@@ -24,19 +24,20 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
 
     return useEffect(() => {
 
-        console.log("Test: ", FlowState.isRunning.get(), Running)
+        // console.log("Test: ", FlowState.isRunning.get(), Running)
 
         function connect() {
 
             // 1. Set the run state as running
             FlowState.isRunning.set(true);
+            RunState.selectedRunID.set(runId)
 
             // 3. On websocket open - trigger run
-            wsconnect.onopen = () => {
+            wsconnect.onopen = async () => {
                 ConsoleLogHelper('ws opened');
 
                 // Run pipeline
-                let response = runPipelines({
+                let response = await runPipelines({
                     pipelineID: pipelineId,
                     environmentID: environmentId,
                     RunType: 'pipeline',
@@ -47,9 +48,12 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                 } else if (response.errors) {
                     response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
                 } else {
+
                     RunState.runObject.merge({
                         runStart: response.created_at,
+                        runEnd: null,
                     });
+
                 }
 
                 (async () => {
