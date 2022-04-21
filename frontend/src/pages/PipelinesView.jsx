@@ -7,7 +7,7 @@ import AddPipelineDrawer from '../components/DrawerContent/AddPipelineDrawer';
 import { useGetPipelines } from '../graphql/getPipelines';
 import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
-import { useGlobalFlowState } from './Flow';
+import { useGlobalFlowState } from './PipelineEdit';
 import { useGlobalRunState } from './PipelineRuns/GlobalRunState';
 
 const Pipelines = () => {

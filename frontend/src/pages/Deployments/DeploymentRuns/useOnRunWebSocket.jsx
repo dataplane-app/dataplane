@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import ConsoleLogHelper from '../../../Helper/logger';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
-import { useGlobalFlowState } from '../../Flow';
+import { useGlobalFlowState } from '../../PipelineEdit';
 import { useGlobalDeploymentState } from './GlobalDeploymentState';
 import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';

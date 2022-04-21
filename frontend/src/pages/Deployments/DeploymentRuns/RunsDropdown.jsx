@@ -4,14 +4,14 @@ import { useGetDeploymentRuns } from '../../../graphql/getDeploymentRuns';
 import { useHistory, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { usePipelineTasksRun } from '../../../graphql/getPipelineTasksRun';
-import { useGlobalFlowState } from '../../Flow';
+import { useGlobalFlowState } from '../../PipelineEdit';
 import { useGlobalDeploymentState } from './GlobalDeploymentState';
 import { useGlobalMeState } from '../../../components/Navbar';
-import { prepareInputForFrontend } from '.';
 import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
 import useOnPageLoadWebSocket, { addDdash } from './useOnPageLoadWebSocket';
 import useOnChangeDropdownWebSocket from './useOnChangeDropdownWebSocket';
 import { formatDateNoZone } from '../../../utils/formatDate';
+import { prepareInputForFrontend } from '../../../utils/PipelinePrepareGraphInput';
 
 export default function RunsDropdown({ environmentID, deployment, runs, setRuns, selectedRun, setSelectedRun }) {
     // Global states
@@ -169,18 +169,3 @@ const useGetPipelineFlowHook = () => {
     };
 };
 
-export function displayTimerMs(end, start) {
-    if (!end || !start) return null;
-
-    var ticks = (new Date(start) - new Date(end)) / 1000;
-    var hh = Math.floor(ticks / 3600);
-    var mm = Math.floor((ticks % 3600) / 60);
-    var ss = (ticks % 60).toFixed(3);
-
-    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(Math.floor(ss), 2) + '.' + ss.split('.')[1];
-}
-
-function pad(n, width) {
-    const num = n + '';
-    return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
-}

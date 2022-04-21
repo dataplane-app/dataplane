@@ -1,5 +1,5 @@
 import { MenuItem } from '@mui/material';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 
 const ApiTriggerNodeItem = (props) => {
     const FlowState = useGlobalFlowState();

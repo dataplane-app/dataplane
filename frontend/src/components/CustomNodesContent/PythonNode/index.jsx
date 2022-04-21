@@ -4,7 +4,7 @@ import { Grid, Tooltip, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import { useGlobalDeploymentState } from '../../../pages/Deployments/DeploymentRuns/GlobalDeploymentState';
 import { customSourceHandle, customSourceHandleDragging, customTargetHandle } from '../../../utils/handleStyles';
@@ -12,6 +12,8 @@ import ProcessTypeEditorModeItem from '../../MoreInfoContent/ProcessTypeEditorMo
 import ProcessTypeNodeItem from '../../MoreInfoContent/ProcessTypeNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
 import { getColor } from '../utils';
+import { displayRunTime } from '../../../utils/formatDate';
+
 
 const PythonNode = (props) => {
     // Theme hook
@@ -25,6 +27,11 @@ const PythonNode = (props) => {
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
     const [borderColor, setBorderColor] = useState('#c4c4c4');
+
+    // let runtype = 'pipeline'
+    // if (props.id.substring(0, 2) === 'd-') {
+    //     runtype = 'deployment'
+    // }
 
     useEffect(() => {
         setIsEditorPage(FlowState.isEditorPage.get());
@@ -43,35 +50,24 @@ const PythonNode = (props) => {
     }, [FlowState.selectedElement.get()]);
 
     // Set border color on node status change
-    let nodeStatus = RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() && RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status?.get();
-    let dNodeStatus =
-        DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.get() && DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status?.get();
+    let nodeStatus = RunState.runObject?.nodes?.get() && RunState.runObject?.nodes[props.id]?.status?.get();
+
     useEffect(() => {
+
+        // console.log("node status:", nodeStatus)
         if (nodeStatus) {
-            setBorderColor(getColor(RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status.get()));
+            setBorderColor(getColor(nodeStatus));
         } else {
             setBorderColor(getColor());
         }
+    
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nodeStatus]);
 
-    useEffect(() => {
-        if (dNodeStatus) {
-            setBorderColor(getColor(DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status.get()));
-        } else {
-            setBorderColor(getColor());
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dNodeStatus]);
-
     const onClick = () => {
-        if (props.id.substring(0, 2) === 'd-') {
-            DeploymentState.node_id.set(props.id);
-        } else {
+
             RunState.node_id.set(props.id);
-        }
     };
 
     return (
@@ -99,25 +95,14 @@ const PythonNode = (props) => {
                 </Grid>
 
                 <Grid item>
-                    {props.id.substring(0, 2) === 'd-' ? (
                         <Typography fontSize={8}>
-                            {DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.get() &&
-                                DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.status?.get() === 'Success' &&
-                                displayTimer(
-                                    DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.end_dt.get(),
-                                    DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes[props.id]?.start_dt.get()
+                            {RunState.runObject?.nodes?.get() &&
+                                RunState.runObject?.nodes[props.id]?.status?.get() === 'Success' &&
+                                displayRunTime(
+                                    RunState.runObject?.nodes[props.id]?.end_dt.get(),
+                                    RunState.runObject?.nodes[props.id]?.start_dt.get()
                                 )}
                         </Typography>
-                    ) : (
-                        <Typography fontSize={8}>
-                            {RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() &&
-                                RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.status?.get() === 'Success' &&
-                                displayTimer(
-                                    RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.end_dt.get(),
-                                    RunState.runIDs[RunState.selectedRunID.get()]?.nodes[props.id]?.start_dt.get()
-                                )}
-                        </Typography>
-                    )}
                 </Grid>
 
                 <Box mt={0}>
@@ -131,20 +116,3 @@ const PythonNode = (props) => {
 };
 
 export default PythonNode;
-
-// Utility function
-function displayTimer(end, start) {
-    if (!end || !start) return null;
-    var ticks = Math.floor((new Date(end) - new Date(start)) / 1000);
-    var hh = Math.floor(ticks / 3600);
-    var mm = Math.floor((ticks % 3600) / 60);
-    var ss = ticks % 60;
-    var ms = (new Date(end) - new Date(start)) % 1000;
-
-    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(ss, 2) + '.' + pad(ms, 3);
-}
-
-function pad(n, width) {
-    const num = n + '';
-    return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
-}

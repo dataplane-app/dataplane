@@ -1,6 +1,6 @@
 import { MenuItem } from '@mui/material';
 import { useHistory, useParams } from 'react-router-dom';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 
 const ProcessTypeNodeItem = (props) => {
     const history = useHistory();
@@ -26,9 +26,6 @@ const ProcessTypeNodeItem = (props) => {
         <>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleCodeClick}>
                 Code
-            </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
-                Run
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleOpenLog}>
                 Logs

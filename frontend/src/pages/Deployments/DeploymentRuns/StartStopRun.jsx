@@ -7,7 +7,7 @@ import StatusChips from './StatusChips';
 import RunsDropdown, { usePipelineTasksRunHook } from './RunsDropdown';
 import { useGlobalDeploymentState } from './GlobalDeploymentState';
 import useOnRunWebSocket from './useOnRunWebSocket';
-import { displayTimerMs } from '../../PipelineRuns/RunsDropdown';
+import { displayTimerMs, displayTimer } from '../../../utils/formatDate';
 
 export default function StartStopRun({ environmentID, deployment }) {
     // Global state
@@ -140,22 +140,3 @@ const useStopPipelinesHook = (getPipelineTasksRun) => {
         }
     };
 };
-
-// Utility function
-export function displayTimer(startDate, endDate = new Date()) {
-    if (typeof endDate === 'string') {
-        endDate = new Date(endDate);
-    }
-    if (!startDate) return '';
-    var ticks = Math.floor((endDate - new Date(startDate)) / 1000);
-    var hh = Math.floor(ticks / 3600);
-    var mm = Math.floor((ticks % 3600) / 60);
-    var ss = ticks % 60;
-
-    return pad(hh, 2) + ':' + pad(mm, 2) + ':' + pad(ss, 2);
-}
-
-function pad(n, width) {
-    const num = n + '';
-    return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
-}

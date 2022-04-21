@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTheme } from '@emotion/react';
 import { getBezierPath, getEdgeCenter, getMarkerEnd } from 'react-flow-renderer';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 
 import './style.css';
 

@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useGlobalFlowState } from '../../../../pages/Flow';
+import { useGlobalFlowState } from '../../../../pages/PipelineEdit';
 
 const AddCommandDrawer = ({ handleClose, setElements, refreshData }) => {
     // Local state

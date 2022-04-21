@@ -2,7 +2,7 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Tab, Tabs, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { IOSSwitch } from './IOSSwitch';
 import { CronTab } from './CronTab';
 import { CronSecondsTab } from './CronSecondsTab';

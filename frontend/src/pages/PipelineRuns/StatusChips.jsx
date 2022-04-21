@@ -1,20 +1,20 @@
 import { Grid } from '@mui/material';
 import CustomChip from '../../components/CustomChip';
-import { useGlobalFlowState } from '../Flow';
+import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
 import { useGlobalRunState } from './GlobalRunState';
 
 export default function StatusChips() {
     // Global state
     const RunState = useGlobalRunState();
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
 
     return (
         <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }} ml={3} mr={1}>
             <CustomChip amount={Object.values(FlowState.elements?.get()).filter((a) => a.type !== 'custom').length || '0'} label="Steps" margin={2} customColor="orange" />
             <CustomChip
                 amount={
-                    (RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() &&
-                        Object?.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes.get())?.filter((a) => a?.status === 'Queue').length) ||
+                    (RunState.runObject?.nodes?.get() &&
+                        Object?.values(RunState.runObject?.nodes.get())?.filter((a) => a?.status === 'Queue').length) ||
                     '0'
                 }
                 label="Queue"
@@ -23,8 +23,8 @@ export default function StatusChips() {
             />
             <CustomChip
                 amount={
-                    (RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() &&
-                        Object?.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes.get())?.filter((a) => a?.status === 'Run').length) ||
+                    (RunState.runObject?.nodes?.get() &&
+                        Object?.values(RunState.runObject?.nodes.get())?.filter((a) => a?.status === 'Run').length) ||
                     '0'
                 }
                 label="Running"
@@ -33,8 +33,8 @@ export default function StatusChips() {
             />
             <CustomChip
                 amount={
-                    (RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() &&
-                        Object?.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes.get())?.filter((a) => a?.status === 'Success').length) ||
+                    (RunState.runObject?.nodes?.get() &&
+                        Object?.values(RunState.runObject?.nodes.get())?.filter((a) => a?.status === 'Success').length) ||
                     '0'
                 }
                 label="Succeeded"
@@ -43,8 +43,8 @@ export default function StatusChips() {
             />
             <CustomChip
                 amount={
-                    (RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() &&
-                        Object?.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes.get())?.filter((a) => a?.status === 'Fail').length) ||
+                    (RunState.runObject?.nodes?.get() &&
+                        Object?.values(RunState.runObject?.nodes.get())?.filter((a) => a?.status === 'Fail').length) ||
                     '0'
                 }
                 label="Failed"

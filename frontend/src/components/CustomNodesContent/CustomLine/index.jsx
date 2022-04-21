@@ -1,7 +1,7 @@
 import { useTheme } from '@emotion/react';
 import React from 'react';
 import { getBezierPath } from 'react-flow-renderer';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 
 const CustomLine = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, data, arrowHeadType, markerEndId }) => {
     const theme = useTheme();

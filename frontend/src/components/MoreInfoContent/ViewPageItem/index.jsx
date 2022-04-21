@@ -1,7 +1,7 @@
 import { MenuItem } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { useTurnOnOffPipelineHook } from '../../DrawerContent/TurnOffPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 
