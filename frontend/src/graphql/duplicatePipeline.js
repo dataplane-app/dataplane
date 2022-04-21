@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation duplicatePipeline($environmentID: String!, $pipelineID: String!) {
-        duplicatePipeline(environmentID: $environmentID, pipelineID: $pipelineID)
+    mutation duplicatePipeline($name: String!, $environmentID: String!, $pipelineID: String!, $description: String!, $workerGroup: String!) {
+        duplicatePipeline(name: $name, environmentID: $environmentID, pipelineID: $pipelineID, description: $description, workerGroup: $workerGroup)
     }
 `;
 

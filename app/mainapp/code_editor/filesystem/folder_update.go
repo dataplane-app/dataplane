@@ -60,7 +60,9 @@ func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFo
 		if err != nil {
 			log.Println("Rename pipeline dir err:", err)
 		}
-		log.Println("Directory change: ", updateOLDDirectory, "->", updateNewDirectory)
+		if config.Debug == "true" {
+			log.Println("Directory change: ", updateOLDDirectory, "->", updateNewDirectory)
+		}
 	}
 
 	return Newinput, updateOLDDirectory, updateNewDirectory

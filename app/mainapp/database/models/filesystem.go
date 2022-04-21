@@ -80,3 +80,15 @@ type FolderDeleted struct {
 	UpdatedAt     *time.Time `json:"updated_at"`
 	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
 }
+
+type FolderDuplicate struct {
+	FolderID string `json:"folder_id"`
+	OldDir   string `json:"old_dir"`
+	NewDir   string `json:"new_dir"`
+}
+
+type FileDuplicate struct {
+	FileID string `json:"file_id"`
+	OldDir string `json:"old_dir"`
+	NewDir string `json:"new_dir"`
+}
