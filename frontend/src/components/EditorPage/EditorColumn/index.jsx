@@ -316,6 +316,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                 <Button
                                     onClick={uploadFileNode}
                                     variant="text"
+                                    disabled={!EditorGlobal.selectedFile.diffValue.get()}
                                     sx={{ height: '32px', color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null, fontSize: '0.75rem', minWidth: '60px' }}>
                                     Save
                                 </Button>
