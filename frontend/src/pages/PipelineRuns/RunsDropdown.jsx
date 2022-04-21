@@ -13,6 +13,7 @@ import useOnPageLoadWebSocket from './useOnPageLoadWebSocket';
 import { formatDateNoZone } from '../../utils/formatDate';
 import { useGlobalMeState } from '../../components/Navbar';
 import { GetPipelineFlow } from './PipelineFlowStructure';
+import { GetPipelineRun } from './PipelineRunStructure';
 
 
 /*
@@ -29,16 +30,10 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
     // Graphql
     const getPipelineRuns = useGetPipelineRuns();
-    // const getPipelineRuns = useGetPipelineRunsHook(environmentID, setRuns, setIsNewFlow, pipeline.updated_at);
     const getPipelineFlow = GetPipelineFlow();
+    const getPipelineRun = GetPipelineRun();
 
     const { enqueueSnackbar } = useSnackbar();
-
-    // Instantiate websocket for on page load
-    // useOnPageLoadWebSocket(environmentID, setSelectedRun, setRuns, setIsNewFlow, pipeline.updated_at);
-
-    // Instantiate websocket for dropdown change
-    // useOnChangeDropdownWebSocket(environmentID, setSelectedRun);
 
     useEffect(() => {
         (async () => {
@@ -62,17 +57,22 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
             }
 
             let lastRunTime = response[0]?.updated_at
-            let runID = response[0].run_id
+            let runID = response[0]?.run_id
 
             // On page load select the latest response
-            setSelectedRun(response[0])
+            // console.log("Run ID:", runID)
+
+            // If there is no runID then show the structure without RunID
+            if (runID == null){
 
             // Get the flow of the latest run or if no flow then get structure
-            console.log("Pipeline ID:", pipeline.pipelineID)
+            // console.log("Pipeline ID:", pipeline.pipelineID)
             const flowstructure = await getPipelineFlow({ pipelineId: pipeline.pipelineID, environmentID});
-
-
-            // 2. Retrieve the latest run
+            }else{
+                // If there is a run then get the run structure 
+                setSelectedRun(response[0])
+                const runstructure = await getPipelineRun(pipeline.pipelineID, runID, environmentID);
+            }
 
             // If the pipeline has a new flow, get only the flow and return
             const isNewFlow = pipeline.updated_at > lastRunTime;
@@ -82,22 +82,39 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                 return;
             }
 
-            RunState.merge({
-                selectedRunID: runID,
-                onLoadTrigger: 1,
-            });
         })();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    /* 
+    On the update of the run, consider if running or not 
+    ----------- 2. Is the pipeline running or not?
+        if yes --- websockets + graphql tasks update
+        if no ---- graphql tasks update
+    */
+    useEffect(() => {
+
+        if (selectedRun!= null){
+            console.log("I am the selected run:", selectedRun)
+            if (selectedRun.status == "Running"){
+
+            }else{
+                
+            }
+        }
+
+    },[selectedRun])
+
     // Update elements on run dropdown change
     const handleDropdownChange = (run) => {
+
+        // Update the selected run state
         setSelectedRun(run);
-        RunState.merge((r) => ({
-            selectedRunID: run.run_id,
-            onChangeTrigger: r.onChangeTrigger + 1,
-        }));
+
+        // Retrieve the run structure
+        const runstructure = getPipelineRun(pipeline.pipelineID, run.run_id, environmentID);
+
     };
 
     return (

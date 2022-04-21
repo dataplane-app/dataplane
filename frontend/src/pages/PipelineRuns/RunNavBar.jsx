@@ -72,7 +72,7 @@ export default function RunNavBar({ environmentID, pipeline }) {
         // 1. Generate run ID
         const runId = uuidv4();
 
-        console.log("run clicked")
+        // console.log("run clicked")
 
         // 2. Open websockets
         /* 

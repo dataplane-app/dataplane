@@ -24,11 +24,11 @@ export const GetPipelineFlow = () => {
     // Get members
     return async (inputs) => {
 
-        console.log("Pipeline ID:", inputs.pipelineId, inputs.environmentID)
+        // console.log("Pipeline ID:", inputs.pipelineId, inputs.environmentID)
 
         const rawResponse = await getPipelineFlow({ pipelineID: inputs.pipelineId, environmentID: inputs.environmentID });
 
-        console.log("Get pipeline structure", rawResponse)
+        // console.log("Get pipeline structure", rawResponse)
         const response = prepareInputForFrontend(rawResponse);
 
         if (response.length === 0) {
