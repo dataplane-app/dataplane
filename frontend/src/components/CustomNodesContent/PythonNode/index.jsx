@@ -4,7 +4,7 @@ import { Grid, Tooltip, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
-import { useGlobalFlowState } from '../../../pages/PipelineEdit';
+
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import { useGlobalDeploymentState } from '../../../pages/Deployments/DeploymentRuns/GlobalDeploymentState';
 import { customSourceHandle, customSourceHandleDragging, customTargetHandle } from '../../../utils/handleStyles';
@@ -13,6 +13,7 @@ import ProcessTypeNodeItem from '../../MoreInfoContent/ProcessTypeNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
 import { getColor } from '../utils';
 import { displayRunTime } from '../../../utils/formatDate';
+import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
 
 
 const PythonNode = (props) => {
@@ -20,7 +21,7 @@ const PythonNode = (props) => {
     const theme = useTheme();
 
     // Global state
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
     const RunState = useGlobalRunState();
     const DeploymentState = useGlobalDeploymentState();
 
