@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -18,6 +18,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -148,6 +149,12 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	}
 
 	// Copy pipeline, nodes and edges
+	var jsonstring string
+	// json.Unmarshal([]byte(pipeline.Json), &jsonstring)
+
+	jsonstring = string(pipeline.Json)
+
+	jsonstring = strings.ReplaceAll(jsonstring, pipelineID, "d-"+pipeline.PipelineID)
 
 	// Pipeline
 	createPipeline := models.DeployPipelines{
@@ -162,8 +169,8 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		Active:            pipeline.Active,
 		WorkerGroup:       workerGroup,
 		Meta:              pipeline.Meta,
-		Json:              pipeline.Json,
-		UpdateLock:        true,
+		// Json:              pipeline.Json,
+		UpdateLock: true,
 	}
 
 	// Recalculate edge dependencies and destinations with new d- ID
@@ -187,6 +194,9 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		// map out dependencies and destinations
 		destinations["d-"+edge.From] = append(destinations["d-"+edge.From], "d-"+edge.To)
 		dependencies["d-"+edge.To] = append(dependencies["d-"+edge.To], "d-"+edge.From)
+
+		// replace in json pipeline run
+		jsonstring = strings.ReplaceAll(jsonstring, edge.EdgeID, "d-"+edge.EdgeID)
 	}
 
 	// Map
@@ -253,6 +263,9 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 			WorkerGroup: workergroupassign,
 			Active:      node.Active,
 		})
+
+		// Replace all nodes
+		jsonstring = strings.ReplaceAll(jsonstring, node.NodeID, "d-"+node.NodeID)
 	}
 
 	// folders
@@ -287,6 +300,15 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 			Active:        n.Active,
 		})
 	}
+
+	// Replace references to old pipeline
+	var res interface{}
+	json.Unmarshal([]byte(jsonstring), &res)
+	pipelineJSON, err := json.Marshal(res)
+	if err != nil {
+		logging.PrintSecretsRedact(err)
+	}
+	createPipeline.Json = pipelineJSON
 
 	// Pipeline create
 	err = database.DBConn.Create(&createPipeline).Error

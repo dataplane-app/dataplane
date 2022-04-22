@@ -4,15 +4,15 @@ import CustomChip from '../../components/CustomChip';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
-import { useGlobalFlowState } from '../PipelineEdit';
 import { useGetDeployments } from '../../graphql/getDeployments';
 import DeploymentsTable from './DeploymentsTable';
 import { useGlobalDeploymentState } from './DeploymentRuns/GlobalDeploymentState';
+import { useGlobalPipelineRun } from '../PipelineRuns/GlobalPipelineRunUIState';
 
 const Deployments = () => {
     // Global states
     const Environment = useGlobalEnvironmentState();
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
     const DeploymentState = useGlobalDeploymentState();
 
     // Local state

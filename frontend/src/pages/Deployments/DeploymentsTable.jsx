@@ -7,7 +7,6 @@ import { faClock } from '@fortawesome/free-regular-svg-icons';
 import DeploymentsTableItem from './DeploymentsTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenu from '../../components/MoreInfoMenuPipeline';
-import { useGlobalFlowState } from '../PipelineEdit';
 import CustomChip from '../../components/CustomChip';
 import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
@@ -15,12 +14,13 @@ import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../com
 import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
 import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
 import { useGlobalDeploymentState } from './DeploymentRuns/GlobalDeploymentState';
+import { useGlobalPipelineRun } from '../PipelineRuns/GlobalPipelineRunUIState';
 
 const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDeployments }) => {
     // React router
     const history = useHistory();
 
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
     const DeploymentState = useGlobalDeploymentState();
 
     const Environments = useGlobalEnvironmentsState();

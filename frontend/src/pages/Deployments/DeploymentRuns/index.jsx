@@ -11,25 +11,46 @@ import PublishPipelineDrawer from '../../../components/DrawerContent/PublishPipe
 import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
 import MenuItem from './MenuItem';
 import MoreInfoMenu from '../../../components/MoreInfoMenu';
-import { edgeTypes, nodeTypes, useGlobalFlowState } from '../../PipelineEdit';
+
 import TurnOffPipelineDrawer from '../../../components/DrawerContent/TurnOffPipelineDrawer';
 import CustomChip from '../../../components/CustomChip';
 import { Analytics } from './Analytics';
 import { Downgraded } from '@hookstate/core';
 import { useGetActiveDeployment } from '../../../graphql/getActiveDeployment';
-import StartStopRun from './StartStopRun';
+import RunDepNavBar from './RunDepNavBar';
 import LogsDrawer from './LogsDrawer';
+
+import { useGlobalPipelineRun} from '../../PipelineRuns/GlobalPipelineRunUIState'
+import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
+import { edgeTypes, nodeTypes } from '../../PipelineRuns/NodeTypes';
 
 const DeploymentView = () => {
     const Environment = useGlobalEnvironmentState();
 
     // Hooks
     const theme = useTheme();
+
+     // Local state for Deployment comes from GraphQL
     const [deployment, setDeployment] = useState(null);
+
+        // Get the name and status of name and title at top of page
+    // This calls the getDeployment to get the pipeline details for this specific deployment
     const getActiveDeployment = useGetActiveDeploymentHook(Environment.id.get(), setDeployment);
 
-    // Global states
-    const FlowState = useGlobalFlowState();
+        // Global states
+    // Flowstate = graph structure, elements contain the actual structure
+    // Runstate = run updates on graph structure
+    const FlowState = useGlobalPipelineRun();
+    const RunState = useGlobalRunState();
+
+    // On page load, clear the global run state
+    useEffect(() => {
+        RunState.set({
+            selectedRunID: null,
+            runObject: null,
+        })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // URI parameter
     const { version } = useParams();
@@ -159,7 +180,7 @@ const DeploymentView = () => {
 
                 {/* Run/Stop button, Chips, Dropdown, Timer */}
                 <Grid mt={4} container alignItems="center" sx={{ width: { xl: '88%' }, flexWrap: 'nowrap' }}>
-                    <StartStopRun environmentID={Environment.id.get()} deployment={deployment} />
+                    <RunDepNavBar environmentID={Environment.id.get()} deployment={deployment} />
                 </Grid>
             </Box>
             {!FlowState.isOpenDepLogDrawer.get() && !isOpenAnalytics ? (
@@ -240,7 +261,7 @@ export const useGetActiveDeploymentHook = (environmentID, setDeployment) => {
     const { deploymentId } = useParams();
     const pipelineID = deploymentId;
 
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 

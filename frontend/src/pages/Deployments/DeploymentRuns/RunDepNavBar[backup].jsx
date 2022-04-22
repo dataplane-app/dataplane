@@ -3,13 +3,13 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useStopPipelines } from '../../../graphql/stopPipelines';
-import StatusChips from './StatusChips';
 import RunsDropdown, { usePipelineTasksRunHook } from './RunsDropdown';
+import StatusChips from '../../PipelineRuns/StatusChips';
 import { useGlobalDeploymentState } from './GlobalDeploymentState';
 import useOnRunWebSocket from './useOnRunWebSocket';
 import { displayTimerMs, displayTimer } from '../../../utils/formatDate';
 
-export default function StartStopRun({ environmentID, deployment }) {
+export default function RunDepNavBar({ environmentID, deployment }) {
     // Global state
     const DeploymentState = useGlobalDeploymentState();
 
