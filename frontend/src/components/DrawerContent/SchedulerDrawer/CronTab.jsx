@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import cronstrue from 'cronstrue';
 import later from '@breejs/later';
 import { isValidCron } from 'cron-validator';
-import { useMeHook } from '../../EditorSidebar';
+import { useGlobalMeState } from '../../Navbar';
 
 export function CronTab({ setValidationError, scheduleStatement, setScheduleStatement, timezone, setTimezone }) {
     // Local State
     const [schedule, setSchedule] = useState([]);
-    const [userTimezone, setUserTimezone] = useState('');
+
+    const MeData = useGlobalMeState();
+    const userTimezone = MeData.timezone.get();
 
     // Set schedule for upcoming runs on cron expression change
     useEffect(() => {
@@ -22,14 +24,6 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scheduleStatement]);
-
-    // Get user's timezone on load
-    const getMe = useMeHook(setUserTimezone);
-    useEffect(() => {
-        getMe();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     return (
         <Box display="flex" gap={8}>
