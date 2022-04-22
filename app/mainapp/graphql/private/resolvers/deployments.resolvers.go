@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -18,9 +18,22 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strings"
 
 	"gorm.io/gorm"
 )
+
+func (r *deploymentEdgesResolver) Meta(ctx context.Context, obj *models.DeployPipelineEdges) (interface{}, error) {
+	return obj.Meta, nil
+}
+
+func (r *deploymentNodesResolver) Commands(ctx context.Context, obj *models.DeployPipelineNodes) (interface{}, error) {
+	return obj.Commands, nil
+}
+
+func (r *deploymentNodesResolver) Meta(ctx context.Context, obj *models.DeployPipelineNodes) (interface{}, error) {
+	return obj.Meta, nil
+}
 
 func (r *deploymentRunsResolver) RunJSON(ctx context.Context, obj *models.PipelineRuns) (interface{}, error) {
 	return obj.RunJSON, nil
@@ -148,6 +161,12 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	}
 
 	// Copy pipeline, nodes and edges
+	var jsonstring string
+	// json.Unmarshal([]byte(pipeline.Json), &jsonstring)
+
+	jsonstring = string(pipeline.Json)
+
+	jsonstring = strings.ReplaceAll(jsonstring, pipelineID, "d-"+pipeline.PipelineID)
 
 	// Pipeline
 	createPipeline := models.DeployPipelines{
@@ -162,8 +181,8 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		Active:            pipeline.Active,
 		WorkerGroup:       workerGroup,
 		Meta:              pipeline.Meta,
-		Json:              pipeline.Json,
-		UpdateLock:        true,
+		// Json:              pipeline.Json,
+		UpdateLock: true,
 	}
 
 	// Recalculate edge dependencies and destinations with new d- ID
@@ -187,6 +206,9 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		// map out dependencies and destinations
 		destinations["d-"+edge.From] = append(destinations["d-"+edge.From], "d-"+edge.To)
 		dependencies["d-"+edge.To] = append(dependencies["d-"+edge.To], "d-"+edge.From)
+
+		// replace in json pipeline run
+		jsonstring = strings.ReplaceAll(jsonstring, edge.EdgeID, "d-"+edge.EdgeID)
 	}
 
 	// Map
@@ -253,6 +275,9 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 			WorkerGroup: workergroupassign,
 			Active:      node.Active,
 		})
+
+		// Replace all nodes
+		jsonstring = strings.ReplaceAll(jsonstring, node.NodeID, "d-"+node.NodeID)
 	}
 
 	// folders
@@ -287,6 +312,15 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 			Active:        n.Active,
 		})
 	}
+
+	// Replace references to old pipeline
+	var res interface{}
+	json.Unmarshal([]byte(jsonstring), &res)
+	pipelineJSON, err := json.Marshal(res)
+	if err != nil {
+		logging.PrintSecretsRedact(err)
+	}
+	createPipeline.Json = pipelineJSON
 
 	// Pipeline create
 	err = database.DBConn.Create(&createPipeline).Error
@@ -798,6 +832,142 @@ order by a.created_at desc`
 	return &p, nil
 }
 
+func (r *queryResolver) GetDeployment(ctx context.Context, pipelineID string, environmentID string, version string) (*privategraphql.Deployments, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_deployments", ResourceID: platformID, Access: "read", EnvironmentID: environmentID},
+	}
+
+	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
+
+	// if permOutcome == "denied" {
+	// 	return []*privategraphql.Pipelines{}, nil
+	// }
+
+	p := privategraphql.Deployments{}
+	var query string
+	if admin == "yes" || adminEnv == "yes" {
+		query = `
+select
+a.pipeline_id, 
+a.name,
+a.environment_id,
+a.from_environment_id,
+a.description,
+a.active,
+a.worker_group,
+a.created_at,
+a.updated_at,
+a.version,
+a.deploy_active,
+b.node_type,
+b.node_type_desc,
+b.online,
+scheduler.schedule,
+scheduler.schedule_type
+from deploy_pipelines a left join (
+	select node_type, node_type_desc, pipeline_id, trigger_online as online, environment_id, version from deploy_pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id and a.environment_id = b.environment_id and a.version = b.version
+left join scheduler on scheduler.pipeline_id = a.pipeline_id and scheduler.environment_id = a.environment_id
+where a.pipeline_id = ? and a.environment_id=? and a.version=?
+order by a.created_at desc
+`
+
+		err := database.DBConn.Raw(
+			query, pipelineID, environmentID, version).Scan(&p).Error
+
+		if err != nil {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return nil, errors.New("Retrive pipelines database error.")
+		}
+
+	} else {
+
+		query = `select
+a.pipeline_id, 
+a.name,
+a.environment_id,
+a.from_environment_id
+a.description,
+a.active,
+a.worker_group,
+a.created_at,
+a.updated_at,
+b.node_type,
+b.node_type_desc,
+a.version,
+a.deploy_active,
+b.online,
+scheduler.schedule,
+scheduler.schedule_type
+from deploy_pipelines a 
+left join (
+	select node_type, node_type_desc, pipeline_id, trigger_online as online, environment_id, version from deploy_pipeline_nodes where node_type='trigger'
+) b on a.pipeline_id=b.pipeline_id and a.environment_id = b.environment_id and a.version = b.version
+inner join (
+  select distinct resource_id, environment_id from (
+	(select 
+		p.resource_id,
+        p.environment_id
+		from 
+		permissions p
+		where 
+		p.subject = 'user' and 
+		p.subject_id = ? and
+		p.resource = 'specific_deployment' and
+		p.active = true
+		)
+		union
+		(
+		select
+		p.resource_id,
+        p.environment_id
+		from 
+		permissions p, permissions_accessg_users agu
+		where 
+		p.subject = 'access_group' and 
+		p.subject_id = agu.user_id and
+		p.subject_id = ? and
+		p.resource = 'specific_deployment' and
+		p.environment_id = agu.environment_id and 
+		p.active = true and
+		agu.active = true
+		)
+	) x
+
+) p on p.resource_id = a.pipeline_id and p.environment_id = a.environment_id
+left join scheduler on scheduler.pipeline_id = a.pipeline_id and scheduler.environment_id = a.environment_id
+where 
+a.pipeline_id = ? and a.environment_id=? and a.version=?
+order by a.created_at desc`
+
+		err := database.DBConn.Raw(
+			query, currentUser, currentUser, pipelineID, environmentID, version).Scan(&p).Error
+
+		if err != nil {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+
+			if err != gorm.ErrRecordNotFound {
+				return nil, errors.New("Retrive pipelines database error.")
+			}
+		}
+
+	}
+
+	// err := database.DBConn.Select("pipeline_id", "name", "environment_id", "description", "active", "online", "worker_group", "created_at").Order("created_at desc").Where("environment_id = ?", environmentID).Find(&p).Error
+
+	return &p, nil
+}
+
 func (r *queryResolver) GetDeployments(ctx context.Context, environmentID string) ([]*privategraphql.Deployments, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -932,6 +1102,57 @@ order by a.created_at desc`
 	return p, nil
 }
 
+func (r *queryResolver) GetDeploymentFlow(ctx context.Context, pipelineID string, environmentID string, version string) (*privategraphql.DeploymentFlow, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("requires permissions")
+	}
+
+	// ----- Get pipeline nodes
+	nodes := []*models.DeployPipelineNodes{}
+
+	err := database.DBConn.Where("pipeline_id = ? and version = ? and environment_id = ?", pipelineID, version, environmentID).Find(&nodes).Error
+
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrieve pipeline nodes database error")
+	}
+
+	// ----- Get pipeline edges
+	edges := []*models.DeployPipelineEdges{}
+
+	err = database.DBConn.Where("pipeline_id = ? and version = ? and environment_id = ?", pipelineID, version, environmentID).Find(&edges).Error
+
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("retrive pipeline edges database error")
+	}
+
+	flow := privategraphql.DeploymentFlow{
+		Edges: edges,
+		Nodes: nodes,
+	}
+
+	return &flow, nil
+}
+
 func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string) ([]*privategraphql.NonDefaultNodes, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1022,9 +1243,21 @@ func (r *queryResolver) GetDeploymentRuns(ctx context.Context, deploymentID stri
 	return pipelineRuns, nil
 }
 
+// DeploymentEdges returns privategraphql.DeploymentEdgesResolver implementation.
+func (r *Resolver) DeploymentEdges() privategraphql.DeploymentEdgesResolver {
+	return &deploymentEdgesResolver{r}
+}
+
+// DeploymentNodes returns privategraphql.DeploymentNodesResolver implementation.
+func (r *Resolver) DeploymentNodes() privategraphql.DeploymentNodesResolver {
+	return &deploymentNodesResolver{r}
+}
+
 // DeploymentRuns returns privategraphql.DeploymentRunsResolver implementation.
 func (r *Resolver) DeploymentRuns() privategraphql.DeploymentRunsResolver {
 	return &deploymentRunsResolver{r}
 }
 
+type deploymentEdgesResolver struct{ *Resolver }
+type deploymentNodesResolver struct{ *Resolver }
 type deploymentRunsResolver struct{ *Resolver }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGlobalAuthState } from '../../../../Auth/UserAuth';
 import ConsoleLogHelper from '../../../../Helper/logger';
-import { useGlobalDeploymentState } from '../GlobalDeploymentState';
+import { useGlobalRunState } from '../../../PipelineRuns/GlobalRunState';
 
 var loc = window.location,
     new_uri;
@@ -27,12 +27,12 @@ export default function useWebSocketLog(environmentId, run_id, node_id, setKeys)
     const ws = useRef(null);
 
     // Global state
-    const DeploymentState = useGlobalDeploymentState();
+    const RunState = useGlobalRunState();
 
     const { authToken } = useGlobalAuthState();
 
     useEffect(() => {
-        if (DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[node_id].status.get() !== 'Run') return;
+        if (RunState.runObject?.nodes[node_id].status.get() !== 'Run') return;
 
         function connect() {
             ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=workerlogs.${run_id}.${node_id}&id=${run_id}.${node_id}&token=${authToken.get()}`);

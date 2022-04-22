@@ -7,21 +7,21 @@ import { faClock } from '@fortawesome/free-regular-svg-icons';
 import DeploymentsTableItem from './DeploymentsTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenu from '../../components/MoreInfoMenuPipeline';
-import { useGlobalFlowState } from '../PipelineEdit';
 import CustomChip from '../../components/CustomChip';
 import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
 import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
-import { useGlobalDeploymentState } from './DeploymentRuns/GlobalDeploymentState';
+import { useGlobalPipelineRun } from '../PipelineRuns/GlobalPipelineRunUIState';
+import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
 
 const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDeployments }) => {
     // React router
     const history = useHistory();
 
-    const FlowState = useGlobalFlowState();
-    const DeploymentState = useGlobalDeploymentState();
+    const FlowState = useGlobalPipelineRun();
+    const RunState = useGlobalRunState();
 
     const Environments = useGlobalEnvironmentsState();
     const Environment = useGlobalEnvironmentState();
@@ -79,7 +79,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
                             sx={{ fontWeight: 400 }}
                             onClick={() => {
                                 history.push(`/deployments/view/${row.value.pipelineID}/${row.value.version}`);
-                                DeploymentState.tableRunTrigger.set(1);
+                                RunState.tableRunTrigger.set(1);
                             }}>
                             Run
                         </Button>

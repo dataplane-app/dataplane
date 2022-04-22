@@ -3,7 +3,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Grid, Tooltip, Typography, useTheme, Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
-import { useGlobalDeploymentState } from '../../../pages/Deployments/DeploymentRuns/GlobalDeploymentState';
 import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import customNodeStyle from '../../../utils/customNodeStyle';
@@ -19,7 +18,6 @@ const CheckpointNode = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
-    const DeploymentState = useGlobalDeploymentState();
 
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
