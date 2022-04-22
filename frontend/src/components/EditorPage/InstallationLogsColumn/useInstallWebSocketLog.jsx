@@ -93,7 +93,7 @@ export default function useInstallWebSocketLog(environmentID, workerGroup, pipel
                 const resp = JSON.parse(e.data);
 
                 // If the run is complete, return
-                if (resp.status === 'Success') {
+                if (resp.log_type === 'action' && resp.log === 'complete') {
                     EditorGlobal.installState.set('Success');
 
                     // Get packages for packages column after a successful install
