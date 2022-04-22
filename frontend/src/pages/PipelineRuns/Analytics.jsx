@@ -23,8 +23,8 @@ export function Analytics({ setIsOpenAnalytics }) {
     // Set nodes on dropdown change
     useEffect(() => {
         if (!MeData.timezone.get()) return;
-        RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.attach(Downgraded).get() &&
-            setNodes(Object.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.attach(Downgraded).get()).sort((a, b) => a.start_dt?.localeCompare(b.start_dt)));
+        RunState.runObject.nodes?.attach(Downgraded).get() &&
+            setNodes(Object.values(RunState.runObject.nodes?.attach(Downgraded).get()).sort((a, b) => a.start_dt?.localeCompare(b.start_dt)));
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [RunState.selectedRunID.get(), MeData.timezone.get()]);
@@ -81,8 +81,8 @@ export function Analytics({ setIsOpenAnalytics }) {
                 time: {
                     // unit: 'second',
                 },
-                min: RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get(),
-                max: RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get(),
+                min: RunState.runObject.runStart?.get(),
+                max: RunState.runObject.runEnd?.get(),
                 grid: {
                     display: false,
                 },
@@ -104,6 +104,7 @@ export function Analytics({ setIsOpenAnalytics }) {
         },
     };
 
+    console.log('🚀 ~ file: Analytics.jsx ~ line 119 ~ useEffect ~ RunState', RunState.runObject.get());
     // Set data on labels change
     useEffect(() => {
         setData({
@@ -115,7 +116,7 @@ export function Analytics({ setIsOpenAnalytics }) {
                     // categoryPercentage: 0.3,
                     // maxBarThickness: 8,
                     // minBarLength: 20,
-                    data: Object.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes.get())
+                    data: Object.values(RunState.runObject.nodes.get())
                         .sort((a, b) => a.start_dt.localeCompare(b.start_dt))
                         .map((a) => [a.start_dt, a.end_dt]),
                     backgroundColor: '#0073C6',
