@@ -1,17 +1,18 @@
 import { Autocomplete, Grid, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { useGetSinglepipelineRun } from '../../graphql/getSinglepipelineRun';
+import { useGetSinglepipelineRun } from '../../../graphql/getSinglepipelineRun';
 import { useSnackbar } from 'notistack';
 import { formatDateNoZone } from '../../../utils/formatDate';
 import { GetDeploymentFlow } from './DeploymentFlowStructure';
 import { GetDeploymentRun } from './DeploymentRunStructure';
-import { usePipelineTasksColoursRun } from './UpdatePipelineColours';
+import { useDeploymentTasksColoursRun } from './UpdateDeploymentColours';
 import EventRunOpen from './EventRunOpen';
 import { useGetDeploymentRuns } from '../../../graphql/getDeploymentRuns';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
 import { useGlobalMeState } from '../../../components/Navbar';
+import { GetPipelineRun } from '../../PipelineRuns/PipelineRunStructure';
 
 
 var loc = window.location,
@@ -51,7 +52,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     const getDeploymentFlow = GetDeploymentFlow();
     const getDeploymentRun = GetDeploymentRun();
     const getSinglePipelineRun = useGetSinglepipelineRun();
-    const getPipelineTasks = usePipelineTasksColoursRun();
+    const getPipelineTasks = useDeploymentTasksColoursRun();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -218,7 +219,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
         setSelectedRun(run);
 
         // Retrieve the run structure
-        const runstructure = getPipelineRun(pipeline.pipelineID, run.run_id, environmentID);
+        const runstructure = GetPipelineRun(pipeline.pipelineID, run.run_id, environmentID);
 
     };
 

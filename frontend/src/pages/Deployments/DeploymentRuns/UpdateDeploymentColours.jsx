@@ -1,6 +1,7 @@
 import { useSnackbar } from "notistack";
-import { usePipelineTasksRun } from "../../graphql/getPipelineTasksRun";
-import { useGlobalRunState } from "./GlobalRunState";
+import { usePipelineTasksRun } from "../../../graphql/getPipelineTasksRun";
+import { useGlobalRunState } from "../../PipelineRuns/GlobalRunState";
+
 
 
 export const useDeploymentTasksColoursRun = () => {

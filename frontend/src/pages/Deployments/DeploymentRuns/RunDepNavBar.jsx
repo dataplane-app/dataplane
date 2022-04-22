@@ -10,6 +10,7 @@ import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIStat
 import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 import { useDeploymentTasksColoursRun } from './UpdateDeploymentColours';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
+import { useStopPipelines } from '../../../graphql/stopPipelines';
 
 
 var loc = window.location,

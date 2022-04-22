@@ -6,14 +6,14 @@ import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
 import { useGetDeployments } from '../../graphql/getDeployments';
 import DeploymentsTable from './DeploymentsTable';
-import { useGlobalDeploymentState } from './DeploymentRuns/GlobalDeploymentState';
 import { useGlobalPipelineRun } from '../PipelineRuns/GlobalPipelineRunUIState';
+import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
 
 const Deployments = () => {
     // Global states
     const Environment = useGlobalEnvironmentState();
     const FlowState = useGlobalPipelineRun();
-    const DeploymentState = useGlobalDeploymentState();
+    const RunState = useGlobalRunState();
 
     // Local state
     const [deployments, setDeployments] = useState([]);
@@ -39,7 +39,7 @@ const Deployments = () => {
             triggerDelete: 1,
         });
 
-        DeploymentState.set({
+        RunState.set({
             selectedRunID: null,
             runIDs: null,
             runTrigger: 0,
