@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import ConsoleLogHelper from '../../../Helper/logger';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
-import { DateTime } from 'luxon';
-import { useGlobalMeState } from '../../Navbar';
 import { formatDateLog } from '../../../utils/formatDate';
 
 var loc = window.location,
