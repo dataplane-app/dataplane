@@ -36,6 +36,8 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	DeploymentEdges() DeploymentEdgesResolver
+	DeploymentNodes() DeploymentNodesResolver
 	DeploymentRuns() DeploymentRunsResolver
 	Mutation() MutationResolver
 	PipelineEdges() PipelineEdgesResolver
@@ -396,6 +398,7 @@ type ComplexityRoot struct {
 		GetCodeFileRunLogs            func(childComplexity int, runID string, pipelineID string, environmentID string) int
 		GetCodePackages               func(childComplexity int, workerGroup string, language string, environmentID string, pipelineID string) int
 		GetDeployment                 func(childComplexity int, pipelineID string, environmentID string, version string) int
+		GetDeploymentFlow             func(childComplexity int, pipelineID string, environmentID string, version string) int
 		GetDeploymentRuns             func(childComplexity int, deploymentID string, environmentID string, version string) int
 		GetDeployments                func(childComplexity int, environmentID string) int
 		GetEnvironment                func(childComplexity int, environmentID string) int
@@ -499,6 +502,13 @@ type ComplexityRoot struct {
 	}
 }
 
+type DeploymentEdgesResolver interface {
+	Meta(ctx context.Context, obj *models.DeployPipelineEdges) (interface{}, error)
+}
+type DeploymentNodesResolver interface {
+	Commands(ctx context.Context, obj *models.DeployPipelineNodes) (interface{}, error)
+	Meta(ctx context.Context, obj *models.DeployPipelineNodes) (interface{}, error)
+}
 type DeploymentRunsResolver interface {
 	RunJSON(ctx context.Context, obj *models.PipelineRuns) (interface{}, error)
 }
@@ -585,6 +595,7 @@ type QueryResolver interface {
 	GetActiveDeployment(ctx context.Context, pipelineID string, environmentID string) (*Deployments, error)
 	GetDeployment(ctx context.Context, pipelineID string, environmentID string, version string) (*Deployments, error)
 	GetDeployments(ctx context.Context, environmentID string) ([]*Deployments, error)
+	GetDeploymentFlow(ctx context.Context, pipelineID string, environmentID string, version string) (*DeploymentFlow, error)
 	GetNonDefaultWGNodes(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string) ([]*NonDefaultNodes, error)
 	GetDeploymentRuns(ctx context.Context, deploymentID string, environmentID string, version string) ([]*models.PipelineRuns, error)
 	Me(ctx context.Context) (*models.Users, error)
@@ -2803,6 +2814,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetDeployment(childComplexity, args["pipelineID"].(string), args["environmentID"].(string), args["version"].(string)), true
 
+	case "Query.getDeploymentFlow":
+		if e.complexity.Query.GetDeploymentFlow == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getDeploymentFlow_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetDeploymentFlow(childComplexity, args["pipelineID"].(string), args["environmentID"].(string), args["version"].(string)), true
+
 	case "Query.getDeploymentRuns":
 		if e.complexity.Query.GetDeploymentRuns == nil {
 			break
@@ -4057,6 +4080,13 @@ extend type Query {
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
   getDeployments(environmentID: String!): [Deployments]
+
+    """
+  Get deployment flows.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getDeploymentFlow(pipelineID: String!, environmentID: String!, version: String!): DeploymentFlow
 
   """
   Get list of non-default worker groups for a single pipeline.
@@ -6839,6 +6869,39 @@ func (ec *executionContext) field_Query_getCodePackages_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_getDeploymentFlow_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["version"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["version"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_getDeploymentRuns_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -8829,7 +8892,7 @@ func (ec *executionContext) _CodeTree_folders(ctx context.Context, field graphql
 	return ec.marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFoldersᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentEdges_edgeID(ctx context.Context, field graphql.CollectedField, obj *DeploymentEdges) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentEdges_edgeID(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineEdges) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -8864,7 +8927,7 @@ func (ec *executionContext) _DeploymentEdges_edgeID(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentEdges_pipelineID(ctx context.Context, field graphql.CollectedField, obj *DeploymentEdges) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentEdges_pipelineID(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineEdges) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -8899,7 +8962,7 @@ func (ec *executionContext) _DeploymentEdges_pipelineID(ctx context.Context, fie
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentEdges_version(ctx context.Context, field graphql.CollectedField, obj *DeploymentEdges) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentEdges_version(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineEdges) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -8934,7 +8997,7 @@ func (ec *executionContext) _DeploymentEdges_version(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentEdges_from(ctx context.Context, field graphql.CollectedField, obj *DeploymentEdges) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentEdges_from(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineEdges) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -8969,7 +9032,7 @@ func (ec *executionContext) _DeploymentEdges_from(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentEdges_to(ctx context.Context, field graphql.CollectedField, obj *DeploymentEdges) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentEdges_to(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineEdges) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9004,7 +9067,7 @@ func (ec *executionContext) _DeploymentEdges_to(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentEdges_environmentID(ctx context.Context, field graphql.CollectedField, obj *DeploymentEdges) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentEdges_environmentID(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineEdges) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9039,7 +9102,7 @@ func (ec *executionContext) _DeploymentEdges_environmentID(ctx context.Context, 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentEdges_meta(ctx context.Context, field graphql.CollectedField, obj *DeploymentEdges) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentEdges_meta(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineEdges) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9050,14 +9113,14 @@ func (ec *executionContext) _DeploymentEdges_meta(ctx context.Context, field gra
 		Object:     "DeploymentEdges",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Meta, nil
+		return ec.resolvers.DeploymentEdges().Meta(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9074,7 +9137,7 @@ func (ec *executionContext) _DeploymentEdges_meta(ctx context.Context, field gra
 	return ec.marshalNAny2interface(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentEdges_active(ctx context.Context, field graphql.CollectedField, obj *DeploymentEdges) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentEdges_active(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineEdges) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9139,9 +9202,9 @@ func (ec *executionContext) _DeploymentFlow_edges(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*DeploymentEdges)
+	res := resTmp.([]*models.DeployPipelineEdges)
 	fc.Result = res
-	return ec.marshalNDeploymentEdges2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentEdgesᚄ(ctx, field.Selections, res)
+	return ec.marshalNDeploymentEdges2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineEdgesᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _DeploymentFlow_nodes(ctx context.Context, field graphql.CollectedField, obj *DeploymentFlow) (ret graphql.Marshaler) {
@@ -9174,12 +9237,12 @@ func (ec *executionContext) _DeploymentFlow_nodes(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*DeploymentNodes)
+	res := resTmp.([]*models.DeployPipelineNodes)
 	fc.Result = res
-	return ec.marshalNDeploymentNodes2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentNodesᚄ(ctx, field.Selections, res)
+	return ec.marshalNDeploymentNodes2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineNodesᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_nodeID(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_nodeID(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9214,7 +9277,7 @@ func (ec *executionContext) _DeploymentNodes_nodeID(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_pipelineID(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_pipelineID(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9249,7 +9312,7 @@ func (ec *executionContext) _DeploymentNodes_pipelineID(ctx context.Context, fie
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_version(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_version(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9284,7 +9347,7 @@ func (ec *executionContext) _DeploymentNodes_version(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_name(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_name(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9319,7 +9382,7 @@ func (ec *executionContext) _DeploymentNodes_name(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_environmentID(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_environmentID(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9354,7 +9417,7 @@ func (ec *executionContext) _DeploymentNodes_environmentID(ctx context.Context, 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_nodeType(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_nodeType(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9389,7 +9452,7 @@ func (ec *executionContext) _DeploymentNodes_nodeType(ctx context.Context, field
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_nodeTypeDesc(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_nodeTypeDesc(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9424,7 +9487,7 @@ func (ec *executionContext) _DeploymentNodes_nodeTypeDesc(ctx context.Context, f
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_triggerOnline(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_triggerOnline(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9459,7 +9522,7 @@ func (ec *executionContext) _DeploymentNodes_triggerOnline(ctx context.Context, 
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_description(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_description(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9494,7 +9557,7 @@ func (ec *executionContext) _DeploymentNodes_description(ctx context.Context, fi
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_commands(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_commands(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9505,14 +9568,14 @@ func (ec *executionContext) _DeploymentNodes_commands(ctx context.Context, field
 		Object:     "DeploymentNodes",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Commands, nil
+		return ec.resolvers.DeploymentNodes().Commands(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9529,7 +9592,7 @@ func (ec *executionContext) _DeploymentNodes_commands(ctx context.Context, field
 	return ec.marshalNAny2interface(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_meta(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_meta(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9540,14 +9603,14 @@ func (ec *executionContext) _DeploymentNodes_meta(ctx context.Context, field gra
 		Object:     "DeploymentNodes",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Meta, nil
+		return ec.resolvers.DeploymentNodes().Meta(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9564,7 +9627,7 @@ func (ec *executionContext) _DeploymentNodes_meta(ctx context.Context, field gra
 	return ec.marshalNAny2interface(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_workerGroup(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_workerGroup(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -9599,7 +9662,7 @@ func (ec *executionContext) _DeploymentNodes_workerGroup(ctx context.Context, fi
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DeploymentNodes_active(ctx context.Context, field graphql.CollectedField, obj *DeploymentNodes) (ret graphql.Marshaler) {
+func (ec *executionContext) _DeploymentNodes_active(ctx context.Context, field graphql.CollectedField, obj *models.DeployPipelineNodes) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -17194,6 +17257,45 @@ func (ec *executionContext) _Query_getDeployments(ctx context.Context, field gra
 	return ec.marshalODeployments2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_getDeploymentFlow(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getDeploymentFlow_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetDeploymentFlow(rctx, args["pipelineID"].(string), args["environmentID"].(string), args["version"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*DeploymentFlow)
+	fc.Result = res
+	return ec.marshalODeploymentFlow2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentFlow(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_getNonDefaultWGNodes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -22765,7 +22867,7 @@ func (ec *executionContext) _CodeTree(ctx context.Context, sel ast.SelectionSet,
 
 var deploymentEdgesImplementors = []string{"DeploymentEdges"}
 
-func (ec *executionContext) _DeploymentEdges(ctx context.Context, sel ast.SelectionSet, obj *DeploymentEdges) graphql.Marshaler {
+func (ec *executionContext) _DeploymentEdges(ctx context.Context, sel ast.SelectionSet, obj *models.DeployPipelineEdges) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, deploymentEdgesImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -22781,7 +22883,7 @@ func (ec *executionContext) _DeploymentEdges(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "pipelineID":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -22791,7 +22893,7 @@ func (ec *executionContext) _DeploymentEdges(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "version":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -22801,7 +22903,7 @@ func (ec *executionContext) _DeploymentEdges(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "from":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -22811,7 +22913,7 @@ func (ec *executionContext) _DeploymentEdges(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "to":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -22821,7 +22923,7 @@ func (ec *executionContext) _DeploymentEdges(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "environmentID":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -22831,18 +22933,28 @@ func (ec *executionContext) _DeploymentEdges(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "meta":
+			field := field
+
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._DeploymentEdges_meta(ctx, field, obj)
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._DeploymentEdges_meta(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
 
-			out.Values[i] = innerFunc(ctx)
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			})
 		case "active":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._DeploymentEdges_active(ctx, field, obj)
@@ -22851,7 +22963,7 @@ func (ec *executionContext) _DeploymentEdges(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -22907,7 +23019,7 @@ func (ec *executionContext) _DeploymentFlow(ctx context.Context, sel ast.Selecti
 
 var deploymentNodesImplementors = []string{"DeploymentNodes"}
 
-func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.SelectionSet, obj *DeploymentNodes) graphql.Marshaler {
+func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.SelectionSet, obj *models.DeployPipelineNodes) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, deploymentNodesImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -22923,7 +23035,7 @@ func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "pipelineID":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -22933,7 +23045,7 @@ func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "version":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -22943,7 +23055,7 @@ func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -22953,7 +23065,7 @@ func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "environmentID":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -22963,7 +23075,7 @@ func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "nodeType":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -22973,7 +23085,7 @@ func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "nodeTypeDesc":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -22983,7 +23095,7 @@ func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "triggerOnline":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -22993,7 +23105,7 @@ func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "description":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -23003,28 +23115,48 @@ func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "commands":
+			field := field
+
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._DeploymentNodes_commands(ctx, field, obj)
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._DeploymentNodes_commands(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
 
-			out.Values[i] = innerFunc(ctx)
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			})
 		case "meta":
+			field := field
+
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._DeploymentNodes_meta(ctx, field, obj)
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._DeploymentNodes_meta(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
 
-			out.Values[i] = innerFunc(ctx)
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			})
 		case "workerGroup":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._DeploymentNodes_workerGroup(ctx, field, obj)
@@ -23033,7 +23165,7 @@ func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "active":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -23043,7 +23175,7 @@ func (ec *executionContext) _DeploymentNodes(ctx context.Context, sel ast.Select
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -25615,6 +25747,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "getDeploymentFlow":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getDeploymentFlow(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "getNonDefaultWGNodes":
 			field := field
 
@@ -27438,7 +27590,7 @@ func (ec *executionContext) marshalNCodeFolders2ᚖdataplaneᚋmainappᚋdatabas
 	return ec._CodeFolders(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDeploymentEdges2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentEdgesᚄ(ctx context.Context, sel ast.SelectionSet, v []*DeploymentEdges) graphql.Marshaler {
+func (ec *executionContext) marshalNDeploymentEdges2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineEdgesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.DeployPipelineEdges) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -27462,7 +27614,7 @@ func (ec *executionContext) marshalNDeploymentEdges2ᚕᚖdataplaneᚋmainappᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDeploymentEdges2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentEdges(ctx, sel, v[i])
+			ret[i] = ec.marshalNDeploymentEdges2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineEdges(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -27482,7 +27634,7 @@ func (ec *executionContext) marshalNDeploymentEdges2ᚕᚖdataplaneᚋmainappᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNDeploymentEdges2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentEdges(ctx context.Context, sel ast.SelectionSet, v *DeploymentEdges) graphql.Marshaler {
+func (ec *executionContext) marshalNDeploymentEdges2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineEdges(ctx context.Context, sel ast.SelectionSet, v *models.DeployPipelineEdges) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -27492,7 +27644,7 @@ func (ec *executionContext) marshalNDeploymentEdges2ᚖdataplaneᚋmainappᚋgra
 	return ec._DeploymentEdges(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDeploymentNodes2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentNodesᚄ(ctx context.Context, sel ast.SelectionSet, v []*DeploymentNodes) graphql.Marshaler {
+func (ec *executionContext) marshalNDeploymentNodes2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineNodesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.DeployPipelineNodes) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -27516,7 +27668,7 @@ func (ec *executionContext) marshalNDeploymentNodes2ᚕᚖdataplaneᚋmainappᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDeploymentNodes2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentNodes(ctx, sel, v[i])
+			ret[i] = ec.marshalNDeploymentNodes2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineNodes(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -27536,7 +27688,7 @@ func (ec *executionContext) marshalNDeploymentNodes2ᚕᚖdataplaneᚋmainappᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNDeploymentNodes2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentNodes(ctx context.Context, sel ast.SelectionSet, v *DeploymentNodes) graphql.Marshaler {
+func (ec *executionContext) marshalNDeploymentNodes2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineNodes(ctx context.Context, sel ast.SelectionSet, v *models.DeployPipelineNodes) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -28494,6 +28646,13 @@ func (ec *executionContext) unmarshalODataInput2ᚖdataplaneᚋmainappᚋgraphql
 	}
 	res, err := ec.unmarshalInputDataInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalODeploymentFlow2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentFlow(ctx context.Context, sel ast.SelectionSet, v *DeploymentFlow) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DeploymentFlow(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalODeployments2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx context.Context, sel ast.SelectionSet, v []*Deployments) graphql.Marshaler {

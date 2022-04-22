@@ -8,7 +8,7 @@ import { useGetDeploymentRuns } from '../../../graphql/getDeploymentRuns';
 import ConsoleLogHelper from '../../../Helper/logger';
 
 
-export default function EventRunButton(environmentId, pipelineId, runId, setRuns, setSelectedRun,  Running, setRunning, wsconnect) {
+export default function EventRunButton(environmentId, pipelineId, runId, setRuns, setSelectedRun,  Running, setRunning, wsconnect, version) {
     // Global state
     const RunState = useGlobalRunState();
     const FlowState = useGlobalPipelineRun();
@@ -45,7 +45,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                     RunID: runId,
                 });
                 if (response.r || response.error) {
-                    enqueueSnackbar("Can't run pipeline: " + (response.msg || response.r || response.error), { variant: 'error' });
+                    enqueueSnackbar("Can't run deployment: " + (response.msg || response.r || response.error), { variant: 'error' });
                 } else if (response.errors) {
                     response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
                 } else {
@@ -59,7 +59,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
 
                 (async () => {
                 // Get a list of all pipeline runs
-                response = await getDeploymentRuns({ pipelineID: pipelineId, environmentID: environmentId });
+                response = await getDeploymentRuns({ deploymentID: pipelineId, environmentID: environmentId, version });
 
                 if (response?.length === 0) {
                     setRuns([]);
@@ -97,13 +97,13 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
 
                 // console.log("message:", response)
 
-                // ConsoleLogHelper(
-                //     '🧲',
-                //     FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.data.name ||
-                //         FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.type ||
-                //         response.MSG,
-                //     response.status
-                // );
+                ConsoleLogHelper(
+                    '🧲',
+                    FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.data.name ||
+                        FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.type ||
+                        response.MSG,
+                    response.status
+                );
 
                 // Add only if a node message, not MSG.
                 if (response.node_id) {

@@ -23,6 +23,18 @@ import (
 	"gorm.io/gorm"
 )
 
+func (r *deploymentEdgesResolver) Meta(ctx context.Context, obj *models.DeployPipelineEdges) (interface{}, error) {
+	return obj.Meta, nil
+}
+
+func (r *deploymentNodesResolver) Commands(ctx context.Context, obj *models.DeployPipelineNodes) (interface{}, error) {
+	return obj.Commands, nil
+}
+
+func (r *deploymentNodesResolver) Meta(ctx context.Context, obj *models.DeployPipelineNodes) (interface{}, error) {
+	return obj.Meta, nil
+}
+
 func (r *deploymentRunsResolver) RunJSON(ctx context.Context, obj *models.PipelineRuns) (interface{}, error) {
 	return obj.RunJSON, nil
 }
@@ -1090,6 +1102,57 @@ order by a.created_at desc`
 	return p, nil
 }
 
+func (r *queryResolver) GetDeploymentFlow(ctx context.Context, pipelineID string, environmentID string, version string) (*privategraphql.DeploymentFlow, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("requires permissions")
+	}
+
+	// ----- Get pipeline nodes
+	nodes := []*models.DeployPipelineNodes{}
+
+	err := database.DBConn.Where("pipeline_id = ? and version = ? and environment_id = ?", pipelineID, version, environmentID).Find(&nodes).Error
+
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrieve pipeline nodes database error")
+	}
+
+	// ----- Get pipeline edges
+	edges := []*models.DeployPipelineEdges{}
+
+	err = database.DBConn.Where("pipeline_id = ? and version = ? and environment_id = ?", pipelineID, version, environmentID).Find(&edges).Error
+
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("retrive pipeline edges database error")
+	}
+
+	flow := privategraphql.DeploymentFlow{
+		Edges: edges,
+		Nodes: nodes,
+	}
+
+	return &flow, nil
+}
+
 func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string) ([]*privategraphql.NonDefaultNodes, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1180,9 +1243,21 @@ func (r *queryResolver) GetDeploymentRuns(ctx context.Context, deploymentID stri
 	return pipelineRuns, nil
 }
 
+// DeploymentEdges returns privategraphql.DeploymentEdgesResolver implementation.
+func (r *Resolver) DeploymentEdges() privategraphql.DeploymentEdgesResolver {
+	return &deploymentEdgesResolver{r}
+}
+
+// DeploymentNodes returns privategraphql.DeploymentNodesResolver implementation.
+func (r *Resolver) DeploymentNodes() privategraphql.DeploymentNodesResolver {
+	return &deploymentNodesResolver{r}
+}
+
 // DeploymentRuns returns privategraphql.DeploymentRunsResolver implementation.
 func (r *Resolver) DeploymentRuns() privategraphql.DeploymentRunsResolver {
 	return &deploymentRunsResolver{r}
 }
 
+type deploymentEdgesResolver struct{ *Resolver }
+type deploymentNodesResolver struct{ *Resolver }
 type deploymentRunsResolver struct{ *Resolver }

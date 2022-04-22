@@ -16,6 +16,7 @@ export const useDeploymentTasksColoursRun = () => {
 
         if (running === false){
 
+        // Comes from the pipeline tasks table - both deployments and pipelines, filtered by run id
         const response = await getPipelineTasksRun({ pipelineID: pipelineID, runID, environmentID });
 
         // console.log("tasks response:", response)

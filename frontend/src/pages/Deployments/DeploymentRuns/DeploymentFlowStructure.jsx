@@ -1,8 +1,8 @@
 import { useSnackbar } from "notistack";
 import { useHistory } from "react-router-dom";
 import { prepareInputForFrontend } from "../../../utils/PipelinePrepareGraphInput";
-import { useGetPipelineFlow } from "../../../graphql/getPipelineFlow";
 import { useGlobalPipelineRun } from "../../PipelineRuns/GlobalPipelineRunUIState";
+import { useGetDeploymentFlow } from "../../../graphql/getDeploymentFlow";
 
 
 /* 
@@ -12,7 +12,7 @@ Set the Elements in Flowstate that updates the graph on page
 export const GetDeploymentFlow = () => {
 
     // GraphQL hook
-    const getPipelineFlow = useGetPipelineFlow();
+    const getDeploymentFlow = useGetDeploymentFlow();
 
     // React router
     const history = useHistory();
@@ -25,11 +25,11 @@ export const GetDeploymentFlow = () => {
     // Get members
     return async (inputs) => {
 
-        // console.log("Pipeline ID:", inputs.pipelineId, inputs.environmentID)
+        console.log("Deployment ID:", inputs.pipelineId, inputs.environmentID, inputs.version)
 
-        const rawResponse = await getPipelineFlow({ pipelineID: inputs.pipelineId, environmentID: inputs.environmentID });
+        const rawResponse = await getDeploymentFlow({ pipelineID: inputs.pipelineId, environmentID: inputs.environmentID, version: inputs.version });
 
-        // console.log("Get pipeline structure", rawResponse)
+        console.log("Get deployment structure", rawResponse)
         const response = prepareInputForFrontend(rawResponse);
 
         if (response.length === 0) {

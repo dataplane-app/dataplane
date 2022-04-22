@@ -57,7 +57,7 @@ export default function RunDepNavBar({ environmentID, deployment }) {
     Update drop down menu with the latest run
     Set the current run for graph to show
     */
-    EventRunButton(environmentID, deployment?.pipelineID, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect)
+    EventRunButton(environmentID, deployment?.pipelineID, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect, deployment?.version)
 
     const RunButtonClick = () => {
 
@@ -129,7 +129,8 @@ export default function RunDepNavBar({ environmentID, deployment }) {
         <Grid item>
             <Box display="flex" alignItems="center">
                 {/* {console.log(FlowState.isRunning.get())} */}
-                {FlowState.isRunning.get() ? (
+                {deployment?.deploy_active && (
+                FlowState.isRunning.get() ? (
                     <Button
                         onClick={StopButtonClick}
                         variant="outlined"
@@ -141,6 +142,7 @@ export default function RunDepNavBar({ environmentID, deployment }) {
                     <Button onClick={RunButtonClick} variant="outlined" sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                         Run
                     </Button>
+                )
                 )}
 
                 <StatusChips />
@@ -177,7 +179,7 @@ const useStopPipelinesHook = (getPipelineTasks) => {
 
     // Stop pipeline flow
     return async (pipelineID, environmentID, runID) => {
-        const response = await stopPipelines({ pipelineID, environmentID, runID, RunType: 'pipeline' });
+        const response = await stopPipelines({ pipelineID, environmentID, runID, RunType: 'deployment' });
 
         if (response.r === 'error') {
             closeSnackbar();

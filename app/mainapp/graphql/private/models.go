@@ -84,36 +84,9 @@ type DataInput struct {
 	Genericdata interface{} `json:"genericdata"`
 }
 
-type DeploymentEdges struct {
-	EdgeID        string      `json:"edgeID"`
-	PipelineID    string      `json:"pipelineID"`
-	Version       string      `json:"version"`
-	From          string      `json:"from"`
-	To            string      `json:"to"`
-	EnvironmentID string      `json:"environmentID"`
-	Meta          interface{} `json:"meta"`
-	Active        bool        `json:"active"`
-}
-
 type DeploymentFlow struct {
-	Edges []*DeploymentEdges `json:"edges"`
-	Nodes []*DeploymentNodes `json:"nodes"`
-}
-
-type DeploymentNodes struct {
-	NodeID        string      `json:"nodeID"`
-	PipelineID    string      `json:"pipelineID"`
-	Version       string      `json:"version"`
-	Name          string      `json:"name"`
-	EnvironmentID string      `json:"environmentID"`
-	NodeType      string      `json:"nodeType"`
-	NodeTypeDesc  string      `json:"nodeTypeDesc"`
-	TriggerOnline bool        `json:"triggerOnline"`
-	Description   string      `json:"description"`
-	Commands      interface{} `json:"commands"`
-	Meta          interface{} `json:"meta"`
-	WorkerGroup   string      `json:"workerGroup"`
-	Active        bool        `json:"active"`
+	Edges []*models.DeployPipelineEdges `json:"edges"`
+	Nodes []*models.DeployPipelineNodes `json:"nodes"`
 }
 
 type Deployments struct {

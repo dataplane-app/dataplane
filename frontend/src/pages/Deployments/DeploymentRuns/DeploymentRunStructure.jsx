@@ -24,11 +24,10 @@ export const GetDeploymentRun = () => {
                 if (singleRunResponse.length === 0) {
                     // setSelectedRun([]);
                 } else if (singleRunResponse.r || singleRunResponse.error) {
-                    enqueueSnackbar("Can't get pipeline run: " + (singleRunResponse.msg || singleRunResponse.r || singleRunResponse.error), { variant: 'error' });
+                    enqueueSnackbar("Can't get deployment run: " + (singleRunResponse.msg || singleRunResponse.r || singleRunResponse.error), { variant: 'error' });
                 } else if (singleRunResponse.errors) {
                     singleRunResponse.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
                 } else {
-                    // setSelectedRun(singleRunResponse);
                     FlowState.elements.set(singleRunResponse.run_json);
  
                 }

@@ -12,7 +12,6 @@ import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
 import { useGlobalMeState } from '../../../components/Navbar';
-import { GetPipelineRun } from '../../PipelineRuns/PipelineRunStructure';
 
 
 var loc = window.location,
@@ -50,7 +49,9 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
     // Graphql functions
     const getDeploymentRuns = useGetDeploymentRuns();
     const getDeploymentFlow = GetDeploymentFlow();
-    const getDeploymentRun = GetDeploymentRun();
+    const getdeploymentRun = GetDeploymentRun();
+
+    // Pipeline runs are the same table as deployments, filtered by run id
     const getSinglePipelineRun = useGetSinglepipelineRun();
     const getPipelineTasks = useDeploymentTasksColoursRun();
 
@@ -100,13 +101,15 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
             // If there is no runID then show the structure without RunID
             if (runID == null){
 
+                console.log("no runs")
+
             // Get the flow of the latest run or if no flow then get structure
             // console.log("Pipeline ID:", pipeline.pipelineID)
-            const flowstructure = await getDeploymentFlow({ pipelineId: deployment.pipelineID, environmentID});
+            const flowstructure = await getDeploymentFlow({ pipelineId: deployment.pipelineID, environmentID, version: deployment.version});
             }else{
                 // If there is a run then get the run structure 
                 setSelectedRun(response[0])
-                const runstructure = await getDeploymentRun(deployment.pipelineID, runID, environmentID);
+                const runstructure = await getdeploymentRun(deployment.pipelineID, runID, environmentID);
             }
 
             // If the pipeline has a new flow, get only the flow and return
@@ -219,8 +222,12 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
         setDroptrigger(true)
         setSelectedRun(run);
 
+        // console.log(deployment.pipelineID, run.run_id, environmentID)
+
         // Retrieve the run structure
-        const runstructure = GetPipelineRun(deployment.pipelineID, run.run_id, environmentID);
+        const runstructure = getdeploymentRun(deployment.pipelineID, run.run_id, environmentID);
+
+        // console.log("out of:", runstructure)
 
     };
 
