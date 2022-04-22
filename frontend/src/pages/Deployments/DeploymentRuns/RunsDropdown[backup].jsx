@@ -36,7 +36,7 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
             // No runID means, there are no runs yet, return.
             if (!runID) return;
 
-            DeploymentState.merge({
+            RunState.merge({
                 selectedRunID: runID,
                 onLoadTrigger: 1,
             });
@@ -48,7 +48,7 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
     // Update elements on run dropdown change
     const handleDropdownChange = (run) => {
         setSelectedRun(run);
-        DeploymentState.merge((r) => ({
+        RunState.merge((r) => ({
             selectedRunID: run.run_id,
             onChangeTrigger: r.onChangeTrigger + 1,
         }));
@@ -133,7 +133,7 @@ export const usePipelineTasksRunHook = () => {
                         start_dt: a.start_dt,
                     })
             );
-            DeploymentState.batch((s) => {
+            RunState.batch((s) => {
                 s.selectedRunID.set(response[0].run_id);
                 s.runIDs[response[0].run_id].nodes.set(nodes);
             }, 'tasks-batch');

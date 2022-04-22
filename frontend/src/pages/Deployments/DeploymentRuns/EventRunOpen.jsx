@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
-import ConsoleLogHelper from '../../Helper/logger';
-import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
-import { useGlobalRunState } from './GlobalRunState';
 import { Downgraded } from '@hookstate/core';
+import ConsoleLogHelper from '../../../Helper/logger';
+import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
+import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
 
 
 export default function EventRunOpen(runId, Running, setRunning, wsconnect) {

@@ -2,16 +2,16 @@ import { Autocomplete, Grid, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useGetSinglepipelineRun } from '../../graphql/getSinglepipelineRun';
 import { useSnackbar } from 'notistack';
-import { formatDateNoZone } from '../../utils/formatDate';
-import { useGlobalMeState } from '../../components/Navbar';
+import { formatDateNoZone } from '../../../utils/formatDate';
 import { GetDeploymentFlow } from './DeploymentFlowStructure';
 import { GetDeploymentRun } from './DeploymentRunStructure';
 import { usePipelineTasksColoursRun } from './UpdatePipelineColours';
 import EventRunOpen from './EventRunOpen';
-import { useGlobalAuthState } from '../../Auth/UserAuth';
-import { useGlobalRunState } from './GlobalRunState';
-import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
 import { useGetDeploymentRuns } from '../../../graphql/getDeploymentRuns';
+import { useGlobalAuthState } from '../../../Auth/UserAuth';
+import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
+import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
+import { useGlobalMeState } from '../../../components/Navbar';
 
 
 var loc = window.location,

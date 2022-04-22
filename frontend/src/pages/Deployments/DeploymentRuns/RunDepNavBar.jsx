@@ -1,17 +1,15 @@
 import { Box, Button, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
-import { useStopPipelines } from '../../graphql/stopPipelines';
-import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
-import StatusChips from './StatusChips';
+import StatusChips from '../../PipelineRuns/StatusChips';
 import RunsDropdown from './RunsDropdown';
-import { useGlobalRunState } from './GlobalRunState';
 import EventRunButton from './EventRunButton'
 import { v4 as uuidv4 } from 'uuid';
-import { useGlobalAuthState } from '../../Auth/UserAuth';
-// import { usePipelineTasksRunHook } from './UpdatePipelineColours';
-import { displayTimer, displayTimerMs } from '../../utils/formatDate';
-import { usePipelineTasksColoursRun } from './UpdatePipelineColours';
+import { displayTimer, displayTimerMs } from '../../../utils/formatDate';
+import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
+import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
+import { useDeploymentTasksColoursRun } from './UpdateDeploymentColours';
+import { useGlobalAuthState } from '../../../Auth/UserAuth';
 
 
 var loc = window.location,
@@ -50,7 +48,7 @@ export default function RunDepNavBar({ environmentID, pipeline }) {
     // GraphQL hooks - not run at this point
     // const getPipelineTasksRun = usePipelineTasksRunHook();
     
-    const getPipelineTasks = usePipelineTasksColoursRun();
+    const getPipelineTasks = useDeploymentTasksColoursRun();
     const stopPipelines = useStopPipelinesHook(getPipelineTasks);
 
     // Click Run button and start to run the pipeline

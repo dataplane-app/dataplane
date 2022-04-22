@@ -29,24 +29,24 @@ export default function RunDepNavBar({ environmentID, deployment }) {
     useOnRunWebSocket(environmentID, setRuns, setSelectedRun);
 
     const handleTimerStart = () => {
-        DeploymentState.runTrigger.set((t) => t + 1);
+        RunState.runTrigger.set((t) => t + 1);
     };
 
     const handleTimerStop = () => {
-        stopPipelines(environmentID, DeploymentState.selectedRunID.get());
-        DeploymentState.isRunning.set(false);
+        stopPipelines(environmentID, RunState.selectedRunID.get());
+        RunState.isRunning.set(false);
     };
 
     // Updates timer every second
     useEffect(() => {
         let secTimer;
-        if (DeploymentState.isRunning.get()) {
+        if (RunState.isRunning.get()) {
             secTimer = setInterval(() => {
-                setElapsed(displayTimer(DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runStart?.get()));
+                setElapsed(displayTimer(RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get()));
             }, 500);
         }
 
-        if (DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runEnd?.get()) {
+        if (RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get()) {
             clearInterval(secTimer);
             setElapsed(0);
         }
@@ -57,12 +57,12 @@ export default function RunDepNavBar({ environmentID, deployment }) {
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [DeploymentState.isRunning.get()]);
+    }, [RunState.isRunning.get()]);
 
     return (
         <Grid item>
             <Box display="flex" alignItems="center">
-                {DeploymentState.isRunning.get() && !DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runEnd?.get() ? (
+                {RunState.isRunning.get() && !RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get() ? (
                     <Button
                         onClick={handleTimerStop}
                         variant="outlined"
@@ -82,18 +82,18 @@ export default function RunDepNavBar({ environmentID, deployment }) {
                     <RunsDropdown environmentID={environmentID} deployment={deployment} runs={runs} setRuns={setRuns} selectedRun={selectedRun} setSelectedRun={setSelectedRun} />
                 ) : null}
 
-                {!DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runEnd?.get() ? (
+                {!RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get() ? (
                     // If looking at an active run, show live timer
-                    DeploymentState.isRunning.get() ? (
+                    RunState.isRunning.get() ? (
                         <Typography variant="h3" ml={2}>
-                            {elapsed ? elapsed : DeploymentState.isRunning.get() ? '' : '00:00:00'}
+                            {elapsed ? elapsed : RunState.isRunning.get() ? '' : '00:00:00'}
                         </Typography>
                     ) : (
                         // If looking at a previous run during an active run
                         <Typography variant="h3" ml={2}>
                             {displayTimerMs(
-                                DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runStart?.get(),
-                                DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runEnd?.get()
+                                RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get(),
+                                RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get()
                             )}
                         </Typography>
                     )
@@ -101,8 +101,8 @@ export default function RunDepNavBar({ environmentID, deployment }) {
                     // If there is no active run.
                     <Typography variant="h3" ml={2}>
                         {displayTimerMs(
-                            DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runStart?.get(),
-                            DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runEnd?.get()
+                            RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get(),
+                            RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get()
                         )}
                     </Typography>
                 )}
@@ -133,7 +133,7 @@ const useStopPipelinesHook = (getPipelineTasksRun) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            DeploymentState.runIDs[response.run_id].merge({
+            RunState.runIDs[response.run_id].merge({
                 runEnd: response.ended_at,
             });
             getPipelineTasksRun(response.run_id, environmentID);

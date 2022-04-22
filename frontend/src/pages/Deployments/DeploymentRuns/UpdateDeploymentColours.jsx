@@ -3,7 +3,7 @@ import { usePipelineTasksRun } from "../../graphql/getPipelineTasksRun";
 import { useGlobalRunState } from "./GlobalRunState";
 
 
-export const usePipelineTasksColoursRun = () => {
+export const useDeploymentTasksColoursRun = () => {
     // GraphQL hook
     const getPipelineTasksRun = usePipelineTasksRun();
     const RunState = useGlobalRunState();

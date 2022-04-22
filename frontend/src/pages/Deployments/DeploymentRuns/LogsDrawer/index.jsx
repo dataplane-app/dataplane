@@ -8,8 +8,8 @@ import { faRunning, faTimes, faCheckCircle, faExclamationCircle } from '@fortawe
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { RunningSpinner } from './RunningSpinner';
 import useWebSocketLog, { formatDate } from './useWebSocketLog';
-import { useGlobalFlowState } from '../../../PipelineEdit';
-import { useGlobalDeploymentState } from '../GlobalDeploymentState';
+import { useGlobalRunState } from '../../../PipelineRuns/GlobalRunState';
+import { useGlobalPipelineRun } from '../../../PipelineRuns/GlobalPipelineRunUIState';
 
 const LogsDrawer = ({ environmentId, handleClose }) => {
     const [websocketResp, setWebsocketResp] = useState('');
@@ -18,11 +18,11 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
     const [keys, setKeys] = useState([]);
 
     // Global state
-    const DeploymentState = useGlobalDeploymentState();
-    const FlowState = useGlobalFlowState();
+    const RunState = useGlobalRunState();
+    const FlowState = useGlobalPipelineRun();
 
     // Instantiate websocket
-    const webSocket = useWebSocketLog(environmentId, DeploymentState.selectedRunID.get(), DeploymentState.node_id.get(), setKeys);
+    const webSocket = useWebSocketLog(environmentId, RunState.selectedRunID.get(), RunState.node_id.get(), setKeys);
 
     useEffect(() => {
         setWebsocketResp((t) => t + webSocket + '\n');
@@ -44,14 +44,14 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
     }, [graphQlResp]);
 
     // Graphql Hook
-    const getNodeLogs = useGetNodeLogsHook(environmentId, DeploymentState.selectedRunID.get(), DeploymentState.node_id.get(), setGraphQlResp, keys);
+    const getNodeLogs = useGetNodeLogsHook(environmentId, RunState.selectedRunID.get(), RunState.node_id.get(), setGraphQlResp, keys);
 
     useEffect(() => {
-        if (!DeploymentState.selectedRunID.get() || !DeploymentState.node_id.get()) return;
+        if (!RunState.selectedRunID.get() || !RunState.node_id.get()) return;
         getNodeLogs();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [DeploymentState.selectedRunID.get(), DeploymentState.node_id.get()]);
+    }, [RunState.selectedRunID.get(), RunState.node_id.get()]);
 
     return (
         <>
@@ -60,9 +60,9 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     <Box component={FontAwesomeIcon} fontSize={24} color="secondary.main" icon={faRunning} mr={2} />
                     <Box>
                         <Typography fontSize="0.875rem" fontWeight={900}>
-                            {FlowState.elements.get().filter((a) => a.id === DeploymentState.node_id.get())[0].data.name}
+                            {FlowState.elements.get().filter((a) => a.id === RunState.node_id.get())[0].data.name}
                         </Typography>
-                        <Typography fontSize="0.75rem">{FlowState.elements.get().filter((a) => a.id === DeploymentState.node_id.get())[0].data.description}</Typography>
+                        <Typography fontSize="0.75rem">{FlowState.elements.get().filter((a) => a.id === RunState.node_id.get())[0].data.description}</Typography>
                     </Box>
                     <Button
                         onClick={handleClose}
@@ -78,7 +78,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Button>
                 </Box>
 
-                {DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[DeploymentState.node_id.get()].status.get() === 'Success' ? (
+                {RunState.runIDs[RunState.selectedRunID.get()].nodes[RunState.node_id.get()].status.get() === 'Success' ? (
                     <Box color="status.pipelineOnline" display="flex" alignItems="center" mt={0.5}>
                         <Box component={FontAwesomeIcon} fontSize={18} color="status.pipelineOnline" icon={faCheckCircle} />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
@@ -87,7 +87,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Box>
                 ) : null}
 
-                {DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[DeploymentState.node_id.get()].status.get() === 'Run' ? (
+                {RunState.runIDs[RunState.selectedRunID.get()].nodes[RunState.node_id.get()].status.get() === 'Run' ? (
                     <Box color="#65BEFF" display="flex" alignItems="center" mt={0.5}>
                         <RunningSpinner />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
@@ -96,7 +96,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Box>
                 ) : null}
 
-                {DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[DeploymentState.node_id.get()].status.get() === 'Fail' ? (
+                {RunState.runIDs[RunState.selectedRunID.get()].nodes[RunState.node_id.get()].status.get() === 'Fail' ? (
                     <Box color="#F80000" display="flex" alignItems="center" mt={0.5}>
                         <Box component={FontAwesomeIcon} fontSize={18} color="#F80000" icon={faExclamationCircle} />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
