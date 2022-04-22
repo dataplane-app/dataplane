@@ -4,7 +4,6 @@ import { Grid, Tooltip, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
-import { useGlobalDeploymentState } from '../../../pages/Deployments/DeploymentRuns/GlobalDeploymentState';
 import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import { displayRunTime } from '../../../utils/formatDate';
@@ -21,7 +20,6 @@ const BashNode = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
-    const DeploymentState = useGlobalDeploymentState();
 
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);

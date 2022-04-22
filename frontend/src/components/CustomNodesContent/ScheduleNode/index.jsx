@@ -13,7 +13,6 @@ import { getColor } from '../utils';
 import cronstrue from 'cronstrue';
 import { getTimeZoneOffSet } from '../../DrawerContent/SchedulerDrawer/CronTab';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
-import { useGlobalDeploymentState } from '../../../pages/Deployments/DeploymentRuns/GlobalDeploymentState';
 
 const ScheduleNode = (props) => {
     // Theme hook
@@ -22,7 +21,6 @@ const ScheduleNode = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
-    const DeploymentState = useGlobalDeploymentState();
 
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);

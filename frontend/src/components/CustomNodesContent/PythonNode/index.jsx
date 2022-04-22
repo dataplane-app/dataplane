@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
 
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
-import { useGlobalDeploymentState } from '../../../pages/Deployments/DeploymentRuns/GlobalDeploymentState';
 import { customSourceHandle, customSourceHandleDragging, customTargetHandle } from '../../../utils/handleStyles';
 import ProcessTypeEditorModeItem from '../../MoreInfoContent/ProcessTypeEditorModeItem';
 import ProcessTypeNodeItem from '../../MoreInfoContent/ProcessTypeNodeItem';
@@ -23,7 +22,6 @@ const PythonNode = (props) => {
     // Global state
     const FlowState = useGlobalPipelineRun();
     const RunState = useGlobalRunState();
-    const DeploymentState = useGlobalDeploymentState();
 
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);

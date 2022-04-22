@@ -5,14 +5,15 @@ import { Bar } from 'react-chartjs-2';
 import { Button } from '@mui/material';
 import { Downgraded } from '@hookstate/core';
 import { Box } from '@mui/system';
-import { useGlobalDeploymentState } from './GlobalDeploymentState';
+
+import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 import { useGlobalMeState } from '../../../components/Navbar';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, TimeScale, TimeSeriesScale);
 
-export function Analytics({ setIsOpenAnalytics, active_deploy }) {
+export function Analytics({ setIsOpenAnalytics }) {
     // Global states
-    const DeploymentState = useGlobalDeploymentState();
+    const RunState = useGlobalRunState();
     const MeData = useGlobalMeState();
 
     const [labels, setLabels] = useState([]);
@@ -23,13 +24,11 @@ export function Analytics({ setIsOpenAnalytics, active_deploy }) {
     // Set nodes on dropdown change
     useEffect(() => {
         if (!MeData.timezone.get()) return;
-        DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.attach(Downgraded).get() &&
-            setNodes(
-                Object.values(DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.attach(Downgraded).get()).sort((a, b) => a.start_dt?.localeCompare(b.start_dt))
-            );
+        RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.attach(Downgraded).get() &&
+            setNodes(Object.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.attach(Downgraded).get()).sort((a, b) => a.start_dt?.localeCompare(b.start_dt)));
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [DeploymentState.dropdownRunId.get(), MeData.timezone.get()]);
+    }, [RunState.selectedRunID.get(), MeData.timezone.get()]);
 
     // Set labels, chart height on nodes change
     useEffect(() => {
@@ -83,8 +82,8 @@ export function Analytics({ setIsOpenAnalytics, active_deploy }) {
                 time: {
                     // unit: 'second',
                 },
-                min: DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runStart?.get(),
-                max: DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.runEnd?.get(),
+                min: RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get(),
+                max: RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get(),
                 grid: {
                     display: false,
                 },
@@ -117,7 +116,7 @@ export function Analytics({ setIsOpenAnalytics, active_deploy }) {
                     // categoryPercentage: 0.3,
                     // maxBarThickness: 8,
                     // minBarLength: 20,
-                    data: Object.values(DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes.get())
+                    data: Object.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes.get())
                         .sort((a, b) => a.start_dt.localeCompare(b.start_dt))
                         .map((a) => [a.start_dt, a.end_dt]),
                     backgroundColor: '#0073C6',
@@ -135,7 +134,7 @@ export function Analytics({ setIsOpenAnalytics, active_deploy }) {
                     <Bar options={options} data={data} />
                 ) : null}
             </div>
-            <Button onClick={() => setIsOpenAnalytics(false)} variant="outlined" sx={{ position: 'absolute', top: '17px', left: active_deploy ? '1089px' : '995px' }}>
+            <Button onClick={() => setIsOpenAnalytics(false)} variant="outlined" sx={{ position: 'absolute', top: '17px', left: '1089px' }}>
                 Close
             </Button>
         </Box>
