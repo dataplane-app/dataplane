@@ -104,7 +104,6 @@ export function Analytics({ setIsOpenAnalytics }) {
         },
     };
 
-    console.log('🚀 ~ file: Analytics.jsx ~ line 119 ~ useEffect ~ RunState', RunState.runObject.get());
     // Set data on labels change
     useEffect(() => {
         setData({
