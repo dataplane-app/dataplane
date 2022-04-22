@@ -117,6 +117,8 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
 
             if (response[0]!= null){
+
+                RunState.selectedRunID.set(response[0].run_id)
                 // console.log("I am the selected run:", response[0])
                 if (response[0].status == "Running"){
 
@@ -175,7 +177,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
             // console.log("single response:", responseSingle)
             setSelectedRun(responseSingle)
         
-
+            RunState.selectedRunID.set(selectedRun.run_id)
             // reset drop trigger for next
             setDroptrigger(false)
             // console.log("I am the selected run:", selectedRun)
