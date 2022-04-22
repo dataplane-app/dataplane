@@ -22,6 +22,17 @@ export function formatDateNoZone(dateString, zone) {
     }
 }
 
+/**
+ * Formats date for logs
+ * @param {string} dateString 2022-12-20T13:27:08Z
+ * @return {string} 2022/12/20 13:27:08
+ */
+export function formatDateLog(dateString, zone) {
+    if (dateString) {
+        return DateTime.fromISO(dateString, { zone }).toFormat('yyyy/LL/dd HH:mm:ss');
+    }
+}
+
 export function displayTimerMs(end, start) {
     if (!end || !start) return null;
 
