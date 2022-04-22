@@ -7,9 +7,11 @@ import { useGetNodeLogs } from '../../../graphql/getNodeLogs';
 import { faRunning, faTimes, faCheckCircle, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { RunningSpinner } from './RunningSpinner';
-import useWebSocketLog, { formatDate } from './useWebSocketLog';
+import useWebSocketLog from './useWebSocketLog';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
+import { useGlobalMeState } from '../../Navbar';
+import { formatDateLog } from '../../../utils/formatDate';
 
 const LogsDrawer = ({ environmentId, handleClose }) => {
     const [websocketResp, setWebsocketResp] = useState('');
@@ -20,9 +22,10 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
     // Global state
     const RunState = useGlobalRunState();
     const FlowState = useGlobalPipelineRun();
+    const MeData = useGlobalMeState();
 
     // Instantiate websocket
-    const webSocket = useWebSocketLog(environmentId, RunState.selectedRunID.get(), RunState.node_id.get(), setKeys);
+    const webSocket = useWebSocketLog(environmentId, RunState.selectedRunID.get(), RunState.node_id.get(), setKeys, MeData.timezone.get());
 
     useEffect(() => {
         setWebsocketResp((t) => t + webSocket + '\n');
@@ -33,7 +36,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
         let text = '';
         graphQlResp.forEach((log) => {
             if (!websocketResp.includes(log.uid)) {
-                text += `\n${formatDate(log.created_at)} ${log.log}`;
+                text += `\n${formatDateLog(log.created_at, MeData.timezone.get())} ${log.log}`;
             }
         });
         text = text.replace(/\n/, '');
