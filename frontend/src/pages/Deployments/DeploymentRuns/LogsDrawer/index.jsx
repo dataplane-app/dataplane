@@ -27,7 +27,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
   const MeData = useGlobalMeState();
 
     // Instantiate websocket
-    const webSocket = useWebSocketLog(environmentId, DeploymentState.selectedRunID.get(), DeploymentState.node_id.get(), setKeys, MeData.timezone.get());
+    const webSocket = useWebSocketLog(environmentId, RunState.selectedRunID.get(), RunState.node_id.get(), setKeys, MeData.timezone.get());
 
 
     useEffect(() => {
@@ -84,7 +84,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Button>
                 </Box>
 
-                {RunState.runIDs[RunState.selectedRunID.get()].nodes[RunState.node_id.get()].status.get() === 'Success' ? (
+                {RunState.runObject?.nodes[RunState.node_id.get()].status.get() === 'Success' ? (
                     <Box color="status.pipelineOnline" display="flex" alignItems="center" mt={0.5}>
                         <Box component={FontAwesomeIcon} fontSize={18} color="status.pipelineOnline" icon={faCheckCircle} />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
@@ -93,7 +93,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Box>
                 ) : null}
 
-                {RunState.runIDs[RunState.selectedRunID.get()].nodes[RunState.node_id.get()].status.get() === 'Run' ? (
+                {RunState.runObject?.nodes[RunState.node_id.get()].status.get() === 'Run' ? (
                     <Box color="#65BEFF" display="flex" alignItems="center" mt={0.5}>
                         <RunningSpinner />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
@@ -102,7 +102,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Box>
                 ) : null}
 
-                {RunState.runIDs[RunState.selectedRunID.get()].nodes[RunState.node_id.get()].status.get() === 'Fail' ? (
+                {RunState.runObject?.nodes[RunState.node_id.get()].status.get() === 'Fail' ? (
                     <Box color="#F80000" display="flex" alignItems="center" mt={0.5}>
                         <Box component={FontAwesomeIcon} fontSize={18} color="#F80000" icon={faExclamationCircle} />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
