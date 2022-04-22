@@ -395,6 +395,7 @@ type ComplexityRoot struct {
 		GetAllPreferences             func(childComplexity int) int
 		GetCodeFileRunLogs            func(childComplexity int, runID string, pipelineID string, environmentID string) int
 		GetCodePackages               func(childComplexity int, workerGroup string, language string, environmentID string, pipelineID string) int
+		GetDeployment                 func(childComplexity int, pipelineID string, environmentID string, version string) int
 		GetDeploymentRuns             func(childComplexity int, deploymentID string, environmentID string, version string) int
 		GetDeployments                func(childComplexity int, environmentID string) int
 		GetEnvironment                func(childComplexity int, environmentID string) int
@@ -582,6 +583,7 @@ type QueryResolver interface {
 	FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*CodeTree, error)
 	GetCodePackages(ctx context.Context, workerGroup string, language string, environmentID string, pipelineID string) (*CodePackages, error)
 	GetActiveDeployment(ctx context.Context, pipelineID string, environmentID string) (*Deployments, error)
+	GetDeployment(ctx context.Context, pipelineID string, environmentID string, version string) (*Deployments, error)
 	GetDeployments(ctx context.Context, environmentID string) ([]*Deployments, error)
 	GetNonDefaultWGNodes(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string) ([]*NonDefaultNodes, error)
 	GetDeploymentRuns(ctx context.Context, deploymentID string, environmentID string, version string) ([]*models.PipelineRuns, error)
@@ -2789,6 +2791,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetCodePackages(childComplexity, args["workerGroup"].(string), args["language"].(string), args["environmentID"].(string), args["pipelineID"].(string)), true
 
+	case "Query.getDeployment":
+		if e.complexity.Query.GetDeployment == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getDeployment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetDeployment(childComplexity, args["pipelineID"].(string), args["environmentID"].(string), args["version"].(string)), true
+
 	case "Query.getDeploymentRuns":
 		if e.complexity.Query.GetDeploymentRuns == nil {
 			break
@@ -4029,6 +4043,13 @@ extend type Query {
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
   """
   getActiveDeployment(pipelineID: String!, environmentID: String!): Deployments
+
+  """
+  Get deployment.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getDeployment(pipelineID: String!, environmentID: String!, version: String!): Deployments
 
   """
   Get all deployments.
@@ -6830,6 +6851,39 @@ func (ec *executionContext) field_Query_getDeploymentRuns_args(ctx context.Conte
 		}
 	}
 	args["deploymentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["version"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["version"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getDeployment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["environmentID"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
@@ -17062,6 +17116,45 @@ func (ec *executionContext) _Query_getActiveDeployment(ctx context.Context, fiel
 	return ec.marshalODeployments2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_getDeployment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getDeployment_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetDeployment(rctx, args["pipelineID"].(string), args["environmentID"].(string), args["version"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*Deployments)
+	fc.Result = res
+	return ec.marshalODeployments2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_getDeployments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -25472,6 +25565,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getActiveDeployment(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getDeployment":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getDeployment(ctx, field)
 				return res
 			}
 

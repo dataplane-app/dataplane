@@ -16,13 +16,13 @@ import TurnOffPipelineDrawer from '../../../components/DrawerContent/TurnOffPipe
 import CustomChip from '../../../components/CustomChip';
 import { Analytics } from './Analytics';
 import { Downgraded } from '@hookstate/core';
-import { useGetActiveDeployment } from '../../../graphql/getActiveDeployment';
 import RunDepNavBar from './RunDepNavBar';
 import LogsDrawer from './LogsDrawer';
 
 import { useGlobalPipelineRun} from '../../PipelineRuns/GlobalPipelineRunUIState'
 import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 import { edgeTypes, nodeTypes } from '../../PipelineRuns/NodeTypes';
+import { useGetDeploymentSingle } from '../../../graphql/getDeploymentSingle';
 
 const DeploymentView = () => {
     const Environment = useGlobalEnvironmentState();
@@ -33,9 +33,12 @@ const DeploymentView = () => {
      // Local state for Deployment comes from GraphQL
     const [deployment, setDeployment] = useState(null);
 
+    // URI parameter
+    const { version } = useParams();
+
         // Get the name and status of name and title at top of page
     // This calls the getDeployment to get the pipeline details for this specific deployment
-    const getActiveDeployment = useGetActiveDeploymentHook(Environment.id.get(), setDeployment);
+    const getSingleDeployment = useGetSingleDeploymentHook(Environment.id.get(), setDeployment, version);
 
         // Global states
     // Flowstate = graph structure, elements contain the actual structure
@@ -51,9 +54,6 @@ const DeploymentView = () => {
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    // URI parameter
-    const { version } = useParams();
 
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
@@ -83,7 +83,7 @@ const DeploymentView = () => {
     useEffect(() => {
         if (!Environment.id.get()) return;
         setIsLoadingFlow(false);
-        getActiveDeployment();
+        getSingleDeployment();
 
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -131,6 +131,8 @@ const DeploymentView = () => {
         }
     };
 
+    // console.log("get deployment", deployment)
+
     return (
         <Box className="page" height="calc(100vh - 136px)" minHeight="min-content">
             <Box ref={offsetRef}>
@@ -168,7 +170,7 @@ const DeploymentView = () => {
                                     <MenuItem
                                         pipeline={deployment}
                                         isPipelineOnline={deployment?.online}
-                                        getPipeline={getActiveDeployment}
+                                        getPipeline={getSingleDeployment}
                                         setIsOpenAnalytics={setIsOpenAnalytics}
                                         version={deployment?.version}
                                     />
@@ -243,7 +245,7 @@ const DeploymentView = () => {
                     pipelineID={deployment?.pipelineID}
                     environmentID={deployment?.environmentID}
                     name={deployment?.name}
-                    getPipelines={getActiveDeployment}
+                    getPipelines={getSingleDeployment}
                 />
             </Drawer>
         </Box>
@@ -253,9 +255,9 @@ const DeploymentView = () => {
 export default DeploymentView;
 
 // ------ Custom hooks
-export const useGetActiveDeploymentHook = (environmentID, setDeployment) => {
+export const useGetSingleDeploymentHook = (environmentID, setDeployment, version) => {
     // GraphQL hook
-    const getActiveDeployment = useGetActiveDeployment();
+    const getSingleDeployment = useGetDeploymentSingle();
 
     // URI parameter
     const { deploymentId } = useParams();
@@ -267,7 +269,7 @@ export const useGetActiveDeploymentHook = (environmentID, setDeployment) => {
 
     // Get active deployment
     return async () => {
-        const response = await getActiveDeployment({ pipelineID, environmentID });
+        const response = await getSingleDeployment({ pipelineID, environmentID, version });
 
         if (response.r || response.error) {
             closeSnackbar();

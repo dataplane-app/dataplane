@@ -36,7 +36,7 @@ const websocketEndpoint = new_uri;
 Input:
 runs, setRuns - state set at RunNavBar level but are set inside this component
 */
-export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, selectedRun, setSelectedRun }) {
+export default function RunsDropdown({ environmentID, deployment, runs, setRuns, selectedRun, setSelectedRun }) {
     // Global states
     // const RunState = useGlobalPipelineRun();
     const MeData = useGlobalMeState();
@@ -71,8 +71,9 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
         (async () => {
 
 
+            // console.log("Runs response:", deployment)
             // --------  1. Retrieve the the previous runs:
-            const response = await getDeploymentRuns({ pipelineID: pipeline.pipelineID, environmentID });
+            const response = await getDeploymentRuns({ deploymentID: deployment.pipelineID, environmentID, version: deployment.version });
 
             // console.log("Runs response:", response)
     
@@ -101,15 +102,15 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
             // Get the flow of the latest run or if no flow then get structure
             // console.log("Pipeline ID:", pipeline.pipelineID)
-            const flowstructure = await getDeploymentFlow({ pipelineId: pipeline.pipelineID, environmentID});
+            const flowstructure = await getDeploymentFlow({ pipelineId: deployment.pipelineID, environmentID});
             }else{
                 // If there is a run then get the run structure 
                 setSelectedRun(response[0])
-                const runstructure = await getDeploymentRun(pipeline.pipelineID, runID, environmentID);
+                const runstructure = await getDeploymentRun(deployment.pipelineID, runID, environmentID);
             }
 
             // If the pipeline has a new flow, get only the flow and return
-            const isNewFlow = pipeline.updated_at > lastRunTime;
+            const isNewFlow = deployment.updated_at > lastRunTime;
             if (isNewFlow) {
                 setIsNewFlow(true);
                 // getPipelineFlow(environmentID);
@@ -133,7 +134,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                     setRunning(true)
                     FlowState.isRunning.set(true);
     
-                    const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, response[0].run_id, environmentID, false);
+                    const runtaskscolours = await getPipelineTasks(deployment.pipelineID, response[0].run_id, environmentID, false);
 
                     // Timer set start date on running
                     RunState.runObject?.runStart.set(response[0].created_at);
@@ -143,7 +144,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     
                 }else{
                     // console.log("change run:", selectedRun.status)
-                    const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, response[0].run_id, environmentID, false);
+                    const runtaskscolours = await getPipelineTasks(deployment.pipelineID, response[0].run_id, environmentID, false);
                     FlowState.isRunning.set(false);
                     // console.log("end date:", response[0])
 
@@ -173,7 +174,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
             if (selectedRun!= null && droptrigger === true){
 
             // console.log("Selected run:", selectedRun.run_id)
-            const responseSingle = await getSinglePipelineRun({ pipelineID: pipeline.pipelineID, environmentID, runID: selectedRun.run_id});
+            const responseSingle = await getSinglePipelineRun({ pipelineID: deployment.pipelineID, environmentID, runID: selectedRun.run_id});
 
             // console.log("single response:", responseSingle)
             setSelectedRun(responseSingle)
@@ -191,7 +192,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                 setRunId(selectedRun.run_id)
                 setRunning(true)
 
-                const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, selectedRun.run_id, environmentID, false);
+                const runtaskscolours = await getPipelineTasks(deployment.pipelineID, selectedRun.run_id, environmentID, false);
 
                 // Timer set start on run
                 RunState.runObject?.runStart.set(responseSingle.created_at);
@@ -199,7 +200,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
             }else{
                 // console.log("change run:", selectedRun.status)
-                const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, selectedRun.run_id, environmentID, false);
+                const runtaskscolours = await getPipelineTasks(deployment.pipelineID, selectedRun.run_id, environmentID, false);
 
                 // Timer set start and end date
                 RunState.runObject?.runStart.set(responseSingle.created_at);
@@ -219,7 +220,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
         setSelectedRun(run);
 
         // Retrieve the run structure
-        const runstructure = GetPipelineRun(pipeline.pipelineID, run.run_id, environmentID);
+        const runstructure = GetPipelineRun(deployment.pipelineID, run.run_id, environmentID);
 
     };
 

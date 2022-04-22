@@ -36,7 +36,7 @@ export const GetDeploymentFlow = () => {
             FlowState.elements.set([]);
 
             // If there is no elements then navigate to edit pipelines
-            history.push(`/pipelines/flow/${inputs.pipelineId}`);
+            // history.push(`/pipelines/flow/${inputs.pipelineId}`);
         } else if (response.r === 'error') {
             closeSnackbar();
             enqueueSnackbar("Can't get flow: " + response.msg, { variant: 'error' });

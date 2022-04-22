@@ -96,6 +96,13 @@ extend type Query {
   getActiveDeployment(pipelineID: String!, environmentID: String!): Deployments
 
   """
+  Get deployment.
+  + **Route**: Private
+  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  """
+  getDeployment(pipelineID: String!, environmentID: String!, version: String!): Deployments
+
+  """
   Get all deployments.
   + **Route**: Private
   + **Permissions**: admin_platform, platform_environment, environment_all_pipelines

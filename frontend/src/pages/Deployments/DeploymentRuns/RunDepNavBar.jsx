@@ -30,7 +30,7 @@ if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
 
 const websocketEndpoint = new_uri;
 
-export default function RunDepNavBar({ environmentID, pipeline }) {
+export default function RunDepNavBar({ environmentID, deployment }) {
     // Global state
     const FlowState = useGlobalPipelineRun();
     const RunState = useGlobalRunState();
@@ -52,18 +52,12 @@ export default function RunDepNavBar({ environmentID, pipeline }) {
     const getPipelineTasks = useDeploymentTasksColoursRun();
     const stopPipelines = useStopPipelinesHook(getPipelineTasks);
 
-    // Click Run button and start to run the pipeline
-    // const handleTimerStart = () => {
-    //     RunState.runTrigger.set((t) => t + 1);
-    // };
-
-
     /*
     On click of run button, this UseEffect state keeps websockets open for run
     Update drop down menu with the latest run
     Set the current run for graph to show
     */
-    EventRunButton(environmentID, pipeline?.pipelineID, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect)
+    EventRunButton(environmentID, deployment?.pipelineID, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect)
 
     const RunButtonClick = () => {
 
@@ -98,7 +92,7 @@ export default function RunDepNavBar({ environmentID, pipeline }) {
         FlowState.isRunning.set(false);
         setRunning(false)
         // pipelineID, environmentID, runID
-        stopPipelines(pipeline?.pipelineID, environmentID, RunState.selectedRunID.get());
+        stopPipelines(deployment?.pipelineID, environmentID, RunState.selectedRunID.get());
 
     }
 
@@ -151,8 +145,8 @@ export default function RunDepNavBar({ environmentID, pipeline }) {
 
                 <StatusChips />
 
-                {pipeline && environmentID ? (
-                    <RunsDropdown environmentID={environmentID} pipeline={pipeline} runs={runs} setRuns={setRuns} selectedRun={selectedRun} setSelectedRun={setSelectedRun} />
+                {deployment && environmentID ? (
+                    <RunsDropdown environmentID={environmentID} deployment={deployment} runs={runs} setRuns={setRuns} selectedRun={selectedRun} setSelectedRun={setSelectedRun} />
                 ) : null}
 
                 {!RunState.runObject?.runEnd?.get() ? (
