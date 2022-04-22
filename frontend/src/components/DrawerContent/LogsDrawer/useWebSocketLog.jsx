@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import ConsoleLogHelper from '../../../Helper/logger';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
+import { DateTime } from 'luxon';
+import { useGlobalMeState } from '../../Navbar';
+import { formatDateLog } from '../../../utils/formatDate';
 
 var loc = window.location,
     new_uri;
@@ -21,7 +24,7 @@ if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
 
 const websocketEndpoint = new_uri;
 
-export default function useWebSocketLog(environmentId, run_id, node_id, setKeys) {
+export default function useWebSocketLog(environmentId, run_id, node_id, setKeys, timezone) {
     const [socketResponse, setSocketResponse] = useState('');
     const reconnectOnClose = useRef(true);
     const ws = useRef(null);
@@ -56,7 +59,7 @@ export default function useWebSocketLog(environmentId, run_id, node_id, setKeys)
                 // Return if not a log message
                 if (resp.run_id) return;
                 setKeys((k) => [...k, resp.uid]);
-                let text = `${formatDate(resp.created_at)} ${resp.log}`;
+                let text = `${formatDateLog(resp.created_at, timezone)} ${resp.log}`;
                 setSocketResponse(text);
             };
         }
@@ -72,21 +75,4 @@ export default function useWebSocketLog(environmentId, run_id, node_id, setKeys)
     }, [run_id]);
 
     return socketResponse;
-}
-
-export function formatDate(dateString) {
-    const date = new Date(dateString);
-    return (
-        date.getFullYear() +
-        '/' +
-        ('0' + (date.getMonth() + 1)) +
-        '/' +
-        ('0' + date.getDate()).slice(-2) +
-        ' ' +
-        ('0' + date.getHours()).slice(-2) +
-        ':' +
-        ('0' + date.getMinutes()).slice(-2) +
-        ':' +
-        ('0' + date.getSeconds()).slice(-2)
-    );
 }
