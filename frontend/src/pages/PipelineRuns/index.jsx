@@ -11,7 +11,7 @@ import PublishPipelineDrawer from '../../components/DrawerContent/PublishPipelin
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import ViewPageItem from '../../components/MoreInfoContent/ViewPageItem';
 import MoreInfoMenu from '../../components/MoreInfoMenu';
-import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
+import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
 import LogsDrawer from '../../components/DrawerContent/LogsDrawer';
 import TurnOffPipelineDrawer from '../../components/DrawerContent/TurnOffPipelineDrawer';
 import CustomChip from '../../components/CustomChip';
@@ -24,7 +24,6 @@ import { useGlobalRunState } from './GlobalRunState';
 import { edgeTypes, nodeTypes } from './NodeTypes';
 
 const View = () => {
-
     // Retrieve global environments from drop down - selected environment ID
     const Environment = useGlobalEnvironmentState();
 
@@ -49,7 +48,7 @@ const View = () => {
         RunState.set({
             selectedRunID: null,
             runObject: null,
-        })
+        });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -155,7 +154,8 @@ const View = () => {
                 {/* Run navbar includes --- Run/Stop button, Chips, Dropdown, Timer */}
                 <Grid mt={4} container alignItems="center" sx={{ width: { xl: '88%' }, flexWrap: 'nowrap' }}>
                     {/* <WebsocketConnect /> */}
-                    <RunNavBar environmentID={Environment.id.get()} pipeline={pipeline} />
+
+                    {Environment.id.get() && pipeline ? <RunNavBar environmentID={Environment.id.get()} pipeline={pipeline} /> : null}
                 </Grid>
             </Box>
             {!FlowState.isOpenLogDrawer.get() && !isOpenAnalytics ? (
@@ -228,7 +228,7 @@ const View = () => {
 export default View;
 
 // ------ Custom hooks
-// To get the the name and title at the top of page and the staus - online / offline. 
+// To get the the name and title at the top of page and the staus - online / offline.
 export const useGetPipelineHook = (environmentID, setPipeline) => {
     // GraphQL hook
     // Calls getPipeline graphql to get this specific pipeline
@@ -236,7 +236,6 @@ export const useGetPipelineHook = (environmentID, setPipeline) => {
 
     // URI parameter
     const { pipelineId } = useParams();
-
 
     const FlowState = useGlobalPipelineRun();
 
@@ -252,7 +251,6 @@ export const useGetPipelineHook = (environmentID, setPipeline) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-
             // Set local pipeline state
             setPipeline(response);
 

@@ -47,7 +47,7 @@ const ViewPageItem = (props) => {
     const handleRun = () => {
         props.handleCloseMenu();
 
-        var clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: false });
+        const clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: false });
         const runButton = document.getElementById('pipeline-run-button');
         runButton.dispatchEvent(clickEvent);
     };

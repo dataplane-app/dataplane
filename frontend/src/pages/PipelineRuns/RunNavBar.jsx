@@ -12,6 +12,7 @@ import { useGlobalAuthState } from '../../Auth/UserAuth';
 // import { usePipelineTasksRunHook } from './UpdatePipelineColours';
 import { displayTimer, displayTimerMs } from '../../utils/formatDate';
 import { usePipelineTasksColoursRun } from './UpdatePipelineColours';
+import { useLocation } from 'react-router-dom';
 
 var loc = window.location,
     new_uri;
@@ -90,6 +91,19 @@ export default function RunNavBar({ environmentID, pipeline }) {
         // 5. Get pipeline runs
         // 6. Update run dropdown menu
     };
+
+    // Check if run button clicked on pipelines table
+    const { state } = useLocation();
+    useEffect(() => {
+        if (!state) return;
+        if (state) {
+            const clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: false });
+            const runButton = document.getElementById('pipeline-run-button');
+            runButton.dispatchEvent(clickEvent);
+        }
+        // Clear state after a run to avoid a re-run on refresh
+        window.history.replaceState({}, document.title);
+    }, [state]);
 
     const StopButtonClick = () => {
         FlowState.isRunning.set(false);
