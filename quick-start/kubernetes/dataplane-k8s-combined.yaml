@@ -103,6 +103,17 @@ spec:
     requests:
       storage: 10Gi
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dataplane-storage
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -149,7 +160,7 @@ spec:
         - name: DP_MODE
           value: development
         - name: DP_DEBUG
-          value: "false"
+          value: "true"
         - name: DP_DB_DEBUG
           value: "false"
         - name: DP_MQ_DEBUG
@@ -158,16 +169,6 @@ spec:
           value: "false"
         - name: DP_SCHEDULER_DEBUG
           value: "true"
-        - name: DP_WORKER_HEARTBEAT_SECONDS
-          value: "1"
-        - name: DP_WORKER_GROUP
-          value: python_1
-        - name: DP_WORKER_TYPE
-          value: vm
-        - name: DP_WORKER_LB
-          value: roundrobin
-        - name: DP_WORKER_ENV
-          value: Development
         - name: DP_CLEANTASKS_DAYS
           value: "60"
         - name: DP_REMOVELOGS_DAYS
@@ -183,9 +184,17 @@ spec:
           requests:
             cpu: "0.1"
             memory: 100Mi
+        volumeMounts:
+        - mountPath: /appdev/code-files
+          name: dp-persistent-storage
+          subPath: code-files
       securityContext:
         runAsGroup: 10001
         runAsUser: 10001
+      volumes:
+      - name: dp-persistent-storage
+        persistentVolumeClaim:
+          claimName: dataplane-storage
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -247,15 +256,11 @@ spec:
         - name: DP_WORKER_GROUP
           value: python_1
         - name: DP_WORKER_TYPE
-          value: vm
+          value: container
         - name: DP_WORKER_LB
           value: roundrobin
         - name: DP_WORKER_ENV
           value: Development
-        - name: DP_CLEANTASKS_DAYS
-          value: "60"
-        - name: DP_REMOVELOGS_DAYS
-          value: "60"
         - name: DP_WORKER_CMD
           value: /bin/sh
         - name: DP_WORKER_PORT
@@ -264,7 +269,7 @@ spec:
           value: Python
         - name: DP_WORKER_LOAD_PACKAGES
           value: Python
-        image: dataplane/dataplane-worker:latest
+        image: dataplane/dataplane-worker-python:latest
         name: container
         ports:
         - containerPort: 9005
@@ -275,9 +280,17 @@ spec:
           requests:
             cpu: "0.1"
             memory: 100Mi
+        volumeMounts:
+        - mountPath: /appdev/code-files
+          name: dp-persistent-storage
+          subPath: code-files
       securityContext:
         runAsGroup: 10001
         runAsUser: 10001
+      volumes:
+      - name: dp-persistent-storage
+        persistentVolumeClaim:
+          claimName: dataplane-storage
 ---
 apiVersion: apps/v1
 kind: Deployment
