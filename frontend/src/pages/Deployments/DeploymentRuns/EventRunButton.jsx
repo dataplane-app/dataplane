@@ -30,12 +30,12 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
             FlowState.isRunning.set(true);
             RunState.selectedRunID.set(runId);
 
-            // // Define nodes object if it hasn't been defined and set trigger node to Success
-            // if (RunState.runObject.get() === null) {
-            //     // Get trigger id
-            //     const triggerNodeId = FlowState.elements.get().filter((a) => a.type === 'scheduleNode' || a.type === 'playNode')[0].id;
-            //     RunState.runObject.set({ nodes: { [triggerNodeId]: { status: 'Success' } } });
-            // }
+            // Define nodes object if it hasn't been defined and set trigger node to Success
+            if (RunState.runObject.get() === null) {
+                // Get trigger id
+                const triggerNodeId = FlowState.elements.get().filter((a) => a.type === 'scheduleNode' || a.type === 'playNode')[0].id;
+                RunState.runObject.set({ nodes: { [triggerNodeId]: { status: 'Success' } } });
+            }
 
             // 3. On websocket open - trigger run
             wsconnect.onopen = async () => {
@@ -96,13 +96,13 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
 
                 // console.log("message:", response)
 
-                ConsoleLogHelper(
-                    '🧲',
-                    FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.data.name ||
-                        FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.type ||
-                        response.MSG,
-                    response.status
-                );
+                // ConsoleLogHelper(
+                //     '🧲',
+                //     FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.data.name ||
+                //         FlowState.elements.get().filter((a) => a.id === response.node_id)[0]?.type ||
+                //         response.MSG,
+                //     response.status
+                // );
 
                 // Add only if a node message, not MSG.
                 if (response.node_id) {
@@ -133,7 +133,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                     // console.log("n", nodes);
 
                     for (var key in nodes) {
-                        if (nodes[key].status == 'Queue') {
+                        if (nodes[key].status === 'Queue') {
                             RunState.runObject.nodes.merge({
                                 [key]: {
                                     status: 'Fail',
