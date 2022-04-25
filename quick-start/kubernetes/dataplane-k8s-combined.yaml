@@ -172,7 +172,7 @@ spec:
           value: "60"
         - name: DP_REMOVELOGS_DAYS
           value: "60"
-        image: dataplane/dataplane-main:latest
+        image: dataplane/dataplane:latest
         name: container
         ports:
         - containerPort: 9000

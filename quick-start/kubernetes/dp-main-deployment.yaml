@@ -35,7 +35,7 @@ spec:
         runAsGroup: 10001
       containers:
         - name: container
-          image: dataplane/dataplane-main:latest
+          image: dataplane/dataplane:latest
           command:
             - "./dataplane"
           ports:

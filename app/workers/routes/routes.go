@@ -25,15 +25,20 @@ func Setup(port string) *fiber.App {
 
 	app := fiber.New()
 
-	config.LoadConfig()
+	start := time.Now()
 
-	// -------- NATS Connect -------
-	messageq.NATSConnect()
+	config.LoadConfig()
 
 	// ------- DATABASE CONNECT ------
 
 	database.DBConnect()
 	log.Println("🏃 ======== DATAPLANE WORKER ========")
+
+	// ------- LOAD secrets ------
+	secrets.MapSecrets()
+
+	// -------- NATS Connect -------
+	messageq.NATSConnect()
 
 	// ------ Validate worker data ---------
 	if config.WorkerGroup == "" {
@@ -101,11 +106,6 @@ func Setup(port string) *fiber.App {
 	config.EnvName = e.Name
 	config.EnvID = e.ID
 	log.Println("🌳 Environment name and ID: ", config.EnvName, " - ", config.EnvID)
-
-	start := time.Now()
-
-	// ------- LOAD secrets ------
-	secrets.MapSecrets()
 
 	// Load a worker ID
 	config.WorkerID = uuid.NewString()

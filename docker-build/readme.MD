@@ -7,7 +7,8 @@ docker run -p 9001:9000 --rm dataplane/dataplane:0.0.2
 
 docker login
 
-export dpversion=0.0.3
+## NB: From root directory of this repo (not this directory):
+export dpversion=0.0.x
 
 docker build -t dataplane/dataplane:$dpversion -f docker-build/Dockerfile.main.alpine .
 docker tag dataplane/dataplane:$dpversion dataplane/dataplane:$dpversion
