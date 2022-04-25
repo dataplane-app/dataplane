@@ -4,6 +4,7 @@ import { Grid, Tooltip, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
+import { useLocation } from 'react-router-dom';
 import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import { displayRunTime } from '../../../utils/formatDate';
@@ -25,16 +26,18 @@ const BashNode = (props) => {
     const [, setIsSelected] = useState(false);
     const [borderColor, setBorderColor] = useState('#c4c4c4');
 
+    // Determine if editor page
+    const { pathname } = useLocation();
     useEffect(() => {
-        setIsEditorPage(FlowState.isEditorPage.get());
+        if (pathname.includes('/pipelines/flow/')) {
+            setIsEditorPage(true);
+        }
+    }, [pathname]);
+
+    useEffect(() => {
         setIsSelected(FlowState.selectedElement.get()?.id === props.id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    useEffect(() => {
-        setIsEditorPage(FlowState.isEditorPage.get());
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isEditorPage.get()]);
 
     useEffect(() => {
         setIsSelected(FlowState.selectedElement.get()?.id === props.id);
@@ -53,7 +56,6 @@ const BashNode = (props) => {
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nodeStatus]);
-
 
     const onClick = () => {
         RunState.node_id.set(props.id);
@@ -84,16 +86,11 @@ const BashNode = (props) => {
                 </Grid>
 
                 <Grid item>
-
-                        <Typography fontSize={8}>
-                            {RunState.runObject?.nodes?.get() &&
-                                RunState.runObject?.nodes[props.id]?.status?.get() === 'Success' &&
-                                displayRunTime(
-                                    RunState.runObject?.nodes[props.id]?.end_dt.get(),
-                                    RunState.runObject?.nodes[props.id]?.start_dt.get()
-                                )}
-                        </Typography>
-
+                    <Typography fontSize={8}>
+                        {RunState.runObject?.nodes?.get() &&
+                            RunState.runObject?.nodes[props.id]?.status?.get() === 'Success' &&
+                            displayRunTime(RunState.runObject?.nodes[props.id]?.end_dt.get(), RunState.runObject?.nodes[props.id]?.start_dt.get())}
+                    </Typography>
                 </Grid>
 
                 <Box mt={0}>
@@ -107,4 +104,3 @@ const BashNode = (props) => {
 };
 
 export default BashNode;
-
