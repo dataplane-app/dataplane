@@ -13,7 +13,7 @@ import MoreInfoMenu from '../../MoreInfoMenu';
 import { getColor } from '../utils';
 import { displayRunTime } from '../../../utils/formatDate';
 import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
-
+import { useLocation } from 'react-router-dom';
 
 const PythonNode = (props) => {
     // Theme hook
@@ -27,21 +27,18 @@ const PythonNode = (props) => {
     const [, setIsSelected] = useState(false);
     const [borderColor, setBorderColor] = useState('#c4c4c4');
 
-    // let runtype = 'pipeline'
-    // if (props.id.substring(0, 2) === 'd-') {
-    //     runtype = 'deployment'
-    // }
+    // Determine if editor page
+    const { pathname } = useLocation();
+    useEffect(() => {
+        if (pathname.includes('/pipelines/flow/')) {
+            setIsEditorPage(true);
+        }
+    }, [pathname]);
 
     useEffect(() => {
-        setIsEditorPage(FlowState.isEditorPage.get());
         setIsSelected(FlowState.selectedElement.get()?.id === props.id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    useEffect(() => {
-        setIsEditorPage(FlowState.isEditorPage.get());
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isEditorPage.get()]);
 
     useEffect(() => {
         setIsSelected(FlowState.selectedElement.get()?.id === props.id);
@@ -52,21 +49,18 @@ const PythonNode = (props) => {
     let nodeStatus = RunState.runObject?.nodes?.get() && RunState.runObject?.nodes[props.id]?.status?.get();
 
     useEffect(() => {
-
         // console.log("node status:", nodeStatus)
         if (nodeStatus) {
             setBorderColor(getColor(nodeStatus));
         } else {
             setBorderColor(getColor());
         }
-    
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nodeStatus]);
 
     const onClick = () => {
-
-            RunState.node_id.set(props.id);
+        RunState.node_id.set(props.id);
     };
 
     return (
@@ -94,14 +88,11 @@ const PythonNode = (props) => {
                 </Grid>
 
                 <Grid item>
-                        <Typography fontSize={8}>
-                            {RunState.runObject?.nodes?.get() &&
-                                RunState.runObject?.nodes[props.id]?.status?.get() === 'Success' &&
-                                displayRunTime(
-                                    RunState.runObject?.nodes[props.id]?.end_dt.get(),
-                                    RunState.runObject?.nodes[props.id]?.start_dt.get()
-                                )}
-                        </Typography>
+                    <Typography fontSize={8}>
+                        {RunState.runObject?.nodes?.get() &&
+                            RunState.runObject?.nodes[props.id]?.status?.get() === 'Success' &&
+                            displayRunTime(RunState.runObject?.nodes[props.id]?.end_dt.get(), RunState.runObject?.nodes[props.id]?.start_dt.get())}
+                    </Typography>
                 </Grid>
 
                 <Box mt={0}>

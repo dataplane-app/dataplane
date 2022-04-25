@@ -560,8 +560,6 @@ function prepareInputForBackend(input) {
     const nodesInput = [];
     const edgesInput = [];
 
-    console.log('INOUTTTTT: ', input);
-
     const nodeDictionary = {
         playNode: 'trigger',
         scheduleNode: 'trigger',

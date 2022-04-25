@@ -44,9 +44,17 @@ const ViewPageItem = (props) => {
         history.push(`/pipelines/deploy/${pipelineId}`);
     };
 
+    const handleRun = () => {
+        props.handleCloseMenu();
+
+        const clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: false });
+        const runButton = document.getElementById('pipeline-run-button');
+        runButton.dispatchEvent(clickEvent);
+    };
+
     return (
         <>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleRun}>
                 Run
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleGoToEditorPage}>

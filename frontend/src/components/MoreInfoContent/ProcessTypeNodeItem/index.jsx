@@ -2,7 +2,6 @@ import { MenuItem } from '@mui/material';
 import { useHistory, useParams } from 'react-router-dom';
 import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
 
-
 const ProcessTypeNodeItem = (props) => {
     const history = useHistory();
     const FlowState = useGlobalPipelineRun();
@@ -25,9 +24,11 @@ const ProcessTypeNodeItem = (props) => {
 
     return (
         <>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleCodeClick}>
-                Code
-            </MenuItem>
+            {pipelineId ? (
+                <MenuItem sx={{ color: 'cyan.main' }} onClick={handleCodeClick}>
+                    Code
+                </MenuItem>
+            ) : null}
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleOpenLog}>
                 Logs
             </MenuItem>

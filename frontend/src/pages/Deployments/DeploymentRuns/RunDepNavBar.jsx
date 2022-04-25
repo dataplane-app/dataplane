@@ -3,7 +3,7 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import StatusChips from '../../PipelineRuns/StatusChips';
 import RunsDropdown from './RunsDropdown';
-import EventRunButton from './EventRunButton'
+import EventRunButton from './EventRunButton';
 import { v4 as uuidv4 } from 'uuid';
 import { displayTimer, displayTimerMs } from '../../../utils/formatDate';
 import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
@@ -11,7 +11,6 @@ import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 import { useDeploymentTasksColoursRun } from './UpdateDeploymentColours';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import { useStopPipelines } from '../../../graphql/stopPipelines';
-
 
 var loc = window.location,
     new_uri;
@@ -44,11 +43,11 @@ export default function RunDepNavBar({ environmentID, deployment }) {
     const [selectedRun, setSelectedRun] = useState(null);
     const [Running, setRunning] = useState(false);
     const [wsconnect, setWsConnect] = useState();
-    const [runId, setRunId] = useState("");
+    const [runId, setRunId] = useState('');
 
     // GraphQL hooks - not run at this point
     // const getPipelineTasksRun = usePipelineTasksRunHook();
-    
+
     const getPipelineTasks = useDeploymentTasksColoursRun();
     const stopPipelines = useStopPipelinesHook(getPipelineTasks);
 
@@ -57,10 +56,9 @@ export default function RunDepNavBar({ environmentID, deployment }) {
     Update drop down menu with the latest run
     Set the current run for graph to show
     */
-    EventRunButton(environmentID, deployment?.pipelineID, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect, deployment?.version)
+    EventRunButton(environmentID, deployment?.pipelineID, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect, deployment?.version);
 
     const RunButtonClick = () => {
-
         // 1. Generate run ID
         const runId = uuidv4();
 
@@ -72,38 +70,33 @@ export default function RunDepNavBar({ environmentID, deployment }) {
         setRuns - dropdown menu, on run will bring back the latest 20
         setSelectedRun - set the run to the latest run on button press
         */
-        const authtokenget = authToken.get()
-        const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${runId}&id=${runId}&token=${authtokenget}`
+        const authtokenget = authToken.get();
+        const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${runId}&id=${runId}&token=${authtokenget}`;
         const ws = new WebSocket(wsurl);
-        setWsConnect(ws)
-        setRunId(runId)
-        setRunning(true)
-        // 
-        
+        setWsConnect(ws);
+        setRunId(runId);
+        setRunning(true);
+        //
+
         // ------- Handled inside EventRunButton ----------
         // 3. Call Run pipeline
         // 4. Start timer
         // 5. Get pipeline runs
         // 6. Update run dropdown menu
-
-    }
+    };
 
     const StopButtonClick = () => {
         FlowState.isRunning.set(false);
-        setRunning(false)
+        setRunning(false);
         // pipelineID, environmentID, runID
         stopPipelines(deployment?.pipelineID, environmentID, RunState.selectedRunID.get());
+    };
 
-    }
-
-    
-
-    const runstart = RunState.runObject?.runStart?.get()
+    const runstart = RunState.runObject?.runStart?.get();
     // console.log(runstart)
 
     // Updates timer every second
     useEffect(() => {
-
         // console.log("Running: ", FlowState.isRunning.get(), RunState.runObject?.get())
         let secTimer;
         if (FlowState.isRunning.get()) {
@@ -129,21 +122,24 @@ export default function RunDepNavBar({ environmentID, deployment }) {
         <Grid item>
             <Box display="flex" alignItems="center">
                 {/* {console.log(FlowState.isRunning.get())} */}
-                {deployment?.deploy_active && (
-                FlowState.isRunning.get() ? (
-                    <Button
-                        onClick={StopButtonClick}
-                        variant="outlined"
-                        color="error"
-                        sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                        Stop
-                    </Button>
-                ) : (
-                    <Button onClick={RunButtonClick} variant="outlined" sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                        Run
-                    </Button>
-                )
-                )}
+                {deployment?.deploy_active &&
+                    (FlowState.isRunning.get() ? (
+                        <Button
+                            onClick={StopButtonClick}
+                            variant="outlined"
+                            color="error"
+                            sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                            Stop
+                        </Button>
+                    ) : (
+                        <Button
+                            id="deployment-run-button"
+                            onClick={RunButtonClick}
+                            variant="outlined"
+                            sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                            Run
+                        </Button>
+                    ))}
 
                 <StatusChips />
 
@@ -153,12 +149,10 @@ export default function RunDepNavBar({ environmentID, deployment }) {
 
                 {!RunState.runObject?.runEnd?.get() ? (
                     // If looking at an active run, show live timer
-                        <Typography variant="h3" ml={2}>
-                            {elapsed ? elapsed : FlowState.isRunning.get() ? '' : '00:00:00'}
-                        </Typography>
-
+                    <Typography variant="h3" ml={2}>
+                        {elapsed ? elapsed : FlowState.isRunning.get() ? '' : '00:00:00'}
+                    </Typography>
                 ) : (
-                    
                     // If there is no active run.
                     <Typography variant="h3" ml={2}>
                         {displayTimerMs(RunState.runObject?.runStart?.get(), RunState.runObject?.runEnd?.get())}

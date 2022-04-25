@@ -11,7 +11,7 @@ import { useSnackbar } from 'notistack';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import { useTheme } from '@mui/system';
 
-const LogsColumn = forwardRef(({ children, ...rest }) => {
+const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const environmentID = rest.environmentID;
     const pipelineID = rest.pipelineID;
 

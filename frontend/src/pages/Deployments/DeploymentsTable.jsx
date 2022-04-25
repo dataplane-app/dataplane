@@ -78,8 +78,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
                             variant="text"
                             sx={{ fontWeight: 400 }}
                             onClick={() => {
-                                history.push(`/deployments/view/${row.value.pipelineID}/${row.value.version}`);
-                                RunState.tableRunTrigger.set(1);
+                                history.push({ pathname: `/deployments/view/${row.value.pipelineID}/${row.value.version}`, state: { run: true } });
                             }}>
                             Run
                         </Button>

@@ -76,8 +76,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipel
                             variant="text"
                             sx={{ fontWeight: 400 }}
                             onClick={() => {
-                                history.push({ pathname: `/pipelines/view/${row.value.pipelineID}`, state: row.value });
-                                RunState.tableRunTrigger.set(1);
+                                history.push({ pathname: `/pipelines/view/${row.value.pipelineID}`, state: { run: true } });
                             }}>
                             Run
                         </Button>

@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
 import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 
-
 const DeploymentViewPageItem = (props) => {
     // Global state
     const FlowState = useGlobalPipelineRun();
@@ -20,8 +19,11 @@ const DeploymentViewPageItem = (props) => {
     const handleRun = () => {
         RunState.isRunning.set(true);
         props.handleCloseMenu();
-    };
 
+        const clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: false });
+        const runButton = document.getElementById('deployment-run-button');
+        runButton.dispatchEvent(clickEvent);
+    };
     return (
         <>
             {props.version === version ? (
