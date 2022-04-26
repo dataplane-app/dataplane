@@ -58,7 +58,7 @@
     },
     "scripts": {
         "start": "env-cmd -f ./src/enviroment/env.development craco start --watch-poll",
-        "build": "CI=false BUILD_PATH=../app/mainapp/frontbuild env-cmd -f ./src/enviroment/env.build craco build",
+        "build": "CI=false BUILD_PATH=../app/mainapp/frontbuild env-cmd -f ./src/enviroment/env.build craco --max_old_space_size=4096 build",
         "dockerbuild": "env-cmd -f ./src/enviroment/env.build craco build",
         "test": "craco test",
         "eject": "react-scripts eject"
