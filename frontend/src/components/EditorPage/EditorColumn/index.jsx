@@ -1,7 +1,5 @@
 import { Box, Button, Grid, IconButton, Typography, useTheme } from '@mui/material';
 import { forwardRef, useEffect, useRef } from 'react';
-import Editor, { useMonaco } from '@monaco-editor/react';
-import { loader } from '@monaco-editor/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useGlobalEditorState } from '../../../pages/Editor';
@@ -15,10 +13,12 @@ import { useRunCEFile } from '../../../graphql/runCEFile';
 import { useStopCERun } from '../../../graphql/stopCERun';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import * as monaco from 'monaco-editor';
+import Editor, { useMonaco, loader } from '@monaco-editor/react';
+
+loader.config({ monaco });
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
-
-// loader.config({ monaco });
 
 const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Editor state
@@ -50,7 +50,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     useEffect(() => {
         const fileIndex = EditorGlobal.tabs
             .get()
-            .map((tabs) => tabs.id)
+            .map((tabs) => tabs?.id)
             .indexOf(EditorGlobal.selectedFile.attach(Downgraded).get()?.id);
 
         if (fileIndex !== -1) {
@@ -335,7 +335,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                     </Grid>
                 ) : null}
 
-                {EditorGlobal.tabs.get().length > 0 ? (
+                <Box zIndex={10} height="100%">
                     <Editor
                         onMount={handleEditorOnMount}
                         defaultLanguage={EditorGlobal.selectedFile.get()?.language}
@@ -351,11 +351,24 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                             hideCursorInOverviewRuler: { enabled: true },
                         }}
                     />
-                ) : (
-                    <Grid height="100%" container alignItems="center" justifyContent="center">
-                        <Typography>Select a file to open</Typography>
-                    </Grid>
-                )}
+                </Box>
+
+                <Grid
+                    sx={{
+                        backgroundColor: '#fff',
+                        display: EditorGlobal.tabs.get().length > 0 ? 'none' : 'flex',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        bottom: 30,
+                        right: 0,
+                        zIndex: EditorGlobal.tabs.get().length > 0 ? -1 : 20,
+                    }}
+                    container
+                    alignItems="center"
+                    justifyContent="center">
+                    <Typography>Select a file to open</Typography>
+                </Grid>
             </Box>
             {children}
             <CustomDragHandle bottom={7} left={15} />
