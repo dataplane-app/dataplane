@@ -2,7 +2,6 @@ package messageq
 
 import (
 	"dataplane/mainapp/logging"
-	"dataplane/workers/config"
 	"log"
 	"os"
 	"time"
@@ -26,7 +25,7 @@ func NATSConnect() {
 		if err == nil {
 			break
 		} else {
-			log.Printf("😩 NATS: connection failure: %v, try number. %d, retry in 5 seconds", config.Secrets.Replace(err.Error()), i+1)
+			log.Printf("😩 NATS: connection failure: %v, try number. %d, retry in 5 seconds", err.Error(), i+1)
 			time.Sleep(time.Second * 5)
 		}
 	}
