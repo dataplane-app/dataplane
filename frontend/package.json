@@ -82,7 +82,7 @@
     },
     "devDependencies": {
         "autoprefixer": "^9",
-        "cypress": "^9.5.4",
+        "cypress": "9.6.0",
         "eslint-plugin-cypress": "^2.12.1",
         "prettier": "2.5.1"
     }
