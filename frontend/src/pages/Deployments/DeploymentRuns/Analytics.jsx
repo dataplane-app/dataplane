@@ -16,12 +16,12 @@ export function Analytics({ setIsOpenAnalytics }) {
     const RunState = useGlobalRunState();
     const MeData = useGlobalMeState();
 
-    const [labels, setLabels] = useState([]);
     const [nodes, setNodes] = useState([]);
+    const [labels, setLabels] = useState([]);
     const [data, setData] = useState(null);
     const [height, setHeight] = useState(100);
 
-    // Set nodes on dropdown change
+    // 1. Set nodes on dropdown change
     useEffect(() => {
         if (!MeData.timezone.get()) return;
         RunState.runObject.nodes?.attach(Downgraded).get() &&
@@ -30,7 +30,7 @@ export function Analytics({ setIsOpenAnalytics }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [RunState.selectedRunID.get(), MeData.timezone.get()]);
 
-    // Set labels, chart height on nodes change
+    // 2. Set labels, chart height on nodes change
     useEffect(() => {
         setLabels(Object.keys(nodes).map((a) => nodes[a].name || formatType(nodes[a].type)));
 
@@ -105,7 +105,7 @@ export function Analytics({ setIsOpenAnalytics }) {
         },
     };
 
-    // Set data on labels change
+    // 3. Set data on labels change
     useEffect(() => {
         setData({
             labels: labels,
