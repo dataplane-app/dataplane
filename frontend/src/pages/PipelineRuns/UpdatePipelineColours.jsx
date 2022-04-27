@@ -37,10 +37,8 @@ export const usePipelineTasksColoursRun = () => {
                         })
                 );
 
-                RunState.merge({
-                    runObject: {
-                        nodes: nodes,
-                    },
+                RunState.runObject.merge({
+                    nodes: nodes,
                 });
             }
         }

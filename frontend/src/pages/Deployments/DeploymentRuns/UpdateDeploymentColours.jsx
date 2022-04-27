@@ -39,10 +39,8 @@ export const useDeploymentTasksColoursRun = () => {
                         })
                 );
 
-                RunState.merge({
-                    runObject: {
-                        nodes: nodes,
-                    },
+                RunState.runObject.merge({
+                    nodes: nodes,
                 });
             }
         }
