@@ -116,6 +116,7 @@ export function Analytics({ setIsOpenAnalytics }) {
                     // maxBarThickness: 8,
                     // minBarLength: 20,
                     data: Object.values(RunState.runObject.nodes.get())
+                        .filter((a) => a.end_dt)
                         .sort((a, b) => a.start_dt.localeCompare(b.start_dt))
                         .map((a) => [a.start_dt, a.end_dt]),
                     backgroundColor: '#0073C6',
