@@ -35,7 +35,7 @@ const websocketEndpoint = new_uri;
 Input:
 runs, setRuns - state set at RunNavBar level but are set inside this component
 */
-export default function RunsDropdown({ environmentID, deployment, runs, setRuns, selectedRun, setSelectedRun }) {
+export default function RunsDropdown({ environmentID, deployment, runs, setRuns, selectedRun, setSelectedRun , ReconnectWS, setReconnectWS}) {
     // Global states
     // const RunState = useGlobalPipelineRun();
     const MeData = useGlobalMeState();
@@ -65,7 +65,7 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
     const [runId, setRunId] = useState('');
     const [droptrigger, setDroptrigger] = useState(false);
 
-    EventRunOpen(runId, Running, setRunning, wsconnect);
+    EventRunOpen(runId, Running, setRunning, wsconnect, ReconnectWS);
 
     // ------ On page load get the latest run --------
     useEffect(() => {
@@ -142,6 +142,7 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
                     // console.log("change run:", selectedRun.status)
                     const runtaskscolours = await getPipelineTasks(deployment.pipelineID, response[0].run_id, environmentID, false);
                     FlowState.isRunning.set(false);
+                    setRunning(false);
                     // console.log("end date:", response[0])
 
                     // Timer set start and end date
@@ -174,6 +175,13 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
         (async () => {
             // --------  1. Retrieve the selected runs:
             if (selectedRun != null && droptrigger === true) {
+
+                if (wsconnect && wsconnect.readyState === WebSocket.OPEN) {
+                    console.log("close already open ws")
+                    setReconnectWS(false)
+                    wsconnect.close()
+                }
+
                 // console.log("Selected run:", selectedRun.run_id)
                 const responseSingle = await getSinglePipelineRun({ pipelineID: deployment.pipelineID, environmentID, runID: selectedRun.run_id });
 
@@ -184,7 +192,7 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
                 // reset drop trigger for next
                 setDroptrigger(false);
                 // console.log("I am the selected run:", selectedRun)
-                if (selectedRun.status == 'Running') {
+                if (responseSingle.status == 'Running') {
                     const authtokenget = authToken.get();
                     const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${selectedRun.run_id}&id=${selectedRun.run_id}&token=${authtokenget}`;
                     const ws = new WebSocket(wsurl);
@@ -197,6 +205,7 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
                     // Timer set start on run
                     RunState.runObject?.runStart.set(responseSingle.created_at);
                     RunState.runObject?.runEnd.set(null);
+                    FlowState.isRunning.set(true)
                 } else {
                     // console.log("change run:", selectedRun.status)
                     const runtaskscolours = await getPipelineTasks(deployment.pipelineID, selectedRun.run_id, environmentID, false);
@@ -204,6 +213,7 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
                     // Timer set start and end date
                     RunState.runObject?.runStart.set(responseSingle.created_at);
                     RunState.runObject?.runEnd.set(responseSingle.ended_at);
+                    FlowState.isRunning.set(false)
                 }
             }
         })();

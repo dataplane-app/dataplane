@@ -5,7 +5,7 @@ import { useGlobalRunState } from './GlobalRunState';
 import { Downgraded } from '@hookstate/core';
 
 
-export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
+export default function EventRunOpen(runId, Running, setRunning, wsconnect, ReconnectWS) {
     // Global state
     const RunState = useGlobalRunState();
     const FlowState = useGlobalPipelineRun();
@@ -18,6 +18,15 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
 
     return useEffect(() => {
 
+        console.log("Running: ", Running)
+        // if(Running===false && wsconnect){
+        //     wsconnect.onopen = () => {
+        //         ConsoleLogHelper('Not running, close ws');
+        //         wsconnect.close();
+        //         return;
+        //     }
+        // }
+
         function connect() {
 
             // 1. Set the run state as running
@@ -25,6 +34,7 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
             RunState.selectedRunID.set(runId)
 
             console.log("Open trigger")
+            console.log("wsconnect in:", wsconnect)
 
             // 3. On websocket open - trigger run
             wsconnect.onopen = () => {
@@ -35,6 +45,10 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
             wsconnect.onclose = () => {
                 // Exit if closing the connection was intentional
                 if (!reconnectOnClose.current) {
+                    return;
+                }
+
+                if(ReconnectWS === false){
                     return;
                 }
 
@@ -125,7 +139,11 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
             wsconnect.close();
             setRunning(false)
         };
+    }else{
+
     }
+
+
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Running]);

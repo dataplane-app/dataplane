@@ -29,7 +29,7 @@ export const GetPipelineRun = () => {
                 } else {
                     // setSelectedRun(singleRunResponse);
                     FlowState.elements.set(singleRunResponse.run_json);
- 
+                    return singleRunResponse
                 }
             }
             };

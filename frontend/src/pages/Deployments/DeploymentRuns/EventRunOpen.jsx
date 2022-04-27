@@ -5,7 +5,7 @@ import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
 
 
-export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
+export default function EventRunOpen(runId, Running, setRunning, wsconnect, ReconnectWS) {
     // Global state
     const RunState = useGlobalRunState();
     const FlowState = useGlobalPipelineRun();
@@ -35,6 +35,10 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect) {
             wsconnect.onclose = () => {
                 // Exit if closing the connection was intentional
                 if (!reconnectOnClose.current) {
+                    return;
+                }
+
+                if(ReconnectWS === false){
                     return;
                 }
 

@@ -7,7 +7,7 @@ import { useRunPipelines } from '../../graphql/runPipelines';
 import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
 import { Downgraded } from '@hookstate/core';
 
-export default function EventRunButton(environmentId, pipelineId, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect) {
+export default function EventRunButton(environmentId, pipelineId, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect, ReconnectWS) {
     // Global state
     const RunState = useGlobalRunState();
     const FlowState = useGlobalPipelineRun();
@@ -78,6 +78,10 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
             wsconnect.onclose = () => {
                 // Exit if closing the connection was intentional
                 if (!reconnectOnClose.current) {
+                    return;
+                }
+
+                if(ReconnectWS === false){
                     return;
                 }
 

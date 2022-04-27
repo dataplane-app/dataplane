@@ -44,6 +44,7 @@ export default function RunNavBar({ environmentID, pipeline }) {
     const [selectedRun, setSelectedRun] = useState(null);
     const [Running, setRunning] = useState(false);
     const [wsconnect, setWsConnect] = useState();
+    const [ReconnectWS, setReconnectWS] = useState(true);
     const [runId, setRunId] = useState('');
 
     // GraphQL hooks - not run at this point
@@ -62,7 +63,7 @@ export default function RunNavBar({ environmentID, pipeline }) {
     Update drop down menu with the latest run
     Set the current run for graph to show
     */
-    EventRunButton(environmentID, pipeline?.pipelineID, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect);
+    EventRunButton(environmentID, pipeline?.pipelineID, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect, ReconnectWS);
 
     const RunButtonClick = () => {
         // 1. Generate run ID
@@ -149,7 +150,18 @@ export default function RunNavBar({ environmentID, pipeline }) {
                 <StatusChips />
 
                 {pipeline && environmentID ? (
-                    <RunsDropdown environmentID={environmentID} pipeline={pipeline} runs={runs} setRuns={setRuns} selectedRun={selectedRun} setSelectedRun={setSelectedRun} />
+                    <RunsDropdown 
+                    environmentID={environmentID} 
+                    pipeline={pipeline} 
+                    runs={runs} 
+                    setRuns={setRuns} 
+                    selectedRun={selectedRun} 
+                    setSelectedRun={setSelectedRun} 
+                    wsconnect={wsconnect} 
+                    setWsConnect={setWsConnect}
+                    ReconnectWS={ReconnectWS}
+                    setReconnectWS={setReconnectWS}
+                    />
                 ) : null}
 
                 {!RunState.runObject?.runEnd?.get() ? (
