@@ -25,7 +25,11 @@ export function Analytics({ setIsOpenAnalytics }) {
     useEffect(() => {
         if (!MeData.timezone.get()) return;
         RunState.runObject.nodes?.attach(Downgraded).get() &&
-            setNodes(Object.values(RunState.runObject.nodes?.attach(Downgraded).get()).sort((a, b) => a.start_dt?.localeCompare(b.start_dt)));
+            setNodes(
+                Object.values(RunState.runObject.nodes?.attach(Downgraded).get())
+                    .filter((a) => a.end_dt)
+                    .sort((a, b) => a.start_dt?.localeCompare(b.start_dt))
+            );
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [RunState.selectedRunID.get(), MeData.timezone.get()]);
