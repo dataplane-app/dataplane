@@ -122,6 +122,8 @@ func WorkerHealthStart() {
 			MemoryPerc:  percentMemorysend,
 			MemoryUsed:  memoryused,
 			Load:        loadsend,
+			EnvID:       config.EnvID,
+			T:           time.Now().UTC(),
 			LB:          config.WorkerLB,
 			WorkerType:  config.WorkerType,
 		}

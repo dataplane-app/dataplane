@@ -68,6 +68,7 @@ type WorkerStats struct {
 	EnvID       string `json:"EnvID"`
 	LB          string `json:"LB"`
 	WorkerType  string `json:"WorkerType"` //container, kubernetes
+	T           time.Time
 }
 
 type WorkerGroup struct {
