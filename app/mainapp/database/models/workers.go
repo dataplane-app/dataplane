@@ -9,17 +9,17 @@ func (Workers) TableName() string {
 }
 
 type Workers struct {
-	WorkerID       string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"worker_id"`
-	CPU            int        `json:"cpu"`
-	Memory         int        `json:"memory"`
-	NetworkAddress string     `json:"network_address"`
-	NetworkPort    string     `json:"network_port"`
-	WorkerGroup    string     `json:"worker_group"`
-	AcceptStatus   string     `json:"accept_status"`
-	Status         string     `json:"status"` //online || offline || failed || starting
-	CreatedAt      time.Time  `json:"created_at"`
-	UpdatedAt      *time.Time `json:"updated_at"`
-	DeletedAt      *time.Time `json:"deleted_at,omitempty"`
+	WorkerID      string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"worker_id"`
+	WorkerGroup   string     `gorm:"PRIMARY_KEY;" json:"worker_group"`
+	EnvironmentID string     `gorm:"PRIMARY_KEY;" json:"environment_id"`
+	Status        string     `json:"status"` //online || offline || failed || starting
+	CPUPerc       float64    `json:"cpu_perc"`
+	Load          float64    `json:"load"`
+	MemoryPerc    float64    `json:"memory_perc"`
+	MemoryUsed    float64    `json:"memory_used"`
+	LB            string     `json:"lb"`
+	WorkerType    string     `json:"worker_type"`
+	UpdatedAt     *time.Time `json:"updated_at"`
 }
 
 func (WorkerGroups) IsEntity() {}
@@ -29,13 +29,11 @@ func (WorkerGroups) TableName() string {
 }
 
 type WorkerGroups struct {
-	WorkerGroupID string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"worker_group_id"`
-	WorkerName    string     `json:"worker_name"`
-	WorkerType    string     `json:"secret_type"` //docker || kubernetes
-	Description   string     `json:"description"`
-	CreatedAt     time.Time  `json:"created_at"`
+	WorkerGroup   string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"worker_group"`
+	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"environment_id"`
+	LB            string     `json:"lb"`
+	WorkerType    string     `json:"worker_type"`
 	UpdatedAt     *time.Time `json:"updated_at"`
-	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
 }
 
 func (WorkerSecrets) IsEntity() {}
@@ -63,13 +61,10 @@ type WorkerStats struct {
 	WorkerGroup string
 	WorkerID    string
 	Status      string //Online, Busy
-	T           time.Time
-	Interval    int
 	CPUPerc     float64
 	Load        float64
 	MemoryPerc  float64
 	MemoryUsed  float64
-	Env         string `json:"Env"`
 	EnvID       string `json:"EnvID"`
 	LB          string `json:"LB"`
 	WorkerType  string `json:"WorkerType"` //container, kubernetes
@@ -78,9 +73,6 @@ type WorkerStats struct {
 type WorkerGroup struct {
 	WorkerGroup string
 	Status      string //Online, Busy
-	T           time.Time
-	Interval    int
-	Env         string `json:"Env"`
 	EnvID       string `json:"EnvID"`
 	LB          string `json:"LB"`
 	WorkerType  string `json:"WorkerType"` //container, kubernetes

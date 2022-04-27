@@ -1,6 +1,7 @@
 package workerhealth
 
 import (
+	"dataplane/mainapp/database/models"
 	"dataplane/workers/config"
 	"dataplane/workers/messageq"
 	"log"
@@ -34,7 +35,7 @@ func WorkerLoad(s *gocron.Scheduler) {
 		load, _ := load.Avg()
 		loadsend := math.Round(load.Load1*100) / 100
 
-		send := WorkerStats{
+		send := models.WorkerStats{
 			WorkerGroup: config.WorkerGroup,
 			WorkerID:    config.WorkerID,
 			Status:      "Online",
@@ -42,14 +43,11 @@ func WorkerLoad(s *gocron.Scheduler) {
 			MemoryPerc:  percentMemorysend,
 			MemoryUsed:  memoryused,
 			Load:        loadsend,
-			Interval:    1,
-			T:           time.Now().UTC(),
 			EnvID:       config.EnvID,
-			Env:         config.WorkerEnv,
 			LB:          config.WorkerLB,
 			WorkerType:  config.WorkerType,
 		}
-		messageq.NATSencoded.Publish("workerload", send)
+		messageq.NATSencoded.Publish("workerloadv2", send)
 		if os.Getenv("DP_WORKER_DEBUG") == "true" {
 			log.Println("sending:", send)
 		}

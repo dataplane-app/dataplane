@@ -322,7 +322,9 @@ func Setup(port string) *fiber.App {
 	})
 
 	/* Worker Load Subscriptions activate */
-	worker.LoadWorkers(MainAppID)
+	// worker.LoadWorkers(MainAppID)
+	worker.WorkerListen()
+	worker.WorkerRemovalListen(config.Scheduler, database.DBConn)
 	pipelines.RunNextPipeline()
 	scheduler.PipelineSchedulerListen()
 
