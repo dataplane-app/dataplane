@@ -4,10 +4,10 @@ metadata:
   name: kubernetes-dev
 build:
   artifacts:
-  - image: dataplane/dataplane-main-dev
+  - image: registry.digitalocean.com/dataplane-dev/dataplane-main-dev
     docker:
       dockerfile: ./kubernetes-dev/Dockerfile.main
 deploy:
   kubectl:
     manifests:
-    - ./kubernetes-dev/dp-main-deployment.yaml
+    - ./kubernetes-dev/do-dp-main-deployment.yaml

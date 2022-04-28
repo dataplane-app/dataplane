@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/go-co-op/gocron"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -117,6 +118,9 @@ func Setup(port string) *fiber.App {
 	// add timer field to response header
 	app.Use(Timer())
 
+	config.Scheduler = gocron.NewScheduler(time.UTC)
+	config.Scheduler.StartAsync()
+
 	if config.Debug == "true" {
 		app.Use(logger.New(
 			logger.Config{
@@ -152,7 +156,9 @@ func Setup(port string) *fiber.App {
 	/* Every 5 seconds tell mainapp about my status
 	Needs to be called after listen for tasks to avoid timing issues when accepting tasks
 	*/
-	workerhealth.WorkerHealthStart()
+	workerhealth.WorkerHealthStart(config.Scheduler)
+	log.Println("🚚 Submitting workers")
+	workerhealth.WorkerLoad(config.Scheduler)
 
 	stop := time.Now()
 	// Do something with response

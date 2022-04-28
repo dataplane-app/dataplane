@@ -4,10 +4,10 @@ metadata:
   name: kubernetes-dev
 build:
   artifacts:
-  - image: dataplane/dataplane-worker-dev
+  - image: registry.digitalocean.com/dataplane-dev/dp-worker-dev
     docker:
       dockerfile: ./kubernetes-dev/Dockerfile.workerpython
 deploy:
   kubectl:
     manifests:
-    - ./kubernetes-dev/dp-worker-deployment.yaml
+    - ./kubernetes-dev/do-dp-worker-deployment.yaml

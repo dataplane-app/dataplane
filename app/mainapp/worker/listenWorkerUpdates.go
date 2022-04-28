@@ -5,6 +5,7 @@ import (
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/messageq"
 	"log"
+	"os"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -14,6 +15,10 @@ func WorkerListen() {
 
 	// Subscribe all worker updates
 	messageq.NATSencoded.QueueSubscribe("workerloadv2", "workerloadv2", func(subj, reply string, msg models.WorkerStats) {
+
+		if os.Getenv("DP_WORKER_DEBUG") == "true" {
+			log.Println("rcvd:", msg)
+		}
 
 		switch msg.Status {
 		case "Online":

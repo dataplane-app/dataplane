@@ -73,7 +73,7 @@ func DB() (*gorm.DB, error) {
 		if err == nil {
 			break
 		} else {
-			log.Printf("😩 db: connection failure: %v, try number. %d, retry in 5 seconds", config.Secrets.Replace(err.Error()), i+1)
+			log.Printf("😩 db: connection failure: %v, try number. %d, retry in 5 seconds", err.Error(), i+1)
 			time.Sleep(time.Second * 5)
 		}
 	}

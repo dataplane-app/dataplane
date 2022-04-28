@@ -57,7 +57,6 @@ func Setup(port string) *fiber.App {
 	// ------- DATABASE CONNECT ------
 
 	database.DBConnect()
-	database.GoDBConnect()
 	log.Println("🏃 Running")
 
 	// -------- NATS Connect -------

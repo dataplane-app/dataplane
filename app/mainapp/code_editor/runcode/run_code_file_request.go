@@ -171,8 +171,9 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 			var response runtask.TaskResponse
 
 			// log.Println("Task channel: ", "task."+workerGroup+"."+loadbalanceNext)
-
-			_, errnats := messageq.MsgReply("runcodefile."+workerGroup+"."+loadbalanceNext, runSend, &response)
+			channel := "runcodefile." + workerGroup + "." + loadbalanceNext
+			// log.Println(channel)
+			_, errnats := messageq.MsgReply(channel, runSend, &response)
 
 			if errnats != nil {
 				log.Println("Send to worker error nats:", errnats)

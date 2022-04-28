@@ -3,6 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nats-config
+  namespace: dataplane-dev
 data:
   nats.conf: |
     pid_file: "/var/run/nats/nats.pid"
@@ -25,6 +26,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nats
+  namespace: dataplane-dev
   labels:
     app: nats
 spec:
@@ -48,6 +50,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: nats
+  namespace: dataplane-dev
   labels:
     app: nats
 spec:
@@ -81,7 +84,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
       - name: nats
-        image: nats:2.7.4-alpine
+        image: nats:2.8.1-alpine
         ports:
         - containerPort: 4222
           name: client

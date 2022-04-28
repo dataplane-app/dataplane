@@ -23,7 +23,7 @@ type WorkerResponse struct {
 func WorkerLoad(s *gocron.Scheduler) {
 	/* Reply to mainapp request */
 
-	s.Every(1).Seconds().Do(func() {
+	s.Every(1000).Milliseconds().Do(func() {
 
 		percentCPU, _ := cpu.Percent(time.Second, false)
 		percentCPUsend := math.Round(percentCPU[0]*100) / 100

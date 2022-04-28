@@ -1,35 +1,35 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: dataplane-worker
+  name: dataplane-main
   namespace: dataplane-dev
   labels:
-    app: dataplane-worker
+    app: dataplane-main
 spec:
   ports:
     - name: tcp
       protocol: TCP
       #      port = port connected to ingress
-      port: 9005
+      port: 9000
       # targetPort = port on container
-      targetPort: 9005
+      targetPort: 9000
   selector:
-    app: dataplane-worker
+    app: dataplane-main
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dataplane-worker
+  name: dataplane-main
   namespace: dataplane-dev
 spec:
-  replicas: 4
+  replicas: 1
   selector:
     matchLabels:
-      app: dataplane-worker
+      app: dataplane-main
   template:
     metadata:
       labels:
-        app: dataplane-worker
+        app: dataplane-main
     spec:
       securityContext:
         runAsUser: 10001
@@ -40,11 +40,11 @@ spec:
             claimName: dataplane-storage
       containers:
         - name: container
-          image: dataplane/dataplane-worker-dev:latest
+          image: registry.digitalocean.com/dataplane-dev/dataplane-main-dev:latest
           command:
-            - "./dataplane-worker"
+            - "./dataplane"
           ports:
-            - containerPort: 9005
+            - containerPort: 9000
           volumeMounts:
             - name: dp-persistent-storage
               mountPath: /appdev/code-files
@@ -105,13 +105,5 @@ spec:
               value: "60"
             - name: DP_REMOVELOGS_DAYS
               value: "60"
-            - name: DP_WORKER_CMD
-              value: "/bin/sh"
-            - name: DP_WORKER_PORT
-              value: "9005"
-            - name: DP_WORKER_LANGUAGES
-              value: "Python"
-            - name: DP_WORKER_LOAD_PACKAGES
-              value: "Python"
             - name: DP_WORKER_DEBUG
               value: "true"

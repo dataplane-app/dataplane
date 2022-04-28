@@ -34,7 +34,7 @@ import (
 // 	WorkerType  string `json:"WorkerType"` //container, kubernetes
 // }
 
-func WorkerHealthStart() {
+func WorkerHealthStart(s *gocron.Scheduler) {
 
 	// data, err := json.Marshal(worker)
 	// if err != nil {
@@ -50,10 +50,6 @@ func WorkerHealthStart() {
 	// }
 
 	/* Start the worker heart beat */
-	s := gocron.NewScheduler(time.UTC)
-
-	log.Println("🚚 Submitting workers")
-	WorkerLoad(s)
 
 	i, _ := strconv.Atoi(os.Getenv("DP_WORKER_HEARTBEAT_SECONDS"))
 
@@ -148,5 +144,4 @@ func WorkerHealthStart() {
 
 	})
 
-	s.StartAsync()
 }
