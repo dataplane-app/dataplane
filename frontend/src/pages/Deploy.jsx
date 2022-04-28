@@ -397,7 +397,7 @@ const useGetWorkerGroupsHook = (setWorkerGroups, selectedEnvironment) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setWorkerGroups(response.filter((a) => a.Env === selectedEnvironment.name));
+            setWorkerGroups(response);
         }
     };
 };
