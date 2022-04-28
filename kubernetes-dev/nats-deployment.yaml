@@ -11,9 +11,9 @@ data:
     cluster {
       port: 6222
       routes [
-        nats://nats-0.nats.default.svc:6222
-        nats://nats-1.nats.default.svc:6222
-        nats://nats-2.nats.default.svc:6222
+        nats://nats-0.nats.dataplane-dev.svc:6222
+        nats://nats-1.nats.dataplane-dev.svc:6222
+        nats://nats-2.nats.dataplane-dev.svc:6222
       ]
       cluster_advertise: $CLUSTER_ADVERTISE
       connect_retries: 30
