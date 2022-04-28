@@ -18,7 +18,7 @@ const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGrou
     // Local state
     const [selectedElement, setSelectedElement] = useState('-');
     const [workerGroups, setWorkerGroups] = useState([]);
-    const [selectedWorkerGroup, setSelectedWorkerGroup] = useState({ WorkerGroup: 'default' });
+    const [selectedWorkerGroup, setSelectedWorkerGroup] = useState({ WorkerGroup: workerGroup });
 
     // Custom GraphQL hook
     const getWorkerGroups = useGetWorkerGroupsHook(environmentID, setWorkerGroups);
@@ -91,7 +91,7 @@ const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGrou
                             options={workerGroups}
                             value={selectedWorkerGroup}
                             disableClearable
-                            getOptionLabel={(option) => (option.WorkerGroup === workerGroup || option.WorkerGroup === '' ? 'default' : option.WorkerGroup)}
+                            getOptionLabel={(option) => option.WorkerGroup}
                             onChange={(event, newValue) => {
                                 setSelectedWorkerGroup(newValue);
                             }}
