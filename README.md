@@ -1,4 +1,5 @@
-![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests)
+![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests) 
+![Docker Pulls](https://img.shields.io/docker/pulls/dataplane/dataplane-worker-python)
 
 If you like Dataplane, give it a star ⭐<br />
 
