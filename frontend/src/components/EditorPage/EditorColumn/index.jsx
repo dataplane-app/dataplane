@@ -13,10 +13,10 @@ import { useRunCEFile } from '../../../graphql/runCEFile';
 import { useStopCERun } from '../../../graphql/stopCERun';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import * as monaco from 'monaco-editor';
+// import * as monaco from 'monaco-editor';
 import Editor, { useMonaco, loader } from '@monaco-editor/react';
 
-loader.config({ monaco });
+// loader.config({ monaco });
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 

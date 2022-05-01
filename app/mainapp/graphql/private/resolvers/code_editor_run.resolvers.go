@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/runcode"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database/models"
@@ -61,6 +61,7 @@ func (r *mutationResolver) StopCERun(ctx context.Context, pipelineID string, run
 		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
