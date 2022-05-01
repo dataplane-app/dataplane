@@ -3,11 +3,11 @@
 If you like Dataplane, give it a star ⭐<br />
 
 ### Dataplane (Beta)
-⚡️ Extreme performance with a low resource footprint<br />
-🖐 Drag drop workflow builder<br />
+⚡️ Extreme performance with a low memory and cpu footprint<br />
+🖐 Drag drop data pipeline builder<br />
 🧑‍💻 Built in Python code editor<br />
 👮 Granular permissions for teams to collaborate with segregated access. <br />
-🐿 Secrets management with logging redaction allows team members to use secure resources without revealing passwords. <br />
+🐿 Secrets management with logging redaction allows team members to use secure resources without revealing passwords<br />
 ⏱ Scheduler with multiple timezone support<br />
 🌍 Setup isolated environments to develop, test & deploy across data mesh domains<br />
 📊 Monitor real-time resource usage by analytical workloads<br />
