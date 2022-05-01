@@ -43,14 +43,14 @@ extend type Query {
   """
 	Get a node's file structure.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write], specific_pipeline[read]
 	"""
   filesNode(environmentID: String!, nodeID: String!, pipelineID: String!): CodeTree
 
   """
 	Get packages of a python script.
 	+ **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
+    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write], specific_pipeline[read]
 	"""
   getCodePackages( workerGroup: String!, language: String!, environmentID: String!, pipelineID: String!): CodePackages
 }
