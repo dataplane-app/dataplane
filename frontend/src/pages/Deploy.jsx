@@ -206,7 +206,7 @@ const Deploy = () => {
                                     </Grid>
                                 </Grid>
 
-                                {deployment.node_type_desc !== 'play' ? (
+                                {pipeline.node_type_desc !== 'play' ? (
                                     <Grid container alignItems="center" mb={4}>
                                         <IOSSwitch onClick={() => setLive(!live)} checked={live} inputProps={{ 'aria-label': 'controlled' }} />
                                         <Typography
