@@ -382,13 +382,13 @@ const useGetDeploymentHook = (environmentID, pipelineID, setDeployment) => {
 // ------- Custom Hooks
 const useGetWorkerGroupsHook = (setWorkerGroups, selectedEnvironment) => {
     // GraphQL hook
-    const getAccessGroupUsers = useGetWorkerGroups();
+    const getWorkerGroups = useGetWorkerGroups();
 
     const { enqueueSnackbar } = useSnackbar();
 
     // Get worker groups
     return async (environmentID) => {
-        const response = await getAccessGroupUsers({ environmentID });
+        const response = await getWorkerGroups({ environmentID });
 
         if (response === null) {
             setWorkerGroups([]);
@@ -397,7 +397,7 @@ const useGetWorkerGroupsHook = (setWorkerGroups, selectedEnvironment) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setWorkerGroups(response.filter((a) => a.Env === selectedEnvironment.name));
+            setWorkerGroups(response);
         }
     };
 };
