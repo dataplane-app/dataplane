@@ -14,7 +14,7 @@ ARG SKAFFOLD_GO_GCFLAGS
 RUN CGO_ENABLED=0 go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane-worker workers/worker.go
 
 
-FROM python:3.9.12-bullseye
+FROM python:3.9.12-slim-bullseye
 
 # RUN apk update && apk add --no-cache tzdata make automake gcc g++ subversion python3-dev
 # RUN rm -rf /var/cache/apk/*
