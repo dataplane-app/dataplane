@@ -14,6 +14,22 @@ ARG SKAFFOLD_GO_GCFLAGS
 RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane mainapp/server.go
 
 
+FROM node:16.10.0-bullseye-slim as builder2
+
+RUN mkdir -p /node
+RUN mkdir -p /node/app/mainapp/frontbuild
+
+WORKDIR /node
+
+ADD frontend/public /node/public
+ADD frontend/src /node/src
+ADD frontend/craco.config.js /node/craco.config.js
+ADD frontend/package.json /node/package.json
+
+RUN yarn add global env-cmd
+RUN yarn builddocker
+
+
 FROM alpine:3.15
 
 RUN apk update && apk add --no-cache tzdata
@@ -33,7 +49,8 @@ RUN adduser \
     "${USER}"
 
 
-ADD app/mainapp/frontbuild /dataplane/frontbuild
+# ADD app/mainapp/frontbuild /dataplane/frontbuild
+COPY --from=builder2 /node/app/mainapp/frontbuild /dataplane/frontbuild
 COPY --from=builder go/src/build/dataplane /dataplane/dataplane
 RUN mkdir /dataplane/code-files/ && chown -R appuser:appuser /dataplane
 RUN chmod +w /dataplane/code-files/

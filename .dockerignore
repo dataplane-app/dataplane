@@ -1,2 +1,5 @@
-node_modules
-frontbuild
+/node_modules
+/build
+.git
+*.md
+.gitignore
