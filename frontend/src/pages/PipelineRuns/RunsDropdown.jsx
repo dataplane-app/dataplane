@@ -148,7 +148,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
                     // Check if run button clicked on pipelines table
                     if (!state) return;
-                    if (state) {
+                    if (state?.run) {
                         const clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: false });
                         const runButton = document.getElementById('pipeline-run-button');
                         runButton.dispatchEvent(clickEvent);
