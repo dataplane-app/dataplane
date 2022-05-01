@@ -15,7 +15,8 @@ If you like Dataplane, give it a star ⭐<br />
 🌳 Add more replicas for high availability and scale<br />
 ☁️ Cloud native  
 
-<img width="1660" alt="image" src="https://user-images.githubusercontent.com/63714857/161389462-a65928c6-1ab7-4efa-a8d8-06598adfef1b.png">
+![Pipeline Running Screen Recording 4K pre render v2](https://user-images.githubusercontent.com/63714857/166139437-3020ac63-7ae6-4265-a301-29e5448451eb.gif)
+
 
 ### About the project
 The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved. <br />
