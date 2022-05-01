@@ -22,7 +22,6 @@ const Deploy = () => {
 
     // Local state
     const [deployment, setDeployment] = useState(null);
-    console.log('🚀 ~ file: Deploy.jsx ~ line 25 ~ Deploy ~ deployment', deployment);
     const [selectedEnvironment, setSelectedEnvironment] = useState(null);
     const [availableEnvironments, setAvailableEnvironments] = useState([]);
     const [availableWorkerGroups, setAvailableWorkerGroups] = useState([]);
