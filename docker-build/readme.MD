@@ -12,13 +12,14 @@ export dpversion=0.0.x
 
 docker build -t dataplane/dataplane:$dpversion -f docker-build/Dockerfile.main.alpine .
 docker tag dataplane/dataplane:$dpversion dataplane/dataplane:$dpversion
+docker push dataplane/dataplane:$dpversion
 docker tag dataplane/dataplane:$dpversion dataplane/dataplane:latest
 docker push dataplane/dataplane:latest
-docker push dataplane/dataplane:$dpversion
+
 
 docker build -t dataplane/dataplane-worker-python:$dpversion -f docker-build/Dockerfile.workerpython.debian .
 docker tag dataplane/dataplane-worker-python:$dpversion dataplane/dataplane-worker-python:$dpversion
+docker push dataplane/dataplane-worker-python:$dpversion
 docker tag dataplane/dataplane-worker-python:$dpversion dataplane/dataplane-worker-python:latest
 docker push dataplane/dataplane-worker-python:latest
-docker push dataplane/dataplane-worker-python:$dpversion
 ```
