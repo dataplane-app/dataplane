@@ -98,9 +98,9 @@ const AddUserDrawer = ({ handleClose }) => {
                         {...register('password', { required: true })}
                     />
 
-                    <Typography variant="body2" sx={{ mt: 2 }}>
+                    {/* <Typography variant="body2" sx={{ mt: 2 }}>
                         The user will be asked to change password on first login.
-                    </Typography>
+                    </Typography> */}
 
                     <TextField label="Job title" id="job_title" size="small" sx={{ mt: 2, fontSize: '.75rem', display: 'flex' }} {...register('job_title')} />
 
