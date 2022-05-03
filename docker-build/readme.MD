@@ -23,3 +23,8 @@ docker push dataplane/dataplane-worker-python:$dpversion
 docker tag dataplane/dataplane-worker-python:$dpversion dataplane/dataplane-worker-python:latest
 docker push dataplane/dataplane-worker-python:latest
 ```
+
+Test
+```
+docker run -rm -p 9003:9000 --name dataplane-main dataplane/dataplane:0.0.11
+```
