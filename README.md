@@ -4,7 +4,7 @@
 If you like Dataplane, give it a star ⭐<br />
 
 ### Dataplane (Beta)
-⚡️ Extreme performance with a low memory and cpu footprint<br />
+⚡️ Extreme performance with a low memory and CPU footprint<br />
 🖐 Drag drop data pipeline builder<br />
 🧑‍💻 Built in Python code editor<br />
 👮 Granular permissions for teams to collaborate with segregated access. <br />
@@ -24,6 +24,7 @@ The idea behind Dataplane is to make it quicker and easier to build robust data 
 
 Website: https://dataplane.app/ <br />
 Documentation: https://learn.dataplane.app/ <br />
+Demo: https://dataplane.app/demo <br />
 
 ### Quick start with Docker
 Requires Docker engine installed - https://docs.docker.com/engine/install/<br /><br/>
