@@ -20,11 +20,11 @@ If you like Dataplane, give it a star ⭐<br />
 
 
 ### About the project
-The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved. <br />
+The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved.
 
-Website: https://dataplane.app/ <br />
-Documentation: https://learn.dataplane.app/ <br />
-Demo: https://dataplane.app/demo <br />
+Website: https://dataplane.app/
+Documentation: https://learn.dataplane.app/
+Demo: https://dataplane.app/demo
 
 ### Quick start with Docker
 Requires Docker engine installed - https://docs.docker.com/engine/install/<br /><br/>
@@ -38,7 +38,7 @@ docker-compose up
 ```
 For first time setup, follow the get started process at: http://localhost:9001/webapp/get-started
 <br />
-To use Dataplane, go to http://localhost:9001/webapp/<br /><br />
+To use Dataplane, go to http://localhost:9001/webapp/<br />
 Docker releases: https://hub.docker.com/u/dataplane
 
 
