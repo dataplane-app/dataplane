@@ -5,6 +5,7 @@ import cronstrue from 'cronstrue';
 import later from '@breejs/later';
 import { isValidCron } from 'cron-validator';
 import { useGlobalMeState } from '../../Navbar';
+import { DateTime } from 'luxon';
 
 export function CronTab({ setValidationError, scheduleStatement, setScheduleStatement, timezone, setTimezone }) {
     // Local State
@@ -25,6 +26,8 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scheduleStatement]);
 
+    const cronString = isValidCron(scheduleStatement) ? cronstrue.toString(scheduleStatement, { throwExceptionOnParseError: false }) : '';
+
     return (
         <Box display="flex" gap={8}>
             {/* Left Side */}
@@ -35,7 +38,11 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
                 </Box>
 
                 <Typography fontSize={13} mt={1.5}>
-                    {(isValidCron(scheduleStatement) ? cronstrue.toString(scheduleStatement, { throwExceptionOnParseError: false }) : '').replace(/AM|PM/, (x) => x + ' UTC')}
+                    {cronString.replace(/AM|PM/, (x) => x + ' UTC')}
+                </Typography>
+
+                <Typography fontSize={13} mt={1.5}>
+                    {cronZone(cronString, schedule[0], timezone)}
                 </Typography>
 
                 <Typography fontSize={15} fontWeight={700} mt={3}>
@@ -68,38 +75,35 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
                                             <TableCell component="th" scope="row">
                                                 {idx + 1}
                                             </TableCell>
+
                                             <TableCell component="th" scope="row">
-                                                {row.toLocaleDateString('en-US', {
-                                                    weekday: 'short',
-                                                })}
-                                                ,
+                                                {DateTime.fromJSDate(row, { zone: timezone }).toFormat('EEE')},
                                             </TableCell>
+
                                             <TableCell component="th" scope="row">
-                                                {row.getDate()}
+                                                {DateTime.fromJSDate(row, { zone: timezone }).toFormat('d')}
                                             </TableCell>
+
                                             <TableCell component="th" scope="row">
-                                                {row.toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                })}
+                                                {DateTime.fromJSDate(row, { zone: timezone }).toFormat('MMM')}
                                             </TableCell>
+
                                             <TableCell component="th" scope="row">
-                                                {row.getFullYear()}
+                                                {DateTime.fromJSDate(row, { zone: timezone }).toFormat('yyyy')}
                                             </TableCell>
+
                                             {userTimezone ? (
-                                                <Tooltip
-                                                    title={formatUsersTime(row, userTimezone, timezone) + ' ' + userTimezone + ' ' + getTimeZoneOffSet(userTimezone)}
-                                                    placement="top-start">
+                                                <Tooltip title={DateTime.fromJSDate(row, { zone: timezone }).toFormat('HH:mm:ss z (ZZZZ)')} placement="top-start">
                                                     <TableCell component="th" scope="row">
-                                                        {formatTime(row)}
+                                                        {DateTime.fromJSDate(row, { zone: timezone }).toFormat('HH:mm:ss')}
                                                     </TableCell>
                                                 </Tooltip>
                                             ) : null}
+
                                             {userTimezone ? (
-                                                <Tooltip
-                                                    title={formatUsersTime(row, userTimezone, timezone) + ' ' + userTimezone + ' ' + getTimeZoneOffSet(userTimezone)}
-                                                    placement="top-start">
+                                                <Tooltip title={DateTime.fromJSDate(row, { zone: timezone }).toFormat('HH:mm:ss z (ZZZZ)')} placement="top-start">
                                                     <TableCell component="th" scope="row">
-                                                        {timezone && timezone + ' ' + getTimeZoneOffSet(timezone)}
+                                                        {DateTime.fromJSDate(row, { zone: timezone }).toFormat('z (ZZZZ)')}
                                                     </TableCell>
                                                 </Tooltip>
                                             ) : null}
@@ -154,36 +158,11 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
 }
 
 // Utility functions
-function formatTime(date) {
-    const hours = date.getHours() < 10 ? '0' + date.getHours() : date.getHours();
-    const minutes = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes();
-    const seconds = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
-    return hours + ':' + minutes + ':' + seconds;
-}
+function cronZone(statement, next, zone) {
+    // Return if there is no time
+    if (/\d\d:\d\d (AM|PM)/.test(statement) === false) return;
 
-// Takes timezone name and return its offset
-// Example 'Europe/Istanbul' => (GMT+3)
-export function getTimeZoneOffSet(timezoneName) {
-    if (!timezoneName) return;
-    return '(' + new Intl.DateTimeFormat('en', { timeZoneName: 'short', timeZone: timezoneName }).format(new Date()).split(' ')[1] + ')';
-}
-
-function formatUsersTime(date, userTimezone, timezone) {
-    const timezonediff = getOffsetBetweenTimezonesForDate(date, userTimezone, timezone);
-    const userDate = new Date(date.getTime() + timezonediff);
-
-    return formatTime(userDate);
-}
-
-function getOffsetBetweenTimezonesForDate(date, timezone1, timezone2) {
-    const timezone1Date = convertDateToAnotherTimeZone(date, timezone1);
-    const timezone2Date = convertDateToAnotherTimeZone(date, timezone2);
-    return timezone1Date.getTime() - timezone2Date.getTime();
-}
-
-function convertDateToAnotherTimeZone(date, timezone) {
-    const dateString = date.toLocaleString('en-US', {
-        timeZone: timezone,
-    });
-    return new Date(dateString);
+    const time = DateTime.fromJSDate(next, { zone }).toFormat('hh:mm a z');
+    statement = statement.replace(/\d\d:\d\d (AM|PM)/, time);
+    return statement;
 }
