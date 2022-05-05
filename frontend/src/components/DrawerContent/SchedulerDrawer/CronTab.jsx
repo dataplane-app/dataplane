@@ -35,10 +35,7 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
                 </Box>
 
                 <Typography fontSize={13} mt={1.5}>
-                    {(isValidCron(scheduleStatement) ? cronstrue.toString(scheduleStatement, { throwExceptionOnParseError: false }) : '').replace(
-                        /AM|PM/,
-                        (x) => x + ' ' + timezone
-                    )}
+                    {(isValidCron(scheduleStatement) ? cronstrue.toString(scheduleStatement, { throwExceptionOnParseError: false }) : '').replace(/AM|PM/, (x) => x + ' UTC')}
                 </Typography>
 
                 <Typography fontSize={15} fontWeight={700} mt={3}>
