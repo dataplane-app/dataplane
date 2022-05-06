@@ -15,21 +15,25 @@ export function Analytics({ setIsOpenAnalytics }) {
     const RunState = useGlobalRunState();
     const MeData = useGlobalMeState();
 
-    const [labels, setLabels] = useState([]);
     const [nodes, setNodes] = useState([]);
+    const [labels, setLabels] = useState([]);
     const [data, setData] = useState(null);
     const [height, setHeight] = useState(100);
 
-    // Set nodes on dropdown change
+    // 1. Set nodes on dropdown change
     useEffect(() => {
         if (!MeData.timezone.get()) return;
-        RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.attach(Downgraded).get() &&
-            setNodes(Object.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.attach(Downgraded).get()).sort((a, b) => a.start_dt?.localeCompare(b.start_dt)));
+        RunState.runObject.nodes?.attach(Downgraded).get() &&
+            setNodes(
+                Object.values(RunState.runObject.nodes?.attach(Downgraded).get())
+                    .filter((a) => a.end_dt)
+                    .sort((a, b) => a.start_dt?.localeCompare(b.start_dt))
+            );
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [RunState.selectedRunID.get(), MeData.timezone.get()]);
 
-    // Set labels, chart height on nodes change
+    // 2. Set labels, chart height on nodes change
     useEffect(() => {
         setLabels(Object.keys(nodes).map((a) => nodes[a].name || formatType(nodes[a].type)));
 
@@ -81,8 +85,8 @@ export function Analytics({ setIsOpenAnalytics }) {
                 time: {
                     // unit: 'second',
                 },
-                min: RunState.runIDs[RunState.selectedRunID.get()]?.runStart?.get(),
-                max: RunState.runIDs[RunState.selectedRunID.get()]?.runEnd?.get(),
+                min: RunState.runObject.runStart?.get(),
+                max: RunState.runObject.runEnd?.get(),
                 grid: {
                     display: false,
                 },
@@ -104,7 +108,7 @@ export function Analytics({ setIsOpenAnalytics }) {
         },
     };
 
-    // Set data on labels change
+    // 3. Set data on labels change
     useEffect(() => {
         setData({
             labels: labels,
@@ -115,7 +119,8 @@ export function Analytics({ setIsOpenAnalytics }) {
                     // categoryPercentage: 0.3,
                     // maxBarThickness: 8,
                     // minBarLength: 20,
-                    data: Object.values(RunState.runIDs[RunState.selectedRunID.get()]?.nodes.get())
+                    data: Object.values(RunState.runObject.nodes.get())
+                        .filter((a) => a.end_dt)
                         .sort((a, b) => a.start_dt.localeCompare(b.start_dt))
                         .map((a) => [a.start_dt, a.end_dt]),
                     backgroundColor: '#0073C6',

@@ -73,7 +73,7 @@ func DB() (*gorm.DB, error) {
 		if err == nil {
 			break
 		} else {
-			log.Printf("😩 db: connection failure: %v, try number. %d, retry in 5 seconds", config.Secrets.Replace(err.Error()), i+1)
+			log.Printf("😩 db: connection failure: %v, try number. %d, retry in 5 seconds", err.Error(), i+1)
 			time.Sleep(time.Second * 5)
 		}
 	}
@@ -86,10 +86,10 @@ func DB() (*gorm.DB, error) {
 	//--- Connection pooling
 	sqlDB, _ := dbConn.DB()
 	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
-	sqlDB.SetMaxIdleConns(25)
+	sqlDB.SetMaxIdleConns(18)
 
 	// SetMaxOpenConns sets the maximum number of open connections to the database.
-	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxOpenConns(18)
 
 	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
 	sqlDB.SetConnMaxLifetime(time.Minute * 5)

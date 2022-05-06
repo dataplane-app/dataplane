@@ -11,25 +11,46 @@ import PublishPipelineDrawer from '../../components/DrawerContent/PublishPipelin
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import ViewPageItem from '../../components/MoreInfoContent/ViewPageItem';
 import MoreInfoMenu from '../../components/MoreInfoMenu';
-import { edgeTypes, nodeTypes, useGlobalFlowState } from '../Flow';
+import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
 import LogsDrawer from '../../components/DrawerContent/LogsDrawer';
 import TurnOffPipelineDrawer from '../../components/DrawerContent/TurnOffPipelineDrawer';
 import CustomChip from '../../components/CustomChip';
 import { useGetPipeline } from '../../graphql/getPipeline';
 import { Analytics } from './Analytics';
 import { Downgraded } from '@hookstate/core';
-import StartStopRun from './StartStopRun';
+import RunNavBar from './RunNavBar';
+import { useGlobalRunState } from './GlobalRunState';
+
+import { edgeTypes, nodeTypes } from './NodeTypes';
 
 const View = () => {
+    // Retrieve global environments from drop down - selected environment ID
     const Environment = useGlobalEnvironmentState();
 
     // Hooks
     const theme = useTheme();
+
+    // Local state for Pipeline comes from GraphQL getPipeline
     const [pipeline, setPipeline] = useState(null);
+
+    // Get the name and status of name and title at top of page
+    // This calls the getPipeline to get the pipeline details for this specific pipeline
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
     // Global states
-    const FlowState = useGlobalFlowState();
+    // Flowstate = graph structure, elements contain the actual structure
+    // Runstate = run updates on graph structure
+    const FlowState = useGlobalPipelineRun();
+    const RunState = useGlobalRunState();
+
+    // On page load, clear the global run state
+    useEffect(() => {
+        RunState.set({
+            selectedRunID: null,
+            runObject: null,
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
@@ -130,9 +151,11 @@ const View = () => {
                     </Box>
                 </Grid>
 
-                {/* Run/Stop button, Chips, Dropdown, Timer */}
+                {/* Run navbar includes --- Run/Stop button, Chips, Dropdown, Timer */}
                 <Grid mt={4} container alignItems="center" sx={{ width: { xl: '88%' }, flexWrap: 'nowrap' }}>
-                    <StartStopRun environmentID={Environment.id.get()} pipeline={pipeline} />
+                    {/* <WebsocketConnect /> */}
+
+                    {Environment.id.get() && pipeline ? <RunNavBar environmentID={Environment.id.get()} pipeline={pipeline} /> : null}
                 </Grid>
             </Box>
             {!FlowState.isOpenLogDrawer.get() && !isOpenAnalytics ? (
@@ -205,18 +228,20 @@ const View = () => {
 export default View;
 
 // ------ Custom hooks
+// To get the the name and title at the top of page and the staus - online / offline.
 export const useGetPipelineHook = (environmentID, setPipeline) => {
     // GraphQL hook
+    // Calls getPipeline graphql to get this specific pipeline
     const getPipeline = useGetPipeline();
 
     // URI parameter
     const { pipelineId } = useParams();
 
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Get members
+    // Get pipeline data
     return async () => {
         const response = await getPipeline({ pipelineID: pipelineId, environmentID });
 
@@ -226,50 +251,11 @@ export const useGetPipelineHook = (environmentID, setPipeline) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
+            // Set local pipeline state
             setPipeline(response);
+
+            // Set global pipeline state
             FlowState.pipelineInfo.set(response);
         }
     };
 };
-
-// ----- Utility functions
-export function prepareInputForFrontend(input) {
-    const edgesInput = [];
-    const nodesInput = [];
-
-    if (input && Object.keys(input).length > 0) {
-        for (const edge of input.edges) {
-            edgesInput.push({
-                source: edge.from,
-                sourceHandle: edge.meta.sourceHandle,
-                target: edge.to,
-                targetHandle: edge.meta.targetHandle,
-                type: edge.meta.edgeType,
-                arrowHeadType: edge.meta.arrowHeadType,
-                id: edge.edgeID,
-            });
-        }
-
-        for (const node of input.nodes) {
-            let data = {
-                ...node.meta?.data,
-                name: node.name,
-                description: node.description,
-                workerGroup: node.workerGroup,
-                commands: node.commands,
-                triggerOnline: node.triggerOnline,
-            };
-            nodesInput.push({
-                id: node.nodeID,
-                type: node.nodeTypeDesc + 'Node',
-                position: {
-                    x: node.meta.position.x,
-                    y: node.meta.position.y,
-                },
-                data,
-            });
-        }
-    }
-
-    return [...edgesInput, ...nodesInput];
-}

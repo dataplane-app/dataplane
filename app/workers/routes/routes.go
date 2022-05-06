@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/go-co-op/gocron"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -25,15 +26,20 @@ func Setup(port string) *fiber.App {
 
 	app := fiber.New()
 
-	config.LoadConfig()
+	start := time.Now()
 
-	// -------- NATS Connect -------
-	messageq.NATSConnect()
+	config.LoadConfig()
 
 	// ------- DATABASE CONNECT ------
 
 	database.DBConnect()
 	log.Println("🏃 ======== DATAPLANE WORKER ========")
+
+	// ------- LOAD secrets ------
+	secrets.MapSecrets()
+
+	// -------- NATS Connect -------
+	messageq.NATSConnect()
 
 	// ------ Validate worker data ---------
 	if config.WorkerGroup == "" {
@@ -102,11 +108,6 @@ func Setup(port string) *fiber.App {
 	config.EnvID = e.ID
 	log.Println("🌳 Environment name and ID: ", config.EnvName, " - ", config.EnvID)
 
-	start := time.Now()
-
-	// ------- LOAD secrets ------
-	secrets.MapSecrets()
-
 	// Load a worker ID
 	config.WorkerID = uuid.NewString()
 	log.Println("👷 Worker Group and ID: ", config.WorkerGroup, " - ", config.WorkerID)
@@ -116,6 +117,9 @@ func Setup(port string) *fiber.App {
 
 	// add timer field to response header
 	app.Use(Timer())
+
+	config.Scheduler = gocron.NewScheduler(time.UTC)
+	config.Scheduler.StartAsync()
 
 	if config.Debug == "true" {
 		app.Use(logger.New(
@@ -152,7 +156,9 @@ func Setup(port string) *fiber.App {
 	/* Every 5 seconds tell mainapp about my status
 	Needs to be called after listen for tasks to avoid timing issues when accepting tasks
 	*/
-	workerhealth.WorkerHealthStart()
+	workerhealth.WorkerHealthStart(config.Scheduler)
+	log.Println("🚚 Submitting workers")
+	workerhealth.WorkerLoad(config.Scheduler)
 
 	stop := time.Now()
 	// Do something with response

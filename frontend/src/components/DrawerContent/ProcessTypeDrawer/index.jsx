@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { Downgraded } from '@hookstate/core';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useSnackbar } from 'notistack';
@@ -18,7 +18,7 @@ const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGrou
     // Local state
     const [selectedElement, setSelectedElement] = useState('-');
     const [workerGroups, setWorkerGroups] = useState([]);
-    const [selectedWorkerGroup, setSelectedWorkerGroup] = useState({ WorkerGroup: 'default' });
+    const [selectedWorkerGroup, setSelectedWorkerGroup] = useState({ WorkerGroup: workerGroup });
 
     // Custom GraphQL hook
     const getWorkerGroups = useGetWorkerGroupsHook(environmentID, setWorkerGroups);
@@ -91,7 +91,7 @@ const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGrou
                             options={workerGroups}
                             value={selectedWorkerGroup}
                             disableClearable
-                            getOptionLabel={(option) => (option.WorkerGroup === workerGroup || option.WorkerGroup === '' ? 'default' : option.WorkerGroup)}
+                            getOptionLabel={(option) => option.WorkerGroup}
                             onChange={(event, newValue) => {
                                 setSelectedWorkerGroup(newValue);
                             }}

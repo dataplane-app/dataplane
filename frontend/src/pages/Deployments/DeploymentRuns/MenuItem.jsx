@@ -1,12 +1,12 @@
 import { MenuItem } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import { useGlobalFlowState } from '../../Flow';
-import { useGlobalDeploymentState } from './GlobalDeploymentState';
+import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
+import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 
 const DeploymentViewPageItem = (props) => {
     // Global state
-    const FlowState = useGlobalFlowState();
-    const DeploymentState = useGlobalDeploymentState();
+    const FlowState = useGlobalPipelineRun();
+    const RunState = useGlobalRunState();
 
     // URI parameter
     const { version } = useParams();
@@ -17,11 +17,13 @@ const DeploymentViewPageItem = (props) => {
     };
 
     const handleRun = () => {
-        DeploymentState.isRunning.set(true);
-        DeploymentState.runTrigger.set((t) => t + 1);
+        RunState.isRunning.set(true);
         props.handleCloseMenu();
-    };
 
+        const clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: false });
+        const runButton = document.getElementById('deployment-run-button');
+        runButton.dispatchEvent(clickEvent);
+    };
     return (
         <>
             {props.version === version ? (

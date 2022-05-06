@@ -4,7 +4,7 @@ metadata:
   name: kubernetes-dev
 build:
   artifacts:
-  - image: dataplane/dataplane-worker
+  - image: dataplane/dataplane-worker-dev
     docker:
       dockerfile: ./kubernetes-dev/Dockerfile.workerpython
 deploy:

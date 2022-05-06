@@ -7,7 +7,7 @@ import { faClock } from '@fortawesome/free-regular-svg-icons';
 import PipelineItemTable from '../../MoreInfoContent/PipelineTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenuPipeline from '../../MoreInfoMenuPipeline';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import DeletePipelineDrawer from '../../DrawerContent/DeletePipelineDrawer';
 import CustomChip from '../../CustomChip';
 import TurnOffPipelineDrawer from '../../DrawerContent/TurnOffPipelineDrawer';
@@ -76,8 +76,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipel
                             variant="text"
                             sx={{ fontWeight: 400 }}
                             onClick={() => {
-                                history.push({ pathname: `/pipelines/view/${row.value.pipelineID}`, state: row.value });
-                                RunState.tableRunTrigger.set(1);
+                                history.push({ pathname: `/pipelines/view/${row.value.pipelineID}`, state: { run: true } });
                             }}>
                             Run
                         </Button>

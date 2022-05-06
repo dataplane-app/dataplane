@@ -2,7 +2,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: dataplane-main
-  namespace: default
+  namespace: dataplane-dev
   labels:
     app: dataplane-main
 spec:
@@ -20,6 +20,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dataplane-main
+  namespace: dataplane-dev
 spec:
   replicas: 3
   selector:
@@ -33,20 +34,25 @@ spec:
       securityContext:
         runAsUser: 10001
         runAsGroup: 10001
+      volumes:
+        - name: dp-persistent-storage
+          persistentVolumeClaim:
+            claimName: dataplane-storage
       containers:
         - name: container
-          image: dataplane/dataplane-main:latest
+          image: dataplane/dataplane-main-dev:latest
           command:
             - "./dataplane"
           ports:
             - containerPort: 9000
+          volumeMounts:
+            - name: dp-persistent-storage
+              mountPath: /appdev/code-files
+              subPath: code-files
           resources:
-            limits:
-              memory: "200Mi"
-              cpu: "0.2"
             requests:
               memory: "100Mi"
-              cpu: "0.1"
+              cpu: "0.01"
           env:
             - name: DP_CODE_FOLDER
               value: "/appdev/code-files/"
@@ -71,7 +77,7 @@ spec:
             - name: DP_PORT
               value: "9000"
             - name: DP_NATS
-              value: "nats://nats-0.nats.default.svc:4222, nats://nats-1.nats.default.svc:4222, nats-3.nats.default.svc:4222"
+              value: "nats://nats-0.nats.dataplane-dev.svc:4222, nats://nats-1.nats.dataplane-dev.svc:4222, nats-3.nats.dataplane-dev.svc:4222"
             - name: DP_MODE
               value: "development"
             - name: DP_DEBUG

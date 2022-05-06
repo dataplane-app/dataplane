@@ -35,6 +35,11 @@ stern -n default dataplane-main -t
 stern -n default dataplane-worker -t
 ```
 
+7. Port-forward 
+```
+kubectl port-forward svc/timescaledb-service 5001:5432 -n dataplane-dev
+```
+
 
 
 ## Build docker image

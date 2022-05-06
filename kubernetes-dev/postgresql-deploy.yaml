@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: timescaledb
+  namespace: dataplane-dev
   labels:
     app: timescaledb
 spec:
@@ -50,13 +51,13 @@ spec:
       volumes:
         - name: timescaledb-persistent-storage
           persistentVolumeClaim:
-            claimName: timescaledb
+            claimName: timescaledb3
 ---
 kind: Service
 apiVersion: v1
 metadata:
   name: timescaledb-service
-  namespace: default
+  namespace: dataplane-dev
   labels:
     app: timescaledb
 spec:

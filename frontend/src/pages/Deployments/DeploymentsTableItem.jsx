@@ -2,7 +2,7 @@ import { MenuItem } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
 import { useGetDeployments } from '../../graphql/getDeployments';
-import { useGlobalFlowState } from '../Flow';
+import { useGlobalFlowState } from '../PipelineEdit';
 import { useTurnOnOffDeploymentHook } from './TurnOffDeploymentDrawer';
 
 const DeploymentTableItem = (props) => {

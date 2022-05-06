@@ -9,9 +9,9 @@ go run mainapp/Tests/mainTest.go
 
 ### Run a production worker
 ```shell
-export worker_group=python_prod
-export worker_env=Production
-export dataplane_worker_port=9010
+export DP_WORKER_GROUP=python_prod
+export DP_WORKER_ENV=Production
+export DP_WORKER_PORT=9010
 cd app/workers
 go run worker.go
 ```

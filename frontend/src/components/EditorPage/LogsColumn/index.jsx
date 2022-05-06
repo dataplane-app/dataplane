@@ -20,6 +20,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const [graphQlResp, setGraphQlResp] = useState([]);
     const [keys, setKeys] = useState([]);
     const [hasGetNodeLogsRun, setHasGetNodeLogsRun] = useState(0);
+    const [render, setRender] = useState(0);
 
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
@@ -75,6 +76,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     useEffect(() => {
         setWebsocketResp('');
         setFilteredGraphqlResp('');
+        setRender((r) => r + 1);
     }, [EditorGlobal.selectedFile?.id?.value]);
 
     const theme = useTheme();
@@ -92,6 +94,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                 <Box sx={{ background: 'editorPage.logBackground', color: '#d6d6d6' }} display="flex" alignItems="flex-start" flexDirection="row" pl={6} pr={4} pt={3} pb={0}>
                     <Box component={FontAwesomeIcon} fontSize={24} color="secondary.main" icon={faRunning} mr={2} />
 
+                    {/* Code file update status messages */}
                     {EditorGlobal.runState.get() === 'Success' ? (
                         <Box color="status.pipelineOnline" display="flex" alignItems="center">
                             <Box component={FontAwesomeIcon} fontSize={18} color="status.pipelineOnline" icon={faCheckCircle} />
@@ -132,6 +135,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                         render={({ follow, onScroll }) => (
                             <LazyLog
                                 enableSearch
+                                key={render}
                                 text={filteredGraphqlResp + '\n' + websocketResp}
                                 follow={follow}
                                 onScroll={onScroll}

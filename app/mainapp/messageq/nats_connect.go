@@ -15,11 +15,20 @@ var NATSencoded *nats.EncodedConn
 var NATSProtobuf *nats.EncodedConn
 
 func NATSConnect() {
+
+	const maxRetiresAllowed int = 50000
 	var err error
-	NATS, err = nats.Connect(os.Getenv("DP_NATS"),
-		nats.RetryOnFailedConnect(true),
-		nats.MaxReconnects(10),
-		nats.ReconnectWait(3*time.Second))
+	for i := 0; i < maxRetiresAllowed; i++ {
+
+		NATS, err = nats.Connect(os.Getenv("DP_NATS"))
+
+		if err == nil {
+			break
+		} else {
+			log.Printf("😩 NATS: connection failure: %v, try number. %d, retry in 5 seconds", err.Error(), i+1)
+			time.Sleep(time.Second * 5)
+		}
+	}
 
 	// log.Println(NATS)
 

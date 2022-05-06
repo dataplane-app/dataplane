@@ -40,7 +40,11 @@ models:
  PipelineRuns:
    model: dataplane/mainapp/database/models.PipelineRuns
  DeploymentRuns:
-   model: dataplane/mainapp/database/models.PipelineRuns   
+   model: dataplane/mainapp/database/models.PipelineRuns
+ DeploymentEdges:
+   model: dataplane/mainapp/database/models.DeployPipelineEdges
+ DeploymentNodes:
+   model: dataplane/mainapp/database/models.DeployPipelineNodes
  LogsWorkers:
    model: dataplane/mainapp/database/models.LogsWorkers
  LogsCodeRun:
