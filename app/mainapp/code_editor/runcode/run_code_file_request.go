@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/tidwall/buntdb"
+	"gorm.io/gorm"
 )
 
 type Command struct {
@@ -81,28 +81,32 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 
 		// log.Println(i)
 
-		database.GoDBWorker.View(func(tx *buntdb.Tx) error {
-			tx.AscendEqual("workergroup", `{"WorkerGroup":"`+workerGroup+`"}`, func(key, val string) bool {
+		var workers []models.Workers
+		var worker models.WorkerStats
 
-				// `{"WorkerGeroup":"`+workerGroup+`"}`,
-				var worker models.WorkerStats
-				// log.Println("Workers:", key, val)
+		err := database.DBConn.Where("environment_id =? and worker_group = ?", envID, workerGroup).Find(&workers).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			return models.CodeRun{}, errors.New("Code run: Worker groups database error.")
+		}
 
-				if config.Debug == "true" {
-					log.Println("worker loaded:", val)
-				}
+		for _, v := range workers {
 
-				err := json.Unmarshal([]byte(val), &worker)
-				if err != nil {
-					logging.PrintSecretsRedact(err)
-				}
-				onlineWorkers = append(onlineWorkers, worker)
-				return true
+			worker = models.WorkerStats{
+				WorkerGroup: v.WorkerGroup,
+				WorkerID:    v.WorkerID,
+				Status:      v.Status,
+				CPUPerc:     v.CPUPerc,
+				Load:        v.Load,
+				MemoryPerc:  v.MemoryPerc,
+				MemoryUsed:  v.MemoryUsed,
+				EnvID:       v.EnvironmentID,
+				LB:          v.LB,
+				WorkerType:  v.WorkerType,
+			}
 
-			})
+			onlineWorkers = append(onlineWorkers, worker)
 
-			return nil
-		})
+		}
 
 		// log.Println("X:", onlineWorkers)
 
@@ -167,8 +171,9 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 			var response runtask.TaskResponse
 
 			// log.Println("Task channel: ", "task."+workerGroup+"."+loadbalanceNext)
-
-			_, errnats := messageq.MsgReply("runcodefile."+workerGroup+"."+loadbalanceNext, runSend, &response)
+			channel := "runcodefile." + workerGroup + "." + loadbalanceNext
+			// log.Println(channel)
+			_, errnats := messageq.MsgReply(channel, runSend, &response)
 
 			if errnats != nil {
 				log.Println("Send to worker error nats:", errnats)

@@ -3,8 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Grid, Tooltip, Typography, useTheme, Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
-import { useGlobalDeploymentState } from '../../../pages/Deployments/DeploymentRuns/GlobalDeploymentState';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import customNodeStyle from '../../../utils/customNodeStyle';
 import { customTargetHandle } from '../../../utils/handleStyles';
@@ -19,7 +18,6 @@ const CheckpointNode = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
-    const DeploymentState = useGlobalDeploymentState();
 
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
@@ -42,12 +40,11 @@ const CheckpointNode = (props) => {
     }, [FlowState.selectedElement.get()]);
 
     // Set border color on node status change
-    let nodeStatus = RunState.runIDs[RunState.selectedRunID.get()]?.nodes?.get() && RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status?.get();
-    let dNodeStatus =
-        DeploymentState.runIDs[DeploymentState.selectedRunID.get()]?.nodes?.get() && DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status?.get();
+    let nodeStatus = RunState.runObject?.nodes?.get() && RunState.runObject?.nodes[props.id].status?.get();
+
     useEffect(() => {
         if (nodeStatus) {
-            setBorderColor(getColor(RunState.runIDs[RunState.selectedRunID.get()].nodes[props.id].status.get()));
+            setBorderColor(getColor(nodeStatus));
         } else {
             setBorderColor(getColor());
         }
@@ -55,15 +52,6 @@ const CheckpointNode = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nodeStatus]);
 
-    useEffect(() => {
-        if (dNodeStatus) {
-            setBorderColor(getColor(DeploymentState.runIDs[DeploymentState.selectedRunID.get()].nodes[props.id].status.get()));
-        } else {
-            setBorderColor(getColor());
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dNodeStatus]);
 
     return (
         <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>

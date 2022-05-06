@@ -4,7 +4,7 @@ metadata:
   name: kubernetes-dev
 build:
   artifacts:
-  - image: dataplane/dataplane-main
+  - image: dataplane/dataplane-main-dev
     docker:
       dockerfile: ./kubernetes-dev/Dockerfile.main
 deploy:

@@ -5,10 +5,8 @@ import CustomDragHandle from '../../CustomDragHandle';
 import { useSnackbar } from 'notistack';
 import { useGetCodePackages } from '../../../graphql/getCodePackages';
 
-const PackageColumn = forwardRef(({ children, pipeline, ...rest }, ref) => {
-    const Editor = useGlobalEditorState();
-
-    const [packages, setPackages] = useState('');
+const PackageColumn = forwardRef(({ children, pipeline, packages, setPackages, ...rest }, ref) => {
+    const EditorGlobal = useGlobalEditorState();
 
     const handleEdit = () => {
         const newFolderMock = {
@@ -18,15 +16,15 @@ const PackageColumn = forwardRef(({ children, pipeline, ...rest }, ref) => {
             content: packages,
         };
 
-        const activeTabs = Editor.tabs.get();
+        const activeTabs = EditorGlobal.tabs.get();
         if (activeTabs.some((a) => a.id === 'requirements.txt')) {
             const file = JSON.parse(JSON.stringify(activeTabs.filter((a) => a.id === 'requirements.txt')[0]));
-            Editor.selectedFile.set(file);
+            EditorGlobal.selectedFile.set(file);
             return;
         }
 
-        Editor.tabs.merge([newFolderMock]);
-        Editor.selectedFile.set(newFolderMock);
+        EditorGlobal.tabs.merge([newFolderMock]);
+        EditorGlobal.selectedFile.set(newFolderMock);
     };
 
     const getCodePackages = useGetCodePackagesHook(pipeline, setPackages);
@@ -37,14 +35,6 @@ const PackageColumn = forwardRef(({ children, pipeline, ...rest }, ref) => {
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    // Get packages on save
-    useEffect(() => {
-        if (Editor.updatePackages.get() < 2) return;
-        getCodePackages();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [Editor.updatePackages.get()]);
 
     return (
         <div {...rest}>
@@ -69,7 +59,9 @@ const PackageColumn = forwardRef(({ children, pipeline, ...rest }, ref) => {
 
                 <Box mt={1.2}>
                     {packages.split('\n').map((a) => (
-                        <Typography variant="subtitle1">{a}</Typography>
+                        <Typography variant="subtitle1" key={a}>
+                            {a}
+                        </Typography>
                     ))}
                 </Box>
             </Box>

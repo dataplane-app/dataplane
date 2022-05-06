@@ -1,30 +1,33 @@
-![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests)
+![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests) 
+![Docker Pulls](https://img.shields.io/docker/pulls/dataplane/dataplane-worker-python?label=Docker%20pulls)
 
-If you like Dataplane, give it a star ⭐<br />
+If you like Dataplane, give it a star ⭐
 
 ### Dataplane (Beta)
-⚡️ Extreme performance with a low resource footprint<br />
-🖐 Drag drop workflow builder<br />
-🧑‍💻 Built in Python code editor<br />
+⚡️ Extreme performance with a low memory and CPU footprint. <br />
+🖐 Drag drop data pipeline builder. <br />
+🧑‍💻 Built in Python code editor. <br />
 👮 Granular permissions for teams to collaborate with segregated access. <br />
 🐿 Secrets management with logging redaction allows team members to use secure resources without revealing passwords. <br />
-⏱ Scheduler with multiple timezone support<br />
-🌍 Setup isolated environments to develop, test & deploy across data mesh domains<br />
-📊 Monitor real-time resource usage by analytical workloads<br />
-⭐️ Distributed computing with worker groups<br />
-🌳 Add more replicas for high availability and scale<br />
-☁️ Cloud native  
+⏱ Scheduler with multiple time zone support. <br />
+🌍 Setup isolated environments to develop, test & deploy across data mesh domains. <br />
+📊 Monitor real-time resource usage by analytical workloads. <br />
+⭐️ Distributed computing with worker groups. <br />
+🌳 Add more replicas for high availability and scale. <br />
+☁️ Cloud native  <br />
 
-<img width="1660" alt="image" src="https://user-images.githubusercontent.com/63714857/161389462-a65928c6-1ab7-4efa-a8d8-06598adfef1b.png">
+![Pipeline Running Screen Recording 4K pre render v2](https://user-images.githubusercontent.com/63714857/166139437-3020ac63-7ae6-4265-a301-29e5448451eb.gif)
+
 
 ### About the project
-The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved. <br />
-
+The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved.
+<br /><br />
 Website: https://dataplane.app/ <br />
 Documentation: https://learn.dataplane.app/ <br />
+Demo: https://dataplane.app/demo <br />
 
 ### Quick start with Docker
-Requires Docker engine installed - https://docs.docker.com/engine/install/<br /><br/>
+Requires Docker engine installed - https://docs.docker.com/engine/install/ <br />
 Download the quick start docker compose file
 ```shell
 curl -LfO 'https://raw.githubusercontent.com/dataplane-app/dataplane/main/quick-start/docker-compose.yaml'
@@ -33,10 +36,10 @@ Run docker compose
 ```shell
 docker-compose up
 ```
-For first time setup, follow the get started process at: http://localhost:9001/webapp/get-started
-<br />
-To use Dataplane, go to http://localhost:9001/webapp/<br /><br />
-Docker releases: https://hub.docker.com/u/dataplane
+For first time setup, follow the get started process at: http://localhost:9001/webapp/get-started <br />
+
+To use Dataplane, go to http://localhost:9001/webapp/ <br />
+Docker releases: https://hub.docker.com/u/dataplane <br />
 
 
 ### Develop Dataplane code

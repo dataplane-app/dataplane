@@ -10,7 +10,6 @@ const query = gql`
             pipeline_id
             status
             environment_id
-            run_json
             created_at
             ended_at
             updated_at

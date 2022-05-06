@@ -36,6 +36,16 @@ export default function useWebSocket(workerId) {
         return () => clearInterval(timer);
     }, []);
 
+    // Purge stale workers older than 3 seconds.
+    useEffect(() => {
+        const timer = setInterval(() => {
+            Object.values(response.current)
+                .filter((a) => new Date().valueOf() - new Date(a.T).valueOf() > 3000)
+                .map((a) => delete response.current[a.WorkerID]);
+        }, 2000);
+        return () => clearInterval(timer);
+    }, []);
+
     useEffect(() => {
         function connect() {
             ws.current = new WebSocket(`${websocketEndpoint}/${workerId}?token=${authToken.get()}`);

@@ -7,9 +7,11 @@ import { useGetNodeLogs } from '../../../graphql/getNodeLogs';
 import { faRunning, faTimes, faCheckCircle, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { RunningSpinner } from './RunningSpinner';
-import useWebSocketLog, { formatDate } from './useWebSocketLog';
+import useWebSocketLog from './useWebSocketLog';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
+import { useGlobalMeState } from '../../Navbar';
+import { formatDateLog } from '../../../utils/formatDate';
 
 const LogsDrawer = ({ environmentId, handleClose }) => {
     const [websocketResp, setWebsocketResp] = useState('');
@@ -19,10 +21,11 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
 
     // Global state
     const RunState = useGlobalRunState();
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
+    const MeData = useGlobalMeState();
 
     // Instantiate websocket
-    const webSocket = useWebSocketLog(environmentId, RunState.selectedRunID.get(), RunState.node_id.get(), setKeys);
+    const webSocket = useWebSocketLog(environmentId, RunState.selectedRunID.get(), RunState.node_id.get(), setKeys, MeData.timezone.get());
 
     useEffect(() => {
         setWebsocketResp((t) => t + webSocket + '\n');
@@ -33,7 +36,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
         let text = '';
         graphQlResp.forEach((log) => {
             if (!websocketResp.includes(log.uid)) {
-                text += `\n${formatDate(log.created_at)} ${log.log}`;
+                text += `\n${formatDateLog(log.created_at, MeData.timezone.get())} ${log.log}`;
             }
         });
         text = text.replace(/\n/, '');
@@ -78,7 +81,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Button>
                 </Box>
 
-                {RunState.runIDs[RunState.selectedRunID.get()].nodes[RunState.node_id.get()].status.get() === 'Success' ? (
+                {RunState.runObject.nodes[RunState.node_id.get()]?.status?.get() === 'Success' ? (
                     <Box color="status.pipelineOnline" display="flex" alignItems="center" mt={0.5}>
                         <Box component={FontAwesomeIcon} fontSize={18} color="status.pipelineOnline" icon={faCheckCircle} />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
@@ -87,7 +90,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Box>
                 ) : null}
 
-                {RunState.runIDs[RunState.selectedRunID.get()].nodes[RunState.node_id.get()].status.get() === 'Run' ? (
+                {RunState.runObject.nodes[RunState.node_id.get()]?.status?.get() === 'Run' ? (
                     <Box color="#65BEFF" display="flex" alignItems="center" mt={0.5}>
                         <RunningSpinner />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">
@@ -96,7 +99,7 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                     </Box>
                 ) : null}
 
-                {RunState.runIDs[RunState.selectedRunID.get()].nodes[RunState.node_id.get()].status.get() === 'Fail' ? (
+                {RunState.runObject.nodes[RunState.node_id.get()]?.status?.get() === 'Fail' ? (
                     <Box color="#F80000" display="flex" alignItems="center" mt={0.5}>
                         <Box component={FontAwesomeIcon} fontSize={18} color="#F80000" icon={faExclamationCircle} />
                         <Typography ml={1.5} fontWeight={700} fontSize="0.875rem">

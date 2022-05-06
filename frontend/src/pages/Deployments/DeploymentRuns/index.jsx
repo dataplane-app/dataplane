@@ -11,28 +11,49 @@ import PublishPipelineDrawer from '../../../components/DrawerContent/PublishPipe
 import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
 import MenuItem from './MenuItem';
 import MoreInfoMenu from '../../../components/MoreInfoMenu';
-import { edgeTypes, nodeTypes, useGlobalFlowState } from '../../Flow';
+
 import TurnOffPipelineDrawer from '../../../components/DrawerContent/TurnOffPipelineDrawer';
 import CustomChip from '../../../components/CustomChip';
 import { Analytics } from './Analytics';
 import { Downgraded } from '@hookstate/core';
-import { useGetActiveDeployment } from '../../../graphql/getActiveDeployment';
-import StartStopRun from './StartStopRun';
+import RunDepNavBar from './RunDepNavBar';
 import LogsDrawer from './LogsDrawer';
+
+import { useGlobalPipelineRun} from '../../PipelineRuns/GlobalPipelineRunUIState'
+import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
+import { edgeTypes, nodeTypes } from '../../PipelineRuns/NodeTypes';
+import { useGetDeploymentSingle } from '../../../graphql/getDeploymentSingle';
 
 const DeploymentView = () => {
     const Environment = useGlobalEnvironmentState();
 
     // Hooks
     const theme = useTheme();
-    const [deployment, setDeployment] = useState(null);
-    const getActiveDeployment = useGetActiveDeploymentHook(Environment.id.get(), setDeployment);
 
-    // Global states
-    const FlowState = useGlobalFlowState();
+     // Local state for Deployment comes from GraphQL
+    const [deployment, setDeployment] = useState(null);
 
     // URI parameter
     const { version } = useParams();
+
+        // Get the name and status of name and title at top of page
+    // This calls the getDeployment to get the pipeline details for this specific deployment
+    const getSingleDeployment = useGetSingleDeploymentHook(Environment.id.get(), setDeployment, version);
+
+        // Global states
+    // Flowstate = graph structure, elements contain the actual structure
+    // Runstate = run updates on graph structure
+    const FlowState = useGlobalPipelineRun();
+    const RunState = useGlobalRunState();
+
+    // On page load, clear the global run state
+    useEffect(() => {
+        RunState.set({
+            selectedRunID: null,
+            runObject: null,
+        })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
@@ -62,7 +83,7 @@ const DeploymentView = () => {
     useEffect(() => {
         if (!Environment.id.get()) return;
         setIsLoadingFlow(false);
-        getActiveDeployment();
+        getSingleDeployment();
 
         document.querySelector('#root div').scrollTo(0, 0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,6 +131,8 @@ const DeploymentView = () => {
         }
     };
 
+    // console.log("get deployment", deployment)
+
     return (
         <Box className="page" height="calc(100vh - 136px)" minHeight="min-content">
             <Box ref={offsetRef}>
@@ -147,7 +170,7 @@ const DeploymentView = () => {
                                     <MenuItem
                                         pipeline={deployment}
                                         isPipelineOnline={deployment?.online}
-                                        getPipeline={getActiveDeployment}
+                                        getPipeline={getSingleDeployment}
                                         setIsOpenAnalytics={setIsOpenAnalytics}
                                         version={deployment?.version}
                                     />
@@ -159,7 +182,7 @@ const DeploymentView = () => {
 
                 {/* Run/Stop button, Chips, Dropdown, Timer */}
                 <Grid mt={4} container alignItems="center" sx={{ width: { xl: '88%' }, flexWrap: 'nowrap' }}>
-                    <StartStopRun environmentID={Environment.id.get()} deployment={deployment} />
+                    <RunDepNavBar environmentID={Environment.id.get()} deployment={deployment} />
                 </Grid>
             </Box>
             {!FlowState.isOpenDepLogDrawer.get() && !isOpenAnalytics ? (
@@ -222,7 +245,7 @@ const DeploymentView = () => {
                     pipelineID={deployment?.pipelineID}
                     environmentID={deployment?.environmentID}
                     name={deployment?.name}
-                    getPipelines={getActiveDeployment}
+                    getPipelines={getSingleDeployment}
                 />
             </Drawer>
         </Box>
@@ -232,21 +255,21 @@ const DeploymentView = () => {
 export default DeploymentView;
 
 // ------ Custom hooks
-export const useGetActiveDeploymentHook = (environmentID, setDeployment) => {
+export const useGetSingleDeploymentHook = (environmentID, setDeployment, version) => {
     // GraphQL hook
-    const getActiveDeployment = useGetActiveDeployment();
+    const getSingleDeployment = useGetDeploymentSingle();
 
     // URI parameter
     const { deploymentId } = useParams();
     const pipelineID = deploymentId;
 
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get active deployment
     return async () => {
-        const response = await getActiveDeployment({ pipelineID, environmentID });
+        const response = await getSingleDeployment({ pipelineID, environmentID, version });
 
         if (response.r || response.error) {
             closeSnackbar();
@@ -259,45 +282,3 @@ export const useGetActiveDeploymentHook = (environmentID, setDeployment) => {
         }
     };
 };
-
-// ----- Utility functions
-export function prepareInputForFrontend(input) {
-    const edgesInput = [];
-    const nodesInput = [];
-
-    if (input && Object.keys(input).length > 0) {
-        for (const edge of input.edges) {
-            edgesInput.push({
-                source: edge.from,
-                sourceHandle: edge.meta.sourceHandle,
-                target: edge.to,
-                targetHandle: edge.meta.targetHandle,
-                type: edge.meta.edgeType,
-                arrowHeadType: edge.meta.arrowHeadType,
-                id: edge.edgeID,
-            });
-        }
-
-        for (const node of input.nodes) {
-            let data = {
-                ...node.meta?.data,
-                name: node.name,
-                description: node.description,
-                workerGroup: node.workerGroup,
-                commands: node.commands,
-                triggerOnline: node.triggerOnline,
-            };
-            nodesInput.push({
-                id: node.nodeID,
-                type: node.nodeTypeDesc + 'Node',
-                position: {
-                    x: node.meta.position.x,
-                    y: node.meta.position.y,
-                },
-                data,
-            });
-        }
-    }
-
-    return [...edgesInput, ...nodesInput];
-}

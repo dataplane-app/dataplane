@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: timescaledb
-  namespace: default
+  name: timescaledb3
+  namespace: dataplane-dev
 spec:
   accessModes:
     - ReadWriteOnce

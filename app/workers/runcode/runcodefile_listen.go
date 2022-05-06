@@ -19,6 +19,7 @@ func ListenRunCode() {
 
 	// Responding to a task request
 	channel := "runcodefile." + config.WorkerGroup + "." + config.WorkerID
+	// log.Println("channel:", channel)
 	messageq.NATSencoded.Subscribe(channel, func(subj, reply string, msg modelmain.CodeRun) {
 		// log.Println("message:", msg)
 

@@ -1,7 +1,7 @@
 import { MenuItem } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { useTurnOnOffPipelineHook } from '../../DrawerContent/TurnOffPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 
@@ -44,9 +44,17 @@ const ViewPageItem = (props) => {
         history.push(`/pipelines/deploy/${pipelineId}`);
     };
 
+    const handleRun = () => {
+        props.handleCloseMenu();
+
+        const clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: false });
+        const runButton = document.getElementById('pipeline-run-button');
+        runButton.dispatchEvent(clickEvent);
+    };
+
     return (
         <>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={() => props.handleCloseMenu()}>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleRun}>
                 Run
             </MenuItem>
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleGoToEditorPage}>

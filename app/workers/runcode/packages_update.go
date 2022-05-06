@@ -143,6 +143,15 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 		// Wait for the command to finish
 		cmd.Wait()
 
+		sendmsg := modelmain.LogsSend{
+			CreatedAt: time.Now().UTC(),
+			UID:       uuid.NewString(),
+			Log:       "complete",
+			LogType:   "action",
+		}
+
+		messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
+
 		log.Println("📦 Loaded "+language+" packages in", packagesfile)
 	}
 	return nil

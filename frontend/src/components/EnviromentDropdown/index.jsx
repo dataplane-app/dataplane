@@ -87,7 +87,6 @@ const EnviromentDropdown = () => {
     React.useEffect(() => {
         let active = true;
 
-        console.log(GlobalEnvironmentID.get());
         if (active && GlobalEnvironments.get().length !== environments.length) {
             (async () => {
                 const getEnvironmentsResponse = await getEnvironments();

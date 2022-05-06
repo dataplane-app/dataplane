@@ -1,6 +1,7 @@
 package workerhealth
 
 import (
+	"dataplane/mainapp/database/models"
 	"dataplane/workers/cmetric"
 	"dataplane/workers/config"
 	"dataplane/workers/logging"
@@ -17,41 +18,23 @@ import (
 	"github.com/shirou/gopsutil/mem"
 )
 
-type WorkerStats struct {
-	WorkerGroup string
-	WorkerID    string
-	Status      string //Online, Busy
-	T           time.Time
-	Interval    int
-	CPUPerc     float64
-	Load        float64
-	MemoryPerc  float64
-	MemoryUsed  float64
-	Env         string `json:"Env"`
-	EnvID       string `json:"EnvID"`
-	LB          string `json:"LB"`
-	WorkerType  string `json:"WorkerType"` //container, kubernetes
-}
+// type WorkerStats struct {
+// 	WorkerGroup string
+// 	WorkerID    string
+// 	Status      string //Online, Busy
+// 	T           time.Time
+// 	Interval    int
+// 	CPUPerc     float64
+// 	Load        float64
+// 	MemoryPerc  float64
+// 	MemoryUsed  float64
+// 	Env         string `json:"Env"`
+// 	EnvID       string `json:"EnvID"`
+// 	LB          string `json:"LB"`
+// 	WorkerType  string `json:"WorkerType"` //container, kubernetes
+// }
 
-type Worker struct {
-	WorkerGroup string    `json:"WorkerGroup"`
-	WorkerID    string    `json:"WorkerID"`
-	Status      string    `json:"Status"` //Online, busy
-	T           time.Time `json:"T"`
-	Env         string    `json:"Env"`
-	LB          string    `json:"LB"`
-	WorkerType  string    `json:"WorkerType"` //container, kubernetes
-}
-
-func WorkerHealthStart() {
-
-	/* Register the worker with mainapp */
-	worker := Worker{
-		WorkerGroup: config.WorkerGroup,
-		WorkerID:    config.WorkerID,
-		Status:      "Online",
-		T:           time.Now().UTC(),
-	}
+func WorkerHealthStart(s *gocron.Scheduler) {
 
 	// data, err := json.Marshal(worker)
 	// if err != nil {
@@ -67,10 +50,6 @@ func WorkerHealthStart() {
 	// }
 
 	/* Start the worker heart beat */
-	s := gocron.NewScheduler(time.UTC)
-
-	log.Println("🚚 Submitting workers")
-	WorkerLoad(s)
 
 	i, _ := strconv.Atoi(os.Getenv("DP_WORKER_HEARTBEAT_SECONDS"))
 
@@ -131,7 +110,7 @@ func WorkerHealthStart() {
 
 		// log.Printf("cpu perc:%v | mem percent:%v | mem used :%v | load:%v \n", percentCPUsend, percentMemorysend, memoryused, loadsend)
 
-		workerdata := &WorkerStats{
+		workerdata := &models.WorkerStats{
 			WorkerGroup: config.WorkerGroup,
 			WorkerID:    config.WorkerID,
 			Status:      "Online",
@@ -139,15 +118,14 @@ func WorkerHealthStart() {
 			MemoryPerc:  percentMemorysend,
 			MemoryUsed:  memoryused,
 			Load:        loadsend,
+			EnvID:       config.EnvID,
 			T:           time.Now().UTC(),
-			Interval:    i,
-			Env:         config.WorkerEnv,
 			LB:          config.WorkerLB,
 			WorkerType:  config.WorkerType,
 		}
 
 		// Go type Publisher
-		err := messageq.MsgSend("workerstats."+worker.WorkerGroup, workerdata)
+		err := messageq.MsgSend("workerstats."+config.WorkerGroup, workerdata)
 		if err != nil {
 			logging.PrintSecretsRedact("NATS error:", err)
 		}
@@ -166,5 +144,4 @@ func WorkerHealthStart() {
 
 	})
 
-	s.StartAsync()
 }

@@ -3,7 +3,7 @@ import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
 import { useGetPipelines } from '../../../graphql/getPipelines';
 import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
-import { useGlobalFlowState } from '../../../pages/Flow';
+import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 
 const PipelineItemTable = (props) => {
     // React router

@@ -5,17 +5,16 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
-	"encoding/json"
 	"errors"
 
-	"github.com/tidwall/buntdb"
+	"gorm.io/gorm"
 )
 
 func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environmentID string, workerGroup string, secret string) (*string, error) {
@@ -110,7 +109,6 @@ func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, envi
 
 func (r *queryResolver) GetWorkers(ctx context.Context, environmentID string) ([]*privategraphql.Workers, error) {
 	var resp []*privategraphql.Workers
-	var worker models.WorkerStats
 
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -128,41 +126,34 @@ func (r *queryResolver) GetWorkers(ctx context.Context, environmentID string) ([
 		return nil, errors.New("Requires permissions.")
 	}
 
-	database.GoDBWorker.View(func(tx *buntdb.Tx) error {
-		tx.AscendEqual("environment", `{"EnvID":"`+environmentID+`"}`, func(key, val string) bool {
-			// fmt.Printf("Worker Groups: %s %s\n", key, val)
+	var workers []models.Workers
 
-			err := json.Unmarshal([]byte(val), &worker)
-			if err != nil {
-				logging.PrintSecretsRedact(err)
-			}
+	err := database.DBConn.Where("environment_id =?", environmentID).Find(&workers).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Worker groups database error.")
+	}
 
-			resp = append(resp, &privategraphql.Workers{
-				WorkerID:    key,
-				WorkerGroup: worker.WorkerGroup,
-				Status:      worker.Status,
-				T:           worker.T,
-				Interval:    worker.Interval,
-				CPUPerc:     worker.CPUPerc,
-				Load:        worker.Load,
-				MemoryPerc:  worker.MemoryPerc,
-				MemoryUsed:  worker.MemoryUsed,
-				Env:         worker.Env,
-				EnvID:       worker.EnvID,
-				Lb:          worker.LB,
-				WorkerType:  worker.WorkerType,
-			})
-			return true
+	for _, v := range workers {
+		resp = append(resp, &privategraphql.Workers{
+			WorkerID:    v.WorkerID,
+			WorkerGroup: v.WorkerGroup,
+			Status:      v.Status,
+			CPUPerc:     v.CPUPerc,
+			Load:        v.Load,
+			MemoryPerc:  v.MemoryPerc,
+			MemoryUsed:  v.MemoryUsed,
+			EnvID:       v.EnvironmentID,
+			Lb:          v.LB,
+			T:           *v.UpdatedAt,
+			WorkerType:  v.WorkerType,
 		})
-		return nil
-	})
+	}
 
 	return resp, nil
 }
 
 func (r *queryResolver) GetWorkerGroups(ctx context.Context, environmentID string) ([]*privategraphql.WorkerGroup, error) {
 	var resp []*privategraphql.WorkerGroup
-	var workergroup models.WorkerGroup
 
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -180,28 +171,22 @@ func (r *queryResolver) GetWorkerGroups(ctx context.Context, environmentID strin
 		return nil, errors.New("Requires permissions.")
 	}
 
-	database.GoDBWorkerGroup.View(func(tx *buntdb.Tx) error {
-		tx.AscendEqual("environment", `{"EnvID":"`+environmentID+`"}`, func(key, val string) bool {
-			// fmt.Printf("Worker Groups: %s %s\n", key, val)
+	var workerGroups []models.WorkerGroups
 
-			err := json.Unmarshal([]byte(val), &workergroup)
-			if err != nil {
-				logging.PrintSecretsRedact(err)
-			}
+	err := database.DBConn.Where("environment_id =?", environmentID).Find(&workerGroups).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Worker groups database error.")
+	}
 
-			resp = append(resp, &privategraphql.WorkerGroup{
-				WorkerGroup: key,
-				Status:      workergroup.Status,
-				T:           workergroup.T,
-				Interval:    workergroup.Interval,
-				Env:         workergroup.Env,
-				Lb:          workergroup.LB,
-				WorkerType:  workergroup.WorkerType,
-			})
-			return true
+	for _, v := range workerGroups {
+		resp = append(resp, &privategraphql.WorkerGroup{
+			WorkerGroup: v.WorkerGroup,
+			Status:      "Online",
+			Lb:          v.LB,
+			T:           *v.UpdatedAt,
+			WorkerType:  v.WorkerType,
 		})
-		return nil
-	})
+	}
 
 	return resp, nil
 }
