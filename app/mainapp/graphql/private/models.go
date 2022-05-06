@@ -89,6 +89,22 @@ type DeploymentFlow struct {
 	Nodes []*models.DeployPipelineNodes `json:"nodes"`
 }
 
+type DeploymentPermissionsOutput struct {
+	Access        string `json:"Access"`
+	Subject       string `json:"Subject"`
+	SubjectID     string `json:"SubjectID"`
+	PipelineName  string `json:"PipelineName"`
+	ResourceID    string `json:"ResourceID"`
+	EnvironmentID string `json:"EnvironmentID"`
+	Active        bool   `json:"Active"`
+	Level         string `json:"Level"`
+	Label         string `json:"Label"`
+	FirstName     string `json:"FirstName"`
+	LastName      string `json:"LastName"`
+	Email         string `json:"Email"`
+	JobTitle      string `json:"JobTitle"`
+}
+
 type Deployments struct {
 	PipelineID        string    `json:"pipelineID"`
 	Version           string    `json:"version"`
