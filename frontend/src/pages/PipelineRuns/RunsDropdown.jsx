@@ -43,9 +43,6 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     const RunState = useGlobalRunState();
     const FlowState = useGlobalPipelineRun();
 
-    // Local state
-    const [isNewFlow, setIsNewFlow] = useState(false);
-
     // Graphql functions
     const getPipelineRuns = useGetPipelineRuns();
     const getPipelineFlow = GetPipelineFlow();
@@ -56,7 +53,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     const { enqueueSnackbar } = useSnackbar();
 
     const [Running, setRunning] = useState(false);
-    
+
     const [runId, setRunId] = useState('');
     const [droptrigger, setDroptrigger] = useState(false);
 
@@ -109,8 +106,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
             // If the pipeline has a new flow, get only the flow and return
             const isNewFlow = pipeline.updated_at > lastRunTime;
             if (isNewFlow) {
-                setIsNewFlow(true);
-                // getPipelineFlow(environmentID);
+                getPipelineFlow({ pipelineId: pipeline.pipelineID, environmentID });
                 return;
             }
 
@@ -170,16 +166,14 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
     */
     useEffect(() => {
         (async () => {
-
             // --------  1. Retrieve the selected runs:
             if (selectedRun != null && droptrigger === true) {
-
                 // console.log(wsconnect)
 
                 if (wsconnect && wsconnect.readyState === WebSocket.OPEN) {
-                    console.log("close already open ws")
-                    setReconnectWS(false)
-                    wsconnect.close()
+                    console.log('close already open ws');
+                    setReconnectWS(false);
+                    wsconnect.close();
                 }
                 // console.log("Selected run:", selectedRun.run_id)
                 const responseSingle = await getSinglePipelineRun({ pipelineID: pipeline.pipelineID, environmentID, runID: selectedRun.run_id });
@@ -194,12 +188,11 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                 setDroptrigger(false);
                 // console.log("I am the selected run:", selectedRun)
                 if (responseSingle.status == 'Running') {
-
-                    console.log("open ws on drop down")
+                    console.log('open ws on drop down');
                     const authtokenget = authToken.get();
                     const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${selectedRun.run_id}&id=${selectedRun.run_id}&token=${authtokenget}`;
                     const ws = new WebSocket(wsurl);
-                    setReconnectWS(true)
+                    setReconnectWS(true);
                     setWsConnect(ws);
                     setRunId(selectedRun.run_id);
                     setRunning(true);
@@ -209,26 +202,24 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                     // Timer set start on run
                     RunState.runObject?.runStart.set(responseSingle.created_at);
                     RunState.runObject?.runEnd.set(null);
-                    FlowState.isRunning.set(true)
+                    FlowState.isRunning.set(true);
                 } else {
-
                     // console.log("change run:", selectedRun.status)
                     const runtaskscolours = await getPipelineTasks(pipeline.pipelineID, selectedRun.run_id, environmentID, false);
-                    setReconnectWS(false)
+                    setReconnectWS(false);
                     setRunning(false);
 
                     // Timer set start and end date
                     RunState.runObject?.runStart.set(responseSingle.created_at);
                     RunState.runObject?.runEnd.set(responseSingle.ended_at);
-                    FlowState.isRunning.set(false)
+                    FlowState.isRunning.set(false);
                 }
             }
         })();
     }, [droptrigger]);
 
     // Update elements on run dropdown change
-    const handleDropdownChange = async(run) => {
-
+    const handleDropdownChange = async (run) => {
         setRunning(false);
         setDroptrigger(true);
         setSelectedRun(run);
@@ -242,9 +233,6 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
 
         //     console.log("Change status:", runstructure.status, run.status)
         // }
-
-        
-       
     };
 
     return (
