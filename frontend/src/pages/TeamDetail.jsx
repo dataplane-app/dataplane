@@ -269,6 +269,7 @@ export default function TeamDetail() {
                                     variant="contained"
                                     color="primary"
                                     height="100%"
+                                    id="permission-add"
                                     sx={{ ml: 1 }}>
                                     Add
                                 </Button>
@@ -284,7 +285,7 @@ export default function TeamDetail() {
                                         </Typography>
                                     </Box>
 
-                                    <Box mt={2}>
+                                    <Box mt={2} id="platform-permissions">
                                         {userPermissions
                                             .filter((permission) => permission.Level === 'platform')
                                             .map((permission) => (
@@ -320,7 +321,7 @@ export default function TeamDetail() {
                                         Environment: {globalEnvironment?.name}
                                     </Typography>
 
-                                    <Box mt={2}>
+                                    <Box mt={2} id="environment-permissions">
                                         {userPermissions
                                             .filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === globalEnvironment.id)
                                             .map((permission) => (
