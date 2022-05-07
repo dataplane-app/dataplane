@@ -13,10 +13,7 @@ import { useRunCEFile } from '../../../graphql/runCEFile';
 import { useStopCERun } from '../../../graphql/stopCERun';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-// import * as monaco from 'monaco-editor';
-import Editor, { useMonaco, loader } from '@monaco-editor/react';
-
-// loader.config({ monaco });
+import MonacoEditor, { monaco } from 'react-monaco-editor';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
@@ -201,21 +198,18 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     }, [runState]);
 
     // Editor configs
-    const monaco = useMonaco();
     useEffect(() => {
-        if (monaco) {
-            monaco.editor.defineTheme('dp-dark', {
-                base: 'vs-dark',
-                inherit: true,
-                rules: [],
-                colors: {
-                    'editor.background': '#0e1928',
-                    'editorLineNumber.foreground': '#3C7790',
-                    'editorLineNumber.activeForeground': '#0E236B',
-                },
-            });
-        }
-    }, [monaco]);
+        monaco.editor.defineTheme('dp-dark', {
+            base: 'vs-dark',
+            inherit: true,
+            rules: [],
+            colors: {
+                'editor.background': '#0e1928',
+                'editorLineNumber.foreground': '#3C7790',
+                'editorLineNumber.activeForeground': '#0E236B',
+            },
+        });
+    }, [])
 
     return (
         <div {...rest}>
@@ -336,15 +330,15 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 ) : null}
 
                 <Box zIndex={10} height="100%">
-                    <Editor
-                        onMount={handleEditorOnMount}
-                        defaultLanguage={EditorGlobal.selectedFile.get()?.language}
-                        path={EditorGlobal.selectedFile.get()?.name}
+                    <MonacoEditor
+                        editorDidMount={handleEditorOnMount}
+                        language={EditorGlobal.selectedFile.get()?.language}
+                        // path={EditorGlobal.selectedFile.get()?.name}
                         defaultValue={EditorGlobal.selectedFile.get()?.content}
                         value={EditorGlobal.selectedFile.get()?.diffValue ?? EditorGlobal.selectedFile.get()?.content}
                         theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}
                         height="100%"
-                        saveViewState
+                        // saveViewState
                         onChange={handleEditorChange}
                         options={{
                             minimap: { enabled: false },
