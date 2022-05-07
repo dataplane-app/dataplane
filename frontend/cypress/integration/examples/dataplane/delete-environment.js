@@ -1,4 +1,4 @@
-describe('Add User', function () {
+describe('Delete Environment', function () {
     it('Login', function () {
         cy.visit('http://localhost:3000/webapp/');
 

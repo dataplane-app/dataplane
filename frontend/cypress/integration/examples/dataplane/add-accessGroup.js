@@ -1,4 +1,4 @@
-describe('Add Environment', function () {
+describe('Add Access group', function () {
     it('Login', function () {
         cy.visit('http://localhost:3000/webapp/');
 
@@ -8,15 +8,15 @@ describe('Add Environment', function () {
         cy.url().should('include', '/webapp');
     });
 
-    it('Add Environment', function () {
-        cy.contains('Settings').click();
+    it('Add Access group', function () {
+        cy.contains('Access groups').click();
         cy.contains('button', 'Add').click();
 
-        cy.get('#name').type('ProductionCy').should('have.value', 'ProductionCy');
+        cy.get('#name').type('Cy Access Group').should('have.value', 'Cy Access Group');
         cy.get('#description').type('Description').should('have.value', 'Description');
 
-        cy.get('#environment-save').click();
+        cy.contains('Save').click();
 
-        cy.get('#notistack-snackbar').should('contain', 'Environment added: ProductionCy');
+        cy.get('#notistack-snackbar').should('contain', 'Success');
     });
 });
