@@ -87,7 +87,7 @@ const ScheduleNode = (props) => {
                         </Typography>
 
                         <Typography fontSize={10} mt={1}>
-                            {DateTime.fromJSDate(new Date(), { zone: props.data.genericdata.timezone }).toFormat('z (ZZZZ)')}
+                            {getTimeZone(props.data.genericdata.timezone)}
                         </Typography>
                     </Grid>
                 </Tooltip>
@@ -111,9 +111,17 @@ export default ScheduleNode;
 // Utility function
 function cronZone(statement, next, zone) {
     // Return if there is no time
-    if (/\d\d:\d\d (AM|PM)/.test(statement) === false) return;
+    if (/\d\d:\d\d (AM|PM)/.test(statement) === false) return statement;
 
     const time = DateTime.fromJSDate(next, { zone }).toFormat('HH:mm a');
     statement = statement.replace(/\d\d:\d\d (AM|PM)/, time);
     return statement;
+}
+
+function getTimeZone(zone) {
+    let text = DateTime.fromJSDate(new Date(), { zone }).toFormat('z (ZZZZ)');
+    if (text === 'Etc/UTC (UTC)') {
+        text = 'UTC';
+    }
+    return text;
 }
