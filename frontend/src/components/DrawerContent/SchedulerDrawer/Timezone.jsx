@@ -10,6 +10,7 @@ export function Timezone({ timezone, setTimezone }) {
             onChange={(event, newValue) => {
                 setTimezone(newValue);
             }}
+            disableClearable
             options={Object.keys(ct.getAllTimezones())}
             renderInput={(params) => (
                 <TextField
