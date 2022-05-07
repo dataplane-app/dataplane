@@ -19,4 +19,13 @@ describe('Add Environment', function () {
 
         cy.get('#notistack-snackbar').should('contain', 'Environment added: ProductionCy');
     });
+
+    it('Delete Environment', function () {
+        cy.contains('ProductionCy').click();
+
+        cy.contains('Delete environment').click();
+        cy.contains('Yes').click();
+
+        cy.get('#notistack-snackbar').should('contain', 'Success');
+    });
 });

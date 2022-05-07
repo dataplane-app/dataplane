@@ -8,7 +8,7 @@ describe('Add User', function () {
         cy.url().should('include', '/webapp');
     });
 
-    it('Add User', function () {
+    it('Add user', function () {
         cy.contains('Team').click();
         cy.contains('button', 'Add').click();
 
@@ -23,5 +23,14 @@ describe('Add User', function () {
         cy.contains('Save').click();
 
         cy.get('#notistack-snackbar').should('contain', 'User created: John Smith (johnd@email.com)');
+    });
+
+    it('Remove user', function () {
+        cy.contains('John Smith').click();
+
+        cy.contains('Delete user').click();
+        cy.contains('Yes').click();
+
+        cy.get('#notistack-snackbar').should('contain', 'Success');
     });
 });
