@@ -11,8 +11,9 @@ import ScheduleTriggerNodeItem from '../../MoreInfoContent/ScheduleTriggerNodeIt
 import MoreInfoMenu from '../../MoreInfoMenu';
 import { getColor } from '../utils';
 import cronstrue from 'cronstrue';
-import { getTimeZoneOffSet } from '../../DrawerContent/SchedulerDrawer/CronTab';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
+import later from '@breejs/later';
+import { DateTime } from 'luxon';
 
 const ScheduleNode = (props) => {
     // Theme hook
@@ -58,7 +59,9 @@ const ScheduleNode = (props) => {
     // Set description
     useEffect(() => {
         if (props.data.genericdata.scheduleType === 'cron') {
-            setSchedule(cronstrue.toString(props.data.genericdata.schedule, { throwExceptionOnParseError: false }));
+            // Get next occurrence
+            const next = later.schedule(later.parse.cron(props.data.genericdata.schedule)).next(1);
+            setSchedule(cronZone(cronstrue.toString(props.data.genericdata.schedule, { throwExceptionOnParseError: false }), next, props.data.genericdata.timezone));
         } else {
             if (props.data.genericdata.schedule === '*/1 * * * * *') {
                 setSchedule('Every second');
@@ -66,7 +69,7 @@ const ScheduleNode = (props) => {
                 setSchedule('Every ' + props.data.genericdata.schedule.split(' ')[0].replace('*/', '') + ' seconds');
             }
         }
-    }, [props.data.genericdata.schedule, props.data.genericdata.scheduleType, schedule]);
+    }, [props.data.genericdata.schedule, props.data.genericdata.scheduleType, props.data.genericdata.timezone, schedule]);
 
     return (
         <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>
@@ -84,7 +87,7 @@ const ScheduleNode = (props) => {
                         </Typography>
 
                         <Typography fontSize={10} mt={1}>
-                            {printTimezone(props.data.genericdata.timezone)}
+                            {DateTime.fromJSDate(new Date(), { zone: props.data.genericdata.timezone }).toFormat('z (ZZZZ)')}
                         </Typography>
                     </Grid>
                 </Tooltip>
@@ -106,9 +109,11 @@ const ScheduleNode = (props) => {
 export default ScheduleNode;
 
 // Utility function
-function printTimezone(timezone) {
-    if (timezone === 'Etc/UTC') {
-        return 'UTC';
-    }
-    return timezone + ' ' + getTimeZoneOffSet(timezone);
+function cronZone(statement, next, zone) {
+    // Return if there is no time
+    if (/\d\d:\d\d (AM|PM)/.test(statement) === false) return;
+
+    const time = DateTime.fromJSDate(next, { zone }).toFormat('HH:mm a');
+    statement = statement.replace(/\d\d:\d\d (AM|PM)/, time);
+    return statement;
 }
