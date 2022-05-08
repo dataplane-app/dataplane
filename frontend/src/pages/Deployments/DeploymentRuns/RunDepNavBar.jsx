@@ -94,6 +94,7 @@ export default function RunDepNavBar({ environmentID, deployment }) {
     };
 
     const runstart = RunState.runObject?.runStart?.get();
+    const runEnd = RunState.runObject?.runEnd?.get();
     // console.log(runstart)
 
     // Updates timer every second
@@ -117,7 +118,7 @@ export default function RunDepNavBar({ environmentID, deployment }) {
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [runstart]);
+    }, [runstart, runEnd]);
 
     return (
         <Grid item>
@@ -145,16 +146,16 @@ export default function RunDepNavBar({ environmentID, deployment }) {
                 <StatusChips />
 
                 {deployment && environmentID ? (
-                    <RunsDropdown 
-                    environmentID={environmentID} 
-                    deployment={deployment} 
-                    runs={runs} 
-                    setRuns={setRuns} 
-                    selectedRun={selectedRun} 
-                    setSelectedRun={setSelectedRun}
-                    ReconnectWS={ReconnectWS}
-                    setReconnectWS={setReconnectWS}
-                     />
+                    <RunsDropdown
+                        environmentID={environmentID}
+                        deployment={deployment}
+                        runs={runs}
+                        setRuns={setRuns}
+                        selectedRun={selectedRun}
+                        setSelectedRun={setSelectedRun}
+                        ReconnectWS={ReconnectWS}
+                        setReconnectWS={setReconnectWS}
+                    />
                 ) : null}
 
                 {!RunState.runObject?.runEnd?.get() ? (

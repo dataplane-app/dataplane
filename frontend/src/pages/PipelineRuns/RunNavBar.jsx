@@ -100,6 +100,7 @@ export default function RunNavBar({ environmentID, pipeline }) {
     };
 
     const runstart = RunState.runObject?.runStart?.get();
+    const runEnd = RunState.runObject?.runEnd?.get();
     // console.log(runstart)
 
     // Updates timer every second
@@ -123,7 +124,7 @@ export default function RunNavBar({ environmentID, pipeline }) {
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [runstart]);
+    }, [runstart, runEnd]);
 
     return (
         <Grid item>
@@ -150,17 +151,17 @@ export default function RunNavBar({ environmentID, pipeline }) {
                 <StatusChips />
 
                 {pipeline && environmentID ? (
-                    <RunsDropdown 
-                    environmentID={environmentID} 
-                    pipeline={pipeline} 
-                    runs={runs} 
-                    setRuns={setRuns} 
-                    selectedRun={selectedRun} 
-                    setSelectedRun={setSelectedRun} 
-                    wsconnect={wsconnect} 
-                    setWsConnect={setWsConnect}
-                    ReconnectWS={ReconnectWS}
-                    setReconnectWS={setReconnectWS}
+                    <RunsDropdown
+                        environmentID={environmentID}
+                        pipeline={pipeline}
+                        runs={runs}
+                        setRuns={setRuns}
+                        selectedRun={selectedRun}
+                        setSelectedRun={setSelectedRun}
+                        wsconnect={wsconnect}
+                        setWsConnect={setWsConnect}
+                        ReconnectWS={ReconnectWS}
+                        setReconnectWS={setReconnectWS}
                     />
                 ) : null}
 

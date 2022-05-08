@@ -31,16 +31,16 @@ const TeamGroup = () => {
     useEffect(() => {
         if (Environment.id.get() && MeData.get()) {
             setIsGlobalDataLoaded(true);
-            // getAccessGroup();
         }
     }, [Environment, MeData]);
 
     // Get access group data on load
     useEffect(() => {
+        if (!isGlobalDataLoaded) return;
         getAccessGroup();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [isGlobalDataLoaded]);
 
     return (
         <Box className="page" width="83%">
