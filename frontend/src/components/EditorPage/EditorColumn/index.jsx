@@ -344,9 +344,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                     </Grid>
                 ) : null}
 
-
                 <Box zIndex={10} height="100%">
-                    {<MonacoEditor
+                    <MonacoEditor
                         editorDidMount={handleEditorOnMount}
                         language={EditorGlobal.selectedFile.get()?.language}
                         defaultValue={EditorGlobal.selectedFile.get()?.content}
@@ -358,7 +357,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                             minimap: { enabled: false },
                             hideCursorInOverviewRuler: { enabled: true },
                         }}
-                    />}
+                    />
                 </Box>
 
                 <Grid
