@@ -1,6 +1,6 @@
 module dataplane
 
-go 1.17
+go 1.18
 
 require (
 	github.com/99designs/gqlgen v0.17.1
@@ -10,7 +10,7 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-playground/validator/v10 v10.10.0
 	github.com/gofiber/adaptor/v2 v2.1.19
-	github.com/gofiber/fiber/v2 v2.28.0
+	github.com/gofiber/fiber/v2 v2.33.0
 	github.com/gofiber/websocket/v2 v2.0.17
 	github.com/golang-jwt/jwt/v4 v4.3.0
 	github.com/google/uuid v1.3.0
@@ -22,8 +22,7 @@ require (
 	github.com/pieterclaerhout/go-log v1.14.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/stretchr/testify v1.7.0
-	github.com/tidwall/buntdb v1.2.9
-	github.com/valyala/fasthttp v1.34.0
+	github.com/valyala/fasthttp v1.35.0
 	github.com/vektah/gqlparser/v2 v2.4.0
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	gorm.io/datatypes v1.0.6
@@ -95,6 +94,7 @@ require (
 	github.com/savsgio/gotils v0.0.0-20220201163454-d252f0a44d5b // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/tidwall/btree v1.1.0 // indirect
+	github.com/tidwall/buntdb v1.2.9 // indirect
 	github.com/tidwall/gjson v1.14.0 // indirect
 	github.com/tidwall/grect v0.1.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect

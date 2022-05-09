@@ -174,7 +174,7 @@ github.com/goccy/go-json/internal/runtime
 # github.com/gofiber/adaptor/v2 v2.1.19
 ## explicit; go 1.14
 github.com/gofiber/adaptor/v2
-# github.com/gofiber/fiber/v2 v2.28.0
+# github.com/gofiber/fiber/v2 v2.33.0
 ## explicit; go 1.16
 github.com/gofiber/fiber/v2
 github.com/gofiber/fiber/v2/internal/bytebufferpool
@@ -182,15 +182,6 @@ github.com/gofiber/fiber/v2/internal/colorable
 github.com/gofiber/fiber/v2/internal/dictpool
 github.com/gofiber/fiber/v2/internal/fasttemplate
 github.com/gofiber/fiber/v2/internal/fwd
-github.com/gofiber/fiber/v2/internal/go-json
-github.com/gofiber/fiber/v2/internal/go-json/decoder
-github.com/gofiber/fiber/v2/internal/go-json/encoder
-github.com/gofiber/fiber/v2/internal/go-json/encoder/vm
-github.com/gofiber/fiber/v2/internal/go-json/encoder/vm_color
-github.com/gofiber/fiber/v2/internal/go-json/encoder/vm_color_indent
-github.com/gofiber/fiber/v2/internal/go-json/encoder/vm_indent
-github.com/gofiber/fiber/v2/internal/go-json/errors
-github.com/gofiber/fiber/v2/internal/go-json/runtime
 github.com/gofiber/fiber/v2/internal/isatty
 github.com/gofiber/fiber/v2/internal/msgp
 github.com/gofiber/fiber/v2/internal/schema
@@ -404,30 +395,20 @@ github.com/shirou/gopsutil/process
 github.com/stretchr/testify/assert
 # github.com/tidwall/btree v1.1.0
 ## explicit; go 1.16
-github.com/tidwall/btree
-github.com/tidwall/btree/internal
 # github.com/tidwall/buntdb v1.2.9
 ## explicit; go 1.16
-github.com/tidwall/buntdb
 # github.com/tidwall/gjson v1.14.0
 ## explicit; go 1.12
-github.com/tidwall/gjson
 # github.com/tidwall/grect v0.1.4
 ## explicit; go 1.15
-github.com/tidwall/grect
 # github.com/tidwall/match v1.1.1
 ## explicit; go 1.15
-github.com/tidwall/match
 # github.com/tidwall/pretty v1.2.0
 ## explicit; go 1.16
-github.com/tidwall/pretty
 # github.com/tidwall/rtred v0.1.2
 ## explicit; go 1.15
-github.com/tidwall/rtred
-github.com/tidwall/rtred/base
 # github.com/tidwall/tinyqueue v0.1.1
 ## explicit; go 1.15
-github.com/tidwall/tinyqueue
 # github.com/tklauser/go-sysconf v0.3.10
 ## explicit; go 1.13
 github.com/tklauser/go-sysconf
@@ -440,8 +421,8 @@ github.com/urfave/cli/v2
 # github.com/valyala/bytebufferpool v1.0.0
 ## explicit
 github.com/valyala/bytebufferpool
-# github.com/valyala/fasthttp v1.34.0
-## explicit; go 1.12
+# github.com/valyala/fasthttp v1.35.0
+## explicit; go 1.15
 github.com/valyala/fasthttp
 github.com/valyala/fasthttp/fasthttpadaptor
 github.com/valyala/fasthttp/fasthttputil
