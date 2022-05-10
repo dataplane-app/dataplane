@@ -2,6 +2,15 @@ import cronstrue from 'cronstrue';
 import later from '@breejs/later';
 import { DateTime } from 'luxon';
 
+/**
+ * Converts cron string to human readable string in user's timezone
+ * @param {string} cronStatement * /1 * * * * *'
+ * @param {string} zone Europe/London
+ * @param {string} type cron
+ * @return {string} Every second
+ * @example * /5 * * * * * ==> Every 5 seconds
+ * @example 0 * * * * ==> Every hour
+ */
 export default function cronZone(cronStatement, zone, type) {
     if (type !== 'cron') {
         if (cronStatement === '*/1 * * * * *') {
