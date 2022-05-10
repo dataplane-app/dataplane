@@ -1,6 +1,7 @@
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography } from '@mui/material';
+import { DateTime } from 'luxon';
 
-export function CronSecondsTab({ seconds, setSeconds }) {
+export function CronSecondsTab({ seconds, setSeconds, timezone }) {
     return (
         <Box display="flex" flexDirection="column">
             <Box mt={1} sx={{ width: 650 }} display="flex" alignItems="center">
@@ -21,62 +22,53 @@ export function CronSecondsTab({ seconds, setSeconds }) {
                             minWidth: 650,
                         }}
                         aria-label="simple table">
-                        <TableBody>{SecondsTable(new Date(), seconds)}</TableBody>
+                        <TableBody>
+                            {calculateNext20(seconds, timezone).map((a, idx) => (
+                                <TableRow
+                                    key={idx}
+                                    sx={{
+                                        '&:last-child td, &:last-child th': {
+                                            border: 0,
+                                        },
+                                    }}>
+                                    <TableCell component="th" scope="row">
+                                        {idx + 1}
+                                    </TableCell>
+                                    <TableCell component="th" scope="row">
+                                        {DateTime.fromISO(a, { zone: timezone }).toFormat('EEE')},
+                                    </TableCell>
+                                    <TableCell component="th" scope="row">
+                                        {DateTime.fromISO(a, { zone: timezone }).toFormat('M')}
+                                    </TableCell>
+                                    <TableCell component="th" scope="row">
+                                        {DateTime.fromISO(a, { zone: timezone }).toFormat('MMM')}
+                                    </TableCell>
+                                    <TableCell component="th" scope="row">
+                                        {DateTime.fromISO(a, { zone: timezone }).toFormat('yyyy')}
+                                    </TableCell>
+                                    <TableCell component="th" scope="row">
+                                        {DateTime.fromISO(a, { zone: timezone }).toFormat('TT')}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
                     </Table>
                 </TableContainer>
             ) : null}
         </Box>
     );
-
-    function SecondsTable(date) {
-        const table = [];
-
-        for (let idx = 1; idx < 21; idx++) {
-            table.push(
-                <TableRow
-                    key={idx}
-                    sx={{
-                        '&:last-child td, &:last-child th': {
-                            border: 0,
-                        },
-                    }}>
-                    <TableCell component="th" scope="row">
-                        {idx}
-                    </TableCell>
-                    <TableCell component="th" scope="row">
-                        {date.toLocaleDateString('en-US', {
-                            weekday: 'short',
-                        })}
-                        ,
-                    </TableCell>
-                    <TableCell component="th" scope="row">
-                        {date.getDate}
-                    </TableCell>
-                    <TableCell component="th" scope="row">
-                        {date.toLocaleDateString('en-US', {
-                            month: 'short',
-                        })}
-                    </TableCell>
-                    <TableCell component="th" scope="row">
-                        {date.getFullYear()}
-                    </TableCell>
-                    <TableCell component="th" scope="row">
-                        {formatTime(date, seconds, idx)}
-                    </TableCell>
-                </TableRow>
-            );
-        }
-
-        return table;
-    }
 }
 
 // Utility functions
-function formatTime(date, s, idx) {
-    date = date.getTime() + s * idx * 1000;
-    date = new Date(date);
-    const hours = date.getHours() < 10 ? '0' + date.getHours() : date.getHours();
-    const minutes = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes();
-    const seconds = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
-    return hours + ':' + minutes + ':' + seconds;
+function calculateNext20(seconds, zone) {
+    const now = DateTime.fromJSDate(new Date(), { zone }).toISO();
+    const arr = [now];
+    for (let index = 1; index < 20; index++) {
+        arr.push(
+            DateTime.fromISO(now)
+                .plus({ seconds: index * seconds })
+                .toISO()
+        );
+    }
+    return arr;
 }
