@@ -59,19 +59,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.tabs.get()]);
 
-    useEffect(() => {
-        function getOrCreateModel(fileName, value) {
-            const existingModel = monaco.editor.getModel(monaco.Uri.file(fileName));
-            return existingModel ? existingModel : monaco.editor.createModel(value, undefined, monaco.Uri.file(fileName));
-        }
-
-        if (EditorGlobal.selectedFile.get()?.name && editorRef.current) {
-            const model = editorRef.current.getModel();
-            const fileName = EditorGlobal.selectedFile.get()?.name;
-            editorRef.current.setModel(getOrCreateModel(fileName, model.value));
-        }
-    }, [EditorGlobal.selectedFile.get()?.name]);
-
     const handleEditorOnMount = (editor) => {
         editorRef.current = editor;
         setEditorInstance(editor);
@@ -179,6 +166,15 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.selectedFile?.id?.value]);
 
+    useEffect(() => {
+        if(editorRef.current) {
+            var model = editorRef.current.getModel()
+            if(model) {
+                model.setValue(model.getValue());
+            }
+        }
+    }, [EditorGlobal.selectedFile?.id?.value]);
+
     // Handle ctrl+s
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
@@ -223,6 +219,25 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             },
         });
     }, []);
+
+    const getLanguage = (filename) => {
+        if(!filename) {
+            return
+        }
+
+        if(filename.match(/.py$/i)) {
+            return 'python';
+        } else if(filename.match(/.sh$/i)){
+            return 'shell'
+        } else if(filename.match(/.json$/i)){
+            return 'json'
+        }
+    }
+
+    const getEditorValue = () => {
+        return EditorGlobal.selectedFile.get()?.diffValue 
+            ?? EditorGlobal.selectedFile.get()?.content;
+    }
 
     return (
         <div {...rest}>
@@ -342,11 +357,10 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 ) : null}
 
                 <Box zIndex={10} height="100%">
-                    <MonacoEditor
+                    {getEditorValue() != undefined ? <MonacoEditor
                         editorDidMount={handleEditorOnMount}
-                        language={EditorGlobal.selectedFile.get()?.language}
-                        defaultValue={EditorGlobal.selectedFile.get()?.content}
-                        value={EditorGlobal.selectedFile.get()?.diffValue ?? EditorGlobal.selectedFile.get()?.content}
+                        language={getLanguage(EditorGlobal.selectedFile.get()?.name)}
+                        value={getEditorValue()}
                         theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}
                         height="100%"
                         onChange={handleEditorChange}
@@ -354,7 +368,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                             minimap: { enabled: false },
                             hideCursorInOverviewRuler: { enabled: true },
                         }}
-                    />
+                    /> : null}
                 </Box>
 
                 <Grid
