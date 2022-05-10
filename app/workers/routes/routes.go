@@ -4,7 +4,6 @@ import (
 	"dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/database/models"
-	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
 	runcodeworker "dataplane/workers/runcode"
 	"dataplane/workers/runtask"
@@ -34,9 +33,6 @@ func Setup(port string) *fiber.App {
 
 	database.DBConnect()
 	log.Println("🏃 ======== DATAPLANE WORKER ========")
-
-	// ------- LOAD secrets ------
-	secrets.MapSecrets()
 
 	// -------- NATS Connect -------
 	messageq.NATSConnect()
@@ -97,7 +93,7 @@ func Setup(port string) *fiber.App {
 
 		if err != nil {
 			if config.Debug == "true" {
-				logging.PrintSecretsRedact(err)
+				log.Println(err)
 			}
 			panic("Failed to create a development environment on first use.")
 		}
@@ -107,6 +103,9 @@ func Setup(port string) *fiber.App {
 	config.EnvName = e.Name
 	config.EnvID = e.ID
 	log.Println("🌳 Environment name and ID: ", config.EnvName, " - ", config.EnvID)
+
+	// ------- LOAD secrets (must be loaded after environment id to load for this environment) ------
+	secrets.MapSecrets()
 
 	// Load a worker ID
 	config.WorkerID = uuid.NewString()
