@@ -225,7 +225,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     }, []);
 
     return (
-        <div {...rest}>
+        <div {...rest} ref={ref}>
             <Box
                 sx={{
                     backgroundColor: 'background.main',
