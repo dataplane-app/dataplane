@@ -62,17 +62,15 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     useEffect(() => {
         function getOrCreateModel(fileName, value) {
             const existingModel = monaco.editor.getModel(monaco.Uri.file(fileName));
-            return existingModel 
-                ? existingModel
-                : monaco.editor.createModel(value, undefined, monaco.Uri.file(fileName));
+            return existingModel ? existingModel : monaco.editor.createModel(value, undefined, monaco.Uri.file(fileName));
         }
 
-        if(EditorGlobal.selectedFile.get()?.name && editorRef.current) {
+        if (EditorGlobal.selectedFile.get()?.name && editorRef.current) {
             const model = editorRef.current.getModel();
             const fileName = EditorGlobal.selectedFile.get()?.name;
-            editorRef.current.setModel(getOrCreateModel(fileName, model.value))
+            editorRef.current.setModel(getOrCreateModel(fileName, model.value));
         }
-    }, [EditorGlobal.selectedFile.get()?.name])
+    }, [EditorGlobal.selectedFile.get()?.name]);
 
     const handleEditorOnMount = (editor) => {
         editorRef.current = editor;
@@ -224,7 +222,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 'editorLineNumber.activeForeground': '#0E236B',
             },
         });
-    }, [])
+    }, []);
 
     return (
         <div {...rest}>
@@ -256,7 +254,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         {EditorGlobal.tabs
                             .attach(Downgraded)
                             .get()
-                            ?.reverse()
                             ?.map((tabs, idx) => {
                                 return (
                                     <Tab
