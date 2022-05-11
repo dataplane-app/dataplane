@@ -19,20 +19,20 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const [filteredGraphqlResp, setFilteredGraphqlResp] = useState('');
     const [graphQlResp, setGraphQlResp] = useState([]);
     const [keys, setKeys] = useState([]);
-    const [hasGetNodeLogsRun, setHasGetNodeLogsRun] = useState(0);
+    // const [hasGetNodeLogsRun, setHasGetNodeLogsRun] = useState(0);
     const [render, setRender] = useState(0);
 
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
 
     // Instantiate websocket
-    const webSocket = useWebSocketLog(environmentID, EditorGlobal.runID.get(), setKeys);
+    const webSocket = useWebSocketLog(environmentID, EditorGlobal.runID.get(), setKeys, pipelineID, setGraphQlResp, keys);
 
     useEffect(() => {
-        if (hasGetNodeLogsRun === 0 && EditorGlobal.runID.get()) {
-            setHasGetNodeLogsRun(1);
-            getNodeLogs();
-        }
+        // if (hasGetNodeLogsRun === 0 && EditorGlobal.runID.get()) {
+        // setHasGetNodeLogsRun(1);
+        //     getNodeLogs();
+        // }
 
         setWebsocketResp((t) => t + webSocket + '\n');
 
@@ -42,7 +42,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     useEffect(() => {
         setWebsocketResp('');
         setGraphQlResp([]);
-        setHasGetNodeLogsRun(0);
+        // setHasGetNodeLogsRun(0);
     }, []);
 
     // Prepare filtered graphQL response
@@ -61,13 +61,13 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     }, [graphQlResp]);
 
     // Graphql Hook
-    const getNodeLogs = useGetNodeLogsHook(environmentID, pipelineID, EditorGlobal.runID.get(), setGraphQlResp, keys);
+    // const getNodeLogs = useGetNodeLogsHook(environmentID, pipelineID, EditorGlobal.runID.get(), setGraphQlResp, keys);
 
     useEffect(() => {
         if (!EditorGlobal.runID.get()) return;
         setWebsocketResp('');
         setGraphQlResp([]);
-        setHasGetNodeLogsRun(0);
+        // setHasGetNodeLogsRun(0);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.runID.get()]);
@@ -154,23 +154,23 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
 export default LogsColumn;
 
 // ----- Custom Hooks
-const useGetNodeLogsHook = (environmentID, pipelineID, runID, setGraphQlResp, keys) => {
-    // GraphQL hook
-    const getNodeLogs = useGetCodeFileRunLogs();
+// const useGetNodeLogsHook = (environmentID, pipelineID, runID, setGraphQlResp, keys) => {
+//     // GraphQL hook
+//     const getNodeLogs = useGetCodeFileRunLogs();
 
-    const { enqueueSnackbar } = useSnackbar();
+//     const { enqueueSnackbar } = useSnackbar();
 
-    // Get logs
-    return async () => {
-        const response = await getNodeLogs({ environmentID, pipelineID, runID });
+//     // Get logs
+//     return async () => {
+//         const response = await getNodeLogs({ environmentID, pipelineID, runID });
 
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't get logs: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            const resp250 = response.slice(response.length - 250);
-            setGraphQlResp(resp250.filter((a) => !keys.includes(a.uid)));
-        }
-    };
-};
+//         if (response.r || response.error) {
+//             enqueueSnackbar("Can't get logs: " + (response.msg || response.r || response.error), { variant: 'error' });
+//         } else if (response.errors) {
+//             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+//         } else {
+//             const resp250 = response.slice(response.length - 250);
+//             setGraphQlResp(resp250.filter((a) => !keys.includes(a.uid)));
+//         }
+//     };
+// };

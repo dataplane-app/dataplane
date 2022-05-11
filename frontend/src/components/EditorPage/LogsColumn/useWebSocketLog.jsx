@@ -1,5 +1,7 @@
+import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
+import { useGetCodeFileRunLogs } from '../../../graphql/getCodeFileRunLogs';
 import ConsoleLogHelper from '../../../Helper/logger';
 import { useGlobalEditorState } from '../../../pages/Editor';
 
@@ -21,13 +23,18 @@ if (process.env.REACT_APP_DATAPLANE_ENV == 'build') {
 
 const websocketEndpoint = new_uri;
 
-export default function useWebSocketLog(environmentId, run_id, setKeys) {
+export default function useWebSocketLog(environmentId, run_id, setKeys, pipelineID, setGraphQlResp, keys) {
     const [socketResponse, setSocketResponse] = useState('');
     const reconnectOnClose = useRef(true);
     const ws = useRef(null);
 
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
+
+    // GraphQL hook
+    const getNodeLogs = useGetCodeFileRunLogs();
+
+    const { enqueueSnackbar } = useSnackbar();
 
     const { authToken } = useGlobalAuthState();
 
@@ -37,13 +44,25 @@ export default function useWebSocketLog(environmentId, run_id, setKeys) {
         function connect() {
             ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=coderunfilelogs.${run_id}&id=${run_id}&token=${authToken.get()}`);
 
-            ws.current.onopen = () => {
+            ws.current.onopen = async () => {
                 EditorGlobal.runState.set('Running');
                 ConsoleLogHelper('ws opened');
+
+                const response = await getNodeLogs({ environmentID: environmentId, pipelineID, runID: run_id });
+
+                if (response.r || response.error) {
+                    enqueueSnackbar("Can't get logs: " + (response.msg || response.r || response.error), { variant: 'error' });
+                } else if (response.errors) {
+                    response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+                } else {
+                    const resp250 = response.slice(response.length - 250);
+                    setGraphQlResp(resp250.filter((a) => !keys.includes(a.uid)));
+                }
             };
             ws.current.onclose = () => {
                 // Exit if closing the connection was intentional
                 if (!reconnectOnClose.current) {
+                    ConsoleLogHelper('ws closed');
                     return;
                 }
 
