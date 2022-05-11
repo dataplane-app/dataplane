@@ -9,7 +9,7 @@ import { useGlobalEditorState } from '../../../pages/Editor';
 import { useTheme } from '@mui/system';
 import useInstallWebSocketLog from './useInstallWebSocketLog';
 
-const InstallationLogsColumn = forwardRef(({ children, setPackages, ...rest }, ref) => {
+const InstallationLogsColumn = forwardRef(({ children, setPackages, environmentID, workerGroup, pipelineID, ...rest }, ref) => {
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
 
@@ -17,7 +17,7 @@ const InstallationLogsColumn = forwardRef(({ children, setPackages, ...rest }, r
     const [websocketResp, setWebsocketResp] = useState('\n');
 
     // Instantiate websockets connection
-    const webSocketInstall = useInstallWebSocketLog(rest.environmentID, rest.workerGroup, rest.pipelineID, setWebsocketResp, setPackages);
+    const webSocketInstall = useInstallWebSocketLog(environmentID, workerGroup, pipelineID, setWebsocketResp, setPackages);
 
     // Clear websockets logs on load and tab change
     useEffect(() => {
