@@ -569,7 +569,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const getFilesNode = useGetFilesNodeHook(rest.pipeline, data, setExpanded, handleFileClick);
 
     return (
-        <div {...rest}>
+        <div {...rest} ref={ref}>
             <Box>
                 <Autocomplete
                     options={workerGroups}
@@ -730,7 +730,9 @@ function CustomTreeItem(props) {
         <TreeItem
             label={
                 <Box>
-                    <Typography sx={{ fontWeight: '400', fontSize: 13, flexGrow: 1 }}>{label}</Typography>
+                    <Typography component="div" sx={{ fontWeight: '400', fontSize: 13, flexGrow: 1 }}>
+                        {label}
+                    </Typography>
                 </Box>
             }
             {...other}
