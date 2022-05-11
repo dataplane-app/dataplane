@@ -321,7 +321,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
                     setTmpFileName(null);
                     setIsEditing(false);
-                    changeTreeStyling();
+                    changeTreeStyling(elementToChange.id);
                 }
             } else {
                 const check = checkFileName(tmpFileName);
@@ -346,7 +346,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
                     setTmpFileName(null);
                     setIsEditing(false);
-                    changeTreeStyling();
+                    changeTreeStyling(elementToChange.id);
                     selectAndOpenNewFile(nodes);
                 }
             }
