@@ -1,4 +1,5 @@
 type PipelinePermissionsOutput {
+    ID: String!
     Access: String!
     Subject: String!
     SubjectID: String!

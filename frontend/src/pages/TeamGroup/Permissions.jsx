@@ -9,6 +9,7 @@ import { useUpdatePermissionToAccessGroup } from '../../graphql/updatePermission
 import { useAvailablePermissions } from '../../graphql/availablePermissions';
 import { useGetUserPermissions } from '../../graphql/getUserPermissions';
 import { useDeletePermissionToUser } from '../../graphql/deletePermissionToUser';
+import { useGetUserPipelinePermissions } from '../../graphql/getUserPipelinePermissions';
 
 export default function Permissions({ environmentId }) {
     // Global environment state with hookstate
@@ -18,6 +19,7 @@ export default function Permissions({ environmentId }) {
     const [availablePermissions, setAvailablePermissions] = useState([]);
     const [selectedPermission, setSelectedPermission] = useState(null);
     const [permissions, setPermissions] = useState([]);
+    const [specificPermissions, setSpecificPermissions] = useState([]);
 
     // Control states
     const [clear, setClear] = useState(1);
@@ -27,7 +29,8 @@ export default function Permissions({ environmentId }) {
     const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, Environment.id.get());
     const getPermissions = useGetPermissions(setPermissions, Environment.id.get());
     const updatePermission = useUpdatePermissions(getPermissions, selectedPermission, environmentId);
-    const deletePermission = useDeletePermission(getPermissions);
+    const getUserPipelinePermissions = useGetUserPipelinePermissionsHook(setSpecificPermissions, Environment.id.get());
+    const deletePermission = useDeletePermission(getPermissions, getUserPipelinePermissions);
 
     // Get permissions on load
     useEffect(() => {
@@ -35,6 +38,7 @@ export default function Permissions({ environmentId }) {
         if (Environment.id.get() && firstRender) {
             getPermissions();
             getAvailablePermissions();
+            getUserPipelinePermissions();
             setFirstRender(false);
         }
 
@@ -108,7 +112,7 @@ export default function Permissions({ environmentId }) {
 
             {/* Specific permissions */}
             {/* Check if there are any permissions. If not, hide the box */}
-            {permissions.filter((env) => env.Level === 'specific').length ? (
+            {specificPermissions.length ? (
                 <Box mt={4}>
                     <Box>
                         <Typography component="h3" variant="h3" color="text.primary">
@@ -117,21 +121,19 @@ export default function Permissions({ environmentId }) {
                     </Box>
 
                     <Box mt={2}>
-                        {permissions
-                            .filter((permission) => permission.Level === 'specific')
-                            .map((permission) => (
-                                <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
-                                    <Box
-                                        onClick={() => deletePermission(permission)}
-                                        component={FontAwesomeIcon}
-                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
-                                        icon={faTrashAlt}
-                                    />
-                                    <Typography variant="subtitle2" lineHeight="15.23px">
-                                        {permission.Label}
-                                    </Typography>
-                                </Grid>
-                            ))}
+                        {specificPermissions.map((permission) => (
+                            <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
+                                <Box
+                                    onClick={() => deletePermission(permission)}
+                                    component={FontAwesomeIcon}
+                                    sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                    icon={faTrashAlt}
+                                />
+                                <Typography variant="subtitle2" lineHeight="15.23px">
+                                    {permission.Label}
+                                </Typography>
+                            </Grid>
+                        ))}
                     </Box>
                 </Box>
             ) : null}
@@ -221,7 +223,7 @@ const useGetAvailablePermissions = (setAvailablePermissions, environmentID) => {
     };
 };
 
-const useDeletePermission = (getUserPermissions) => {
+const useDeletePermission = (getUserPermissions, getSpecificPermissions) => {
     // GraphQL hook
     const deletePermissionToUser = useDeletePermissionToUser();
 
@@ -244,7 +246,36 @@ const useDeletePermission = (getUserPermissions) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
-            getUserPermissions();
+            if (permission.Level === 'specific') {
+                getSpecificPermissions();
+            } else {
+                getUserPermissions();
+            }
+        }
+    };
+};
+
+const useGetUserPipelinePermissionsHook = (setSpecificPermissions, environmentID) => {
+    // GraphQL hook
+    const getUserPipelinePermissions = useGetUserPipelinePermissions();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // URI parameter
+    const { accessId } = useParams();
+
+    // Get specific permissions
+    return async () => {
+        const response = await getUserPipelinePermissions({ userID: accessId, environmentID });
+
+        if (response === null) {
+            setSpecificPermissions([]);
+        } else if (response.r || response.error) {
+            enqueueSnackbar("Can't get specific permissions: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setSpecificPermissions(response);
         }
     };
 };

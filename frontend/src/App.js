@@ -130,7 +130,7 @@ function App() {
                                             '/workers/:workerId',
                                             '/teams',
                                             '/teams/:teamId',
-                                            '/teams/access/:accessId',
+                                            '/access/:accessId',
                                             '/myaccount/:memberId',
                                             '/access_groups',
                                             '/settings',
@@ -172,7 +172,7 @@ function App() {
                                                 <Route exact path="/teams/:teamId">
                                                     <TeamDetail />
                                                 </Route>
-                                                <Route exact path="/teams/access/:accessId">
+                                                <Route exact path="/access/:accessId">
                                                     <TeamGroup />
                                                 </Route>
                                                 <Route exact path="/access_groups">

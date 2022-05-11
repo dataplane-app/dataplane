@@ -76,7 +76,7 @@ export default function TeamDetail() {
     const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
     const getUserPipelinePermissions = useGetUserPipelinePermissions_(setSpecificPermissions, user.user_id, globalEnvironment?.id);
     const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
-    const deletePermission = useDeletePermission(getUserPermissions);
+    const deletePermission = useDeletePermissionHook(getUserPermissions, getUserPipelinePermissions);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
     const getUserAccessGroups = useGetUserAccessGroups_(setUserAccessGroups, globalEnvironment?.id, user.user_id);
     const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id, getUserAccessGroups, accessGroup);
@@ -483,7 +483,7 @@ export default function TeamDetail() {
                                                 icon={faTrashAlt}
                                             />
                                             <Typography
-                                                onClick={() => history.push(`/teams/access/${row.AccessGroupID}`)}
+                                                onClick={() => history.push(`/access/${row.AccessGroupID}`)}
                                                 variant="subtitle2"
                                                 lineHeight="15.23px"
                                                 color="primary"
@@ -792,7 +792,7 @@ const useUpdatePermissions = (getUserPermissions, selectedPermission, environmen
     };
 };
 
-const useDeletePermission = (getUserPermissions) => {
+const useDeletePermissionHook = (getUserPermissions, getSpecificPermissions) => {
     // GraphQL hook
     const deletePermissionToUser = useDeletePermissionToUser();
 
@@ -815,7 +815,11 @@ const useDeletePermission = (getUserPermissions) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
-            getUserPermissions();
+            if (permission.Level === 'specific') {
+                getSpecificPermissions();
+            } else {
+                getUserPermissions();
+            }
         }
     };
 };
