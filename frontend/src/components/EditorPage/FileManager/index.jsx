@@ -833,10 +833,6 @@ const useRenameFileHook = (pipeline, data, setExpanded) => {
             enqueueSnackbar("Can't rename file: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            const resp = prepareForFrontEnd(response);
-            data.set(resp);
-            setExpanded([resp.id]);
         }
     };
 };
@@ -862,10 +858,6 @@ const useRenameFolderHook = (pipeline, data, setExpanded) => {
             enqueueSnackbar("Can't rename folder: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            const resp = prepareForFrontEnd(response);
-            data.set(resp);
-            setExpanded([resp.id]);
         }
     };
 };
