@@ -151,7 +151,7 @@ const PipelineEditor = () => {
                             {pipeline.nodeTypeDesc === 'python' ? <PackageColumn key="2" pipeline={pipeline} packages={packages} setPackages={setPackages} /> : null}
                             <EditorColumn key="3" ref={editorRef} pipeline={pipeline} />
                             {currentTab === 'code' ? (
-                                <LogsColumn key="4" environmentID={Environment.id.get()} pipelineID={pipeline.pipelineID} workerGroup={pipeline.workerGroup} />
+                                <LogsColumn key="4" pipeline={pipeline} />
                             ) : (
                                 <InstallationLogsColumn
                                     key="4"

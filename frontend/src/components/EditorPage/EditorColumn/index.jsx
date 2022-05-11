@@ -419,34 +419,14 @@ export const useUploadFileNodeHook = (pipeline) => {
 };
 
 const useRunCEFileHook = (pipeline, setIsRunning) => {
-    const environmentID = pipeline.environmentID;
-    const pipelineID = pipeline.pipelineID;
-    const nodeID = pipeline.nodeID;
-    const workerGroup = pipeline.workerGroup;
-    const NodeTypeDesc = pipeline.nodeTypeDesc;
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
-    const fileID = EditorGlobal.selectedFile?.id?.get();
-
-    // GraphQL hook
-    const runCEFile = useRunCEFile();
-
-    const { enqueueSnackbar } = useSnackbar();
-
-    const runID = uuidv4();
 
     // Run script
     return async () => {
-        const response = await runCEFile({ environmentID, pipelineID, nodeID, fileID, NodeTypeDesc, workerGroup, runID });
-
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            setIsRunning(true);
-            EditorGlobal.runID.set(response.run_id);
-        }
+        setIsRunning(true);
+        const runID = uuidv4();
+        EditorGlobal.runID.set(runID);
     };
 };
 
