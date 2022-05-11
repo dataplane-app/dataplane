@@ -14,6 +14,7 @@ import { useStopCERun } from '../../../graphql/stopCERun';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import MonacoEditor, { monaco } from 'react-monaco-editor';
+import { v4 as uuidv4 } from 'uuid';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
@@ -418,32 +419,14 @@ export const useUploadFileNodeHook = (pipeline) => {
 };
 
 const useRunCEFileHook = (pipeline, setIsRunning) => {
-    const environmentID = pipeline.environmentID;
-    const pipelineID = pipeline.pipelineID;
-    const nodeID = pipeline.nodeID;
-    const workerGroup = pipeline.workerGroup;
-    const NodeTypeDesc = pipeline.nodeTypeDesc;
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
-    const fileID = EditorGlobal.selectedFile?.id?.get();
-
-    // GraphQL hook
-    const runCEFile = useRunCEFile();
-
-    const { enqueueSnackbar } = useSnackbar();
 
     // Run script
     return async () => {
-        const response = await runCEFile({ environmentID, pipelineID, nodeID, fileID, NodeTypeDesc, workerGroup });
-
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            setIsRunning(true);
-            EditorGlobal.runID.set(response.run_id);
-        }
+        setIsRunning(true);
+        const runID = uuidv4();
+        EditorGlobal.runID.set(runID);
     };
 };
 

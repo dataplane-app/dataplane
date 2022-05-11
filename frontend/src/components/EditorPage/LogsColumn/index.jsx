@@ -6,34 +6,25 @@ import { LazyLog, ScrollFollow } from 'react-lazylog';
 import CustomDragHandle from '../../CustomDragHandle';
 import { RunningSpinner } from './RunningSpinner';
 import useWebSocketLog, { formatDate } from './useWebSocketLog';
-import { useGetCodeFileRunLogs } from '../../../graphql/getCodeFileRunLogs';
-import { useSnackbar } from 'notistack';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import { useTheme } from '@mui/system';
 
 const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
-    const environmentID = rest.environmentID;
-    const pipelineID = rest.pipelineID;
+    const pipeline = rest.pipeline;
 
     const [websocketResp, setWebsocketResp] = useState('');
     const [filteredGraphqlResp, setFilteredGraphqlResp] = useState('');
     const [graphQlResp, setGraphQlResp] = useState([]);
     const [keys, setKeys] = useState([]);
-    const [hasGetNodeLogsRun, setHasGetNodeLogsRun] = useState(0);
     const [render, setRender] = useState(0);
 
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
 
     // Instantiate websocket
-    const webSocket = useWebSocketLog(environmentID, EditorGlobal.runID.get(), setKeys);
+    const webSocket = useWebSocketLog(pipeline.environmentID, EditorGlobal.runID.get(), setKeys, setGraphQlResp, keys, pipeline);
 
     useEffect(() => {
-        if (hasGetNodeLogsRun === 0 && EditorGlobal.runID.get()) {
-            setHasGetNodeLogsRun(1);
-            getNodeLogs();
-        }
-
         setWebsocketResp((t) => t + webSocket + '\n');
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -42,7 +33,6 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     useEffect(() => {
         setWebsocketResp('');
         setGraphQlResp([]);
-        setHasGetNodeLogsRun(0);
     }, []);
 
     // Prepare filtered graphQL response
@@ -60,14 +50,10 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [graphQlResp]);
 
-    // Graphql Hook
-    const getNodeLogs = useGetNodeLogsHook(environmentID, pipelineID, EditorGlobal.runID.get(), setGraphQlResp, keys);
-
     useEffect(() => {
         if (!EditorGlobal.runID.get()) return;
         setWebsocketResp('');
         setGraphQlResp([]);
-        setHasGetNodeLogsRun(0);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.runID.get()]);
@@ -82,7 +68,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const theme = useTheme();
 
     return (
-        <div {...rest}>
+        <div {...rest} ref={ref}>
             <Box
                 sx={{
                     height: '100%',
@@ -152,25 +138,3 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
 });
 
 export default LogsColumn;
-
-// ----- Custom Hooks
-const useGetNodeLogsHook = (environmentID, pipelineID, runID, setGraphQlResp, keys) => {
-    // GraphQL hook
-    const getNodeLogs = useGetCodeFileRunLogs();
-
-    const { enqueueSnackbar } = useSnackbar();
-
-    // Get logs
-    return async () => {
-        const response = await getNodeLogs({ environmentID, pipelineID, runID });
-
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't get logs: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            const resp250 = response.slice(response.length - 250);
-            setGraphQlResp(resp250.filter((a) => !keys.includes(a.uid)));
-        }
-    };
-};
