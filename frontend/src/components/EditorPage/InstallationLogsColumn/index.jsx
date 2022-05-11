@@ -34,7 +34,7 @@ const InstallationLogsColumn = forwardRef(({ children, setPackages, ...rest }, r
     const theme = useTheme();
 
     return (
-        <div {...rest}>
+        <div {...rest} ref={ref}>
             <Box
                 sx={{
                     height: '100%',

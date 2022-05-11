@@ -138,11 +138,11 @@ const PipelineEditor = () => {
                     <Box>
                         <ResponsiveGridLayout
                             draggableHandle=".drag-handle"
-                            onLayoutChange={(e, _) => console.log('Change layout', e, _)}
+                            // onLayoutChange={(e, _) => console.log('Change layout', e, _)}
                             isDraggable={true}
                             verticalCompact
                             measureBeforeMount={true}
-                            onResizeStop={(e, _) => console.log('Resize', e, _)}
+                            // onResizeStop={(e, _) => console.log('Resize', e, _)}
                             compactType="vertical"
                             layouts={pipeline.nodeTypeDesc === 'python' ? layoutsPython : layoutsBash}
                             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
