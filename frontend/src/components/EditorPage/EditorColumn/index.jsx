@@ -194,7 +194,9 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             if (EditorGlobal.selectedFile.fType.value === 'file') {
                 uploadFileNode();
             }
-            if (EditorGlobal.selectedFile.fType.value === 'package') {
+
+            // Make sure a change is made to allow ctrl+s
+            if (EditorGlobal.selectedFile.fType.value === 'package' && EditorGlobal.selectedFile.diffValue.get()) {
                 EditorGlobal.installState.set('Running');
             }
         }
