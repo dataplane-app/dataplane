@@ -55,7 +55,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         } else {
             setTabValue(0);
         }
-
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.tabs.get()]);
 
@@ -69,8 +68,29 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             const model = editorRef.current.getModel();
             const fileName = EditorGlobal.selectedFile.get()?.name;
             editorRef.current.setModel(getOrCreateModel(fileName, model.value));
+
+            window.setTimeout(() => {
+                removeCodeSelection();
+            }, 10);
         }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.selectedFile.get()?.name]);
+
+    const removeCodeSelection = () => {
+        if (editorRef.current) {
+            editorRef.current.setSelection({
+                endColumn: 1,
+                endLineNumber: 1,
+                positionColumn: 1,
+                positionLineNumber: 1,
+                selectionStartColumn: 1,
+                selectionStartLineNumber: 1,
+                startColumn: 1,
+                startLineNumber: 1,
+            });
+        }
+    };
 
     const handleEditorOnMount = (editor) => {
         editorRef.current = editor;
@@ -81,6 +101,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             handler.dispose();
             editor.getAction('editor.action.formatDocument').run();
         });
+
+        removeCodeSelection();
 
         window.addEventListener('resize', () => {
             editor.layout({
