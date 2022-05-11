@@ -97,7 +97,7 @@ export const useGetCodePackagesHook = (pipeline, setPackages) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setPackages(response.packages);
-            EditorGlobal.selectedFile.isEditing.set(false);
+            EditorGlobal.selectedFile?.isEditing?.set(false);
         }
     };
 };
