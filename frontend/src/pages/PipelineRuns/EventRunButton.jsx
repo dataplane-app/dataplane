@@ -6,6 +6,8 @@ import { useSnackbar } from 'notistack';
 import { useRunPipelines } from '../../graphql/runPipelines';
 import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
 import { Downgraded } from '@hookstate/core';
+import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
+import { prepareInputForFrontend } from '../../utils/PipelinePrepareGraphInput';
 
 export default function EventRunButton(environmentId, pipelineId, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect, ReconnectWS) {
     // Global state
@@ -15,6 +17,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
     // GraphQL hook - this is the Graphql to Run the pipeline
     const runPipelines = useRunPipelines();
     const getPipelineRuns = useGetPipelineRuns();
+    const getPipelineFlow = useGetPipelineFlow();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -39,6 +42,19 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
             // 3. On websocket open - trigger run
             wsconnect.onopen = async () => {
                 ConsoleLogHelper('ws opened');
+
+                // Get pipeline flow
+                const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID: environmentId });
+                const responseFlow = prepareInputForFrontend(rawResponse);
+                if (responseFlow.length === 0) {
+                    FlowState.elements.set([]);
+                } else if (responseFlow.r === 'error') {
+                    enqueueSnackbar("Can't get flow: " + responseFlow.msg, { variant: 'error' });
+                } else if (responseFlow.errors) {
+                    responseFlow.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+                } else {
+                    FlowState.elements.set(responseFlow);
+                }
 
                 // Run pipeline
                 let response = await runPipelines({
@@ -81,7 +97,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                     return;
                 }
 
-                if(ReconnectWS === false){
+                if (ReconnectWS === false) {
                     return;
                 }
 
