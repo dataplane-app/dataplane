@@ -14,6 +14,7 @@ import { useStopCERun } from '../../../graphql/stopCERun';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import MonacoEditor, { monaco } from 'react-monaco-editor';
+import { v4 as uuidv4 } from 'uuid';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
@@ -432,9 +433,11 @@ const useRunCEFileHook = (pipeline, setIsRunning) => {
 
     const { enqueueSnackbar } = useSnackbar();
 
+    const runID = uuidv4();
+
     // Run script
     return async () => {
-        const response = await runCEFile({ environmentID, pipelineID, nodeID, fileID, NodeTypeDesc, workerGroup });
+        const response = await runCEFile({ environmentID, pipelineID, nodeID, fileID, NodeTypeDesc, workerGroup, runID });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
