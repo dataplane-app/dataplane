@@ -72,6 +72,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Check if selected file changed
     useEffect(() => {
         if (EditorGlobal.selectedFile.get()?.id) {
+            setSelected(EditorGlobal.selectedFile.get()?.id);
         }
 
         if (!data.children.get()) return;
