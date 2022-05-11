@@ -10,10 +10,9 @@ import { customSourceHandle, customSourceHandleDragging } from '../../../utils/h
 import ScheduleTriggerNodeItem from '../../MoreInfoContent/ScheduleTriggerNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
 import { getColor } from '../utils';
-import cronstrue from 'cronstrue';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
-import later from '@breejs/later';
-import { DateTime } from 'luxon';
+import cronZone from '../../../utils/cronZone';
+import { getTimeZone } from '../../../utils/formatDate';
 
 const ScheduleNode = (props) => {
     // Theme hook
@@ -58,18 +57,8 @@ const ScheduleNode = (props) => {
 
     // Set description
     useEffect(() => {
-        if (props.data.genericdata.scheduleType === 'cron') {
-            // Get next occurrence
-            const next = later.schedule(later.parse.cron(props.data.genericdata.schedule)).next(1);
-            setSchedule(cronZone(cronstrue.toString(props.data.genericdata.schedule, { throwExceptionOnParseError: false }), next, props.data.genericdata.timezone));
-        } else {
-            if (props.data.genericdata.schedule === '*/1 * * * * *') {
-                setSchedule('Every second');
-            } else {
-                setSchedule('Every ' + props.data.genericdata.schedule.split(' ')[0].replace('*/', '') + ' seconds');
-            }
-        }
-    }, [props.data.genericdata.schedule, props.data.genericdata.scheduleType, props.data.genericdata.timezone, schedule]);
+        setSchedule(cronZone(props.data.genericdata.schedule, props.data.genericdata.timezone, props.data.genericdata.scheduleType));
+    }, [props.data.genericdata.schedule, props.data.genericdata.scheduleType, props.data.genericdata.timezone]);
 
     return (
         <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>
@@ -107,21 +96,3 @@ const ScheduleNode = (props) => {
 };
 
 export default ScheduleNode;
-
-// Utility function
-function cronZone(statement, next, zone) {
-    // Return if there is no time
-    if (/\d\d:\d\d (AM|PM)/.test(statement) === false) return statement;
-
-    const time = DateTime.fromJSDate(next, { zone }).toFormat('HH:mm a');
-    statement = statement.replace(/\d\d:\d\d (AM|PM)/, time);
-    return statement;
-}
-
-function getTimeZone(zone) {
-    let text = DateTime.fromJSDate(new Date(), { zone }).toFormat('z (ZZZZ)');
-    if (text === 'Etc/UTC (UTC)') {
-        text = 'UTC';
-    }
-    return text;
-}
