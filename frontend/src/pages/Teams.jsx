@@ -11,7 +11,6 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const Teams = () => {
     let history = useHistory();
-    const { enqueueSnackbar } = useSnackbar();
 
     // Users state
     const [data, setData] = useState([]);
@@ -56,6 +55,8 @@ const Teams = () => {
                 Cell: (row) => (row.value === 'active' ? <CustomChip label="Active" customColor="green" /> : <CustomChip label="Inactive" customColor="red" />),
             },
         ],
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [history, jwt]
     );
 

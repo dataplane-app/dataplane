@@ -53,6 +53,8 @@ const AccessGroups = () => {
                 Cell: (row) => (row.value === true ? <CustomChip label="Active" customColor="green" /> : <CustomChip label="Inactive" customColor="red" />),
             },
         ],
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [history, jwt]
     );
 
