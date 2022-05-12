@@ -82,7 +82,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                     return;
                 }
 
-                if(ReconnectWS === false){
+                if (ReconnectWS === false) {
                     return;
                 }
 
