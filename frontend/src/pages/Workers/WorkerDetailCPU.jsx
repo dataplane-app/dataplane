@@ -3,7 +3,6 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 import { Line } from 'react-chartjs-2';
 import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
-import { height } from '@mui/system';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -109,17 +108,4 @@ export default function WorkerDetailCPU({ row }) {
  */
 function timeLabel(dateString, zone) {
     return DateTime.fromISO(dateString, { zone }).toLocaleString(DateTime.TIME_24_WITH_SECONDS);
-}
-
-function extractTime(dateString) {
-    // Time label with current second
-    let dd = new Date(dateString);
-    let labelsArray = [`${('0' + dd.getMinutes()).slice(-2)}:${('0' + dd.getSeconds()).slice(-2)}`];
-
-    // Add 4 more time labels 5 seconds apart
-    for (let index = 0; index < 4; index++) {
-        dd.setSeconds(dd.getSeconds() + 1);
-        labelsArray.push(`${('0' + dd.getMinutes()).slice(-2)}:${('0' + dd.getSeconds()).slice(-2)}`);
-    }
-    return labelsArray;
 }
