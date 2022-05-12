@@ -83,13 +83,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             handler.dispose();
             editor.getAction('editor.action.formatDocument').run();
         });
-
-        window.addEventListener('resize', () => {
-            editor.layout({
-                width: 'auto',
-                height: 'auto',
-            });
-        });
     };
 
     const handleTabClick = (tab) => {
