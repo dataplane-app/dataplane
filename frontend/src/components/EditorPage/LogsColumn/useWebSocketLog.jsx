@@ -16,7 +16,7 @@ if (loc.protocol === 'https:') {
 new_uri += '//' + loc.host;
 
 // console.log("websockets loc:", new_uri)
-if (process.env.REACT_APP_DATAPLANE_ENV == 'build') {
+if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
     new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
 } else {
     new_uri = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;

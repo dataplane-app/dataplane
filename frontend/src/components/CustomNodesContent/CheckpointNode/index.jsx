@@ -52,7 +52,6 @@ const CheckpointNode = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nodeStatus]);
 
-
     return (
         <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>
             <Handle type="source" position={Position.Right} id="checkpoint_source" style={customTargetHandle(theme.palette.mode)} />

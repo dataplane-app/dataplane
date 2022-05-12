@@ -70,6 +70,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             const fileName = EditorGlobal.selectedFile.get()?.name;
             editorRef.current.setModel(getOrCreateModel(fileName, model.value));
         }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.selectedFile.get()?.name]);
 
     const handleEditorOnMount = (editor) => {
