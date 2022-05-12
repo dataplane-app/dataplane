@@ -77,7 +77,7 @@ export default function Workers() {
     );
 
     // Use the state and functions returned from useTable to build your UI
-    const { getTableProps, getTableBodyProps, rows, prepareRow, state, setGlobalFilter } = useTable(
+    const { getTableProps, getTableBodyProps, rows, prepareRow, setGlobalFilter } = useTable(
         {
             columns,
             data,

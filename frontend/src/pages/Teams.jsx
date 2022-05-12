@@ -61,7 +61,7 @@ const Teams = () => {
     );
 
     // Use the state and functions returned from useTable to build your UI
-    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, state, setGlobalFilter } = useTable(
+    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, setGlobalFilter } = useTable(
         {
             columns,
             data,
