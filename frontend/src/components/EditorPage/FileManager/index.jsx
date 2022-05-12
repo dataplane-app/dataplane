@@ -47,7 +47,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Local ref
     const newFileRef = useRef();
-    const editingFileRef = useRef();
 
     // Graphql hook
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
@@ -470,7 +469,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 icon={!nodes.children && <Box component={FontAwesomeIcon} icon={faFileAlt} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.fileManagerIcon' }} />}
                 key={nodes.id}
                 nodeId={nodes.id || ''}
-                ref={selected === nodes.id ? editingFileRef : null}
                 label={
                     <>
                         <input
