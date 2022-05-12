@@ -69,12 +69,6 @@ const Teams = () => {
         useGlobalFilter
     );
 
-    const { globalFilter } = state;
-
-    useEffect(() => {
-        console.log(globalFilter);
-    }, [globalFilter]);
-
     return (
         <Box className="page">
             <Typography component="h2" variant="h2" color="text.primary">
