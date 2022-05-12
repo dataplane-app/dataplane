@@ -19,9 +19,8 @@ import {
 } from '../utils/editorLayouts';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
-import { Downgraded } from '@hookstate/core';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { useSnackbar } from 'notistack';
 import { useGetPipeline } from '../graphql/getPipeline';

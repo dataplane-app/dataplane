@@ -1,9 +1,8 @@
 import { useEffect, useRef } from 'react';
 import ConsoleLogHelper from '../../Helper/logger';
-import { useGlobalPipelineRun} from './GlobalPipelineRunUIState'
+import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
 import { useGlobalRunState } from './GlobalRunState';
 import { Downgraded } from '@hookstate/core';
-
 
 export default function EventRunOpen(runId, Running, setRunning, wsconnect, ReconnectWS) {
     // Global state
@@ -17,8 +16,7 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect, Reco
     // console.log("Run in function 1:", runId)
 
     return useEffect(() => {
-
-        console.log("Running: ", Running)
+        console.log('Running: ', Running);
         // if(Running===false && wsconnect){
         //     wsconnect.onopen = () => {
         //         ConsoleLogHelper('Not running, close ws');
@@ -28,18 +26,16 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect, Reco
         // }
 
         function connect() {
-
             // 1. Set the run state as running
             FlowState.isRunning.set(true);
-            RunState.selectedRunID.set(runId)
+            RunState.selectedRunID.set(runId);
 
-            console.log("Open trigger")
-            console.log("wsconnect in:", wsconnect)
+            console.log('Open trigger');
+            console.log('wsconnect in:', wsconnect);
 
             // 3. On websocket open - trigger run
             wsconnect.onopen = () => {
                 ConsoleLogHelper('ws opened - open run');
-
             };
 
             wsconnect.onclose = () => {
@@ -48,7 +44,7 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect, Reco
                     return;
                 }
 
-                if(ReconnectWS === false){
+                if (ReconnectWS === false) {
                     return;
                 }
 
@@ -61,7 +57,7 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect, Reco
 
             wsconnect.onmessage = (e) => {
                 //  ConsoleLogHelper('msg rcvd', e.data);
-                
+
                 const response = JSON.parse(e.data);
 
                 // console.log("message:", response)
@@ -94,28 +90,24 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect, Reco
 
                     reconnectOnClose.current = false;
                     wsconnect.close();
-                    setRunning(false)
+                    setRunning(false);
                 }
 
                 if (response.status === 'Fail') {
-
-
-                    const nodes = RunState.runObject.nodes.attach(Downgraded).get()
+                    const nodes = RunState.runObject.nodes.attach(Downgraded).get();
 
                     // console.log("n", nodes);
 
                     for (var key in nodes) {
-                        if(nodes[key].status=="Queue"){
-
+                        if (nodes[key].status === 'Queue') {
                             RunState.runObject.nodes.merge({
                                 [key]: {
-                                    status: "Fail",
+                                    status: 'Fail',
                                     updated_by: 'failure',
                                 },
                             });
 
                             // console.log("n", nodes[key]);
-
                         }
                     }
 
@@ -123,27 +115,22 @@ export default function EventRunOpen(runId, Running, setRunning, wsconnect, Reco
                     RunState.runObject.runEnd.set(response.end_dt);
                     reconnectOnClose.current = false;
                     wsconnect.close();
-                    setRunning(false)
+                    setRunning(false);
                 }
             };
         }
 
-
         // console.log("Run in function:", Running)
-        if (Running === true){
-        connect();
-        
+        if (Running === true) {
+            connect();
 
-        return () => {
-            reconnectOnClose.current = false;
-            wsconnect.close();
-            setRunning(false)
-        };
-    }else{
-
-    }
-
-
+            return () => {
+                reconnectOnClose.current = false;
+                wsconnect.close();
+                setRunning(false);
+            };
+        } else {
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Running]);
