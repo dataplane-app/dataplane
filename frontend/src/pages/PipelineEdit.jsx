@@ -183,8 +183,6 @@ const Flow = () => {
         const prevElements = FlowState.elements.attach(Downgraded).get();
         FlowState.isEditorPage.set(true);
 
-        console.log('FLOWWW: ', FlowState.attach(Downgraded).get());
-
         setElements([...prevElements]);
         setIsLoadingFlow(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps

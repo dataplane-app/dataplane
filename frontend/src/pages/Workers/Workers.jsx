@@ -85,12 +85,6 @@ export default function Workers() {
         useGlobalFilter
     );
 
-    const { globalFilter } = state;
-
-    useEffect(() => {
-        console.log(globalFilter);
-    }, [globalFilter]);
-
     return (
         <Box className="page">
             <Typography id="test" component="h2" variant="h2" color="text.primary">
