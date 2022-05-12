@@ -219,6 +219,16 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 'editorLineNumber.activeForeground': '#0E236B',
             },
         });
+        monaco.editor.setTheme('dp-dark', {
+            base: 'vs-dark',
+            inherit: true,
+            rules: [],
+            colors: {
+                'editor.background': '#0e1928',
+                'editorLineNumber.foreground': '#3C7790',
+                'editorLineNumber.activeForeground': '#0E236B',
+            },
+        });
     }, []);
 
     return (
