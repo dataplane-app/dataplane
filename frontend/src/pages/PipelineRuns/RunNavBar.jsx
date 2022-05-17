@@ -9,7 +9,6 @@ import { useGlobalRunState } from './GlobalRunState';
 import EventRunButton from './EventRunButton';
 import { v4 as uuidv4 } from 'uuid';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
-// import { usePipelineTasksRunHook } from './UpdatePipelineColours';
 import { displayTimer, displayTimerMs } from '../../utils/formatDate';
 import { usePipelineTasksColoursRun } from './UpdatePipelineColours';
 

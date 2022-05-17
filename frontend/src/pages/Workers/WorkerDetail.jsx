@@ -51,29 +51,30 @@ export default function WorkerDetail() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [socketResponse]);
 
+    const timezone = MeData.timezone.get();
     const columns = useMemo(
         () => [
             {
                 Header: 'Worker',
-                accessor: (row) => [row.WorkerID, row.Status, formatDate(row.T, MeData.timezone.get())],
+                accessor: (row) => [row.WorkerID, row.Status, formatDate(row.T, timezone)],
                 Cell: (row) => <CustomWorker row={row} />,
             },
             {
                 Header: 'CPU',
-                accessor: (row) => [row.CPUPerc, row.Load, row.T, MeData.timezone.get()],
+                accessor: (row) => [row.CPUPerc, row.Load, row.T, timezone],
                 Cell: (row) => <WorkerDetailCPU row={row} />,
             },
             {
                 Header: 'Memory',
-                accessor: (row) => [row.MemoryPerc, formatMemory(row.MemoryUsed), row.T, MeData.timezone.get()],
+                accessor: (row) => [row.MemoryPerc, formatMemory(row.MemoryUsed), row.T, timezone],
                 Cell: (row) => <WorkerDetailMemory row={row} />,
             },
         ],
-        [MeData.timezone.get()]
+        [timezone]
     );
 
     // Use the state and functions returned from useTable to build your UI
-    const { getTableProps, getTableBodyProps, rows, prepareRow, state, setGlobalFilter } = useTable(
+    const { getTableProps, getTableBodyProps, rows, prepareRow, setGlobalFilter } = useTable(
         {
             columns,
             data,
@@ -81,12 +82,6 @@ export default function WorkerDetail() {
         },
         useGlobalFilter
     );
-
-    const { globalFilter } = state;
-
-    useEffect(() => {
-        console.log(globalFilter);
-    }, [globalFilter]);
 
     return (
         <Box className="page">
@@ -220,7 +215,7 @@ export default function WorkerDetail() {
 }
 
 const CustomWorker = ({ row }) => {
-    const [WorkerID, Status, T, queue = 2, running = 2, succeeded = 2, failed = 2] = row.value;
+    const [WorkerID, Status, T] = row.value;
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
@@ -271,16 +266,6 @@ const useGetWorkersHook = (environmentID, setData, workerId) => {
 };
 
 // -------- Utility function
-function sortObjectByName(a, b) {
-    if (a.WorkerID < b.WorkerID) {
-        return -1;
-    }
-    if (a.WorkerID > b.WorkerID) {
-        return 1;
-    }
-    return 0;
-}
-
 /**
  * @example 8821968896 => 8.8GB
  *          882196889  => 882MB
@@ -293,3 +278,13 @@ function formatMemory(memory) {
         return (memory / Math.pow(1024, 3)).toFixed(1) + 'GB';
     }
 }
+
+// function sortObjectByName(a, b) {
+//     if (a.WorkerID < b.WorkerID) {
+//         return -1;
+//     }
+//     if (a.WorkerID > b.WorkerID) {
+//         return 1;
+//     }
+//     return 0;
+// }

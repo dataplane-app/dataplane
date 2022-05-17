@@ -53,23 +53,19 @@ const AccessGroups = () => {
                 Cell: (row) => (row.value === true ? <CustomChip label="Active" customColor="green" /> : <CustomChip label="Inactive" customColor="red" />),
             },
         ],
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [history, jwt]
     );
 
     // Use the state and functions returned from useTable to build your UI
-    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, state, setGlobalFilter } = useTable(
+    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, setGlobalFilter } = useTable(
         {
             columns,
             data,
         },
         useGlobalFilter
     );
-
-    const { globalFilter } = state;
-
-    useEffect(() => {
-        console.log(globalFilter);
-    }, [globalFilter]);
 
     return (
         <Box className="page">

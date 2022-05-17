@@ -1,21 +1,15 @@
-import { useSnackbar } from "notistack";
-import { useHistory } from "react-router-dom";
-import { prepareInputForFrontend } from "../../../utils/PipelinePrepareGraphInput";
-import { useGlobalPipelineRun } from "../../PipelineRuns/GlobalPipelineRunUIState";
-import { useGetDeploymentFlow } from "../../../graphql/getDeploymentFlow";
-
+import { useSnackbar } from 'notistack';
+import { prepareInputForFrontend } from '../../../utils/PipelinePrepareGraphInput';
+import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
+import { useGetDeploymentFlow } from '../../../graphql/getDeploymentFlow';
 
 /* 
 Get the structure for given pipeline ID and environment ID
 Set the Elements in Flowstate that updates the graph on page
 */
 export const GetDeploymentFlow = () => {
-
     // GraphQL hook
     const getDeploymentFlow = useGetDeploymentFlow();
-
-    // React router
-    const history = useHistory();
 
     // Global state
     const FlowState = useGlobalPipelineRun();
@@ -24,12 +18,11 @@ export const GetDeploymentFlow = () => {
 
     // Get members
     return async (inputs) => {
-
-        console.log("Deployment ID:", inputs.pipelineId, inputs.environmentID, inputs.version)
+        console.log('Deployment ID:', inputs.pipelineId, inputs.environmentID, inputs.version);
 
         const rawResponse = await getDeploymentFlow({ pipelineID: inputs.pipelineId, environmentID: inputs.environmentID, version: inputs.version });
 
-        console.log("Get deployment structure", rawResponse)
+        console.log('Get deployment structure', rawResponse);
         const response = prepareInputForFrontend(rawResponse);
 
         if (response.length === 0) {

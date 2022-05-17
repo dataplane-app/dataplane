@@ -1,4 +1,4 @@
-import { Box, Button, Grid, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, Button, Grid, Typography, useTheme } from '@mui/material';
 import { forwardRef, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -9,7 +9,6 @@ import CustomDragHandle from '../../CustomDragHandle';
 import { useUploadFileNode } from '../../../graphql/uploadFileNode';
 import { useSnackbar } from 'notistack';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
-import { useRunCEFile } from '../../../graphql/runCEFile';
 import { useStopCERun } from '../../../graphql/stopCERun';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -71,6 +70,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             const fileName = EditorGlobal.selectedFile.get()?.name;
             editorRef.current.setModel(getOrCreateModel(fileName, model.value));
         }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.selectedFile.get()?.name]);
 
     const handleEditorOnMount = (editor) => {
@@ -81,13 +82,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         const handler = editor.onDidChangeModelDecorations((_) => {
             handler.dispose();
             editor.getAction('editor.action.formatDocument').run();
-        });
-
-        window.addEventListener('resize', () => {
-            editor.layout({
-                width: 'auto',
-                height: 'auto',
-            });
         });
     };
 
@@ -195,7 +189,9 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             if (EditorGlobal.selectedFile.fType.value === 'file') {
                 uploadFileNode();
             }
-            if (EditorGlobal.selectedFile.fType.value === 'package') {
+
+            // Make sure a change is made to allow ctrl+s
+            if (EditorGlobal.selectedFile.fType.value === 'package' && EditorGlobal.selectedFile.diffValue.get()) {
                 EditorGlobal.installState.set('Running');
             }
         }
@@ -214,6 +210,16 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Editor configs
     useEffect(() => {
         monaco.editor.defineTheme('dp-dark', {
+            base: 'vs-dark',
+            inherit: true,
+            rules: [],
+            colors: {
+                'editor.background': '#0e1928',
+                'editorLineNumber.foreground': '#3C7790',
+                'editorLineNumber.activeForeground': '#0E236B',
+            },
+        });
+        monaco.editor.setTheme('dp-dark', {
             base: 'vs-dark',
             inherit: true,
             rules: [],
@@ -264,15 +270,17 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                         disableRipple
                                         value={idx}
                                         icon={
-                                            <IconButton
+                                            <Box
                                                 aria-label="close"
                                                 disableRipple
                                                 disableFocusRipple
+                                                sx={{ display: 'flex', alignItems: 'center', paddingLeft: '12px', paddingRight: '8px' }}
+                                                id="hello"
                                                 onClick={(e) => handleTabClose(tabs, e)}
                                                 style={{ marginLeft: 0, paddingLeft: 12 }}>
                                                 {tabs.isEditing && <Box sx={{ width: 8, height: 8, marginRight: 1, backgroundColor: 'secondary.main', borderRadius: '50%' }} />}
                                                 <Box component={FontAwesomeIcon} icon={faTimes} sx={{ fontSize: 13 }} color="editorPage.fileManagerIcon" />
-                                            </IconButton>
+                                            </Box>
                                         }
                                         iconPosition="end"
                                         sx={{

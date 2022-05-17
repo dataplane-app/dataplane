@@ -171,7 +171,7 @@ export default function TeamDetail() {
 
                                     <Autocomplete
                                         disablePortal
-                                        value={user.timezone}
+                                        value={user.timezone || null}
                                         id="combo-box-demo"
                                         onChange={(event, newValue) => {
                                             setUser({ ...user, timezone: newValue });

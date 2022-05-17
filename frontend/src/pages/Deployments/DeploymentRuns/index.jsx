@@ -19,7 +19,7 @@ import { Downgraded } from '@hookstate/core';
 import RunDepNavBar from './RunDepNavBar';
 import LogsDrawer from './LogsDrawer';
 
-import { useGlobalPipelineRun} from '../../PipelineRuns/GlobalPipelineRunUIState'
+import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
 import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 import { edgeTypes, nodeTypes } from '../../PipelineRuns/NodeTypes';
 import { useGetDeploymentSingle } from '../../../graphql/getDeploymentSingle';
@@ -30,17 +30,17 @@ const DeploymentView = () => {
     // Hooks
     const theme = useTheme();
 
-     // Local state for Deployment comes from GraphQL
+    // Local state for Deployment comes from GraphQL
     const [deployment, setDeployment] = useState(null);
 
     // URI parameter
     const { version } = useParams();
 
-        // Get the name and status of name and title at top of page
+    // Get the name and status of name and title at top of page
     // This calls the getDeployment to get the pipeline details for this specific deployment
     const getSingleDeployment = useGetSingleDeploymentHook(Environment.id.get(), setDeployment, version);
 
-        // Global states
+    // Global states
     // Flowstate = graph structure, elements contain the actual structure
     // Runstate = run updates on graph structure
     const FlowState = useGlobalPipelineRun();
@@ -51,7 +51,7 @@ const DeploymentView = () => {
         RunState.set({
             selectedRunID: null,
             runObject: null,
-        })
+        });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
