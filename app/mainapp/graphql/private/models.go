@@ -179,7 +179,6 @@ type PipelineNodesMetaInput struct {
 }
 
 type PipelinePermissionsOutput struct {
-	ID            string `json:"ID"`
 	Access        string `json:"Access"`
 	Subject       string `json:"Subject"`
 	SubjectID     string `json:"SubjectID"`

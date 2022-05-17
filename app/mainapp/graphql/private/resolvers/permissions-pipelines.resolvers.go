@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -216,7 +216,6 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 		(
 			select
 			  string_agg(p.access, ',') as access,
-			  p.id,
 			  p.subject,
 			  p.subject_id,
 			  pipelines.name as pipeline_name,
@@ -247,7 +246,6 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 			  and p.active = true
 		  
 			GROUP BY
-			  p.id,
 			  p.subject,
 			  p.subject_id,
 			  pipelines.name,
@@ -266,7 +264,6 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 			(
 			  select
 				string_agg(p.access, ',') as access,
-				p.id,
 				p.subject,
 				p.subject_id,
 				pipelines.name,
@@ -297,8 +294,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 				and p.active = true
 				
 			  GROUP BY
-			    p.id,
-				p.subject,
+			    p.subject,
 				p.subject_id,
 				pipelines.name,
 				p.resource_id,
