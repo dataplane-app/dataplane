@@ -44,6 +44,9 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
             }
         });
         text = text.replace(/\n/, '');
+        if (text) {
+            text = text + '\n';
+        }
 
         setFilteredGraphqlResp(text);
 
@@ -122,7 +125,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                             <LazyLog
                                 enableSearch
                                 key={render}
-                                text={filteredGraphqlResp + '\n' + websocketResp}
+                                text={filteredGraphqlResp + websocketResp + ' '}
                                 follow={follow}
                                 onScroll={onScroll}
                                 style={{ background: theme.palette.editorPage.logBackground }}

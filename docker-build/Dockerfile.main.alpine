@@ -27,6 +27,7 @@ ADD frontend/craco.config.js /node/craco.config.js
 ADD frontend/package.json /node/package.json
 
 RUN yarn add global env-cmd
+RUN yarn
 RUN yarn builddocker
 
 

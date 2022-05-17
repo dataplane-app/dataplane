@@ -8,7 +8,6 @@ import DeploymentsTableItem from './DeploymentsTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenu from '../../components/MoreInfoMenuPipeline';
 import CustomChip from '../../components/CustomChip';
-import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
