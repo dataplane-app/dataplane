@@ -160,7 +160,7 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 	// log.Println("Parent folder:", pfolder)
 
 	var oldfolder models.CodeFolders
-	database.DBConn.Debug().Where("environment_id = ? and level = ? and pipeline_id =?", environmentID, "pipeline", pipelineID).First(&oldfolder)
+	database.DBConn.Where("environment_id = ? and level = ? and pipeline_id =?", environmentID, "pipeline", pipelineID).First(&oldfolder)
 
 	// log.Println("Old folder:", oldfolder.FolderID, oldfolder.FolderName)
 	if oldfolder.FolderID == "" {

@@ -143,7 +143,7 @@ func (r *queryResolver) UserSingleDeploymentPermissions(ctx context.Context, use
 
 	var PermissionsOutput *privategraphql.DeploymentPermissionsOutput
 
-	err := database.DBConn.Debug().Raw(
+	err := database.DBConn.Raw(
 		`
 		(
 			select
