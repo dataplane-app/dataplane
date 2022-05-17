@@ -1,5 +1,5 @@
 import { Box, Button, Grid, Typography } from '@mui/material';
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect } from 'react';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import CustomDragHandle from '../../CustomDragHandle';
 import { useSnackbar } from 'notistack';
@@ -37,7 +37,7 @@ const PackageColumn = forwardRef(({ children, pipeline, packages, setPackages, .
     }, []);
 
     return (
-        <div {...rest}>
+        <div {...rest} ref={ref}>
             <Box
                 sx={{
                     backgroundColor: 'background.main',
@@ -97,7 +97,7 @@ export const useGetCodePackagesHook = (pipeline, setPackages) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setPackages(response.packages);
-            EditorGlobal.selectedFile.isEditing.set(false);
+            EditorGlobal.selectedFile?.isEditing?.set(false);
         }
     };
 };

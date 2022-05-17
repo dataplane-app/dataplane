@@ -10,9 +10,9 @@ import { customSourceHandle, customSourceHandleDragging } from '../../../utils/h
 import ScheduleTriggerNodeItem from '../../MoreInfoContent/ScheduleTriggerNodeItem';
 import MoreInfoMenu from '../../MoreInfoMenu';
 import { getColor } from '../utils';
-import cronstrue from 'cronstrue';
-import { getTimeZoneOffSet } from '../../DrawerContent/SchedulerDrawer/CronTab';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
+import cronZone from '../../../utils/cronZone';
+import { getTimeZone } from '../../../utils/formatDate';
 
 const ScheduleNode = (props) => {
     // Theme hook
@@ -57,16 +57,8 @@ const ScheduleNode = (props) => {
 
     // Set description
     useEffect(() => {
-        if (props.data.genericdata.scheduleType === 'cron') {
-            setSchedule(cronstrue.toString(props.data.genericdata.schedule, { throwExceptionOnParseError: false }));
-        } else {
-            if (props.data.genericdata.schedule === '*/1 * * * * *') {
-                setSchedule('Every second');
-            } else {
-                setSchedule('Every ' + props.data.genericdata.schedule.split(' ')[0].replace('*/', '') + ' seconds');
-            }
-        }
-    }, [props.data.genericdata.schedule, props.data.genericdata.scheduleType, schedule]);
+        setSchedule(cronZone(props.data.genericdata.schedule, props.data.genericdata.timezone, props.data.genericdata.scheduleType));
+    }, [props.data.genericdata.schedule, props.data.genericdata.scheduleType, props.data.genericdata.timezone]);
 
     return (
         <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>
@@ -84,7 +76,7 @@ const ScheduleNode = (props) => {
                         </Typography>
 
                         <Typography fontSize={10} mt={1}>
-                            {printTimezone(props.data.genericdata.timezone)}
+                            {getTimeZone(props.data.genericdata.timezone)}
                         </Typography>
                     </Grid>
                 </Tooltip>
@@ -104,11 +96,3 @@ const ScheduleNode = (props) => {
 };
 
 export default ScheduleNode;
-
-// Utility function
-function printTimezone(timezone) {
-    if (timezone === 'Etc/UTC') {
-        return 'UTC';
-    }
-    return timezone + ' ' + getTimeZoneOffSet(timezone);
-}

@@ -220,7 +220,7 @@ func Setup(port string) *fiber.App {
 
 	// --------FRONTEND ----
 	app.Static("/webapp", "./frontbuild")
-	app.Static("/webapp/*", "frontbuild/index.html")
+	app.Static("/webapp/*", "./frontbuild/index.html")
 
 	// ------- GRAPHQL------
 	app.Post("/app/public/graphql", PublicGraphqlHandler())

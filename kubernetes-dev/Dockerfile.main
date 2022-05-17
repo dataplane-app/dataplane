@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine as builder
+FROM golang:1.18-alpine as builder
 
 RUN mkdir -p /go/src/build
 
@@ -13,6 +13,21 @@ ADD app /go/src/build/
 # RUN CGO_ENABLED=0 go build -o worker workers/worker.go
 ARG SKAFFOLD_GO_GCFLAGS
 RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane mainapp/server.go
+
+FROM node:16.10.0-bullseye-slim as builder2
+
+RUN mkdir -p /node
+RUN mkdir -p /node/app/mainapp/frontbuild
+
+WORKDIR /node
+
+ADD frontend/public /node/public
+ADD frontend/src /node/src
+ADD frontend/craco.config.js /node/craco.config.js
+ADD frontend/package.json /node/package.json
+
+RUN yarn add global env-cmd
+RUN yarn builddocker
 
 
 FROM alpine:3.15
@@ -35,7 +50,7 @@ RUN adduser \
     "${USER}"
 
 
-ADD app/mainapp/frontbuild /workerdev/frontbuild
+COPY --from=builder2 /node/app/mainapp/frontbuild /dataplane/frontbuild
 # COPY --from=builder go/src/build/app/mainapp/frontbuild/ /workerdev/frontbuild/
 COPY --from=builder go/src/build/dataplane /workerdev/dataplane
 WORKDIR /workerdev

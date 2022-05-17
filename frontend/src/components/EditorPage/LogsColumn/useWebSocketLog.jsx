@@ -1,5 +1,8 @@
+import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
+import { useGetCodeFileRunLogs } from '../../../graphql/getCodeFileRunLogs';
+import { useRunCEFile } from '../../../graphql/runCEFile';
 import ConsoleLogHelper from '../../../Helper/logger';
 import { useGlobalEditorState } from '../../../pages/Editor';
 
@@ -13,7 +16,7 @@ if (loc.protocol === 'https:') {
 new_uri += '//' + loc.host;
 
 // console.log("websockets loc:", new_uri)
-if (process.env.REACT_APP_DATAPLANE_ENV == 'build') {
+if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
     new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
 } else {
     new_uri = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
@@ -21,7 +24,7 @@ if (process.env.REACT_APP_DATAPLANE_ENV == 'build') {
 
 const websocketEndpoint = new_uri;
 
-export default function useWebSocketLog(environmentId, run_id, setKeys) {
+export default function useWebSocketLog(environmentId, run_id, setKeys, setGraphQlResp, keys, pipeline) {
     const [socketResponse, setSocketResponse] = useState('');
     const reconnectOnClose = useRef(true);
     const ws = useRef(null);
@@ -29,21 +32,58 @@ export default function useWebSocketLog(environmentId, run_id, setKeys) {
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
 
+    // GraphQL hook
+    const getNodeLogs = useGetCodeFileRunLogs();
+    const runCEFile = useRunCEFile();
+
+    const { enqueueSnackbar } = useSnackbar();
+
     const { authToken } = useGlobalAuthState();
 
     useEffect(() => {
         if (!run_id) return;
 
         function connect() {
+            // 1. Connect to websockets
             ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=coderunfilelogs.${run_id}&id=${run_id}&token=${authToken.get()}`);
 
-            ws.current.onopen = () => {
+            ws.current.onopen = async () => {
                 EditorGlobal.runState.set('Running');
                 ConsoleLogHelper('ws opened');
+
+                // 2. Start the run
+                const response = await runCEFile({
+                    environmentID: environmentId,
+                    pipelineID: pipeline.pipelineID,
+                    nodeID: pipeline.nodeID,
+                    fileID: EditorGlobal.selectedFile?.id?.get(),
+                    NodeTypeDesc: pipeline.nodeTypeDesc,
+                    workerGroup: pipeline.workerGroup,
+                    runID: run_id,
+                });
+
+                if (response.r || response.error) {
+                    enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
+                } else if (response.errors) {
+                    response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+                }
+
+                // 3. Get the logs
+                const responseLogs = await getNodeLogs({ environmentID: environmentId, pipelineID: pipeline.pipelineID, runID: run_id });
+
+                if (responseLogs.r || responseLogs.error) {
+                    enqueueSnackbar("Can't get logs: " + (responseLogs.msg || responseLogs.r || responseLogs.error), { variant: 'error' });
+                } else if (responseLogs.errors) {
+                    responseLogs.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+                } else {
+                    const resp250 = responseLogs.slice(responseLogs.length - 250);
+                    setGraphQlResp(resp250.filter((a) => !keys.includes(a.uid)));
+                }
             };
             ws.current.onclose = () => {
                 // Exit if closing the connection was intentional
                 if (!reconnectOnClose.current) {
+                    ConsoleLogHelper('ws closed');
                     return;
                 }
 

@@ -17,7 +17,7 @@ extend type Mutation {
     + **Route**: Private
     + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
     """
-    runCEFile(pipelineID: String!, nodeID: String!, fileID: String!, environmentID: String!, NodeTypeDesc: String!, workerGroup: String!): CERun!
+    runCEFile(pipelineID: String!, nodeID: String!, fileID: String!, environmentID: String!, NodeTypeDesc: String!, workerGroup: String!, runID: String!): CERun!
 
 
     """

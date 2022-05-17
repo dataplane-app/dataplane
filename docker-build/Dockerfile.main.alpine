@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine as builder
+FROM golang:1.18-alpine as builder
 
 RUN mkdir -p /go/src/build
 
@@ -27,6 +27,7 @@ ADD frontend/craco.config.js /node/craco.config.js
 ADD frontend/package.json /node/package.json
 
 RUN yarn add global env-cmd
+RUN yarn
 RUN yarn builddocker
 
 

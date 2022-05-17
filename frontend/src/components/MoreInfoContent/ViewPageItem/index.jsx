@@ -2,6 +2,7 @@ import { MenuItem } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import { useGlobalFlowState } from '../../../pages/PipelineEdit';
+import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import { useTurnOnOffPipelineHook } from '../../DrawerContent/TurnOffPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 
@@ -11,6 +12,7 @@ const ViewPageItem = (props) => {
     // Global state
     const FlowState = useGlobalFlowState();
     const Environment = useGlobalEnvironmentState();
+    const RunState = useGlobalRunState();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -46,6 +48,7 @@ const ViewPageItem = (props) => {
 
     const handleRun = () => {
         props.handleCloseMenu();
+        RunState.isRunning.set(true);
 
         const clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: false });
         const runButton = document.getElementById('pipeline-run-button');
@@ -60,9 +63,11 @@ const ViewPageItem = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleGoToEditorPage}>
                 Edit
             </MenuItem>
-            <MenuItem sx={{ color: 'cyan.main' }} onClick={handleAnalytics}>
-                Analytics
-            </MenuItem>
+            {RunState.selectedRunID.get() ? (
+                <MenuItem sx={{ color: 'cyan.main' }} onClick={handleAnalytics}>
+                    Analytics
+                </MenuItem>
+            ) : null}
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleDeploy}>
                 Deploy
             </MenuItem>

@@ -19,9 +19,8 @@ import {
 } from '../utils/editorLayouts';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
-import { Downgraded } from '@hookstate/core';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { useSnackbar } from 'notistack';
 import { useGetPipeline } from '../graphql/getPipeline';
@@ -138,11 +137,11 @@ const PipelineEditor = () => {
                     <Box>
                         <ResponsiveGridLayout
                             draggableHandle=".drag-handle"
-                            onLayoutChange={(e, _) => console.log('Change layout', e, _)}
+                            // onLayoutChange={(e, _) => console.log('Change layout', e, _)}
                             isDraggable={true}
                             verticalCompact
                             measureBeforeMount={true}
-                            onResizeStop={(e, _) => console.log('Resize', e, _)}
+                            // onResizeStop={(e, _) => console.log('Resize', e, _)}
                             compactType="vertical"
                             layouts={pipeline.nodeTypeDesc === 'python' ? layoutsPython : layoutsBash}
                             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
@@ -151,7 +150,7 @@ const PipelineEditor = () => {
                             {pipeline.nodeTypeDesc === 'python' ? <PackageColumn key="2" pipeline={pipeline} packages={packages} setPackages={setPackages} /> : null}
                             <EditorColumn key="3" ref={editorRef} pipeline={pipeline} />
                             {currentTab === 'code' ? (
-                                <LogsColumn key="4" environmentID={Environment.id.get()} pipelineID={pipeline.pipelineID} workerGroup={pipeline.workerGroup} />
+                                <LogsColumn key="4" pipeline={pipeline} />
                             ) : (
                                 <InstallationLogsColumn
                                     key="4"

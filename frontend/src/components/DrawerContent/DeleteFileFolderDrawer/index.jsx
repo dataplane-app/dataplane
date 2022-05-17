@@ -8,7 +8,6 @@ import { Downgraded } from '@hookstate/core';
 import { findNodeById, isFolder, removeById } from '../../EditorPage/FileManager/functions';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import { useDeleteFolderNode } from '../../../graphql/deleteFolderNode';
-import { useParams } from 'react-router-dom';
 import { useDeleteFileNode } from '../../../graphql/deleteFileNode';
 
 const DeleteFileFolderDrawer = ({ handleClose, data, selected, nodeID, pipelineID }) => {
