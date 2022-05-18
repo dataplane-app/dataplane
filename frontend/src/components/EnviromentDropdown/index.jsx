@@ -176,7 +176,7 @@ const EnviromentDropdown = () => {
                     ? environments
                           .filter((filterId) => filterId.id !== selectedEnviroment)
                           .map((env) => (
-                              <MenuItem id="hello" onClick={() => onSelectEnvironment(env)} key={env.id} sx={{ width: 'auto' }}>
+                              <MenuItem onClick={() => onSelectEnvironment(env)} key={env.id} sx={{ width: 'auto' }}>
                                   <Box
                                       display="flex"
                                       backgroundColor="primary.main"
