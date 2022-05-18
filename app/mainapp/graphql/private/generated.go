@@ -214,6 +214,7 @@ type ComplexityRoot struct {
 		DeletePermissionToUser           func(childComplexity int, userID string, permissionID string, environmentID string) int
 		DeletePipeline                   func(childComplexity int, environmentID string, pipelineID string) int
 		DeleteSecretFromWorkerGroup      func(childComplexity int, environmentID string, workerGroup string, secret string) int
+		DeleteSpecificPermission         func(childComplexity int, subject string, subjectID string, resourceID string, environmentID string) int
 		DuplicatePipeline                func(childComplexity int, pipelineID string, name string, environmentID string, description string, workerGroup string) int
 		MoveFileNode                     func(childComplexity int, fileID string, toFolderID string, environmentID string, pipelineID string) int
 		MoveFolderNode                   func(childComplexity int, folderID string, toFolderID string, environmentID string, pipelineID string) int
@@ -549,6 +550,7 @@ type MutationResolver interface {
 	PipelinePermissionsToAccessGroup(ctx context.Context, environmentID string, resourceID string, access []string, accessGroupID string) (string, error)
 	UpdatePermissionToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string) (string, error)
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
+	DeleteSpecificPermission(ctx context.Context, subject string, subjectID string, resourceID string, environmentID string) (string, error)
 	AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error)
 	UpdatePipeline(ctx context.Context, pipelineID string, name string, environmentID string, description string, workerGroup string) (string, error)
 	DuplicatePipeline(ctx context.Context, pipelineID string, name string, environmentID string, description string, workerGroup string) (string, error)
@@ -1563,6 +1565,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteSecretFromWorkerGroup(childComplexity, args["environmentID"].(string), args["WorkerGroup"].(string), args["Secret"].(string)), true
+
+	case "Mutation.deleteSpecificPermission":
+		if e.complexity.Mutation.DeleteSpecificPermission == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSpecificPermission_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSpecificPermission(childComplexity, args["subject"].(string), args["subjectID"].(string), args["resourceID"].(string), args["environmentID"].(string)), true
 
 	case "Mutation.duplicatePipeline":
 		if e.complexity.Mutation.DuplicatePipeline == nil {
@@ -4296,6 +4310,13 @@ extend type Mutation {
     """
     deletePermissionToUser(user_id: String!, permission_id: String!, environmentID: String!): String!
 
+    """
+    Revoke Permission from User.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
+    """
+    deleteSpecificPermission(subject: String!, subjectID: String!, resourceID: String!, environmentID: String!): String!
+
 }
 `, BuiltIn: false},
 	{Name: "resolvers/pipelines.graphqls", Input: `type Pipelines {
@@ -5432,6 +5453,48 @@ func (ec *executionContext) field_Mutation_deleteSecretFromWorkerGroup_args(ctx 
 		}
 	}
 	args["Secret"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSpecificPermission_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["subject"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subject"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["subject"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["subjectID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subjectID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["subjectID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["resourceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["resourceID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg3
 	return args, nil
 }
 
@@ -12525,6 +12588,48 @@ func (ec *executionContext) _Mutation_deletePermissionToUser(ctx context.Context
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().DeletePermissionToUser(rctx, args["user_id"].(string), args["permission_id"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteSpecificPermission(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteSpecificPermission_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteSpecificPermission(rctx, args["subject"].(string), args["subjectID"].(string), args["resourceID"].(string), args["environmentID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -24032,6 +24137,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "deletePermissionToUser":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deletePermissionToUser(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteSpecificPermission":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteSpecificPermission(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
