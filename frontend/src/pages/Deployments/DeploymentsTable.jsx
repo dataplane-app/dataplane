@@ -15,6 +15,7 @@ import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
 import { useGlobalPipelineRun } from '../PipelineRuns/GlobalPipelineRunUIState';
 import { useGlobalMeState } from '../../components/Navbar';
 import cronZone from '../../utils/cronZone';
+import { DateTime } from 'luxon';
 
 const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDeployments }) => {
     // React router
@@ -101,6 +102,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
                             <Typography color="secondary.main" variant="body2">
                                 {row.value.node_type_desc[0]?.toUpperCase() + row.value.node_type_desc.slice(1) + ' trigger'}
                                 {row.value.schedule && ' - ' + cronZone(row.value.schedule, MeData.timezone.get(), row.value.schedule_type)}
+                                {' ' + DateTime.fromJSDate(new Date(), { zone: MeData.timezone.get() }).toFormat('z (ZZZZ)')}
                             </Typography>
                         </Box>
                     ) : null,
