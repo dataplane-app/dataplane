@@ -256,7 +256,7 @@ const useDeploymentPermissionsToUserHook = (permissionsState, refreshPermissions
     const accessDictionary = {
         view: 'read',
         run: 'run',
-        assign_permissions: 'assign_pipeline_permission',
+        assign_permissions: 'assign_deployment_permission',
     };
 
     const { enqueueSnackbar } = useSnackbar();
@@ -297,7 +297,7 @@ const useGetUserSingleDeploymentPermissionsHook = (environmentID, setpermissions
     const accessDictionary = {
         read: 'view',
         run: 'run',
-        assign_pipeline_permission: 'assign_permissions',
+        assign_deployment_permission: 'assign_permissions',
     };
 
     // Get permissions
@@ -313,7 +313,7 @@ const useGetUserSingleDeploymentPermissionsHook = (environmentID, setpermissions
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             // Create an array with access permissions
-            const accessArr = response.Access.split(',');
+            const accessArr = response.Access.split(',').filter((a) => a === 'read' || a === 'run' || a === 'assign_deployment_permission');
 
             // Create an object and add Access types that are set to true. Pass it to state
             const incomingPermissions = {};
@@ -336,7 +336,7 @@ const useDeploymentPermissionsToAccessGroupHook = (permissionsState, refreshPerm
     const accessDictionary = {
         view: 'read',
         run: 'run',
-        assign_permissions: 'assign_pipeline_permission',
+        assign_permissions: 'assign_deployment_permission',
     };
 
     const { enqueueSnackbar } = useSnackbar();

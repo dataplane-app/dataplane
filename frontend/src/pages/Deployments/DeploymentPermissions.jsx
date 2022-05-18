@@ -245,7 +245,7 @@ const CustomAccess = ({ row, onClick }) => {
     const accessDictionary = {
         view: 'read',
         run: 'run',
-        assign_permissions: 'assign_pipeline_permission',
+        assign_permissions: 'assign_deployment_permission',
     };
 
     return (
