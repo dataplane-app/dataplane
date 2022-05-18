@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -1338,6 +1338,7 @@ a.created_at,
 b.node_type,
 b.node_type_desc,
 b.online,
+timezone,
 scheduler.schedule,
 scheduler.schedule_type
 from pipelines a left join (
@@ -1371,6 +1372,7 @@ a.created_at,
 b.node_type,
 b.node_type_desc,
 b.online,
+timezone,
 scheduler.schedule,
 scheduler.schedule_type
 from pipelines a 

@@ -22,6 +22,7 @@ const query = gql`
             node_type_desc
             schedule
             schedule_type
+            timezone
         }
     }
 `;
