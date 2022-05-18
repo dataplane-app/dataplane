@@ -15,6 +15,7 @@ import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import DuplicatePipelineDrawer from '../../DrawerContent/DuplicatePipelineDrawer';
 import cronZone from '../../../utils/cronZone';
 import { useGlobalMeState } from '../../Navbar';
+import { DateTime } from 'luxon';
 
 const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipelines }) => {
     // React router
@@ -99,6 +100,9 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipel
                             <Typography color="secondary.main" variant="body2">
                                 {row.value.node_type_desc[0]?.toUpperCase() + row.value.node_type_desc.slice(1) + ' trigger'}
                                 {row.value.schedule && ' - ' + cronZone(row.value.schedule, MeData.timezone.get(), row.value.schedule_type)}
+                            </Typography>
+                            <Typography color="secondary.main" variant="body2" ml={0.5}>
+                                {DateTime.fromJSDate(new Date(), { zone: MeData.timezone.get() }).toFormat('z (ZZZZ)')}
                             </Typography>
                         </Box>
                     ) : null,
