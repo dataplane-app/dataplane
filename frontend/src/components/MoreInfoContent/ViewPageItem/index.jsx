@@ -2,6 +2,7 @@ import { MenuItem } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import { useGlobalFlowState } from '../../../pages/PipelineEdit';
+import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import { useTurnOnOffPipelineHook } from '../../DrawerContent/TurnOffPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
@@ -13,6 +14,7 @@ const ViewPageItem = (props) => {
     const FlowState = useGlobalFlowState();
     const Environment = useGlobalEnvironmentState();
     const RunState = useGlobalRunState();
+    const GlobalPipelineRun = useGlobalPipelineRun();
 
     // URI parameter
     const { pipelineId } = useParams();
@@ -29,7 +31,7 @@ const ViewPageItem = (props) => {
     // Handle turn off button
     const handleTurnOffPipeline = () => {
         props.handleCloseMenu();
-        FlowState.isOpenTurnOffPipelineDrawer.set(true);
+        GlobalPipelineRun.isOpenTurnOffPipelineDrawer.set(true);
     };
 
     // Handle turn on button
