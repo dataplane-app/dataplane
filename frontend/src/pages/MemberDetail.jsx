@@ -6,18 +6,21 @@ import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import { useHistory } from 'react-router-dom';
 import { useMe } from '../graphql/me';
 import { useUpdateMe } from '../graphql/updateMe';
-import { useGetUserPermissions } from '../graphql/getUserPermissions';
-import { useGetUserEnvironments } from '../graphql/getUserEnvironments';
-import { useGetUserAccessGroups } from '../graphql/getUserAccessGroups';
 import { useGetMyPipelinePermissions } from '../graphql/getMyPipelinePermissions';
 import { EnvironmentContext } from '../App';
 import ct from 'countries-and-timezones';
 import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
+import { useMyPermissions } from '../graphql/getMyPermissions';
+import { useGlobalEnvironmentsState } from '../components/EnviromentDropdown';
+import { useGetMyAccessGroups } from '../graphql/getMyAccessGroups';
 
 const MemberDetail = () => {
     // Context
     const [globalEnvironment] = useContext(EnvironmentContext);
+
+    // Environment global state
+    const Environments = useGlobalEnvironmentsState();
 
     // Router
     let history = useHistory();
@@ -31,7 +34,6 @@ const MemberDetail = () => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [userPermissions, setUserPermissions] = useState([]);
     const [userSpecificPermissions, setUserSpecificPermissions] = useState([]);
-    const [userEnvironments, setUserEnvironments] = useState([]);
     const [accessGroups, setAccessGroups] = useState([]);
 
     // Sidebar states
@@ -40,10 +42,9 @@ const MemberDetail = () => {
 
     // Custom Hooks
     const getData = useGetData(setUser, reset, setIsActive, setIsAdmin);
-    const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
-    const getUserEnvironments = useGetUserEnvironments_(setUserEnvironments, user.user_id, globalEnvironment?.id);
-    const getAccessGroups = useGetUserAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
-    const getMyPipelinePermissions = useGetMyPipelinePermissions_(setUserSpecificPermissions);
+    const getMyPermissions = useMyPermissionsHook(setUserPermissions);
+    const getAccessGroups = useGetMyAccessGroupsHook(setAccessGroups);
+    const getMyPipelinePermissions = useGetMyPipelinePermissionsHook(setUserSpecificPermissions);
 
     // Get me data on load
     useEffect(() => {
@@ -56,8 +57,7 @@ const MemberDetail = () => {
     useEffect(() => {
         if (globalEnvironment?.id && user.user_id) {
             getAccessGroups();
-            getUserPermissions();
-            getUserEnvironments();
+            getMyPermissions();
             getMyPipelinePermissions();
         }
 
@@ -215,8 +215,8 @@ const MemberDetail = () => {
                         </Typography>
 
                         <Box mt="1.31rem">
-                            {userEnvironments.length ? (
-                                userEnvironments.map((env) => (
+                            {Environments.get().length ? (
+                                Environments.get().map((env) => (
                                     <Grid display="flex" mt={1.5} mb={1.5} alignItems="center" key={env.id}>
                                         <Typography
                                             onClick={() => history.push(`/settings/environment/${env.id}`)}
@@ -292,11 +292,9 @@ const useGetData = (setUser, reset, setIsActive, setIsAdmin) => {
     return async () => {
         const response = await getMe();
 
-        if (response.r === 'error') {
+        if (response.r || response.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't get user data: " + response.msg, {
-                variant: 'error',
-            });
+            enqueueSnackbar("Can't get user data: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
@@ -341,11 +339,9 @@ const useSubmitData = () => {
 
         let response = await updateMe(allData);
 
-        if (response.r === 'error') {
+        if (response.r || response.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't update user data: " + response.msg, {
-                variant: 'error',
-            });
+            enqueueSnackbar("Can't update user data: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             closeSnackbar();
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
@@ -356,32 +352,30 @@ const useSubmitData = () => {
     };
 };
 
-const useGetUserPermissions_ = (setUserPermissions, userID, environmentID) => {
+const useMyPermissionsHook = (setUserPermissions) => {
     // GraphQL hook
-    const getUserPermissions = useGetUserPermissions();
+    const getMyPermissions = useMyPermissions();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    // Get user permissions
+    // Get my permissions
     return async () => {
-        if (userID && environmentID) {
-            const response = await getUserPermissions({ userID, environmentID });
+        const response = await getMyPermissions();
 
-            if (response === null) {
-                setUserPermissions([]);
-            } else if (response.r === 'error') {
-                closeSnackbar();
-                enqueueSnackbar("Can't user permissions: " + response.msg, { variant: 'error' });
-            } else if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-            } else {
-                setUserPermissions(response);
-            }
+        if (response === null) {
+            setUserPermissions([]);
+        } else if (response.r || response.error) {
+            closeSnackbar();
+            enqueueSnackbar("Can't get my permissions: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setUserPermissions(response);
         }
     };
 };
 
-const useGetMyPipelinePermissions_ = (setUserSpecificPermissions) => {
+const useGetMyPipelinePermissionsHook = (setUserSpecificPermissions) => {
     // GraphQL hook
     const getMyPipelinePermissions = useGetMyPipelinePermissions();
 
@@ -393,9 +387,9 @@ const useGetMyPipelinePermissions_ = (setUserSpecificPermissions) => {
 
         if (response === null) {
             setUserSpecificPermissions([]);
-        } else if (response.r === 'error') {
+        } else if (response.r || response.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't get specific permissions: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't get specific permissions: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
@@ -404,44 +398,19 @@ const useGetMyPipelinePermissions_ = (setUserSpecificPermissions) => {
     };
 };
 
-const useGetUserEnvironments_ = (setUserEnvironments, user_id, environment_id) => {
+const useGetMyAccessGroupsHook = (setAccessGroups) => {
     // GraphQL hook
-    const getUserEnvironments = useGetUserEnvironments();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Get environments on load
-    return async () => {
-        if (user_id && environment_id) {
-            const response = await getUserEnvironments({ user_id, environment_id });
-
-            if (response.r === 'error') {
-                closeSnackbar();
-                enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
-            } else if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-            } else {
-                setUserEnvironments(response);
-            }
-        }
-    };
-};
-
-const useGetUserAccessGroups_ = (setAccessGroups, environmentID, userID) => {
-    // GraphQL hook
-    const getUserAccessGroups = useGetUserAccessGroups();
+    const getMyAccessGroups = useGetMyAccessGroups();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get access groups
     return async () => {
-        const response = await getUserAccessGroups({ environmentID, userID });
+        const response = await getMyAccessGroups();
 
-        if (response.r === 'error') {
+        if (response.r || response.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't get access groups: " + response.msg, {
-                variant: 'error',
-            });
+            enqueueSnackbar("Can't get access groups: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
