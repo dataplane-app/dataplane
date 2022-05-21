@@ -220,7 +220,7 @@ func (r *queryResolver) UserSingleDeploymentPermissions(ctx context.Context, use
 		  
 				and p.subject = 'access_group'
 				and p.subject_id = pag.access_group_id
-				and p.subject_id = ?
+				and pag.user_id = ?
 		  
 				and p.resource_id = deploy_pipelines.pipeline_id
 				and p.resource_id = ?
