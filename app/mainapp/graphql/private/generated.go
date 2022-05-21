@@ -426,6 +426,7 @@ type ComplexityRoot struct {
 		GetWorkers                    func(childComplexity int, environmentID string) int
 		LogoutUser                    func(childComplexity int) int
 		Me                            func(childComplexity int) int
+		MyAccessGroups                func(childComplexity int) int
 		MyPermissions                 func(childComplexity int) int
 		MyPipelinePermissions         func(childComplexity int) int
 		PipelinePermissions           func(childComplexity int, userID string, environmentID string, pipelineID string) int
@@ -592,6 +593,7 @@ type QueryResolver interface {
 	GetAccessGroup(ctx context.Context, userID string, environmentID string, accessGroupID string) (*models.PermissionsAccessGroups, error)
 	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error)
 	GetAccessGroupUsers(ctx context.Context, environmentID string, accessGroupID string) ([]*models.Users, error)
+	MyAccessGroups(ctx context.Context) ([]*models.PermissionsAccessGUsersOutput, error)
 	FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*CodeTree, error)
 	GetCodePackages(ctx context.Context, workerGroup string, language string, environmentID string, pipelineID string) (*CodePackages, error)
 	GetActiveDeployment(ctx context.Context, pipelineID string, environmentID string) (*Deployments, error)
@@ -3127,6 +3129,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Me(childComplexity), true
 
+	case "Query.myAccessGroups":
+		if e.complexity.Query.MyAccessGroups == nil {
+			break
+		}
+
+		return e.complexity.Query.MyAccessGroups(childComplexity), true
+
 	case "Query.myPermissions":
 		if e.complexity.Query.MyPermissions == nil {
 			break
@@ -3772,6 +3781,12 @@ extend type Query {
 	+ **Permissions**:  admin_platform, admin_environment, environment_permissions, 
     """  
     getAccessGroupUsers( environmentID: String!, access_group_id: String!): [User]
+    """
+    Retrieve my access groups.
+    + **Route**: Private
+    + **Permissions**: logged in user
+    """
+    myAccessGroups: [PermissionsAccessGUsersOutput]
 }
 
 extend type Mutation {
@@ -17176,6 +17191,38 @@ func (ec *executionContext) _Query_getAccessGroupUsers(ctx context.Context, fiel
 	return ec.marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_myAccessGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MyAccessGroups(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.PermissionsAccessGUsersOutput)
+	fc.Result = res
+	return ec.marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_filesNode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -25761,6 +25808,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getAccessGroupUsers(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "myAccessGroups":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myAccessGroups(ctx, field)
 				return res
 			}
 
