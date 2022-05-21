@@ -24,7 +24,7 @@ func PermissionSingleCheck(
 	permresult := "denied"
 
 	/* Access groups operate at environment level. The environment id will be equal to provided environment id. */
-	result := database.DBConn.Debug().Raw(
+	result := database.DBConn.Raw(
 		`
 		(select 
 		p.access,
