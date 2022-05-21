@@ -247,7 +247,7 @@ const MemberDetail = () => {
                                         .map((env) => (
                                             <Grid display="flex" mt={1.5} mb={1.5} alignItems="center" key={env.AccessGroupID}>
                                                 <Typography
-                                                    onClick={() => history.push(`/teams/access/${env.AccessGroupID}`)}
+                                                    onClick={() => history.push(`/access/${env.AccessGroupID}`)}
                                                     sx={{ cursor: 'pointer' }}
                                                     variant="subtitle2"
                                                     lineHeight="15.23px"

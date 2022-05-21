@@ -46,7 +46,7 @@ const TeamGroup = () => {
         <Box className="page" width="83%">
             <Grid container alignItems="flex-start" flexDirection="column">
                 <Typography component="h2" variant="h2" color="text.primary">
-                    Team {'>'} Access group {'>'} {accessGroup.Name}
+                    Access group {'>'} {accessGroup.Name}
                 </Typography>
 
                 <Typography variant="subtitle2" mt=".20rem">

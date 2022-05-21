@@ -294,7 +294,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 				and p.active = true
 				
 			  GROUP BY
-				p.subject,
+			    p.subject,
 				p.subject_id,
 				pipelines.name,
 				p.resource_id,
