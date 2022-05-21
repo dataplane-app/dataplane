@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -182,8 +182,8 @@ func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permission
 		where 
 		p.resource = pt.code and
 		p.subject = 'access_group' and 
-		p.subject_id = agu.user_id and
-		p.subject_id = ? and
+		p.subject_id = agu.access_group_id and
+		agu.user_id = ? and
 		p.active = true and
 		pt.level <> 'specific'
 		)
