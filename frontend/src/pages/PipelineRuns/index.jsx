@@ -22,6 +22,7 @@ import RunNavBar from './RunNavBar';
 import { useGlobalRunState } from './GlobalRunState';
 
 import { edgeTypes, nodeTypes } from './NodeTypes';
+import TurnOffPipelineDrawerRunPipeline from '../../components/DrawerContent/TurnOffPipelineDrawerRunPipeline';
 
 const View = () => {
     // Retrieve global environments from drop down - selected environment ID
@@ -213,7 +214,7 @@ const View = () => {
                 <LogsDrawer handleClose={() => FlowState.isOpenLogDrawer.set(false)} environmentId={Environment.id.get()} />
             </Drawer>
             <Drawer anchor="right" open={FlowState.isOpenTurnOffPipelineDrawer.get()} onClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)}>
-                <TurnOffPipelineDrawer
+                <TurnOffPipelineDrawerRunPipeline
                     handleClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)} //
                     pipelineID={pipeline?.pipelineID}
                     environmentID={pipeline?.environmentID}
