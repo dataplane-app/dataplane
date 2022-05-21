@@ -170,8 +170,8 @@ const EnviromentDropdown = () => {
                         },
                     },
                 }}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
+                transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'top', vertical: 'bottom' }}>
                 {environments && environments.length > 0
                     ? environments
                           .filter((filterId) => filterId.id !== selectedEnviroment)
