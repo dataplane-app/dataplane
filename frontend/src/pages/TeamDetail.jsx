@@ -29,6 +29,7 @@ import { useGetUserAccessGroups } from '../graphql/getUserAccessGroups';
 import { useRemoveUserFromAccessGroup } from '../graphql/removeUserFromAccessGroup';
 import { useGetUserPipelinePermissions } from '../graphql/getUserPipelinePermissions';
 import { EnvironmentContext } from '../App';
+import { useDeleteSpecificPermission } from '../graphql/deleteSpecificPermission';
 
 export default function TeamDetail() {
     // Context
@@ -76,7 +77,8 @@ export default function TeamDetail() {
     const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
     const getUserPipelinePermissions = useGetUserPipelinePermissions_(setSpecificPermissions, user.user_id, globalEnvironment?.id);
     const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
-    const deletePermission = useDeletePermission(getUserPermissions);
+    const deletePermission = useDeletePermissionHook(getUserPermissions);
+    const deleteSpecificPermission = useDeleteSpecificPermissionHook(getUserPipelinePermissions);
     const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
     const getUserAccessGroups = useGetUserAccessGroups_(setUserAccessGroups, globalEnvironment?.id, user.user_id);
     const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id, getUserAccessGroups, accessGroup);
@@ -356,7 +358,7 @@ export default function TeamDetail() {
                                             .map((permission) => (
                                                 <Grid display="flex" alignItems="center" key={permission.PipelineName} mt={1.5} mb={1.5}>
                                                     <Box
-                                                        onClick={() => deletePermission(permission)}
+                                                        onClick={() => deleteSpecificPermission(permission)}
                                                         component={FontAwesomeIcon}
                                                         sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
                                                         icon={faTrashAlt}
@@ -483,7 +485,7 @@ export default function TeamDetail() {
                                                 icon={faTrashAlt}
                                             />
                                             <Typography
-                                                onClick={() => history.push(`/teams/access/${row.AccessGroupID}`)}
+                                                onClick={() => history.push(`/access/${row.AccessGroupID}`)}
                                                 variant="subtitle2"
                                                 lineHeight="15.23px"
                                                 color="primary"
@@ -792,7 +794,7 @@ const useUpdatePermissions = (getUserPermissions, selectedPermission, environmen
     };
 };
 
-const useDeletePermission = (getUserPermissions) => {
+const useDeletePermissionHook = (getUserPermissions) => {
     // GraphQL hook
     const deletePermissionToUser = useDeletePermissionToUser();
 
@@ -806,16 +808,41 @@ const useDeletePermission = (getUserPermissions) => {
 
         const response = await deletePermissionToUser({ user_id, permission_id, environmentID });
 
-        if (response.r === 'error') {
+        if (response.r || response.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't delete permission: " + response.msg, {
-                variant: 'error',
-            });
+            enqueueSnackbar("Can't delete permission: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getUserPermissions();
+        }
+    };
+};
+
+const useDeleteSpecificPermissionHook = (getSpecificPermissions) => {
+    // GraphQL hook
+    const deleteSpecificPermission = useDeleteSpecificPermission();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Delete a permission
+    return async (permission) => {
+        const subject = 'user';
+        const subjectID = permission.SubjectID;
+        const resourceID = permission.ResourceID;
+        const environmentID = permission.EnvironmentID;
+
+        const response = await deleteSpecificPermission({ subject, subjectID, resourceID, environmentID });
+
+        if (response.r || response.error) {
+            closeSnackbar();
+            enqueueSnackbar("Can't delete permission: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getSpecificPermissions();
         }
     };
 };
