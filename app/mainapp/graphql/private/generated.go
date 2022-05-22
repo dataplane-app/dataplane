@@ -168,6 +168,7 @@ type ComplexityRoot struct {
 		PipelineID        func(childComplexity int) int
 		Schedule          func(childComplexity int) int
 		ScheduleType      func(childComplexity int) int
+		Timezone          func(childComplexity int) int
 		UpdatedAt         func(childComplexity int) int
 		Version           func(childComplexity int) int
 		WorkerGroup       func(childComplexity int) int
@@ -372,6 +373,7 @@ type ComplexityRoot struct {
 		PipelineID    func(childComplexity int) int
 		Schedule      func(childComplexity int) int
 		ScheduleType  func(childComplexity int) int
+		Timezone      func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 		WorkerGroup   func(childComplexity int) int
 	}
@@ -1234,6 +1236,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Deployments.ScheduleType(childComplexity), true
+
+	case "Deployments.timezone":
+		if e.complexity.Deployments.Timezone == nil {
+			break
+		}
+
+		return e.complexity.Deployments.Timezone(childComplexity), true
 
 	case "Deployments.updated_at":
 		if e.complexity.Deployments.UpdatedAt == nil {
@@ -2659,6 +2668,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Pipelines.ScheduleType(childComplexity), true
 
+	case "Pipelines.timezone":
+		if e.complexity.Pipelines.Timezone == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Timezone(childComplexity), true
+
 	case "Pipelines.updated_at":
 		if e.complexity.Pipelines.UpdatedAt == nil {
 			break
@@ -4017,6 +4033,7 @@ extend type Mutation {
   node_type_desc: String!
   schedule: String!
   schedule_type: String!
+  timezone: String!
 }
 
 type DeploymentRuns {
@@ -4349,6 +4366,7 @@ extend type Mutation {
   node_type_desc: String!
   schedule: String!
   schedule_type: String!
+  timezone: String!
 }
 
 # ----- Add/Update flow
@@ -10723,6 +10741,41 @@ func (ec *executionContext) _Deployments_schedule_type(ctx context.Context, fiel
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Deployments_timezone(ctx context.Context, field graphql.CollectedField, obj *Deployments) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Deployments",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timezone, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Environments_id(ctx context.Context, field graphql.CollectedField, obj *models.Environment) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -16667,6 +16720,41 @@ func (ec *executionContext) _Pipelines_schedule_type(ctx context.Context, field 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ScheduleType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Pipelines_timezone(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timezone, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -23654,6 +23742,16 @@ func (ec *executionContext) _Deployments(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "timezone":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Deployments_timezone(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -25519,6 +25617,16 @@ func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet
 		case "schedule_type":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Pipelines_schedule_type(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "timezone":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Pipelines_timezone(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

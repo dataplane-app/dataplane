@@ -1003,6 +1003,7 @@ a.deploy_active,
 b.node_type,
 b.node_type_desc,
 b.online,
+timezone,
 scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a left join (
@@ -1039,6 +1040,7 @@ a.deploy_active,
 b.node_type,
 b.node_type_desc,
 b.online,
+timezone,
 scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a 
