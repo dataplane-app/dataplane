@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -213,14 +213,16 @@ func (r *queryResolver) UserSingleDeploymentPermissions(ctx context.Context, use
 				permissions p,
 				permissions_resource_types pt,
 				permissions_access_groups pag,
+				permissions_accessg_users pagu,
 				deploy_pipelines
 			  where
 				p.resource = pt.code
 				and pt.level = 'specific'
 		  
 				and p.subject = 'access_group'
-				and p.subject_id = pag.access_group_id
-				and pag.user_id = ?
+				and p.subject_id = pagu.access_group_id
+				and pag.access_group_id = pagu.access_group_id
+				and p.subject_id = ?
 		  
 				and p.resource_id = deploy_pipelines.pipeline_id
 				and p.resource_id = ?
