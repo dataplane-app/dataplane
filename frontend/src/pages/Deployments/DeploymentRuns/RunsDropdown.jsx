@@ -94,7 +94,7 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
             // console.log("Run ID:", runID)
 
             // If there is no runID then show the structure without RunID
-            if (runID === null) {
+            if (!runID) {
                 console.log('no runs');
 
                 // Get the flow of the latest run or if no flow then get structure
