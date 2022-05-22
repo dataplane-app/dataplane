@@ -277,7 +277,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                                 disableRipple
                                                 disableFocusRipple
                                                 sx={{ display: 'flex', alignItems: 'center', paddingLeft: '12px', paddingRight: '8px' }}
-                                                id="hello"
                                                 onClick={(e) => handleTabClose(tabs, e)}
                                                 style={{ marginLeft: 0, paddingLeft: 12 }}>
                                                 {tabs.isEditing && <Box sx={{ width: 8, height: 8, marginRight: 1, backgroundColor: 'secondary.main', borderRadius: '50%' }} />}

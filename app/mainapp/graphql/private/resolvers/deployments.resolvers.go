@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -797,8 +797,8 @@ inner join (
 		permissions p, permissions_accessg_users agu
 		where 
 		p.subject = 'access_group' and 
-		p.subject_id = agu.user_id and
-		p.subject_id = ? and
+		p.subject_id = agu.access_group_id and
+		agu.user_id = ? and
 		p.resource = 'specific_deployment' and
 		p.environment_id = agu.environment_id and 
 		p.active = true and
@@ -933,8 +933,8 @@ inner join (
 		permissions p, permissions_accessg_users agu
 		where 
 		p.subject = 'access_group' and 
-		p.subject_id = agu.user_id and
-		p.subject_id = ? and
+		p.subject_id = agu.access_group_id and
+		agu.user_id = ? and
 		p.resource = 'specific_deployment' and
 		p.environment_id = agu.environment_id and 
 		p.active = true and
@@ -1003,6 +1003,7 @@ a.deploy_active,
 b.node_type,
 b.node_type_desc,
 b.online,
+timezone,
 scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a left join (
@@ -1039,6 +1040,7 @@ a.deploy_active,
 b.node_type,
 b.node_type_desc,
 b.online,
+timezone,
 scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a 
@@ -1067,8 +1069,8 @@ inner join (
 		permissions p, permissions_accessg_users agu
 		where 
 		p.subject = 'access_group' and 
-		p.subject_id = agu.user_id and
-		p.subject_id = ? and
+		p.subject_id = agu.access_group_id and
+		agu.user_id = ? and
 		p.resource = 'specific_deployment' and
 		p.environment_id = agu.environment_id and 
 		p.active = true and

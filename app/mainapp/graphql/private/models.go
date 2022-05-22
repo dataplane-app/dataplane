@@ -123,6 +123,7 @@ type Deployments struct {
 	NodeTypeDesc      string    `json:"node_type_desc"`
 	Schedule          string    `json:"schedule"`
 	ScheduleType      string    `json:"schedule_type"`
+	Timezone          string    `json:"timezone"`
 }
 
 type FolderNodeInput struct {
@@ -225,6 +226,7 @@ type Pipelines struct {
 	NodeTypeDesc  string    `json:"node_type_desc"`
 	Schedule      string    `json:"schedule"`
 	ScheduleType  string    `json:"schedule_type"`
+	Timezone      string    `json:"timezone"`
 }
 
 type Platform struct {

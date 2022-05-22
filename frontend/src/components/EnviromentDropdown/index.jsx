@@ -29,14 +29,14 @@ const EnviromentDropdown = () => {
     const [selectedEnviroment, setSelectedEnviroment] = React.useState('');
     const [environments, setEnvironments] = React.useState([]);
     const GlobalEnvironments = useGlobalEnvironmentsState();
-    const dropdownWidth = React.useRef(null);
+    // const dropdownWidth = React.useRef(null);
 
     const open = Boolean(anchorEl);
 
     const handleClick = (event) => {
         if (environments.length < 2) return;
         setAnchorEl(event.currentTarget);
-        dropdownWidth.current = event.currentTarget.offsetWidth;
+        // dropdownWidth.current = event.currentTarget.offsetWidth;
     };
     const handleClose = () => {
         setAnchorEl(null);
@@ -170,13 +170,13 @@ const EnviromentDropdown = () => {
                         },
                     },
                 }}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
+                transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'top', vertical: 'bottom' }}>
                 {environments && environments.length > 0
                     ? environments
                           .filter((filterId) => filterId.id !== selectedEnviroment)
                           .map((env) => (
-                              <MenuItem onClick={() => onSelectEnvironment(env)} key={env.id} sx={{ width: dropdownWidth.current }}>
+                              <MenuItem onClick={() => onSelectEnvironment(env)} key={env.id} sx={{ width: 'auto' }}>
                                   <Box
                                       display="flex"
                                       backgroundColor="primary.main"
@@ -193,7 +193,7 @@ const EnviromentDropdown = () => {
                                       {env.name[0].toUpperCase()}
                                   </Box>{' '}
                                   <Box ml="1rem" mr="1rem">
-                                      <Typography fontSize={16} fontWeight={700} color="text.primary" noWrap maxWidth={150}>
+                                      <Typography fontSize={16} fontWeight={700} color="text.primary" noWrap maxWidth={150} textOverflow="unset">
                                           {env.name}
                                       </Typography>
                                       <Typography variant="subtitle1" color="text.primary" marginTop={-0.7}>

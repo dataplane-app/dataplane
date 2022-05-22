@@ -19,6 +19,7 @@ const query = gql`
             schedule
             schedule_type
             workerGroup
+            timezone
         }
     }
 `;

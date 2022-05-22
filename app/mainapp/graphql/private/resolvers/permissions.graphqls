@@ -69,4 +69,11 @@ extend type Mutation {
     """
     deletePermissionToUser(user_id: String!, permission_id: String!, environmentID: String!): String!
 
+    """
+    Revoke Permission from User.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
+    """
+    deleteSpecificPermission(subject: String!, subjectID: String!, resourceID: String!, environmentID: String!): String!
+
 }

@@ -184,6 +184,7 @@ type ComplexityRoot struct {
 		PipelineID        func(childComplexity int) int
 		Schedule          func(childComplexity int) int
 		ScheduleType      func(childComplexity int) int
+		Timezone          func(childComplexity int) int
 		UpdatedAt         func(childComplexity int) int
 		Version           func(childComplexity int) int
 		WorkerGroup       func(childComplexity int) int
@@ -230,6 +231,7 @@ type ComplexityRoot struct {
 		DeletePermissionToUser             func(childComplexity int, userID string, permissionID string, environmentID string) int
 		DeletePipeline                     func(childComplexity int, environmentID string, pipelineID string) int
 		DeleteSecretFromWorkerGroup        func(childComplexity int, environmentID string, workerGroup string, secret string) int
+		DeleteSpecificPermission           func(childComplexity int, subject string, subjectID string, resourceID string, environmentID string) int
 		DeploymentPermissionsToAccessGroup func(childComplexity int, environmentID string, resourceID string, access []string, accessGroupID string) int
 		DeploymentPermissionsToUser        func(childComplexity int, environmentID string, resourceID string, access []string, userID string) int
 		DuplicatePipeline                  func(childComplexity int, pipelineID string, name string, environmentID string, description string, workerGroup string) int
@@ -389,6 +391,7 @@ type ComplexityRoot struct {
 		PipelineID    func(childComplexity int) int
 		Schedule      func(childComplexity int) int
 		ScheduleType  func(childComplexity int) int
+		Timezone      func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 		WorkerGroup   func(childComplexity int) int
 	}
@@ -444,6 +447,7 @@ type ComplexityRoot struct {
 		GetWorkers                      func(childComplexity int, environmentID string) int
 		LogoutUser                      func(childComplexity int) int
 		Me                              func(childComplexity int) int
+		MyAccessGroups                  func(childComplexity int) int
 		MyPermissions                   func(childComplexity int) int
 		MyPipelinePermissions           func(childComplexity int) int
 		PipelinePermissions             func(childComplexity int, userID string, environmentID string, pipelineID string) int
@@ -571,6 +575,7 @@ type MutationResolver interface {
 	PipelinePermissionsToAccessGroup(ctx context.Context, environmentID string, resourceID string, access []string, accessGroupID string) (string, error)
 	UpdatePermissionToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string) (string, error)
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
+	DeleteSpecificPermission(ctx context.Context, subject string, subjectID string, resourceID string, environmentID string) (string, error)
 	AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error)
 	UpdatePipeline(ctx context.Context, pipelineID string, name string, environmentID string, description string, workerGroup string) (string, error)
 	DuplicatePipeline(ctx context.Context, pipelineID string, name string, environmentID string, description string, workerGroup string) (string, error)
@@ -612,6 +617,7 @@ type QueryResolver interface {
 	GetAccessGroup(ctx context.Context, userID string, environmentID string, accessGroupID string) (*models.PermissionsAccessGroups, error)
 	GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error)
 	GetAccessGroupUsers(ctx context.Context, environmentID string, accessGroupID string) ([]*models.Users, error)
+	MyAccessGroups(ctx context.Context) ([]*models.PermissionsAccessGUsersOutput, error)
 	FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*CodeTree, error)
 	GetCodePackages(ctx context.Context, workerGroup string, language string, environmentID string, pipelineID string) (*CodePackages, error)
 	GetActiveDeployment(ctx context.Context, pipelineID string, environmentID string) (*Deployments, error)
@@ -1346,6 +1352,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Deployments.ScheduleType(childComplexity), true
 
+	case "Deployments.timezone":
+		if e.complexity.Deployments.Timezone == nil {
+			break
+		}
+
+		return e.complexity.Deployments.Timezone(childComplexity), true
+
 	case "Deployments.updated_at":
 		if e.complexity.Deployments.UpdatedAt == nil {
 			break
@@ -1678,6 +1691,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteSecretFromWorkerGroup(childComplexity, args["environmentID"].(string), args["WorkerGroup"].(string), args["Secret"].(string)), true
+
+	case "Mutation.deleteSpecificPermission":
+		if e.complexity.Mutation.DeleteSpecificPermission == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSpecificPermission_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSpecificPermission(childComplexity, args["subject"].(string), args["subjectID"].(string), args["resourceID"].(string), args["environmentID"].(string)), true
 
 	case "Mutation.deploymentPermissionsToAccessGroup":
 		if e.complexity.Mutation.DeploymentPermissionsToAccessGroup == nil {
@@ -2782,6 +2807,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Pipelines.ScheduleType(childComplexity), true
 
+	case "Pipelines.timezone":
+		if e.complexity.Pipelines.Timezone == nil {
+			break
+		}
+
+		return e.complexity.Pipelines.Timezone(childComplexity), true
+
 	case "Pipelines.updated_at":
 		if e.complexity.Pipelines.UpdatedAt == nil {
 			break
@@ -3263,6 +3295,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Me(childComplexity), true
+
+	case "Query.myAccessGroups":
+		if e.complexity.Query.MyAccessGroups == nil {
+			break
+		}
+
+		return e.complexity.Query.MyAccessGroups(childComplexity), true
 
 	case "Query.myPermissions":
 		if e.complexity.Query.MyPermissions == nil {
@@ -3921,6 +3960,12 @@ extend type Query {
 	+ **Permissions**:  admin_platform, admin_environment, environment_permissions, 
     """  
     getAccessGroupUsers( environmentID: String!, access_group_id: String!): [User]
+    """
+    Retrieve my access groups.
+    + **Route**: Private
+    + **Permissions**: logged in user
+    """
+    myAccessGroups: [PermissionsAccessGUsersOutput]
 }
 
 extend type Mutation {
@@ -4151,6 +4196,7 @@ extend type Mutation {
   node_type_desc: String!
   schedule: String!
   schedule_type: String!
+  timezone: String!
 }
 
 type DeploymentRuns {
@@ -4511,6 +4557,13 @@ extend type Mutation {
     """
     deletePermissionToUser(user_id: String!, permission_id: String!, environmentID: String!): String!
 
+    """
+    Revoke Permission from User.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_pipeline
+    """
+    deleteSpecificPermission(subject: String!, subjectID: String!, resourceID: String!, environmentID: String!): String!
+
 }
 `, BuiltIn: false},
 	{Name: "resolvers/pipelines.graphqls", Input: `type Pipelines {
@@ -4528,6 +4581,7 @@ extend type Mutation {
   node_type_desc: String!
   schedule: String!
   schedule_type: String!
+  timezone: String!
 }
 
 # ----- Add/Update flow
@@ -5647,6 +5701,48 @@ func (ec *executionContext) field_Mutation_deleteSecretFromWorkerGroup_args(ctx 
 		}
 	}
 	args["Secret"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSpecificPermission_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["subject"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subject"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["subject"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["subjectID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subjectID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["subjectID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["resourceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["resourceID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg3
 	return args, nil
 }
 
@@ -11465,6 +11561,41 @@ func (ec *executionContext) _Deployments_schedule_type(ctx context.Context, fiel
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Deployments_timezone(ctx context.Context, field graphql.CollectedField, obj *Deployments) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Deployments",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timezone, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Environments_id(ctx context.Context, field graphql.CollectedField, obj *models.Environment) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -13429,6 +13560,48 @@ func (ec *executionContext) _Mutation_deletePermissionToUser(ctx context.Context
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().DeletePermissionToUser(rctx, args["user_id"].(string), args["permission_id"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteSpecificPermission(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteSpecificPermission_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteSpecificPermission(rctx, args["subject"].(string), args["subjectID"].(string), args["resourceID"].(string), args["environmentID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -17467,6 +17640,41 @@ func (ec *executionContext) _Pipelines_schedule_type(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Pipelines_timezone(ctx context.Context, field graphql.CollectedField, obj *Pipelines) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Pipelines",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timezone, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Platform_id(ctx context.Context, field graphql.CollectedField, obj *Platform) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -17973,6 +18181,38 @@ func (ec *executionContext) _Query_getAccessGroupUsers(ctx context.Context, fiel
 	res := resTmp.([]*models.Users)
 	fc.Result = res
 	return ec.marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_myAccessGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MyAccessGroups(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.PermissionsAccessGUsersOutput)
+	fc.Result = res
+	return ec.marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_filesNode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -24635,6 +24875,16 @@ func (ec *executionContext) _Deployments(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "timezone":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Deployments_timezone(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -25185,6 +25435,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "deletePermissionToUser":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deletePermissionToUser(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteSpecificPermission":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteSpecificPermission(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
@@ -26517,6 +26777,16 @@ func (ec *executionContext) _Pipelines(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "timezone":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Pipelines_timezone(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -26799,6 +27069,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getAccessGroupUsers(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "myAccessGroups":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myAccessGroups(ctx, field)
 				return res
 			}
 
