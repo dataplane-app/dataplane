@@ -8,6 +8,7 @@ import { useGetAccessGroups } from '../../../graphql/getAccessGroups';
 import { useGetUsers } from '../../../graphql/getUsers';
 import { useDeploymentPermissionsToUser } from '../../../graphql/deploymentPermissionsToUser';
 import { useDeploymentPermissionsToAccessGroup } from '../../../graphql/deploymentPermissionsToAccessGroup';
+import { useGetUserSingleDeploymentPermissions } from '../../../graphql/getUserSingleDeploymentPermissions';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGlobalMeState } from '../../Navbar';
 
@@ -17,38 +18,21 @@ export const DEFAULT_OPTIONS = {
     assign_permissions: false,
 };
 
-const AddDeploymentPermissionsDrawer = ({ handleClose, subjectsWithPermissions, typeToAdd, refreshPermissions, selectedSubject }) => {
-    const [selectedTypeToAdd, setSelectedTypeToAdd] = useState(typeToAdd);
-
+const EditDeploymentPermissionsDrawer = ({ handleClose, refreshPermissions, selectedSubject }) => {
     // Global state
     const Environment = useGlobalEnvironmentState();
-    const MeData = useGlobalMeState();
-
-    // Control state
-    const [clear, setClear] = useState(1);
 
     // Local state
-    const [users, setUsers] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
-    const [accessGroups, setAccessGroups] = useState([]);
     const [selectedAccessGroup, setSelectedAccessGroup] = useState(null);
 
     // Options state
     const [permissionsState, setPermissionsState] = useState({ ...DEFAULT_OPTIONS });
 
     // Custom GraphQL hooks
-    const getUsers = useGetUsersHook(setUsers, subjectsWithPermissions);
-    const getAccessGroups = useGetAccessGroupsHook(setAccessGroups, Environment.id.get(), MeData.user_id.get(), subjectsWithPermissions);
     const deploymentPermissionsToUser = useDeploymentPermissionsToUserHook(permissionsState, refreshPermissions, handleClose);
     const deploymentPermissionsToAccessGroup = useDeploymentPermissionsToAccessGroupHook(permissionsState, refreshPermissions, handleClose);
-
-    // Get all users and access groups on load
-    useEffect(() => {
-        getUsers();
-        getAccessGroups();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    const getUserDeploymentPermissions = useGetUserSingleDeploymentPermissionsHook(Environment.id.get(), setPermissionsState, selectedSubject.type);
 
     // Set input default value
     useEffect(() => {
@@ -57,6 +41,13 @@ const AddDeploymentPermissionsDrawer = ({ handleClose, subjectsWithPermissions, 
         } else if (selectedSubject.first_name && !selectedSubject.email) {
             setSelectedAccessGroup({ AccessGroupID: selectedSubject.user_id, Name: selectedSubject.first_name });
         }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Get default user or access groups's permissions on drawer open.
+    useEffect(() => {
+        getUserDeploymentPermissions(selectedSubject.user_id, clearOptions);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -83,77 +74,12 @@ const AddDeploymentPermissionsDrawer = ({ handleClose, subjectsWithPermissions, 
 
                 <Box width="212px">
                     <Typography component="h2" variant="h2">
-                        Add permissions
+                        Edit permissions
                     </Typography>
 
-                    <Box mt={1.5} ml={-2} mb={2}>
-                        <Button
-                            onClick={() => {
-                                setSelectedTypeToAdd('User');
-                                clearOptions();
-                                setSelectedUser(null);
-                                setClear(clear * -1);
-                            }}
-                            sx={{ fontWeight: 400, fontSize: '1.0625rem' }}>
-                            User
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                setSelectedTypeToAdd('Access group');
-                                clearOptions();
-                                setSelectedAccessGroup(null);
-                                setClear(clear * -1);
-                            }}
-                            sx={{ fontWeight: 400, fontSize: '1.0625rem', marginLeft: 1 }}>
-                            Access group
-                        </Button>
-                    </Box>
-
-                    {selectedTypeToAdd === 'User' ? (
-                        <Autocomplete
-                            key={clear} //Changing this value on submit clears the input field
-                            onChange={(event, newValue) => {
-                                setSelectedUser(newValue);
-                            }}
-                            onInputChange={(e, v, reason) => {
-                                if (reason === 'clear') {
-                                    clearOptions();
-                                    setClear(clear * -1);
-                                }
-                            }}
-                            value={selectedUser}
-                            options={users}
-                            getOptionLabel={(option) => option.first_name + ' ' + option.last_name + ' - ' + option.email || ''}
-                            isOptionEqualToValue={(option, value) =>
-                                option.user_id === value.user_id && //
-                                option.first_name === value.first_name &&
-                                option.last_name === value.last_name &&
-                                option.email === value.email
-                            }
-                            renderInput={(params) => <TextField {...params} label="User" size="small" sx={{ fontSize: '.75rem', display: 'flex', width: '300px' }} />}
-                        />
-                    ) : (
-                        <Autocomplete
-                            key={clear} //Changing this value on submit clears the input field
-                            onChange={(event, newValue) => {
-                                setSelectedAccessGroup(newValue);
-                            }}
-                            onInputChange={(e, v, reason) => {
-                                if (reason === 'clear') {
-                                    clearOptions();
-                                    setClear(clear * -1);
-                                }
-                            }}
-                            value={selectedAccessGroup}
-                            options={accessGroups}
-                            getOptionLabel={(option) => option.Name || option.first_name}
-                            isOptionEqualToValue={(option, value) =>
-                                option.Name === (value.first_name || value.Name) && //
-                                option.AccessGroupID === (value.AccessGroupID || value.user_id)
-                            }
-                            renderInput={(params) => <TextField {...params} label="Access group" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
-                        />
-                    )}
+                    <Typography width="150%" mt={2}>
+                        {selectedSubject.type === 'user' ? 'User' : 'Access group'}: {selectedSubject.first_name + ' ' + selectedSubject.last_name}
+                    </Typography>
 
                     <FormGroup sx={{ mt: 2 }}>
                         <FormControlLabel
@@ -171,7 +97,7 @@ const AddDeploymentPermissionsDrawer = ({ handleClose, subjectsWithPermissions, 
 
                     <Button
                         onClick={() => {
-                            selectedTypeToAdd === 'User'
+                            selectedSubject.type === 'user'
                                 ? deploymentPermissionsToUser(Environment.id.get(), selectedUser.user_id)
                                 : deploymentPermissionsToAccessGroup(Environment.id.get(), selectedAccessGroup.AccessGroupID);
                         }}
@@ -187,55 +113,9 @@ const AddDeploymentPermissionsDrawer = ({ handleClose, subjectsWithPermissions, 
     );
 };
 
-export default AddDeploymentPermissionsDrawer;
+export default EditDeploymentPermissionsDrawer;
 
 // ----------- Custom Hooks --------------------------------
-const useGetUsersHook = (setUsers, subjectsWithPermissions) => {
-    // GraphQL hook
-    const getUsers = useGetUsers();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Get members
-    return async () => {
-        const response = await getUsers();
-
-        if (response === null) {
-            setUsers([]);
-        } else if (response.r || response.error) {
-            closeSnackbar();
-            enqueueSnackbar("Can't get members: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            // Don't add users that are already on the table
-            setUsers(response.filter((a) => !subjectsWithPermissions.includes(a.user_id)));
-        }
-    };
-};
-
-const useGetAccessGroupsHook = (setAccessGroups, environmentID, userID, subjectsWithPermissions) => {
-    // GraphQL hook
-    const getAccessGroups = useGetAccessGroups();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Get access groups
-    return async () => {
-        const response = await getAccessGroups({ environmentID, userID });
-
-        if (response.r || response.error) {
-            closeSnackbar();
-            enqueueSnackbar("Can't get access groups: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            // Don't add access groups that are already on the table
-            setAccessGroups(response.filter((a) => !subjectsWithPermissions.includes(a.AccessGroupID)));
-        }
-    };
-};
-
 // Update deployment permissions to user
 const useDeploymentPermissionsToUserHook = (permissionsState, refreshPermissions, handleClose) => {
     // GraphQL hook
@@ -271,6 +151,46 @@ const useDeploymentPermissionsToUserHook = (permissionsState, refreshPermissions
             enqueueSnackbar('Success', { variant: 'success' });
             refreshPermissions();
             handleClose();
+        }
+    };
+};
+
+// Get deployment permissions to user or access group
+const useGetUserSingleDeploymentPermissionsHook = (environmentID, setpermissionsState, type) => {
+    // GraphQL hook
+    const getUserSingleDeploymentPermissions = useGetUserSingleDeploymentPermissions();
+
+    // URI parameter
+    const { deploymentId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    const accessDictionary = {
+        read: 'view',
+        run: 'run',
+        assign_deployment_permission: 'assign_permissions',
+    };
+
+    // Get permissions
+    return async (userID, clearOptions) => {
+        const response = await getUserSingleDeploymentPermissions({ userID, environmentID, deploymentID: deploymentId, subjectType: type });
+
+        if (response === null) {
+            clearOptions();
+        } else if (response.r || response.error) {
+            closeSnackbar();
+            enqueueSnackbar("Can't get permissions: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            // Create an array with access permissions
+            const accessArr = response.Access.split(',').filter((a) => a === 'read' || a === 'run' || a === 'assign_deployment_permission');
+
+            // Create an object and add Access types that are set to true. Pass it to state
+            const incomingPermissions = {};
+            accessArr.map((a) => (incomingPermissions[accessDictionary[a]] = true));
+
+            setpermissionsState({ ...DEFAULT_OPTIONS, ...incomingPermissions });
         }
     };
 };

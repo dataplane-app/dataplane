@@ -21,7 +21,7 @@ extend type Query {
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
     """
-    userSingleDeploymentPermissions(userID: String!, environmentID: String!, deploymentID: String!): DeploymentPermissionsOutput
+    userSingleDeploymentPermissions(userID: String!, environmentID: String!, deploymentID: String!, subjectType: String!): DeploymentPermissionsOutput
 
     """
     Retrieve deployments's permissions.
