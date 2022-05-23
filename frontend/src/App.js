@@ -38,6 +38,7 @@ import Flow from './pages/PipelineEdit';
 import Deploy from './pages/Deploy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import DeploymentPermissions from './pages/Deployments/DeploymentPermissions';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
@@ -144,6 +145,7 @@ function App() {
                                             '/pipelines/flow/:pipelineId',
                                             '/pipelines/deploy/:pipelineId',
                                             '/deployments',
+                                            '/deployments/permissions/:deploymentId',
                                             '/deployments/view/:deploymentId/:version?',
                                             '/support',
                                             '/feedback',
@@ -159,6 +161,9 @@ function App() {
                                                 </Route>
                                                 <Route path="/deployments/view/:deploymentId/:version?">
                                                     <DeploymentView />
+                                                </Route>
+                                                <Route path="/deployments/permissions/:deploymentId">
+                                                    <DeploymentPermissions />
                                                 </Route>
                                                 <Route exact path="/workers">
                                                     <Workers />
