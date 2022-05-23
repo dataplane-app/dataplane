@@ -141,7 +141,7 @@ const EnviromentDropdown = () => {
                     {environments && environments.length > 0 && selectedEnviroment ? environments.filter((env) => env.id === selectedEnviroment)[0].name[0].toUpperCase() : '-'}
                 </Box>
                 <Box ml="1rem" mr="1rem">
-                    <Typography fontSize={16} fontWeight={700} color="text.primary" noWrap maxWidth={194}>
+                    <Typography fontSize={16} fontWeight={700} color="text.primary" noWrap>
                         {environments && environments.length > 0 && selectedEnviroment ? environments.filter((env) => env.id === selectedEnviroment)[0].name : '-'}
                     </Typography>
                     <Typography variant="subtitle1" color="text.primary" marginTop={-0.7}>
@@ -193,7 +193,7 @@ const EnviromentDropdown = () => {
                                       {env.name[0].toUpperCase()}
                                   </Box>{' '}
                                   <Box ml="1rem" mr="1rem">
-                                      <Typography fontSize={16} fontWeight={700} color="text.primary" noWrap maxWidth={150} textOverflow="unset">
+                                      <Typography fontSize={16} fontWeight={700} color="text.primary" noWrap textOverflow="unset">
                                           {env.name}
                                       </Typography>
                                       <Typography variant="subtitle1" color="text.primary" marginTop={-0.7}>
