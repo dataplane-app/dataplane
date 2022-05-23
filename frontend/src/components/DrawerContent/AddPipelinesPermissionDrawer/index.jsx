@@ -320,7 +320,7 @@ const useGetUserSinglePipelinePermissions_ = (environmentID, setpermissionsState
 
     // Get permissions
     return async (userID, clearOptions) => {
-        const response = await getUserSinglePipelinePermissions({ userID, environmentID, pipelineID: pipelineId });
+        const response = await getUserSinglePipelinePermissions({ userID, environmentID, pipelineID: pipelineId, subjectType: 'user' });
 
         if (response === null) {
             clearOptions();

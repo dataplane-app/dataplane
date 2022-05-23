@@ -367,7 +367,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 	return PermissionsOutput, nil
 }
 
-func (r *queryResolver) UserSinglePipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string) (*privategraphql.PipelinePermissionsOutput, error) {
+func (r *queryResolver) UserSinglePipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string, subjectType string) (*privategraphql.PipelinePermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -388,107 +388,98 @@ func (r *queryResolver) UserSinglePipelinePermissions(ctx context.Context, userI
 
 	var PermissionsOutput *privategraphql.PipelinePermissionsOutput
 
-	err := database.DBConn.Raw(
+	var rawQuery string
+	if subjectType == "user" {
+		rawQuery = `
+		select
+	string_agg(p.access, ',') as access,
+	p.subject,
+	p.subject_id,
+	pipelines.name as pipeline_name,
+	p.resource_id,
+	p.environment_id,
+	p.active,
+	pt.level,
+	pt.label,
+	users.first_name,
+	users.last_name,
+	users.email,
+	users.job_title
+from
+	permissions p,
+	permissions_resource_types pt,
+	users,
+	pipelines
+where
+	p.resource = pt.code
+	and pt.level = 'specific'
+	and p.subject = 'user'
+	and p.subject_id = users.user_id
+	and p.subject_id = ?
+	and p.resource_id = pipelines.pipeline_id
+	and p.resource_id = ?
+	and p.active = true
+GROUP BY
+	p.subject,
+	p.subject_id,
+	pipelines.name,
+	p.resource_id,
+	p.environment_id,
+	p.active,
+	p.subject_id,
+	pt.level,
+	pt.label,
+	users.first_name,
+	users.last_name,
+	users.email,
+	users.job_title
 		`
-		(
-			select
-			  string_agg(p.access, ',') as access,
-			  p.subject,
-			  p.subject_id,
-			  pipelines.name as pipeline_name,
-			  p.resource_id,
-			  p.environment_id,
-			  p.active,
-			  pt.level,
-			  pt.label,
-			  users.first_name,
-			  users.last_name,
-			  users.email,
-			  users.job_title
-			from
-			  permissions p,
-			  permissions_resource_types pt,
-			  users,
-			  pipelines
-			where
-			  p.resource = pt.code
-			  and pt.level = 'specific'
-		  
-			  and p.subject = 'user'
-			  and p.subject_id = users.user_id
-			  and p.subject_id = ?
-		  
-			  and p.resource_id = pipelines.pipeline_id
- 			  and p.resource_id = ?
-		  
-			  and p.active = true
-		  
-			GROUP BY
-			  p.subject,
-			  p.subject_id,
-			  pipelines.name,
-			  p.resource_id,
-			  p.environment_id,
-			  p.active,
-			  p.subject_id,
-			  pt.level,
-			  pt.label,
-			  users.first_name,
-			  users.last_name,
-			  users.email,
-			  users.job_title
-		  )
-		  UNION
-			(
-			  select
-				string_agg(p.access, ',') as access,
-				p.subject,
-				p.subject_id,
-				pipelines.name,
-				p.resource_id,
-				p.environment_id,
-				p.active,
-				pt.level,
-				pt.label,
-				pag.name,
-				'',
-				'',
-				''
-			  from
-				permissions p,
-				permissions_resource_types pt,
-				permissions_access_groups pag,
-				permissions_accessg_users pagu,
-				pipelines
-			  where
-				p.resource = pt.code
-				and pt.level = 'specific'
-		  
-				and p.subject = 'access_group'
-				and p.subject_id = pag.access_group_id
-				and pag.access_group_id = pagu.access_group_id
-				and p.subject_id = ?
-		  
-				and p.resource_id = pipelines.pipeline_id
-				and p.resource_id = ?
-		  
-				and p.active = true
-				
-			  GROUP BY
-				p.subject,
-				p.subject_id,
-				pipelines.name,
-				p.resource_id,
-				p.environment_id,
-				p.active,
-				pt.level,
-				pt.label,
-				pag.name
-			)
-`,
+	}
+
+	if subjectType == "access_group" {
+		rawQuery = `
+		select
+	string_agg(p.access, ',') as access,
+	p.subject,
+	p.subject_id,
+	pipelines.name,
+	p.resource_id,
+	p.environment_id,
+	p.active,
+	pt.level,
+	pt.label,
+	pag.name
+from
+	permissions p,
+	permissions_resource_types pt,
+	permissions_access_groups pag,
+	permissions_accessg_users pagu,
+	pipelines
+where
+	p.resource = pt.code
+	and pt.level = 'specific'
+	and p.subject = 'access_group'
+	and p.subject_id = pag.access_group_id
+	and pag.access_group_id = pagu.access_group_id
+	and p.subject_id = ?
+	and p.resource_id = pipelines.pipeline_id
+	and p.resource_id = ?
+	and p.active = true
+GROUP BY
+	p.subject,
+	p.subject_id,
+	pipelines.name,
+	p.resource_id,
+	p.environment_id,
+	p.active,
+	pt.level,
+	pt.label,
+	pag.name
+		`
+	}
+
+	err := database.DBConn.Debug().Raw(rawQuery,
 		//direct
-		userID,
-		pipelineID,
 		userID,
 		pipelineID,
 	).Scan(
