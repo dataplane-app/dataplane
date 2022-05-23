@@ -219,7 +219,6 @@ const PipelinesPermission = () => {
                         email: '',
                         type: '',
                     });
-                    alert('hi');
                 }}>
                 <EditPipelinesPermissionDrawer
                     selectedSubject={selectedSubject}
