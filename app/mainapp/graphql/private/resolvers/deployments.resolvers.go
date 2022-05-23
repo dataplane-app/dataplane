@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -705,13 +705,11 @@ func (r *queryResolver) GetActiveDeployment(ctx context.Context, pipelineID stri
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_deployments", ResourceID: platformID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
 	}
 
+	// Permissions baked into the SQL query below
 	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
-
-	// if permOutcome == "denied" {
-	// 	return []*privategraphql.Pipelines{}, nil
-	// }
 
 	p := privategraphql.Deployments{}
 	var query string
@@ -758,7 +756,7 @@ order by a.created_at desc
 a.pipeline_id, 
 a.name,
 a.environment_id,
-a.from_environment_id
+a.from_environment_id,
 a.description,
 a.active,
 a.worker_group,
@@ -841,13 +839,11 @@ func (r *queryResolver) GetDeployment(ctx context.Context, pipelineID string, en
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_deployments", ResourceID: platformID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
 	}
 
+	// Permissions baked into the SQL query below
 	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
-
-	// if permOutcome == "denied" {
-	// 	return []*privategraphql.Pipelines{}, nil
-	// }
 
 	p := privategraphql.Deployments{}
 	var query string
@@ -894,7 +890,7 @@ order by a.created_at desc
 a.pipeline_id, 
 a.name,
 a.environment_id,
-a.from_environment_id
+a.from_environment_id,
 a.description,
 a.active,
 a.worker_group,
