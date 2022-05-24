@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -288,7 +288,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 			  and p.subject_id = users.user_id
 			  and p.subject_id = ?
 		  
-			  and p.resource_id = pipelines.pipeline_id 
+			  and p.resource_id = pipelines.pipeline_id
 		  
 			  and p.active = true
 		  
@@ -338,7 +338,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 				and pag.access_group_id = pagu.access_group_id
 				and pagu.access_group_id = ?
 		  
-				and p.resource_id = pipelines.pipeline_id 
+				and p.resource_id = pipelines.pipeline_id
 		  
 				and p.active = true
 				
