@@ -307,7 +307,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 			  and p.subject_id = users.user_id
 			  and p.subject_id = ?
 		  
-			  and p.resource_id = 'd-' || pipelines.pipeline_id 
+			  and p.resource_id = 'd-' || pipelines.pipeline_id
 		  
 			  and p.active = true
 		  
@@ -357,7 +357,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 				and pag.access_group_id = pagu.access_group_id
 				and pagu.access_group_id = ?
 		  
-				and p.resource_id = 'd-' || pipelines.pipeline_id 
+				and p.resource_id = 'd-' || pipelines.pipeline_id
 		  
 				and p.active = true
 				
