@@ -124,7 +124,7 @@ export default function Permissions({ environmentId }) {
 
                     <Box mt={2}>
                         {specificPermissions.map((permission) => (
-                            <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
+                            <Grid display="flex" alignItems="center" width="200%" key={permission.Label} mt={1.5} mb={1.5}>
                                 <Box
                                     onClick={() => deleteSpecificPermission(permission)}
                                     component={FontAwesomeIcon}
