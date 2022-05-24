@@ -132,7 +132,7 @@ export default function Permissions({ environmentId }) {
                                     icon={faTrashAlt}
                                 />
                                 <Typography variant="subtitle2" lineHeight="15.23px">
-                                    Pipeline {permission.PipelineName + ' ' + permission.Access}
+                                    {permission.Label.split(' ')[0].replace('-', '') + ' ' + permission.PipelineName + ' ' + permission.Access}
                                 </Typography>
                             </Grid>
                         ))}
