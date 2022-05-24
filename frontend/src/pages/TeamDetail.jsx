@@ -155,7 +155,7 @@ export default function TeamDetail() {
                 </Grid>
 
                 <Grid container mt={5} alignItems="flex-start" gap="5%" justifyContent="space-between">
-                    <Grid item width="250px">
+                    <Grid item width="250px" mb={2}>
                         <Typography component="h3" variant="h3" color="text.primary">
                             Details
                         </Typography>
@@ -240,7 +240,7 @@ export default function TeamDetail() {
                         ) : null}
                     </Grid>
 
-                    <Grid item sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column' }}>
+                    <Grid item sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column' }} mb={2}>
                         <Typography component="h3" variant="h3" color="text.primary">
                             Belongs to environments
                         </Typography>
