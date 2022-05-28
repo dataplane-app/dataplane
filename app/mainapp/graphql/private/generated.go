@@ -455,8 +455,8 @@ type ComplexityRoot struct {
 		UserDeploymentPermissions       func(childComplexity int, userID string, environmentID string) int
 		UserPermissions                 func(childComplexity int, userID string, environmentID string) int
 		UserPipelinePermissions         func(childComplexity int, userID string, environmentID string) int
-		UserSingleDeploymentPermissions func(childComplexity int, userID string, environmentID string, deploymentID string) int
-		UserSinglePipelinePermissions   func(childComplexity int, userID string, environmentID string, pipelineID string) int
+		UserSingleDeploymentPermissions func(childComplexity int, userID string, environmentID string, deploymentID string, subjectType string) int
+		UserSinglePipelinePermissions   func(childComplexity int, userID string, environmentID string, pipelineID string, subjectType string) int
 	}
 
 	SecretWorkerGroups struct {
@@ -628,12 +628,12 @@ type QueryResolver interface {
 	GetNonDefaultWGNodes(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string) ([]*NonDefaultNodes, error)
 	GetDeploymentRuns(ctx context.Context, deploymentID string, environmentID string, version string) ([]*models.PipelineRuns, error)
 	Me(ctx context.Context) (*models.Users, error)
-	UserSingleDeploymentPermissions(ctx context.Context, userID string, environmentID string, deploymentID string) (*DeploymentPermissionsOutput, error)
+	UserSingleDeploymentPermissions(ctx context.Context, userID string, environmentID string, deploymentID string, subjectType string) (*DeploymentPermissionsOutput, error)
 	UserDeploymentPermissions(ctx context.Context, userID string, environmentID string) ([]*DeploymentPermissionsOutput, error)
 	DeploymentPermissions(ctx context.Context, userID string, environmentID string, deploymentID string) ([]*DeploymentPermissionsOutput, error)
 	MyPipelinePermissions(ctx context.Context) ([]*PipelinePermissionsOutput, error)
 	UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*PipelinePermissionsOutput, error)
-	UserSinglePipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string) (*PipelinePermissionsOutput, error)
+	UserSinglePipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string, subjectType string) (*PipelinePermissionsOutput, error)
 	PipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string) ([]*PipelinePermissionsOutput, error)
 	AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error)
 	MyPermissions(ctx context.Context) ([]*models.PermissionsOutput, error)
@@ -3389,7 +3389,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.UserSingleDeploymentPermissions(childComplexity, args["userID"].(string), args["environmentID"].(string), args["deploymentID"].(string)), true
+		return e.complexity.Query.UserSingleDeploymentPermissions(childComplexity, args["userID"].(string), args["environmentID"].(string), args["deploymentID"].(string), args["subjectType"].(string)), true
 
 	case "Query.userSinglePipelinePermissions":
 		if e.complexity.Query.UserSinglePipelinePermissions == nil {
@@ -3401,7 +3401,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.UserSinglePipelinePermissions(childComplexity, args["userID"].(string), args["environmentID"].(string), args["pipelineID"].(string)), true
+		return e.complexity.Query.UserSinglePipelinePermissions(childComplexity, args["userID"].(string), args["environmentID"].(string), args["pipelineID"].(string), args["subjectType"].(string)), true
 
 	case "SecretWorkerGroups.Active":
 		if e.complexity.SecretWorkerGroups.Active == nil {
@@ -4405,7 +4405,7 @@ extend type Query {
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
     """
-    userSingleDeploymentPermissions(userID: String!, environmentID: String!, deploymentID: String!): DeploymentPermissionsOutput
+    userSingleDeploymentPermissions(userID: String!, environmentID: String!, deploymentID: String!, subjectType: String!): DeploymentPermissionsOutput
 
     """
     Retrieve user's deployment permissions.
@@ -4478,7 +4478,7 @@ extend type Query {
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
     """
-    userSinglePipelinePermissions(userID: String!, environmentID: String!, pipelineID: String!): PipelinePermissionsOutput
+    userSinglePipelinePermissions(userID: String!, environmentID: String!, pipelineID: String!, subjectType: String!): PipelinePermissionsOutput
 
     """
     Retrieve pipeline's permissions.
@@ -8047,6 +8047,15 @@ func (ec *executionContext) field_Query_userSingleDeploymentPermissions_args(ctx
 		}
 	}
 	args["deploymentID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["subjectType"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subjectType"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["subjectType"] = arg3
 	return args, nil
 }
 
@@ -8080,6 +8089,15 @@ func (ec *executionContext) field_Query_userSinglePipelinePermissions_args(ctx c
 		}
 	}
 	args["pipelineID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["subjectType"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subjectType"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["subjectType"] = arg3
 	return args, nil
 }
 
@@ -18632,7 +18650,7 @@ func (ec *executionContext) _Query_userSingleDeploymentPermissions(ctx context.C
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().UserSingleDeploymentPermissions(rctx, args["userID"].(string), args["environmentID"].(string), args["deploymentID"].(string))
+		return ec.resolvers.Query().UserSingleDeploymentPermissions(rctx, args["userID"].(string), args["environmentID"].(string), args["deploymentID"].(string), args["subjectType"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -18820,7 +18838,7 @@ func (ec *executionContext) _Query_userSinglePipelinePermissions(ctx context.Con
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().UserSinglePipelinePermissions(rctx, args["userID"].(string), args["environmentID"].(string), args["pipelineID"].(string))
+		return ec.resolvers.Query().UserSinglePipelinePermissions(rctx, args["userID"].(string), args["environmentID"].(string), args["pipelineID"].(string), args["subjectType"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
