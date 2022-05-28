@@ -13,6 +13,7 @@ import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { useGlobalMeState } from '../components/Navbar';
 import { DEFAULT_OPTIONS } from '../components/DrawerContent/AddPipelinesPermissionDrawer';
 import { useGlobalAuthState } from '../Auth/UserAuth';
+import EditPipelinesPermissionDrawer from '../components/DrawerContent/EditPipelinesPermissionDrawer';
 
 const PipelinesPermission = () => {
     // React router
@@ -32,6 +33,7 @@ const PipelinesPermission = () => {
         first_name: '',
         last_name: '',
         email: '',
+        type: '',
     });
 
     const authState = useGlobalAuthState();
@@ -39,6 +41,7 @@ const PipelinesPermission = () => {
 
     // Drawer state
     const [isOpenAddPermissions, setIsOpenAddPermissions] = useState(false);
+    const [isOpenEditPermissions, setIsOpenEditPermissions] = useState(false);
     const [type, setType] = useState('User');
 
     // Custom GraphQL hooks
@@ -62,9 +65,10 @@ const PipelinesPermission = () => {
             first_name: permission.FirstName,
             last_name: permission.LastName,
             email: permission.Email,
+            type: permission.Subject,
         });
 
-        setIsOpenAddPermissions(true);
+        setIsOpenEditPermissions(true);
     };
 
     // table
@@ -191,13 +195,42 @@ const PipelinesPermission = () => {
                         first_name: '',
                         last_name: '',
                         email: '',
+                        type: '',
                     });
                 }}>
                 <AddPipelinesPermissionDrawer
                     typeToAdd={type}
+                    subjectsWithPermissions={permissions.map((a) => a.SubjectID)}
+                    selectedSubject={selectedSubject}
+                    handleClose={() => setIsOpenAddPermissions(false)}
+                    refreshPermissions={pipelinePermissions}
+                />
+            </Drawer>
+
+            <Drawer
+                anchor="right"
+                open={isOpenEditPermissions}
+                onClose={() => {
+                    setIsOpenEditPermissions(false);
+                    setSelectedSubject({
+                        user_id: '',
+                        first_name: '',
+                        last_name: '',
+                        email: '',
+                        type: '',
+                    });
+                }}>
+                <EditPipelinesPermissionDrawer
                     selectedSubject={selectedSubject}
                     handleClose={() => {
-                        setIsOpenAddPermissions(false);
+                        setIsOpenEditPermissions(false);
+                        setSelectedSubject({
+                            user_id: '',
+                            first_name: '',
+                            last_name: '',
+                            email: '',
+                            type: '',
+                        });
                     }}
                     refreshPermissions={pipelinePermissions}
                 />
