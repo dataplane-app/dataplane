@@ -483,7 +483,7 @@ export default function TeamDetail() {
                                         {specificPermissions
                                             ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
                                             .map((permission) => (
-                                                <Grid display="flex" alignItems="center" width="200%" key={permission.PipelineName} mt={1.5} mb={1.5}>
+                                                <Grid display="flex" alignItems="center" width="200%" key={permission.ResourceID} mt={1.5} mb={1.5}>
                                                     <Box
                                                         onClick={() => deleteSpecificPermission(permission)}
                                                         component={FontAwesomeIcon}
