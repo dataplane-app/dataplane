@@ -8,7 +8,6 @@ import { useGetAccessGroups } from '../../../graphql/getAccessGroups';
 import { useGetUsers } from '../../../graphql/getUsers';
 import { usePipelinePermissionsToUser } from '../../../graphql/pipelinePermissionsToUser';
 import { usePipelinePermissionsToAccessGroup } from '../../../graphql/pipelinePermissionsToAccessGroup';
-import { useGetUserSinglePipelinePermissions } from '../../../graphql/getUserSinglePipelinePermissions';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGlobalMeState } from '../../Navbar';
 
@@ -20,7 +19,7 @@ export const DEFAULT_OPTIONS = {
     assign_permissions: false,
 };
 
-const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissions, selectedSubject }) => {
+const AddPipelinesPermissionDrawer = ({ handleClose, subjectsWithPermissions, typeToAdd, refreshPermissions, selectedSubject }) => {
     const [selectedTypeToAdd, setSelectedTypeToAdd] = useState(typeToAdd);
 
     // Global state
@@ -40,11 +39,10 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
     const [permissionsState, setPermissionsState] = useState({ ...DEFAULT_OPTIONS });
 
     // Custom GraphQL hooks
-    const getUsers = useGetUsers_(setUsers);
-    const getAccessGroups = useGetAccessGroups_(setAccessGroups, Environment.id.get(), MeData.user_id.get());
-    const pipelinePermissionsToUser = usePipelinePermissionsToUser_(permissionsState, refreshPermissions, handleClose);
-    const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup_(permissionsState, refreshPermissions, handleClose);
-    const getUserPipelinePermissions = useGetUserSinglePipelinePermissions_(Environment.id.get(), setPermissionsState);
+    const getUsers = useGetUsersHook(setUsers, subjectsWithPermissions);
+    const getAccessGroups = useGetAccessGroupsHook(setAccessGroups, Environment.id.get(), MeData.user_id.get(), subjectsWithPermissions);
+    const pipelinePermissionsToUser = usePipelinePermissionsToUserHook(permissionsState, refreshPermissions, handleClose);
+    const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroupHook(permissionsState, refreshPermissions, handleClose);
 
     // Get all users and access groups on load
     useEffect(() => {
@@ -61,13 +59,6 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
         } else if (selectedSubject.first_name && !selectedSubject.email) {
             setSelectedAccessGroup({ AccessGroupID: selectedSubject.user_id, Name: selectedSubject.first_name });
         }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // Get default user or access groups's permissions on drawer open.
-    useEffect(() => {
-        getUserPipelinePermissions(selectedSubject.user_id, clearOptions);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -125,7 +116,6 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
                             key={clear} //Changing this value on submit clears the input field
                             onChange={(event, newValue) => {
                                 setSelectedUser(newValue);
-                                newValue && getUserPipelinePermissions(newValue.user_id, clearOptions);
                             }}
                             onInputChange={(e, v, reason) => {
                                 if (reason === 'clear') {
@@ -149,7 +139,6 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
                             key={clear} //Changing this value on submit clears the input field
                             onChange={(event, newValue) => {
                                 setSelectedAccessGroup(newValue);
-                                newValue && getUserPipelinePermissions(newValue.AccessGroupID, clearOptions);
                             }}
                             onInputChange={(e, v, reason) => {
                                 if (reason === 'clear') {
@@ -211,7 +200,7 @@ const AddPipelinesPermissionDrawer = ({ handleClose, typeToAdd, refreshPermissio
 export default AddPipelinesPermissionDrawer;
 
 // ----------- Custom Hooks --------------------------------
-const useGetUsers_ = (setUsers) => {
+const useGetUsersHook = (setUsers, subjectsWithPermissions) => {
     // GraphQL hook
     const getUsers = useGetUsers();
 
@@ -223,18 +212,19 @@ const useGetUsers_ = (setUsers) => {
 
         if (response === null) {
             setUsers([]);
-        } else if (response.r === 'error') {
+        } else if (response.r || response.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't get members: " + response.msg, { variant: 'error' });
+            enqueueSnackbar("Can't get members: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setUsers(response);
+            // Don't add users that are already on the table
+            setUsers(response.filter((a) => !subjectsWithPermissions.includes(a.user_id)));
         }
     };
 };
 
-const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
+const useGetAccessGroupsHook = (setAccessGroups, environmentID, userID, subjectsWithPermissions) => {
     // GraphQL hook
     const getAccessGroups = useGetAccessGroups();
 
@@ -244,21 +234,20 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
     return async () => {
         const response = await getAccessGroups({ environmentID, userID });
 
-        if (response.r === 'error') {
+        if (response.r || response.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't get access groups: " + response.msg, {
-                variant: 'error',
-            });
+            enqueueSnackbar("Can't get access groups: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setAccessGroups(response);
+            // Don't add access groups that are already on the table
+            setAccessGroups(response.filter((a) => !subjectsWithPermissions.includes(a.AccessGroupID)));
         }
     };
 };
 
 // Update pipeline permissions to user
-const usePipelinePermissionsToUser_ = (permissionsState, refreshPermissions, handleClose) => {
+const usePipelinePermissionsToUserHook = (permissionsState, refreshPermissions, handleClose) => {
     // GraphQL hook
     const pipelinePermissionsToUser = usePipelinePermissionsToUser();
 
@@ -286,10 +275,8 @@ const usePipelinePermissionsToUser_ = (permissionsState, refreshPermissions, han
             user_id,
             access: accessArray.map((a) => accessDictionary[a]),
         });
-        if (response.r === 'error') {
-            enqueueSnackbar("Can't update permissions: " + response.msg, {
-                variant: 'error',
-            });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't update permissions: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
@@ -300,51 +287,9 @@ const usePipelinePermissionsToUser_ = (permissionsState, refreshPermissions, han
     };
 };
 
-// Get pipeline permissions to user or access group
-const useGetUserSinglePipelinePermissions_ = (environmentID, setpermissionsState) => {
-    // GraphQL hook
-    const getUserSinglePipelinePermissions = useGetUserSinglePipelinePermissions();
-
-    // URI parameter
-    const { pipelineId } = useParams();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    const accessDictionary = {
-        read: 'view',
-        write: 'edit',
-        run: 'run',
-        deploy: 'deploy',
-        assign_pipeline_permission: 'assign_permissions',
-    };
-
-    // Get permissions
-    return async (userID, clearOptions) => {
-        const response = await getUserSinglePipelinePermissions({ userID, environmentID, pipelineID: pipelineId });
-
-        if (response === null) {
-            clearOptions();
-        } else if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get permissions: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            // Create an array with access permissions
-            const accessArr = response.Access.split(',');
-
-            // Create an object and add Access types that are set to true. Pass it to state
-            const incomingPermissions = {};
-            accessArr.map((a) => (incomingPermissions[accessDictionary[a]] = true));
-
-            setpermissionsState({ ...DEFAULT_OPTIONS, ...incomingPermissions });
-        }
-    };
-};
-
 // ----- Access group
 // Update pipeline permissions to user
-const usePipelinePermissionsToAccessGroup_ = (permissionsState, refreshPermissions, handleClose) => {
+const usePipelinePermissionsToAccessGroupHook = (permissionsState, refreshPermissions, handleClose) => {
     // GraphQL hook
     const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroup();
 
@@ -372,10 +317,8 @@ const usePipelinePermissionsToAccessGroup_ = (permissionsState, refreshPermissio
             access_group_id,
             access: accessArray.map((a) => accessDictionary[a]),
         });
-        if (response.r === 'error') {
-            enqueueSnackbar("Can't update permissions: " + response.msg, {
-                variant: 'error',
-            });
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't update permissions: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {

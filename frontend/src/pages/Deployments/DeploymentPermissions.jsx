@@ -12,6 +12,7 @@ import { useSnackbar } from 'notistack';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import { useGlobalMeState } from '../../components/Navbar';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
+import EditDeploymentPermissionsDrawer from '../../components/DrawerContent/EditDeploymentPermissionsDrawer';
 
 export const DEFAULT_OPTIONS = {
     view: false,
@@ -37,6 +38,7 @@ const DeploymentPermissions = () => {
         first_name: '',
         last_name: '',
         email: '',
+        type: '',
     });
 
     const authState = useGlobalAuthState();
@@ -44,6 +46,7 @@ const DeploymentPermissions = () => {
 
     // Drawer state
     const [isOpenAddPermissions, setIsOpenAddPermissions] = useState(false);
+    const [isOpenEditPermissions, setIsOpenEditPermissions] = useState(false);
     const [type, setType] = useState('User');
 
     // Custom GraphQL hooks
@@ -67,9 +70,10 @@ const DeploymentPermissions = () => {
             first_name: permission.FirstName,
             last_name: permission.LastName,
             email: permission.Email,
+            type: permission.Subject,
         });
 
-        setIsOpenAddPermissions(true);
+        setIsOpenEditPermissions(true);
     };
 
     // table
@@ -196,13 +200,42 @@ const DeploymentPermissions = () => {
                         first_name: '',
                         last_name: '',
                         email: '',
+                        type: '',
                     });
                 }}>
                 <AddDeploymentPermissionsDrawer
                     typeToAdd={type}
+                    subjectsWithPermissions={permissions.map((a) => a.SubjectID)}
+                    selectedSubject={selectedSubject}
+                    handleClose={() => setIsOpenAddPermissions(false)}
+                    refreshPermissions={deploymentPermissions}
+                />
+            </Drawer>
+
+            <Drawer
+                anchor="right"
+                open={isOpenEditPermissions}
+                onClose={() => {
+                    setIsOpenEditPermissions(false);
+                    setSelectedSubject({
+                        user_id: '',
+                        first_name: '',
+                        last_name: '',
+                        email: '',
+                        type: '',
+                    });
+                }}>
+                <EditDeploymentPermissionsDrawer
                     selectedSubject={selectedSubject}
                     handleClose={() => {
-                        setIsOpenAddPermissions(false);
+                        setIsOpenEditPermissions(false);
+                        setSelectedSubject({
+                            user_id: '',
+                            first_name: '',
+                            last_name: '',
+                            email: '',
+                            type: '',
+                        });
                     }}
                     refreshPermissions={deploymentPermissions}
                 />

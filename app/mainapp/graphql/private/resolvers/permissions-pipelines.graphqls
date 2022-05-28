@@ -35,7 +35,7 @@ extend type Query {
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
     """
-    userSinglePipelinePermissions(userID: String!, environmentID: String!, pipelineID: String!): PipelinePermissionsOutput
+    userSinglePipelinePermissions(userID: String!, environmentID: String!, pipelineID: String!, subjectType: String!): PipelinePermissionsOutput
 
     """
     Retrieve pipeline's permissions.

@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    query userSinglePipelinePermissions($userID: String!, $environmentID: String!, $pipelineID: String!) {
-        userSinglePipelinePermissions(userID: $userID, environmentID: $environmentID, pipelineID: $pipelineID) {
+    query userSinglePipelinePermissions($userID: String!, $environmentID: String!, $pipelineID: String!, $subjectType: String!) {
+        userSinglePipelinePermissions(userID: $userID, environmentID: $environmentID, pipelineID: $pipelineID, subjectType: $subjectType) {
             Access
             Subject
             SubjectID

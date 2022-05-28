@@ -155,8 +155,8 @@ export default function TeamDetail() {
                     </Grid>
                 </Grid>
 
-                <Grid container mt={5} alignItems="flex-start" justifyContent="space-between">
-                    <Grid item sx={{ flex: 1 }}>
+                <Grid container mt={5} alignItems="flex-start" gap="5%" justifyContent="space-between">
+                    <Grid item width="250px" mb={2}>
                         <Typography component="h3" variant="h3" color="text.primary">
                             Details
                         </Typography>
@@ -240,141 +240,8 @@ export default function TeamDetail() {
                             </Box>
                         ) : null}
                     </Grid>
-                    <Grid item sx={{ flex: 2.2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                        <Box>
-                            <Typography component="h3" variant="h3" color="text.primary">
-                                Permissions
-                            </Typography>
 
-                            <Grid mt={2} display="flex" alignItems="center">
-                                <Autocomplete
-                                    disablePortal
-                                    id="available_permissions_autocomplete"
-                                    key={clear} //Changing this value on submit clears the input field
-                                    onChange={(event, newValue) => {
-                                        setSelectedPermission(newValue);
-                                    }}
-                                    sx={{ minWidth: '280px' }}
-                                    // Filter out user's permissions from available permissions
-                                    options={filterPermissionsDropdown(availablePermissions, userPermissions, globalEnvironment?.id)}
-                                    getOptionLabel={(option) => option.Label}
-                                    renderInput={(params) => (
-                                        <TextField {...params} label="Available permissions" id="available_permissions" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
-                                    )}
-                                />
-
-                                <Button
-                                    onClick={() => {
-                                        updatePermission();
-                                        setClear(clear * -1); // Clears autocomplete input field
-                                        setSelectedPermission(null);
-                                    }}
-                                    variant="contained"
-                                    color="primary"
-                                    height="100%"
-                                    sx={{ ml: 1 }}>
-                                    Add
-                                </Button>
-                            </Grid>
-
-                            {/* Platform permissions */}
-                            {/* Check if there are any permissions. If not, hide the box */}
-                            {userPermissions.filter((permission) => permission.Level === 'platform').length ? (
-                                <Box mt={4}>
-                                    <Box>
-                                        <Typography component="h3" variant="h3" color="text.primary">
-                                            Platform
-                                        </Typography>
-                                    </Box>
-
-                                    <Box mt={2}>
-                                        {userPermissions
-                                            .filter((permission) => permission.Level === 'platform')
-                                            .map((permission) => (
-                                                <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
-                                                    <Box
-                                                        onClick={() => !(user.user_id === meData.user_id && permission.Label === 'Admin') && deletePermission(permission)}
-                                                        component={FontAwesomeIcon}
-                                                        sx={{
-                                                            fontSize: '17px',
-                                                            mr: '7px',
-                                                            color: user.user_id === meData.user_id && permission.Label === 'Admin' ? 'rgba(0, 0, 0, 0.26)' : 'rgba(248, 0, 0, 1)',
-                                                            cursor: !(user.user_id === meData.user_id && permission.Label === 'Admin') && 'pointer',
-                                                        }}
-                                                        icon={faTrashAlt}
-                                                    />
-                                                    <Typography variant="subtitle2" lineHeight="15.23px">
-                                                        {permission.Label}
-                                                    </Typography>
-                                                </Grid>
-                                            ))}
-                                    </Box>
-                                </Box>
-                            ) : null}
-
-                            {/* Environment permissions */}
-                            {/* Check if there are any permissions. If not, hide the box */}
-                            {userPermissions.filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === globalEnvironment.id).length ? (
-                                <Box mt="2.31rem">
-                                    <Typography component="h3" variant="h3" color="text.primary">
-                                        Environment permissions
-                                    </Typography>
-                                    <Typography variant="subtitle2" mt=".20rem">
-                                        Environment: {globalEnvironment?.name}
-                                    </Typography>
-
-                                    <Box mt={2}>
-                                        {userPermissions
-                                            .filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === globalEnvironment.id)
-                                            .map((permission) => (
-                                                <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
-                                                    <Box
-                                                        onClick={() => deletePermission(permission)}
-                                                        component={FontAwesomeIcon}
-                                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
-                                                        icon={faTrashAlt}
-                                                    />
-                                                    <Typography variant="subtitle2" lineHeight="15.23px">
-                                                        {permission.Label}
-                                                    </Typography>
-                                                </Grid>
-                                            ))}
-                                    </Box>
-                                </Box>
-                            ) : null}
-
-                            {/* Specific permissions */}
-                            {/* Check if there are any permissions. If not, hide the box */}
-                            {specificPermissions.length ? (
-                                <Box mt={4}>
-                                    <Box>
-                                        <Typography component="h3" variant="h3" color="text.primary">
-                                            Specific permissions
-                                        </Typography>
-                                    </Box>
-
-                                    <Box mt={2}>
-                                        {specificPermissions
-                                            ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
-                                            .map((permission) => (
-                                                <Grid display="flex" alignItems="center" key={permission.ResourceID} mt={1.5} mb={1.5}>
-                                                    <Box
-                                                        onClick={() => deleteSpecificPermission(permission)}
-                                                        component={FontAwesomeIcon}
-                                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
-                                                        icon={faTrashAlt}
-                                                    />
-                                                    <Typography variant="subtitle2" lineHeight="15.23px">
-                                                        {permission.Label.split(' ')[0].replace('-', '') + ' ' + permission.PipelineName + ' ' + permission.Access}
-                                                    </Typography>
-                                                </Grid>
-                                            ))}
-                                    </Box>
-                                </Box>
-                            ) : null}
-                        </Box>
-                    </Grid>
-                    <Grid item sx={{ flex: 1 }}>
+                    <Grid item sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column' }} mb={2}>
                         <Typography component="h3" variant="h3" color="text.primary">
                             Belongs to environments
                         </Typography>
@@ -497,6 +364,140 @@ export default function TeamDetail() {
                                         </Grid>
                                     ))}
                             </Box>
+                        </Box>
+                    </Grid>
+                    <Grid item sx={{ flex: 1 }}>
+                        <Box>
+                            <Typography component="h3" variant="h3" color="text.primary">
+                                Permissions
+                            </Typography>
+
+                            <Grid mt={2} display="flex" alignItems="center">
+                                <Autocomplete
+                                    disablePortal
+                                    id="available_permissions_autocomplete"
+                                    key={clear} //Changing this value on submit clears the input field
+                                    onChange={(event, newValue) => {
+                                        setSelectedPermission(newValue);
+                                    }}
+                                    sx={{ minWidth: '280px' }}
+                                    // Filter out user's permissions from available permissions
+                                    options={filterPermissionsDropdown(availablePermissions, userPermissions, globalEnvironment?.id)}
+                                    getOptionLabel={(option) => option.Label}
+                                    renderInput={(params) => (
+                                        <TextField {...params} label="Available permissions" id="available_permissions" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
+                                    )}
+                                />
+
+                                <Button
+                                    onClick={() => {
+                                        updatePermission();
+                                        setClear(clear * -1); // Clears autocomplete input field
+                                        setSelectedPermission(null);
+                                    }}
+                                    variant="contained"
+                                    color="primary"
+                                    height="100%"
+                                    sx={{ ml: 1 }}>
+                                    Add
+                                </Button>
+                            </Grid>
+
+                            {/* Platform permissions */}
+                            {/* Check if there are any permissions. If not, hide the box */}
+                            {userPermissions.filter((permission) => permission.Level === 'platform').length ? (
+                                <Box mt={4}>
+                                    <Box>
+                                        <Typography component="h3" variant="h3" color="text.primary">
+                                            Platform
+                                        </Typography>
+                                    </Box>
+
+                                    <Box mt={2}>
+                                        {userPermissions
+                                            .filter((permission) => permission.Level === 'platform')
+                                            .map((permission) => (
+                                                <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
+                                                    <Box
+                                                        onClick={() => !(user.user_id === meData.user_id && permission.Label === 'Admin') && deletePermission(permission)}
+                                                        component={FontAwesomeIcon}
+                                                        sx={{
+                                                            fontSize: '17px',
+                                                            mr: '7px',
+                                                            color: user.user_id === meData.user_id && permission.Label === 'Admin' ? 'rgba(0, 0, 0, 0.26)' : 'rgba(248, 0, 0, 1)',
+                                                            cursor: !(user.user_id === meData.user_id && permission.Label === 'Admin') && 'pointer',
+                                                        }}
+                                                        icon={faTrashAlt}
+                                                    />
+                                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                                        {permission.Label}
+                                                    </Typography>
+                                                </Grid>
+                                            ))}
+                                    </Box>
+                                </Box>
+                            ) : null}
+
+                            {/* Environment permissions */}
+                            {/* Check if there are any permissions. If not, hide the box */}
+                            {userPermissions.filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === globalEnvironment.id).length ? (
+                                <Box mt="2.31rem">
+                                    <Typography component="h3" variant="h3" color="text.primary">
+                                        Environment permissions
+                                    </Typography>
+                                    <Typography variant="subtitle2" mt=".20rem">
+                                        Environment: {globalEnvironment?.name}
+                                    </Typography>
+
+                                    <Box mt={2}>
+                                        {userPermissions
+                                            .filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === globalEnvironment.id)
+                                            .map((permission) => (
+                                                <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
+                                                    <Box
+                                                        onClick={() => deletePermission(permission)}
+                                                        component={FontAwesomeIcon}
+                                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                                        icon={faTrashAlt}
+                                                    />
+                                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                                        {permission.Label}
+                                                    </Typography>
+                                                </Grid>
+                                            ))}
+                                    </Box>
+                                </Box>
+                            ) : null}
+
+                            {/* Specific permissions */}
+                            {/* Check if there are any permissions. If not, hide the box */}
+                            {specificPermissions.length ? (
+                                <Box mt={4}>
+                                    <Box>
+                                        <Typography component="h3" variant="h3" color="text.primary">
+                                            Specific permissions
+                                        </Typography>
+                                    </Box>
+
+                                    <Box mt={2}>
+                                        {specificPermissions
+                                            ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
+                                            .map((permission) => (
+                                                <Grid display="flex" alignItems="center" width="200%" key={permission.PipelineName} mt={1.5} mb={1.5}>
+                                                    <Box
+                                                        onClick={() => deleteSpecificPermission(permission)}
+                                                        component={FontAwesomeIcon}
+                                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                                        icon={faTrashAlt}
+                                                    />
+                                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                                        {permission.Label.split(' ')[0].replace('-', '') + ' ' + permission.PipelineName + ' ' + permission.Access}
+                                                    </Typography>
+                                                </Grid>
+                                            ))}
+                                    </Box>
+                                </Box>
+                            ) : null}
                         </Box>
                     </Grid>
                 </Grid>

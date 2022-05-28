@@ -8,7 +8,6 @@ import { useGetAccessGroups } from '../../../graphql/getAccessGroups';
 import { useGetUsers } from '../../../graphql/getUsers';
 import { useDeploymentPermissionsToUser } from '../../../graphql/deploymentPermissionsToUser';
 import { useDeploymentPermissionsToAccessGroup } from '../../../graphql/deploymentPermissionsToAccessGroup';
-import { useGetUserSingleDeploymentPermissions } from '../../../graphql/getUserSingleDeploymentPermissions';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGlobalMeState } from '../../Navbar';
 
@@ -18,7 +17,7 @@ export const DEFAULT_OPTIONS = {
     assign_permissions: false,
 };
 
-const AddDeploymentPermissionsDrawer = ({ handleClose, typeToAdd, refreshPermissions, selectedSubject }) => {
+const AddDeploymentPermissionsDrawer = ({ handleClose, subjectsWithPermissions, typeToAdd, refreshPermissions, selectedSubject }) => {
     const [selectedTypeToAdd, setSelectedTypeToAdd] = useState(typeToAdd);
 
     // Global state
@@ -38,11 +37,10 @@ const AddDeploymentPermissionsDrawer = ({ handleClose, typeToAdd, refreshPermiss
     const [permissionsState, setPermissionsState] = useState({ ...DEFAULT_OPTIONS });
 
     // Custom GraphQL hooks
-    const getUsers = useGetUsers_(setUsers);
-    const getAccessGroups = useGetAccessGroups_(setAccessGroups, Environment.id.get(), MeData.user_id.get());
+    const getUsers = useGetUsersHook(setUsers, subjectsWithPermissions);
+    const getAccessGroups = useGetAccessGroupsHook(setAccessGroups, Environment.id.get(), MeData.user_id.get(), subjectsWithPermissions);
     const deploymentPermissionsToUser = useDeploymentPermissionsToUserHook(permissionsState, refreshPermissions, handleClose);
     const deploymentPermissionsToAccessGroup = useDeploymentPermissionsToAccessGroupHook(permissionsState, refreshPermissions, handleClose);
-    const getUserDeploymentPermissions = useGetUserSingleDeploymentPermissionsHook(Environment.id.get(), setPermissionsState);
 
     // Get all users and access groups on load
     useEffect(() => {
@@ -59,13 +57,6 @@ const AddDeploymentPermissionsDrawer = ({ handleClose, typeToAdd, refreshPermiss
         } else if (selectedSubject.first_name && !selectedSubject.email) {
             setSelectedAccessGroup({ AccessGroupID: selectedSubject.user_id, Name: selectedSubject.first_name });
         }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // Get default user or access groups's permissions on drawer open.
-    useEffect(() => {
-        getUserDeploymentPermissions(selectedSubject.user_id, clearOptions);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -123,7 +114,6 @@ const AddDeploymentPermissionsDrawer = ({ handleClose, typeToAdd, refreshPermiss
                             key={clear} //Changing this value on submit clears the input field
                             onChange={(event, newValue) => {
                                 setSelectedUser(newValue);
-                                newValue && getUserDeploymentPermissions(newValue.user_id, clearOptions);
                             }}
                             onInputChange={(e, v, reason) => {
                                 if (reason === 'clear') {
@@ -147,7 +137,6 @@ const AddDeploymentPermissionsDrawer = ({ handleClose, typeToAdd, refreshPermiss
                             key={clear} //Changing this value on submit clears the input field
                             onChange={(event, newValue) => {
                                 setSelectedAccessGroup(newValue);
-                                newValue && getUserDeploymentPermissions(newValue.AccessGroupID, clearOptions);
                             }}
                             onInputChange={(e, v, reason) => {
                                 if (reason === 'clear') {
@@ -201,7 +190,7 @@ const AddDeploymentPermissionsDrawer = ({ handleClose, typeToAdd, refreshPermiss
 export default AddDeploymentPermissionsDrawer;
 
 // ----------- Custom Hooks --------------------------------
-const useGetUsers_ = (setUsers) => {
+const useGetUsersHook = (setUsers, subjectsWithPermissions) => {
     // GraphQL hook
     const getUsers = useGetUsers();
 
@@ -219,12 +208,13 @@ const useGetUsers_ = (setUsers) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setUsers(response);
+            // Don't add users that are already on the table
+            setUsers(response.filter((a) => !subjectsWithPermissions.includes(a.user_id)));
         }
     };
 };
 
-const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
+const useGetAccessGroupsHook = (setAccessGroups, environmentID, userID, subjectsWithPermissions) => {
     // GraphQL hook
     const getAccessGroups = useGetAccessGroups();
 
@@ -240,7 +230,8 @@ const useGetAccessGroups_ = (setAccessGroups, environmentID, userID) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setAccessGroups(response);
+            // Don't add access groups that are already on the table
+            setAccessGroups(response.filter((a) => !subjectsWithPermissions.includes(a.AccessGroupID)));
         }
     };
 };
@@ -280,46 +271,6 @@ const useDeploymentPermissionsToUserHook = (permissionsState, refreshPermissions
             enqueueSnackbar('Success', { variant: 'success' });
             refreshPermissions();
             handleClose();
-        }
-    };
-};
-
-// Get deployment permissions to user or access group
-const useGetUserSingleDeploymentPermissionsHook = (environmentID, setpermissionsState) => {
-    // GraphQL hook
-    const getUserSingleDeploymentPermissions = useGetUserSingleDeploymentPermissions();
-
-    // URI parameter
-    const { deploymentId } = useParams();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    const accessDictionary = {
-        read: 'view',
-        run: 'run',
-        assign_deployment_permission: 'assign_permissions',
-    };
-
-    // Get permissions
-    return async (userID, clearOptions) => {
-        const response = await getUserSingleDeploymentPermissions({ userID, environmentID, deploymentID: deploymentId });
-
-        if (response === null) {
-            clearOptions();
-        } else if (response.r || response.error) {
-            closeSnackbar();
-            enqueueSnackbar("Can't get permissions: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            // Create an array with access permissions
-            const accessArr = response.Access.split(',').filter((a) => a === 'read' || a === 'run' || a === 'assign_deployment_permission');
-
-            // Create an object and add Access types that are set to true. Pass it to state
-            const incomingPermissions = {};
-            accessArr.map((a) => (incomingPermissions[accessDictionary[a]] = true));
-
-            setpermissionsState({ ...DEFAULT_OPTIONS, ...incomingPermissions });
         }
     };
 };
