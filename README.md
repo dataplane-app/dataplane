@@ -4,7 +4,7 @@
 If you like Dataplane, give it a star ⭐
 
 ### Dataplane (Beta)
-⚡️ Extreme performance with a low memory and CPU footprint. <br />
+⚡️ Written in Golang and compiled to machine code to achieve extreme performance with a low memory and CPU footprint. <br />
 🖐 Drag drop data pipeline builder. <br />
 🧑‍💻 Built in Python code editor. <br />
 👮 Granular permissions for teams to collaborate with segregated access. <br />
