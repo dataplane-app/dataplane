@@ -179,8 +179,8 @@ func (b *builder) bindField(obj *Object, f *Field) (errret error) {
 			params = types.NewTuple(vars...)
 		}
 
-		// Try to match target function's arguments with GraphQL field arguments
-		newArgs, err := b.bindArgs(f, params)
+		// Try to match target function's arguments with GraphQL field arguments.
+		newArgs, err := b.bindArgs(f, sig, params)
 		if err != nil {
 			return fmt.Errorf("%s:%d: %w", pos.Filename, pos.Line, err)
 		}
@@ -483,6 +483,14 @@ func (f *Field) ArgsFunc() string {
 	return "field_" + f.Object.Definition.Name + "_" + f.Name + "_args"
 }
 
+func (f *Field) FieldContextFunc() string {
+	return "fieldContext_" + f.Object.Definition.Name + "_" + f.Name
+}
+
+func (f *Field) ChildFieldContextFunc(name string) string {
+	return "fieldContext_" + f.TypeReference.Definition.Name + "_" + name
+}
+
 func (f *Field) ResolverType() string {
 	if !f.IsResolver {
 		return ""
@@ -549,7 +557,7 @@ func (f *Field) CallArgs() string {
 	}
 
 	for _, arg := range f.Args {
-		args = append(args, "args["+strconv.Quote(arg.Name)+"].("+templates.CurrentImports.LookupType(arg.TypeReference.GO)+")")
+		args = append(args, "fc.Args["+strconv.Quote(arg.Name)+"].("+templates.CurrentImports.LookupType(arg.TypeReference.GO)+")")
 	}
 
 	return strings.Join(args, ", ")

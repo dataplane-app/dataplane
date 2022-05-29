@@ -25,10 +25,14 @@ var (
 	testRandZero = false
 	//Sets the default number of string when it is created randomly.
 	randomStringLen = 25
-	//Sets the boundary for random value generation. Boundaries can not exceed integer(4 byte...)
-	nBoundary = numberBoundary{start: 0, end: 100}
-	//Sets the random size for slices and maps.
-	randomSize = 100
+	//Sets the boundary for random integer value generation. Boundaries can not exceed integer(4 byte...)
+	iBoundary = intBoundary{start: 0, end: 100}
+	//Sets the boundary for random float value generation. Boundaries should comply with float values constraints (IEEE 754)
+	fBoundary = floatBoundary{start: 0, end: 100}
+	//Sets the random max size for slices and maps.
+	randomMaxSize = 100
+	//Sets the random min size for slices and maps.
+	randomMinSize = 0
 	// Sets the single fake data generator to generate unique values
 	generateUniqueValues = false
 	// Sets whether interface{}s should be ignored.
@@ -41,9 +45,14 @@ var (
 	maxGenerateStringRetries = 1000000
 )
 
-type numberBoundary struct {
+type intBoundary struct {
 	start int
 	end   int
+}
+
+type floatBoundary struct {
+	start float64
+	end   float64
 }
 
 type langRuneBoundary struct {
@@ -62,6 +71,10 @@ var (
 	LangRUS = langRuneBoundary{1025, 1105, nil}
 	// LangJPN is for japanese Hiragana Katakana language
 	LangJPN = langRuneBoundary{12353, 12534, []rune{12436, 12437, 12438, 12439, 12440, 12441, 12442, 12443, 12444, 12445, 12446, 12447, 12448}}
+	// LangKOR is for korean Hangul language
+	LangKOR = langRuneBoundary{44032, 55203, nil}
+	// EmotEMJ is for emoticons
+	EmotEMJ = langRuneBoundary{126976, 129535, nil}
 )
 
 // Supported tags
@@ -98,6 +111,9 @@ const (
 	FirstNameFemaleTag    = "first_name_female"
 	LastNameTag           = "last_name"
 	NAME                  = "name"
+	ChineseFirstNameTag   = "chinese_first_name"
+	ChineseLastNameTag    = "chinese_last_name"
+	ChineseNameTag        = "chinese_name"
 	GENDER                = "gender"
 	UnixTimeTag           = "unix_time"
 	DATE                  = "date"
@@ -130,6 +146,15 @@ const (
 	//hyphen = "-"
 )
 
+// PriorityTags define the priority order of the tag
+var PriorityTags = []string{ID, HyphenatedID, EmailTag, MacAddressTag, DomainNameTag, UserNameTag, URLTag, IPV4Tag,
+	IPV6Tag, PASSWORD, JWT, LATITUDE, LONGITUDE, CreditCardNumber, CreditCardType, PhoneNumber, TollFreeNumber,
+	E164PhoneNumberTag, TitleMaleTag, TitleFemaleTag, FirstNameTag, FirstNameMaleTag, FirstNameFemaleTag, LastNameTag,
+	NAME, ChineseFirstNameTag, ChineseLastNameTag, ChineseNameTag, GENDER, UnixTimeTag, DATE, TIME, MonthNameTag,
+	YEAR, DayOfWeekTag, DayOfMonthTag, TIMESTAMP, CENTURY, TIMEZONE, TimePeriodTag, WORD, SENTENCE, PARAGRAPH,
+	CurrencyTag, AmountTag, AmountWithCurrencyTag, SKIP, Length, SliceLength, Language, BoundaryStart, BoundaryEnd, ONEOF,
+}
+
 var defaultTag = map[string]string{
 	EmailTag:              EmailTag,
 	MacAddressTag:         MacAddressTag,
@@ -154,6 +179,9 @@ var defaultTag = map[string]string{
 	FirstNameFemaleTag:    FirstNameFemaleTag,
 	LastNameTag:           LastNameTag,
 	NAME:                  NAME,
+	ChineseFirstNameTag:   ChineseFirstNameTag,
+	ChineseLastNameTag:    ChineseLastNameTag,
+	ChineseNameTag:        ChineseNameTag,
 	GENDER:                GENDER,
 	UnixTimeTag:           UnixTimeTag,
 	DATE:                  DATE,
@@ -204,6 +232,9 @@ var mapperTag = map[string]TaggedFunction{
 	FirstNameFemaleTag:    GetPerson().FirstNameFemale,
 	LastNameTag:           GetPerson().LastName,
 	NAME:                  GetPerson().Name,
+	ChineseFirstNameTag:   GetPerson().ChineseFirstName,
+	ChineseLastNameTag:    GetPerson().ChineseLastName,
+	ChineseNameTag:        GetPerson().ChineseName,
 	GENDER:                GetPerson().Gender,
 	UnixTimeTag:           GetDateTimer().UnixTime,
 	DATE:                  GetDateTimer().Date,
@@ -308,17 +339,32 @@ func SetRandomStringLength(size int) error {
 	return nil
 }
 
-// SetStringLang sets language of random string generation (LangENG, LangCHI, LangRUS, LangJPN)
+// SetStringLang sets language of random string generation (LangENG, LangCHI, LangRUS, LangJPN, LangKOR, EmotEMJ)
 func SetStringLang(l langRuneBoundary) {
 	lang = l
 }
 
 // SetRandomMapAndSliceSize sets the size for maps and slices for random generation.
+// deprecates, currently left for old version usage
 func SetRandomMapAndSliceSize(size int) error {
+	return SetRandomMapAndSliceMaxSize(size)
+}
+
+// SetRandomMapAndSliceMaxSize sets the max size for maps and slices for random generation.
+func SetRandomMapAndSliceMaxSize(size int) error {
 	if size < 1 {
 		return fmt.Errorf(ErrSmallerThanOne, size)
 	}
-	randomSize = size
+	randomMaxSize = size
+	return nil
+}
+
+// SetRandomMapAndSliceMinSize sets the min size for maps and slices for random generation.
+func SetRandomMapAndSliceMinSize(size int) error {
+	if size < 0 {
+		return fmt.Errorf(ErrSmallerThanZero, size)
+	}
+	randomMinSize = size
 	return nil
 }
 
@@ -327,7 +373,7 @@ func SetRandomNumberBoundaries(start, end int) error {
 	if start > end {
 		return errors.New(ErrStartValueBiggerThanEnd)
 	}
-	nBoundary = numberBoundary{start: start, end: end}
+	iBoundary = intBoundary{start: start, end: end}
 	return nil
 }
 
@@ -403,7 +449,7 @@ func AddProvider(tag string, provider TaggedFunction) error {
 	if _, ok := mapperTag[tag]; ok {
 		return errors.New(ErrTagAlreadyExists)
 	}
-
+	PriorityTags = append(PriorityTags, tag)
 	mapperTag[tag] = provider
 
 	return nil
@@ -557,9 +603,9 @@ func getValue(a interface{}) (reflect.Value, error) {
 	case reflect.Int64:
 		return reflect.ValueOf(int64(randomInteger())), nil
 	case reflect.Float32:
-		return reflect.ValueOf(rand.Float32()), nil
+		return reflect.ValueOf(float32(randomFloat())), nil
 	case reflect.Float64:
-		return reflect.ValueOf(rand.Float64()), nil
+		return reflect.ValueOf(randomFloat()), nil
 	case reflect.Bool:
 		val := rand.Intn(2) > 0
 		return reflect.ValueOf(val), nil
@@ -621,11 +667,13 @@ func isZero(field reflect.Value) (bool, error) {
 }
 
 func decodeTags(typ reflect.Type, i int) structTag {
-	tags := strings.Split(typ.Field(i).Tag.Get(tagName), ",")
+	tagField := typ.Field(i).Tag.Get(tagName)
+	tags := strings.Split(tagField, ",")
 
 	keepOriginal := false
 	uni := false
 	res := make([]string, 0)
+	pMap := make(map[string]string)
 	for _, tag := range tags {
 		if tag == keep {
 			keepOriginal = true
@@ -634,7 +682,28 @@ func decodeTags(typ reflect.Type, i int) structTag {
 			uni = true
 			continue
 		}
-		res = append(res, tag)
+		// res = append(res, tag)
+		ptag := strings.ToLower(strings.Trim(strings.Split(tag, "=")[0], " "))
+		pMap[ptag] = tag
+		ptag = strings.ToLower(strings.Trim(strings.Split(tag, ":")[0], " "))
+		pMap[ptag] = tag
+	}
+	// Priority
+	for _, ptag := range PriorityTags {
+		if tag, ok := pMap[ptag]; ok {
+			if ptag == ONEOF {
+				res = append(res, tags...)
+			} else {
+				res = append(res, tag)
+			}
+			delete(pMap, ptag)
+		}
+	}
+	// custom,keep,unique
+	if len(res) < 1 {
+		if !keepOriginal && !uni {
+			res = append(res, tags...)
+		}
 	}
 
 	return structTag{
@@ -737,7 +806,7 @@ func userDefinedMap(v reflect.Value, tag string) error {
 func getValueWithTag(t reflect.Type, tag string) (interface{}, error) {
 	switch t.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int8, reflect.Int16, reflect.Uint, reflect.Uint8,
-		reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64:
 		res, err := extractNumberFromTag(tag, t)
 		if err != nil {
 			return nil, err
@@ -872,17 +941,10 @@ func extractStringFromTag(tag string) (interface{}, error) {
 		}
 	}
 	if isOneOfTag {
-		items := strings.Split(tag, colon)
-		argsList := items[1:]
-		if len(argsList) != 1 {
-			return nil, fmt.Errorf(ErrUnsupportedTagArguments)
-		}
-		if strings.Contains(argsList[0], ",,") {
-			return nil, fmt.Errorf(ErrDuplicateSeparator)
-		}
-		args := strings.Split(argsList[0], comma)
-		if len(args) < 2 {
-			return nil, fmt.Errorf(ErrNotEnoughTagArguments)
+		var args []string
+		args, err = fetchOneOfArgsFromTag(tag)
+		if err != nil {
+			return nil, err
 		}
 		toRet := args[rand.Intn(len(args))]
 		return strings.TrimSpace(toRet), nil
@@ -906,6 +968,10 @@ func extractLangFromTag(tag string) (*langRuneBoundary, error) {
 		return &LangCHI, nil
 	case "jpn":
 		return &LangJPN, nil
+	case "kor":
+		return &LangKOR, nil
+	case "emj":
+		return &EmotEMJ, nil
 	default:
 		return &LangENG, nil
 	}
@@ -923,16 +989,9 @@ func extractNumberFromTag(tag string, t reflect.Type) (interface{}, error) {
 
 	// handling oneof tag
 	if usingOneOfTag {
-		argsList := strings.Split(tag, colon)[1:]
-		if len(argsList) != 1 {
-			return nil, fmt.Errorf(ErrUnsupportedTagArguments)
-		}
-		if strings.Contains(argsList[0], ",,") {
-			return nil, fmt.Errorf(ErrDuplicateSeparator)
-		}
-		args := strings.Split(argsList[0], comma)
-		if len(args) < 2 {
-			return nil, fmt.Errorf(ErrNotEnoughTagArguments)
+		args, err := fetchOneOfArgsFromTag(tag)
+		if err != nil {
+			return nil, err
 		}
 		switch t.Kind() {
 		case reflect.Float64:
@@ -1043,15 +1102,35 @@ func extractNumberFromTag(tag string, t reflect.Type) (interface{}, error) {
 	if len(valuesStr) != 2 {
 		return nil, fmt.Errorf(ErrWrongFormattedTag, tag)
 	}
-	startBoundary, err := extractNumberFromText(valuesStr[0])
+
+	// TODO(Xaspy): When Golang provides generics, we will be able to make this method simpler and more beautiful.
+	if t.Kind() == reflect.Float64 || t.Kind() == reflect.Float32 {
+		startBoundary, err := extractFloatFromText(valuesStr[0])
+		if err != nil {
+			return nil, err
+		}
+		endBoundary, err := extractFloatFromText(valuesStr[1])
+		if err != nil {
+			return nil, err
+		}
+		boundary := floatBoundary{start: startBoundary, end: endBoundary}
+		switch t.Kind() {
+		case reflect.Float32:
+			return float32(randomFloatWithBoundary(boundary)), nil
+		case reflect.Float64:
+			return randomFloatWithBoundary(boundary), nil
+		}
+	}
+
+	startBoundary, err := extractIntFromText(valuesStr[0])
 	if err != nil {
 		return nil, err
 	}
-	endBoundary, err := extractNumberFromText(valuesStr[1])
+	endBoundary, err := extractIntFromText(valuesStr[1])
 	if err != nil {
 		return nil, err
 	}
-	boundary := numberBoundary{start: startBoundary, end: endBoundary}
+	boundary := intBoundary{start: startBoundary, end: endBoundary}
 	switch t.Kind() {
 	case reflect.Uint:
 		return uint(randomIntegerWithBoundary(boundary)), nil
@@ -1078,13 +1157,41 @@ func extractNumberFromTag(tag string, t reflect.Type) (interface{}, error) {
 	}
 }
 
-func extractNumberFromText(text string) (int, error) {
+func extractIntFromText(text string) (int, error) {
 	text = strings.TrimSpace(text)
 	texts := strings.SplitN(text, Equals, -1)
 	if len(texts) != 2 {
 		return 0, fmt.Errorf(ErrWrongFormattedTag, text)
 	}
 	return strconv.Atoi(texts[1])
+}
+
+func extractFloatFromText(text string) (float64, error) {
+	text = strings.TrimSpace(text)
+	texts := strings.SplitN(text, Equals, -1)
+	if len(texts) != 2 {
+		return 0, fmt.Errorf(ErrWrongFormattedTag, text)
+	}
+	return strconv.ParseFloat(texts[1], 64)
+}
+
+func fetchOneOfArgsFromTag(tag string) ([]string, error) {
+	items := strings.Split(tag, colon)
+	argsList := items[1:]
+	if len(argsList) != 1 {
+		return nil, fmt.Errorf(ErrUnsupportedTagArguments)
+	}
+	if strings.Contains(argsList[0], ",,") {
+		return nil, fmt.Errorf(ErrDuplicateSeparator)
+	}
+	if argsList[0] == "" {
+		return nil, fmt.Errorf(ErrNotEnoughTagArguments)
+	}
+	args := strings.Split(argsList[0], comma)
+	if len(args) < 1 {
+		return nil, fmt.Errorf(ErrNotEnoughTagArguments)
+	}
+	return args, nil
 }
 
 func randomString(n int, lang *langRuneBoundary) (string, error) {
@@ -1118,7 +1225,7 @@ func randomString(n int, lang *langRuneBoundary) (string, error) {
 }
 
 // randomIntegerWithBoundary returns a random integer between input start and end boundary. [start, end)
-func randomIntegerWithBoundary(boundary numberBoundary) int {
+func randomIntegerWithBoundary(boundary intBoundary) int {
 	span := boundary.end - boundary.start
 	if span <= 0 {
 		return boundary.start
@@ -1126,9 +1233,23 @@ func randomIntegerWithBoundary(boundary numberBoundary) int {
 	return rand.Intn(span) + boundary.start
 }
 
+// randomFloatWithBoundary returns a random float between input start and end boundary. [start, end)
+func randomFloatWithBoundary(boundary floatBoundary) float64 {
+	span := boundary.end - boundary.start
+	if span <= 0 {
+		return boundary.start
+	}
+	return boundary.start + rand.Float64()*span
+}
+
 // randomInteger returns a random integer between start and end boundary. [start, end)
 func randomInteger() int {
-	return randomIntegerWithBoundary(nBoundary)
+	return randomIntegerWithBoundary(iBoundary)
+}
+
+// randomFloat returns a random float between start and end boundary. [start, end)
+func randomFloat() float64 {
+	return randomFloatWithBoundary(fBoundary)
 }
 
 // randomSliceAndMapSize returns a random integer between [0,randomSliceAndMapSize). If the testRandZero is set, returns 0
@@ -1137,7 +1258,11 @@ func randomSliceAndMapSize() int {
 	if testRandZero {
 		return 0
 	}
-	return rand.Intn(randomSize)
+	r := randomMaxSize - randomMinSize
+	if r < 1 {
+		r = 1
+	}
+	return randomMinSize + rand.Intn(r)
 }
 
 func randomElementFromSliceString(s []string) string {

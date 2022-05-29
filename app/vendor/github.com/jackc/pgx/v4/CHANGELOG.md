@@ -1,3 +1,18 @@
+# 4.16.1 (May 7, 2022)
+
+* Upgrade pgconn to v1.12.1
+* Fix explicitly prepared statements with describe statement cache mode
+
+# 4.16.0 (April 21, 2022)
+
+* Upgrade pgconn to v1.12.0
+* Upgrade pgproto3 to v2.3.0
+* Upgrade pgtype to v1.11.0
+* Fix: Do not panic when context cancelled while getting statement from cache.
+* Fix: Less memory pinning from old Rows.
+* Fix: Support '\r' line ending when sanitizing SQL comment.
+* Add pluggable GSSAPI support (Oliver Tan)
+
 # 4.15.0 (February 7, 2022)
 
 * Upgrade to pgconn v1.11.0

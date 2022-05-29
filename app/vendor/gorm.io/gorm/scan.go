@@ -50,7 +50,7 @@ func scanIntoMap(mapValue map[string]interface{}, values []interface{}, columns 
 	}
 }
 
-func (db *DB) scanIntoStruct(rows *sql.Rows, reflectValue reflect.Value, values []interface{}, fields []*schema.Field, joinFields [][2]*schema.Field) {
+func (db *DB) scanIntoStruct(rows Rows, reflectValue reflect.Value, values []interface{}, fields []*schema.Field, joinFields [][2]*schema.Field) {
 	for idx, field := range fields {
 		if field != nil {
 			values[idx] = field.NewValuePool.Get()
@@ -69,17 +69,17 @@ func (db *DB) scanIntoStruct(rows *sql.Rows, reflectValue reflect.Value, values 
 	for idx, field := range fields {
 		if field != nil {
 			if len(joinFields) == 0 || joinFields[idx][0] == nil {
-				field.Set(db.Statement.Context, reflectValue, values[idx])
+				db.AddError(field.Set(db.Statement.Context, reflectValue, values[idx]))
 			} else {
 				relValue := joinFields[idx][0].ReflectValueOf(db.Statement.Context, reflectValue)
 				if relValue.Kind() == reflect.Ptr && relValue.IsNil() {
 					if value := reflect.ValueOf(values[idx]).Elem(); value.Kind() == reflect.Ptr && value.IsNil() {
-						return
+						continue
 					}
 
 					relValue.Set(reflect.New(relValue.Type().Elem()))
 				}
-				joinFields[idx][1].Set(db.Statement.Context, relValue, values[idx])
+				db.AddError(joinFields[idx][1].Set(db.Statement.Context, relValue, values[idx]))
 			}
 
 			// release data to pool
@@ -99,7 +99,7 @@ const (
 )
 
 // Scan scan rows into db statement
-func Scan(rows *sql.Rows, db *DB, mode ScanMode) {
+func Scan(rows Rows, db *DB, mode ScanMode) {
 	var (
 		columns, _          = rows.Columns()
 		values              = make([]interface{}, len(columns))
@@ -156,10 +156,11 @@ func Scan(rows *sql.Rows, db *DB, mode ScanMode) {
 		}
 	default:
 		var (
-			fields       = make([]*schema.Field, len(columns))
-			joinFields   [][2]*schema.Field
-			sch          = db.Statement.Schema
-			reflectValue = db.Statement.ReflectValue
+			fields             = make([]*schema.Field, len(columns))
+			selectedColumnsMap = make(map[string]int, len(columns))
+			joinFields         [][2]*schema.Field
+			sch                = db.Statement.Schema
+			reflectValue       = db.Statement.ReflectValue
 		)
 
 		if reflectValue.Kind() == reflect.Interface {
@@ -194,7 +195,18 @@ func Scan(rows *sql.Rows, db *DB, mode ScanMode) {
 			if sch != nil {
 				for idx, column := range columns {
 					if field := sch.LookUpField(column); field != nil && field.Readable {
-						fields[idx] = field
+						if curIndex, ok := selectedColumnsMap[column]; ok {
+							for fieldIndex, selectField := range sch.Fields[curIndex+1:] {
+								if selectField.DBName == column && selectField.Readable {
+									selectedColumnsMap[column] = curIndex + fieldIndex + 1
+									fields[idx] = selectField
+									break
+								}
+							}
+						} else {
+							fields[idx] = field
+							selectedColumnsMap[column] = idx
+						}
 					} else if names := strings.Split(column, "__"); len(names) > 1 {
 						if rel, ok := sch.Relationships.Relations[names[0]]; ok {
 							if field := rel.FieldSchema.LookUpField(strings.Join(names[1:], "__")); field != nil && field.Readable {

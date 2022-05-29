@@ -152,11 +152,11 @@ func (m Migrator) ColumnTypes(value interface{}) ([]gorm.ColumnType, error) {
 			return err
 		}
 
-		defer func() {
-			err = rows.Close()
-		}()
-
 		rawColumnTypes, err := rows.ColumnTypes()
+
+		if err := rows.Close(); err != nil {
+			return err
+		}
 
 		if !m.DisableDatetimePrecision {
 			columnTypeSQL += ", datetime_precision "
@@ -203,6 +203,13 @@ func (m Migrator) ColumnTypes(value interface{}) ([]gorm.ColumnType, error) {
 			}
 
 			column.DefaultValueValue.String = strings.Trim(column.DefaultValueValue.String, "'")
+			if m.Dialector.DontSupportNullAsDefaultValue {
+				// rewrite mariadb default value like other version
+				if column.DefaultValueValue.Valid && column.DefaultValueValue.String == "NULL" {
+					column.DefaultValueValue.Valid = false
+					column.DefaultValueValue.String = ""
+				}
+			}
 
 			if datetimePrecision.Valid {
 				column.DecimalSizeValue = datetimePrecision
