@@ -17,6 +17,13 @@ type DeploymentPermissionsOutput {
 
 extend type Query {
     """
+    Retrieve my deployment permissions.
+    + **Route**: Private
+    + **Permissions**: logged in user
+    """
+    myDeploymentPermissions: [DeploymentPermissionsOutput]
+
+    """
     Retrieve user's permissions for a single deployment.
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
