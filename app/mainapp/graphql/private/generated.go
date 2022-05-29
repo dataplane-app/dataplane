@@ -452,6 +452,7 @@ type ComplexityRoot struct {
 		MyPipelinePermissions           func(childComplexity int) int
 		PipelinePermissions             func(childComplexity int, userID string, environmentID string, pipelineID string) int
 		PipelineTasksRun                func(childComplexity int, pipelineID string, runID string, environmentID string) int
+		UserDeploymentPermissions       func(childComplexity int, userID string, environmentID string) int
 		UserPermissions                 func(childComplexity int, userID string, environmentID string) int
 		UserPipelinePermissions         func(childComplexity int, userID string, environmentID string) int
 		UserSingleDeploymentPermissions func(childComplexity int, userID string, environmentID string, deploymentID string, subjectType string) int
@@ -628,6 +629,7 @@ type QueryResolver interface {
 	GetDeploymentRuns(ctx context.Context, deploymentID string, environmentID string, version string) ([]*models.PipelineRuns, error)
 	Me(ctx context.Context) (*models.Users, error)
 	UserSingleDeploymentPermissions(ctx context.Context, userID string, environmentID string, deploymentID string, subjectType string) (*DeploymentPermissionsOutput, error)
+	UserDeploymentPermissions(ctx context.Context, userID string, environmentID string) ([]*DeploymentPermissionsOutput, error)
 	DeploymentPermissions(ctx context.Context, userID string, environmentID string, deploymentID string) ([]*DeploymentPermissionsOutput, error)
 	MyPipelinePermissions(ctx context.Context) ([]*PipelinePermissionsOutput, error)
 	UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*PipelinePermissionsOutput, error)
@@ -3341,6 +3343,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.PipelineTasksRun(childComplexity, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string)), true
 
+	case "Query.userDeploymentPermissions":
+		if e.complexity.Query.UserDeploymentPermissions == nil {
+			break
+		}
+
+		args, err := ec.field_Query_userDeploymentPermissions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UserDeploymentPermissions(childComplexity, args["userID"].(string), args["environmentID"].(string)), true
+
 	case "Query.userPermissions":
 		if e.complexity.Query.UserPermissions == nil {
 			break
@@ -4392,6 +4406,13 @@ extend type Query {
     + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
     """
     userSingleDeploymentPermissions(userID: String!, environmentID: String!, deploymentID: String!, subjectType: String!): DeploymentPermissionsOutput
+
+    """
+    Retrieve user's deployment permissions.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
+    """
+    userDeploymentPermissions(userID: String!, environmentID: String!): [DeploymentPermissionsOutput]
 
     """
     Retrieve deployments's permissions.
@@ -7921,6 +7942,30 @@ func (ec *executionContext) field_Query_pipelineTasksRun_args(ctx context.Contex
 		}
 	}
 	args["environmentID"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_userDeploymentPermissions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["userID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
 	return args, nil
 }
 
@@ -18619,6 +18664,45 @@ func (ec *executionContext) _Query_userSingleDeploymentPermissions(ctx context.C
 	return ec.marshalODeploymentPermissionsOutput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_userDeploymentPermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_userDeploymentPermissions_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().UserDeploymentPermissions(rctx, args["userID"].(string), args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*DeploymentPermissionsOutput)
+	fc.Result = res
+	return ec.marshalODeploymentPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_deploymentPermissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -27310,6 +27394,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_userSingleDeploymentPermissions(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "userDeploymentPermissions":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_userDeploymentPermissions(ctx, field)
 				return res
 			}
 

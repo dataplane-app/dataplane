@@ -11,6 +11,7 @@ import { useGetUserPermissions } from '../../graphql/getUserPermissions';
 import { useDeletePermissionToUser } from '../../graphql/deletePermissionToUser';
 import { useGetUserPipelinePermissions } from '../../graphql/getUserPipelinePermissions';
 import { useDeleteSpecificPermission } from '../../graphql/deleteSpecificPermission';
+import { useGetUserDeploymentPermissions } from '../../graphql/getUserDeploymentPermissions';
 
 export default function Permissions({ environmentId }) {
     // Global environment state with hookstate
@@ -124,7 +125,7 @@ export default function Permissions({ environmentId }) {
 
                     <Box mt={2}>
                         {specificPermissions.map((permission) => (
-                            <Grid display="flex" alignItems="center" width="200%" key={permission.Label} mt={1.5} mb={1.5}>
+                            <Grid display="flex" alignItems="center" width="200%" key={permission.ResourceID} mt={1.5} mb={1.5}>
                                 <Box
                                     onClick={() => deleteSpecificPermission(permission)}
                                     component={FontAwesomeIcon}
@@ -132,7 +133,7 @@ export default function Permissions({ environmentId }) {
                                     icon={faTrashAlt}
                                 />
                                 <Typography variant="subtitle2" lineHeight="15.23px">
-                                    Pipeline {permission.PipelineName + ' ' + permission.Access}
+                                    {permission.Label.split(' ')[0].replace('-', '') + ' ' + permission.PipelineName + ' ' + permission.Access}
                                 </Typography>
                             </Grid>
                         ))}
@@ -281,6 +282,7 @@ const useDeleteSpecificPermissionHook = (getSpecificPermissions) => {
 const useGetUserPipelinePermissionsHook = (setSpecificPermissions, environmentID) => {
     // GraphQL hook
     const getUserPipelinePermissions = useGetUserPipelinePermissions();
+    const getUserDeploymentPermissions = useGetUserDeploymentPermissions();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -289,16 +291,26 @@ const useGetUserPipelinePermissionsHook = (setSpecificPermissions, environmentID
 
     // Get specific permissions
     return async () => {
-        const response = await getUserPipelinePermissions({ userID: accessId, environmentID });
+        let responsePipeline = await getUserPipelinePermissions({ userID: accessId, environmentID });
 
-        if (response === null) {
-            setSpecificPermissions([]);
-        } else if (response.r || response.error) {
-            enqueueSnackbar("Can't get specific permissions: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        if (responsePipeline === null) {
+            responsePipeline = [];
+        } else if (responsePipeline.r || responsePipeline.error) {
+            enqueueSnackbar("Can't get specific permissions: " + (responsePipeline.msg || responsePipeline.r || responsePipeline.error), { variant: 'error' });
+        } else if (responsePipeline.errors) {
+            responsePipeline.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        }
+
+        const responseDeployment = await getUserDeploymentPermissions({ userID: accessId, environmentID });
+
+        if (responseDeployment === null) {
+            setSpecificPermissions(responsePipeline);
+        } else if (responseDeployment.r || responseDeployment.error) {
+            enqueueSnackbar("Can't get specific permissions: " + (responseDeployment.msg || responseDeployment.r || responseDeployment.error), { variant: 'error' });
+        } else if (responseDeployment.errors) {
+            responseDeployment.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setSpecificPermissions(response);
+            setSpecificPermissions([...responsePipeline, ...responseDeployment]);
         }
     };
 };

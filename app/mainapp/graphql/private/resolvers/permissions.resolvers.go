@@ -121,8 +121,14 @@ func (r *mutationResolver) DeleteSpecificPermission(ctx context.Context, subject
 		return "", errors.New("Requires permissions.")
 	}
 
+	var resource string
+	if resourceID[0:2] == "d-" {
+		resource = "specific_deployment"
+	} else {
+		resource = "specific_pipeline"
+	}
 	err := database.DBConn.Where("subject = ? and subject_id = ? and resource = ? and resource_id = ? and environment_id=?",
-		subject, subjectID, "specific_pipeline", resourceID, environmentID).Delete(&models.Permissions{})
+		subject, subjectID, resource, resourceID, environmentID).Delete(&models.Permissions{})
 
 	if err.RowsAffected == 0 {
 		return "", errors.New("User to permission relationship not found.")

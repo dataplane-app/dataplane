@@ -30,6 +30,7 @@ import { useRemoveUserFromAccessGroup } from '../graphql/removeUserFromAccessGro
 import { useGetUserPipelinePermissions } from '../graphql/getUserPipelinePermissions';
 import { EnvironmentContext } from '../App';
 import { useDeleteSpecificPermission } from '../graphql/deleteSpecificPermission';
+import { useGetUserDeploymentPermissions } from '../graphql/getUserDeploymentPermissions';
 
 export default function TeamDetail() {
     // Context
@@ -75,7 +76,7 @@ export default function TeamDetail() {
     const addUserToEnv = useAddUserToEnv(getUserEnvironments);
     const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, globalEnvironment?.id);
     const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
-    const getUserPipelinePermissions = useGetUserPipelinePermissions_(setSpecificPermissions, user.user_id, globalEnvironment?.id);
+    const getUserPipelinePermissions = useGetUserPipelinePermissionsHook(setSpecificPermissions, user.user_id, globalEnvironment?.id);
     const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
     const deletePermission = useDeletePermissionHook(getUserPermissions);
     const deleteSpecificPermission = useDeleteSpecificPermissionHook(getUserPipelinePermissions);
@@ -482,7 +483,7 @@ export default function TeamDetail() {
                                         {specificPermissions
                                             ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
                                             .map((permission) => (
-                                                <Grid display="flex" alignItems="center" width="200%" key={permission.PipelineName} mt={1.5} mb={1.5}>
+                                                <Grid display="flex" alignItems="center" width="200%" key={permission.ResourceID} mt={1.5} mb={1.5}>
                                                     <Box
                                                         onClick={() => deleteSpecificPermission(permission)}
                                                         component={FontAwesomeIcon}
@@ -490,7 +491,7 @@ export default function TeamDetail() {
                                                         icon={faTrashAlt}
                                                     />
                                                     <Typography variant="subtitle2" lineHeight="15.23px">
-                                                        Pipeline {permission.PipelineName + ' ' + permission.Access}
+                                                        {permission.Label.split(' ')[0].replace('-', '') + ' ' + permission.PipelineName + ' ' + permission.Access}
                                                     </Typography>
                                                 </Grid>
                                             ))}
@@ -736,26 +737,38 @@ const useGetUserPermissions_ = (setUserPermissions, userID, environmentID) => {
     };
 };
 
-const useGetUserPipelinePermissions_ = (setSpecificPermissions, userID, environmentID) => {
+const useGetUserPipelinePermissionsHook = (setSpecificPermissions, userID, environmentID) => {
     // GraphQL hook
     const getUserPipelinePermissions = useGetUserPipelinePermissions();
+    const getUserDeploymentPermissions = useGetUserDeploymentPermissions();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get specific permissions
     return async () => {
         if (userID !== undefined && environmentID !== null) {
-            const response = await getUserPipelinePermissions({ userID, environmentID });
+            let responsePipeline = await getUserPipelinePermissions({ userID, environmentID });
 
-            if (response === null) {
-                setSpecificPermissions([]);
-            } else if (response.r === 'error') {
+            if (responsePipeline === null) {
+                responsePipeline = [];
+            } else if (responsePipeline.r || responsePipeline.error) {
                 closeSnackbar();
-                enqueueSnackbar("Can't get specific permissions: " + response.msg, { variant: 'error' });
-            } else if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+                enqueueSnackbar("Can't get specific permissions: " + (responsePipeline.msg || responsePipeline.r || responsePipeline.error), { variant: 'error' });
+            } else if (responsePipeline.errors) {
+                responsePipeline.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            }
+
+            const responseDeployment = await getUserDeploymentPermissions({ userID, environmentID });
+
+            if (responseDeployment === null) {
+                setSpecificPermissions(responsePipeline);
+            } else if (responseDeployment.r || responseDeployment.error) {
+                closeSnackbar();
+                enqueueSnackbar("Can't get specific permissions: " + (responseDeployment.msg || responseDeployment.r || responseDeployment.error), { variant: 'error' });
+            } else if (responseDeployment.errors) {
+                responseDeployment.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
             } else {
-                setSpecificPermissions(response);
+                setSpecificPermissions([...responsePipeline, ...responseDeployment]);
             }
         }
     };

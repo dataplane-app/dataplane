@@ -24,6 +24,13 @@ extend type Query {
     userSingleDeploymentPermissions(userID: String!, environmentID: String!, deploymentID: String!, subjectType: String!): DeploymentPermissionsOutput
 
     """
+    Retrieve user's deployment permissions.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
+    """
+    userDeploymentPermissions(userID: String!, environmentID: String!): [DeploymentPermissionsOutput]
+
+    """
     Retrieve deployments's permissions.
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_deployment
