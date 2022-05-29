@@ -7,6 +7,7 @@ import { useHistory } from 'react-router-dom';
 import { useMe } from '../graphql/me';
 import { useUpdateMe } from '../graphql/updateMe';
 import { useGetMyPipelinePermissions } from '../graphql/getMyPipelinePermissions';
+import { useGetMyDeploymentPermissions } from '../graphql/getMyDeploymentPermissions';
 import { EnvironmentContext } from '../App';
 import ct from 'countries-and-timezones';
 import { useForm } from 'react-hook-form';
@@ -14,7 +15,6 @@ import { useSnackbar } from 'notistack';
 import { useMyPermissions } from '../graphql/getMyPermissions';
 import { useGlobalEnvironmentsState } from '../components/EnviromentDropdown';
 import { useGetMyAccessGroups } from '../graphql/getMyAccessGroups';
-import { useGetMyDeploymentPermissions } from '../graphql/getMyDeploymentPermissions';
 
 const MemberDetail = () => {
     // Context
@@ -144,7 +144,7 @@ const MemberDetail = () => {
                         </Box>
                     </Grid>
 
-                    <Grid item sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column' }} mb={2}>
+                    <Grid item sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column', maxWidth: '300px', minWidth: '220px' }} mb={2}>
                         <Typography component="h3" variant="h3" color="text.primary">
                             Belongs to environments
                         </Typography>
