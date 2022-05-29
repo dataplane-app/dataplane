@@ -258,7 +258,12 @@ const MemberDetail = () => {
                                             .map((permission) => (
                                                 <Grid display="flex" alignItems="center" width="200%" key={permission.ResourceID + permission.SubjectID} mt={1.5} mb={1.5}>
                                                     <Typography variant="subtitle2" lineHeight="15.23px">
-                                                        {permission.Label.split(' ')[0].replace('-', '') + ' ' + permission.PipelineName + ' ' + permission.Access}
+                                                        {permission.Label.split(' ')[0].replace('-', '') +
+                                                            ' ' +
+                                                            permission.PipelineName +
+                                                            ' ' +
+                                                            permission.Access +
+                                                            (permission.Subject === 'access_group' ? ' {Access group}' : '')}
                                                     </Typography>
                                                 </Grid>
                                             ))}
