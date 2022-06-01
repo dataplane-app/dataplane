@@ -83,8 +83,8 @@ const MemberDetail = () => {
                     </Grid>
                 </Grid>
 
-                <Grid container mt={5} alignItems="flex-start" gap="5%" justifyContent="space-between">
-                    <Grid item width="250px" mb={2}>
+                <Grid container mt={5} alignItems="flex-start" gap="5%" justifyContent="space-between" flexWrap="nowrap">
+                    <Grid item minWidth="250px" width="250px" mb={2}>
                         <Typography component="h3" variant="h3" color="text.primary">
                             Details
                         </Typography>
