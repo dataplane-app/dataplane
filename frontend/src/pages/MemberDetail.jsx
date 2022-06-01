@@ -7,6 +7,7 @@ import { useHistory } from 'react-router-dom';
 import { useMe } from '../graphql/me';
 import { useUpdateMe } from '../graphql/updateMe';
 import { useGetMyPipelinePermissions } from '../graphql/getMyPipelinePermissions';
+import { useGetMyDeploymentPermissions } from '../graphql/getMyDeploymentPermissions';
 import { EnvironmentContext } from '../App';
 import ct from 'countries-and-timezones';
 import { useForm } from 'react-hook-form';
@@ -81,8 +82,8 @@ const MemberDetail = () => {
                     </Grid>
                 </Grid>
 
-                <Grid container mt={5} alignItems="flex-start" justifyContent="space-between">
-                    <Grid item sx={{ flex: 1 }}>
+                <Grid container mt={5} alignItems="flex-start" gap="5%" justifyContent="space-between">
+                    <Grid item width="250px" mb={2}>
                         <Typography component="h3" variant="h3" color="text.primary">
                             Details
                         </Typography>
@@ -142,7 +143,64 @@ const MemberDetail = () => {
                             </Button>
                         </Box>
                     </Grid>
-                    <Grid item sx={{ flex: 2.2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+
+                    <Grid item sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column', maxWidth: '300px', minWidth: '220px' }} mb={2}>
+                        <Typography component="h3" variant="h3" color="text.primary">
+                            Belongs to environments
+                        </Typography>
+
+                        <Box mt="1.31rem">
+                            {Environments.get().length ? (
+                                Environments.get().map((env) => (
+                                    <Grid display="flex" mt={1.5} mb={1.5} alignItems="center" key={env.id}>
+                                        <Typography
+                                            onClick={() => history.push(`/settings/environment/${env.id}`)}
+                                            sx={{ cursor: 'pointer' }}
+                                            variant="subtitle2"
+                                            lineHeight="15.23px"
+                                            color="primary">
+                                            {env.name}
+                                        </Typography>
+                                    </Grid>
+                                ))
+                            ) : (
+                                <Typography variant="subtitle2" lineHeight="15.23px">
+                                    None
+                                </Typography>
+                            )}
+                        </Box>
+
+                        <Box mt="2.31rem">
+                            <Typography component="h3" variant="h3" color="text.primary">
+                                Belongs to access groups
+                            </Typography>
+
+                            <Box mt="1.31rem">
+                                {accessGroups.filter((env) => env.EnvironmentID === globalEnvironment.id).length ? (
+                                    accessGroups
+                                        .filter((env) => env.EnvironmentID === globalEnvironment.id)
+                                        .map((env) => (
+                                            <Grid display="flex" mt={1.5} mb={1.5} alignItems="center" key={env.AccessGroupID}>
+                                                <Typography
+                                                    onClick={() => history.push(`/access/${env.AccessGroupID}`)}
+                                                    sx={{ cursor: 'pointer' }}
+                                                    variant="subtitle2"
+                                                    lineHeight="15.23px"
+                                                    color="primary">
+                                                    {env.Name ? env.Name : 'None'}
+                                                </Typography>
+                                            </Grid>
+                                        ))
+                                ) : (
+                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                        None
+                                    </Typography>
+                                )}
+                            </Box>
+                        </Box>
+                    </Grid>
+
+                    <Grid item sx={{ flex: 1 }}>
                         <Box>
                             <Box>
                                 <Typography component="h3" variant="h3" color="text.primary">
@@ -198,70 +256,20 @@ const MemberDetail = () => {
                                         {userSpecificPermissions
                                             ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
                                             .map((permission) => (
-                                                <Grid display="flex" alignItems="center" key={permission.PipelineName} mt={1.5} mb={1.5}>
+                                                <Grid display="flex" alignItems="center" width="200%" key={permission.ResourceID + permission.SubjectID} mt={1.5} mb={1.5}>
                                                     <Typography variant="subtitle2" lineHeight="15.23px">
-                                                        Pipeline {permission.PipelineName + ' ' + permission.Access}
+                                                        {permission.Label.split(' ')[0].replace('-', '') +
+                                                            ' ' +
+                                                            permission.PipelineName +
+                                                            ' ' +
+                                                            permission.Access +
+                                                            (permission.Subject === 'access_group' ? ' {Access group}' : '')}
                                                     </Typography>
                                                 </Grid>
                                             ))}
                                     </Box>
                                 </Box>
                             ) : null}
-                        </Box>
-                    </Grid>
-                    <Grid item sx={{ flex: 1 }}>
-                        <Typography component="h3" variant="h3" color="text.primary">
-                            Belongs to environments
-                        </Typography>
-
-                        <Box mt="1.31rem">
-                            {Environments.get().length ? (
-                                Environments.get().map((env) => (
-                                    <Grid display="flex" mt={1.5} mb={1.5} alignItems="center" key={env.id}>
-                                        <Typography
-                                            onClick={() => history.push(`/settings/environment/${env.id}`)}
-                                            sx={{ cursor: 'pointer' }}
-                                            variant="subtitle2"
-                                            lineHeight="15.23px"
-                                            color="primary">
-                                            {env.name}
-                                        </Typography>
-                                    </Grid>
-                                ))
-                            ) : (
-                                <Typography variant="subtitle2" lineHeight="15.23px">
-                                    None
-                                </Typography>
-                            )}
-                        </Box>
-
-                        <Box mt="2.31rem">
-                            <Typography component="h3" variant="h3" color="text.primary">
-                                Belongs to access groups
-                            </Typography>
-
-                            <Box mt="1.31rem">
-                                {accessGroups.filter((env) => env.EnvironmentID === globalEnvironment.id).length ? (
-                                    accessGroups
-                                        .filter((env) => env.EnvironmentID === globalEnvironment.id)
-                                        .map((env) => (
-                                            <Grid display="flex" mt={1.5} mb={1.5} alignItems="center" key={env.AccessGroupID}>
-                                                <Typography
-                                                    onClick={() => history.push(`/access/${env.AccessGroupID}`)}
-                                                    sx={{ cursor: 'pointer' }}
-                                                    variant="subtitle2"
-                                                    lineHeight="15.23px"
-                                                    color="primary">
-                                                    {env.Name ? env.Name : 'None'}
-                                                </Typography>
-                                            </Grid>
-                                        ))
-                                ) : (
-                                    <Typography variant="subtitle2" lineHeight="15.23px">
-                                        None
-                                    </Typography>
-                                )}
-                            </Box>
                         </Box>
                     </Grid>
                 </Grid>
@@ -378,22 +386,34 @@ const useMyPermissionsHook = (setUserPermissions) => {
 const useGetMyPipelinePermissionsHook = (setUserSpecificPermissions) => {
     // GraphQL hook
     const getMyPipelinePermissions = useGetMyPipelinePermissions();
+    const getMyDeploymentPermissions = useGetMyDeploymentPermissions();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get specific permissions
     return async () => {
-        const response = await getMyPipelinePermissions();
+        let responsePipeline = await getMyPipelinePermissions();
 
-        if (response === null) {
-            setUserSpecificPermissions([]);
-        } else if (response.r || response.error) {
+        if (responsePipeline === null) {
+            responsePipeline = [];
+        } else if (responsePipeline.r || responsePipeline.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't get specific permissions: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            enqueueSnackbar("Can't get specific permissions: " + (responsePipeline.msg || responsePipeline.r || responsePipeline.error), { variant: 'error' });
+        } else if (responsePipeline.errors) {
+            responsePipeline.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        }
+
+        const responseDeployment = await getMyDeploymentPermissions();
+
+        if (responseDeployment === null) {
+            setUserSpecificPermissions(responsePipeline);
+        } else if (responseDeployment.r || responseDeployment.error) {
+            closeSnackbar();
+            enqueueSnackbar("Can't get specific permissions: " + (responseDeployment.msg || responseDeployment.r || responseDeployment.error), { variant: 'error' });
+        } else if (responseDeployment.errors) {
+            responseDeployment.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setUserSpecificPermissions(response);
+            setUserSpecificPermissions([...responsePipeline, ...responseDeployment]);
         }
     };
 };
@@ -408,7 +428,9 @@ const useGetMyAccessGroupsHook = (setAccessGroups) => {
     return async () => {
         const response = await getMyAccessGroups();
 
-        if (response.r || response.error) {
+        if (response === null) {
+            setAccessGroups([]);
+        } else if (response.r || response.error) {
             closeSnackbar();
             enqueueSnackbar("Can't get access groups: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {

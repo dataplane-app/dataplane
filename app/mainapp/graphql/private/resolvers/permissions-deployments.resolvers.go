@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -120,6 +120,123 @@ func (r *mutationResolver) DeploymentPermissionsToAccessGroup(ctx context.Contex
 	}
 
 	return "Access permissions updated.", nil
+}
+
+func (r *queryResolver) MyDeploymentPermissions(ctx context.Context) ([]*privategraphql.DeploymentPermissionsOutput, error) {
+	currentUser := ctx.Value("currentUser").(string)
+
+	// Permissions - as logged in user
+
+	var PermissionsOutput []*privategraphql.DeploymentPermissionsOutput
+
+	err := database.DBConn.Raw(
+		`
+		(
+			select
+			  string_agg(p.access, ',') as access,
+			  p.subject,
+			  p.subject_id,
+			  deploy_pipelines.name as pipeline_name,
+			  p.resource_id,
+			  p.environment_id,
+			  p.active,
+			  pt.level,
+			  pt.label,
+			  users.first_name,
+			  users.last_name,
+			  users.email,
+			  users.job_title
+			from
+			  permissions p,
+			  permissions_resource_types pt,
+			  users,
+			  deploy_pipelines
+			where
+			  p.resource = pt.code
+			  and pt.level = 'specific'
+		  
+			  and p.subject = 'user'
+			  and p.subject_id = users.user_id
+			  and p.subject_id = ?
+		  
+			  and deploy_pipelines.deploy_active = 'true'
+			  and p.resource_id = deploy_pipelines.pipeline_id
+		  
+			  and p.active = true
+		  
+			GROUP BY
+			  p.subject,
+			  p.subject_id,
+			  deploy_pipelines.name,
+			  p.resource_id,
+			  p.environment_id,
+			  p.active,
+			  p.subject_id,
+			  pt.level,
+			  pt.label,
+			  users.first_name,
+			  users.last_name,
+			  users.email,
+			  users.job_title
+		)UNION(
+			select
+				string_agg(p.access, ',') as access,
+				p.subject,
+				p.subject_id,
+				deploy_pipelines.name,
+				p.resource_id,
+				p.environment_id,
+				p.active,
+				pt.level,
+				pt.label,
+				pag.name,
+				'',
+				'',
+				''
+			  from
+				permissions p,
+				permissions_resource_types pt,
+				permissions_access_groups pag,
+				permissions_accessg_users pagu,
+				deploy_pipelines
+			  where
+				p.resource = pt.code
+				and pt.level = 'specific'
+		  
+				and p.subject = 'access_group'
+				and p.subject_id = pagu.access_group_id
+				and pag.access_group_id = pagu.access_group_id
+				and pagu.user_id = ?
+		  
+				and deploy_pipelines.deploy_active = 'true'
+				and p.resource_id = deploy_pipelines.pipeline_id
+				
+				and p.active = true
+				
+			  GROUP BY
+			    p.subject,
+				p.subject_id,
+				deploy_pipelines.name,
+				p.resource_id,
+				p.environment_id,
+				p.active,
+				pt.level,
+				pt.label,
+				pag.name
+		)
+		  
+`,
+		//direct
+		currentUser,
+		currentUser,
+	).Scan(
+		&PermissionsOutput,
+	).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Error retrieving permissions")
+	}
+
+	return PermissionsOutput, nil
 }
 
 func (r *queryResolver) UserSingleDeploymentPermissions(ctx context.Context, userID string, environmentID string, deploymentID string, subjectType string) (*privategraphql.DeploymentPermissionsOutput, error) {
