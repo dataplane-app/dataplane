@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -280,7 +280,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 			  string_agg(p.access, ',') as access,
 			  p.subject,
 			  p.subject_id,
-			  pipelines.name as pipeline_name,
+			  deploy_pipelines.name as pipeline_name,
 			  p.resource_id,
 			  p.environment_id,
 			  p.active,
@@ -294,7 +294,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 			  permissions p,
 			  permissions_resource_types pt,
 			  users,
-			  pipelines
+			  deploy_pipelines
 			where
 			  p.resource = pt.code
 			  and pt.level = 'specific'
@@ -303,14 +303,15 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 			  and p.subject_id = users.user_id
 			  and p.subject_id = ?
 		  
-			  and p.resource_id = 'd-' || pipelines.pipeline_id
+			  and deploy_pipelines.deploy_active = 'true'
+			  and p.resource_id = deploy_pipelines.pipeline_id
 		  
 			  and p.active = true
 		  
 			GROUP BY
 			  p.subject,
 			  p.subject_id,
-			  pipelines.name,
+			  deploy_pipelines.name,
 			  p.resource_id,
 			  p.environment_id,
 			  p.active,
@@ -328,7 +329,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 				string_agg(p.access, ',') as access,
 				p.subject,
 				p.subject_id,
-				pipelines.name,
+				deploy_pipelines.name,
 				p.resource_id,
 				p.environment_id,
 				p.active,
@@ -343,7 +344,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 				permissions_resource_types pt,
 				permissions_access_groups pag,
 				permissions_accessg_users pagu,
-				pipelines
+				deploy_pipelines
 			  where
 				p.resource = pt.code
 				and pt.level = 'specific'
@@ -353,14 +354,15 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 				and pag.access_group_id = pagu.access_group_id
 				and pagu.access_group_id = ?
 		  
-				and p.resource_id = 'd-' || pipelines.pipeline_id
+				and deploy_pipelines.deploy_active = 'true'
+				and p.resource_id = deploy_pipelines.pipeline_id
 		  
 				and p.active = true
 				
 			  GROUP BY
 			    p.subject,
 				p.subject_id,
-				pipelines.name,
+				deploy_pipelines.name,
 				p.resource_id,
 				p.environment_id,
 				p.active,
