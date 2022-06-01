@@ -491,7 +491,7 @@ export default function TeamDetail() {
                                                         sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
                                                         icon={faTrashAlt}
                                                     />
-                                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                                    <Typography variant="subtitle2" lineHeight="15.23px" pr={2}>
                                                         {formatSpecialPermission(permission)}
                                                     </Typography>
                                                 </Grid>

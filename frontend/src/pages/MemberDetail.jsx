@@ -258,7 +258,7 @@ const MemberDetail = () => {
                                             ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
                                             .map((permission) => (
                                                 <Grid display="flex" alignItems="center" width="200%" key={permission.ResourceID + permission.SubjectID} mt={1.5} mb={1.5}>
-                                                    <Typography variant="subtitle2" lineHeight="15.23px">
+                                                    <Typography variant="subtitle2" lineHeight="15.23px" pr={2}>
                                                         {formatSpecialPermission(permission)}
                                                     </Typography>
                                                 </Grid>
