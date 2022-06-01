@@ -12,6 +12,7 @@ import { useDeletePermissionToUser } from '../../graphql/deletePermissionToUser'
 import { useGetUserPipelinePermissions } from '../../graphql/getUserPipelinePermissions';
 import { useDeleteSpecificPermission } from '../../graphql/deleteSpecificPermission';
 import { useGetUserDeploymentPermissions } from '../../graphql/getUserDeploymentPermissions';
+import { formatSpecialPermission } from '../../utils/formatString';
 
 export default function Permissions({ environmentId }) {
     // Global environment state with hookstate
@@ -133,7 +134,7 @@ export default function Permissions({ environmentId }) {
                                     icon={faTrashAlt}
                                 />
                                 <Typography variant="subtitle2" lineHeight="15.23px">
-                                    {permission.Label.split(' ')[0].replace('-', '') + ' ' + permission.PipelineName + ' ' + permission.Access}
+                                    {formatSpecialPermission(permission)}
                                 </Typography>
                             </Grid>
                         ))}

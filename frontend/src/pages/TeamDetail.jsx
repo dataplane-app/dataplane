@@ -31,6 +31,7 @@ import { useGetUserPipelinePermissions } from '../graphql/getUserPipelinePermiss
 import { EnvironmentContext } from '../App';
 import { useDeleteSpecificPermission } from '../graphql/deleteSpecificPermission';
 import { useGetUserDeploymentPermissions } from '../graphql/getUserDeploymentPermissions';
+import { formatSpecialPermission } from '../utils/formatString';
 
 export default function TeamDetail() {
     // Context
@@ -491,7 +492,7 @@ export default function TeamDetail() {
                                                         icon={faTrashAlt}
                                                     />
                                                     <Typography variant="subtitle2" lineHeight="15.23px">
-                                                        {permission.Label.split(' ')[0].replace('-', '') + ' ' + permission.PipelineName + ' ' + permission.Access}
+                                                        {formatSpecialPermission(permission)}
                                                     </Typography>
                                                 </Grid>
                                             ))}
