@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -133,7 +133,7 @@ func (r *queryResolver) MyPipelinePermissions(ctx context.Context) ([]*privategr
 		`
 		(
 			select
-			  string_agg(p.access, ',') as access,
+			  string_agg(distinct p.access, ',') as access,
 			  p.subject,
 			  p.subject_id,
 			  pipelines.name as pipeline_name,
@@ -179,7 +179,7 @@ func (r *queryResolver) MyPipelinePermissions(ctx context.Context) ([]*privategr
 			  users.job_title
 		)UNION(
 			select
-				string_agg(p.access, ',') as access,
+				string_agg(distinct p.access, ',') as access,
 				p.subject,
 				p.subject_id,
 				pipelines.name,
@@ -262,7 +262,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 		`
 		(
 			select
-			  string_agg(p.access, ',') as access,
+			  string_agg(distinct p.access, ',') as access,
 			  p.subject,
 			  p.subject_id,
 			  pipelines.name as pipeline_name,
@@ -310,7 +310,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 		  UNION
 			(
 			  select
-				string_agg(p.access, ',') as access,
+				string_agg(distinct p.access, ',') as access,
 				p.subject,
 				p.subject_id,
 				pipelines.name,
@@ -392,7 +392,7 @@ func (r *queryResolver) UserSinglePipelinePermissions(ctx context.Context, userI
 	if subjectType == "user" {
 		rawQuery = `
 		select
-	string_agg(p.access, ',') as access,
+	string_agg(distinct p.access, ',') as access,
 	p.subject,
 	p.subject_id,
 	pipelines.name as pipeline_name,
@@ -439,7 +439,7 @@ GROUP BY
 	if subjectType == "access_group" {
 		rawQuery = `
 		select
-	string_agg(p.access, ',') as access,
+	string_agg(distinct p.access, ',') as access,
 	p.subject,
 	p.subject_id,
 	pipelines.name,
@@ -519,7 +519,7 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 	err := database.DBConn.Raw(
 		`
 		(select 
-			string_agg(
+			string_agg(distinct 
 		  p.access
 		  ,',') as access,
 		  p.subject,
@@ -562,7 +562,7 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 		UNION
 		(
 		select 
-		string_agg(
+		string_agg(distinct 
 			p.access
 			,',') as access,
 		  p.subject,

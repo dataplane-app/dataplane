@@ -133,7 +133,7 @@ func (r *queryResolver) MyDeploymentPermissions(ctx context.Context) ([]*private
 		`
 		(
 			select
-			  string_agg(p.access, ',') as access,
+			  string_agg(distinct p.access, ',') as access,
 			  p.subject,
 			  p.subject_id,
 			  deploy_pipelines.name as pipeline_name,
@@ -180,7 +180,7 @@ func (r *queryResolver) MyDeploymentPermissions(ctx context.Context) ([]*private
 			  users.job_title
 		)UNION(
 			select
-				string_agg(p.access, ',') as access,
+				string_agg(distinct p.access, ',') as access,
 				p.subject,
 				p.subject_id,
 				deploy_pipelines.name,
@@ -394,7 +394,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 		`
 		(
 			select
-			  string_agg(p.access, ',') as access,
+			  string_agg(distinct p.access, ',') as access,
 			  p.subject,
 			  p.subject_id,
 			  deploy_pipelines.name as pipeline_name,
@@ -443,7 +443,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 		  UNION
 			(
 			  select
-				string_agg(p.access, ',') as access,
+				string_agg(distinct p.access, ',') as access,
 				p.subject,
 				p.subject_id,
 				deploy_pipelines.name,
