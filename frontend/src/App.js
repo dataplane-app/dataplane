@@ -38,6 +38,7 @@ import Flow from './pages/PipelineEdit';
 import Deploy from './pages/Deploy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import DeploymentPermissions from './pages/Deployments/DeploymentPermissions';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
@@ -130,7 +131,7 @@ function App() {
                                             '/workers/:workerId',
                                             '/teams',
                                             '/teams/:teamId',
-                                            '/teams/access/:accessId',
+                                            '/access/:accessId',
                                             '/myaccount/:memberId',
                                             '/access_groups',
                                             '/settings',
@@ -144,6 +145,7 @@ function App() {
                                             '/pipelines/flow/:pipelineId',
                                             '/pipelines/deploy/:pipelineId',
                                             '/deployments',
+                                            '/deployments/permissions/:deploymentId',
                                             '/deployments/view/:deploymentId/:version?',
                                             '/support',
                                             '/feedback',
@@ -160,6 +162,9 @@ function App() {
                                                 <Route path="/deployments/view/:deploymentId/:version?">
                                                     <DeploymentView />
                                                 </Route>
+                                                <Route path="/deployments/permissions/:deploymentId">
+                                                    <DeploymentPermissions />
+                                                </Route>
                                                 <Route exact path="/workers">
                                                     <Workers />
                                                 </Route>
@@ -172,7 +177,7 @@ function App() {
                                                 <Route exact path="/teams/:teamId">
                                                     <TeamDetail />
                                                 </Route>
-                                                <Route exact path="/teams/access/:accessId">
+                                                <Route exact path="/access/:accessId">
                                                     <TeamGroup />
                                                 </Route>
                                                 <Route exact path="/access_groups">

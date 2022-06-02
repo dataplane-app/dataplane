@@ -261,7 +261,7 @@ func (resp *Response) IsBodyStream() bool {
 //
 // Note that GET and HEAD requests cannot have body.
 //
-/// See also SetBodyStream.
+// See also SetBodyStream.
 func (req *Request) SetBodyStreamWriter(sw StreamWriter) {
 	sr := NewStreamReader(sw)
 	req.SetBodyStream(sr, -1)
@@ -582,6 +582,9 @@ func (req *Request) SetBodyRaw(body []byte) {
 // The majority of workloads don't need this method.
 func (resp *Response) ReleaseBody(size int) {
 	resp.bodyRaw = nil
+	if resp.body == nil {
+		return
+	}
 	if cap(resp.body.B) > size {
 		resp.closeBodyStream() //nolint:errcheck
 		resp.body = nil
@@ -597,6 +600,9 @@ func (resp *Response) ReleaseBody(size int) {
 // The majority of workloads don't need this method.
 func (req *Request) ReleaseBody(size int) {
 	req.bodyRaw = nil
+	if req.body == nil {
+		return
+	}
 	if cap(req.body.B) > size {
 		req.closeBodyStream() //nolint:errcheck
 		req.body = nil
@@ -777,6 +783,14 @@ func swapRequestBody(a, b *Request) {
 	a.body, b.body = b.body, a.body
 	a.bodyRaw, b.bodyRaw = b.bodyRaw, a.bodyRaw
 	a.bodyStream, b.bodyStream = b.bodyStream, a.bodyStream
+
+	// This code assumes that if a requestStream was swapped the headers are also swapped or copied.
+	if rs, ok := a.bodyStream.(*requestStream); ok {
+		rs.header = &a.Header
+	}
+	if rs, ok := b.bodyStream.(*requestStream); ok {
+		rs.header = &b.Header
+	}
 }
 
 func swapResponseBody(a, b *Response) {
@@ -932,7 +946,7 @@ func WriteMultipartForm(w io.Writer, f *multipart.Form, boundary string) error {
 			}
 			fh, err := fv.Open()
 			if err != nil {
-				return fmt.Errorf("cannot open form file %q (%q): %s", k, fv.Filename, err)
+				return fmt.Errorf("cannot open form file %q (%q): %w", k, fv.Filename, err)
 			}
 			if _, err = copyZeroAlloc(vw, fh); err != nil {
 				return fmt.Errorf("error when copying form file %q (%q): %w", k, fv.Filename, err)
@@ -1291,6 +1305,9 @@ func (resp *Response) ReadLimitBody(r *bufio.Reader, maxBodySize int) error {
 	if !resp.mustSkipBody() {
 		err = resp.ReadBody(r, maxBodySize)
 		if err != nil {
+			if isConnectionReset(err) {
+				return nil
+			}
 			return err
 		}
 	}
@@ -1298,6 +1315,9 @@ func (resp *Response) ReadLimitBody(r *bufio.Reader, maxBodySize int) error {
 	if resp.Header.ContentLength() == -1 {
 		err = resp.Header.ReadTrailer(r)
 		if err != nil && err != io.EOF {
+			if isConnectionReset(err) {
+				return nil
+			}
 			return err
 		}
 	}
@@ -1869,6 +1889,9 @@ func (req *Request) closeBodyStream() error {
 	if bsc, ok := req.bodyStream.(io.Closer); ok {
 		err = bsc.Close()
 	}
+	if rs, ok := req.bodyStream.(*requestStream); ok {
+		releaseRequestStream(rs)
+	}
 	req.bodyStream = nil
 	return err
 }
@@ -2162,7 +2185,7 @@ func parseChunkSize(r *bufio.Reader) (int, error) {
 		c, err := r.ReadByte()
 		if err != nil {
 			return -1, ErrBrokenChunk{
-				error: fmt.Errorf("cannot read '\r' char at the end of chunk size: %s", err),
+				error: fmt.Errorf("cannot read '\r' char at the end of chunk size: %w", err),
 			}
 		}
 		// Skip chunk extension after chunk size.

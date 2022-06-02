@@ -2,7 +2,7 @@ import { useTheme } from '@emotion/react';
 import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactFlow, { addEdge, ControlButton, Controls, getConnectedEdges, isEdge, ReactFlowProvider, removeElements } from 'react-flow-renderer';
-import { useHistory, useLocation, useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import ApiNode from '../components/CustomNodesContent/ApiNode';
 import PythonNode from '../components/CustomNodesContent/PythonNode';
 import BashNode from '../components/CustomNodesContent/BashNode';
@@ -183,8 +183,6 @@ const Flow = () => {
         const prevElements = FlowState.elements.attach(Downgraded).get();
         FlowState.isEditorPage.set(true);
 
-        console.log('FLOWWW: ', FlowState.attach(Downgraded).get());
-
         setElements([...prevElements]);
         setIsLoadingFlow(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -193,6 +191,8 @@ const Flow = () => {
     useEffect(() => {
         if (!pipeline) return;
         getPipelineFlow(Environment.id.get(), setElements, setInitialState);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pipeline]);
 
     // Trigger the scale button on keyboard 's' key click

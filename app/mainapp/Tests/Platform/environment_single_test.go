@@ -52,7 +52,7 @@ func TestGetSingleEnvironment(t *testing.T) {
 	assert.Equalf(t, http.StatusOK, httpLoginResponse.StatusCode, "Login user 200 status code")
 
 	var environmentID models.Environment
-	database.DBConn.Debug().Where("name=?", "Development").First(&environmentID)
+	database.DBConn.Where("name=?", "Development").First(&environmentID)
 
 	// -------- Get environments  -------------
 	// getEnvironment(environment_id: String!): Environments

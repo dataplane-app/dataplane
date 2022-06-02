@@ -16,6 +16,7 @@ type Deployments {
   node_type_desc: String!
   schedule: String!
   schedule_type: String!
+  timezone: String!
 }
 
 type DeploymentRuns {

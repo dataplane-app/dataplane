@@ -22,7 +22,7 @@ import (
 
 /*
 For individual tests - in separate window run: go run server.go
-go test -p 1 -v -count=1 -run TestSpecificPipelines dataplane/Tests/pipelines
+go test -p 1 -v -count=1 -run TestSpecificPipelines dataplane/mainapp/Tests/pipelines
 * Login
 * Create pipeline
 * My pipeline permissions
@@ -218,6 +218,7 @@ func TestSpecificPipelines(t *testing.T) {
 			userID: "` + userId + `",
 			environmentID: "` + envID + `",
 			pipelineID: "` + p.PipelineID + `",
+			subjectType: "user",
 			){
 				Access
 				Subject

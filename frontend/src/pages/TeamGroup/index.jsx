@@ -46,7 +46,7 @@ const TeamGroup = () => {
         <Box className="page" width="83%">
             <Grid container alignItems="flex-start" flexDirection="column">
                 <Typography component="h2" variant="h2" color="text.primary">
-                    Team {'>'} Access group {'>'} {accessGroup.Name}
+                    Access group {'>'} {accessGroup.Name}
                 </Typography>
 
                 <Typography variant="subtitle2" mt=".20rem">
@@ -55,19 +55,19 @@ const TeamGroup = () => {
             </Grid>
 
             {isGlobalDataLoaded && accessGroup ? (
-                <Grid container mt="2.56rem" alignItems="flex-start" justifyContent="space-between">
-                    <Grid item sx={{ flex: 1 }}>
+                <Grid container mt="2.56rem" alignItems="flex-start" gap="5%" justifyContent="space-between" flexWrap="nowrap">
+                    <Grid item minWidth="250px" width="250px" mb={2}>
                         <Details environmentId={Environment.id.get()} accessGroup={accessGroup} getAccessGroup={getAccessGroup} />
 
                         <Box sx={{ margin: '2.45rem 0', borderTop: 1, borderColor: 'divider' }}></Box>
 
                         <Control environmentId={Environment.id.get()} accessGroup={accessGroup} getAccessGroup={getAccessGroup} />
                     </Grid>
-                    <Grid item sx={{ flex: 2.2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                        <Permissions environmentId={accessGroup.EnvironmentID} />
+                    <Grid item sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column' }} mb={2}>
+                        <Members environmentId={accessGroup.EnvironmentID} />
                     </Grid>
                     <Grid item sx={{ flex: 1 }}>
-                        <Members environmentId={accessGroup.EnvironmentID} />
+                        <Permissions environmentId={accessGroup.EnvironmentID} />
                     </Grid>
                 </Grid>
             ) : null}

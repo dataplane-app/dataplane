@@ -48,7 +48,7 @@ import (
 
 // Default Constants
 const (
-	Version                   = "1.13.0"
+	Version                   = "1.16.0"
 	DefaultURL                = "nats://127.0.0.1:4222"
 	DefaultPort               = 4222
 	DefaultMaxReconnect       = 60
@@ -83,6 +83,9 @@ const (
 
 	// ACCOUNT_AUTHENTICATION_EXPIRED_ERR is for when nats server account authorization has expired.
 	ACCOUNT_AUTHENTICATION_EXPIRED_ERR = "account authentication expired"
+
+	// MAX_CONNECTIONS_ERR is for when nats server denies the connection due to server max_connections limit
+	MAX_CONNECTIONS_ERR = "maximum connections exceeded"
 )
 
 // Errors
@@ -142,11 +145,13 @@ var (
 	ErrNotJSMessage                 = errors.New("nats: not a jetstream message")
 	ErrInvalidStreamName            = errors.New("nats: invalid stream name")
 	ErrInvalidDurableName           = errors.New("nats: invalid durable name")
+	ErrInvalidConsumerName          = errors.New("nats: invalid consumer name")
 	ErrNoMatchingStream             = errors.New("nats: no stream matches subject")
 	ErrSubjectMismatch              = errors.New("nats: subject does not match consumer")
 	ErrContextAndTimeout            = errors.New("nats: context and timeout can not both be set")
 	ErrInvalidJSAck                 = errors.New("nats: invalid jetstream publish response")
 	ErrMultiStreamUnsupported       = errors.New("nats: multiple streams are not supported")
+	ErrStreamConfigRequired         = errors.New("nats: stream configuration is required")
 	ErrStreamNameRequired           = errors.New("nats: stream name is required")
 	ErrStreamNotFound               = errors.New("nats: stream not found")
 	ErrConsumerNotFound             = errors.New("nats: consumer not found")
@@ -160,6 +165,8 @@ var (
 	ErrMsgNotFound                  = errors.New("nats: message not found")
 	ErrMsgAlreadyAckd               = errors.New("nats: message was already acknowledged")
 	ErrStreamInfoMaxSubjects        = errors.New("nats: subject details would exceed maximum allowed")
+	ErrStreamNameAlreadyInUse       = errors.New("nats: stream name already in use")
+	ErrMaxConnectionsExceeded       = errors.New("nats: server maximum connections exceeded")
 )
 
 func init() {
@@ -459,6 +466,10 @@ type Options struct {
 	// For websocket connections, indicates to the server that the connection
 	// supports compression. If the server does too, then data will be compressed.
 	Compression bool
+
+	// For websocket connections, adds a path to connections url.
+	// This is useful when connecting to NATS behind a proxy.
+	ProxyPath string
 
 	// InboxPrefix allows the default _INBOX prefix to be customized
 	InboxPrefix string
@@ -1140,6 +1151,15 @@ func Compression(enabled bool) Option {
 	}
 }
 
+// ProxyPath is an option for websocket connections that adds a path to connections url.
+// This is useful when connecting to NATS behind a proxy.
+func ProxyPath(path string) Option {
+	return func(o *Options) error {
+		o.ProxyPath = path
+		return nil
+	}
+}
+
 // CustomInboxPrefix configures the request + reply inbox prefix
 func CustomInboxPrefix(p string) Option {
 	return func(o *Options) error {
@@ -1649,6 +1669,17 @@ func (w *natsWriter) doneWithPending() {
 	w.pending = nil
 }
 
+// Notify the reader that we are done with the connect, where "read" operations
+// happen synchronously and under the connection lock. After this point, "read"
+// will be happening from the read loop, without the connection lock.
+//
+// Note: this runs under the connection lock.
+func (r *natsReader) doneWithConnect() {
+	if wsr, ok := r.r.(*websocketReader); ok {
+		wsr.doneWithConnect()
+	}
+}
+
 func (r *natsReader) Read() ([]byte, error) {
 	if r.off >= 0 {
 		off := r.off
@@ -1801,6 +1832,21 @@ func (nc *Conn) ConnectedUrl() string {
 		return _EMPTY_
 	}
 	return nc.current.url.String()
+}
+
+// ConnectedUrlRedacted reports the connected server's URL with passwords redacted
+func (nc *Conn) ConnectedUrlRedacted() string {
+	if nc == nil {
+		return _EMPTY_
+	}
+
+	nc.mu.RLock()
+	defer nc.mu.RUnlock()
+
+	if nc.status != CONNECTED {
+		return _EMPTY_
+	}
+	return nc.current.url.Redacted()
 }
 
 // ConnectedAddr returns the connected server's IP
@@ -1961,6 +2007,10 @@ func (nc *Conn) processConnectInit() error {
 	nc.wg.Add(2)
 	go nc.readLoop()
 	go nc.flusher()
+
+	// Notify the reader that we are done with the connect handshake, where
+	// reads were done synchronously and under the connection lock.
+	nc.br.doneWithConnect()
 
 	return nil
 }
@@ -3182,6 +3232,8 @@ func (nc *Conn) processErr(ie string) {
 	// FIXME(dlc) - process Slow Consumer signals special.
 	if e == STALE_CONNECTION {
 		nc.processOpErr(ErrStaleConnection)
+	} else if e == MAX_CONNECTIONS_ERR {
+		nc.processOpErr(ErrMaxConnectionsExceeded)
 	} else if strings.HasPrefix(e, PERMISSIONS_ERR) {
 		nc.processPermissionsViolation(ne)
 	} else if authErr := checkAuthError(e); authErr != nil {
@@ -3352,21 +3404,10 @@ func (nc *Conn) PublishMsg(m *Msg) error {
 	if m == nil {
 		return ErrInvalidMsg
 	}
-
-	var hdr []byte
-	var err error
-
-	if len(m.Header) > 0 {
-		if !nc.info.Headers {
-			return ErrHeadersNotSupported
-		}
-
-		hdr, err = m.headerBytes()
-		if err != nil {
-			return err
-		}
+	hdr, err := m.headerBytes()
+	if err != nil {
+		return err
 	}
-
 	return nc.publish(m.Subject, m.Reply, hdr, m.Data)
 }
 
@@ -3391,6 +3432,12 @@ func (nc *Conn) publish(subj, reply string, hdr, data []byte) error {
 		return ErrBadSubject
 	}
 	nc.mu.Lock()
+
+	// Check if headers attempted to be sent to server that does not support them.
+	if len(hdr) > 0 && !nc.info.Headers {
+		nc.mu.Unlock()
+		return ErrHeadersNotSupported
+	}
 
 	if nc.isClosed() {
 		nc.mu.Unlock()
@@ -3562,17 +3609,12 @@ func (nc *Conn) createNewRequestAndSend(subj string, hdr, data []byte) (chan *Ms
 // RequestMsg will send a request payload including optional headers and deliver
 // the response message, or an error, including a timeout if no message was received properly.
 func (nc *Conn) RequestMsg(msg *Msg, timeout time.Duration) (*Msg, error) {
-	var hdr []byte
-	var err error
-
-	if len(msg.Header) > 0 {
-		if !nc.info.Headers {
-			return nil, ErrHeadersNotSupported
-		}
-		hdr, err = msg.headerBytes()
-		if err != nil {
-			return nil, err
-		}
+	if msg == nil {
+		return nil, ErrInvalidMsg
+	}
+	hdr, err := msg.headerBytes()
+	if err != nil {
+		return nil, err
 	}
 
 	return nc.request(msg.Subject, hdr, msg.Data, timeout)

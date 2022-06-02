@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -705,13 +705,11 @@ func (r *queryResolver) GetActiveDeployment(ctx context.Context, pipelineID stri
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_deployments", ResourceID: platformID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
 	}
 
+	// Permissions baked into the SQL query below
 	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
-
-	// if permOutcome == "denied" {
-	// 	return []*privategraphql.Pipelines{}, nil
-	// }
 
 	p := privategraphql.Deployments{}
 	var query string
@@ -758,7 +756,7 @@ order by a.created_at desc
 a.pipeline_id, 
 a.name,
 a.environment_id,
-a.from_environment_id
+a.from_environment_id,
 a.description,
 a.active,
 a.worker_group,
@@ -797,8 +795,8 @@ inner join (
 		permissions p, permissions_accessg_users agu
 		where 
 		p.subject = 'access_group' and 
-		p.subject_id = agu.user_id and
-		p.subject_id = ? and
+		p.subject_id = agu.access_group_id and
+		agu.user_id = ? and
 		p.resource = 'specific_deployment' and
 		p.environment_id = agu.environment_id and 
 		p.active = true and
@@ -841,13 +839,11 @@ func (r *queryResolver) GetDeployment(ctx context.Context, pipelineID string, en
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_deployments", ResourceID: platformID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
 	}
 
+	// Permissions baked into the SQL query below
 	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
-
-	// if permOutcome == "denied" {
-	// 	return []*privategraphql.Pipelines{}, nil
-	// }
 
 	p := privategraphql.Deployments{}
 	var query string
@@ -894,7 +890,7 @@ order by a.created_at desc
 a.pipeline_id, 
 a.name,
 a.environment_id,
-a.from_environment_id
+a.from_environment_id,
 a.description,
 a.active,
 a.worker_group,
@@ -933,8 +929,8 @@ inner join (
 		permissions p, permissions_accessg_users agu
 		where 
 		p.subject = 'access_group' and 
-		p.subject_id = agu.user_id and
-		p.subject_id = ? and
+		p.subject_id = agu.access_group_id and
+		agu.user_id = ? and
 		p.resource = 'specific_deployment' and
 		p.environment_id = agu.environment_id and 
 		p.active = true and
@@ -1003,6 +999,7 @@ a.deploy_active,
 b.node_type,
 b.node_type_desc,
 b.online,
+timezone,
 scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a left join (
@@ -1039,6 +1036,7 @@ a.deploy_active,
 b.node_type,
 b.node_type_desc,
 b.online,
+timezone,
 scheduler.schedule,
 scheduler.schedule_type
 from deploy_pipelines a 
@@ -1067,8 +1065,8 @@ inner join (
 		permissions p, permissions_accessg_users agu
 		where 
 		p.subject = 'access_group' and 
-		p.subject_id = agu.user_id and
-		p.subject_id = ? and
+		p.subject_id = agu.access_group_id and
+		agu.user_id = ? and
 		p.resource = 'specific_deployment' and
 		p.environment_id = agu.environment_id and 
 		p.active = true and

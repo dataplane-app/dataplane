@@ -100,6 +100,49 @@ func (r *mutationResolver) DeletePermissionToUser(ctx context.Context, userID st
 	return e.ID, nil
 }
 
+func (r *mutationResolver) DeleteSpecificPermission(ctx context.Context, subject string, subjectID string, resourceID string, environmentID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_permissions", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: resourceID, Access: "assign_pipeline_permission", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: resourceID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: resourceID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: resourceID, Access: "run", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	var resource string
+	if resourceID[0:2] == "d-" {
+		resource = "specific_deployment"
+	} else {
+		resource = "specific_pipeline"
+	}
+	err := database.DBConn.Where("subject = ? and subject_id = ? and resource = ? and resource_id = ? and environment_id=?",
+		subject, subjectID, resource, resourceID, environmentID).Delete(&models.Permissions{})
+
+	if err.RowsAffected == 0 {
+		return "", errors.New("User to permission relationship not found.")
+	}
+	if err.Error != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete specific permission database error.")
+	}
+
+	return "Permission deleted", nil
+}
+
 func (r *queryResolver) AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error) {
 	platformID := ctx.Value("platformID").(string)
 
@@ -182,8 +225,8 @@ func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permission
 		where 
 		p.resource = pt.code and
 		p.subject = 'access_group' and 
-		p.subject_id = agu.user_id and
-		p.subject_id = ? and
+		p.subject_id = agu.access_group_id and
+		agu.user_id = ? and
 		p.active = true and
 		pt.level <> 'specific'
 		)

@@ -9,6 +9,10 @@ import { useUpdatePermissionToAccessGroup } from '../../graphql/updatePermission
 import { useAvailablePermissions } from '../../graphql/availablePermissions';
 import { useGetUserPermissions } from '../../graphql/getUserPermissions';
 import { useDeletePermissionToUser } from '../../graphql/deletePermissionToUser';
+import { useGetUserPipelinePermissions } from '../../graphql/getUserPipelinePermissions';
+import { useDeleteSpecificPermission } from '../../graphql/deleteSpecificPermission';
+import { useGetUserDeploymentPermissions } from '../../graphql/getUserDeploymentPermissions';
+import { formatSpecialPermission } from '../../utils/formatString';
 
 export default function Permissions({ environmentId }) {
     // Global environment state with hookstate
@@ -18,6 +22,7 @@ export default function Permissions({ environmentId }) {
     const [availablePermissions, setAvailablePermissions] = useState([]);
     const [selectedPermission, setSelectedPermission] = useState(null);
     const [permissions, setPermissions] = useState([]);
+    const [specificPermissions, setSpecificPermissions] = useState([]);
 
     // Control states
     const [clear, setClear] = useState(1);
@@ -27,7 +32,9 @@ export default function Permissions({ environmentId }) {
     const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, Environment.id.get());
     const getPermissions = useGetPermissions(setPermissions, Environment.id.get());
     const updatePermission = useUpdatePermissions(getPermissions, selectedPermission, environmentId);
+    const getUserPipelinePermissions = useGetUserPipelinePermissionsHook(setSpecificPermissions, Environment.id.get());
     const deletePermission = useDeletePermission(getPermissions);
+    const deleteSpecificPermission = useDeleteSpecificPermissionHook(getUserPipelinePermissions);
 
     // Get permissions on load
     useEffect(() => {
@@ -35,6 +42,7 @@ export default function Permissions({ environmentId }) {
         if (Environment.id.get() && firstRender) {
             getPermissions();
             getAvailablePermissions();
+            getUserPipelinePermissions();
             setFirstRender(false);
         }
 
@@ -108,7 +116,7 @@ export default function Permissions({ environmentId }) {
 
             {/* Specific permissions */}
             {/* Check if there are any permissions. If not, hide the box */}
-            {permissions.filter((env) => env.Level === 'specific').length ? (
+            {specificPermissions.length ? (
                 <Box mt={4}>
                     <Box>
                         <Typography component="h3" variant="h3" color="text.primary">
@@ -117,21 +125,19 @@ export default function Permissions({ environmentId }) {
                     </Box>
 
                     <Box mt={2}>
-                        {permissions
-                            .filter((permission) => permission.Level === 'specific')
-                            .map((permission) => (
-                                <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
-                                    <Box
-                                        onClick={() => deletePermission(permission)}
-                                        component={FontAwesomeIcon}
-                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
-                                        icon={faTrashAlt}
-                                    />
-                                    <Typography variant="subtitle2" lineHeight="15.23px">
-                                        {permission.Label}
-                                    </Typography>
-                                </Grid>
-                            ))}
+                        {specificPermissions.map((permission) => (
+                            <Grid display="flex" alignItems="center" width="200%" key={permission.ResourceID} mt={1.5} mb={1.5}>
+                                <Box
+                                    onClick={() => deleteSpecificPermission(permission)}
+                                    component={FontAwesomeIcon}
+                                    sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                    icon={faTrashAlt}
+                                />
+                                <Typography variant="subtitle2" lineHeight="15.23px" pr={2}>
+                                    {formatSpecialPermission(permission)}
+                                </Typography>
+                            </Grid>
+                        ))}
                     </Box>
                 </Box>
             ) : null}
@@ -235,16 +241,77 @@ const useDeletePermission = (getUserPermissions) => {
 
         const response = await deletePermissionToUser({ user_id, permission_id, environmentID });
 
-        if (response.r === 'error') {
+        if (response.r || response.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't delete permission: " + response.msg, {
-                variant: 'error',
-            });
+            enqueueSnackbar("Can't delete permission: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getUserPermissions();
+        }
+    };
+};
+
+const useDeleteSpecificPermissionHook = (getSpecificPermissions) => {
+    // GraphQL hook
+    const deleteSpecificPermission = useDeleteSpecificPermission();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Delete a permission
+    return async (permission) => {
+        const subject = 'access_group';
+        const subjectID = permission.SubjectID;
+        const resourceID = permission.ResourceID;
+        const environmentID = permission.EnvironmentID;
+
+        const response = await deleteSpecificPermission({ subject, subjectID, resourceID, environmentID });
+
+        if (response.r || response.error) {
+            closeSnackbar();
+            enqueueSnackbar("Can't delete permission: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getSpecificPermissions();
+        }
+    };
+};
+
+const useGetUserPipelinePermissionsHook = (setSpecificPermissions, environmentID) => {
+    // GraphQL hook
+    const getUserPipelinePermissions = useGetUserPipelinePermissions();
+    const getUserDeploymentPermissions = useGetUserDeploymentPermissions();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // URI parameter
+    const { accessId } = useParams();
+
+    // Get specific permissions
+    return async () => {
+        let responsePipeline = await getUserPipelinePermissions({ userID: accessId, environmentID });
+
+        if (responsePipeline === null) {
+            responsePipeline = [];
+        } else if (responsePipeline.r || responsePipeline.error) {
+            enqueueSnackbar("Can't get specific permissions: " + (responsePipeline.msg || responsePipeline.r || responsePipeline.error), { variant: 'error' });
+        } else if (responsePipeline.errors) {
+            responsePipeline.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        }
+
+        const responseDeployment = await getUserDeploymentPermissions({ userID: accessId, environmentID });
+
+        if (responseDeployment === null) {
+            setSpecificPermissions(responsePipeline);
+        } else if (responseDeployment.r || responseDeployment.error) {
+            enqueueSnackbar("Can't get specific permissions: " + (responseDeployment.msg || responseDeployment.r || responseDeployment.error), { variant: 'error' });
+        } else if (responseDeployment.errors) {
+            responseDeployment.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setSpecificPermissions([...responsePipeline, ...responseDeployment]);
         }
     };
 };

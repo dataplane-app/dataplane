@@ -14,7 +14,6 @@ import { useGlobalPipelineRun } from '../../../PipelineRuns/GlobalPipelineRunUIS
 import { useGlobalMeState } from '../../../../components/Navbar';
 import { formatDateLog } from '../../../../utils/formatDate';
 
-
 const LogsDrawer = ({ environmentId, handleClose }) => {
     const [websocketResp, setWebsocketResp] = useState('');
     const [filteredGraphqlResp, setFilteredGraphqlResp] = useState('');
@@ -24,11 +23,10 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
     // Global state
     const RunState = useGlobalRunState();
     const FlowState = useGlobalPipelineRun();
-  const MeData = useGlobalMeState();
+    const MeData = useGlobalMeState();
 
     // Instantiate websocket
     const webSocket = useWebSocketLog(environmentId, RunState.selectedRunID.get(), RunState.node_id.get(), setKeys, MeData.timezone.get());
-
 
     useEffect(() => {
         setWebsocketResp((t) => t + webSocket + '\n');

@@ -11,17 +11,18 @@ import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import DeletePipelineDrawer from '../../DrawerContent/DeletePipelineDrawer';
 import CustomChip from '../../CustomChip';
 import TurnOffPipelineDrawer from '../../DrawerContent/TurnOffPipelineDrawer';
-import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import DuplicatePipelineDrawer from '../../DrawerContent/DuplicatePipelineDrawer';
-import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
+import cronZone from '../../../utils/cronZone';
+import { useGlobalMeState } from '../../Navbar';
+import { getTimeZone } from '../../../utils/formatDate';
 
 const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipelines }) => {
     // React router
     const history = useHistory();
 
     const FlowState = useGlobalFlowState();
-    const RunState = useGlobalRunState();
+    const MeData = useGlobalMeState();
 
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
@@ -98,7 +99,8 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipel
                             />
                             <Typography color="secondary.main" variant="body2">
                                 {row.value.node_type_desc[0]?.toUpperCase() + row.value.node_type_desc.slice(1) + ' trigger'}
-                                {row.value.schedule && ' - ' + formatSchedule(row.value.schedule, row.value.schedule_type)}
+                                {row.value.schedule && ' - ' + cronZone(row.value.schedule, MeData.timezone.get(), row.value.schedule_type)}
+                                {row.value.node_type_desc !== 'play' && ' ' + getTimeZone(row.value.timezone)}
                             </Typography>
                         </Box>
                     ) : null,
@@ -217,17 +219,3 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipel
 };
 
 export default PipelineTable;
-
-// Utility function
-function formatSchedule(schedule, type) {
-    if (type === 'cronseconds') {
-        if (schedule === '*/1 * * * * *') {
-            return 'Every second';
-        } else {
-            return 'Every ' + schedule.split(' ')[0].replace('*/', '') + ' seconds';
-        }
-    }
-    if (type === 'cron') {
-        return cronstrue.toString(schedule, { throwExceptionOnParseError: false });
-    }
-}

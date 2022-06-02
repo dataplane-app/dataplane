@@ -41,7 +41,9 @@ type Config struct {
 	BuildFrontend  BuildFrontendFunc
 	RuntimeParams  map[string]string // Run-time parameters to set on connection as session default values (e.g. search_path or application_name)
 
-	Fallbacks []*FallbackConfig
+	KerberosSrvName string
+	KerberosSpn     string
+	Fallbacks       []*FallbackConfig
 
 	// ValidateConnect is called during a connection attempt after a successful authentication with the PostgreSQL server.
 	// It can be used to validate that the server is acceptable. If this returns an error the connection is closed and the next
@@ -98,10 +100,29 @@ type FallbackConfig struct {
 	TLSConfig *tls.Config // nil disables TLS
 }
 
+// isAbsolutePath checks if the provided value is an absolute path either
+// beginning with a forward slash (as on Linux-based systems) or with a capital
+// letter A-Z followed by a colon and a backslash, e.g., "C:\", (as on Windows).
+func isAbsolutePath(path string) bool {
+	isWindowsPath := func(p string) bool {
+		if len(p) < 3 {
+			return false
+		}
+		drive := p[0]
+		colon := p[1]
+		backslash := p[2]
+		if drive >= 'A' && drive <= 'Z' && colon == ':' && backslash == '\\' {
+			return true
+		}
+		return false
+	}
+	return strings.HasPrefix(path, "/") || isWindowsPath(path)
+}
+
 // NetworkAddress converts a PostgreSQL host and port into network and address suitable for use with
 // net.Dial.
 func NetworkAddress(host string, port uint16) (network, address string) {
-	if strings.HasPrefix(host, "/") {
+	if isAbsolutePath(host) {
 		network = "unix"
 		address = filepath.Join(host, ".s.PGSQL.") + strconv.FormatInt(int64(port), 10)
 	} else {
@@ -175,8 +196,6 @@ func NetworkAddress(host string, port uint16) (network, address string) {
 // TLCConfig.
 //
 // Other known differences with libpq:
-//
-// If a host name resolves into multiple addresses, libpq will try all addresses. pgconn will only try the first.
 //
 // When multiple hosts are specified, libpq allows them to have different passwords set via the .pgpass file. pgconn
 // does not.
@@ -259,10 +278,20 @@ func ParseConfig(connString string) (*Config, error) {
 		"sslkey":               {},
 		"sslcert":              {},
 		"sslrootcert":          {},
+		"krbspn":               {},
+		"krbsrvname":           {},
 		"target_session_attrs": {},
 		"min_read_buffer_size": {},
 		"service":              {},
 		"servicefile":          {},
+	}
+
+	// Adding kerberos configuration
+	if _, present := settings["krbsrvname"]; present {
+		config.KerberosSrvName = settings["krbsrvname"]
+	}
+	if _, present := settings["krbspn"]; present {
+		config.KerberosSpn = settings["krbspn"]
 	}
 
 	for k, v := range settings {

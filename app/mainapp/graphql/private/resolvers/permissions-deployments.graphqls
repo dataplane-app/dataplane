@@ -1,0 +1,65 @@
+type DeploymentPermissionsOutput {
+    Access: String!
+    Subject: String!
+    SubjectID: String!
+    PipelineName: String!
+    ResourceID: String!
+    EnvironmentID: String!
+    Active: Boolean!
+    Level: String!
+    Label: String!
+    FirstName: String!
+    LastName: String!
+    Email: String!
+    JobTitle: String!
+}
+
+
+extend type Query {
+    """
+    Retrieve my deployment permissions.
+    + **Route**: Private
+    + **Permissions**: logged in user
+    """
+    myDeploymentPermissions: [DeploymentPermissionsOutput]
+
+    """
+    Retrieve user's permissions for a single deployment.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
+    """
+    userSingleDeploymentPermissions(userID: String!, environmentID: String!, deploymentID: String!, subjectType: String!): DeploymentPermissionsOutput
+
+    """
+    Retrieve user's deployment permissions.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, environment_users
+    """
+    userDeploymentPermissions(userID: String!, environmentID: String!): [DeploymentPermissionsOutput]
+
+    """
+    Retrieve deployments's permissions.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_deployment
+    """
+    deploymentPermissions(userID: String!, environmentID: String!, deploymentID: String!): [DeploymentPermissionsOutput]
+
+}
+
+extend type Mutation {
+
+    """
+    Grant Deployment Specific Permissions to User.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_deployment
+    """
+    deploymentPermissionsToUser(environmentID: String!, resourceID: String!, access: [String!]!, user_id: String!): String!
+
+    """
+    Grant Deployment Specific Permissions to Access Group.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_permissions, specific_deployment
+    """
+    deploymentPermissionsToAccessGroup(environmentID: String!, resourceID: String!, access: [String!]!, access_group_id: String!): String!
+
+}

@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -53,9 +54,9 @@ type KeyValue interface {
 	// Update will update the value iff the latest revision matches.
 	Update(key string, value []byte, last uint64) (revision uint64, err error)
 	// Delete will place a delete marker and leave all revisions.
-	Delete(key string) error
+	Delete(key string, opts ...DeleteOpt) error
 	// Purge will place a delete marker and remove all previous revisions.
-	Purge(key string) error
+	Purge(key string, opts ...DeleteOpt) error
 	// Watch for any updates to keys that match the keys argument which could include wildcards.
 	// Watch will send a nil entry when it has received all initial values.
 	Watch(keys string, opts ...WatchOpt) (KeyWatcher, error)
@@ -93,6 +94,8 @@ type KeyValueStatus interface {
 
 // KeyWatcher is what is returned when doing a watch.
 type KeyWatcher interface {
+	// Context returns watcher context optionally provided by nats.Context option.
+	Context() context.Context
 	// Updates returns a channel to read any updates to entries.
 	Updates() <-chan KeyValueEntry
 	// Stop will stop this watcher.
@@ -177,6 +180,40 @@ func (ctx ContextOpt) configurePurge(opts *purgeOpts) error {
 	return nil
 }
 
+type DeleteOpt interface {
+	configureDelete(opts *deleteOpts) error
+}
+
+type deleteOpts struct {
+	// Remove all previous revisions.
+	purge bool
+
+	// Delete only if the latest revision matches.
+	revision uint64
+}
+
+type deleteOptFn func(opts *deleteOpts) error
+
+func (opt deleteOptFn) configureDelete(opts *deleteOpts) error {
+	return opt(opts)
+}
+
+// LastRevision deletes if the latest revision matches.
+func LastRevision(revision uint64) DeleteOpt {
+	return deleteOptFn(func(opts *deleteOpts) error {
+		opts.revision = revision
+		return nil
+	})
+}
+
+// purge removes all previous revisions.
+func purge() DeleteOpt {
+	return deleteOptFn(func(opts *deleteOpts) error {
+		opts.purge = true
+		return nil
+	})
+}
+
 // KeyValueConfig is for configuring a KeyValue store.
 type KeyValueConfig struct {
 	Bucket       string
@@ -187,6 +224,7 @@ type KeyValueConfig struct {
 	MaxBytes     int64
 	Storage      StorageType
 	Replicas     int
+	Placement    *Placement
 }
 
 // Used to watch all keys.
@@ -326,18 +364,41 @@ func (js *js) CreateKeyValue(cfg *KeyValueConfig) (KeyValue, error) {
 		replicas = 1
 	}
 
+	// We will set explicitly some values so that we can do comparison
+	// if we get an "already in use" error and need to check if it is same.
+	maxBytes := cfg.MaxBytes
+	if maxBytes == 0 {
+		maxBytes = -1
+	}
+	maxMsgSize := cfg.MaxValueSize
+	if maxMsgSize == 0 {
+		maxMsgSize = -1
+	}
+	// When stream's MaxAge is not set, server uses 2 minutes as the default
+	// for the duplicate window. If MaxAge is set, and lower than 2 minutes,
+	// then the duplicate window will be set to that. If MaxAge is greater,
+	// we will cap the duplicate window to 2 minutes (to be consistent with
+	// previous behavior).
+	duplicateWindow := 2 * time.Minute
+	if cfg.TTL > 0 && cfg.TTL < duplicateWindow {
+		duplicateWindow = cfg.TTL
+	}
 	scfg := &StreamConfig{
 		Name:              fmt.Sprintf(kvBucketNameTmpl, cfg.Bucket),
 		Description:       cfg.Description,
 		Subjects:          []string{fmt.Sprintf(kvSubjectsTmpl, cfg.Bucket)},
 		MaxMsgsPerSubject: history,
-		MaxBytes:          cfg.MaxBytes,
+		MaxBytes:          maxBytes,
 		MaxAge:            cfg.TTL,
-		MaxMsgSize:        cfg.MaxValueSize,
+		MaxMsgSize:        maxMsgSize,
 		Storage:           cfg.Storage,
 		Replicas:          replicas,
+		Placement:         cfg.Placement,
 		AllowRollup:       true,
 		DenyDelete:        true,
+		Duplicates:        duplicateWindow,
+		MaxMsgs:           -1,
+		MaxConsumers:      -1,
 	}
 
 	// If we are at server version 2.7.2 or above use DiscardNew. We can not use DiscardNew for 2.7.1 or below.
@@ -346,7 +407,24 @@ func (js *js) CreateKeyValue(cfg *KeyValueConfig) (KeyValue, error) {
 	}
 
 	if _, err := js.AddStream(scfg); err != nil {
-		return nil, err
+		// If we have a failure to add, it could be because we have
+		// a config change if the KV was created against a pre 2.7.2
+		// and we are now moving to a v2.7.2+. If that is the case
+		// and the only difference is the discard policy, then update
+		// the stream.
+		if err == ErrStreamNameAlreadyInUse {
+			if si, _ := js.StreamInfo(scfg.Name); si != nil {
+				// To compare, make the server's stream info discard
+				// policy same than ours.
+				si.Config.Discard = scfg.Discard
+				if reflect.DeepEqual(&si.Config, scfg) {
+					_, err = js.UpdateStream(scfg)
+				}
+			}
+		}
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	kv := &kvs{
@@ -547,16 +625,7 @@ func (kv *kvs) Update(key string, value []byte, revision uint64) (uint64, error)
 }
 
 // Delete will place a delete marker and leave all revisions.
-func (kv *kvs) Delete(key string) error {
-	return kv.delete(key, false)
-}
-
-// Purge will remove the key and all revisions.
-func (kv *kvs) Purge(key string) error {
-	return kv.delete(key, true)
-}
-
-func (kv *kvs) delete(key string, purge bool) error {
+func (kv *kvs) Delete(key string, opts ...DeleteOpt) error {
 	if !keyValid(key) {
 		return ErrInvalidKey
 	}
@@ -571,14 +640,33 @@ func (kv *kvs) delete(key string, purge bool) error {
 	// DEL op marker. For watch functionality.
 	m := NewMsg(b.String())
 
-	if purge {
+	var o deleteOpts
+	for _, opt := range opts {
+		if opt != nil {
+			if err := opt.configureDelete(&o); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.purge {
 		m.Header.Set(kvop, kvpurge)
 		m.Header.Set(MsgRollup, MsgRollupSubject)
 	} else {
 		m.Header.Set(kvop, kvdel)
 	}
+
+	if o.revision != 0 {
+		m.Header.Set(ExpectedLastSubjSeqHdr, strconv.FormatUint(o.revision, 10))
+	}
+
 	_, err := kv.js.PublishMsg(m)
 	return err
+}
+
+// Purge will remove the key and all revisions.
+func (kv *kvs) Purge(key string, opts ...DeleteOpt) error {
+	return kv.Delete(key, append(opts, purge())...)
 }
 
 const kvDefaultPurgeDeletesMarkerThreshold = 30 * time.Minute
@@ -701,6 +789,15 @@ type watcher struct {
 	initDone    bool
 	initPending uint64
 	received    uint64
+	ctx         context.Context
+}
+
+// Context returns the context for the watcher if set.
+func (w *watcher) Context() context.Context {
+	if w == nil {
+		return nil
+	}
+	return w.ctx
 }
 
 // Updates returns the interior channel.
@@ -743,7 +840,7 @@ func (kv *kvs) Watch(keys string, opts ...WatchOpt) (KeyWatcher, error) {
 	keys = b.String()
 
 	// We will block below on placing items on the chan. That is by design.
-	w := &watcher{updates: make(chan KeyValueEntry, 256)}
+	w := &watcher{updates: make(chan KeyValueEntry, 256), ctx: o.ctx}
 
 	update := func(m *Msg) {
 		tokens, err := getMetadataFields(m.Reply)

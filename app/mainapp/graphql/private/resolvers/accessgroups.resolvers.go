@@ -15,6 +15,7 @@ import (
 	"log"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID string, name string, description *string) (string, error) {
@@ -542,4 +543,31 @@ func (r *queryResolver) GetAccessGroupUsers(ctx context.Context, environmentID s
 	}
 
 	return e, nil
+}
+
+func (r *queryResolver) MyAccessGroups(ctx context.Context) ([]*models.PermissionsAccessGUsersOutput, error) {
+	currentUser := ctx.Value("currentUser").(string)
+
+	var AccessGroupsOutput []*models.PermissionsAccessGUsersOutput
+
+	err := database.DBConn.Raw(
+
+		`
+		SELECT
+		pagu.access_group_id,
+		pag.name,
+		pagu.user_id,
+		pagu.active,
+		pagu.environment_id
+		FROM permissions_accessg_users pagu
+		JOIN permissions_access_groups pag
+		ON pagu.access_group_id = pag.access_group_id
+		WHERE pagu.user_id = ?
+		`, currentUser).Scan(&AccessGroupsOutput).Error
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Error retrieving access groups")
+	}
+
+	return AccessGroupsOutput, nil
 }

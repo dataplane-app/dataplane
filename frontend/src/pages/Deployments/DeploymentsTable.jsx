@@ -8,20 +8,21 @@ import DeploymentsTableItem from './DeploymentsTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenu from '../../components/MoreInfoMenuPipeline';
 import CustomChip from '../../components/CustomChip';
-import cronstrue from 'cronstrue';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
 import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
 import { useGlobalPipelineRun } from '../PipelineRuns/GlobalPipelineRunUIState';
-import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
+import { useGlobalMeState } from '../../components/Navbar';
+import cronZone from '../../utils/cronZone';
+import { getTimeZone } from '../../utils/formatDate';
 
 const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDeployments }) => {
     // React router
     const history = useHistory();
 
     const FlowState = useGlobalPipelineRun();
-    const RunState = useGlobalRunState();
+    const MeData = useGlobalMeState();
 
     const Environments = useGlobalEnvironmentsState();
     const Environment = useGlobalEnvironmentState();
@@ -100,7 +101,8 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
                             />
                             <Typography color="secondary.main" variant="body2">
                                 {row.value.node_type_desc[0]?.toUpperCase() + row.value.node_type_desc.slice(1) + ' trigger'}
-                                {row.value.schedule && ' - ' + formatSchedule(row.value.schedule, row.value.schedule_type)}
+                                {row.value.schedule && ' - ' + cronZone(row.value.schedule, MeData.timezone.get(), row.value.schedule_type)}
+                                {row.value.node_type_desc !== 'play' && ' ' + getTimeZone(row.value.timezone)}
                             </Typography>
                         </Box>
                     ) : null,
@@ -245,17 +247,3 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
 };
 
 export default DeploymentsTable;
-
-// Utility function
-function formatSchedule(schedule, type) {
-    if (type === 'cronseconds') {
-        if (schedule === '*/1 * * * * *') {
-            return 'Every second';
-        } else {
-            return 'Every ' + schedule.split(' ')[0].replace('*/', '') + ' seconds';
-        }
-    }
-    if (type === 'cron') {
-        return cronstrue.toString(schedule, { throwExceptionOnParseError: false });
-    }
-}

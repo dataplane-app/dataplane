@@ -2,11 +2,9 @@
 // 🤖 Github Repository: https://github.com/gofiber/fiber
 // 📌 API Documentation: https://docs.gofiber.io
 
-// Package fiber
-// Fiber is an Express inspired web framework built on top of Fasthttp,
+// Package fiber is an Express inspired web framework built on top of Fasthttp,
 // the fastest HTTP engine for Go. Designed to ease things up for fast
 // development with zero memory allocation and performance in mind.
-
 package fiber
 
 import (
@@ -31,15 +29,16 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"encoding/json"
+
 	"github.com/gofiber/fiber/v2/internal/colorable"
-	"github.com/gofiber/fiber/v2/internal/go-json"
 	"github.com/gofiber/fiber/v2/internal/isatty"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/valyala/fasthttp"
 )
 
 // Version of current fiber package
-const Version = "2.28.0"
+const Version = "2.34.0"
 
 // Handler defines a function to serve HTTP requests.
 type Handler = func(*Ctx) error
@@ -114,9 +113,13 @@ type App struct {
 	getBytes func(s string) (b []byte)
 	// Converts byte slice to a string
 	getString func(b []byte) string
-
 	// Mounted and main apps
 	appList map[string]*App
+	// Hooks
+	hooks *hooks
+	// Latest route & group
+	latestRoute *Route
+	latestGroup *Group
 }
 
 // Config is a struct holding the server settings.
@@ -426,14 +429,6 @@ const (
 	DefaultCompressedFileSuffix = ".fiber.gz"
 )
 
-// Variables for Name & GetRoute
-var latestRoute struct {
-	route *Route
-	mu    sync.Mutex
-}
-
-var latestGroup Group
-
 // DefaultErrorHandler that process return errors from handlers
 var DefaultErrorHandler = func(c *Ctx, err error) error {
 	code := StatusInternalServerError
@@ -464,11 +459,17 @@ func New(config ...Config) *App {
 			},
 		},
 		// Create config
-		config:    Config{},
-		getBytes:  utils.UnsafeBytes,
-		getString: utils.UnsafeString,
-		appList:   make(map[string]*App),
+		config:      Config{},
+		getBytes:    utils.UnsafeBytes,
+		getString:   utils.UnsafeString,
+		appList:     make(map[string]*App),
+		latestRoute: &Route{},
+		latestGroup: &Group{},
 	}
+
+	// Define hooks
+	app.hooks = newHooks(app)
+
 	// Override config if provided
 	if len(config) > 0 {
 		app.config = config[0]
@@ -552,6 +553,10 @@ func (app *App) handleTrustedProxy(ipAddress string) {
 func (app *App) Mount(prefix string, fiber *App) Router {
 	stack := fiber.Stack()
 	prefix = strings.TrimRight(prefix, "/")
+	if prefix == "" {
+		prefix = "/"
+	}
+
 	for m := range stack {
 		for r := range stack[m] {
 			route := app.copyRoute(stack[m][r])
@@ -572,13 +577,18 @@ func (app *App) Mount(prefix string, fiber *App) Router {
 
 // Assign name to specific route.
 func (app *App) Name(name string) Router {
-	latestRoute.mu.Lock()
-	if strings.HasPrefix(latestRoute.route.path, latestGroup.prefix) {
-		latestRoute.route.Name = latestGroup.name + name
+	app.mutex.Lock()
+	if strings.HasPrefix(app.latestRoute.path, app.latestGroup.Prefix) {
+		app.latestRoute.Name = app.latestGroup.name + name
 	} else {
-		latestRoute.route.Name = name
+		app.latestRoute.Name = name
 	}
-	latestRoute.mu.Unlock()
+
+	if err := app.hooks.executeOnNameHooks(*app.latestRoute); err != nil {
+		panic(err)
+	}
+	app.mutex.Unlock()
+
 	return app
 }
 
@@ -630,7 +640,7 @@ func (app *App) Use(args ...interface{}) Router {
 // Get registers a route for GET methods that requests a representation
 // of the specified resource. Requests using GET should only retrieve data.
 func (app *App) Get(path string, handlers ...Handler) Router {
-	return app.Add(MethodHead, path, handlers...).Add(MethodGet, path, handlers...)
+	return app.Head(path, handlers...).Add(MethodGet, path, handlers...)
 }
 
 // Head registers a route for HEAD methods that asks for a response identical
@@ -705,7 +715,12 @@ func (app *App) Group(prefix string, handlers ...Handler) Router {
 	if len(handlers) > 0 {
 		app.register(methodUse, prefix, handlers...)
 	}
-	return &Group{prefix: prefix, app: app}
+	grp := &Group{Prefix: prefix, app: app}
+	if err := app.hooks.executeOnGroupHooks(*grp); err != nil {
+		panic(err)
+	}
+
+	return grp
 }
 
 // Route is used to define routes with a common prefix inside the common function.
@@ -789,10 +804,8 @@ func (app *App) Listen(addr string) error {
 	return app.server.Serve(ln)
 }
 
-// ListenTLS serves HTTPs requests from the given addr.
-// certFile and keyFile are the paths to TLS certificate and key file.
-
-//  app.ListenTLS(":8080", "./cert.pem", "./cert.key")
+// ListenTLS serves HTTPS requests from the given addr.
+// certFile and keyFile are the paths to TLS certificate and key file:
 //  app.ListenTLS(":8080", "./cert.pem", "./cert.key")
 func (app *App) ListenTLS(addr, certFile, keyFile string) error {
 	// Check for valid cert/key path
@@ -832,10 +845,8 @@ func (app *App) ListenTLS(addr, certFile, keyFile string) error {
 	return app.server.ServeTLS(ln, certFile, keyFile)
 }
 
-// ListenMutualTLS serves HTTPs requests from the given addr.
-// certFile, keyFile and clientCertFile are the paths to TLS certificate and key file.
-
-//  app.ListenMutualTLS(":8080", "./cert.pem", "./cert.key", "./client.pem")
+// ListenMutualTLS serves HTTPS requests from the given addr.
+// certFile, keyFile and clientCertFile are the paths to TLS certificate and key file:
 //  app.ListenMutualTLS(":8080", "./cert.pem", "./cert.key", "./client.pem")
 func (app *App) ListenMutualTLS(addr, certFile, keyFile, clientCertFile string) error {
 	// Check for valid cert/key path
@@ -921,6 +932,10 @@ func (app *App) HandlersCount() uint32 {
 //
 // Shutdown does not close keepalive connections so its recommended to set ReadTimeout to something else than 0.
 func (app *App) Shutdown() error {
+	if app.hooks != nil {
+		defer app.hooks.executeOnShutdownHooks()
+	}
+
 	app.mutex.Lock()
 	defer app.mutex.Unlock()
 	if app.server == nil {
@@ -932,6 +947,11 @@ func (app *App) Shutdown() error {
 // Server returns the underlying fasthttp server
 func (app *App) Server() *fasthttp.Server {
 	return app.server
+}
+
+// Hooks returns the hook struct to register hooks.
+func (app *App) Hooks() *hooks {
+	return app.hooks
 }
 
 // Test is used for internal debugging by passing a *http.Request.
@@ -1056,7 +1076,7 @@ func (app *App) ErrorHandler(ctx *Ctx, err error) error {
 	)
 
 	for prefix, subApp := range app.appList {
-		if strings.HasPrefix(ctx.path, prefix) && prefix != "" {
+		if prefix != "" && strings.HasPrefix(ctx.path, prefix) {
 			parts := len(strings.Split(prefix, "/"))
 			if mountedPrefixParts <= parts {
 				mountedErrHandler = subApp.config.ErrorHandler
@@ -1100,6 +1120,10 @@ func (app *App) serverErrorHandler(fctx *fasthttp.RequestCtx, err error) {
 
 // startupProcess Is the method which executes all the necessary processes just before the start of the server.
 func (app *App) startupProcess() *App {
+	if err := app.hooks.executeOnListenHooks(); err != nil {
+		panic(err)
+	}
+
 	app.mutex.Lock()
 	app.buildTree()
 	app.mutex.Unlock()

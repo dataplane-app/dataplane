@@ -1,6 +1,6 @@
 {
     "name": "frontend",
-    "homepage": ".",
+    "homepage": "/webapp/",
     "version": "0.1.0",
     "private": true,
     "dependencies": {
@@ -59,6 +59,7 @@
     "scripts": {
         "start": "env-cmd -f ./src/enviroment/env.development craco start --watch-poll",
         "demodev": "env-cmd -f ./src/enviroment/env.demo craco start --watch-poll",
+        "demobuild": "REACT_APP_ENVIRONMENT=development BUILD_PATH=../frontend-build-test/build env-cmd -f ./src/enviroment/env.demo craco build --watch-poll",
         "build": "CI=false BUILD_PATH=../app/mainapp/frontbuild env-cmd -f ./src/enviroment/env.build craco --max_old_space_size=4096 build",
         "builddocker": "CI=false BUILD_PATH=/node/app/mainapp/frontbuild env-cmd -f ./src/enviroment/env.build craco --max_old_space_size=4096 build",
         "dockerbuild": "env-cmd -f ./src/enviroment/env.build craco build",

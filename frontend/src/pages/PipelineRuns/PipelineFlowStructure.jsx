@@ -1,15 +1,14 @@
-import { useSnackbar } from "notistack";
-import { useHistory } from "react-router-dom";
-import { useGetPipelineFlow } from "../../graphql/getPipelineFlow";
-import { useGlobalPipelineRun } from "./GlobalPipelineRunUIState";
-import { prepareInputForFrontend } from "../../utils/PipelinePrepareGraphInput";
+import { useSnackbar } from 'notistack';
+import { useHistory } from 'react-router-dom';
+import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
+import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
+import { prepareInputForFrontend } from '../../utils/PipelinePrepareGraphInput';
 
 /* 
 Get the structure for given pipeline ID and environment ID
 Set the Elements in Flowstate that updates the graph on page
 */
 export const GetPipelineFlow = () => {
-
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
 
@@ -23,7 +22,6 @@ export const GetPipelineFlow = () => {
 
     // Get members
     return async (inputs) => {
-
         // console.log("Pipeline ID:", inputs.pipelineId, inputs.environmentID)
 
         const rawResponse = await getPipelineFlow({ pipelineID: inputs.pipelineId, environmentID: inputs.environmentID });

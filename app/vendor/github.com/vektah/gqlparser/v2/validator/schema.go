@@ -1,8 +1,7 @@
-//go:generate go run ./inliner/inliner.go
-
 package validator
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 
@@ -126,18 +125,12 @@ func ValidateSchemaDocument(ast *SchemaDocument) (*Schema, *gqlerror.Error) {
 		}
 	}
 
-	for _, typ := range schema.Types {
-		err := validateDefinition(&schema, typ)
-		if err != nil {
-			return nil, err
-		}
+	if err := validateTypeDefinitions(&schema); err != nil {
+		return nil, err
 	}
 
-	for _, dir := range schema.Directives {
-		err := validateDirective(&schema, dir)
-		if err != nil {
-			return nil, err
-		}
+	if err := validateDirectiveDefinitions(&schema); err != nil {
+		return nil, err
 	}
 
 	// Inferred root operation type names should be performed only when a `schema` directive is
@@ -175,6 +168,36 @@ func ValidateSchemaDocument(ast *SchemaDocument) (*Schema, *gqlerror.Error) {
 	}
 
 	return &schema, nil
+}
+
+func validateTypeDefinitions(schema *Schema) *gqlerror.Error {
+	types := make([]string, 0, len(schema.Types))
+	for typ := range schema.Types {
+		types = append(types, typ)
+	}
+	sort.Strings(types)
+	for _, typ := range types {
+		err := validateDefinition(schema, schema.Types[typ])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateDirectiveDefinitions(schema *Schema) *gqlerror.Error {
+	directives := make([]string, 0, len(schema.Directives))
+	for directive := range schema.Directives {
+		directives = append(directives, directive)
+	}
+	sort.Strings(directives)
+	for _, directive := range directives {
+		err := validateDirective(schema, schema.Directives[directive])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func validateDirective(schema *Schema, def *DirectiveDefinition) *gqlerror.Error {
@@ -226,27 +249,27 @@ func validateDefinition(schema *Schema, def *Definition) *gqlerror.Error {
 	switch def.Kind {
 	case Object, Interface:
 		if len(def.Fields) == 0 {
-			return gqlerror.ErrorPosf(def.Position, "%s must define one or more fields.", def.Kind)
+			return gqlerror.ErrorPosf(def.Position, "%s %s: must define one or more fields.", def.Kind, def.Name)
 		}
 		for _, field := range def.Fields {
 			if typ, ok := schema.Types[field.Type.Name()]; ok {
 				if !isValidKind(typ.Kind, Scalar, Object, Interface, Union, Enum) {
-					return gqlerror.ErrorPosf(field.Position, "%s field must be one of %s.", def.Kind, kindList(Scalar, Object, Interface, Union, Enum))
+					return gqlerror.ErrorPosf(field.Position, "%s %s: field must be one of %s.", def.Kind, def.Name, kindList(Scalar, Object, Interface, Union, Enum))
 				}
 			}
 		}
 	case Enum:
 		if len(def.EnumValues) == 0 {
-			return gqlerror.ErrorPosf(def.Position, "%s must define one or more unique enum values.", def.Kind)
+			return gqlerror.ErrorPosf(def.Position, "%s %s: must define one or more unique enum values.", def.Kind, def.Name)
 		}
 	case InputObject:
 		if len(def.Fields) == 0 {
-			return gqlerror.ErrorPosf(def.Position, "%s must define one or more input fields.", def.Kind)
+			return gqlerror.ErrorPosf(def.Position, "%s %s: must define one or more input fields.", def.Kind, def.Name)
 		}
 		for _, field := range def.Fields {
 			if typ, ok := schema.Types[field.Type.Name()]; ok {
 				if !isValidKind(typ.Kind, Scalar, Enum, InputObject) {
-					return gqlerror.ErrorPosf(field.Position, "%s field must be one of %s.", def.Kind, kindList(Scalar, Enum, InputObject))
+					return gqlerror.ErrorPosf(field.Position, "%s %s: field must be one of %s.", typ.Kind, field.Name, kindList(Scalar, Enum, InputObject))
 				}
 			}
 		}
@@ -333,7 +356,7 @@ func validateDirectives(schema *Schema, dirs DirectiveList, location DirectiveLo
 
 func validateImplements(schema *Schema, def *Definition, intfName string) *gqlerror.Error {
 	// see validation rules at the bottom of
-	// https://facebook.github.io/graphql/June2018/#sec-Objects
+	// https://facebook.github.io/graphql/October2021/#sec-Objects
 	intf := schema.Types[intfName]
 	if intf == nil {
 		return gqlerror.ErrorPosf(def.Position, "Undefined type %s.", strconv.Quote(intfName))
@@ -382,7 +405,40 @@ func validateImplements(schema *Schema, def *Definition, intfName string) *gqler
 			}
 		}
 	}
+	return validateTypeImplementsAncestors(schema, def, intfName)
+}
+
+// validateTypeImplementsAncestors
+// https://github.com/graphql/graphql-js/blob/47bd8c8897c72d3efc17ecb1599a95cee6bac5e8/src/type/validate.ts#L428
+func validateTypeImplementsAncestors(schema *Schema, def *Definition, intfName string) *gqlerror.Error {
+	intf := schema.Types[intfName]
+	if intf == nil {
+		return gqlerror.ErrorPosf(def.Position, "Undefined type %s.", strconv.Quote(intfName))
+	}
+	for _, transitive := range intf.Interfaces {
+		if !containsString(def.Interfaces, transitive) {
+			if transitive == def.Name {
+				return gqlerror.ErrorPosf(def.Position,
+					`Type %s cannot implement %s because it would create a circular reference.`,
+					def.Name, intfName,
+				)
+			}
+			return gqlerror.ErrorPosf(def.Position,
+				`Type %s must implement %s because it is implemented by %s.`,
+				def.Name, transitive, intfName,
+			)
+		}
+	}
 	return nil
+}
+
+func containsString(slice []string, want string) bool {
+	for _, str := range slice {
+		if want == str {
+			return true
+		}
+	}
+	return false
 }
 
 func isCovariant(schema *Schema, required *Type, actual *Type) bool {

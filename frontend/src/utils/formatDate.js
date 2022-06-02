@@ -73,3 +73,11 @@ function pad(n, width) {
     const num = n + '';
     return num.length >= width ? num : new Array(width - num.length + 1).join('0') + n;
 }
+
+export function getTimeZone(zone) {
+    let text = DateTime.fromJSDate(new Date(), { zone }).toFormat('z (ZZZZ)');
+    if (text === 'Etc/UTC (UTC)') {
+        text = 'UTC';
+    }
+    return text;
+}

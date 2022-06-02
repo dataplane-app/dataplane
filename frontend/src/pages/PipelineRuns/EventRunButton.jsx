@@ -81,7 +81,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                     return;
                 }
 
-                if(ReconnectWS === false){
+                if (ReconnectWS === false) {
                     return;
                 }
 
@@ -136,7 +136,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                     // console.log("n", nodes);
 
                     for (var key in nodes) {
-                        if (nodes[key].status == 'Queue') {
+                        if (nodes[key].status === 'Queue') {
                             RunState.runObject.nodes.merge({
                                 [key]: {
                                     status: 'Fail',

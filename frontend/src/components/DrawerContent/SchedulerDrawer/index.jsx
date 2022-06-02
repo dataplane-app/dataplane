@@ -146,7 +146,7 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
                             />
                         </TabPanel>
                         <TabPanel value={tabValue} index={1}>
-                            <CronSecondsTab seconds={seconds} setSeconds={setSeconds} />
+                            <CronSecondsTab seconds={seconds} setSeconds={setSeconds} timezone={timezone} />
                         </TabPanel>
                     </Box>
                 </Box>

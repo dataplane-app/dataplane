@@ -2,10 +2,7 @@ import { faClock } from '@fortawesome/free-regular-svg-icons';
 import { faMapMarkedAlt, faPlayCircle, faRunning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Typography } from '@mui/material';
-import { useSnackbar } from 'notistack';
-import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { useMe } from '../../graphql/me';
 import { useGlobalMeState } from '../Navbar';
 
 const defaultTypographyStyle = {

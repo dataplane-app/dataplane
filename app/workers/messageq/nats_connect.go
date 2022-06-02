@@ -2,7 +2,6 @@ package messageq
 
 import (
 	"dataplane/workers/config"
-	"dataplane/workers/logging"
 	"log"
 	"os"
 	"time"
@@ -33,7 +32,7 @@ func NATSConnect() {
 
 	NATSencoded, _ = nats.NewEncodedConn(NATS, nats.JSON_ENCODER)
 	if err != nil {
-		logging.PrintSecretsRedact(err.Error())
+		log.Println(err.Error())
 		log.Fatal("Failed to connect to encoded NATS")
 	}
 

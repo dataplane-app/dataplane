@@ -47,7 +47,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Local ref
     const newFileRef = useRef();
-    const editingFileRef = useRef();
 
     // Graphql hook
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
@@ -71,7 +70,9 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Check if selected file changed
     useEffect(() => {
-        setSelected(EditorGlobal.selectedFile.get()?.id);
+        if (EditorGlobal.selectedFile.get()?.id) {
+            setSelected(EditorGlobal.selectedFile.get()?.id);
+        }
 
         if (!data.children.get()) return;
         const path = getPath(data.children.attach(Downgraded).get(), EditorGlobal.selectedFile.get()?.id);
@@ -319,7 +320,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
                     setTmpFileName(null);
                     setIsEditing(false);
-                    changeTreeStyling();
+                    changeTreeStyling(elementToChange.id);
                 }
             } else {
                 const check = checkFileName(tmpFileName);
@@ -344,7 +345,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
 
                     setTmpFileName(null);
                     setIsEditing(false);
-                    changeTreeStyling();
+                    changeTreeStyling(elementToChange.id);
                     selectAndOpenNewFile(nodes);
                 }
             }
@@ -468,7 +469,6 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                 icon={!nodes.children && <Box component={FontAwesomeIcon} icon={faFileAlt} style={{ fontSize: '0.875rem' }} sx={{ color: 'editorPage.fileManagerIcon' }} />}
                 key={nodes.id}
                 nodeId={nodes.id || ''}
-                ref={selected === nodes.id ? editingFileRef : null}
                 label={
                     <>
                         <input
@@ -569,7 +569,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     const getFilesNode = useGetFilesNodeHook(rest.pipeline, data, setExpanded, handleFileClick);
 
     return (
-        <div {...rest}>
+        <div {...rest} ref={ref}>
             <Box>
                 <Autocomplete
                     options={workerGroups}
@@ -730,7 +730,9 @@ function CustomTreeItem(props) {
         <TreeItem
             label={
                 <Box>
-                    <Typography sx={{ fontWeight: '400', fontSize: 13, flexGrow: 1 }}>{label}</Typography>
+                    <Typography component="div" sx={{ fontWeight: '400', fontSize: 13, flexGrow: 1 }}>
+                        {label}
+                    </Typography>
                 </Box>
             }
             {...other}
@@ -829,10 +831,6 @@ const useRenameFileHook = (pipeline, data, setExpanded) => {
             enqueueSnackbar("Can't rename file: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            const resp = prepareForFrontEnd(response);
-            data.set(resp);
-            setExpanded([resp.id]);
         }
     };
 };
@@ -858,10 +856,6 @@ const useRenameFolderHook = (pipeline, data, setExpanded) => {
             enqueueSnackbar("Can't rename folder: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            const resp = prepareForFrontEnd(response);
-            data.set(resp);
-            setExpanded([resp.id]);
         }
     };
 };

@@ -1,4 +1,4 @@
-import { Box, Button, Grid, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, Button, Grid, Typography, useTheme } from '@mui/material';
 import { forwardRef, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -9,11 +9,11 @@ import CustomDragHandle from '../../CustomDragHandle';
 import { useUploadFileNode } from '../../../graphql/uploadFileNode';
 import { useSnackbar } from 'notistack';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
-import { useRunCEFile } from '../../../graphql/runCEFile';
 import { useStopCERun } from '../../../graphql/stopCERun';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import MonacoEditor, { monaco } from 'react-monaco-editor';
+import { v4 as uuidv4 } from 'uuid';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
@@ -67,13 +67,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         const handler = editor.onDidChangeModelDecorations((_) => {
             handler.dispose();
             editor.getAction('editor.action.formatDocument').run();
-        });
-
-        window.addEventListener('resize', () => {
-            editor.layout({
-                width: 'auto',
-                height: 'auto',
-            });
         });
     };
 
@@ -166,6 +159,15 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.selectedFile?.id?.value]);
 
+    useEffect(() => {
+        if (editorRef.current) {
+            var model = editorRef.current.getModel();
+            if (model) {
+                model.setValue(model.getValue());
+            }
+        }
+    }, [EditorGlobal.selectedFile?.id?.value]);
+
     // Handle ctrl+s
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
@@ -181,7 +183,9 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             if (EditorGlobal.selectedFile.fType.value === 'file') {
                 uploadFileNode();
             }
-            if (EditorGlobal.selectedFile.fType.value === 'package') {
+
+            // Make sure a change is made to allow ctrl+s
+            if (EditorGlobal.selectedFile.fType.value === 'package' && EditorGlobal.selectedFile.diffValue.get()) {
                 EditorGlobal.installState.set('Running');
             }
         }
@@ -209,10 +213,40 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 'editorLineNumber.activeForeground': '#0E236B',
             },
         });
-    }, [])
+        if (theme.palette.mode === 'dark') {
+            monaco.editor.setTheme('dp-dark', {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [],
+                colors: {
+                    'editor.background': '#0e1928',
+                    'editorLineNumber.foreground': '#3C7790',
+                    'editorLineNumber.activeForeground': '#0E236B',
+                },
+            });
+        }
+    }, []);
+
+    const getLanguage = (filename) => {
+        if (!filename) {
+            return;
+        }
+
+        if (filename.match(/.py$/i)) {
+            return 'python';
+        } else if (filename.match(/.sh$/i)) {
+            return 'shell';
+        } else if (filename.match(/.json$/i)) {
+            return 'json';
+        }
+    };
+
+    const getEditorValue = () => {
+        return EditorGlobal.selectedFile.get()?.diffValue ?? EditorGlobal.selectedFile.get()?.content;
+    };
 
     return (
-        <div {...rest}>
+        <div {...rest} ref={ref}>
             <Box
                 sx={{
                     backgroundColor: 'background.main',
@@ -241,7 +275,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         {EditorGlobal.tabs
                             .attach(Downgraded)
                             .get()
-                            ?.reverse()
                             ?.map((tabs, idx) => {
                                 return (
                                     <Tab
@@ -251,15 +284,16 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                         disableRipple
                                         value={idx}
                                         icon={
-                                            <IconButton
+                                            <Box
                                                 aria-label="close"
                                                 disableRipple
                                                 disableFocusRipple
+                                                sx={{ display: 'flex', alignItems: 'center', paddingLeft: '12px', paddingRight: '8px' }}
                                                 onClick={(e) => handleTabClose(tabs, e)}
                                                 style={{ marginLeft: 0, paddingLeft: 12 }}>
                                                 {tabs.isEditing && <Box sx={{ width: 8, height: 8, marginRight: 1, backgroundColor: 'secondary.main', borderRadius: '50%' }} />}
                                                 <Box component={FontAwesomeIcon} icon={faTimes} sx={{ fontSize: 13 }} color="editorPage.fileManagerIcon" />
-                                            </IconButton>
+                                            </Box>
                                         }
                                         iconPosition="end"
                                         sx={{
@@ -330,21 +364,20 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 ) : null}
 
                 <Box zIndex={10} height="100%">
-                    <MonacoEditor
-                        editorDidMount={handleEditorOnMount}
-                        language={EditorGlobal.selectedFile.get()?.language}
-                        // path={EditorGlobal.selectedFile.get()?.name}
-                        defaultValue={EditorGlobal.selectedFile.get()?.content}
-                        value={EditorGlobal.selectedFile.get()?.diffValue ?? EditorGlobal.selectedFile.get()?.content}
-                        theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}
-                        height="100%"
-                        // saveViewState
-                        onChange={handleEditorChange}
-                        options={{
-                            minimap: { enabled: false },
-                            hideCursorInOverviewRuler: { enabled: true },
-                        }}
-                    />
+                    {getEditorValue() != undefined ? (
+                        <MonacoEditor
+                            editorDidMount={handleEditorOnMount}
+                            language={getLanguage(EditorGlobal.selectedFile.get()?.name)}
+                            value={getEditorValue()}
+                            theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}
+                            height="100%"
+                            onChange={handleEditorChange}
+                            options={{
+                                minimap: { enabled: false },
+                                hideCursorInOverviewRuler: { enabled: true },
+                            }}
+                        />
+                    ) : null}
                 </Box>
 
                 <Grid
@@ -408,32 +441,14 @@ export const useUploadFileNodeHook = (pipeline) => {
 };
 
 const useRunCEFileHook = (pipeline, setIsRunning) => {
-    const environmentID = pipeline.environmentID;
-    const pipelineID = pipeline.pipelineID;
-    const nodeID = pipeline.nodeID;
-    const workerGroup = pipeline.workerGroup;
-    const NodeTypeDesc = pipeline.nodeTypeDesc;
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
-    const fileID = EditorGlobal.selectedFile?.id?.get();
-
-    // GraphQL hook
-    const runCEFile = useRunCEFile();
-
-    const { enqueueSnackbar } = useSnackbar();
 
     // Run script
     return async () => {
-        const response = await runCEFile({ environmentID, pipelineID, nodeID, fileID, NodeTypeDesc, workerGroup });
-
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            setIsRunning(true);
-            EditorGlobal.runID.set(response.run_id);
-        }
+        setIsRunning(true);
+        const runID = uuidv4();
+        EditorGlobal.runID.set(runID);
     };
 };
 

@@ -21,7 +21,7 @@ const DeploymentTableItem = (props) => {
 
     const permissionClick = () => {
         handleCloseMenu();
-        history.push({ pathname: `/pipelines/permissions/${id}`, state: name });
+        history.push({ pathname: `/deployments/permissions/${id}`, state: name });
     };
 
     const deleteClick = () => {
