@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -454,10 +454,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 				p.active,
 				pt.level,
 				pt.label,
-				pag.name,
-				'',
-				'',
-				''
+				pag.name as first_name
 			  from
 				permissions p,
 				permissions_resource_types pt,

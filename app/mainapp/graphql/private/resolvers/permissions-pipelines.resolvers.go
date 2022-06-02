@@ -321,10 +321,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 		p.active,
 		pt.level,
 		pt.label,
-		pag.name,
-		'',
-		'',
-		''
+		pag.name as first_name
 	  from
 		permissions p,
 		permissions_resource_types pt,

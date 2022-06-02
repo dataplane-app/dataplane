@@ -134,7 +134,7 @@ export default function Permissions({ environmentId }) {
                                     icon={faTrashAlt}
                                 />
                                 <Typography variant="subtitle2" lineHeight="15.23px" pr={2}>
-                                    {formatSpecialPermission(permission).replace('()', '')}
+                                    {formatSpecialPermission(permission)}
                                 </Typography>
                             </Grid>
                         ))}
