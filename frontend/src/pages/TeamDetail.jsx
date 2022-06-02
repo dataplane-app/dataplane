@@ -31,6 +31,7 @@ import { useGetUserPipelinePermissions } from '../graphql/getUserPipelinePermiss
 import { EnvironmentContext } from '../App';
 import { useDeleteSpecificPermission } from '../graphql/deleteSpecificPermission';
 import { useGetUserDeploymentPermissions } from '../graphql/getUserDeploymentPermissions';
+import { formatSpecialPermission } from '../utils/formatString';
 
 export default function TeamDetail() {
     // Context
@@ -155,8 +156,8 @@ export default function TeamDetail() {
                     </Grid>
                 </Grid>
 
-                <Grid container mt={5} alignItems="flex-start" gap="5%" justifyContent="space-between">
-                    <Grid item width="250px" mb={2}>
+                <Grid container mt={5} alignItems="flex-start" gap="5%" justifyContent="space-between" flexWrap="nowrap">
+                    <Grid item minWidth="250px" width="250px" mb={2}>
                         <Typography component="h3" variant="h3" color="text.primary">
                             Details
                         </Typography>
@@ -490,8 +491,8 @@ export default function TeamDetail() {
                                                         sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
                                                         icon={faTrashAlt}
                                                     />
-                                                    <Typography variant="subtitle2" lineHeight="15.23px">
-                                                        {permission.Label.split(' ')[0].replace('-', '') + ' ' + permission.PipelineName + ' ' + permission.Access}
+                                                    <Typography variant="subtitle2" lineHeight="15.23px" pr={2}>
+                                                        {formatSpecialPermission(permission)}
                                                     </Typography>
                                                 </Grid>
                                             ))}

@@ -55,8 +55,8 @@ const TeamGroup = () => {
             </Grid>
 
             {isGlobalDataLoaded && accessGroup ? (
-                <Grid container mt="2.56rem" alignItems="flex-start" gap="5%" justifyContent="space-between">
-                    <Grid item width="250px" mb={2}>
+                <Grid container mt="2.56rem" alignItems="flex-start" gap="5%" justifyContent="space-between" flexWrap="nowrap">
+                    <Grid item minWidth="250px" width="250px" mb={2}>
                         <Details environmentId={Environment.id.get()} accessGroup={accessGroup} getAccessGroup={getAccessGroup} />
 
                         <Box sx={{ margin: '2.45rem 0', borderTop: 1, borderColor: 'divider' }}></Box>

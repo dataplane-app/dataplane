@@ -15,6 +15,7 @@ import { useSnackbar } from 'notistack';
 import { useMyPermissions } from '../graphql/getMyPermissions';
 import { useGlobalEnvironmentsState } from '../components/EnviromentDropdown';
 import { useGetMyAccessGroups } from '../graphql/getMyAccessGroups';
+import { formatSpecialPermission } from '../utils/formatString';
 
 const MemberDetail = () => {
     // Context
@@ -82,8 +83,8 @@ const MemberDetail = () => {
                     </Grid>
                 </Grid>
 
-                <Grid container mt={5} alignItems="flex-start" gap="5%" justifyContent="space-between">
-                    <Grid item width="250px" mb={2}>
+                <Grid container mt={5} alignItems="flex-start" gap="5%" justifyContent="space-between" flexWrap="nowrap">
+                    <Grid item minWidth="250px" width="250px" mb={2}>
                         <Typography component="h3" variant="h3" color="text.primary">
                             Details
                         </Typography>
@@ -257,13 +258,8 @@ const MemberDetail = () => {
                                             ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
                                             .map((permission) => (
                                                 <Grid display="flex" alignItems="center" width="200%" key={permission.ResourceID + permission.SubjectID} mt={1.5} mb={1.5}>
-                                                    <Typography variant="subtitle2" lineHeight="15.23px">
-                                                        {permission.Label.split(' ')[0].replace('-', '') +
-                                                            ' ' +
-                                                            permission.PipelineName +
-                                                            ' ' +
-                                                            permission.Access +
-                                                            (permission.Subject === 'access_group' ? ' {Access group}' : '')}
+                                                    <Typography variant="subtitle2" lineHeight="15.23px" pr={2}>
+                                                        {formatSpecialPermission(permission)}
                                                     </Typography>
                                                 </Grid>
                                             ))}
