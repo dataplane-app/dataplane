@@ -183,6 +183,7 @@ func TestSpecificPipelines(t *testing.T) {
 		userPipelinePermissions(
 			userID: "` + userId + `",
 			environmentID: "` + envID + `",
+			subjectType: "user",
 			){
 				Access
 				Subject
