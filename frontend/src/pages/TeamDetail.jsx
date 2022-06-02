@@ -748,7 +748,7 @@ const useGetUserPipelinePermissionsHook = (setSpecificPermissions, userID, envir
     // Get specific permissions
     return async () => {
         if (userID !== undefined && environmentID !== null) {
-            let responsePipeline = await getUserPipelinePermissions({ userID, environmentID });
+            let responsePipeline = await getUserPipelinePermissions({ userID, environmentID, subjectType: 'user' });
 
             if (responsePipeline === null) {
                 responsePipeline = [];
@@ -759,7 +759,7 @@ const useGetUserPipelinePermissionsHook = (setSpecificPermissions, userID, envir
                 responsePipeline.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
             }
 
-            const responseDeployment = await getUserDeploymentPermissions({ userID, environmentID });
+            const responseDeployment = await getUserDeploymentPermissions({ userID, environmentID, subjectType: 'user' });
 
             if (responseDeployment === null) {
                 setSpecificPermissions(responsePipeline);

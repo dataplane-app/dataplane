@@ -134,7 +134,7 @@ export default function Permissions({ environmentId }) {
                                     icon={faTrashAlt}
                                 />
                                 <Typography variant="subtitle2" lineHeight="15.23px" pr={2}>
-                                    {formatSpecialPermission(permission)}
+                                    {formatSpecialPermission(permission).replace('()', '')}
                                 </Typography>
                             </Grid>
                         ))}
@@ -292,7 +292,7 @@ const useGetUserPipelinePermissionsHook = (setSpecificPermissions, environmentID
 
     // Get specific permissions
     return async () => {
-        let responsePipeline = await getUserPipelinePermissions({ userID: accessId, environmentID });
+        let responsePipeline = await getUserPipelinePermissions({ userID: accessId, environmentID, subjectType: 'access_group' });
 
         if (responsePipeline === null) {
             responsePipeline = [];
@@ -302,7 +302,7 @@ const useGetUserPipelinePermissionsHook = (setSpecificPermissions, environmentID
             responsePipeline.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         }
 
-        const responseDeployment = await getUserDeploymentPermissions({ userID: accessId, environmentID });
+        const responseDeployment = await getUserDeploymentPermissions({ userID: accessId, environmentID, subjectType: 'access_group' });
 
         if (responseDeployment === null) {
             setSpecificPermissions(responsePipeline);

@@ -237,7 +237,7 @@ func (r *queryResolver) MyPipelinePermissions(ctx context.Context) ([]*privategr
 	return PermissionsOutput, nil
 }
 
-func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*privategraphql.PipelinePermissionsOutput, error) {
+func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID string, environmentID string, subjectType string) ([]*privategraphql.PipelinePermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -258,10 +258,10 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 
 	var PermissionsOutput []*privategraphql.PipelinePermissionsOutput
 
-	err := database.DBConn.Raw(
-		`
-		(
-			select
+	var rawQuery string
+	if subjectType == "user" {
+		rawQuery = `
+		select
 			  string_agg(distinct p.access, ',') as access,
 			  p.subject,
 			  p.subject_id,
@@ -306,60 +306,59 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 			  users.last_name,
 			  users.email,
 			  users.job_title
-		  )
-		  UNION
-			(
-			  select
-				string_agg(distinct p.access, ',') as access,
-				p.subject,
-				p.subject_id,
-				pipelines.name,
-				p.resource_id,
-				p.environment_id,
-				p.active,
-				pt.level,
-				pt.label,
-				pag.name,
-				'',
-				'',
-				''
-			  from
-				permissions p,
-				permissions_resource_types pt,
-				permissions_access_groups pag,
-				permissions_accessg_users pagu,
-				pipelines
-			  where
-				p.resource = pt.code
-				and pt.level = 'specific'
-		  
-				and p.subject = 'access_group'
-				and p.subject_id = pag.access_group_id
-				and pag.access_group_id = pagu.access_group_id
-				and pagu.access_group_id = ?
-		  
-				and p.resource_id = pipelines.pipeline_id
-		  
-				and p.active = true
-				
-			  GROUP BY
-			    p.subject,
-				p.subject_id,
-				pipelines.name,
-				p.resource_id,
-				p.environment_id,
-				p.active,
-				pt.level,
-				pt.label,
-				pag.name
-			)
-`,
-		//direct
-		userID,
-		userID,
-	).Scan(
-		&PermissionsOutput,
-	).Error
+		`
+	}
+
+	if subjectType == "access_group" {
+		rawQuery = `
+		select
+		string_agg(distinct p.access, ',') as access,
+		p.subject,
+		p.subject_id,
+		pipelines.name,
+		p.resource_id,
+		p.environment_id,
+		p.active,
+		pt.level,
+		pt.label,
+		pag.name,
+		'',
+		'',
+		''
+	  from
+		permissions p,
+		permissions_resource_types pt,
+		permissions_access_groups pag,
+		permissions_accessg_users pagu,
+		pipelines
+	  where
+		p.resource = pt.code
+		and pt.level = 'specific'
+  
+		and p.subject = 'access_group'
+		and p.subject_id = pag.access_group_id
+		and pag.access_group_id = pagu.access_group_id
+		and pagu.access_group_id = ?
+  
+		and p.resource_id = pipelines.pipeline_id
+  
+		and p.active = true
+		
+	  GROUP BY
+		p.subject,
+		p.subject_id,
+		pipelines.name,
+		p.resource_id,
+		p.environment_id,
+		p.active,
+		pt.level,
+		pt.label,
+		pag.name
+		`
+	}
+
+	err := database.DBConn.Debug().Raw(rawQuery, userID).
+		Scan(&PermissionsOutput).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errors.New("Error retrieving permissions")
 	}
