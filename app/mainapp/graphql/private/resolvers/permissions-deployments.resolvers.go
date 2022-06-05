@@ -291,6 +291,7 @@ func (r *queryResolver) UserSingleDeploymentPermissions(ctx context.Context, use
 		and p.resource_id = deploy_pipelines.pipeline_id
         and p.resource_id = ?
 		and p.active = true
+		and p.environment_id = ?
 	
 	  GROUP BY
 		p.subject,
@@ -315,7 +316,7 @@ func (r *queryResolver) UserSingleDeploymentPermissions(ctx context.Context, use
 				string_agg(distinct p.access, ',') as access,
 				p.subject,
 				p.subject_id,
-				deploy_pipelines.name,
+				deploy_pipelines.name as pipeline_name,
 				p.resource_id,
 				p.environment_id,
 				p.active,
@@ -326,21 +327,20 @@ func (r *queryResolver) UserSingleDeploymentPermissions(ctx context.Context, use
 				permissions p,
 				permissions_resource_types pt,
 				permissions_access_groups pag,
-				permissions_accessg_users pagu,
 				deploy_pipelines
 			  where
 				p.resource = pt.code
 				and pt.level = 'specific'
 		  
 				and p.subject = 'access_group'
-				and p.subject_id = pagu.access_group_id
-				and pag.access_group_id = pagu.access_group_id
+				and p.subject_id = pag.access_group_id
 				and p.subject_id = ?
 		  
 				and p.resource_id = deploy_pipelines.pipeline_id
 				and p.resource_id = ?
 		  
 				and p.active = true
+				and p.environment_id = ?
 				
 			  GROUP BY
 				p.subject,
@@ -359,6 +359,7 @@ func (r *queryResolver) UserSingleDeploymentPermissions(ctx context.Context, use
 		//direct
 		userID,
 		deploymentID,
+		environmentID,
 	).Scan(
 		&PermissionsOutput,
 	).Error
@@ -424,6 +425,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 		and p.resource_id = deploy_pipelines.pipeline_id
 	
 		and p.active = true
+		and p.environment_id = ?
 	
 	  GROUP BY
 		p.subject,
@@ -448,7 +450,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 				string_agg(distinct p.access, ',') as access,
 				p.subject,
 				p.subject_id,
-				deploy_pipelines.name,
+				deploy_pipelines.name as pipeline_name,
 				p.resource_id,
 				p.environment_id,
 				p.active,
@@ -474,6 +476,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 				and p.resource_id = deploy_pipelines.pipeline_id
 		  
 				and p.active = true
+				and p.environment_id = ?
 				
 			  GROUP BY
 			    p.subject,
@@ -487,7 +490,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 				pag.name
 		`
 	}
-	err := database.DBConn.Raw(rawQuery, userID).
+	err := database.DBConn.Raw(rawQuery, userID, environmentID).
 		Scan(&PermissionsOutput).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errors.New("Error retrieving permissions")
@@ -548,6 +551,7 @@ func (r *queryResolver) DeploymentPermissions(ctx context.Context, userID string
 		  p.resource_id = deploy_pipelines.pipeline_id and
 		  p.resource_id = ? and
 		  p.active = true	
+		  and p.environment_id = ?
 		  GROUP BY 
 		  p.subject,
 		  p.subject_id,
@@ -591,6 +595,7 @@ func (r *queryResolver) DeploymentPermissions(ctx context.Context, userID string
 		  p.resource_id = deploy_pipelines.pipeline_id and
 		  p.resource_id = ? and
 		  p.active = true	
+		  and p.environment_id = ?
 		  GROUP BY 
 		  p.subject,
 		  p.subject_id,
@@ -605,7 +610,9 @@ func (r *queryResolver) DeploymentPermissions(ctx context.Context, userID string
 `,
 		//direct
 		deploymentID,
+		environmentID,
 		deploymentID,
+		environmentID,
 	).Scan(
 		&PermissionsOutput,
 	).Error
