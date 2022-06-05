@@ -420,7 +420,7 @@ where
 GROUP BY
 	p.subject,
 	p.subject_id,
-	pipelines.name as pipeline_name,
+	pipelines.name,
 	p.resource_id,
 	p.environment_id,
 	p.active,
