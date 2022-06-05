@@ -291,6 +291,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 			  and p.resource_id = pipelines.pipeline_id
 		  
 			  and p.active = true
+			  and p.environment_id = ?
 		  
 			GROUP BY
 			  p.subject,
@@ -315,7 +316,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 		string_agg(distinct p.access, ',') as access,
 		p.subject,
 		p.subject_id,
-		pipelines.name,
+		pipelines.name as pipeline_name,
 		p.resource_id,
 		p.environment_id,
 		p.active,
@@ -326,7 +327,6 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 		permissions p,
 		permissions_resource_types pt,
 		permissions_access_groups pag,
-		permissions_accessg_users pagu,
 		pipelines
 	  where
 		p.resource = pt.code
@@ -334,12 +334,13 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
   
 		and p.subject = 'access_group'
 		and p.subject_id = pag.access_group_id
-		and pag.access_group_id = pagu.access_group_id
-		and pagu.access_group_id = ?
+
+		and p.subject_id = ?
   
 		and p.resource_id = pipelines.pipeline_id
   
 		and p.active = true
+		and p.environment_id = ?
 		
 	  GROUP BY
 		p.subject,
@@ -354,7 +355,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 		`
 	}
 
-	err := database.DBConn.Debug().Raw(rawQuery, userID).
+	err := database.DBConn.Raw(rawQuery, userID, environmentID).
 		Scan(&PermissionsOutput).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errors.New("Error retrieving permissions")
@@ -415,10 +416,11 @@ where
 	and p.resource_id = pipelines.pipeline_id
 	and p.resource_id = ?
 	and p.active = true
+	and p.environment_id = ?
 GROUP BY
 	p.subject,
 	p.subject_id,
-	pipelines.name,
+	pipelines.name as pipeline_name,
 	p.resource_id,
 	p.environment_id,
 	p.active,
@@ -449,18 +451,17 @@ from
 	permissions p,
 	permissions_resource_types pt,
 	permissions_access_groups pag,
-	permissions_accessg_users pagu,
 	pipelines
 where
 	p.resource = pt.code
 	and pt.level = 'specific'
 	and p.subject = 'access_group'
 	and p.subject_id = pag.access_group_id
-	and pag.access_group_id = pagu.access_group_id
 	and p.subject_id = ?
 	and p.resource_id = pipelines.pipeline_id
 	and p.resource_id = ?
 	and p.active = true
+	and p.environment_id = ?
 GROUP BY
 	p.subject,
 	p.subject_id,
@@ -474,10 +475,11 @@ GROUP BY
 		`
 	}
 
-	err := database.DBConn.Debug().Raw(rawQuery,
+	err := database.DBConn.Raw(rawQuery,
 		//direct
 		userID,
 		pipelineID,
+		environmentID,
 	).Scan(
 		&PermissionsOutput,
 	).Error
@@ -539,7 +541,8 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 		  pt.level = 'specific'and
 		  p.resource_id = pipelines.pipeline_id and
 		  p.resource_id = ? and
-		  p.active = true	
+		  p.active = true and
+		  p.environment_id = ?
 		  GROUP BY 
 		  p.subject,
 		  p.subject_id,
@@ -584,7 +587,8 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 		  p.subject = 'access_group' and 
 		  p.resource_id = pipelines.pipeline_id and
 		  p.resource_id = ? and
-		  p.active = true	
+		  p.active = true and
+		  p.environment_id = ?
 		  GROUP BY 
 		  p.subject,
 		  p.subject_id,
@@ -599,7 +603,9 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 `,
 		//direct
 		pipelineID,
+		environmentID,
 		pipelineID,
+		environmentID,
 	).Scan(
 		&PermissionsOutput,
 	).Error
