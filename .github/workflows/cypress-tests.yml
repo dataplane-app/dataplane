@@ -11,14 +11,18 @@ jobs:
   cypress-run:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      # Install NPM dependencies, cache them correctly
-      # and run all Cypress tests
-      - name: Cypress run
-        uses: cypress-io/github-action@v2
+      - uses: actions/checkout@master
+      - name: Install dependencies
+        uses: cypress-io/github-action@v4
         with:
-          build: npm run build
-          start: npm start
+          # just perform install
+          runTests: false
+      - run: yarn lint
+      - name: Run e2e tests
+        uses: cypress-io/github-action@v4
+        with:
+          # we have already installed all dependencies above
+          install: false
+          # Cypress tests and config file are in "e2e" folder
           config-file: cypress.config.js
           working-directory: frontend
