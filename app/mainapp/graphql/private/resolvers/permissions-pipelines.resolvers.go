@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -133,7 +133,7 @@ func (r *queryResolver) MyPipelinePermissions(ctx context.Context) ([]*privategr
 		`
 		(
 			select
-			  string_agg(p.access, ',') as access,
+			  string_agg(distinct p.access, ',') as access,
 			  p.subject,
 			  p.subject_id,
 			  pipelines.name as pipeline_name,
@@ -179,7 +179,7 @@ func (r *queryResolver) MyPipelinePermissions(ctx context.Context) ([]*privategr
 			  users.job_title
 		)UNION(
 			select
-				string_agg(p.access, ',') as access,
+				string_agg(distinct p.access, ',') as access,
 				p.subject,
 				p.subject_id,
 				pipelines.name,
@@ -237,7 +237,7 @@ func (r *queryResolver) MyPipelinePermissions(ctx context.Context) ([]*privategr
 	return PermissionsOutput, nil
 }
 
-func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID string, environmentID string) ([]*privategraphql.PipelinePermissionsOutput, error) {
+func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID string, environmentID string, subjectType string) ([]*privategraphql.PipelinePermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -258,11 +258,11 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 
 	var PermissionsOutput []*privategraphql.PipelinePermissionsOutput
 
-	err := database.DBConn.Raw(
-		`
-		(
-			select
-			  string_agg(p.access, ',') as access,
+	var rawQuery string
+	if subjectType == "user" {
+		rawQuery = `
+		select
+			  string_agg(distinct p.access, ',') as access,
 			  p.subject,
 			  p.subject_id,
 			  pipelines.name as pipeline_name,
@@ -291,6 +291,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 			  and p.resource_id = pipelines.pipeline_id
 		  
 			  and p.active = true
+			  and p.environment_id = ?
 		  
 			GROUP BY
 			  p.subject,
@@ -306,60 +307,56 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 			  users.last_name,
 			  users.email,
 			  users.job_title
-		  )
-		  UNION
-			(
-			  select
-				string_agg(p.access, ',') as access,
-				p.subject,
-				p.subject_id,
-				pipelines.name,
-				p.resource_id,
-				p.environment_id,
-				p.active,
-				pt.level,
-				pt.label,
-				pag.name,
-				'',
-				'',
-				''
-			  from
-				permissions p,
-				permissions_resource_types pt,
-				permissions_access_groups pag,
-				permissions_accessg_users pagu,
-				pipelines
-			  where
-				p.resource = pt.code
-				and pt.level = 'specific'
-		  
-				and p.subject = 'access_group'
-				and p.subject_id = pag.access_group_id
-				and pag.access_group_id = pagu.access_group_id
-				and pagu.access_group_id = ?
-		  
-				and p.resource_id = pipelines.pipeline_id
-		  
-				and p.active = true
-				
-			  GROUP BY
-			    p.subject,
-				p.subject_id,
-				pipelines.name,
-				p.resource_id,
-				p.environment_id,
-				p.active,
-				pt.level,
-				pt.label,
-				pag.name
-			)
-`,
-		//direct
-		userID,
-		userID,
-	).Scan(
-		&PermissionsOutput,
-	).Error
+		`
+	}
+
+	if subjectType == "access_group" {
+		rawQuery = `
+		select
+		string_agg(distinct p.access, ',') as access,
+		p.subject,
+		p.subject_id,
+		pipelines.name as pipeline_name,
+		p.resource_id,
+		p.environment_id,
+		p.active,
+		pt.level,
+		pt.label,
+		pag.name as first_name
+	  from
+		permissions p,
+		permissions_resource_types pt,
+		permissions_access_groups pag,
+		pipelines
+	  where
+		p.resource = pt.code
+		and pt.level = 'specific'
+  
+		and p.subject = 'access_group'
+		and p.subject_id = pag.access_group_id
+
+		and p.subject_id = ?
+  
+		and p.resource_id = pipelines.pipeline_id
+  
+		and p.active = true
+		and p.environment_id = ?
+		
+	  GROUP BY
+		p.subject,
+		p.subject_id,
+		pipelines.name,
+		p.resource_id,
+		p.environment_id,
+		p.active,
+		pt.level,
+		pt.label,
+		pag.name
+		`
+	}
+
+	err := database.DBConn.Raw(rawQuery, userID, environmentID).
+		Scan(&PermissionsOutput).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errors.New("Error retrieving permissions")
 	}
@@ -392,7 +389,7 @@ func (r *queryResolver) UserSinglePipelinePermissions(ctx context.Context, userI
 	if subjectType == "user" {
 		rawQuery = `
 		select
-	string_agg(p.access, ',') as access,
+	string_agg(distinct p.access, ',') as access,
 	p.subject,
 	p.subject_id,
 	pipelines.name as pipeline_name,
@@ -419,6 +416,7 @@ where
 	and p.resource_id = pipelines.pipeline_id
 	and p.resource_id = ?
 	and p.active = true
+	and p.environment_id = ?
 GROUP BY
 	p.subject,
 	p.subject_id,
@@ -439,7 +437,7 @@ GROUP BY
 	if subjectType == "access_group" {
 		rawQuery = `
 		select
-	string_agg(p.access, ',') as access,
+	string_agg(distinct p.access, ',') as access,
 	p.subject,
 	p.subject_id,
 	pipelines.name,
@@ -453,18 +451,17 @@ from
 	permissions p,
 	permissions_resource_types pt,
 	permissions_access_groups pag,
-	permissions_accessg_users pagu,
 	pipelines
 where
 	p.resource = pt.code
 	and pt.level = 'specific'
 	and p.subject = 'access_group'
 	and p.subject_id = pag.access_group_id
-	and pag.access_group_id = pagu.access_group_id
 	and p.subject_id = ?
 	and p.resource_id = pipelines.pipeline_id
 	and p.resource_id = ?
 	and p.active = true
+	and p.environment_id = ?
 GROUP BY
 	p.subject,
 	p.subject_id,
@@ -478,10 +475,11 @@ GROUP BY
 		`
 	}
 
-	err := database.DBConn.Debug().Raw(rawQuery,
+	err := database.DBConn.Raw(rawQuery,
 		//direct
 		userID,
 		pipelineID,
+		environmentID,
 	).Scan(
 		&PermissionsOutput,
 	).Error
@@ -519,7 +517,7 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 	err := database.DBConn.Raw(
 		`
 		(select 
-			string_agg(
+			string_agg(distinct 
 		  p.access
 		  ,',') as access,
 		  p.subject,
@@ -543,7 +541,8 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 		  pt.level = 'specific'and
 		  p.resource_id = pipelines.pipeline_id and
 		  p.resource_id = ? and
-		  p.active = true	
+		  p.active = true and
+		  p.environment_id = ?
 		  GROUP BY 
 		  p.subject,
 		  p.subject_id,
@@ -562,7 +561,7 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 		UNION
 		(
 		select 
-		string_agg(
+		string_agg(distinct 
 			p.access
 			,',') as access,
 		  p.subject,
@@ -588,7 +587,8 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 		  p.subject = 'access_group' and 
 		  p.resource_id = pipelines.pipeline_id and
 		  p.resource_id = ? and
-		  p.active = true	
+		  p.active = true and
+		  p.environment_id = ?
 		  GROUP BY 
 		  p.subject,
 		  p.subject_id,
@@ -603,7 +603,9 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 `,
 		//direct
 		pipelineID,
+		environmentID,
 		pipelineID,
+		environmentID,
 	).Scan(
 		&PermissionsOutput,
 	).Error
