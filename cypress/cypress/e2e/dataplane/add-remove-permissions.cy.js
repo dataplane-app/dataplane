@@ -90,7 +90,7 @@ describe('Add Permissions to admin', function () {
         cy.get('#notistack-snackbar').should('contain', 'Success');
     });
 
-    it('Verify permissions', function () {
+    it('Verify permissions',{retries: 5}, function () {
         // Make sure Admin permission is there with grayed out trash icon
         cy.get('#platform-permissions').children().contains('Admin').prev().should('have.css', 'color', 'rgba(0, 0, 0, 0.26)');
         cy.get('#platform-permissions').children().contains('Manage environments').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
@@ -108,7 +108,7 @@ describe('Add Permissions to admin', function () {
         cy.get('#environment-permissions').children().contains('View workers').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
         cy.get('#environment-permissions').children().contains('Deploy pipelines to this environment').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
         cy.get('#environment-permissions').children().contains('Deploy pipelines from this environment').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
-        cy.get('#environment-permissions').children().contains('View all deployments').prev().should('have.css', 'color', 'rgb(248, 0, 0)',{ timeout: 1000 });
+        cy.get('#environment-permissions').children().contains('View all deployments').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
     });
  
     it('Remove permissions', function () {
