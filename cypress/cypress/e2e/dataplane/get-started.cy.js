@@ -8,7 +8,7 @@ describe('Get started', function () {
 
         cy.get('#first_name').type('John').should('have.value', 'John');
         cy.get('#last_name').type('Smith').should('have.value', 'Smith');
-        cy.get('#email').type('john@email.com').should('have.value', 'john@email.com');
+        cy.get('#email').type('admin@email.com').should('have.value', 'admin@email.com');
         cy.get('#job_title').type('Manager').should('have.value', 'Manager');
         cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
 

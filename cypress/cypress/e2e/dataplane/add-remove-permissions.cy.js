@@ -14,79 +14,79 @@ describe('Add Permissions to admin', function () {
 
         cy.get('#available_permissions_autocomplete').type('Manage environments', { force: true }).should('have.value', 'Manage environments');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('Manage users', { force: true }).should('have.value', 'Manage users');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('Environment admin', { force: true }).should('have.value', 'Environment admin');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('Add user to environment', { force: true }).should('have.value', 'Add user to environment');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('Remove user from environment', { force: true }).should('have.value', 'Remove user from environment');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('Manage permissions', { force: true }).should('have.value', 'Manage permissions');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('View all pipelines', { force: true }).should('have.value', 'View all pipelines');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('Edit all pipelines', { force: true }).should('have.value', 'Edit all pipelines');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('Run all pipelines', { force: true }).should('have.value', 'Run all pipelines');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('Manage secrets', { force: true }).should('have.value', 'Manage secrets');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('Manage workers', { force: true }).should('have.value', 'Manage workers');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('View workers', { force: true }).should('have.value', 'View workers');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('Deploy pipelines to this environment', { force: true }).should('have.value', 'Deploy pipelines to this environment');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete')
             .type('Deploy pipelines from this environment', { force: true })
             .should('have.value', 'Deploy pipelines from this environment');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#available_permissions_autocomplete').type('View all deployments', { force: true }).should('have.value', 'View all deployments');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        cy.get('#permission-add').click();
+        cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
     });
 
@@ -108,7 +108,7 @@ describe('Add Permissions to admin', function () {
         cy.get('#environment-permissions').children().contains('View workers').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
         cy.get('#environment-permissions').children().contains('Deploy pipelines to this environment').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
         cy.get('#environment-permissions').children().contains('Deploy pipelines from this environment').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
-        cy.get('#environment-permissions').children().contains('View all deployments').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
+        cy.get('#environment-permissions').children().contains('View all deployments').prev().should('have.css', 'color', 'rgb(248, 0, 0)',{ timeout: 100 });
     });
 
     it('Remove permissions', function () {

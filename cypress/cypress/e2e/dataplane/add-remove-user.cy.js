@@ -13,7 +13,7 @@ describe('Add User', function () {
         cy.contains('button', 'Add').click();
 
         cy.get('#first_name').type('John').should('have.value', 'John');
-        cy.get('#last_name').type('Smith').should('have.value', 'Smith');
+        cy.get('#last_name').type('User').should('have.value', 'User');
         cy.get('#email').type('johnd@email.com').should('have.value', 'johnd@email.com');
         cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
         cy.get('#job_title').type('Manager').should('have.value', 'Manager');
@@ -22,11 +22,11 @@ describe('Add User', function () {
 
         cy.contains('Save').click();
 
-        cy.get('#notistack-snackbar').should('contain', 'User created: John Smith (johnd@email.com)');
+        cy.get('#notistack-snackbar').should('contain', 'User created: John User (johnd@email.com)');
     });
 
     it('Remove user', function () {
-        cy.contains('John Smith').click();
+        cy.contains('John User').click();
 
         cy.contains('Delete user').click();
         cy.contains('Yes').click();

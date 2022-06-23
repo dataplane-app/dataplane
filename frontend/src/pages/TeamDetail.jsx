@@ -250,7 +250,7 @@ export default function TeamDetail() {
                         <Grid mt={2} display="flex" alignItems="center">
                             <Autocomplete
                                 disablePortal
-                                id="available_permissions_autocomplete"
+                                id="available_environments_autocomplete"
                                 key={clear} //Changing this value on submit clears the input field
                                 onChange={(event, newValue) => {
                                     setSelectedUserEnvironment(newValue);
