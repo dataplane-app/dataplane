@@ -1,6 +1,6 @@
 describe('Add Permissions to admin', function () {
     it('Login', function () {
-        cy.visit('http://localhost:3000/webapp/');
+        cy.visit('http://localhost:9002/webapp/');
 
         cy.get('#email').type('admin@email.com').should('have.value', 'admin@email.com');
         cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
