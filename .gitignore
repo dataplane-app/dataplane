@@ -140,3 +140,7 @@ dmypy.json
 
 # Mac
 .DS_Store
+
+# Cypress
+/cypress/cypress/screenshots
+/cypress/cypress/videos
