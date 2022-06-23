@@ -1,6 +1,6 @@
 describe('Add Permissions to admin', function () {
     it('Login', function () {
-        cy.visit('http://localhost:9002/webapp/');
+        cy.visit('http://localhost:9002/webapp/login');
 
         cy.get('#email').type('admin@email.com').should('have.value', 'admin@email.com');
         cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
@@ -108,9 +108,9 @@ describe('Add Permissions to admin', function () {
         cy.get('#environment-permissions').children().contains('View workers').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
         cy.get('#environment-permissions').children().contains('Deploy pipelines to this environment').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
         cy.get('#environment-permissions').children().contains('Deploy pipelines from this environment').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
-        cy.get('#environment-permissions').children().contains('View all deployments').prev().should('have.css', 'color', 'rgb(248, 0, 0)',{ timeout: 100 });
+        cy.get('#environment-permissions').children().contains('View all deployments').prev().should('have.css', 'color', 'rgb(248, 0, 0)',{ timeout: 1000 });
     });
-
+ 
     it('Remove permissions', function () {
         cy.get('#platform-permissions').children().contains('Manage environments').prev().click();
         cy.get('#notistack-snackbar').should('contain', 'Success');

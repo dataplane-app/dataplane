@@ -1,6 +1,6 @@
 describe('Add User', function () {
     it('Login', function () {
-        cy.visit('http://localhost:9002/webapp/');
+        cy.visit('http://localhost:9002/webapp/login');
 
         cy.get('#email').type('admin@email.com').should('have.value', 'admin@email.com');
         cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
@@ -26,7 +26,7 @@ describe('Add User', function () {
     });
 
     it('Remove user', function () {
-        cy.contains('John User').click();
+        cy.contains('John User').click({ timeout: 100, force:true });
 
         cy.contains('Delete user').click();
         cy.contains('Yes').click();
