@@ -1,6 +1,6 @@
 describe('Get started', function () {
     it('Register a new platform', function () {
-        cy.visit('http://localhost:3000/webapp/get-started');
+        cy.visit('http://localhost:9002/webapp/get-started');
 
         cy.get('#business_name').type('Acme', { force: true }).should('have.value', 'Acme');
         cy.get('#timezone-box').type('Europe/London', { force: true }).should('have.value', 'Europe/London');

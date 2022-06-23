@@ -34,6 +34,21 @@ response: {"r": "OK", "msg": "Permission created", "count": 1}
 
 func main() {
 
+	// Build the front end
+
+	cmd := exec.Command("cd frontend && yarn")
+	cmd.Env = os.Environ()
+
+	cmd.Stdout = os.Stdout
+
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := cmd.Wait(); err != nil {
+		log.Fatal(err)
+	}
+
 	// Setup a database
 
 	log.Println("Create new database")

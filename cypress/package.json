@@ -1,0 +1,35 @@
+{
+    "name": "cypress-testing",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+
+        "cypress": "cypress open"
+
+    },
+    "eslintConfig": {
+        "extends": [
+            "react-app",
+            "react-app/jest",
+            "plugin:cypress/recommended"
+        ]
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "devDependencies": {
+        "autoprefixer": "^9",
+        "cypress": "^10.0.2",
+        "eslint-plugin-cypress": "^2.12.1",
+        "prettier": "2.5.1"
+    }
+}
