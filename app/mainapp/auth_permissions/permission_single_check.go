@@ -41,7 +41,8 @@ func PermissionSingleCheck(
 		p.resource = ? and
 		p.resource_id = ?
 		and p.access= ?
-		and p.environment_id = ?
+		and (p.environment_id = ?
+		OR p.environment_id = 'd_platform')
 		and p.active = true
 		)
 		union

@@ -1314,10 +1314,17 @@ func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) 
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: platformID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: environmentID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: "pipelineID", Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: "pipelineID", Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: "pipelineID", Access: "run", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: "pipelineID", Access: "deploy", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: "pipelineID", Access: "assign_pipeline_permission", EnvironmentID: environmentID},
 	}
 
-	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
+	permOutcome, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
 
 	// if permOutcome == "denied" {
 	// 	return []*privategraphql.Pipelines{}, nil
@@ -1359,7 +1366,7 @@ order by a.created_at desc
 			return nil, errors.New("Retrive pipelines database error.")
 		}
 
-	} else {
+	} else if permOutcome == "grant" {
 
 		query = `select
 a.pipeline_id, 
