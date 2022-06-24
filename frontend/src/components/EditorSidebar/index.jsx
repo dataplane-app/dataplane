@@ -126,7 +126,7 @@ const EditorSidebar = () => {
             }}>
             <Box>
                 {inputs.map((inpt) => (
-                    <Box key={inpt.id}>
+                    <Box key={inpt.id} id={inpt.parent}>
                         <Typography fontWeight={700} fontSize={14} mt={2.5}>
                             {inpt.parent}
                         </Typography>

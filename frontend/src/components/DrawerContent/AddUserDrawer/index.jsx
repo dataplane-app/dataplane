@@ -107,7 +107,7 @@ const AddUserDrawer = ({ handleClose }) => {
                     <Autocomplete
                         disablePortal
                         value={timezone}
-                        id="combo-box-demo"
+                        id="timezone-box"
                         onChange={(event, newValue) => {
                             setTimezone(newValue);
                         }}

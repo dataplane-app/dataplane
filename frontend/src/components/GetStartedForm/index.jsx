@@ -70,7 +70,7 @@ const GetStartedForm = ({ handleNext }) => {
 
                 <Autocomplete
                     disablePortal
-                    id="combo-box-demo"
+                    id="timezone-box"
                     options={Object.keys(ct.getAllTimezones())}
                     renderInput={(params) => (
                         <TextField

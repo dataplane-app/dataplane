@@ -250,7 +250,7 @@ export default function TeamDetail() {
                         <Grid mt={2} display="flex" alignItems="center">
                             <Autocomplete
                                 disablePortal
-                                id="available_permissions_autocomplete"
+                                id="available_environments_autocomplete"
                                 key={clear} //Changing this value on submit clears the input field
                                 onChange={(event, newValue) => {
                                     setSelectedUserEnvironment(newValue);
@@ -399,6 +399,7 @@ export default function TeamDetail() {
                                     variant="contained"
                                     color="primary"
                                     height="100%"
+                                    id="permission-add"
                                     sx={{ ml: 1 }}>
                                     Add
                                 </Button>
@@ -414,7 +415,7 @@ export default function TeamDetail() {
                                         </Typography>
                                     </Box>
 
-                                    <Box mt={2}>
+                                    <Box mt={2} id="platform-permissions">
                                         {userPermissions
                                             .filter((permission) => permission.Level === 'platform')
                                             .map((permission) => (
@@ -450,7 +451,7 @@ export default function TeamDetail() {
                                         Environment: {globalEnvironment?.name}
                                     </Typography>
 
-                                    <Box mt={2}>
+                                    <Box mt={2} id="environment-permissions">
                                         {userPermissions
                                             .filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === globalEnvironment.id)
                                             .map((permission) => (

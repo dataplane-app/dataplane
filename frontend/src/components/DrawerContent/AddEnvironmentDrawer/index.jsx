@@ -69,7 +69,7 @@ const AddEnvironmentDrawer = ({ handleClose, refreshData }) => {
                         />
 
                         <Grid mt={4} display="flex" alignItems="center">
-                            <Button type="submit" variant="contained" color="primary" style={{ width: '100%' }}>
+                            <Button id="environment-save" type="submit" variant="contained" color="primary" style={{ width: '100%' }}>
                                 Save
                             </Button>
                         </Grid>

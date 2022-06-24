@@ -210,7 +210,7 @@ const MemberDetail = () => {
                             </Box>
 
                             {/* Platform permissions */}
-                            <Box mt={2}>
+                            <Box mt={2} id="platform-permissions">
                                 {userPermissions
                                     ?.filter((permission) => permission.Level === 'platform')
                                     .map((permission) => (
