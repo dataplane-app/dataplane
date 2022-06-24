@@ -2,11 +2,12 @@ package permissions
 
 import (
 	"dataplane/mainapp/database/models"
+	"log"
 )
 
 func MultiplePermissionChecks(
 	multiPermissions []models.Permissions,
-) (permOuctome string, outcomes []CheckResult, Admin string, EnvAdmin string) {
+) (permOutcome string, outcomes []CheckResult, Admin string, EnvAdmin string) {
 
 	c := make(chan CheckResult)
 
@@ -26,13 +27,14 @@ func MultiplePermissionChecks(
 	// get the results back
 	outcomes = make([]CheckResult, len(multiPermissions))
 
-	permOuctome = "denied"
+	permOutcome = "denied"
 	Admin = "no"
 	EnvAdmin = "no"
 
 	// Determin Admins
 	for i, _ := range outcomes {
 		outcomes[i] = <-c
+		log.Println("outcomes[i]", outcomes[i])
 		// fmt.Println("key: ", i, " - ", outcomes[i])
 		// if config.Debug == "true" {
 		// 	logging.PrintSecretsRedact("Perms: ", outcomes[i].Perm.Subject, outcomes[i].Result)
@@ -50,9 +52,9 @@ func MultiplePermissionChecks(
 
 		// If one allowed permission is found, grant access
 		if outcomes[i].Result == "grant" {
-			permOuctome = "grant"
+			permOutcome = "grant"
 		}
 	}
 
-	return permOuctome, outcomes, Admin, EnvAdmin
+	return permOutcome, outcomes, Admin, EnvAdmin
 }
