@@ -14,13 +14,11 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"errors"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/google/uuid"
 	"gorm.io/gorm/clause"
 )
@@ -315,66 +313,6 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 	}
 
 	return "Success", nil
-}
-
-func (r *mutationResolver) UploadFileNode(ctx context.Context, environmentID string, nodeID string, pipelineID string, folderID string, file graphql.Upload) (string, error) {
-	currentUser := ctx.Value("currentUser").(string)
-	platformID := ctx.Value("platformID").(string)
-
-	// ----- Permissions
-	perms := []models.Permissions{
-		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
-	}
-
-	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
-
-	if permOutcome == "denied" {
-		return "", errors.New("Requires permissions.")
-	}
-
-	// Save to code-files
-
-	p := make([]byte, file.Size)
-	file.File.Read(p)
-
-	input := models.CodeFiles{
-		PipelineID:    pipelineID,
-		EnvironmentID: environmentID,
-		NodeID:        nodeID,
-		FileName:      file.Filename,
-		Active:        true,
-		Level:         "node_file",
-		FType:         "file",
-		FolderID:      folderID,
-	}
-
-	// Folder excludes code directory
-	parentFolder, err := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID, "pipelines")
-	if err != nil {
-		return "", errors.New("Create folder - build parent folder failed")
-	}
-
-	_, _, err = filesystem.CreateFile(input, parentFolder, p)
-	if err != nil {
-		if config.Debug == "true" {
-			log.Println(err)
-		}
-		return "", errors.New("Failed to save file.")
-	}
-
-	f := models.CodeFiles{}
-	err = database.DBConn.Where("file_name = ? and folder_id = ? and environment_id = ?", file.Filename, folderID, environmentID).Find(&f).Error
-	if err != nil {
-		if config.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Failed to find file record.")
-	}
-
-	return f.FileID, nil
 }
 
 func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string) (string, error) {

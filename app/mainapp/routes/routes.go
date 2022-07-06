@@ -15,6 +15,7 @@ import (
 	"dataplane/mainapp/scheduler"
 	"dataplane/mainapp/scheduler/routinetasks"
 	"dataplane/mainapp/worker"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -315,6 +316,76 @@ func Setup(port string) *fiber.App {
 			return err
 		}
 		return c.SendString(string(dat))
+	})
+
+	// Upload code files
+	app.Post("/app/private/code-files/:fileid", auth.TokenAuthMiddle(), func(c *fiber.Ctx) error {
+
+		environmentID := string(c.Query("environment_id"))
+		pipelineID := string(c.Query("pipeline_id"))
+		nodeID := string(c.Query("node_id"))
+		folderID := string(c.Query("folder_id"))
+		file, _ := c.FormFile("File")
+
+		currentUser := c.Locals("currentUser").(string)
+		platformID := c.Locals("platformID").(string)
+
+		// ----- Permissions
+		perms := []models.Permissions{
+			{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+			{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+			{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+			{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+			{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
+			{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: platformID, Access: "read", EnvironmentID: environmentID},
+		}
+
+		permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+		if permOutcome == "denied" {
+			return c.Status(fiber.StatusForbidden).SendString("Requires permissions.")
+		}
+
+		// Save to code-files
+		doc := make([]byte, file.Size)
+		docOpen, _ := file.Open()
+		docOpen.Read(doc)
+
+		input := models.CodeFiles{
+			FolderID:      folderID,
+			EnvironmentID: environmentID,
+			PipelineID:    pipelineID,
+			NodeID:        nodeID,
+			FileName:      file.Filename,
+			Level:         "node_file",
+			FType:         "file",
+			Active:        true,
+		}
+
+		// Folder excludes code directory
+		parentFolder, err := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID, "pipelines")
+		if err != nil {
+			return errors.New("Create folder - build parent folder failed")
+		}
+
+		_, _, err = filesystem.CreateFile(input, parentFolder, doc)
+		if err != nil {
+			if config.Debug == "true" {
+				log.Println(err)
+			}
+			return errors.New("Failed to save file.")
+		}
+
+		f := models.CodeFiles{}
+		err = database.DBConn.Where("file_name = ? and folder_id = ? and environment_id = ?", file.Filename, folderID, environmentID).Find(&f).Error
+		if err != nil {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Failed to find file record.")
+		}
+
+		return c.SendString("Success")
 	})
 
 	// Check healthz

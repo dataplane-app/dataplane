@@ -6,7 +6,6 @@ import { useGlobalEditorState } from '../../../pages/Editor';
 import { Downgraded } from '@hookstate/core';
 import { useState } from 'react';
 import CustomDragHandle from '../../CustomDragHandle';
-import { useUploadFileNode } from '../../../graphql/uploadFileNode';
 import { useSnackbar } from 'notistack';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import { useStopCERun } from '../../../graphql/stopCERun';
@@ -414,8 +413,8 @@ export const useUploadFileNodeHook = (pipeline) => {
     // Global editor state
     const EditorGlobal = useGlobalEditorState();
 
-    // GraphQL hook
-    const uploadFileNode = useUploadFileNode();
+    const authState = useGlobalAuthState();
+    const jwt = authState.authToken.get();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -426,16 +425,30 @@ export const useUploadFileNodeHook = (pipeline) => {
         const file = new File([EditorGlobal.selectedFile.diffValue.value], EditorGlobal.selectedFile.name.value, {
             type: 'text/plain',
         });
-        const response = await uploadFileNode({ environmentID, pipelineID, nodeID, folderID: EditorGlobal.selectedFile.parentID.value, file });
+        const formData = new FormData();
+        formData.append('File', file);
 
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            enqueueSnackbar('File saved.', { variant: 'success' });
-            EditorGlobal.selectedFile.id.set(response);
+        try {
+            const response = await fetch(
+                `${codeFilesEndpoint}/${EditorGlobal.selectedFile.id.value}?environment_id=${environmentID}&pipeline_id=${pipelineID}&node_id=${nodeID}&folder_id=${EditorGlobal.selectedFile.parentID.value}`,
+                {
+                    method: 'POST',
+                    body: formData,
+                    headers: { Authorization: `Bearer ${jwt}` },
+                    withCredentials: true,
+                }
+            );
+
+            if (response.status !== 200) {
+                const error = (response && response.statusText) || response.status;
+                enqueueSnackbar(error, { variant: 'error' });
+                return Promise.reject(error);
+            }
+            EditorGlobal.selectedFile.content.set(EditorGlobal.selectedFile.diffValue.value);
             EditorGlobal.selectedFile.isEditing.set(false);
+            enqueueSnackbar('File saved.', { variant: 'success' });
+        } catch (error) {
+            enqueueSnackbar("Can't save file: " + error, { variant: 'error' });
         }
     };
 };
