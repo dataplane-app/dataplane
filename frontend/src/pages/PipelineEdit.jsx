@@ -1,7 +1,7 @@
 import { useTheme } from '@emotion/react';
 import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import ReactFlow, { addEdge, ControlButton, Controls, getConnectedEdges, isEdge, ReactFlowProvider, removeElements } from 'react-flow-renderer';
+import ReactFlow, { addEdge, ControlButton, Controls, getConnectedEdges, isEdge, ReactFlowProvider, removeElements, isNode } from 'react-flow-renderer';
 import { useHistory, useParams } from 'react-router-dom';
 import ApiNode from '../components/CustomNodesContent/ApiNode';
 import PythonNode from '../components/CustomNodesContent/PythonNode';
@@ -29,6 +29,7 @@ import UpdatePipelineDrawer from '../components/DrawerContent/UpdatePipelineDraw
 import { useGetPipeline } from '../graphql/getPipeline';
 import { useGlobalRunState } from './PipelineRuns/GlobalRunState';
 import { prepareInputForFrontend } from '../utils/PipelinePrepareGraphInput';
+import dagre from 'dagre';
 
 export const globalFlowState = createState({
     isRunning: false,
@@ -491,6 +492,41 @@ const Flow = () => {
 
 export default Flow;
 
+const dagreGraph = new dagre.graphlib.Graph();
+dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+const nodeWidth = 172;
+const nodeHeight = 36;
+
+const setAutoLayout = (elements) => {
+    dagreGraph.setGraph({ rankdir: 'LR' });
+
+    elements.forEach((el) => {
+        if (isNode(el)) {
+            dagreGraph.setNode(el.id, { width: nodeWidth, height: nodeHeight });
+        } else {
+            dagreGraph.setEdge(el.source, el.target);
+        }
+    });
+
+    dagre.layout(dagreGraph);
+
+    return elements.map((el) => {
+        if (isNode(el)) {
+            const nodeWithPosition = dagreGraph.node(el.id);
+            el.targetPosition = 'left';
+            el.sourcePosition = 'right';
+
+            el.position = {
+                x: nodeWithPosition.x - nodeWidth / 2 + Math.random() / 1000,
+                y: nodeWithPosition.y - nodeHeight / 2,
+            };
+        }
+
+        return el;
+    });
+};
+
 const useGetPipelineFlowHook = (pipeline) => {
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
@@ -509,7 +545,12 @@ const useGetPipelineFlowHook = (pipeline) => {
     // Get members
     return async (environmentID, setElements, setInitialState) => {
         const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
-        const response = prepareInputForFrontend(rawResponse);
+        let response = prepareInputForFrontend(rawResponse);
+        // Check if 2 or more nodes are at {x:0, y:0}
+        const needsLayout = response.filter((a) => (a.position?.x === 0) & (a.position?.y === 0)).length > 1;
+        if (needsLayout) {
+            response = setAutoLayout(response);
+        }
 
         if (response.length === 0) {
             FlowState.elements.set([]);
