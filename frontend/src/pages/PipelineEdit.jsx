@@ -441,6 +441,11 @@ const Flow = () => {
                             <ControlButton onClick={onPanActive} style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
                                 <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} sx={{ color: FlowState.isPanEnable.get() ? '#72B842' : '' }} />
                             </ControlButton>
+                            <ControlButton
+                                onClick={() => setElements(setAutoLayout(elements))}
+                                style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
+                                <Box component={FontAwesomeIcon} icon={faPen} />
+                            </ControlButton>
                         </Controls>
                         <Box sx={{ position: 'absolute', left: 'auto', right: 155, bottom: 10 }}>
                             <Typography fontSize={12}>Scale {Math.floor((FlowState.scale.get() || 1) * 100)}%</Typography>
