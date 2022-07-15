@@ -546,7 +546,7 @@ const useGetPipelineFlowHook = (pipeline) => {
     return async (environmentID, setElements, setInitialState) => {
         const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
         let response = prepareInputForFrontend(rawResponse);
-        // Check if 2 or more nodes are at {x:0, y:0}
+        // Check if 2 or more nodes are missing position
         const needsLayout = response.filter((a) => (a.position?.x === 0) & (a.position?.y === 0)).length > 1;
         if (needsLayout) {
             response = setAutoLayout(response);
