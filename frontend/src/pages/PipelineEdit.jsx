@@ -20,7 +20,7 @@ import { useSnackbar } from 'notistack';
 import APITRiggerDrawer from '../components/DrawerContent/EditorDrawers/APITriggerDrawer';
 import { useAddUpdatePipelineFlow } from '../graphql/addUpdatePipelineFlow';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
-import { faExpandArrowsAlt, faPen } from '@fortawesome/free-solid-svg-icons';
+import { faExpandArrowsAlt, faPen, faProjectDiagram } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useGlobalAuthState } from '../Auth/UserAuth';
@@ -444,7 +444,7 @@ const Flow = () => {
                             <ControlButton
                                 onClick={() => setElements(setAutoLayout(elements))}
                                 style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
-                                <Box component={FontAwesomeIcon} icon={faPen} />
+                                <Box component={FontAwesomeIcon} icon={faProjectDiagram} />
                             </ControlButton>
                         </Controls>
                         <Box sx={{ position: 'absolute', left: 'auto', right: 155, bottom: 10 }}>
