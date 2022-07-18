@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -1313,11 +1313,18 @@ func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) 
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "platform_environment", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: platformID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: environmentID, Access: "read", EnvironmentID: environmentID},
 	}
 
-	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
+	_, outcomes, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
+
+	envPipelines := "no"
+	for _, outcome := range outcomes {
+		if outcome.Perm.Resource == "environment_all_pipelines" && outcome.Result == "grant" {
+			envPipelines = "yes"
+		}
+	}
 
 	// if permOutcome == "denied" {
 	// 	return []*privategraphql.Pipelines{}, nil
@@ -1325,7 +1332,7 @@ func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) 
 
 	p := []*privategraphql.Pipelines{}
 	var query string
-	if admin == "yes" || adminEnv == "yes" {
+	if admin == "yes" || adminEnv == "yes" || envPipelines == "yes" {
 		query = `
 select
 a.pipeline_id, 
