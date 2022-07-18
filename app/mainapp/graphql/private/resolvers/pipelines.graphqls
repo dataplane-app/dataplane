@@ -102,28 +102,28 @@ extend type Query {
   """
   Get pipeline.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_all_pipelines
   """
   getPipeline(pipelineID: String!, environmentID: String!): Pipelines
 
   """
   Get pipelines.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_all_pipelines
   """
   getPipelines(environmentID: String!): [Pipelines]
 
   """
   Get pipeline flows.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_all_pipelines
   """
   getPipelineFlow(pipelineID: String!, environmentID: String!): PipelineFlow
 
   """
   Get node.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_all_pipelines
   """
   getNode(nodeID: String!, environmentID: String!, pipelineID: String!): PipelineNodes
 }
@@ -132,42 +132,42 @@ extend type Mutation {
   """
   Add a new pipeline.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines
   """
   addPipeline(name: String!, environmentID: String!, description: String!, workerGroup: String! ): String!
 
   """
   Update pipeline.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines
   """
   updatePipeline(pipelineID: String!, name: String!, environmentID: String!, description: String!, workerGroup: String! ): String!
 
   """
   Duplicate pipeline.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines
   """
   duplicatePipeline(pipelineID: String!, name: String!, environmentID: String!, description: String!, workerGroup: String!): String!
 
   """
   Update pipeline flow.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  + **Permissions**: admin_platform, admin_environment, specific_pipeline[write]
   """
   addUpdatePipelineFlow( input: PipelineFlowInput, environmentID: String!, pipelineID: String! ): String!
 
   """
   Delete pipeline.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  + **Permissions**: admin_platform, admin_environment, specific_pipeline[write]
   """
   deletePipeline(environmentID: String!, pipelineID: String! ): String!
 
   """
   Turn on or off trigger node.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  + **Permissions**: admin_platform, admin_environment, specific_pipeline[write]
   """
   turnOnOffPipeline(environmentID: String!, pipelineID: String!, online: Boolean!): String!
 }

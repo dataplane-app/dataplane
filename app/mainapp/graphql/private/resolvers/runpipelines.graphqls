@@ -28,21 +28,21 @@ extend type Query {
     """
     Get a single pipeline tasks run.
     + **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
     pipelineTasksRun(pipelineID: String!, runID: String!, environmentID: String!): [WorkerTasks!]!
 
         """
     Get a single pipeline run status.
     + **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
     getSinglepipelineRun(pipelineID: String!, runID: String!, environmentID: String!): PipelineRuns
 
     """
     Get all runs for a specific pipeline.
     + **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines
     """
     getPipelineRuns(pipelineID: String!, environmentID: String!): [PipelineRuns!]!
 }
@@ -52,7 +52,7 @@ extend type Mutation {
     """
     Run pipeline flow.
     + **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
     + RunType is either deployment or pipeline
     """
     runPipelines(pipelineID: String!, environmentID: String!, RunType: String!, RunID: String!): PipelineRuns!
@@ -60,7 +60,7 @@ extend type Mutation {
     """
     Stop pipeline flow.
     + **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
     stopPipelines(pipelineID: String!, runID: String!, environmentID: String!, RunType: String!): PipelineRuns!
 }

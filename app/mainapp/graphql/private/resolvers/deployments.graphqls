@@ -92,42 +92,42 @@ extend type Query {
   """
   Get the latest active deployment.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_all_pipelines
   """
   getActiveDeployment(pipelineID: String!, environmentID: String!): Deployments
 
   """
   Get deployment.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_all_pipelines
   """
   getDeployment(pipelineID: String!, environmentID: String!, version: String!): Deployments
 
   """
   Get all deployments.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_all_pipelines
   """
   getDeployments(environmentID: String!): [Deployments]
 
     """
   Get deployment flows.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_all_pipelines
   """
   getDeploymentFlow(pipelineID: String!, environmentID: String!, version: String!): DeploymentFlow
 
   """
   Get list of non-default worker groups for a single pipeline.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_all_pipelines
   """
   getNonDefaultWGNodes(pipelineID: String!, fromEnvironmentID: String!, toEnvironmentID: String!): [NonDefaultNodes]
 
   """
   Get all runs for a specific deployment version.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines
   """
   getDeploymentRuns(deploymentID: String!, environmentID: String!, version: String!): [DeploymentRuns!]!
 }
@@ -136,21 +136,21 @@ extend type Mutation {
   """
   Deploy a pipeline.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines
+  + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines
   """
   addDeployment(pipelineID: String!, fromEnvironmentID: String!, toEnvironmentID: String!, version: String!, workerGroup: String!, liveactive: Boolean!, nodeWorkerGroup: [WorkerGroupsNodes]): String!
 
   """
   Delete pipeline.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  + **Permissions**: admin_platform, admin_environment, specific_pipeline[write]
   """
   deleteDeployment(environmentID: String!, pipelineID: String!, version: String!): String!
 
   """
   Turn on or off trigger node.
   + **Route**: Private
-  + **Permissions**: admin_platform, platform_environment, specific_pipeline[write]
+  + **Permissions**: admin_platform, admin_environment, specific_pipeline[write]
   """
   turnOnOffDeployment(environmentID: String!, pipelineID: String!, online: Boolean!): String!
 }
