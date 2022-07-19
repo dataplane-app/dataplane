@@ -1322,6 +1322,7 @@ func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) 
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: environmentID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	_, outcomes, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
@@ -1329,6 +1330,9 @@ func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) 
 	envPipelines := "no"
 	for _, outcome := range outcomes {
 		if outcome.Perm.Resource == "environment_all_pipelines" && outcome.Result == "grant" {
+			envPipelines = "yes"
+		}
+		if outcome.Perm.Resource == "environment_edit_all_pipelines" && outcome.Result == "grant" {
 			envPipelines = "yes"
 		}
 	}
