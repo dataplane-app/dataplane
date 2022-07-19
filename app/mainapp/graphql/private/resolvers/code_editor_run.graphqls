@@ -15,7 +15,7 @@ extend type Mutation {
     """
     Run code editor file.
     + **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
+    + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines, specific_pipeline[write]
     """
     runCEFile(pipelineID: String!, nodeID: String!, fileID: String!, environmentID: String!, NodeTypeDesc: String!, workerGroup: String!, runID: String!): CERun!
 
@@ -23,7 +23,7 @@ extend type Mutation {
     """
     Stop code editor file.
     + **Route**: Private
-    + **Permissions**: admin_platform, platform_environment, environment_edit_all_pipelines, specific_pipeline[write]
+    + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines, specific_pipeline[write]
     """
     stopCERun(pipelineID: String!, runID: String!, environmentID: String!): String!
 }
