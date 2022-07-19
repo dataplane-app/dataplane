@@ -6,7 +6,7 @@ package privateresolvers
 import (
 	"context"
 	"dataplane/mainapp/auth"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"

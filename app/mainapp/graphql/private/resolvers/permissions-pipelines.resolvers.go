@@ -12,6 +12,7 @@ import (
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"errors"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -499,14 +500,22 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "assign_pipeline_permission", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
 	}
 
-	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+	permOutcome, outcomes, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	for _, outcome := range outcomes {
+		if outcome.Perm.Resource == "environment_edit_all_pipelines" && outcome.Result == "grant" {
+			permOutcome = "yes"
+		}
+		log.Println("outcome", outcome)
+
+	}
 
 	if permOutcome == "denied" {
 		return nil, errors.New("Requires permissions.")
