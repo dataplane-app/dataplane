@@ -29,8 +29,8 @@ export function prepareInputForFrontend(input) {
                 id: node.nodeID,
                 type: node.nodeTypeDesc + 'Node',
                 position: {
-                    x: node.meta.position.x,
-                    y: node.meta.position.y,
+                    x: node.meta?.position?.x || 0,
+                    y: node.meta?.position?.y || 0,
                 },
                 data,
             });
