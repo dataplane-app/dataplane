@@ -16,14 +16,14 @@ extend type Query{
 """
 Get logs for node on pipeline run.
 + **Route**: Private
-+ **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
++ **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
 """
 getNodeLogs(runID: String!, pipelineID: String!, nodeID: String!, environmentID: String!): [LogsWorkers!]
 
 """
 Get logs for file on code run.
 + **Route**: Private
-+ **Permissions**: admin_platform, platform_environment, environment_run_all_pipelines, specific_pipeline[run]
++ **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
 """
 getCodeFileRunLogs(runID: String!, pipelineID: String!, environmentID: String!): [LogsCodeRun!]
 }

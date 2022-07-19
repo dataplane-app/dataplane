@@ -270,6 +270,7 @@ export default function TeamDetail() {
                                     setSelectedUserEnvironment(null);
                                 }}
                                 variant="contained"
+                                id="environment-add"
                                 color="primary"
                                 height="100%"
                                 sx={{ ml: 1 }}>
@@ -277,7 +278,7 @@ export default function TeamDetail() {
                             </Button>
                         </Grid>
 
-                        <Box mt="1.31rem">
+                        <Box mt="1.31rem" id="belongs-to-environments">
                             {userEnvironments.map((env) => (
                                 <Grid display="flex" alignItems="center" key={env.id} mt={1.5} mb={1.5}>
                                     <Box
@@ -791,7 +792,7 @@ const useUpdatePermissions = (getUserPermissions, selectedPermission, environmen
     // Update permissions
     return async () => {
         const response = await updatePermissionToUser({
-            environmentID,
+            environmentID: selectedPermission.Code === 'admin_platform' ? 'd_platform' : environmentID,
             resource: selectedPermission.Code,
             resourceID: selectedPermission.ResourceID,
             user_id,
