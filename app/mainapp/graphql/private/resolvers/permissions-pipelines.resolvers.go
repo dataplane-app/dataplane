@@ -12,7 +12,6 @@ import (
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"errors"
-	"log"
 
 	"gorm.io/gorm"
 )
@@ -513,7 +512,6 @@ func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, 
 		if outcome.Perm.Resource == "environment_edit_all_pipelines" && outcome.Result == "grant" {
 			permOutcome = "yes"
 		}
-		log.Println("outcome", outcome)
 
 	}
 
