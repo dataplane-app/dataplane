@@ -5,7 +5,7 @@ import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetAccessGroups } from '../../../graphql/getAccessGroups';
-import { useGetUsers } from '../../../graphql/getUsers';
+import { useGetUsersFromEnvironment } from '../../../graphql/getUsersFromEnvironment';
 import { usePipelinePermissionsToUser } from '../../../graphql/pipelinePermissionsToUser';
 import { usePipelinePermissionsToAccessGroup } from '../../../graphql/pipelinePermissionsToAccessGroup';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
@@ -39,7 +39,7 @@ const AddPipelinesPermissionDrawer = ({ handleClose, subjectsWithPermissions, ty
     const [permissionsState, setPermissionsState] = useState({ ...DEFAULT_OPTIONS });
 
     // Custom GraphQL hooks
-    const getUsers = useGetUsersHook(setUsers, subjectsWithPermissions);
+    const getUsers = useGetUsersHook(setUsers, subjectsWithPermissions, Environment.id.get());
     const getAccessGroups = useGetAccessGroupsHook(setAccessGroups, Environment.id.get(), MeData.user_id.get(), subjectsWithPermissions);
     const pipelinePermissionsToUser = usePipelinePermissionsToUserHook(permissionsState, refreshPermissions, handleClose);
     const pipelinePermissionsToAccessGroup = usePipelinePermissionsToAccessGroupHook(permissionsState, refreshPermissions, handleClose);
@@ -200,15 +200,15 @@ const AddPipelinesPermissionDrawer = ({ handleClose, subjectsWithPermissions, ty
 export default AddPipelinesPermissionDrawer;
 
 // ----------- Custom Hooks --------------------------------
-const useGetUsersHook = (setUsers, subjectsWithPermissions) => {
+const useGetUsersHook = (setUsers, subjectsWithPermissions, environment_id) => {
     // GraphQL hook
-    const getUsers = useGetUsers();
+    const getUsers = useGetUsersFromEnvironment();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get members
     return async () => {
-        const response = await getUsers();
+        const response = await getUsers({ environment_id });
 
         if (response === null) {
             setUsers([]);

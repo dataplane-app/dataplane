@@ -54,6 +54,14 @@ extend type Query{
 	+ **Security**: Based on selected fields in User struct
 	"""
 	getUsers: [User]
+
+	"""
+	Get users from environment.
+	+ **Route**: Private
+	+ **Permission**: anyone logged ind
+	+ **Security**: Based on selected fields in User struct
+	"""
+	getUsersFromEnvironment(environment_id: String!): [User]
 }
 
 extend type Mutation {

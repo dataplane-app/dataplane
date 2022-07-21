@@ -367,3 +367,49 @@ func (r *queryResolver) GetUsers(ctx context.Context) ([]*models.Users, error) {
 	}
 	return e, nil
 }
+
+func (r *queryResolver) GetUsersFromEnvironment(ctx context.Context, environmentID string) ([]*models.Users, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "platform_manage_users", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_permissions", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_permissions_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	e := []*models.Users{}
+
+	err := database.DBConn.Raw(
+		`
+	select
+        users.user_type,
+        users.first_name,
+        users.last_name,
+        users.email,
+        users.job_title,
+        users.timezone,
+        users.status
+    from
+        users,
+        environment_user eu
+    where
+        eu.environment_id = ?
+        and users.user_id = eu.user_id
+`, environmentID).Find(&e).Error
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive users database error.")
+	}
+	return e, nil
+}
