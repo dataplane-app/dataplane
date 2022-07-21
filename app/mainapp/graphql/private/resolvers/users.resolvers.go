@@ -391,6 +391,7 @@ func (r *queryResolver) GetUsersFromEnvironment(ctx context.Context, environment
 	err := database.DBConn.Raw(
 		`
 	select
+		users.user_id,
         users.user_type,
         users.first_name,
         users.last_name,
