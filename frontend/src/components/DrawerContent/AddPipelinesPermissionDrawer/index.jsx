@@ -125,6 +125,7 @@ const AddPipelinesPermissionDrawer = ({ handleClose, subjectsWithPermissions, ty
                             }}
                             value={selectedUser}
                             options={users}
+                            id="environment_users_autocomplete"
                             getOptionLabel={(option) => option.first_name + ' ' + option.last_name + ' - ' + option.email || ''}
                             isOptionEqualToValue={(option, value) =>
                                 option.user_id === value.user_id && //

@@ -130,4 +130,23 @@ describe('Give admin permission to a user', function () {
         cy.get('td').should('not.exist')
     });
 
+    it('Login as admin', function () {
+        cy.visit('http://localhost:9002/webapp/login');
+
+        cy.get('#email').type('admin@email.com').should('have.value', 'admin@email.com');
+        cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
+        cy.contains('button', 'Login').click();
+        cy.url().should('include', '/webapp');
+    });
+
+    it('Remove admin permission to Jimmy', function () {
+        cy.contains('Team').click();
+        cy.contains('Jimmy User').click({force: true});
+
+        // Remove admin permission
+        cy.get('#platform-permissions').children().contains('Admin').prev().click()
+
+        // Verify
+        cy.get('#notistack-snackbar').should('contain', 'Success');
+    });
 });

@@ -47,7 +47,7 @@ describe('Add User', function () {
         cy.get('#first_name').type('Jane',{force:true}).should('have.value', 'Jane');
         cy.get('#last_name').type('User').should('have.value', 'User');
         cy.get('#email').type('changeuser@email.com').should('have.value', 'changeuser@email.com');
-        cy.get('#password').type('environment123!').should('have.value', 'environment123!');
+        cy.get('#password').type('changeuser123!').should('have.value', 'changeuser123!');
         cy.get('#job_title').type('User with no permissions').should('have.value', 'User with no permissions');
         cy.get('#timezone-box').type('Europe/London', { force: true }).should('have.value', 'Europe/London');
         cy.get('.MuiAutocomplete-popper').click();
