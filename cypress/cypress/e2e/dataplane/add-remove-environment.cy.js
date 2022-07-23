@@ -21,6 +21,7 @@ describe('Add Environment', function () {
     });
 
     it('Delete Environment', function () {
+        cy.wait(50);
         cy.contains('ProductionCy').click();
 
         cy.contains('Delete environment').click();
