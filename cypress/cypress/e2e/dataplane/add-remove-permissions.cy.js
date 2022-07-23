@@ -88,6 +88,16 @@ describe('Add Permissions to admin', function () {
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
         cy.get('#permission-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
+
+        cy.get('#available_permissions_autocomplete').type('Create pipelines', { force: true }).should('have.value', 'Create pipelines');
+        cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
+        cy.get('#permission-add').click({force:true});
+        cy.get('#notistack-snackbar').should('contain', 'Success');
+
+        cy.get('#available_permissions_autocomplete').type('Manage pipeline permissions', { force: true }).should('have.value', 'Manage pipeline permissions');
+        cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
+        cy.get('#permission-add').click({force:true});
+        cy.get('#notistack-snackbar').should('contain', 'Success');
     });
 
     it('Verify permissions',{retries: 5}, function () {
@@ -109,6 +119,8 @@ describe('Add Permissions to admin', function () {
         cy.get('#environment-permissions').children().contains('Deploy pipelines to this environment').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
         cy.get('#environment-permissions').children().contains('Deploy pipelines from this environment').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
         cy.get('#environment-permissions').children().contains('View all deployments').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
+        cy.get('#environment-permissions').children().contains('Create pipelines').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
+        cy.get('#environment-permissions').children().contains('Manage pipeline permissions').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
     });
  
     it('Remove permissions', function () {
@@ -155,6 +167,12 @@ describe('Add Permissions to admin', function () {
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
         cy.get('#environment-permissions').children().contains('View all deployments').prev().click();
+        cy.get('#notistack-snackbar').should('contain', 'Success');
+
+        cy.get('#environment-permissions').children().contains('Create pipelines').prev().click();
+        cy.get('#notistack-snackbar').should('contain', 'Success');
+
+        cy.get('#environment-permissions').children().contains('Manage pipeline permissions').prev().click();
         cy.get('#notistack-snackbar').should('contain', 'Success');
     });
 });
