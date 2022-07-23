@@ -1,9 +1,10 @@
 ![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests) 
 ![Docker Pulls](https://img.shields.io/docker/pulls/dataplane/dataplane-worker-python?label=Docker%20pulls)
+![Discord](https://img.shields.io/discord/1000429753205014528?label=Discord%20chat)
 
 If you like Dataplane, give it a star ⭐
 
-### Dataplane (Beta)
+### Dataplane
 ⚡️ Written in Golang and compiled to machine code to achieve extreme performance with a low memory and CPU footprint. <br />
 🖐 Drag drop data pipeline builder. <br />
 🧑‍💻 Built in Python code editor. <br />
@@ -20,7 +21,7 @@ If you like Dataplane, give it a star ⭐
 
 
 ### About the project
-The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first beta release. We would love to hear your thoughts and for you to get involved.
+The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first release. We would love to hear your thoughts and for you to get involved.
 <br /><br />
 Website: https://dataplane.app/ <br />
 Documentation: https://learn.dataplane.app/ <br />
