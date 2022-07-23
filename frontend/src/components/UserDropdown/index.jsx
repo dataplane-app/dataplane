@@ -27,7 +27,7 @@ const UserDropdown = ({ me }) => {
 
     return (
         <>
-            <Grid container flexWrap="nowrap" onClick={handleClick} className={`drop-container`} sx={{ border: 1, borderColor: 'divider' }}>
+            <Grid id="user-dropdown" container flexWrap="nowrap" onClick={handleClick} className={`drop-container`} sx={{ border: 1, borderColor: 'divider' }}>
                 <Box
                     display="flex"
                     backgroundColor="secondary.main"

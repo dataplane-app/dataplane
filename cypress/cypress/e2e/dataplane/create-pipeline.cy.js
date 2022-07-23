@@ -12,7 +12,7 @@ describe('Create pipeline', function () {
         cy.get('button').click();
     });
 
-    it('Create pipeline', function () {
+    it('Create Development pipeline', function () {
         cy.url().should('include', '/webapp/');
 
         cy.contains('Create').click();
@@ -107,4 +107,23 @@ describe('Create pipeline', function () {
         cy.get('.react-flow__node')
         .contains('Checkpoint').parent().parent().parent().should('have.css', 'border').and('match', /rgb\(114, 184, 66\)$/)
     })
+
+    // it('Create Production pipeline', function () {
+    //     cy.contains('Pipelines').click({force: true});
+    //     cy.url().should('include', '/webapp/');
+
+    //     cy.get('#environment-dropdown').click()
+    //     cy.get('li').click();
+    //     cy.get('td').should('not.exist')
+
+    //     cy.contains('Create').click();
+
+    //     cy.get('#name').type('Cypress Pipeline', { force: true }).should('have.value', 'Cypress Pipeline');
+    //     cy.get('#description').type('This is a description', { force: true }).should('have.value', 'This is a description');
+    //     cy.get('#workerGroup-box').click();
+    //     cy.get('.MuiAutocomplete-popper').click();
+
+    //     cy.contains('Save').click();
+    // });
+
 });

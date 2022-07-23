@@ -34,6 +34,11 @@ describe('Add User', function () {
         cy.get('#environment-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
+        // cy.get('#available_environments_autocomplete').type('Production', { force: true }).should('have.value', 'Production');
+        // cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
+        // cy.get('#environment-add').click({force:true});
+        // cy.get('#notistack-snackbar').should('contain', 'Success');
+
          // Verify
         cy.get('#belongs-to-environments').children().contains('Development').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
     

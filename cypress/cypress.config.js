@@ -13,8 +13,8 @@ module.exports = defineConfig({
       "cypress/e2e/dataplane/add-remove-secret.cy.js",
       "cypress/e2e/dataplane/add-remove-user.cy.js",
       "cypress/e2e/dataplane/admin-permission.cy.js",
-      "cypress/e2e/dataplane/create-pipeline.js",
-      "cypress/e2e/dataplane/pipelines-permission.cy.js",
+      "cypress/e2e/dataplane/create-pipeline.cy.js",
+      "cypress/e2e/dataplane/permission-manage-pipelines.cy.js",
       // "cypress/e2e/dataplane/edit-pipeline.js",
     ]
   },

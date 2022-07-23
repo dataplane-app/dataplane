@@ -1,6 +1,10 @@
 // This test gives pipeline permissions to a user
 // for all pipelines in an environment 
 
+// #1 Verify user with 'View all pipelines' permissions can view pipelines
+// #2 Verify user with 'Manage pipeline permissions' can edit pipeline permissions
+// #3 Verify user without 'View all pipelines' permission can't view pipelines
+
 describe('Give pipeline permission to a user', function () {
     it('Login as admin', function () {
         cy.visit('http://localhost:9002/webapp/login');
@@ -36,7 +40,7 @@ describe('Give pipeline permission to a user', function () {
         cy.get('#environment-permissions').children().contains('Manage pipeline permissions').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
     });
 
-
+    // #1 Verify user with 'View all pipelines' permissions can view pipelines
     it('Login as Jimmy verify pipeline visible', function () {
         cy.visit('http://localhost:9002/webapp/login');
 
@@ -47,6 +51,13 @@ describe('Give pipeline permission to a user', function () {
         cy.get('td h3').first().should('have.text', 'Cypress Pipeline')
     });
 
+    // it('Verify pipeline isn\'t visible under production environment', function () {
+    //     cy.get('#environment-dropdown').click()
+    //     cy.get('li').click();
+    //     cy.get('td').should('not.exist')
+    // });
+
+    // #2 Verify user with 'Manage pipeline permissions' can edit pipeline permissions
     it('Add Permission', function () {
         cy.contains('Pipelines').click({force: true});
         cy.contains('button', 'Manage').click({force: true});
@@ -59,10 +70,12 @@ describe('Give pipeline permission to a user', function () {
     })
     
     it('Verify Permission', function () {
+        cy.wait(50)
         cy.get('td h4').contains('Jimmy').parent().parent().next().next().contains('View').prev().should('have.css', 'color', 'rgb(114, 184, 66)');
     })
 
     
+    // #3 Verify user without 'View all pipelines' permission can't view pipelines
     it('Login as Jane verify pipeline is not visible', function () {
         cy.visit('http://localhost:9002/webapp/login');
 
@@ -73,4 +86,27 @@ describe('Give pipeline permission to a user', function () {
         cy.get('td').should('not.exist')
     });
 
+    // Clean up
+    it('Login as admin', function () {
+        cy.visit('http://localhost:9002/webapp/login');
+
+        cy.get('#email').type('admin@email.com').should('have.value', 'admin@email.com');
+        cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
+        cy.contains('button', 'Login').click();
+        cy.url().should('include', '/webapp');
+    });
+
+    it('Clean up - remove permissions from Jimmy',function () {
+        // Go to user's page
+        cy.contains('Team').click();
+        cy.contains('Jimmy User').click({force: true});
+
+        // Remove permissions
+        cy.get('#environment-permissions').children().contains('View all pipelines').prev().click();
+        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.get('#environment-permissions').children().contains('Manage pipeline permissions').prev().click();
+        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.get('#specific-permissions').children().contains('Pipeline Cypress Pipeline [read]').prev().click();
+        cy.get('#notistack-snackbar').should('contain', 'Success');
+    });
 });

@@ -482,7 +482,7 @@ export default function TeamDetail() {
                                         </Typography>
                                     </Box>
 
-                                    <Box mt={2}>
+                                    <Box mt={2} id="specific-permissions">
                                         {specificPermissions
                                             ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
                                             .map((permission) => (
