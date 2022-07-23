@@ -10,7 +10,7 @@ import { useGetWorkers } from '../../graphql/getWorkers';
 import WorkerDetailCPU from './WorkerDetailCPU';
 import WorkerDetailMemory from './WorkerDetailMemory';
 import useWebSocket from './useWebSocket';
-import { useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { balancerDict } from './Workers';
 import { useGlobalMeState } from '../../components/Navbar';
 
@@ -19,6 +19,7 @@ const tableWidth = '1140px';
 export default function WorkerDetail() {
     // URI parameter
     const { workerId } = useParams();
+    const history = useHistory();
 
     // Instantiate websocket connection
     const socketResponse = useWebSocket(workerId);
@@ -35,6 +36,9 @@ export default function WorkerDetail() {
 
     // Get workers on load and environment change
     useEffect(() => {
+        if (data.length > 0) {
+            history.push('/workers/');
+        }
         getWorkers();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
