@@ -1,7 +1,7 @@
 import { useTheme } from '@emotion/react';
 import { Box, Button, Drawer, Grid, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import ReactFlow, { addEdge, ControlButton, Controls, getConnectedEdges, isEdge, ReactFlowProvider, removeElements } from 'react-flow-renderer';
+import ReactFlow, { addEdge, ControlButton, Controls, getConnectedEdges, isEdge, ReactFlowProvider, removeElements, isNode } from 'react-flow-renderer';
 import { useHistory, useParams } from 'react-router-dom';
 import ApiNode from '../components/CustomNodesContent/ApiNode';
 import PythonNode from '../components/CustomNodesContent/PythonNode';
@@ -20,7 +20,7 @@ import { useSnackbar } from 'notistack';
 import APITRiggerDrawer from '../components/DrawerContent/EditorDrawers/APITriggerDrawer';
 import { useAddUpdatePipelineFlow } from '../graphql/addUpdatePipelineFlow';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
-import { faExpandArrowsAlt, faPen } from '@fortawesome/free-solid-svg-icons';
+import { faExpandArrowsAlt, faPen, faProjectDiagram } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useGlobalAuthState } from '../Auth/UserAuth';
@@ -29,6 +29,7 @@ import UpdatePipelineDrawer from '../components/DrawerContent/UpdatePipelineDraw
 import { useGetPipeline } from '../graphql/getPipeline';
 import { useGlobalRunState } from './PipelineRuns/GlobalRunState';
 import { prepareInputForFrontend } from '../utils/PipelinePrepareGraphInput';
+import dagre from 'dagre';
 
 export const globalFlowState = createState({
     isRunning: false,
@@ -440,6 +441,11 @@ const Flow = () => {
                             <ControlButton onClick={onPanActive} style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
                                 <Box component={FontAwesomeIcon} icon={faExpandArrowsAlt} sx={{ color: FlowState.isPanEnable.get() ? '#72B842' : '' }} />
                             </ControlButton>
+                            <ControlButton
+                                onClick={() => setElements(setAutoLayout(elements))}
+                                style={{ border: `1px solid ${FlowState.isPanEnable.get() ? '#72B842' : 'transparent'}` }}>
+                                <Box component={FontAwesomeIcon} icon={faProjectDiagram} />
+                            </ControlButton>
                         </Controls>
                         <Box sx={{ position: 'absolute', left: 'auto', right: 155, bottom: 10 }}>
                             <Typography fontSize={12}>Scale {Math.floor((FlowState.scale.get() || 1) * 100)}%</Typography>
@@ -491,6 +497,41 @@ const Flow = () => {
 
 export default Flow;
 
+const dagreGraph = new dagre.graphlib.Graph();
+dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+const nodeWidth = 172;
+const nodeHeight = 36;
+
+const setAutoLayout = (elements) => {
+    dagreGraph.setGraph({ rankdir: 'LR' });
+
+    elements.forEach((el) => {
+        if (isNode(el)) {
+            dagreGraph.setNode(el.id, { width: nodeWidth, height: nodeHeight });
+        } else {
+            dagreGraph.setEdge(el.source, el.target);
+        }
+    });
+
+    dagre.layout(dagreGraph);
+
+    return elements.map((el) => {
+        if (isNode(el)) {
+            const nodeWithPosition = dagreGraph.node(el.id);
+            el.targetPosition = 'left';
+            el.sourcePosition = 'right';
+
+            el.position = {
+                x: nodeWithPosition.x - nodeWidth / 2 + Math.random() / 1000,
+                y: nodeWithPosition.y - nodeHeight / 2,
+            };
+        }
+
+        return el;
+    });
+};
+
 const useGetPipelineFlowHook = (pipeline) => {
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
@@ -509,7 +550,12 @@ const useGetPipelineFlowHook = (pipeline) => {
     // Get members
     return async (environmentID, setElements, setInitialState) => {
         const rawResponse = await getPipelineFlow({ pipelineID: pipelineId, environmentID });
-        const response = prepareInputForFrontend(rawResponse);
+        let response = prepareInputForFrontend(rawResponse);
+        // Check if 2 or more nodes are missing position
+        const needsLayout = response.filter((a) => (a.position?.x === 0) & (a.position?.y === 0)).length > 1;
+        if (needsLayout) {
+            response = setAutoLayout(response);
+        }
 
         if (response.length === 0) {
             FlowState.elements.set([]);
