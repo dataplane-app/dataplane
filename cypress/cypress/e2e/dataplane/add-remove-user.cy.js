@@ -34,6 +34,11 @@ describe('Add User', function () {
         cy.get('#environment-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
+        // cy.get('#available_environments_autocomplete').type('Production', { force: true }).should('have.value', 'Production');
+        // cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
+        // cy.get('#environment-add').click({force:true});
+        // cy.get('#notistack-snackbar').should('contain', 'Success');
+
          // Verify
         cy.get('#belongs-to-environments').children().contains('Development').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
     
@@ -47,7 +52,7 @@ describe('Add User', function () {
         cy.get('#first_name').type('Jane',{force:true}).should('have.value', 'Jane');
         cy.get('#last_name').type('User').should('have.value', 'User');
         cy.get('#email').type('changeuser@email.com').should('have.value', 'changeuser@email.com');
-        cy.get('#password').type('environment123!').should('have.value', 'environment123!');
+        cy.get('#password').type('changeuser123!').should('have.value', 'changeuser123!');
         cy.get('#job_title').type('User with no permissions').should('have.value', 'User with no permissions');
         cy.get('#timezone-box').type('Europe/London', { force: true }).should('have.value', 'Europe/London');
         cy.get('.MuiAutocomplete-popper').click();

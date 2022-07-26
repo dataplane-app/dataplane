@@ -36,10 +36,17 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_create_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 	}
 
-	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+	permOutcome, outcomes, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	for _, outcome := range outcomes {
+		if outcome.Perm.Resource == "environment_edit_all_pipelines" && outcome.Result == "grant" {
+			permOutcome = "yes"
+		}
+	}
 
 	if permOutcome == "denied" {
 		return "", errors.New("Requires permissions.")
@@ -702,11 +709,17 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
-	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+	permOutcome, outcomes, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	for _, outcome := range outcomes {
+		if outcome.Perm.Resource == "environment_edit_all_pipelines" && outcome.Result == "grant" {
+			permOutcome = "yes"
+		}
+	}
 
 	if permOutcome == "denied" {
 		return "", errors.New("Requires permissions.")
@@ -1184,10 +1197,21 @@ func (r *queryResolver) GetPipeline(ctx context.Context, pipelineID string, envi
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: platformID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
 	}
 
-	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
+	_, outcomes, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
+
+	envPipelines := "no"
+	for _, outcome := range outcomes {
+		if outcome.Perm.Resource == "environment_all_pipelines" && outcome.Result == "grant" {
+			envPipelines = "yes"
+		}
+		if outcome.Perm.Resource == "environment_edit_all_pipelines" && outcome.Result == "grant" {
+			envPipelines = "yes"
+		}
+	}
 
 	// if permOutcome == "denied" {
 	// 	return []*privategraphql.Pipelines{}, nil
@@ -1195,7 +1219,7 @@ func (r *queryResolver) GetPipeline(ctx context.Context, pipelineID string, envi
 
 	p := privategraphql.Pipelines{}
 	var query string
-	if admin == "yes" || adminEnv == "yes" {
+	if admin == "yes" || adminEnv == "yes" || envPipelines == "yes" {
 		query = `
 select
 a.pipeline_id, 
@@ -1315,6 +1339,7 @@ func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) 
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: environmentID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	_, outcomes, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
@@ -1322,6 +1347,9 @@ func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) 
 	envPipelines := "no"
 	for _, outcome := range outcomes {
 		if outcome.Perm.Resource == "environment_all_pipelines" && outcome.Result == "grant" {
+			envPipelines = "yes"
+		}
+		if outcome.Perm.Resource == "environment_edit_all_pipelines" && outcome.Result == "grant" {
 			envPipelines = "yes"
 		}
 	}
@@ -1451,12 +1479,18 @@ func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, 
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
 	}
 
-	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+	permOutcome, outcomes, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	for _, outcome := range outcomes {
+		if outcome.Perm.Resource == "environment_edit_all_pipelines" && outcome.Result == "grant" {
+			permOutcome = "yes"
+		}
+	}
 
 	if permOutcome == "denied" {
 		return nil, errors.New("requires permissions")

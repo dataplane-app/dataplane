@@ -121,6 +121,7 @@ const EnviromentDropdown = () => {
     return (
         <>
             <Grid
+                id="environment-dropdown"
                 container
                 flexWrap="nowrap"
                 onClick={handleClick}

@@ -443,6 +443,7 @@ type ComplexityRoot struct {
 		GetUserAccessGroups             func(childComplexity int, userID string, environmentID string) int
 		GetUserEnvironments             func(childComplexity int, userID string, environmentID string) int
 		GetUsers                        func(childComplexity int) int
+		GetUsersFromEnvironment         func(childComplexity int, environmentID string) int
 		GetWorkerGroupSecrets           func(childComplexity int, environmentID string, workerGroup string) int
 		GetWorkerGroups                 func(childComplexity int, environmentID string) int
 		GetWorkers                      func(childComplexity int, environmentID string) int
@@ -656,6 +657,7 @@ type QueryResolver interface {
 	LogoutUser(ctx context.Context) (*string, error)
 	GetUser(ctx context.Context, userID string) (*models.Users, error)
 	GetUsers(ctx context.Context) ([]*models.Users, error)
+	GetUsersFromEnvironment(ctx context.Context, environmentID string) ([]*models.Users, error)
 	GetWorkers(ctx context.Context, environmentID string) ([]*Workers, error)
 	GetWorkerGroups(ctx context.Context, environmentID string) ([]*WorkerGroup, error)
 	GetSecretGroups(ctx context.Context, environmentID string, secret string) ([]*models.WorkerSecrets, error)
@@ -3237,6 +3239,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetUsers(childComplexity), true
+
+	case "Query.getUsersFromEnvironment":
+		if e.complexity.Query.GetUsersFromEnvironment == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getUsersFromEnvironment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetUsersFromEnvironment(childComplexity, args["environment_id"].(string)), true
 
 	case "Query.getWorkerGroupSecrets":
 		if e.complexity.Query.GetWorkerGroupSecrets == nil {
@@ -6484,6 +6498,21 @@ func (ec *executionContext) field_Query_getUser_args(ctx context.Context, rawArg
 		}
 	}
 	args["user_id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getUsersFromEnvironment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environment_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environment_id"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environment_id"] = arg0
 	return args, nil
 }
 
@@ -22615,6 +22644,76 @@ func (ec *executionContext) fieldContext_Query_getUsers(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getUsersFromEnvironment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getUsersFromEnvironment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetUsersFromEnvironment(rctx, fc.Args["environment_id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Users)
+	fc.Result = res
+	return ec.marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getUsersFromEnvironment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "user_id":
+				return ec.fieldContext_User_user_id(ctx, field)
+			case "user_type":
+				return ec.fieldContext_User_user_type(ctx, field)
+			case "first_name":
+				return ec.fieldContext_User_first_name(ctx, field)
+			case "last_name":
+				return ec.fieldContext_User_last_name(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "job_title":
+				return ec.fieldContext_User_job_title(ctx, field)
+			case "timezone":
+				return ec.fieldContext_User_timezone(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getUsersFromEnvironment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getWorkers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getWorkers(ctx, field)
 	if err != nil {
@@ -31453,6 +31552,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getUsers(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getUsersFromEnvironment":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getUsersFromEnvironment(ctx, field)
 				return res
 			}
 
