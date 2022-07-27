@@ -15,10 +15,6 @@ jobs:
       
       - name: Build the stack
         run: docker-compose -f cypress-docker-compose.yaml up --build -d
-      
-      # - name: Install cypress folder dependencies
-      #   run: yarn
-      #   working-directory: ./cypress
 
       - name: Sleep for 30 seconds
         uses: jakejarvis/wait-action@master
@@ -31,5 +27,7 @@ jobs:
           working-directory: ./cypress
           build: yarn
           browser: chrome
+          record: true
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
