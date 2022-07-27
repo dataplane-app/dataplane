@@ -30,6 +30,7 @@ describe('Add User', function () {
 
         // Add to environment
         cy.get('#available_environments_autocomplete').type('Development', { force: true }).should('have.value', 'Development');
+        cy.wait(100)
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
         cy.get('#environment-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
@@ -67,6 +68,7 @@ describe('Add User', function () {
 
         // Add to environment
         cy.get('#available_environments_autocomplete').type('Development', { force: true }).should('have.value', 'Development');
+        cy.wait(100)
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
         cy.get('#environment-add').click({force:true});
         cy.get('#notistack-snackbar').should('contain', 'Success');
