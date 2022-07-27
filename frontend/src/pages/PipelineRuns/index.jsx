@@ -160,7 +160,7 @@ const View = () => {
                 </Grid>
             </Box>
             {!FlowState.isOpenLogDrawer.get() && !isOpenAnalytics ? (
-                <Box mt={10} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
+                <Box mt={15} sx={{ position: 'absolute', top: offsetHeight, left: 0, right: 0, bottom: 0 }} ref={reactFlowWrapper}>
                     {FlowState.elements.get()?.length > 0 ? (
                         <ReactFlowProvider>
                             <ReactFlow

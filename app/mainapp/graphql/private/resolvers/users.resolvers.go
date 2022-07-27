@@ -373,34 +373,28 @@ func (r *queryResolver) GetUsersFromEnvironment(ctx context.Context, environment
 
 	e := []*models.Users{}
 
+	cUser := models.Users{}
+
 	// Check is user belongs to the environment the request is being made for
 	result := database.DBConn.Raw(
 		`
 	select
-		users.user_id,
-        users.user_type,
-        users.first_name,
-        users.last_name,
-        users.email,
-        users.job_title,
-        users.timezone,
-        users.status
+		user_id
     from
-        users,
         environment_user eu
     where
         eu.environment_id = ?
-        and users.user_id = eu.user_id
 		and eu.user_id = ?
-`, environmentID, currentUser).Find(&e)
+`, environmentID, currentUser).Find(&cUser)
+
 	if result.Error != nil {
 		if config.Debug == "true" {
 			logging.PrintSecretsRedact(result.Error)
 		}
-		return nil, errors.New("Retrive users database error.")
+		return nil, errors.New("User not part of environment.")
 	}
-	if result.RowsAffected == 0 {
-		return nil, errors.New("Requires permissions.")
+	if cUser.UserID != currentUser {
+		return nil, errors.New("User not part of environment.")
 	}
 
 	err := database.DBConn.Raw(

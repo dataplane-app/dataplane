@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
@@ -398,19 +398,29 @@ func (r *mutationResolver) RemoveUserFromAccessGroup(ctx context.Context, userID
 
 func (r *queryResolver) GetAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error) {
 	currentUser := ctx.Value("currentUser").(string)
-	platformID := ctx.Value("platformID").(string)
 
-	// ----- Permissions
-	perms := []models.Permissions{
-		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
-		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
-		{Resource: "environment_permissions", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	cUser := models.Users{}
+
+	// Check is user belongs to the environment the request is being made for
+	result := database.DBConn.Raw(
+		`
+	select
+		user_id
+    from
+        environment_user eu
+    where
+        eu.environment_id = ?
+		and eu.user_id = ?
+`, environmentID, currentUser).Find(&cUser)
+
+	if result.Error != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(result.Error)
+		}
+		return nil, errors.New("User not part of environment.")
 	}
-
-	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
-
-	if permOutcome == "denied" {
-		return nil, errors.New("Requires permissions.")
+	if cUser.UserID != currentUser {
+		return nil, errors.New("User not part of environment.")
 	}
 
 	e := []*models.PermissionsAccessGroups{}
