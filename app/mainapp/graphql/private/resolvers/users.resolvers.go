@@ -370,23 +370,32 @@ func (r *queryResolver) GetUsers(ctx context.Context) ([]*models.Users, error) {
 
 func (r *queryResolver) GetUsersFromEnvironment(ctx context.Context, environmentID string) ([]*models.Users, error) {
 	currentUser := ctx.Value("currentUser").(string)
-	platformID := ctx.Value("platformID").(string)
-
-	// ----- Permissions
-	perms := []models.Permissions{
-		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "platform_manage_users", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_permissions", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_permissions_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-	}
-
-	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
-
-	if permOutcome == "denied" {
-		return nil, errors.New("Requires permissions.")
-	}
 
 	e := []*models.Users{}
+
+	cUser := models.Users{}
+
+	// Check is user belongs to the environment the request is being made for
+	result := database.DBConn.Raw(
+		`
+	select
+		user_id
+    from
+        environment_user eu
+    where
+        eu.environment_id = ?
+		and eu.user_id = ?
+`, environmentID, currentUser).Find(&cUser)
+
+	if result.Error != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(result.Error)
+		}
+		return nil, errors.New("User not part of environment.")
+	}
+	if cUser.UserID != currentUser {
+		return nil, errors.New("User not part of environment.")
+	}
 
 	err := database.DBConn.Raw(
 		`

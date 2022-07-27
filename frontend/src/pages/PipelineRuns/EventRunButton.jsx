@@ -50,6 +50,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
                 if (response.r || response.error) {
                     enqueueSnackbar("Can't run pipeline: " + (response.msg || response.r || response.error), { variant: 'error' });
                 } else if (response.errors) {
+                    FlowState.isRunning.set(false);
                     response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
                 } else {
                     RunState.runObject.merge({
