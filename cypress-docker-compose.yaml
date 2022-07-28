@@ -4,6 +4,8 @@ services:
 
   postgres-test:
     image: timescale/timescaledb:2.5.1-pg14
+    ports:
+      - 54321:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "Hello123!"
