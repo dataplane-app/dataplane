@@ -14,8 +14,6 @@ jobs:
       - name: Build the stack
         run: docker-compose -f cypress-docker-compose.yaml up --build -d
 
-      - run: docker ps
-      - run: docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' dataplane_mainapp-cypresstest_1
       - name: Get the ip address of the server
         run: |
           echo "SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' dataplane_mainapp-cypresstest_1)" >> $GITHUB_ENV
