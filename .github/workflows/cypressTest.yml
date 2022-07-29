@@ -14,9 +14,9 @@ jobs:
       - name: Build the stack
         run: docker-compose -f cypress-dockerbuilt-compose.yaml up --build -d
 
-      - name: Get the ip address of the server
-        run: |
-          echo "SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' dataplane_mainapp-cypresstest_1)" >> $GITHUB_ENV
+      # - name: Get the ip address of the server
+      #   run: |
+      #     echo "SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' dataplane_mainapp-cypresstest_1)" >> $GITHUB_ENV
 
       # - name: Server health check
       #   uses: jtalk/url-health-check-action@v2
