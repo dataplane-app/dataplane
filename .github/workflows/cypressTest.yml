@@ -3,7 +3,7 @@ name: Cypress-tests
 on:
   push:
     branches:
-      - main
+      - cypress-test
 
 jobs:
   tests:
@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v2
       
       - name: Build the stack
-        run: docker-compose -f cypress-docker-compose.yaml up --build -d
+        run: docker-compose -f cypress-dockerbuilt-compose.yaml up --build -d
 
       - name: Get the ip address of the server
         run: |
