@@ -18,16 +18,14 @@ jobs:
       #   run: |
       #     echo "SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' dataplane_mainapp-cypresstest_1)" >> $GITHUB_ENV
 
-      # - name: Server health check
-      #   uses: jtalk/url-health-check-action@v2
-      #   with:
-      #     url: http://127.0.0.1:9002/healthz
-      #     max-attempts: 7
-      #     retry-delay: 5s
-      
       - name: Server health check
-        run: ${GITHUB_WORKSPACE}/.github/workflows/healthcheck.sh
-
+        uses: jtalk/url-health-check-action@v2
+        with:
+          url: http://127.0.0.1:9002/healthz
+          max-attempts: 7
+          retry-delay: 5s
+          retry-all: true
+      
       - name: Cypress run
         uses: cypress-io/github-action@v4
         with:
