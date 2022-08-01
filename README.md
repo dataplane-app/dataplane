@@ -26,6 +26,7 @@ The idea behind Dataplane is to make it quicker and easier to build robust data 
 Website: https://dataplane.app/ <br />
 Documentation: https://learn.dataplane.app/ <br />
 Demo: https://dataplane.app/demo <br />
+Recipes: https://recipes.dataplane.app/ <br />
 
 ### Quick start with Docker
 Requires Docker engine installed - https://docs.docker.com/engine/install/ <br />
