@@ -1,0 +1,136 @@
+version: '2.4'
+
+services:
+
+  postgres-test:
+    image: timescale/timescaledb:2.5.1-pg14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "Hello123!"
+      POSTGRES_DB: "testcypress"
+    # volumes:
+    #   - testcypress-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 30s
+      retries: 5
+    restart: always
+
+  nats:
+    image: nats:2.7.4-scratch
+    command:
+      - "--cluster"
+      - "nats://0.0.0.0:6222"
+      - "--http_port"
+      - "8222"
+      - "--port"
+      - "4222"
+
+  nats-r:
+    image: nats:2.7.4-scratch
+    command:
+      - "--cluster"
+      - "nats://0.0.0.0:6222"
+      - "--http_port"
+      - "8222"
+      - "--port"
+      - "4222"
+      - "--routes"
+      - "nats://nats:6222"
+    deploy:
+      replicas: 2
+
+  mainapp-cypresstest:
+    image: dataplane/dataplane:latest
+    ports:
+      - 9002:9001
+    volumes:
+      - testcypress-code-files:/dataplane/code-files/
+    environment:
+      DP_CODE_FOLDER: "/dataplane/code-files/"
+      secret_db_host: postgres-test
+      secret_db_user: postgres
+      secret_db_pwd: "Hello123!"
+      secret_db_ssl: "disable"
+      secret_db_port: "5432"
+      secret_db_database: "testcypress"
+      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+      secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
+      DP_DATABASE: "timescaledb"
+      DP_PORT: "9001"
+      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_MODE: "development"
+      DP_DEBUG: "true"
+      DP_DB_DEBUG: "false"
+      DP_MQ_DEBUG: "false"
+      DP_METRIC_DEBUG: "false"
+      DP_SCHEDULER_DEBUG: "false"
+      DP_CLEANTASKS_DAYS: "60"
+      DP_REMOVELOGS_DAYS: "60"
+
+  mainapp2-cypresstest:
+    image: dataplane/dataplane:latest
+    deploy:
+      replicas: 2
+    volumes:
+      - testcypress-code-files:/dataplane/code-files/
+    environment:
+      DP_CODE_FOLDER: "/dataplane/code-files/"
+      secret_db_host: postgres-test
+      secret_db_user: postgres
+      secret_db_pwd: "Hello123!"
+      secret_db_ssl: "disable"
+      secret_db_port: "5432"
+      secret_db_database: "testcypress"
+      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+      secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
+      DP_DATABASE: "timescaledb"
+      DP_PORT: "9001"
+      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_MODE: "development"
+      DP_DEBUG: "true"
+      DP_DB_DEBUG: "false"
+      DP_MQ_DEBUG: "false"
+      DP_METRIC_DEBUG: "false"
+      DP_SCHEDULER_DEBUG: "false"
+      DP_CLEANTASKS_DAYS: "60"
+      DP_REMOVELOGS_DAYS: "60"
+
+  dataplane-worker-cypresstest:
+    image: dataplane/dataplane-worker-python:latest
+    mem_limit: 512MB
+    cpus: 1.5
+    deploy:
+      replicas: 3
+    volumes:
+      - testcypress-code-files:/dataplane/code-files/
+    environment:
+      DP_CODE_FOLDER: "/dataplane/code-files/"
+      secret_db_host: postgres-test
+      secret_db_user: postgres
+      secret_db_pwd: "Hello123!"
+      secret_db_ssl: "disable"
+      secret_db_port: "5432"
+      secret_db_database: "testcypress"
+      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+      DP_DATABASE: "timescaledb"
+      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_MODE: "development"
+      DP_DEBUG: "true"
+      DP_DB_DEBUG: "false"
+      DP_MQ_DEBUG: "false"
+      DP_METRIC_DEBUG: "false"
+      DP_SCHEDULER_DEBUG: "false"
+      DP_WORKER_HEARTBEAT_SECONDS: "1"
+      DP_WORKER_GROUP: "python_1"
+      DP_WORKER_CMD: "/bin/sh"
+      DP_WORKER_TYPE: "container"
+      DP_WORKER_LB: "roundrobin"
+      DP_WORKER_ENV: "Development"
+      DP_WORKER_PORT: "9005"
+      DP_WORKER_LANGUAGES: "Python"
+      DP_WORKER_LOAD_PACKAGES: "Python"
+
+volumes:
+  testcypress-code-files:
+  # testcypress-postgres:
