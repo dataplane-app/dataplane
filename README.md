@@ -6,7 +6,7 @@
 
 If you like Dataplane, give it a star ⭐
 
-### Dataplane
+## Dataplane
 ⚡️ Written in Golang and compiled to machine code to achieve extreme performance with a low memory and CPU footprint. <br />
 🖐 Drag drop data pipeline builder. <br />
 🧑‍💻 Built in Python code editor. <br />
@@ -21,8 +21,15 @@ If you like Dataplane, give it a star ⭐
 
 ![Pipeline Running Screen Recording 4K pre render v2](https://user-images.githubusercontent.com/63714857/166139437-3020ac63-7ae6-4265-a301-29e5448451eb.gif)
 
+## Dataplane Community
+[Discord](https://discord.gg/Ztu4ASNky8) is the quickest way to meet and interact with the community.
 
-### About the project
+[Github Discussion](https://github.com/dataplane-app/dataplane/discussions) is preferred when proposing new ideas and longer discussions that need more thought.
+
+[GitHub Issues](https://github.com/dataplane-app/dataplane/issues) is reserved only for actual issues. 
+
+
+## About the project
 The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first release. We would love to hear your thoughts and for you to get involved.
 <br /><br />
 Website: https://dataplane.app/ <br />
@@ -30,7 +37,7 @@ Documentation: https://learn.dataplane.app/ <br />
 Demo: https://dataplane.app/demo <br />
 Recipes: https://recipes.dataplane.app/ <br />
 
-### Quick start with Docker
+## Quick start with Docker
 Requires Docker engine installed - https://docs.docker.com/engine/install/ <br />
 Download the quick start docker compose file
 ```shell
@@ -46,7 +53,7 @@ To use Dataplane, go to http://localhost:9001/webapp/ <br />
 Docker releases: https://hub.docker.com/u/dataplane <br />
 
 
-### Develop Dataplane code
+## Develop Dataplane code
 There is a containerised development environment setup for VS code.
 
 To get started with a development setup follow these steps
