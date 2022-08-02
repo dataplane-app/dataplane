@@ -106,24 +106,4 @@ describe("Access group 'Edit all pipelines' test", function () {
 
         cy.wait(1000);
     });
-
-    // // Clean up
-    // it('Login as admin', function () {
-    //     cy.visit('http://localhost:9002/webapp/login');
-
-    //     cy.get('#email').type('admin@email.com').should('have.value', 'admin@email.com');
-    //     cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
-    //     cy.contains('button', 'Login').click();
-    //     cy.url().should('include', '/webapp');
-    // });
-
-    // it('Clean up - remove permissions from Jimmy', function () {
-    //     // Go to user's page
-    //     cy.contains('Team').click();
-    //     cy.contains('Jimmy User').click({ force: true });
-
-    //     // Remove permissions
-    //     cy.get('#environment-permissions').children().contains('Edit all pipelines').prev().click();
-    //     cy.get('#notistack-snackbar').should('contain', 'Success');
-    // });
 });
