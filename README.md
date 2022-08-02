@@ -24,7 +24,7 @@ If you like Dataplane, give it a star ⭐
 ## Dataplane Community
 [Discord](https://discord.gg/Ztu4ASNky8) is the quickest way to meet and interact with the community.
 
-[Github Discussion](https://github.com/dataplane-app/dataplane/discussions) is preferred when proposing new ideas and longer discussions that need more thought.
+[Github Discussions](https://github.com/dataplane-app/dataplane/discussions) is preferred when proposing new ideas and longer discussions that need more thought.
 
 [GitHub Issues](https://github.com/dataplane-app/dataplane/issues) is reserved only for actual issues. 
 
