@@ -2,9 +2,8 @@ Business Source License 1.1
 
 Parameters
 
-Licensor:             Saul Frank.
-Licensed Work:        Dataplane 0.1.beta
-                      The Licensed Work is (c) 2022 Saul Frank.
+Licensor:             Dataplane, Inc.
+Licensed Work:        Dataplane The Licensed Work is (c) 2022 Dataplane, Inc.
 Additional Use Grant: You may make use of the Licensed Work, provided that
                       you may not use the Licensed Work for a Data Platform Service.
 
@@ -16,7 +15,7 @@ Additional Use Grant: You may make use of the Licensed Work, provided that
                       such as cloud services, hosting services, data center services and similarly situated third parties (including affiliates of such entities) that would offer the Licensed Work 
                       in connection with a broader service offering to customers or subscribers of such of such third party’s core services.
 
-Change Date:          2026-12-01
+Change Date:          Change date is four years from release date. Please see <a href="https://github.com/dataplane-app/dataplane/releases">GitHub releases</a> for exact dates.
 
 Change License:       Apache License, Version 2.0
 
