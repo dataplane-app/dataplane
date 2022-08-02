@@ -22,7 +22,7 @@ If you like Dataplane, give it a star ⭐
 ![Pipeline Running Screen Recording 4K pre render v2](https://user-images.githubusercontent.com/63714857/166139437-3020ac63-7ae6-4265-a301-29e5448451eb.gif)
 
 ## Dataplane Community
-[Discord](https://discord.gg/Ztu4ASNky8) is the quickest way to meet and interact with the community.
+[Discord chat](https://discord.gg/Ztu4ASNky8) is the quickest way to meet and interact with the community.
 
 [Github Discussions](https://github.com/dataplane-app/dataplane/discussions) is preferred when proposing new ideas and longer discussions that need more thought.
 
