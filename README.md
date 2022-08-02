@@ -4,8 +4,6 @@
 [![Documentation](https://img.shields.io/badge/documentation-orange)](https://learn.dataplane.app/create-a-data-pipeline)
 [![Recipes](https://img.shields.io/badge/recipes-blue)](https://recipes.dataplane.app/)
 
-https://img.shields.io/badge/Discord-chat-purple
-
 If you like Dataplane, give it a star ⭐
 
 ### Dataplane
