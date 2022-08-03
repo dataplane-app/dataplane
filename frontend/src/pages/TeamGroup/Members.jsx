@@ -45,7 +45,7 @@ export default function Members({ environmentId }) {
             <Grid mt={2} display="flex" alignItems="center">
                 <Autocomplete
                     disablePortal
-                    // id="members_autocomplete"
+                    id="members_autocomplete_access_group"
                     key={clear} //Changing this value on submit clears the input field
                     onChange={(event, newValue) => {
                         setSelectedUser(newValue);
