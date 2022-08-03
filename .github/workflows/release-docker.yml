@@ -1,0 +1,32 @@
+name: Cypress-tests
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Build the stack
+        run: docker-compose -f cypress-docker-compose.yaml up --build -d
+
+      - name: Tag reference ${{ github.ref }}
+        run: |
+          echo release: ${{ github.ref }}
+          export dpversion=0.0.${{ github.ref }}
+          echo docker version: $dpversion
+
+          # docker build -t dataplane/dataplane:$dpversion -f docker-build/Dockerfile.main.alpine .
+          # docker tag dataplane/dataplane:$dpversion dataplane/dataplane:$dpversion
+          # docker push dataplane/dataplane:$dpversion
+          # docker tag dataplane/dataplane:$dpversion dataplane/dataplane:latest
+          # docker push dataplane/dataplane:latest
+
+          # docker build -t dataplane/dataplane-worker-python:$dpversion -f docker-build/Dockerfile.workerpython.debian .
+          # docker tag dataplane/dataplane-worker-python:$dpversion dataplane/dataplane-worker-python:$dpversion
+          # docker push dataplane/dataplane-worker-python:$dpversion
+          # docker tag dataplane/dataplane-worker-python:$dpversion dataplane/dataplane-worker-python:latest
+          # docker push dataplane/dataplane-worker-python:latest
