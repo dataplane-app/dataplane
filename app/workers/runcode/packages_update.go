@@ -41,7 +41,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 				log.Println("Failed to write file")
 			}
 
-			cmd = exec.Command("pip3", "install", "-r", packagesfile)
+			cmd = exec.Command("python3", "-m", "pip", "install", "-r", packagesfile)
 
 		}
 
