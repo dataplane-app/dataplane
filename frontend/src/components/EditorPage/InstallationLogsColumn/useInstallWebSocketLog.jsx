@@ -114,23 +114,25 @@ export default function useInstallWebSocketLog(environmentID, workerGroup, pipel
 
                 let text = `${formatDate(resp.created_at)} ${resp.log}`;
                 setSocketResponse(text);
+
+                // TO BE IMPLEMENTED
                 // If message is an error message, return after displaying it.
-                if (resp.log_type === 'error') {
-                    EditorGlobal.installState.set('Fail');
+                // if (resp.log_type === 'action' && resp.log === 'Fail') {
+                //     EditorGlobal.installState.set('Fail');
 
-                    // Get packages after installation failure
-                    (async () => {
-                        const response = await getCodePackages({ environmentID, pipelineID, workerGroup, language });
+                //     // Get packages after installation failure
+                //     (async () => {
+                //         const response = await getCodePackages({ environmentID, pipelineID, workerGroup, language });
 
-                        if (response.r || response.error) {
-                            enqueueSnackbar("Can't get packages: " + (response.msg || response.r || response.error), { variant: 'error' });
-                        } else if (response.errors) {
-                            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-                        } else {
-                            setPackages(response.packages);
-                        }
-                    })();
-                }
+                //         if (response.r || response.error) {
+                //             enqueueSnackbar("Can't get packages: " + (response.msg || response.r || response.error), { variant: 'error' });
+                //         } else if (response.errors) {
+                //             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+                //         } else {
+                //             setPackages(response.packages);
+                //         }
+                //     })();
+                // }
             };
         }
 

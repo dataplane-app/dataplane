@@ -101,7 +101,7 @@ export default function useWebSocketLog(environmentId, run_id, setKeys, setGraph
                 setKeys((k) => [...k, resp.uid]);
                 let text = `${formatDate(resp.created_at)} ${resp.log}`;
                 setSocketResponse(text);
-                if (resp.log === 'Fail' || resp.log === 'Success') {
+                if ((resp.log_type === 'action' && resp.log === 'Fail') || (resp.log_type === 'action' && resp.log === 'Success')) {
                     EditorGlobal.runState.set(resp.log);
                     reconnectOnClose.current = false;
                     ws.current.close();
