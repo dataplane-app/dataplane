@@ -1,4 +1,4 @@
-name: Cypress-tests
+name: Docker release
 
 on:
   release:
