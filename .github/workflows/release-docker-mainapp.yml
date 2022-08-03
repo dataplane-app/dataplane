@@ -5,7 +5,7 @@ on:
     types: [published]
 
 jobs:
-  tests:
+  mainapp:
     runs-on: ubuntu-latest
     permissions:
       contents: read
