@@ -1,7 +1,7 @@
 // This is verifies successful installation of
 // python package requests==2.28.1
 
-describe('Python package installation', function () {
+describe('Deployment and deployment turn off', function () {
     it('Login as admin', function () {
         cy.visit('http://localhost:9002/webapp/login');
 
@@ -43,6 +43,7 @@ describe('Python package installation', function () {
             });
 
         cy.contains('Turn off').click({ force: true });
+        cy.contains('Yes').click({ force: true });
 
         cy.contains('Cypress Schedule Pipeline')
             .first()
