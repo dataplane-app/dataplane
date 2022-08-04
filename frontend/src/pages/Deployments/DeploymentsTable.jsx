@@ -12,7 +12,7 @@ import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
 import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
-import { useGlobalPipelineRun } from '../PipelineRuns/GlobalPipelineRunUIState';
+import { useGlobalFlowState } from '../PipelineEdit';
 import { useGlobalMeState } from '../../components/Navbar';
 import cronZone from '../../utils/cronZone';
 import { getTimeZone } from '../../utils/formatDate';
@@ -21,7 +21,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
     // React router
     const history = useHistory();
 
-    const FlowState = useGlobalPipelineRun();
+    const FlowState = useGlobalFlowState();
     const MeData = useGlobalMeState();
 
     const Environments = useGlobalEnvironmentsState();
@@ -232,9 +232,9 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
                     />
                 </Drawer>
 
-                <Drawer anchor="right" open={FlowState.isOpenTurnOffPipelineDrawer.get()} onClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)}>
+                <Drawer anchor="right" open={FlowState.isOpenTurnOffDeploymentDrawer.get()} onClose={() => FlowState.isOpenTurnOffDeploymentDrawer.set(false)}>
                     <TurnOffDeploymentDrawer
-                        handleClose={() => FlowState.isOpenTurnOffPipelineDrawer.set(false)} //
+                        handleClose={() => FlowState.isOpenTurnOffDeploymentDrawer.set(false)}
                         pipelineID={pipelineId}
                         environmentID={environmentID}
                         name={pipelineName}
