@@ -1,5 +1,4 @@
-// This is verifies successful installation of
-// python package requests==2.28.1
+// Tests for depyloyment and turn off deployment
 
 describe('Deployment and deployment turn off', function () {
     it('Login as admin', function () {
