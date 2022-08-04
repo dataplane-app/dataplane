@@ -1,4 +1,4 @@
-// Tests for depyloyment and turn off deployment
+// Tests for deployment and turn off deployment
 
 describe('Deployment and deployment turn off', function () {
     it('Login as admin', function () {
