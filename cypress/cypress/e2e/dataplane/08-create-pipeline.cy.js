@@ -30,9 +30,9 @@ describe('Create pipelines', function () {
         cy.wait(50);
 
         const dataTransfer = new DataTransfer();
-        // Play Trigger
+        // Schedule Trigger
         // Add
-        cy.get('#Triggers div:nth-child(3)') // Play node
+        cy.get('#Triggers div:nth-child(3)') // Schedule node
             .trigger('dragstart', { dataTransfer });
         cy.get('.react-flow__renderer').trigger('drop', { dataTransfer });
         cy.contains('Trigger - Scheduler')
