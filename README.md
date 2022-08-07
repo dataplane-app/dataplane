@@ -27,6 +27,7 @@ If you like Dataplane, give it a star ⭐
 [Github Discussions](https://github.com/dataplane-app/dataplane/discussions) is preferred when proposing new ideas and longer discussions that need more thought.
 
 [GitHub Issues](https://github.com/dataplane-app/dataplane/issues) is reserved only for actual issues. 
+[Roadmap](https://github.com/orgs/dataplane-app/projects/1/views/1) to view work prioritisation, work in progress and back log.
 
 
 ## About the project
@@ -36,6 +37,7 @@ Website: https://dataplane.app/ <br />
 Documentation: https://learn.dataplane.app/ <br />
 Demo: https://dataplane.app/demo <br />
 Recipes: https://recipes.dataplane.app/ <br />
+
 
 ## Quick start with Docker
 Requires Docker engine installed - https://docs.docker.com/engine/install/ <br />
