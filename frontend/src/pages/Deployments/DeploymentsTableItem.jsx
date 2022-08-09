@@ -32,7 +32,7 @@ const DeploymentTableItem = (props) => {
     // Handle turn off button
     const handleTurnOffDeployment = () => {
         handleCloseMenu();
-        FlowState.isOpenTurnOffPipelineDrawer.set(true);
+        FlowState.isOpenTurnOffDeploymentDrawer.set(true);
     };
 
     // Handle turn on button
