@@ -39,6 +39,7 @@ export const globalFlowState = createState({
     isOpenLogDrawer: false,
     isOpenDepLogDrawer: false,
     isOpenAPIDrawer: false,
+    isOpenTurnOffDeploymentDrawer: false,
     isOpenTurnOffPipelineDrawer: false,
     isOpenDuplicatePipelineDrawer: false,
     isOpenUpdatePipelineDrawer: false,
