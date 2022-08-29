@@ -1,3 +1,11 @@
+### Release steps
+```
+1. Merged pull request into main after manual test
+2. Merge pull request to cypress-test, wait for tests to complete
+3. Merge pull request into release to create a new release to docker
+```
+
+
 ### Build docker image
 
 ## NB: From root directory of this repo (not this directory):
