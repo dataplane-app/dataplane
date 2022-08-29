@@ -1,100 +1,100 @@
 package main
 
-import (
-	"fmt"
-	"log"
-	"os/exec"
-	"strconv"
-	"strings"
-	"time"
+// import (
+// 	"fmt"
+// 	"log"
+// 	"os/exec"
+// 	"strconv"
+// 	"strings"
+// 	"time"
 
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/mem"
-)
+// 	"github.com/shirou/gopsutil/v3/cpu"
+// 	"github.com/shirou/gopsutil/v3/mem"
+// )
 
-// ONLY an issue on docker compose locally on Mac - maybe latest version of docker using cgroup v2 - not an isssue with using kubernetes.
+// // ONLY an issue on docker compose locally on Mac - maybe latest version of docker using cgroup v2 - not an isssue with using kubernetes.
 
-func main() {
+// func main() {
 
-	// cmd = exec.Command("/bin/bash", "-c", "stat -fc %T /sys/fs/cgroup/")
-	out, err := exec.Command("/bin/bash", "-c", "stat -fc %T /sys/fs/cgroup/").Output()
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	// cmd = exec.Command("/bin/bash", "-c", "stat -fc %T /sys/fs/cgroup/")
+// 	out, err := exec.Command("/bin/bash", "-c", "stat -fc %T /sys/fs/cgroup/").Output()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	log.Println("--" + string(out) + "--")
+// 	log.Println("--" + string(out) + "--")
 
-	if strings.TrimSuffix(string(out), "\n") == "cgroup2fs" {
-		log.Println("CGroup v2")
-	} else {
-		log.Println("CGroup v1")
-	}
+// 	if strings.TrimSuffix(string(out), "\n") == "cgroup2fs" {
+// 		log.Println("CGroup v2")
+// 	} else {
+// 		log.Println("CGroup v1")
+// 	}
 
-	// Is this using cgroup v2
-	// path :=
-	// v, err := ioutil.ReadFile(path)
-	// if err != nil {
-	// 	return 0, err
-	// }
+// 	// Is this using cgroup v2
+// 	// path :=
+// 	// v, err := ioutil.ReadFile(path)
+// 	// if err != nil {
+// 	// 	return 0, err
+// 	// }
 
-	go func() {
-	restart:
-		t := time.NewTicker(6 * time.Second)
+// 	go func() {
+// 	restart:
+// 		t := time.NewTicker(6 * time.Second)
 
-		for {
-			select {
-			case <-t.C:
-				fmt.Println("cpu down===========")
-				time.Sleep(6 * time.Second)
-				t.Stop()
-				fmt.Println("cpu up===========")
-				goto restart
-			default:
+// 		for {
+// 			select {
+// 			case <-t.C:
+// 				fmt.Println("cpu down===========")
+// 				time.Sleep(6 * time.Second)
+// 				t.Stop()
+// 				fmt.Println("cpu up===========")
+// 				goto restart
+// 			default:
 
-			}
-		}
-	}()
+// 			}
+// 		}
+// 	}()
 
-	for {
+// 	for {
 
-		d, _ := cpu.Counts(false)
-		fmt.Println("CPU:", d)
-		// cpu := cmetric.CurrentCpuPercentUsage()
-		// fmt.Println("cpu ", cpu)
-		memlimitstring, err := exec.Command("/bin/bash", "-c", "cat /sys/fs/cgroup/memory.max").Output()
-		if err != nil {
-			log.Fatal(err)
-		}
+// 		d, _ := cpu.Counts(false)
+// 		fmt.Println("CPU:", d)
+// 		// cpu := cmetric.CurrentCpuPercentUsage()
+// 		// fmt.Println("cpu ", cpu)
+// 		memlimitstring, err := exec.Command("/bin/bash", "-c", "cat /sys/fs/cgroup/memory.max").Output()
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
 
-		memCurrentString, err := exec.Command("/bin/bash", "-c", "cat /sys/fs/cgroup/memory.current").Output()
-		if err != nil {
-			log.Fatal(err)
-		}
+// 		memCurrentString, err := exec.Command("/bin/bash", "-c", "cat /sys/fs/cgroup/memory.current").Output()
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
 
-		fmt.Println("memory raw:", string(memlimitstring), string(memCurrentString))
+// 		fmt.Println("memory raw:", string(memlimitstring), string(memCurrentString))
 
-		var memlimit float64
-		var memcurrent float64
+// 		var memlimit float64
+// 		var memcurrent float64
 
-		// If cat /sys/fs/cgroup/memory.max = max then no memory limit was provided.
-		if strings.TrimSuffix(string(memlimitstring), "\n") == "max" {
-			memlimit = -1
-		}
+// 		// If cat /sys/fs/cgroup/memory.max = max then no memory limit was provided.
+// 		if strings.TrimSuffix(string(memlimitstring), "\n") == "max" {
+// 			memlimit = -1
+// 		}
 
-		v, _ := mem.VirtualMemory()
-		fmt.Printf("Total: %v, Free:%v, UsedPercent:%f%%, Used: %vMB, Shared: %vMB, Cached: %vMB\n", v.Total, v.Free, v.UsedPercent, v.Used/1024/1024, v.Shared/1024/1024, v.Cached/1024/1024)
-		// fmt.Println(v.String())
+// 		v, _ := mem.VirtualMemory()
+// 		fmt.Printf("Total: %v, Free:%v, UsedPercent:%f%%, Used: %vMB, Shared: %vMB, Cached: %vMB\n", v.Total, v.Free, v.UsedPercent, v.Used/1024/1024, v.Shared/1024/1024, v.Cached/1024/1024)
+// 		// fmt.Println(v.String())
 
-		memlimit, _ = strconv.ParseFloat(strings.TrimSuffix(string(memlimitstring), "\n"), 64)
-		memcurrent, _ = strconv.ParseFloat(strings.TrimSuffix(string(memCurrentString), "\n"), 64)
-		fmt.Println("mem limit:", strconv.FormatFloat(memlimit/1024/1024, 'f', -1, 64)+"MB",
-			"|", "mem use:", strconv.FormatFloat(memcurrent/1024/1024, 'f', -1, 64)+"MB",
-			"|", "mem %:", strconv.FormatFloat(memcurrent/memlimit, 'f', -1, 64))
+// 		memlimit, _ = strconv.ParseFloat(strings.TrimSuffix(string(memlimitstring), "\n"), 64)
+// 		memcurrent, _ = strconv.ParseFloat(strings.TrimSuffix(string(memCurrentString), "\n"), 64)
+// 		fmt.Println("mem limit:", strconv.FormatFloat(memlimit/1024/1024, 'f', -1, 64)+"MB",
+// 			"|", "mem use:", strconv.FormatFloat(memcurrent/1024/1024, 'f', -1, 64)+"MB",
+// 			"|", "mem %:", strconv.FormatFloat(memcurrent/memlimit, 'f', -1, 64))
 
-		time.Sleep(2000 * time.Millisecond)
-	}
+// 		time.Sleep(2000 * time.Millisecond)
+// 	}
 
-}
+// }
 
 // getSystemCPUUsage returns the host system's cpu usage in
 // nanoseconds. An error is returned if the format of the underlying
