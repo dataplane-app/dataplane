@@ -85,7 +85,14 @@ const InstallationLogsColumn = forwardRef(({ children, setPackages, environmentI
                     <ScrollFollow
                         startFollowing={true}
                         render={({ follow, onScroll }) => (
-                            <LazyLog enableSearch text={websocketResp} follow={follow} onScroll={onScroll} style={{ background: theme.palette.editorPage.logBackground }} />
+                            <LazyLog
+                                selectableLines={true}
+                                enableSearch
+                                text={websocketResp}
+                                follow={follow}
+                                onScroll={onScroll}
+                                style={{ background: theme.palette.editorPage.logBackground }}
+                            />
                         )}
                     />
                 </Box>
