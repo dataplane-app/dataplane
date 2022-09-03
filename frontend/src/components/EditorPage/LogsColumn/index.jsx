@@ -123,6 +123,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                         startFollowing={true}
                         render={({ follow, onScroll }) => (
                             <LazyLog
+                                selectableLines={true}
                                 enableSearch
                                 key={render}
                                 text={filteredGraphqlResp + websocketResp + ' '}
