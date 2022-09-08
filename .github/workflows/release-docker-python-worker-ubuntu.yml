@@ -1,4 +1,4 @@
-name: Docker release python worker
+name: Docker release python worker ubuntu
 
 on:
   release:
