@@ -2,6 +2,11 @@ version: '2.4'
 
 services:
 
+  redis-service:
+    image: eqalpha/keydb:alpine_x86_64_v6.2.2
+    ports:
+      - 6379
+
   postgres-test:
     image: timescale/timescaledb:2.5.1-pg14
     ports:
@@ -16,7 +21,7 @@ services:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 30s
       retries: 5
-    restart: always
+    # restart: always
 
   nats:
     image: nats:2.7.4-scratch
@@ -105,11 +110,11 @@ services:
   dataplane-worker-cypresstest:
     build:
       context: ./
-      dockerfile: cypress/Dockerfile.workerpython.debian
-    mem_limit: 512MB
-    cpus: 1.5
+      dockerfile: cypress/Dockerfile.workerpython.ubuntu
+    # mem_limit: 512MB
+    # cpus: 1.5
     deploy:
-      replicas: 3
+      replicas: 1
     volumes:
       - testcypress-code-files:/dataplane/code-files/
     environment:
@@ -132,7 +137,7 @@ services:
       DP_WORKER_HEARTBEAT_SECONDS: "1"
       DP_WORKER_GROUP: "python_1"
       DP_WORKER_CMD: "/bin/sh"
-      DP_WORKER_TYPE: "container"
+      DP_WORKER_TYPE: "vm"
       DP_WORKER_LB: "roundrobin"
       DP_WORKER_ENV: "Development"
       DP_WORKER_PORT: "9005"
