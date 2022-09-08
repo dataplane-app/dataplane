@@ -1,0 +1,96 @@
+name: Docker release python worker
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  worker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # This is used to complete the identity challenge
+      # with sigstore/fulcio when running outside of PRs.
+      id-token: write
+
+    steps:
+
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - name: Release check out ${{ steps.get_version.outputs.VERSION }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.get_version.outputs.VERSION }}
+
+      # Login against a Docker registry except on PR
+      # https://github.com/docker/login-action
+      - name: Log into Docker Hub registry
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      # Install the cosign tool except on PR
+      # https://github.com/sigstore/cosign-installer
+      # - name: Install cosign
+      #   uses: sigstore/cosign-installer@7e0881f8fe90b25e305bbf0309761e9314607e25
+      #   with:
+      #     cosign-release: 'v1.9.0'
+
+      - name: Tag reference ${{ github.ref }} - version=${{ steps.get_version.outputs.VERSION }}
+        run: |
+          echo release: ${{ steps.get_version.outputs.VERSION }}
+          export dpversion=0.0.${{ steps.get_version.outputs.VERSION }}
+          echo docker version: $dpversion
+
+      
+# Extract metadata (tags, labels) for Docker
+      # https://github.com/docker/metadata-action
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: dataplane/dataplane-worker-python-ubuntu
+      
+      # - name: Tags - ${{ steps.meta.outputs.tags }}
+      #   run: echo tags ${{ steps.meta.outputs.tags }}
+
+      # Build and push Docker image with Buildx (don't push on PR)
+      # https://github.com/docker/build-push-action
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
+        with:
+          context: .
+          file: docker-build/Dockerfile.workerpython.ubuntu
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # Sign the resulting Docker image digest except on PRs.
+      # This will only write to the public Rekor transparency log when the Docker
+      # repository is public to avoid leaking data.  If you would like to publish
+      # transparency data even for private images, pass --force to cosign below.
+      # https://github.com/sigstore/cosign
+      # - name: Sign the published Docker image
+      #   if: ${{ github.event_name != 'pull_request' }}
+      #   env:
+      #     COSIGN_EXPERIMENTAL: "true"
+      #   # This step uses the identity token to provision an ephemeral certificate
+      #   # against the sigstore community Fulcio instance.
+      #   run: echo "${{ steps.meta.outputs.tags }}" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
+
+          # docker build -t dataplane/dataplane:$dpversion -f docker-build/Dockerfile.main.alpine .
+          # docker tag dataplane/dataplane:$dpversion dataplane/dataplane:$dpversion
+          # docker push dataplane/dataplane:$dpversion
+          # docker tag dataplane/dataplane:$dpversion dataplane/dataplane:latest
+          # docker push dataplane/dataplane:latest
+
+          # docker build -t dataplane/dataplane-worker-python:$dpversion -f docker-build/Dockerfile.workerpython.debian .
+          # docker tag dataplane/dataplane-worker-python:$dpversion dataplane/dataplane-worker-python:$dpversion
+          # docker push dataplane/dataplane-worker-python:$dpversion
+          # docker tag dataplane/dataplane-worker-python:$dpversion dataplane/dataplane-worker-python:latest
+          # docker push dataplane/dataplane-worker-python:latest
