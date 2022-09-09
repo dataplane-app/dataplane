@@ -110,7 +110,7 @@ services:
   dataplane-worker-cypresstest:
     build:
       context: ./
-      dockerfile: cypress/Dockerfile.workerpython.ubuntu
+      dockerfile: cypress/Dockerfile.workerpython.debian
     # mem_limit: 512MB
     # cpus: 1.5
     deploy:
