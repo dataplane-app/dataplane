@@ -46,6 +46,18 @@ type CodeFiles struct {
 	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
 }
 
+func (CodeFilesStore) TableName() string {
+	return "code_files_store"
+}
+
+type CodeFilesStore struct {
+	FileID    string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
+	FileStore []byte     `gorm:"type:bytea; json:"file_store"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+}
+
 func (CodeGitCommits) IsEntity() {}
 
 func (CodeGitCommits) TableName() string {

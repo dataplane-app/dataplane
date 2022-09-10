@@ -1,0 +1,125 @@
+package utilities
+
+// This is the max. number of items each batch will contain
+// const maxBatchSize int = 25
+
+// // `skip` will be our cursor to remember how
+// // many items we already processed before
+// skip := 0
+
+// // `batchAmount` is the important metric, it will contain
+// // the exact number of batches needed to process all items
+// // depending on the maxBatchSize, where the last batch
+// // may contain less than 25 (maxBatchSize) elements
+// filesAmount := len(items)
+// batchAmount := int(math.Ceil(float64(filesAmount / maxBatchSize)))
+
+import (
+	"context"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"math"
+	"os"
+
+	"github.com/golang-queue/queue"
+)
+
+type FileContent struct {
+	URL      string `json:"url"`
+	FileName string `json:"fileName"`
+	Size     int64  `json:"size"`
+	MimeType string `json:"mimeType"`
+	Content  []byte `json:"content"`
+}
+
+/*
+Run Super secret squirrel function test
+go test -timeout 30s -count=1 -v -run ^TestBatchProcess$ dataplane/mainapp/utilities
+*/
+func bgwriter(textback chan string) {
+	for {
+		select {
+		case printme := <-textback:
+			log.Println(printme)
+		}
+	}
+}
+func BatchFileWrite(poolsize int, maxBatchSize int, items []FileContent, folderLocation string) {
+
+	// ---- Workers
+	// initial queue pool
+	q := queue.NewPool(poolsize)
+	// shutdown the service and notify all the worker
+	// wait all jobs are complete.
+	defer q.Release()
+
+	if maxBatchSize == 0 {
+		maxBatchSize = 1000
+	}
+
+	skip := 0
+	filesAmount := len(items)
+	batchAmount := int(math.Ceil(float64(filesAmount / maxBatchSize)))
+	log.Println("Rounds:", batchAmount, "Count:", filesAmount, "Batch size:", maxBatchSize, "pool size:", poolsize)
+	var textback = make(chan string)
+
+	// go backgroundwriter(textback)
+
+	Totalcount := 0
+	for i := 0; i <= batchAmount; i++ {
+		lowerBound := skip
+		upperBound := skip + maxBatchSize
+
+		if upperBound > filesAmount {
+			upperBound = filesAmount
+		}
+
+		// slice
+		batchItems := items[lowerBound:upperBound]
+		// log.Println("Batches:", batchItems)
+
+		go func(i int) {
+			if err := q.QueueTask(func(ctx context.Context) error {
+
+				log.Println("====== batch: ", i)
+				t := 0
+
+				// Write out each file
+				for n, meta := range batchItems {
+
+					if _, err := os.Stat(folderLocation); os.IsNotExist(err) {
+						os.MkdirAll(folderLocation, 0700) // Create your file
+					}
+
+					err := ioutil.WriteFile(folderLocation+meta.FileName, meta.Content, 0644)
+					if err != nil {
+						textback <- err.Error()
+					}
+					Totalcount = Totalcount + 1
+					t = n
+				}
+
+				textback <- fmt.Sprintf("batch: %v | no. in batch: %v | Accumulate count: %v", i, t, Totalcount)
+
+				// rets <- fmt.Sprintf("Hi Gopher, handle the job: %02d", +i)
+				return nil
+			}); err != nil {
+				log.Println(err)
+			}
+		}(i)
+
+		skip += maxBatchSize
+	}
+
+	for i := 0; i <= batchAmount; i++ {
+		select {
+		case printme := <-textback:
+			log.Println(printme)
+		}
+	}
+
+	// time.Sleep(5)
+
+	// assert.Equalf(t, filesAmount, Totalcount, "Batch processing.")
+}

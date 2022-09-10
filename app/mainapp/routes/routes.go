@@ -393,6 +393,11 @@ func Setup(port string) *fiber.App {
 		return c.SendString("Hello 👋! Healthy 🍏")
 	})
 
+	// Sync folders to Database
+	app.Get("/sync-folder-database", func(c *fiber.Ctx) error {
+		return c.SendString("Hello 👋! Healthy 🍏")
+	})
+
 	/* Worker Load Subscriptions activate */
 	// worker.LoadWorkers(MainAppID)
 	worker.WorkerListen()

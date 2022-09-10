@@ -20,6 +20,11 @@ from
   (select setting::int max_conn from pg_settings where name=$$max_connections$$) t3
 ```
 
+### Count files in dir
+```
+ls /appdev/code-files/ | wc -l
+```
+
 
 ### Build docker image
 

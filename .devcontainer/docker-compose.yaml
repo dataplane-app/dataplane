@@ -91,6 +91,8 @@ services:
       DP_WORKER_PORT: "9005"
       DP_WORKER_LANGUAGES: "Python"
       DP_WORKER_LOAD_PACKAGES: "Python"
+      DP_CODE_FILE_STORAGE: "LocalFile" #Database, LocalFile, S3
+      DP_SYNC_FILE_BATCHES: "100" # 100 files synced at once
 
 networks:
   default:

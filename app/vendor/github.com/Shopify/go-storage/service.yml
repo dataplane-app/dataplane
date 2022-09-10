@@ -1,0 +1,7 @@
+security:
+  data_management:
+    contains_pii: false
+ci_url: https://buildkite.com/shopify/go-storage-ci
+bugs_url: https://github.com/Shopify/go-storage/issues
+production:
+  classification: library
