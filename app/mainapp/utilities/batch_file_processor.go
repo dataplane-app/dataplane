@@ -21,7 +21,9 @@ import (
 	"log"
 	"math"
 	"os"
+	"time"
 
+	"github.com/golang-queue/contrib/zerolog"
 	"github.com/golang-queue/queue"
 )
 
@@ -45,11 +47,16 @@ func bgwriter(textback chan string) {
 		}
 	}
 }
+
+var textback = make(chan string)
+var errback = make(chan string)
+
 func BatchFileWrite(poolsize int, maxBatchSize int, items []FileContent, folderLocation string) {
 
 	// ---- Workers
 	// initial queue pool
-	q := queue.NewPool(poolsize)
+
+	q := queue.NewPool(poolsize, queue.WithLogger(zerolog.New()))
 	// shutdown the service and notify all the worker
 	// wait all jobs are complete.
 	defer q.Release()
@@ -60,14 +67,16 @@ func BatchFileWrite(poolsize int, maxBatchSize int, items []FileContent, folderL
 
 	skip := 0
 	filesAmount := len(items)
-	batchAmount := int(math.Ceil(float64(filesAmount / maxBatchSize)))
-	log.Println("Rounds:", batchAmount, "Count:", filesAmount, "Batch size:", maxBatchSize, "pool size:", poolsize)
-	var textback = make(chan string)
+	batchCount := int(math.Ceil(float64(filesAmount / maxBatchSize)))
+	log.Println("Batch count (rounds):", batchCount, "Count:", filesAmount, "Batch size:", maxBatchSize, "pool size:", poolsize)
 
-	// go backgroundwriter(textback)
+	// go bgwriter(textback)
+	starttop := time.Now()
 
-	Totalcount := 0
-	for i := 0; i <= batchAmount; i++ {
+	// Totalcount := 0
+
+	// Go through the batches
+	for i := 1; i <= batchCount; i++ {
 		lowerBound := skip
 		upperBound := skip + maxBatchSize
 
@@ -77,16 +86,17 @@ func BatchFileWrite(poolsize int, maxBatchSize int, items []FileContent, folderL
 
 		// slice
 		batchItems := items[lowerBound:upperBound]
+
+		// log.Println("====== batch: ", i)
 		// log.Println("Batches:", batchItems)
 
 		go func(i int) {
 			if err := q.QueueTask(func(ctx context.Context) error {
 
-				log.Println("====== batch: ", i)
-				t := 0
-
+				// t := 0
+				start := time.Now()
 				// Write out each file
-				for n, meta := range batchItems {
+				for _, meta := range batchItems {
 
 					if _, err := os.Stat(folderLocation); os.IsNotExist(err) {
 						os.MkdirAll(folderLocation, 0700) // Create your file
@@ -94,15 +104,26 @@ func BatchFileWrite(poolsize int, maxBatchSize int, items []FileContent, folderL
 
 					err := ioutil.WriteFile(folderLocation+meta.FileName, meta.Content, 0644)
 					if err != nil {
-						textback <- err.Error()
+						errback <- err.Error()
 					}
-					Totalcount = Totalcount + 1
-					t = n
+					// Totalcount = Totalcount + 1
+					// t = n
 				}
 
-				textback <- fmt.Sprintf("batch: %v | no. in batch: %v | Accumulate count: %v", i, t, Totalcount)
+				// Last batch
+				elapsed := time.Since(start)
+				textback <- fmt.Sprintf("Records written: %v | %s | batch: %v | %s", maxBatchSize, elapsed, i, time.Now())
+
+				// if batchCount == i {
+				// 	elapsed := time.Since(start)
+				// 	// log.Printf("Write took %s", elapsed)
+				// 	textback <- fmt.Sprintf("Batch size: %v with %v workers @ records %v = %s | last batch: %v", maxBatchSize, poolsize, filesAmount, elapsed, i)
+				// }
+				//
 
 				// rets <- fmt.Sprintf("Hi Gopher, handle the job: %02d", +i)
+				// blocks until all sent
+				// textback <- fmt.Sprintf("last batch: %v ", i)
 				return nil
 			}); err != nil {
 				log.Println(err)
@@ -112,12 +133,26 @@ func BatchFileWrite(poolsize int, maxBatchSize int, items []FileContent, folderL
 		skip += maxBatchSize
 	}
 
-	for i := 0; i <= batchAmount; i++ {
-		select {
-		case printme := <-textback:
-			log.Println(printme)
-		}
+	// for i := 0; i <= batchCount; i++ {
+	// 	select {
+	// 	case printme := <-textback:
+	// 		log.Println(printme)
+	// 		// default:
+	// 		// fmt.Println("Nothing available")
+	// 	}
+
+	// }
+	for i := 1; i <= batchCount; i++ {
+		fmt.Println("", <-textback)
 	}
+	log.Println(fmt.Sprintf("Workers: %v | Total records: %v | Batch size: %v | Completed time: %s", poolsize, filesAmount, maxBatchSize, time.Since(starttop)))
+	// wait until all tasks done
+	// for i := 0; i < batchCount; i++ {
+	// 	// if batchCount
+	// 	fmt.Println("message:", <-textback)
+	// 	// fmt.Println("error:", <-errback)
+	// 	time.Sleep(20 * time.Millisecond)
+	// }
 
 	// time.Sleep(5)
 
