@@ -20,6 +20,7 @@ module.exports = defineConfig({
             'cypress/e2e/dataplane/11-permission-edit-all-pipelines-access-groups.cy.js',
             'cypress/e2e/dataplane/12-permission-manage-pipelines-access-groups.cy.js',
             'cypress/e2e/dataplane/13-package-installation.cy.js',
+            'cypress/e2e/dataplane/14-deployment.cy.js',
         ],
     },
 });

@@ -55,23 +55,23 @@ const AddPipelineDrawer = ({ handleClose, environmentID }) => {
                         />
                         <TextField label="Description" id="description" size="small" sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
 
-                        {workerGroups.length > 0 ? (
-                            <Autocomplete
-                                id="workerGroup-box"
-                                options={workerGroups}
-                                getOptionLabel={(option) => option.WorkerGroup}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params} //
-                                        label="Worker group"
-                                        required
-                                        size="small"
-                                        sx={{ fontSize: '.75rem', display: 'flex' }}
-                                        {...register('workerGroup', { required: true })}
-                                    />
-                                )}
-                            />
-                        ) : null}
+                        <Autocomplete
+                            id="workerGroup-box"
+                            options={workerGroups}
+                            getOptionLabel={(option) => option.WorkerGroup}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params} //
+                                    label="Worker group"
+                                    required
+                                    size="small"
+                                    sx={{ fontSize: '.75rem', display: 'flex' }}
+                                    {...register('workerGroup', { required: true })}
+                                />
+                            )}
+                        />
+
+                        {workerGroups.length === 0 ? <Typography color="#F80000">There are no workers running in environment {Environment.name.get()}</Typography> : null}
 
                         <Grid mt={4} display="flex" alignItems="center">
                             <Button type="submit" required variant="contained" color="primary" style={{ width: '100%' }}>
