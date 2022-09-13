@@ -39,6 +39,8 @@ models:
    model: dataplane/mainapp/database/models.PipelineNodes
  PipelineRuns:
    model: dataplane/mainapp/database/models.PipelineRuns
+ PipelineApiTriggers:
+   model: dataplane/mainapp/database/models.PipelineApiTriggers
  DeploymentRuns:
    model: dataplane/mainapp/database/models.PipelineRuns
  DeploymentEdges:

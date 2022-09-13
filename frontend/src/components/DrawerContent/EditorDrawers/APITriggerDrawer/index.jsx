@@ -1,15 +1,37 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Link, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useSnackbar } from 'notistack';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useGeneratePipelineTrigger } from '../../../../graphql/generatePipelineTrigger';
+import { useGlobalEnvironmentState } from '../../../EnviromentDropdown';
 import { IOSSwitch } from '../../SchedulerDrawer/IOSSwitch';
+import { v4 as uuidv4 } from 'uuid';
+import { useGetPipelineTrigger } from '../../../../graphql/getPipelineTrigger';
+
+const PUBLIC = 'https://demo.dataplane.app/app/public/api-trigger/';
+const PRIVATE = `https://{{ HOST }}/app/private/api-trigger/`;
 
 const APITRiggerDrawer = ({ handleClose, refreshData }) => {
-    const [isPublicOnline, setIsPublicOnline] = useState(true);
-    const [isPrivateOnline, setIsPrivateOnline] = useState(true);
-    const [isAPIKey, setIsAPIKey] = useState(true);
-    const [publicAPI, setPublicAPI] = useState('https://demo.dataplane.app/app/public/api-trigger/f176d9dd-830c-4570-bf93-7fa890262796');
-    const [privateAPI, setPrivateAPI] = useState('https://{{ HOST }}/app/private/api-trigger/f176d9dd-830c-4570-bf93-7fa890262796');
+    // Global state
+    const Environment = useGlobalEnvironmentState();
+
+    // Local state
+    const [publicLive, setPublicLive] = useState(true);
+    const [privateLive, setPrivateLive] = useState(true);
+    const [apiKeyActive, setApiKeyActive] = useState(true);
+    const [triggerID, setTriggerID] = useState(uuidv4());
+
+    // Custom GraphQL hooks
+    const generatePipelineTrigger = useGeneratePipelineTriggerHook(Environment.id.get(), triggerID, apiKeyActive, publicLive, privateLive, handleClose);
+    const getPipelineTriggerHook = useGetPipelineTriggerHook(Environment.id.get(), setTriggerID, setApiKeyActive, setPublicLive, setPrivateLive);
+
+    useEffect(() => {
+        getPipelineTriggerHook();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [Environment.id.get()]);
 
     return (
         <Box position="relative" width="100%">
@@ -26,6 +48,7 @@ const APITRiggerDrawer = ({ handleClose, refreshData }) => {
                     {/* Save/Close buttons */}
                     <Box top="26px" right="39px" display="flex" alignItems="center">
                         <Button //
+                            onClick={generatePipelineTrigger}
                             type="submit"
                             variant="contained"
                             color="primary"
@@ -52,18 +75,18 @@ const APITRiggerDrawer = ({ handleClose, refreshData }) => {
                         Anyone with this link can trigger this workflow.
                     </Typography>
                     <Box display="flex" alignItems="center" mt={3}>
-                        <IOSSwitch onClick={() => setIsPublicOnline(!isPublicOnline)} checked={isPublicOnline} inputProps={{ 'aria-label': 'controlled' }} />
-                        <Typography fontSize={13} ml={1.5} color={isPublicOnline ? 'status.pipelineOnlineText' : '#F80000'}>
-                            {isPublicOnline ? 'Live' : 'Offline'}
+                        <IOSSwitch onClick={() => setPublicLive(!publicLive)} checked={publicLive} inputProps={{ 'aria-label': 'controlled' }} />
+                        <Typography fontSize={13} ml={1.5} color={publicLive ? 'status.pipelineOnlineText' : '#F80000'}>
+                            {publicLive ? 'Live' : 'Offline'}
                         </Typography>
                         <Box display="flex" alignItems="center" position="absolute" ml={15}>
                             <Typography>
-                                <Link href={publicAPI} color="text.primary" target="_blank" rel="noreferrer">
-                                    {publicAPI}
+                                <Link href={PUBLIC + triggerID} color="text.primary" target="_blank" rel="noreferrer">
+                                    {PUBLIC + triggerID}
                                 </Link>
                             </Typography>
                             <Button //
-                                onClick={() => navigator.clipboard.writeText(publicAPI)}
+                                onClick={() => navigator.clipboard.writeText(PUBLIC + triggerID)}
                                 variant="contained"
                                 sx={{ background: '#8a8a8a' }}
                                 style={{ paddingLeft: '26px', paddingRight: '26px', marginLeft: '30px' }}>
@@ -85,18 +108,18 @@ const APITRiggerDrawer = ({ handleClose, refreshData }) => {
                         be your service.
                     </Typography>
                     <Box display="flex" alignItems="center" mt={3}>
-                        <IOSSwitch onClick={() => setIsPrivateOnline(!isPrivateOnline)} checked={isPrivateOnline} inputProps={{ 'aria-label': 'controlled' }} />
-                        <Typography fontSize={13} ml={1.5} color={isPrivateOnline ? 'status.pipelineOnlineText' : '#F80000'}>
-                            {isPrivateOnline ? 'Live' : 'Offline'}
+                        <IOSSwitch onClick={() => setPrivateLive(!privateLive)} checked={privateLive} inputProps={{ 'aria-label': 'controlled' }} />
+                        <Typography fontSize={13} ml={1.5} color={privateLive ? 'status.pipelineOnlineText' : '#F80000'}>
+                            {privateLive ? 'Live' : 'Offline'}
                         </Typography>
                         <Box display="flex" alignItems="center" position="absolute" ml={15}>
                             <Typography>
-                                <Link href={privateAPI} color="text.primary" target="_blank" rel="noreferrer">
-                                    {privateAPI}
+                                <Link href={PRIVATE + triggerID} color="text.primary" target="_blank" rel="noreferrer">
+                                    {PRIVATE + triggerID}
                                 </Link>
                             </Typography>
                             <Button //
-                                onClick={() => navigator.clipboard.writeText(privateAPI)}
+                                onClick={() => navigator.clipboard.writeText(PRIVATE + triggerID)}
                                 variant="contained"
                                 sx={{ background: '#8a8a8a' }}
                                 style={{ paddingLeft: '26px', paddingRight: '26px', marginLeft: '30px' }}>
@@ -131,12 +154,12 @@ const APITRiggerDrawer = ({ handleClose, refreshData }) => {
                                     border: 0,
                                 },
                             }}
-                            onClick={() => setIsAPIKey(!isAPIKey)}
-                            checked={isAPIKey}
+                            onClick={() => setApiKeyActive(!apiKeyActive)}
+                            checked={apiKeyActive}
                             inputProps={{ 'aria-label': 'controlled' }}
                         />
-                        <Typography fontSize={13} ml={1.5} color={isAPIKey ? 'cyan.main' : 'text.primary'}>
-                            {isAPIKey ? 'Use an API key' : 'No key'}
+                        <Typography fontSize={13} ml={1.5} color={apiKeyActive ? 'cyan.main' : 'text.primary'}>
+                            {apiKeyActive ? 'Use an API key' : 'No key'}
                         </Typography>
                     </Box>
                 </Box>
@@ -146,3 +169,63 @@ const APITRiggerDrawer = ({ handleClose, refreshData }) => {
 };
 
 export default APITRiggerDrawer;
+
+// ---------- Custom Hooks
+
+const useGeneratePipelineTriggerHook = (environmentID, triggerID, apiKeyActive, publicLive, privateLive, handleClose) => {
+    // GraphQL hook
+    const generatePipelineTrigger = useGeneratePipelineTrigger();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    // Get access groups
+    return async () => {
+        const response = await generatePipelineTrigger({
+            pipelineID: pipelineId,
+            environmentID,
+            triggerID,
+            apiKeyActive,
+            publicLive,
+            privateLive,
+        });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't generate api triggers: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            handleClose();
+        }
+    };
+};
+
+const useGetPipelineTriggerHook = (environmentID, setTriggerID, setApiKeyActive, setPublicLive, setPrivateLive) => {
+    // GraphQL hook
+    const getPipelineTrigger = useGetPipelineTrigger();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    // Get access groups
+    return async () => {
+        const response = await getPipelineTrigger({ pipelineID: pipelineId, environmentID });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get api triggers: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            const { triggerID, publicLive, privateLive, apiKeyActive } = response;
+            setTriggerID(triggerID);
+            setApiKeyActive(apiKeyActive);
+            setPublicLive(publicLive);
+            setPrivateLive(privateLive);
+        }
+    };
+};

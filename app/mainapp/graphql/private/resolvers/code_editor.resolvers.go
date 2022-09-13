@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -314,7 +314,6 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 
 	return "Success", nil
 }
-
 
 func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)

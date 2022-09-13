@@ -22,7 +22,7 @@ import (
 
 func Migrate() {
 
-	migrateVersion := "0.0.39"
+	migrateVersion := "0.0.40"
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -86,6 +86,7 @@ func Migrate() {
 			&models.PipelineNodes{},
 			&models.PipelineEdges{},
 			&models.PipelineRuns{},
+			&models.PipelineApiTriggers{},
 			&models.ResourceTypeStruct{},
 			&models.Secrets{},
 

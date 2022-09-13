@@ -95,3 +95,15 @@ type PipelineRuns struct {
 	EndedAt       time.Time      `json:"ended_at"`
 	UpdatedAt     *time.Time     `json:"updated_at"`
 }
+
+type PipelineApiTriggers struct {
+	TriggerID     string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"trigger_id"`
+	PipelineID    string     `gorm:"index:idx_pipelineid_runs;" json:"pipeline_id"`
+	EnvironmentID string     `json:"environment_id"`
+	APIKey        string     `json:"api_key"`
+	APIKeyActive  bool       `json:"api_key_active"`
+	PublicLive    bool       `json:"public_live"`
+	PrivateLive   bool       `json:"private_live"`
+	CreatedAt     time.Time  `json:"created_at"`
+	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
+}
