@@ -13,7 +13,7 @@ import { useGetPipelineTrigger } from '../../../../graphql/getPipelineTrigger';
 const PUBLIC = 'https://demo.dataplane.app/app/public/api-trigger/';
 const PRIVATE = `https://{{ HOST }}/app/private/api-trigger/`;
 
-const APITRiggerDrawer = ({ handleClose, refreshData }) => {
+const APITRiggerDrawer = ({ handleClose }) => {
     // Global state
     const Environment = useGlobalEnvironmentState();
 

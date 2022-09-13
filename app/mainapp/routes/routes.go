@@ -388,6 +388,45 @@ func Setup(port string) *fiber.App {
 		return c.SendString("Success")
 	})
 
+	// Pipeline API Trigger
+	app.Post("/app/private/api-trigger/:id", auth.TokenAuthMiddle(), func(c *fiber.Ctx) error {
+
+		triggerID := string(c.Params("id"))
+		currentUser := c.Locals("currentUser").(string)
+		platformID := c.Locals("platformID").(string)
+
+		// Get trigger info
+		e := models.PipelineApiTriggers{}
+
+		err := database.DBConn.Where("trigger_id = ?", triggerID).First(&e).Error
+		if err != nil {
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return c.Status(fiber.StatusForbidden).SendString("Retrive pipeline trigger database error.")
+		}
+
+		// ----- Permissions
+		perms := []models.Permissions{
+			{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+			{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: e.EnvironmentID, Access: "write", EnvironmentID: e.EnvironmentID},
+			{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: e.EnvironmentID},
+			{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: e.PipelineID, Access: "run", EnvironmentID: e.EnvironmentID},
+		}
+
+		permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+		if permOutcome == "denied" {
+			return c.Status(fiber.StatusForbidden).SendString("Requires permissions.")
+		}
+
+		// Run pipeline
+		runID := uuid.NewString()
+		pipelines.RunPipeline(e.PipelineID, e.EnvironmentID, runID)
+
+		return c.SendString("Success")
+	})
+
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {
 		return c.SendString("Hello 👋! Healthy 🍏")
