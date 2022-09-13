@@ -29,7 +29,10 @@ describe('Give admin permission to a user', function () {
         // Play Trigger
         // Add
         cy.get('#Triggers div:nth-child(2)') // Play node
-        .trigger('dragstart', { dataTransfer });
+        .should($el => {
+            expect(Cypress.dom.isDetached($el)).to.eq(false)
+          }) 
+        .trigger('dragstart', { dataTransfer, force:true});
         cy.get('.react-flow__renderer')
         .trigger('drop', { dataTransfer });
         // Move
