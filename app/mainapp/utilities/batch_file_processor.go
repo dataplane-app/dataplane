@@ -16,6 +16,7 @@ package utilities
 
 import (
 	"context"
+	"dataplane/mainapp/config"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -39,14 +40,6 @@ type FileContent struct {
 Run Super secret squirrel function test
 go test -timeout 30s -count=1 -v -run ^TestBatchProcess$ dataplane/mainapp/utilities
 */
-func bgwriter(textback chan string) {
-	for {
-		select {
-		case printme := <-textback:
-			log.Println(printme)
-		}
-	}
-}
 
 var textback = make(chan string)
 var errback = make(chan string)
@@ -114,16 +107,6 @@ func BatchFileWrite(poolsize int, maxBatchSize int, items []FileContent, folderL
 				elapsed := time.Since(start)
 				textback <- fmt.Sprintf("Records written: %v | %s | batch: %v | %s", maxBatchSize, elapsed, i, time.Now())
 
-				// if batchCount == i {
-				// 	elapsed := time.Since(start)
-				// 	// log.Printf("Write took %s", elapsed)
-				// 	textback <- fmt.Sprintf("Batch size: %v with %v workers @ records %v = %s | last batch: %v", maxBatchSize, poolsize, filesAmount, elapsed, i)
-				// }
-				//
-
-				// rets <- fmt.Sprintf("Hi Gopher, handle the job: %02d", +i)
-				// blocks until all sent
-				// textback <- fmt.Sprintf("last batch: %v ", i)
 				return nil
 			}); err != nil {
 				log.Println(err)
@@ -133,28 +116,13 @@ func BatchFileWrite(poolsize int, maxBatchSize int, items []FileContent, folderL
 		skip += maxBatchSize
 	}
 
-	// for i := 0; i <= batchCount; i++ {
-	// 	select {
-	// 	case printme := <-textback:
-	// 		log.Println(printme)
-	// 		// default:
-	// 		// fmt.Println("Nothing available")
-	// 	}
-
-	// }
 	for i := 1; i <= batchCount; i++ {
-		fmt.Println("", <-textback)
+		writeout := <-textback
+		if config.Debug == "true" {
+			fmt.Println(writeout)
+		}
 	}
+
 	log.Println(fmt.Sprintf("Workers: %v | Total records: %v | Batch size: %v | Completed time: %s", poolsize, filesAmount, maxBatchSize, time.Since(starttop)))
-	// wait until all tasks done
-	// for i := 0; i < batchCount; i++ {
-	// 	// if batchCount
-	// 	fmt.Println("message:", <-textback)
-	// 	// fmt.Println("error:", <-errback)
-	// 	time.Sleep(20 * time.Millisecond)
-	// }
 
-	// time.Sleep(5)
-
-	// assert.Equalf(t, filesAmount, Totalcount, "Batch processing.")
 }

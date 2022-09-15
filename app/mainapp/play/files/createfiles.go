@@ -107,7 +107,3 @@ func CreateFiles() {
 	// 	// ...
 	// }
 }
-
-func main() {
-	CreateFiles()
-}

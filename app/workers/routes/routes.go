@@ -132,6 +132,8 @@ func Setup(port string) *fiber.App {
 		// Query:${query}
 	}
 
+	// ------- LOAD DS Files ------
+
 	// ------- LOAD packages ------
 	runcodeworker.CodeLoadPackages(config.CodeLanguages, config.CodeLoadPackages, config.EnvID, config.WorkerGroup)
 

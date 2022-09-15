@@ -3,6 +3,7 @@ package routes
 import (
 	"dataplane/mainapp/auth"
 	permissions "dataplane/mainapp/auth_permissions"
+	distributefilesystem "dataplane/mainapp/code_editor/distribute_filesystem"
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -74,10 +75,12 @@ func Setup(port string) *fiber.App {
 	/* --- First time setup, workers will wait for this to be available ---- */
 	if u.ID == "" {
 
+		// #Code File Storage: Database, LocalFile, S3
 		platformData := &models.Platform{
-			ID:       uuid.New().String(),
-			Complete: false,
-			One:      true,
+			ID:              uuid.New().String(),
+			CodeFileStorage: config.FSCodeFileStorage,
+			Complete:        false,
+			One:             true,
 		}
 
 		log.Println("🍽  Platform not found - setup first time.")
@@ -167,22 +170,19 @@ func Setup(port string) *fiber.App {
 	}
 	log.Println("🎯 Platform ID: ", config.PlatformID)
 
+	/* Load code files if no distributed storage method is defined in platform table.
+	Even if a file storage method is used, files will be stored in a database.
+	*/
+	if u.CodeFileStorage == "" {
+		log.Println("💽 Sync files to database")
+		distributefilesystem.MoveCodeFilesToDB(database.DBConn)
+		distributefilesystem.DeployFilesToDB(database.DBConn)
+		database.DBConn.Model(&models.Platform{}).Where("id = ?", u.ID).Update("code_file_storage", config.FSCodeFileStorage)
+	}
+
 	/* --- Run the scheduler ---- */
 	config.Scheduler = gocron.NewScheduler(time.UTC)
 	config.Scheduler.StartAsync()
-
-	// logme.PlatformLogger(models.LogsPlatform{
-	// 	EnvironmentID: "d_platform",
-	// 	Category:      "platform",
-	// 	LogType:       "info", //can be error, info or debug
-	// 	Log:           "🌟 Database connected",
-	// })
-	// logme.PlatformLogger(models.LogsPlatform{
-	// 	EnvironmentID: "d_platform",
-	// 	Category:      "platform",
-	// 	LogType:       "info", //can be error, info or debug
-	// 	Log:           "📦 Database migrated",
-	// })
 
 	// ----- Remove stale tokens ------
 	log.Println("💾 Removing stale data")
@@ -310,10 +310,8 @@ func Setup(port string) *fiber.App {
 
 		dat, err := os.ReadFile(config.CodeDirectory + filepath)
 		if err != nil {
-			if config.Debug == "true" {
-				logging.PrintSecretsRedact(err)
-			}
-			return err
+			logging.PrintSecretsRedact(err)
+			return c.Status(http.StatusBadRequest).SendString("Failed to download file.")
 		}
 		return c.SendString(string(dat))
 	})
@@ -388,14 +386,11 @@ func Setup(port string) *fiber.App {
 		return c.SendString("Success")
 	})
 
-	// Check healthz
-	app.Get("/healthz", func(c *fiber.Ctx) error {
-		return c.SendString("Hello 👋! Healthy 🍏")
-	})
-
 	// Sync folders to Database
-	app.Get("/sync-folder-database", func(c *fiber.Ctx) error {
-		return c.SendString("Hello 👋! Healthy 🍏")
+	app.Post("/sync-folder-database", func(c *fiber.Ctx) error {
+		distributefilesystem.MoveCodeFilesToDB(database.DBConn)
+		distributefilesystem.DeployFilesToDB(database.DBConn)
+		return c.SendString("Finished syncing code files to database.")
 	})
 
 	/* Worker Load Subscriptions activate */
@@ -414,6 +409,11 @@ func Setup(port string) *fiber.App {
 	routinetasks.CleanTasks(config.Scheduler, database.DBConn)
 	routinetasks.CleanWorkerLogs(config.Scheduler, database.DBConn)
 	platform.PlatformNodePublish(config.Scheduler, database.DBConn, MainAppID)
+
+	// Check healthz
+	app.Get("/healthz", func(c *fiber.Ctx) error {
+		return c.SendString("Hello 👋! Healthy 🍏")
+	})
 
 	stop := time.Now()
 	// Do something with response

@@ -30,6 +30,7 @@ print("Node id: ` + node.NodeID + `")`
 		}
 
 		// Folder excludes code directory
+
 		_, filepath, err = CreateFile(input, Folder, []byte(content))
 		if err != nil {
 			return "", err

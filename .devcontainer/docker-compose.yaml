@@ -2,8 +2,14 @@ version: '3'
 
 volumes:
   node_modules:
-
+      
 services:
+
+  redis-service:
+    image: eqalpha/keydb:alpine_x86_64_v6.2.2
+    ports:
+      - 6379
+
   postgres:
     image: timescale/timescaledb:2.5.1-pg14
     ports:
@@ -62,6 +68,7 @@ services:
       - ../:/appdev
     environment:
       DP_CODE_FOLDER: "/appdev/code-files/"
+      DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"
       secret_db_host: postgres
       secret_db_user: postgres
       secret_db_pwd: "Hello123!"
@@ -91,7 +98,7 @@ services:
       DP_WORKER_PORT: "9005"
       DP_WORKER_LANGUAGES: "Python"
       DP_WORKER_LOAD_PACKAGES: "Python"
-      DP_CODE_FILE_STORAGE: "LocalFile" #Database, LocalFile, S3
+      DP_CODE_FILE_STORAGE: "Database" #Database, LocalFile, S3
       DP_SYNC_FILE_BATCHES: "100" # 100 files synced at once
 
 networks:

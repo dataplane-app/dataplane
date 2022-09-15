@@ -51,11 +51,15 @@ func (CodeFilesStore) TableName() string {
 }
 
 type CodeFilesStore struct {
-	FileID    string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
-	FileStore []byte     `gorm:"type:bytea; json:"file_store"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+	FileID        string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
+	FileStore     []byte     `gorm:"type:bytea; json:"file_store"`
+	EnvironmentID string     `gorm:"type:varchar(55); json:"environment_id"`
+	ChecksumMD5   string     `gorm:"type:varchar(55); json:"checksum_md5"`
+	External      bool       `gorm:"default:False" json:"external"`
+	RunInclude    bool       `gorm:"default:True" json:"run_include"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     *time.Time `json:"updated_at"`
+	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
 }
 
 func (CodeGitCommits) IsEntity() {}

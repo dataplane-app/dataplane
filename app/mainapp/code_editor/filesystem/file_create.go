@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -27,24 +28,27 @@ func CreateFile(input models.CodeFiles, Folder string, Content []byte) (models.C
 	var existingFile models.CodeFiles
 	database.DBConn.Where("environment_id = ? and node_id =? and file_name = ?", input.EnvironmentID, input.NodeID, input.FileName).First(&existingFile)
 
-	if _, err := os.Stat(config.CodeDirectory + Folder); os.IsNotExist(err) {
+	// -------- if LocalFile --------
+	if config.FSCodeFileStorage == "LocalFile" {
+		if _, err := os.Stat(config.CodeDirectory + Folder); os.IsNotExist(err) {
 
-		if config.Debug == "true" {
-			log.Println("Directory doesnt exists: ", config.CodeDirectory+Folder)
-			return input, returnpath, errors.New("Directory doesnt exists")
+			if config.Debug == "true" {
+				log.Println("Directory doesnt exists: ", config.CodeDirectory+Folder)
+				return input, returnpath, errors.New("Directory doesnt exists")
+			}
+
+		} else {
+
+			err := os.WriteFile(createFile, Content, 0644)
+			if err != nil {
+				return input, returnpath, errors.New("Failed to write file")
+			}
+
+			if config.Debug == "true" {
+				log.Println("Created file: ", createFile)
+			}
+
 		}
-
-	} else {
-
-		err := os.WriteFile(createFile, Content, 0644)
-		if err != nil {
-			return input, returnpath, errors.New("Failed to write file")
-		}
-
-		if config.Debug == "true" {
-			log.Println("Created file: ", createFile)
-		}
-
 	}
 
 	// Create record if doesnt exist
@@ -58,6 +62,8 @@ func CreateFile(input models.CodeFiles, Folder string, Content []byte) (models.C
 			}
 
 		}
+	} else {
+		database.DBConn.Model(&models.CodeFiles{}).Where("file_id = ?", existingFile.FileID).Update("updated_at", time.Now().UTC())
 	}
 
 	return input, returnpath, nil
