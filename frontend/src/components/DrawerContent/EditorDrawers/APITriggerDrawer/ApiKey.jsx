@@ -1,5 +1,5 @@
 import { Box, Button, FormControl, InputLabel, List, ListItem, MenuItem, Select, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import { IOSSwitch } from '../../SchedulerDrawer/IOSSwitch';
 import { customAlphabet } from 'nanoid';
 import { DateTime } from 'luxon';
@@ -12,16 +12,32 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import AlertDialog from './AlertDialog';
 
+const initialState = {
+    storedKeys: [],
+    expiration: 0,
+    openDialog: false,
+    keyToBeDeleted: null,
+};
+
+function reducer(state, action) {
+    switch (action.type) {
+        case 'set':
+            return { ...state, [action.key]: action.value };
+        case 'addKey':
+            return { ...state, storedKeys: [action.value, ...state.storedKeys] };
+        case 'deleteKey':
+            return { ...state, storedKeys: state.storedKeys.filter((a) => a.apiKey !== action.value) };
+        default:
+            throw new Error(`Unhandled action type: ${action.type}`);
+    }
+}
+
 export default function ApiKey({ apiKeyActive, setApiKeyActive, environmentID, triggerID }) {
-    const [storedKeys, setStoredKeys] = useState([]);
+    const [state, dispatch] = useReducer(reducer, initialState);
 
-    const [expiration, setExpiration] = useState(0);
-    const [openDialog, setOpenDialog] = useState(false);
-    const [keyToBeDeleted, setKeyToBeDeleted] = useState(null);
-
-    const addPipelineApiKey = useAddPipelineApiKeyHook(environmentID, triggerID, setStoredKeys);
-    const getPipelineApiKeys = useGetPipelineApiKeysHook(environmentID, setStoredKeys);
-    const deletePipelineApiKey = useDeletePipelineApiKeyHook(environmentID, setStoredKeys);
+    const addPipelineApiKey = useAddPipelineApiKeyHook(environmentID, triggerID, dispatch);
+    const getPipelineApiKeys = useGetPipelineApiKeysHook(environmentID, dispatch);
+    const deletePipelineApiKey = useDeletePipelineApiKeyHook(environmentID, dispatch);
 
     useEffect(() => {
         getPipelineApiKeys();
@@ -29,7 +45,7 @@ export default function ApiKey({ apiKeyActive, setApiKeyActive, environmentID, t
     }, [environmentID]);
 
     function onGenerateKey() {
-        const expiresAt = expiration === 0 ? null : DateTime.now().plus({ months: expiration }).toISO();
+        const expiresAt = state.expiration === 0 ? null : DateTime.now().plus({ months: state.expiration }).toISO();
         addPipelineApiKey(expiresAt);
     }
 
@@ -69,7 +85,12 @@ export default function ApiKey({ apiKeyActive, setApiKeyActive, environmentID, t
 
                 <FormControl sx={{ marginLeft: '40px', width: '220px' }}>
                     <InputLabel id="demo-simple-select-label">Expires in</InputLabel>
-                    <Select size="small" labelId="select-expiration-label" value={expiration} label="Expires in" onChange={(e) => setExpiration(e.target.value)}>
+                    <Select
+                        size="small"
+                        labelId="select-expiration-label"
+                        value={state.expiration}
+                        label="Expires in"
+                        onChange={(e) => dispatch({ type: 'set', key: 'expiration', value: e.target.value })}>
                         <MenuItem value={0}>never</MenuItem>
                         <MenuItem value={3}>3 months</MenuItem>
                         <MenuItem value={6}>6 months</MenuItem>
@@ -83,13 +104,13 @@ export default function ApiKey({ apiKeyActive, setApiKeyActive, environmentID, t
                 </Button>
             </Box>
             <List sx={{ width: '800px', marginTop: '8px' }}>
-                {storedKeys.map((apiKey, idx) => (
+                {state.storedKeys.map((apiKey, idx) => (
                     <ListItem
                         key={apiKey.apiKey}
                         sx={{
                             borderTop: '1px solid #BABABA',
                             paddingLeft: 0,
-                            borderBottom: idx === storedKeys.length - 1 ? '1px solid #BABABA' : null,
+                            borderBottom: idx === state.storedKeys.length - 1 ? '1px solid #BABABA' : null,
                         }}>
                         <Typography sx={{ background: apiKey.apiKeyTail ? 'null' : '#EEE', borderRadius: '6px', padding: '5px 15px' }}>{formatAPIKey(apiKey)}</Typography>
                         <Typography ml={0} position="absolute" left="245px">
@@ -98,9 +119,8 @@ export default function ApiKey({ apiKeyActive, setApiKeyActive, environmentID, t
                         {apiKey.apiKeyTail ? (
                             <Box
                                 onClick={() => {
-                                    setOpenDialog(true);
-                                    setKeyToBeDeleted({ key: apiKey.apiKey, tail: apiKey.apiKeyTail });
-                                    // return deletePipelineApiKey(apiKey.apiKey);
+                                    dispatch({ type: 'set', key: 'openDialog', value: true });
+                                    dispatch({ type: 'set', key: 'keyToBeDeleted', value: { key: apiKey.apiKey, tail: apiKey.apiKeyTail } });
                                 }}
                                 component={FontAwesomeIcon}
                                 ml="auto"
@@ -121,12 +141,12 @@ export default function ApiKey({ apiKeyActive, setApiKeyActive, environmentID, t
                     </ListItem>
                 ))}
             </List>
-            {keyToBeDeleted ? (
+            {state.keyToBeDeleted ? (
                 <AlertDialog
-                    openDialog={openDialog} //
-                    handleClose={() => setOpenDialog(false)}
+                    openDialog={state.openDialog}
+                    handleClose={() => dispatch({ type: 'set', key: 'openDialog', value: false })}
                     deleteKey={deletePipelineApiKey}
-                    keyToBeDeleted={keyToBeDeleted}
+                    keyToBeDeleted={state.keyToBeDeleted}
                 />
             ) : null}
         </Box>
@@ -134,7 +154,7 @@ export default function ApiKey({ apiKeyActive, setApiKeyActive, environmentID, t
 }
 
 // Graphql hooks
-const useAddPipelineApiKeyHook = (environmentID, triggerID, setStoredKeys) => {
+const useAddPipelineApiKeyHook = (environmentID, triggerID, dispatch) => {
     // GraphQL hook
     const addPipelineApiKey = useAddPipelineApiKey();
 
@@ -159,13 +179,12 @@ const useAddPipelineApiKeyHook = (environmentID, triggerID, setStoredKeys) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            // enqueueSnackbar('Success', { variant: 'success' });
-            setStoredKeys((k) => [newKey, ...k]);
+            dispatch({ type: 'addKey', value: newKey });
         }
     };
 };
 
-const useDeletePipelineApiKeyHook = (environmentID, setStoredKeys) => {
+const useDeletePipelineApiKeyHook = (environmentID, dispatch) => {
     // GraphQL hook
     const deletePipelineKey = useDeletePipelineApiKey();
 
@@ -188,12 +207,12 @@ const useDeletePipelineApiKeyHook = (environmentID, setStoredKeys) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setStoredKeys((k) => k.filter((a) => a.apiKey !== apiKey));
+            dispatch({ type: 'deleteKey', value: apiKey });
         }
     };
 };
 
-const useGetPipelineApiKeysHook = (environmentID, setStoredKeys) => {
+const useGetPipelineApiKeysHook = (environmentID, dispatch) => {
     // GraphQL hook
     const getPipelineApiKeys = useGetPipelineApiKeys();
 
@@ -211,7 +230,7 @@ const useGetPipelineApiKeysHook = (environmentID, setStoredKeys) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setStoredKeys(response);
+            dispatch({ type: 'set', key: 'storedKeys', value: response });
         }
     };
 };
