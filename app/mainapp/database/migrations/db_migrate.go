@@ -87,6 +87,7 @@ func Migrate() {
 			&models.PipelineEdges{},
 			&models.PipelineRuns{},
 			&models.PipelineApiTriggers{},
+			&models.PipelineApiKeys{},
 			&models.ResourceTypeStruct{},
 			&models.Secrets{},
 

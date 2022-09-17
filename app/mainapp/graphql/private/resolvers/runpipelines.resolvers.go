@@ -15,9 +15,9 @@ import (
 	"dataplane/mainapp/pipelines"
 	"dataplane/mainapp/worker"
 	"errors"
+	"strings"
 	"time"
 
-	gonanoid "github.com/matoous/go-nanoid/v2"
 	"gorm.io/gorm/clause"
 )
 
@@ -171,35 +171,16 @@ func (r *mutationResolver) GeneratePipelineTrigger(ctx context.Context, pipeline
 		return "", errors.New("requires permissions")
 	}
 
-	// Generate API key
-	apiKey, err := gonanoid.New()
-	if err != nil {
-		if config.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("unable to generate api key")
-	}
-
-	//  Encrypt API key
-	encryptedApiKey, err := auth.Encrypt(apiKey)
-	if err != nil {
-		if config.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("unable to generate api key")
-	}
-
 	trigger := models.PipelineApiTriggers{
 		TriggerID:     triggerID,
 		PipelineID:    pipelineID,
 		EnvironmentID: environmentID,
-		APIKey:        encryptedApiKey,
 		APIKeyActive:  apiKeyActive,
 		PublicLive:    publicLive,
 		PrivateLive:   privateLive,
 	}
 
-	err = database.DBConn.Clauses(clause.OnConflict{
+	err := database.DBConn.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "trigger_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"public_live", "private_live", "api_key_active"}),
 	}).Create(&trigger).Error
@@ -210,6 +191,88 @@ func (r *mutationResolver) GeneratePipelineTrigger(ctx context.Context, pipeline
 		}
 
 		return "", err
+	}
+
+	return "Success", nil
+}
+
+func (r *mutationResolver) AddPipelineAPIKey(ctx context.Context, triggerID string, apiKey string, pipelineID string, environmentID string, expiresAt *time.Time) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("requires permissions")
+	}
+
+	//  Hash API key
+	hashedApiKey, err := auth.Encrypt(apiKey)
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("unable to hash api key")
+	}
+
+	keys := models.PipelineApiKeys{
+		TriggerID:     triggerID,
+		APIKey:        hashedApiKey,
+		APIKeyTail:    strings.Split(apiKey, "-")[3],
+		PipelineID:    pipelineID,
+		EnvironmentID: environmentID,
+		ExpiresAt:     expiresAt,
+	}
+
+	err = database.DBConn.Create(&keys).Error
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Register database error.")
+	}
+
+	return "Success", nil
+}
+
+func (r *mutationResolver) DeletePipelineAPIKey(ctx context.Context, apiKey string, pipelineID string, environmentID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("requires permissions")
+	}
+
+	k := models.PipelineApiKeys{}
+
+	query := database.DBConn.Where("pipeline_id = ? and environment_id = ? and api_key = ?",
+		pipelineID, environmentID, apiKey).Delete(&k)
+	if query.Error != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(query.Error)
+		}
+		return "", errors.New("Delete pipeline key database error.")
+	}
+	if query.RowsAffected == 0 {
+		return "", errors.New("Delete pipeline key database error.")
 	}
 
 	return "Success", nil
@@ -381,16 +444,46 @@ func (r *queryResolver) GetPipelineTrigger(ctx context.Context, pipelineID strin
 
 	err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).First(&e).Error
 	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, errors.New("record not found")
+		}
 		if config.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive pipeline trigger database error.")
 	}
 
-	// Remove API key
-	e.APIKey = ""
-
 	return &e, nil
+}
+
+func (r *queryResolver) GetPipelineAPIKeys(ctx context.Context, pipelineID string, environmentID string) ([]*models.PipelineApiKeys, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("requires permissions")
+	}
+
+	e := []*models.PipelineApiKeys{}
+
+	err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&e).Error
+	if err != nil {
+		if config.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive pipeline trigger database error.")
+	}
+	return e, nil
 }
 
 // PipelineRuns returns privategraphql.PipelineRunsResolver implementation.

@@ -33,6 +33,15 @@ type PipelineApiTriggers {
 	privateLive: Boolean!
 }
 
+type PipelineApiKeys {
+    triggerID: String!
+    apiKey: String!
+    apiKeyTail: String!
+	pipelineID: String!
+	environmentID: String!
+    expiresAt: Time
+}
+
 extend type Query {
     """
     Get a single pipeline tasks run.
@@ -61,6 +70,13 @@ extend type Query {
     + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
     getPipelineTrigger(pipelineID: String!, environmentID: String!): PipelineApiTriggers!
+
+    """
+    Get api keys for a specific pipeline.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    getPipelineApiKeys(pipelineID: String!, environmentID: String!): [PipelineApiKeys!]!
 }
 
 
@@ -86,4 +102,18 @@ extend type Mutation {
     + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
     generatePipelineTrigger(pipelineID: String!, environmentID: String!, triggerID: String!, apiKeyActive: Boolean!, publicLive: Boolean!, privateLive: Boolean!): String!
+
+    """
+    Add pipeline api key.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    addPipelineApiKey(triggerID: String!, apiKey: String!, pipelineID: String!,  environmentID: String!, expiresAt: Time): String!
+
+    """
+    Delete pipeline api key.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    deletePipelineApiKey(apiKey: String!, pipelineID: String!,  environmentID: String!): String!
 }

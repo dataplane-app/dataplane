@@ -9,8 +9,10 @@ import { useGlobalEnvironmentState } from '../../../EnviromentDropdown';
 import { IOSSwitch } from '../../SchedulerDrawer/IOSSwitch';
 import { v4 as uuidv4 } from 'uuid';
 import { useGetPipelineTrigger } from '../../../../graphql/getPipelineTrigger';
+import ApiKey from './ApiKey';
 
-const PUBLIC = 'https://demo.dataplane.app/app/public/api-trigger/';
+const host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
+const PUBLIC = `${host}/app/public/api-trigger/`;
 const PRIVATE = `https://{{ HOST }}/app/private/api-trigger/`;
 
 const APITRiggerDrawer = ({ handleClose }) => {
@@ -34,7 +36,7 @@ const APITRiggerDrawer = ({ handleClose }) => {
     }, [Environment.id.get()]);
 
     return (
-        <Box position="relative" width="100%">
+        <Box position="relative" width="100%" mb={10}>
             <Box sx={{ p: '4.125rem 3.81rem', paddingTop: '26px' }}>
                 {/* Title and Save/Close buttons */}
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={8}>
@@ -80,11 +82,7 @@ const APITRiggerDrawer = ({ handleClose }) => {
                             {publicLive ? 'Live' : 'Offline'}
                         </Typography>
                         <Box display="flex" alignItems="center" position="absolute" ml={15}>
-                            <Typography>
-                                <Link href={PUBLIC + triggerID} color="text.primary" target="_blank" rel="noreferrer">
-                                    {PUBLIC + triggerID}
-                                </Link>
-                            </Typography>
+                            <Typography>{PUBLIC + triggerID}</Typography>
                             <Button //
                                 onClick={() => navigator.clipboard.writeText(PUBLIC + triggerID)}
                                 variant="contained"
@@ -113,11 +111,7 @@ const APITRiggerDrawer = ({ handleClose }) => {
                             {privateLive ? 'Live' : 'Offline'}
                         </Typography>
                         <Box display="flex" alignItems="center" position="absolute" ml={15}>
-                            <Typography>
-                                <Link href={PRIVATE + triggerID} color="text.primary" target="_blank" rel="noreferrer">
-                                    {PRIVATE + triggerID}
-                                </Link>
-                            </Typography>
+                            <Typography>{PRIVATE + triggerID}</Typography>
                             <Button //
                                 onClick={() => navigator.clipboard.writeText(PRIVATE + triggerID)}
                                 variant="contained"
@@ -132,37 +126,7 @@ const APITRiggerDrawer = ({ handleClose }) => {
                 <Box mb={4} />
 
                 {/* API Key */}
-                <Box>
-                    <Typography variant="body1" fontSize="1.1875rem" lineHeight={2}>
-                        API Key (optional)
-                    </Typography>
-                    <Typography>
-                        Enable an API key for additional security. The key will be stored in Secrets. The key will only be shown once. New keys can be created or rotated using the
-                        generate key button. To keep services running without interruption, the old key will remain active and expire after 24 hours or you can make the key expire
-                        sooner.
-                    </Typography>
-                    <Box display="flex" alignItems="center" mt={3}>
-                        <IOSSwitch
-                            sx={{
-                                '.MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                    backgroundColor: 'primary.main',
-                                },
-                                '.MuiSwitch-track': {
-                                    backgroundColor: '#8a8a8a',
-                                    color: '#8a8a8a',
-                                    opacity: 0.5,
-                                    border: 0,
-                                },
-                            }}
-                            onClick={() => setApiKeyActive(!apiKeyActive)}
-                            checked={apiKeyActive}
-                            inputProps={{ 'aria-label': 'controlled' }}
-                        />
-                        <Typography fontSize={13} ml={1.5} color={apiKeyActive ? 'cyan.main' : 'text.primary'}>
-                            {apiKeyActive ? 'Use an API key' : 'No key'}
-                        </Typography>
-                    </Box>
-                </Box>
+                <ApiKey apiKeyActive={apiKeyActive} setApiKeyActive={setApiKeyActive} environmentID={Environment.id.get()} triggerID={triggerID} />
             </Box>
         </Box>
     );
@@ -219,6 +183,7 @@ const useGetPipelineTriggerHook = (environmentID, setTriggerID, setApiKeyActive,
         if (response.r || response.error) {
             enqueueSnackbar("Can't get api triggers: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
+            if (response.errors[0].message === 'record not found') return;
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             const { triggerID, publicLive, privateLive, apiKeyActive } = response;
