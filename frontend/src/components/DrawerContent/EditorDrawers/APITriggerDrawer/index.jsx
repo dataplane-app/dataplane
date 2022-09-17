@@ -1,6 +1,6 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Link, Typography } from '@mui/material';
+import { Box, Button, Drawer, Link, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -10,6 +10,7 @@ import { IOSSwitch } from '../../SchedulerDrawer/IOSSwitch';
 import { v4 as uuidv4 } from 'uuid';
 import { useGetPipelineTrigger } from '../../../../graphql/getPipelineTrigger';
 import ApiKey from './ApiKey';
+import ApiTriggerExampleDrawer from '../../ApiTriggerExampleDrawer';
 
 const host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
 const PUBLIC = `${host}/app/public/api-trigger/`;
@@ -24,6 +25,8 @@ const APITRiggerDrawer = ({ handleClose }) => {
     const [privateLive, setPrivateLive] = useState(true);
     const [apiKeyActive, setApiKeyActive] = useState(true);
     const [triggerID, setTriggerID] = useState(uuidv4());
+    const [isOpenExampleDrawer, setIsOpenExampleDrawer] = useState(false);
+    const [isExamplePrivate, setIsExamplePrivate] = useState(false);
 
     // Custom GraphQL hooks
     const generatePipelineTrigger = useGeneratePipelineTriggerHook(Environment.id.get(), triggerID, apiKeyActive, publicLive, privateLive, handleClose);
@@ -70,9 +73,14 @@ const APITRiggerDrawer = ({ handleClose }) => {
                 {/* Main section */}
                 {/* Public API endpoint */}
                 <Box>
-                    <Typography variant="body1" fontSize="1.1875rem" lineHeight={2}>
-                        Public API endpoint
-                    </Typography>
+                    <Box display="flex" alignItems="center">
+                        <Typography variant="body1" fontSize="1.1875rem" lineHeight={2}>
+                            Public API endpoint
+                        </Typography>
+                        <Typography onClick={() => setIsOpenExampleDrawer(true)} fontSize="0.8125rem" color="primary.main" ml={3} sx={{ cursor: 'pointer' }}>
+                            See example
+                        </Typography>
+                    </Box>
                     <Typography variant="subtitle2" fontWeight={400}>
                         Anyone with this link can trigger this workflow.
                     </Typography>
@@ -98,13 +106,28 @@ const APITRiggerDrawer = ({ handleClose }) => {
 
                 {/* Private API endpoint */}
                 <Box>
-                    <Typography variant="body1" fontSize="1.1875rem" lineHeight={2}>
-                        Private API endpoint
-                    </Typography>
+                    <Box display="flex" alignItems="center">
+                        <Typography variant="body1" fontSize="1.1875rem" lineHeight={2}>
+                            Private API endpoint
+                        </Typography>
+                        <Typography
+                            onClick={() => {
+                                setIsOpenExampleDrawer(true);
+                                setIsExamplePrivate(true);
+                            }}
+                            fontSize="0.8125rem"
+                            color="primary.main"
+                            ml={3}
+                            sx={{ cursor: 'pointer' }}>
+                            See example
+                        </Typography>
+                    </Box>
+
                     <Typography>
                         Servers in your private networking can access this link. Replace &#123;&#123; HOST &#125;&#125; with network location. For example, in Kubernetes, it will
                         be your service.
                     </Typography>
+
                     <Box display="flex" alignItems="center" mt={3}>
                         <IOSSwitch onClick={() => setPrivateLive(!privateLive)} checked={privateLive} inputProps={{ 'aria-label': 'controlled' }} />
                         <Typography fontSize={13} ml={1.5} color={privateLive ? 'status.pipelineOnlineText' : '#F80000'}>
@@ -128,6 +151,23 @@ const APITRiggerDrawer = ({ handleClose }) => {
                 {/* API Key */}
                 <ApiKey apiKeyActive={apiKeyActive} setApiKeyActive={setApiKeyActive} environmentID={Environment.id.get()} triggerID={triggerID} />
             </Box>
+            <Drawer
+                anchor="right"
+                open={isOpenExampleDrawer}
+                onClose={() => {
+                    setIsOpenExampleDrawer(false);
+                    setIsExamplePrivate(false);
+                }}>
+                <ApiTriggerExampleDrawer
+                    handleClose={() => {
+                        setIsOpenExampleDrawer(false);
+                        setIsExamplePrivate(false);
+                    }}
+                    host={isExamplePrivate ? 'https://{{ HOST }}' : host}
+                    triggerID={triggerID}
+                    isExamplePrivate={isExamplePrivate}
+                />
+            </Drawer>
         </Box>
     );
 };

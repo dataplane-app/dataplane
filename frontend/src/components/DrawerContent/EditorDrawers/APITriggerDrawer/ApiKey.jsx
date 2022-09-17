@@ -85,6 +85,7 @@ export default function ApiKey({ apiKeyActive, setApiKeyActive, environmentID, t
             <List sx={{ width: '800px', marginTop: '8px' }}>
                 {storedKeys.map((apiKey, idx) => (
                     <ListItem
+                        key={apiKey.apiKey}
                         sx={{
                             borderTop: '1px solid #BABABA',
                             paddingLeft: 0,
