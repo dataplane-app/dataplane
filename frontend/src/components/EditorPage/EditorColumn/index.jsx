@@ -224,7 +224,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 },
             });
         }
-    }, []);
+    }, [theme.palette.mode]);
 
     const getLanguage = (filename) => {
         if (!filename) {
@@ -363,7 +363,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 ) : null}
 
                 <Box zIndex={10} height="100%">
-                    {getEditorValue() != undefined ? (
+                    {getEditorValue() !== undefined ? (
                         <MonacoEditor
                             editorDidMount={handleEditorOnMount}
                             language={getLanguage(EditorGlobal.selectedFile.get()?.name)}
