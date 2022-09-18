@@ -24,7 +24,7 @@ const APITRiggerDrawer = ({ handleClose }) => {
     const [publicLive, setPublicLive] = useState(true);
     const [privateLive, setPrivateLive] = useState(true);
     const [apiKeyActive, setApiKeyActive] = useState(true);
-    const [triggerID, setTriggerID] = useState(uuidv4());
+    const [triggerID, setTriggerID] = useState(() => uuidv4());
     const [isOpenExampleDrawer, setIsOpenExampleDrawer] = useState(false);
     const [isExamplePrivate, setIsExamplePrivate] = useState(false);
 

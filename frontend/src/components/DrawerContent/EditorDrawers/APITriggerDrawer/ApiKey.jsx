@@ -1,5 +1,5 @@
 import { Box, Button, FormControl, InputLabel, List, ListItem, MenuItem, Select, Typography } from '@mui/material';
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 import { IOSSwitch } from '../../SchedulerDrawer/IOSSwitch';
 import { customAlphabet } from 'nanoid';
 import { DateTime } from 'luxon';
