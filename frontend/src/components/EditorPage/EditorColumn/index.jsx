@@ -292,6 +292,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                                 style={{ marginLeft: 0, paddingLeft: 12 }}>
                                                 {/*  */}
                                                 {tabs.diffValue && tabs.content !== tabs.diffValue && (
+                                                    <Box sx={{ width: 8, height: 8, marginRight: 1, backgroundColor: 'secondary.main', borderRadius: '50%' }} />
+                                                )}
                                                 <Box component={FontAwesomeIcon} icon={faTimes} sx={{ fontSize: 13 }} color="editorPage.fileManagerIcon" />
                                             </Box>
                                         }
