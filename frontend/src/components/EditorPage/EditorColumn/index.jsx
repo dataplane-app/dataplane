@@ -290,7 +290,6 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                                 sx={{ display: 'flex', alignItems: 'center', paddingLeft: '12px', paddingRight: '8px' }}
                                                 onClick={(e) => handleTabClose(tabs, e)}
                                                 style={{ marginLeft: 0, paddingLeft: 12 }}>
-                                                {/*  */}
                                                 {tabs.diffValue && tabs.content !== tabs.diffValue && (
                                                     <Box sx={{ width: 8, height: 8, marginRight: 1, backgroundColor: 'secondary.main', borderRadius: '50%' }} />
                                                 )}
