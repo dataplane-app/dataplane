@@ -23,7 +23,7 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 
 		id, err := gonanoid.Generate("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 7)
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println("Directory id error:", err)
 			}
 			continue
@@ -38,7 +38,7 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 
 		errdb := database.DBConn.Create(&input).Error
 		if errdb != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println("Directory create error:", errdb)
 			}
 			if i == 4 {
@@ -53,23 +53,23 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 
 	returnpath := parentFolder + foldername
 
-	createDirectory = config.CodeDirectory + parentFolder + foldername
+	createDirectory = dpconfig.CodeDirectory + parentFolder + foldername
 
 	if _, err := os.Stat(createDirectory); os.IsNotExist(err) {
 		// path/to/whatever does not exist
 		err := os.MkdirAll(createDirectory, os.ModePerm)
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println("Create directory error:", err)
 				return input, returnpath, err
 			}
 		}
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			log.Println("Created directory: ", createDirectory)
 		}
 
 	} else {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			log.Println("Directory already exists: ", createDirectory)
 		}
 	}

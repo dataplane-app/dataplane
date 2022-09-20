@@ -15,7 +15,7 @@ func Encrypt(rawPassword string) (string, error) {
 	)
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", err

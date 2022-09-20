@@ -5,7 +5,7 @@ import (
 	"context"
 	"dataplane/mainapp/code_editor/filesystem"
 	modelmain "dataplane/mainapp/database/models"
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/messageq"
 	"log"
@@ -47,7 +47,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	var TasksStatusWG string
 	var TasksRun Task
 
-	if config.Debug == "true" {
+	if wrkerconfig.Debug == "true" {
 		log.Printf("starting task with id %s - node: %s run: %s type: %s version: %s \n", msg.TaskID, msg.NodeID, msg.RunID, msg.RunType, msg.Version)
 	}
 
@@ -59,7 +59,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	errl := database.DBConn.Create(&createLock).Error
 	if errl != nil {
 		if strings.Contains(errl.Error(), "duplicate") {
-			if config.Debug == "true" {
+			if wrkerconfig.Debug == "true" {
 				log.Println("Lock for run and node exists:", msg.RunID, msg.NodeID)
 			}
 		} else {
@@ -91,8 +91,8 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		RunID:         msg.RunID,
 		NodeID:        msg.NodeID,
 		PipelineID:    msg.PipelineID,
-		WorkerGroup:   config.WorkerGroup,
-		WorkerID:      config.WorkerID,
+		WorkerGroup:   wrkerconfig.WorkerGroup,
+		WorkerID:      wrkerconfig.WorkerID,
 		StartDT:       time.Now().UTC(),
 		Status:        statusUpdate,
 	}
@@ -113,10 +113,10 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 		TaskFinal := modelmain.WorkerTasks{
 			TaskID:        msg.TaskID,
-			EnvironmentID: config.EnvID,
+			EnvironmentID: wrkerconfig.EnvID,
 			RunID:         msg.RunID,
 			WorkerGroup:   msg.WorkerGroup,
-			WorkerID:      config.WorkerID,
+			WorkerID:      wrkerconfig.WorkerID,
 			NodeID:        msg.NodeID,
 			PipelineID:    msg.PipelineID,
 			Status:        "Fail",
@@ -150,13 +150,13 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		// Detect if folder is being requested
 		if strings.Contains(v, "${{nodedirectory}}") {
 
-			directoryRun := config.CodeDirectory + msg.Folder + "/"
+			directoryRun := wrkerconfig.CodeDirectory + msg.Folder + "/"
 			// log.Println(directoryRun)
 
 			// construct the directory if the directory cant be found
 			var newdir string
 			if _, err := os.Stat(directoryRun); os.IsNotExist(err) {
-				if config.Debug == "true" {
+				if wrkerconfig.Debug == "true" {
 					log.Println("Directory not found:", directoryRun)
 				}
 				switch msg.RunType {
@@ -166,12 +166,12 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 					newdir, err = filesystem.FolderConstructByID(database.DBConn, msg.FolderID, msg.EnvironmentID, "pipelines")
 				}
 
-				if config.Debug == "true" {
-					log.Println("Reconstructed:", config.CodeDirectory+newdir)
+				if wrkerconfig.Debug == "true" {
+					log.Println("Reconstructed:", wrkerconfig.CodeDirectory+newdir)
 				}
 
 				if err == nil {
-					directoryRun = config.CodeDirectory + newdir
+					directoryRun = wrkerconfig.CodeDirectory + newdir
 				}
 
 			}
@@ -183,7 +183,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 		// log.Println("command:", v)
 		var cmd *exec.Cmd
-		switch config.DPworkerCMD {
+		switch wrkerconfig.DPworkerCMD {
 		case "/bin/bash":
 			cmd = exec.Command("/bin/bash", "-c", v)
 		case "/bin/sh":
@@ -221,7 +221,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			// Read line by line and process it
 			for scanner.Scan() {
 				uid := uuid.NewString()
-				line := config.Secrets.Replace(scanner.Text())
+				line := wrkerconfig.Secrets.Replace(scanner.Text())
 
 				logmsg := modelmain.LogsWorkers{
 					CreatedAt:     time.Now().UTC(),
@@ -248,7 +248,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 				messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
 				database.DBConn.Create(&logmsg)
-				if config.Debug == "true" {
+				if wrkerconfig.Debug == "true" {
 					clog.Info(line)
 				}
 			}
@@ -274,7 +274,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			// Read line by line and process it
 			for scannerErr.Scan() {
 				uid := uuid.NewString()
-				line := config.Secrets.Replace(scannerErr.Text())
+				line := wrkerconfig.Secrets.Replace(scannerErr.Text())
 
 				logmsg := modelmain.LogsWorkers{
 					CreatedAt:     time.Now().UTC(),
@@ -301,7 +301,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 				messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
 				database.DBConn.Create(&logmsg)
-				if config.Debug == "true" {
+				if wrkerconfig.Debug == "true" {
 					clog.Error(line)
 				}
 			}
@@ -325,7 +325,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		// TasksStatus[msg.TaskID] = "run"
 		TasksStatus.Set(msg.TaskID, "run")
 
-		if config.Debug == "true" {
+		if wrkerconfig.Debug == "true" {
 			// log.Println("tasks before pid:", Tasks)
 		}
 		err := cmd.Start()
@@ -337,7 +337,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			}
 
 			uid := uuid.NewString()
-			line := config.Secrets.Replace(err.Error())
+			line := wrkerconfig.Secrets.Replace(err.Error())
 
 			logmsg := modelmain.LogsWorkers{
 				CreatedAt:     time.Now().UTC(),
@@ -364,7 +364,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 			messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
 			database.DBConn.Create(&logmsg)
-			if config.Debug == "true" {
+			if wrkerconfig.Debug == "true" {
 				clog.Error(line)
 			}
 
@@ -375,7 +375,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		Tasks.Set(msg.TaskID, task)
 		// Tasks[msg.TaskID] = task
 
-		if config.Debug == "true" {
+		if wrkerconfig.Debug == "true" {
 			// fmt.Println("PID ", cmd.Process.Pid)
 			// log.Println("tasks after pid:", Tasks)
 			// log.Println(err)
@@ -402,12 +402,12 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		} else {
 			statusUpdate = "Success"
 		}
-		if config.Debug == "true" {
+		if wrkerconfig.Debug == "true" {
 			// log.Println(i, err)
 		}
 	}
 
-	if config.Debug == "true" {
+	if wrkerconfig.Debug == "true" {
 		// log.Println("Update task as " + statusUpdate + " - " + msg.TaskID)
 	}
 
@@ -424,10 +424,10 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	TaskFinal := modelmain.WorkerTasks{
 		TaskID:        msg.TaskID,
 		CreatedAt:     TaskUpdate.CreatedAt,
-		EnvironmentID: config.EnvID,
+		EnvironmentID: wrkerconfig.EnvID,
 		RunID:         msg.RunID,
 		WorkerGroup:   TaskUpdate.WorkerGroup,
-		WorkerID:      config.WorkerID,
+		WorkerID:      wrkerconfig.WorkerID,
 		NodeID:        msg.NodeID,
 		PipelineID:    msg.PipelineID,
 		StartDT:       TaskUpdate.StartDT,
@@ -437,7 +437,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	}
 	UpdateWorkerTasks(TaskFinal)
 
-	if config.Debug == "true" {
+	if wrkerconfig.Debug == "true" {
 		// log.Println("tasks delete:", msg.TaskID)
 		// log.Println("tasks before del:", Tasks)
 	}
@@ -446,7 +446,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	RunNext := modelmain.WorkerPipelineNext{
 		TaskID:        msg.TaskID,
 		CreatedAt:     TaskUpdate.CreatedAt,
-		EnvironmentID: config.EnvID,
+		EnvironmentID: wrkerconfig.EnvID,
 		PipelineID:    msg.PipelineID,
 		RunID:         msg.RunID,
 		NodeID:        msg.NodeID,
@@ -455,7 +455,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 	errnat := messageq.MsgSend("pipeline-run-next", RunNext)
 	if errnat != nil {
-		if config.Debug == "true" {
+		if wrkerconfig.Debug == "true" {
 			log.Println(errnat)
 		}
 
@@ -466,7 +466,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	TasksStatus.Remove(msg.TaskID)
 	Tasks.Remove(msg.TaskID)
 
-	if config.Debug == "true" {
+	if wrkerconfig.Debug == "true" {
 		// log.Println("tasks after del:", Tasks)
 	}
 

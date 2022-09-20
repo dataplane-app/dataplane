@@ -1,15 +1,18 @@
 package filesystem
 
 import (
+	"crypto/md5"
 	"dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm/clause"
 )
 
 /* Will overwrite any existing files */
@@ -17,23 +20,21 @@ func CreateFile(input models.CodeFiles, Folder string, Content []byte) (models.C
 
 	var filename string
 
-	id := uuid.NewString()
-	input.FileID = id
 	filename = input.FileName
 	returnpath := Folder + filename
 
-	createFile := config.CodeDirectory + Folder + filename
+	createFile := dpconfig.CodeDirectory + Folder + filename
 
 	// Does the file already exists?
 	var existingFile models.CodeFiles
-	database.DBConn.Where("environment_id = ? and node_id =? and file_name = ?", input.EnvironmentID, input.NodeID, input.FileName).First(&existingFile)
+	database.DBConn.Where("environment_id = ? and node_id =? and file_name = ? and folder_id =?", input.EnvironmentID, input.NodeID, input.FileName, input.FolderID).First(&existingFile)
 
 	// -------- if LocalFile --------
-	if config.FSCodeFileStorage == "LocalFile" {
-		if _, err := os.Stat(config.CodeDirectory + Folder); os.IsNotExist(err) {
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		if _, err := os.Stat(dpconfig.CodeDirectory + Folder); os.IsNotExist(err) {
 
-			if config.Debug == "true" {
-				log.Println("Directory doesnt exists: ", config.CodeDirectory+Folder)
+			if dpconfig.Debug == "true" {
+				log.Println("Directory doesnt exists: ", dpconfig.CodeDirectory+Folder)
 				return input, returnpath, errors.New("Directory doesnt exists")
 			}
 
@@ -44,7 +45,7 @@ func CreateFile(input models.CodeFiles, Folder string, Content []byte) (models.C
 				return input, returnpath, errors.New("Failed to write file")
 			}
 
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println("Created file: ", createFile)
 			}
 
@@ -53,10 +54,11 @@ func CreateFile(input models.CodeFiles, Folder string, Content []byte) (models.C
 
 	// Create record if doesnt exist
 	if existingFile.FileID == "" {
-
+		id := uuid.NewString()
+		input.FileID = id
 		errdb := database.DBConn.Create(&input).Error
 		if errdb != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println("Directory create error:", errdb)
 				return input, returnpath, errors.New("File create database error")
 			}
@@ -64,6 +66,26 @@ func CreateFile(input models.CodeFiles, Folder string, Content []byte) (models.C
 		}
 	} else {
 		database.DBConn.Model(&models.CodeFiles{}).Where("file_id = ?", existingFile.FileID).Update("updated_at", time.Now().UTC())
+		input.FileID = existingFile.FileID
+	}
+
+	md5byte := md5.Sum(Content)
+	md5string := fmt.Sprintf("%x", md5byte)
+
+	codefile := models.CodeFilesStore{
+		FileID:        input.FileID,
+		FileStore:     Content,
+		RunInclude:    true,
+		External:      false,
+		ChecksumMD5:   md5string,
+		EnvironmentID: input.EnvironmentID,
+	}
+
+	errdb := database.DBConn.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&codefile).Error
+	if errdb != nil {
+		log.Println("Create file in database:", errdb)
 	}
 
 	return input, returnpath, nil

@@ -3,7 +3,7 @@ package runcodeworker
 import (
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/database/models"
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
 	"log"
 	"strings"
@@ -24,7 +24,7 @@ func CodeLoadPackages(language string, loadpackages string, environmentID string
 
 	// Get environment folder
 	envfolder, _ := filesystem.FolderConstructByID(database.DBConn, folder.FolderID, environmentID, "")
-	envfolder = config.CodeDirectory + envfolder
+	envfolder = wrkerconfig.CodeDirectory + envfolder
 
 	for _, v := range languagesplit {
 

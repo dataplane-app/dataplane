@@ -3,7 +3,7 @@ package workerhealth
 import (
 	"dataplane/mainapp/database/models"
 	"dataplane/workers/cmetric"
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
 	"log"
@@ -67,7 +67,7 @@ func WorkerHealthStart(s *gocron.Scheduler) {
 		var percentCPUsend float64
 		var percentMemorysend float64
 		var memoryused float64
-		switch config.WorkerType {
+		switch wrkerconfig.WorkerType {
 
 		// TODO: Fix container usage
 		case "container":
@@ -111,21 +111,21 @@ func WorkerHealthStart(s *gocron.Scheduler) {
 		// log.Printf("cpu perc:%v | mem percent:%v | mem used :%v | load:%v \n", percentCPUsend, percentMemorysend, memoryused, loadsend)
 
 		workerdata := &models.WorkerStats{
-			WorkerGroup: config.WorkerGroup,
-			WorkerID:    config.WorkerID,
+			WorkerGroup: wrkerconfig.WorkerGroup,
+			WorkerID:    wrkerconfig.WorkerID,
 			Status:      "Online",
 			CPUPerc:     percentCPUsend,
 			MemoryPerc:  percentMemorysend,
 			MemoryUsed:  memoryused,
 			Load:        loadsend,
-			EnvID:       config.EnvID,
+			EnvID:       wrkerconfig.EnvID,
 			T:           time.Now().UTC(),
-			LB:          config.WorkerLB,
-			WorkerType:  config.WorkerType,
+			LB:          wrkerconfig.WorkerLB,
+			WorkerType:  wrkerconfig.WorkerType,
 		}
 
 		// Go type Publisher
-		err := messageq.MsgSend("workerstats."+config.WorkerGroup, workerdata)
+		err := messageq.MsgSend("workerstats."+wrkerconfig.WorkerGroup, workerdata)
 		if err != nil {
 			logging.PrintSecretsRedact("NATS error:", err)
 		}

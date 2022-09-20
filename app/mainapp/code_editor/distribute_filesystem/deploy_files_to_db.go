@@ -48,7 +48,7 @@ func DeployFilesToDB(db *gorm.DB) error {
 		// Open each file
 		fileLoc, _ := filesystem.DeployFileConstructByID(db, x.FileID, x.EnvironmentID, "deployments", x.Version)
 
-		dat, err := os.ReadFile(config.CodeDirectory + fileLoc)
+		dat, err := os.ReadFile(dpconfig.CodeDirectory + fileLoc)
 		if err != nil {
 			log.Println("Read file error:", err)
 		} else {
@@ -68,7 +68,7 @@ func DeployFilesToDB(db *gorm.DB) error {
 			if errdb != nil {
 				log.Println("Create file in database:", err)
 			} else {
-				log.Println("DF add: ", md5string, config.CodeDirectory+fileLoc)
+				log.Println("DF add: ", md5string, dpconfig.CodeDirectory+fileLoc)
 			}
 		}
 

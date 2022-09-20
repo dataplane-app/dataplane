@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/secrets"
 	"log"
@@ -27,7 +27,7 @@ func TestSecretsRedactFunction(t *testing.T) {
 	// load up the secrets
 	secrets.MapSecrets()
 
-	redacted := config.Secrets.Replace(logmessage)
+	redacted := wrkerconfig.Secrets.Replace(logmessage)
 
 	log.Println("Test removal: ", redacted)
 

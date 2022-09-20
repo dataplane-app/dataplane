@@ -1,11 +1,11 @@
 package runcode
 
 import (
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
-	"dataplane/workers/config"
 	"dataplane/workers/runtask"
 	"errors"
 	"log"
@@ -67,7 +67,7 @@ func RunCodeFileCancel(runid string, environmentID string) error {
 		} else {
 			log.Println(task.WorkerID + " not online, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
 		}
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			log.Println("Send to worker", response.R)
 		}
 		time.Sleep(2 * time.Second)

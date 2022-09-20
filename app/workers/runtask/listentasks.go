@@ -3,7 +3,7 @@ package runtask
 import (
 	"context"
 	modelmain "dataplane/mainapp/database/models"
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/messageq"
 	"log"
 	"syscall"
@@ -18,24 +18,24 @@ type TaskResponse struct {
 func ListenTasks() {
 
 	// Responding to a task request
-	messageq.NATSencoded.Subscribe("task."+config.WorkerGroup+"."+config.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
+	messageq.NATSencoded.Subscribe("task."+wrkerconfig.WorkerGroup+"."+wrkerconfig.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
 		// log.Println("message:", msg)
 
 		response := "ok"
 		message := "ok"
 		// msg.EnvironmentID
-		if config.EnvID != msg.EnvironmentID {
+		if wrkerconfig.EnvID != msg.EnvironmentID {
 			response = "failed"
 			message = "Incorrect environment"
-			if config.Debug == "true" {
+			if wrkerconfig.Debug == "true" {
 				log.Println("response", response, message)
 			}
 
 			TaskFinal := modelmain.WorkerTasks{
 				TaskID:        msg.TaskID,
-				EnvironmentID: config.EnvID,
+				EnvironmentID: wrkerconfig.EnvID,
 				RunID:         msg.RunID,
-				WorkerID:      config.WorkerID,
+				WorkerID:      wrkerconfig.WorkerID,
 				NodeID:        msg.NodeID,
 				PipelineID:    msg.PipelineID,
 				Status:        "Fail",
@@ -64,11 +64,11 @@ func ListenTasks() {
 			go worker(ctx, msg)
 		}
 	})
-	if config.Debug == "true" {
-		log.Println("🎧 Listening for tasks on subject:", "task."+config.WorkerGroup+"."+config.WorkerID)
+	if wrkerconfig.Debug == "true" {
+		log.Println("🎧 Listening for tasks on subject:", "task."+wrkerconfig.WorkerGroup+"."+wrkerconfig.WorkerID)
 	}
 
-	messageq.NATSencoded.Subscribe("taskcancel."+config.WorkerGroup+"."+config.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
+	messageq.NATSencoded.Subscribe("taskcancel."+wrkerconfig.WorkerGroup+"."+wrkerconfig.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
 		// Respond to cancelling a task
 		id := msg.TaskID
 

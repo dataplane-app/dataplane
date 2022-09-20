@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	config.LoadConfig()
+	dpconfig.LoadConfig()
 	database.DBConnect()
 	log.Println("🏃 Running")
 	// CreateFiles()

@@ -46,11 +46,14 @@ func Setup(port string) *fiber.App {
 
 	app := fiber.New()
 
-	config.LoadConfig()
+	dpconfig.LoadConfig()
+
+	// ------ Logging ----
+	log.Println("🪵  Logging: Debug=", dpconfig.Debug, " | MQ Debug=", dpconfig.MQDebug)
 
 	// go runHub()
 	MainAppID = uuid.NewString()
-	config.MainAppID = MainAppID
+	dpconfig.MainAppID = MainAppID
 	log.Println("🍦 Server ID: ", MainAppID)
 
 	// ------- LOAD secrets ------
@@ -70,7 +73,7 @@ func Setup(port string) *fiber.App {
 	// ----- Load platformID ------
 	u := models.Platform{}
 	database.DBConn.First(&u)
-	config.PlatformID = u.ID
+	dpconfig.PlatformID = u.ID
 
 	/* --- First time setup, workers will wait for this to be available ---- */
 	if u.ID == "" {
@@ -78,7 +81,7 @@ func Setup(port string) *fiber.App {
 		// #Code File Storage: Database, LocalFile, S3
 		platformData := &models.Platform{
 			ID:              uuid.New().String(),
-			CodeFileStorage: config.FSCodeFileStorage,
+			CodeFileStorage: dpconfig.FSCodeFileStorage,
 			Complete:        false,
 			One:             true,
 		}
@@ -88,21 +91,21 @@ func Setup(port string) *fiber.App {
 		err := database.DBConn.Create(&platformData).Error
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				panic(err)
 			}
 		}
-		config.PlatformID = platformData.ID
+		dpconfig.PlatformID = platformData.ID
 
 		// Environments get added
 		environment := []models.Environment{
 			{ID: uuid.New().String(),
 				Name:       "Development",
-				PlatformID: config.PlatformID,
+				PlatformID: dpconfig.PlatformID,
 				Active:     true}, {
 				ID:         uuid.New().String(),
 				Name:       "Production",
-				PlatformID: config.PlatformID,
+				PlatformID: dpconfig.PlatformID,
 				Active:     true,
 			},
 		}
@@ -110,7 +113,7 @@ func Setup(port string) *fiber.App {
 		err = database.DBConn.Clauses(clause.OnConflict{DoNothing: true}).Create(&environment).Error
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			panic("Add initial environments database error.")
@@ -119,16 +122,16 @@ func Setup(port string) *fiber.App {
 		// --------- Setup coding directory structure --------
 
 		// directories := &[]models.CodeFolders{}
-		if _, err := os.Stat(config.CodeDirectory); os.IsNotExist(err) {
+		if _, err := os.Stat(dpconfig.CodeDirectory); os.IsNotExist(err) {
 			// path/to/whatever does not exist
-			err := os.MkdirAll(config.CodeDirectory, os.ModePerm)
+			err := os.MkdirAll(dpconfig.CodeDirectory, os.ModePerm)
 			if err != nil {
 				log.Println("Create directory error:", err)
 			}
-			log.Println("Created platform directory: ", config.CodeDirectory)
+			log.Println("Created platform directory: ", dpconfig.CodeDirectory)
 
 		} else {
-			log.Println("Directory already exists: ", config.CodeDirectory)
+			log.Println("Directory already exists: ", dpconfig.CodeDirectory)
 		}
 
 		// Platform
@@ -168,7 +171,7 @@ func Setup(port string) *fiber.App {
 		}
 
 	}
-	log.Println("🎯 Platform ID: ", config.PlatformID)
+	log.Println("🎯 Platform ID: ", dpconfig.PlatformID)
 
 	/* Load code files if no distributed storage method is defined in platform table.
 	Even if a file storage method is used, files will be stored in a database.
@@ -177,12 +180,12 @@ func Setup(port string) *fiber.App {
 		log.Println("💽 Sync files to database")
 		distributefilesystem.MoveCodeFilesToDB(database.DBConn)
 		distributefilesystem.DeployFilesToDB(database.DBConn)
-		database.DBConn.Model(&models.Platform{}).Where("id = ?", u.ID).Update("code_file_storage", config.FSCodeFileStorage)
+		database.DBConn.Model(&models.Platform{}).Where("id = ?", u.ID).Update("code_file_storage", dpconfig.FSCodeFileStorage)
 	}
 
 	/* --- Run the scheduler ---- */
-	config.Scheduler = gocron.NewScheduler(time.UTC)
-	config.Scheduler.StartAsync()
+	dpconfig.Scheduler = gocron.NewScheduler(time.UTC)
+	dpconfig.Scheduler.StartAsync()
 
 	// ----- Remove stale tokens ------
 	log.Println("💾 Removing stale data")
@@ -198,7 +201,7 @@ func Setup(port string) *fiber.App {
 	// add timer field to response header
 	app.Use(Timer())
 
-	if config.Debug == "true" {
+	if dpconfig.Debug == "true" {
 		app.Use(logger.New(
 			logger.Config{
 				Format: "✨ Latency: ${latency} Time:${time} Status: ${status} Path:${path} \n",
@@ -245,7 +248,7 @@ func Setup(port string) *fiber.App {
 		refreshToken := authHeader[1]
 		newRefreshToken, err := auth.RenewAccessToken(refreshToken)
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err.Error())
 			}
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
@@ -306,14 +309,17 @@ func Setup(port string) *fiber.App {
 		}
 
 		fileID := string(c.Params("fileid"))
-		filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
 
-		dat, err := os.ReadFile(config.CodeDirectory + filepath)
+		// filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
+
+		// dat, err := os.ReadFile(dpconfig.CodeDirectory + filepath)
+		dataFile := models.CodeFilesStore{}
+		err := database.DBConn.Select("file_store").Where("file_id = ? and environment_id = ?", fileID, environmentID).First(&dataFile).Error
 		if err != nil {
 			logging.PrintSecretsRedact(err)
 			return c.Status(http.StatusBadRequest).SendString("Failed to download file.")
 		}
-		return c.SendString(string(dat))
+		return c.SendString(string(dataFile.FileStore))
 	})
 
 	// Upload code files
@@ -368,20 +374,20 @@ func Setup(port string) *fiber.App {
 
 		_, _, err = filesystem.CreateFile(input, parentFolder, doc)
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println(err)
 			}
 			return errors.New("Failed to save file.")
 		}
 
-		f := models.CodeFiles{}
-		err = database.DBConn.Where("file_name = ? and folder_id = ? and environment_id = ?", file.Filename, folderID, environmentID).Find(&f).Error
-		if err != nil {
-			if config.Debug == "true" {
-				logging.PrintSecretsRedact(err)
-			}
-			return errors.New("Failed to find file record.")
-		}
+		// f := models.CodeFiles{}
+		// err = database.DBConn.Where("file_name = ? and folder_id = ? and environment_id = ?", file.Filename, folderID, environmentID).Find(&f).Error
+		// if err != nil {
+		// 	if dpconfig.Debug == "true" {
+		// 		logging.PrintSecretsRedact(err)
+		// 	}
+		// 	return errors.New("Failed to find file record.")
+		// }
 
 		return c.SendString("Success")
 	})
@@ -396,7 +402,7 @@ func Setup(port string) *fiber.App {
 	/* Worker Load Subscriptions activate */
 	// worker.LoadWorkers(MainAppID)
 	worker.WorkerListen()
-	worker.WorkerRemovalListen(config.Scheduler, database.DBConn)
+	worker.WorkerRemovalListen(dpconfig.Scheduler, database.DBConn)
 	pipelines.RunNextPipeline()
 	scheduler.PipelineSchedulerListen()
 
@@ -405,10 +411,10 @@ func Setup(port string) *fiber.App {
 	log.Println("👷 Queue and worker subscriptions")
 
 	/* Scheduled tasks */
-	routinetasks.CleanTaskLocks(config.Scheduler, database.DBConn)
-	routinetasks.CleanTasks(config.Scheduler, database.DBConn)
-	routinetasks.CleanWorkerLogs(config.Scheduler, database.DBConn)
-	platform.PlatformNodePublish(config.Scheduler, database.DBConn, MainAppID)
+	routinetasks.CleanTaskLocks(dpconfig.Scheduler, database.DBConn)
+	routinetasks.CleanTasks(dpconfig.Scheduler, database.DBConn)
+	routinetasks.CleanWorkerLogs(dpconfig.Scheduler, database.DBConn)
+	platform.PlatformNodePublish(dpconfig.Scheduler, database.DBConn, MainAppID)
 
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {

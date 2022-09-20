@@ -1,7 +1,7 @@
 package messageq
 
 import (
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"log"
 	"os"
 	"time"
@@ -25,7 +25,7 @@ func NATSConnect() {
 		if err == nil {
 			break
 		} else {
-			log.Printf("😩 NATS: connection failure: %v, try number. %d, retry in 5 seconds", config.Secrets.Replace(err.Error()), i+1)
+			log.Printf("😩 NATS: connection failure: %v, try number. %d, retry in 5 seconds", wrkerconfig.Secrets.Replace(err.Error()), i+1)
 			time.Sleep(time.Second * 5)
 		}
 	}
@@ -46,5 +46,5 @@ func NATSConnect() {
 	// NATSStream, _ = NATS.JetStream(nats.PublishAsyncMaxPending(256))
 
 	log.Println("📧 NATS connected")
-	//DBConn.Config.PrepareStmt = true
+	//DBConn.wrkerconfig.PrepareStmt = true
 }

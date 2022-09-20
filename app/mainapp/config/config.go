@@ -1,4 +1,4 @@
-package config
+package dpconfig
 
 import (
 	"os"
@@ -71,6 +71,9 @@ func LoadConfig() {
 	}
 
 	CodeDirectory = os.Getenv("DP_CODE_FOLDER")
+	if CodeDirectory == "" {
+		CodeDirectory = "/appdev/code-files/"
+	}
 
 	DPDatabase = os.Getenv("DP_DATABASE")
 
@@ -86,4 +89,8 @@ func LoadConfig() {
 	}
 
 	FSCodeDirectory = os.Getenv("DP_DFS_CODE_FOLDER")
+	if FSCodeDirectory == "" {
+		FSCodeDirectory = "/appdev/dfs-code-files/"
+	}
+
 }

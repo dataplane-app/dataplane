@@ -39,7 +39,7 @@ func (r *mutationResolver) DeploymentPermissionsToUser(ctx context.Context, envi
 		userID, "specific_deployment", resourceID, environmentID).Delete(&models.Permissions{}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete deployment's permission to user database error.")
@@ -59,7 +59,7 @@ func (r *mutationResolver) DeploymentPermissionsToUser(ctx context.Context, envi
 		)
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return "", errors.New("Add permission to user database error.")
@@ -92,7 +92,7 @@ func (r *mutationResolver) DeploymentPermissionsToAccessGroup(ctx context.Contex
 		accessGroupID, "specific_deployment", resourceID, environmentID).Delete(&models.Permissions{}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete deployment's permission to user database error.")
@@ -112,7 +112,7 @@ func (r *mutationResolver) DeploymentPermissionsToAccessGroup(ctx context.Contex
 		)
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return "", errors.New("Add permission to user database error.")

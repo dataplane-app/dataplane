@@ -53,7 +53,7 @@ func (r *mutationResolver) UpdatePermissionToUser(ctx context.Context, environme
 	)
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Add permission to user database error.")
@@ -91,7 +91,7 @@ func (r *mutationResolver) DeletePermissionToUser(ctx context.Context, userID st
 		return "", errors.New("User to permission relationship not found.")
 	}
 	if err.Error != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Add access group database error.")
@@ -134,7 +134,7 @@ func (r *mutationResolver) DeleteSpecificPermission(ctx context.Context, subject
 		return "", errors.New("User to permission relationship not found.")
 	}
 	if err.Error != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete specific permission database error.")

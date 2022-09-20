@@ -95,15 +95,15 @@ func (r *mutationResolver) MoveFolderNode(ctx context.Context, folderID string, 
 		return "", errors.New("Missing folder path.")
 	}
 
-	oldDir := config.CodeDirectory + folderpath
-	newDir := config.CodeDirectory + tofolderpath
+	oldDir := dpconfig.CodeDirectory + folderpath
+	newDir := dpconfig.CodeDirectory + tofolderpath
 
 	cmd := exec.Command("cp", "--recursive", oldDir, newDir)
 	cmd.Run()
 
 	err := os.RemoveAll(oldDir)
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to remove old directory.")
@@ -113,7 +113,7 @@ func (r *mutationResolver) MoveFolderNode(ctx context.Context, folderID string, 
 	err = database.DBConn.Model(&models.CodeFolders{}).
 		Where("folder_id = ? and environment_id = ?", folderID, environmentID).Update("parent_id", toFolderID).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to update parent folder in database.")
@@ -156,7 +156,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 	f := models.CodeFolders{}
 	err := database.DBConn.Where("folder_id = ? and environment_id = ?", folderID, environmentID).Find(&f).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to get folder.")
@@ -166,7 +166,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 	ef := models.CodeFolders{}
 	err = database.DBConn.Select("folder_id").Where("environment_id = ? and level = ?", environmentID, "environment").Find(&ef).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to get folder id from database.")
@@ -175,13 +175,13 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 	v, _ := time.Now().UTC().MarshalText()
 
 	trashParent, _ := filesystem.FolderConstructByID(database.DBConn, ef.FolderID, environmentID, "")
-	trashPath := config.CodeDirectory + trashParent + "trash/"
-	deleteFolder := config.CodeDirectory + folderpath
+	trashPath := dpconfig.CodeDirectory + trashParent + "trash/"
+	deleteFolder := dpconfig.CodeDirectory + folderpath
 
 	// Zip and put in trash
 	err = filesystem.ZipSource(deleteFolder, trashPath+string(v)+"-"+id+"-"+f.FolderName+".zip")
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to zip folder for backup before deletion.")
@@ -199,7 +199,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 	}
 	err = database.DBConn.Create(&d).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to create database record of backup for deletion.")
@@ -208,7 +208,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 	// 2. ----- Delete folder and all its contents from directory
 	err = os.RemoveAll(deleteFolder)
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to remove folder and contents.")
@@ -224,7 +224,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 
 	err = database.DBConn.Where("folder_id = ? and environment_id =?", folderID, environmentID).Delete(&delme).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete folder database error.")
@@ -234,7 +234,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 
 	err = database.DBConn.Where("parent_id = ? and environment_id =?", folderID, environmentID).Delete(&delme).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete folder database error.")
@@ -245,7 +245,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 
 	err = database.DBConn.Where("folder_id = ? and environment_id =?", folderID, environmentID).Delete(&delfiles).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete file database error.")
@@ -276,7 +276,7 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 	f := models.CodeFolders{}
 	err := database.DBConn.Where("folder_id = ? and environment_id = ?", folderID, environmentID).Find(&f).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to get folder.")
@@ -291,9 +291,9 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 	}
 
 	// 1. ----- Rename folder in the directory
-	err = os.Rename(config.CodeDirectory+folderpath, config.CodeDirectory+parentFolderpath+folderID+"_"+newName)
+	err = os.Rename(dpconfig.CodeDirectory+folderpath, dpconfig.CodeDirectory+parentFolderpath+folderID+"_"+newName)
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to rename folder in directory.")
@@ -302,19 +302,18 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 	// 2. ----- Rename folder in the database
 	err = database.DBConn.Model(&models.CodeFolders{}).Where("folder_id = ? and environment_id = ?", folderID, environmentID).Update("folder_name", newName).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to update folder in database.")
 	}
 
-	if config.Debug == "true" {
-		logging.PrintSecretsRedact("Rename: ", config.CodeDirectory+folderpath, " -> ", config.CodeDirectory+parentFolderpath+folderID+"_"+newName)
+	if dpconfig.Debug == "true" {
+		logging.PrintSecretsRedact("Rename: ", dpconfig.CodeDirectory+folderpath, " -> ", dpconfig.CodeDirectory+parentFolderpath+folderID+"_"+newName)
 	}
 
 	return "Success", nil
 }
-
 
 func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
@@ -349,7 +348,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	f := models.CodeFiles{}
 	err := database.DBConn.Where("file_id = ? and environment_id = ?", fileID, environmentID).Find(&f).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to get file name from database.")
@@ -367,7 +366,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	}
 	err = database.DBConn.Create(&d).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to create backup trash record in database.")
@@ -379,7 +378,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	fo := models.CodeFolders{}
 	err = database.DBConn.Select("folder_id").Where("environment_id = ? and level = ?", environmentID, "environment").Find(&fo).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to get folder id from database.")
@@ -390,13 +389,13 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 
 	v, _ := time.Now().UTC().MarshalText()
 
-	deleteFile := config.CodeDirectory + filepath
-	trashPath := config.CodeDirectory + trashParent + "trash/"
+	deleteFile := dpconfig.CodeDirectory + filepath
+	trashPath := dpconfig.CodeDirectory + trashParent + "trash/"
 
 	// Zip and put in trash
 	err = filesystem.ZipSource(deleteFile, trashPath+string(v)+"-"+id+"-"+f.FileName+".zip")
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to zip backup before deletion.")
@@ -404,7 +403,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 
 	err = os.Remove(deleteFile)
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to delete file in directory.")
@@ -416,7 +415,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	err = database.DBConn.Where("file_id = ? and environment_id = ?", fileID, environmentID).Delete(&f).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete file database error.")
@@ -447,7 +446,7 @@ func (r *mutationResolver) RenameFile(ctx context.Context, environmentID string,
 	f := models.CodeFiles{}
 	err := database.DBConn.Where("file_id = ? and environment_id = ?", fileID, environmentID).Find(&f).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to file's folder.")
@@ -462,9 +461,9 @@ func (r *mutationResolver) RenameFile(ctx context.Context, environmentID string,
 	}
 
 	// // 1. ----- Rename file in the directory
-	err = os.Rename(config.CodeDirectory+filepath, config.CodeDirectory+folderpath+newName)
+	err = os.Rename(dpconfig.CodeDirectory+filepath, dpconfig.CodeDirectory+folderpath+newName)
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Rename file in directory failed.")
@@ -473,14 +472,14 @@ func (r *mutationResolver) RenameFile(ctx context.Context, environmentID string,
 	// // 2. ----- Rename file in the database
 	err = database.DBConn.Model(&models.CodeFiles{}).Where("file_id = ? and environment_id = ?", fileID, environmentID).Update("file_name", newName).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Rename file in database failed.")
 	}
 
-	if config.Debug == "true" {
-		logging.PrintSecretsRedact("Rename: ", config.CodeDirectory+filepath, " -> ", config.CodeDirectory+folderpath+newName)
+	if dpconfig.Debug == "true" {
+		logging.PrintSecretsRedact("Rename: ", dpconfig.CodeDirectory+filepath, " -> ", dpconfig.CodeDirectory+folderpath+newName)
 	}
 
 	return "Success", nil
@@ -518,16 +517,16 @@ func (r *mutationResolver) MoveFileNode(ctx context.Context, fileID string, toFo
 	// Get filename
 	err := database.DBConn.Where("file_id = ? and environment_id = ?", fileID, environmentID).Find(&f).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrive user database error.")
 	}
 
 	// Move file in the directory
-	err = os.Rename(config.CodeDirectory+folderpathWithFile, config.CodeDirectory+tofolderpath+f.FileName)
+	err = os.Rename(dpconfig.CodeDirectory+folderpathWithFile, dpconfig.CodeDirectory+tofolderpath+f.FileName)
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Move file failed.")
@@ -537,7 +536,7 @@ func (r *mutationResolver) MoveFileNode(ctx context.Context, fileID string, toFo
 	err = database.DBConn.Model(&models.CodeFiles{}).
 		Where("file_id = ? and environment_id = ?", fileID, environmentID).Update("folder_id", toFolderID).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Move file in database failed")
@@ -576,7 +575,7 @@ func (r *mutationResolver) UpdateCodePackages(ctx context.Context, workerGroup s
 		Where("worker_group = ? and language = ? and environment_id = ?", workerGroup, language, environmentID).
 		Create(&c).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrive packages database error.")
@@ -615,7 +614,7 @@ func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nod
 
 	err := database.DBConn.Where("node_id = ? and environment_id = ?", nodeID, environmentID).Find(&fo).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive user database error.")
@@ -625,7 +624,7 @@ func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nod
 
 	err = database.DBConn.Where("node_id = ? and environment_id = ?", nodeID, environmentID).Find(&fi).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive user database error.")
@@ -663,7 +662,7 @@ func (r *queryResolver) GetCodePackages(ctx context.Context, workerGroup string,
 
 	err := database.DBConn.Where("worker_group = ? and language = ? and environment_id = ?", workerGroup, language, environmentID).Find(&c).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive packages database error.")

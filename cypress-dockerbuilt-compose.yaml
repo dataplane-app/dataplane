@@ -14,7 +14,7 @@ services:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 30s
       retries: 5
-    restart: always
+    # restart: always
 
   nats:
     image: nats:2.7.4-scratch

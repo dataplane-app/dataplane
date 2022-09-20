@@ -118,7 +118,7 @@ func BatchFileWrite(poolsize int, maxBatchSize int, items []FileContent, folderL
 
 	for i := 1; i <= batchCount; i++ {
 		writeout := <-textback
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			fmt.Println(writeout)
 		}
 	}

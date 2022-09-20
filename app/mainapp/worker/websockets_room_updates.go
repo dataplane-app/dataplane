@@ -106,14 +106,14 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				if config.Debug == "true" {
+				if dpconfig.Debug == "true" {
 					log.Println("read error:", err)
 				}
 			}
 			return
 		}
 
-		if config.MQDebug == "true" {
+		if dpconfig.MQDebug == "true" {
 			logging.PrintSecretsRedact("message received from client:", mt, string(message))
 		}
 

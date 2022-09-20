@@ -19,7 +19,7 @@ go test -count=1 -timeout 30s -v -run ^TestFileCreateProcessor$ dataplane/mainap
 */
 func TestFileCreateProcessor(t *testing.T) {
 
-	config.LoadConfig()
+	dpconfig.LoadConfig()
 	database.DBConnect()
 
 	nodeTypeDesc := "python"
@@ -31,18 +31,18 @@ func TestFileCreateProcessor(t *testing.T) {
 		PipelineID:    "test-pipeline-id",
 	}
 
-	// FileCreateProcessor(n.NodeTypeDesc, config.CodeDirectory+rfolder+"/", node)
+	// FileCreateProcessor(n.NodeTypeDesc, dpconfig.CodeDirectory+rfolder+"/", node)
 	output, err := FileCreateProcessor(nodeTypeDesc, "", "testFolderID", node)
 	if err != nil {
 		t.Error(err)
 	}
 
-	log.Println("File location: ", config.CodeDirectory+output)
+	log.Println("File location: ", dpconfig.CodeDirectory+output)
 	stop := time.Now()
 	// Do something with response
 	log.Println("🐆 Runtime:", fmt.Sprintf("%f", float32(stop.Sub(start))/float32(time.Millisecond))+"ms")
 
-	dat, err := os.ReadFile(config.CodeDirectory + output)
+	dat, err := os.ReadFile(dpconfig.CodeDirectory + output)
 	if err != nil {
 		t.Error(err)
 	}

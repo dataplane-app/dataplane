@@ -48,7 +48,7 @@ func MoveCodeFilesToDB(db *gorm.DB) error {
 		// Open each file
 		fileLoc, _ := filesystem.FileConstructByID(db, x.FileID, x.EnvironmentID, "pipelines")
 
-		dat, err := os.ReadFile(config.CodeDirectory + fileLoc)
+		dat, err := os.ReadFile(dpconfig.CodeDirectory + fileLoc)
 		if err != nil {
 			log.Println("Read file error:", err)
 		} else {
@@ -59,6 +59,8 @@ func MoveCodeFilesToDB(db *gorm.DB) error {
 			codefile := models.CodeFilesStore{
 				FileID:        x.FileID,
 				FileStore:     dat,
+				RunInclude:    true,
+				External:      false,
 				ChecksumMD5:   md5string,
 				EnvironmentID: x.EnvironmentID,
 			}
@@ -67,7 +69,7 @@ func MoveCodeFilesToDB(db *gorm.DB) error {
 			if errdb != nil {
 				log.Println("Create file in database:", err)
 			} else {
-				log.Println("DF add: ", md5string, config.CodeDirectory+fileLoc)
+				log.Println("DF add: ", md5string, dpconfig.CodeDirectory+fileLoc)
 			}
 		}
 

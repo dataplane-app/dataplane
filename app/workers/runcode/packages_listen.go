@@ -4,7 +4,7 @@ import (
 	"dataplane/mainapp/code_editor/filesystem"
 	"dataplane/mainapp/database/models"
 	modelmain "dataplane/mainapp/database/models"
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/logging"
 	"dataplane/workers/messageq"
@@ -13,7 +13,7 @@ import (
 
 func CodeLoadPackagesListen() {
 
-	channel := "packages-update." + config.EnvID + "." + config.WorkerGroup
+	channel := "packages-update." + wrkerconfig.EnvID + "." + wrkerconfig.WorkerGroup
 	messageq.NATSencoded.Subscribe(channel, func(subj, reply string, msg modelmain.CodePackages) {
 
 		var folder models.CodeFolders
@@ -26,11 +26,11 @@ func CodeLoadPackagesListen() {
 
 		// Get environment folder
 		envfolder, _ := filesystem.FolderConstructByID(database.DBConn, folder.FolderID, msg.EnvironmentID, "")
-		envfolder = config.CodeDirectory + envfolder
+		envfolder = wrkerconfig.CodeDirectory + envfolder
 
 		err := CodeUpdatePackage(msg.Language, envfolder, msg.EnvironmentID, msg.WorkerGroup)
 		if err != nil {
-			if config.Debug == "true" {
+			if wrkerconfig.Debug == "true" {
 				logging.PrintSecretsRedact("Listen package updates:", err)
 			}
 		}

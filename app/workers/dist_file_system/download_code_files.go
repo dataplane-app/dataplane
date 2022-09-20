@@ -1,7 +1,7 @@
 package distfilesystem
 
 import (
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
 	"log"
 )
@@ -20,7 +20,7 @@ func DownloadFiles() {
 
 	Pipelines := []string{}
 
-	err := database.DBConn.Debug().Table("pipeline_nodes").Select("pipeline_id").Distinct("pipeline_id").Where("worker_group =?", config.WorkerGroup).Find(&Pipelines).Error
+	err := database.DBConn.Debug().Table("pipeline_nodes").Select("pipeline_id").Distinct("pipeline_id").Where("worker_group =?", wrkerconfig.WorkerGroup).Find(&Pipelines).Error
 	if err != nil {
 		log.Println(err)
 	}

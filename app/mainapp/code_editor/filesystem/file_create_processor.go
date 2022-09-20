@@ -40,7 +40,7 @@ print("Node id: ` + node.NodeID + `")`
 		return "", errors.New("Node type not found")
 	}
 
-	if config.Debug == "true" {
+	if dpconfig.Debug == "true" {
 		log.Println("Processor file created:", filepath)
 	}
 

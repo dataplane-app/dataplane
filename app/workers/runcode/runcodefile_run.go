@@ -5,7 +5,7 @@ import (
 	"context"
 	"dataplane/mainapp/code_editor/filesystem"
 	modelmain "dataplane/mainapp/database/models"
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/messageq"
 	"encoding/json"
@@ -47,7 +47,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 	var TasksRun Task
 	var CommandsList []Runner
 
-	if config.Debug == "true" {
+	if wrkerconfig.Debug == "true" {
 		log.Printf("starting code run with run: %s\n", msg.RunID)
 	}
 
@@ -59,7 +59,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 	errl := database.DBConn.Create(&createLock).Error
 	if errl != nil {
 		if strings.Contains(errl.Error(), "duplicate") {
-			if config.Debug == "true" {
+			if wrkerconfig.Debug == "true" {
 				log.Println("Lock for run and node exists:", msg.RunID, msg.NodeID)
 			}
 		} else {
@@ -116,37 +116,73 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			break
 		}
 
+		if wrkerconfig.Debug == "true" {
+			log.Println("Code run file storage:", wrkerconfig.FSCodeFileStorage)
+		}
+
+		codeDirectory := wrkerconfig.CodeDirectory
+		directoryRun := codeDirectory + msg.Folder
+
+		switch wrkerconfig.FSCodeFileStorage {
+		case "Database":
+			// Database download
+			codeDirectory = wrkerconfig.FSCodeDirectory
+			directoryRun = codeDirectory + msg.Folder
+			err := DistributedStorageDownload(msg.EnvironmentID, msg.Folder, msg.FolderID, msg.NodeID)
+			if err != nil {
+				statusUpdate = "Fail"
+				if TasksStatusWG != "cancel" {
+					TasksStatus.Set(msg.RunID, "error")
+					// TasksStatus[msg.TaskID] = "error"
+				}
+			}
+		case "LocalFile":
+
+			// Nothing to do, the files will use a shared volume
+			codeDirectory = wrkerconfig.CodeDirectory
+			directoryRun = codeDirectory + msg.Folder
+
+		default:
+			// Database download
+			codeDirectory = wrkerconfig.FSCodeDirectory
+			directoryRun = codeDirectory + msg.Folder
+
+		}
+
+		/*
+			msg.Folder = is the folder where the files are located. This is constructed in main app before request comes through.
+			Code directory
+		*/
+		// log.Println(directoryRun)
+
 		// Detect if folder is being requested
 		if strings.Contains(v.Command, "${{nodedirectory}}") {
 
-			directoryRun := config.CodeDirectory + msg.Folder
-			// log.Println(directoryRun)
-
 			// construct the directory if the directory cant be found
 			if _, err := os.Stat(directoryRun); os.IsNotExist(err) {
-				if config.Debug == "true" {
+				if wrkerconfig.Debug == "true" {
 					log.Println("Directory not found - reconstructing:", directoryRun)
 				}
 				newdir, err := filesystem.FolderConstructByID(database.DBConn, msg.FolderID, msg.EnvironmentID, "pipelines")
 				if err == nil {
-					directoryRun = config.CodeDirectory + newdir
+					directoryRun = codeDirectory + newdir
 				}
 			}
 
 			// Overwrite command with injected directory
 			v.Command = strings.ReplaceAll(v.Command, "${{nodedirectory}}", directoryRun)
 
-			if config.Debug == "true" {
+			if wrkerconfig.Debug == "true" {
 				log.Println("Run command: ", v.Command)
 			}
 
 		}
 
 		// log.Println("command:", v)
-		// log.Println("shell used:", config.DPworkerCMD)
+		// log.Println("shell used:", wrkerconfig.DPworkerCMD)
 
 		var cmd *exec.Cmd
-		switch config.DPworkerCMD {
+		switch wrkerconfig.DPworkerCMD {
 		case "/bin/bash":
 			cmd = exec.Command("/bin/bash", "-c", v.Command)
 		case "/bin/sh":
@@ -182,7 +218,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			// Read line by line and process it
 			for scanner.Scan() {
 				uid := uuid.NewString()
-				line := config.Secrets.Replace(scanner.Text())
+				line := wrkerconfig.Secrets.Replace(scanner.Text())
 
 				logmsg := modelmain.LogsCodeRun{
 					CreatedAt:     time.Now().UTC(),
@@ -207,7 +243,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 
 				messageq.MsgSend("coderunfilelogs."+msg.RunID, sendmsg)
 				database.DBConn.Create(&logmsg)
-				if config.Debug == "true" {
+				if wrkerconfig.Debug == "true" {
 					clog.Info(line)
 				}
 			}
@@ -233,7 +269,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			// Read line by line and process it
 			for scannerErr.Scan() {
 				uid := uuid.NewString()
-				line := config.Secrets.Replace(scannerErr.Text())
+				line := wrkerconfig.Secrets.Replace(scannerErr.Text())
 
 				logmsg := modelmain.LogsCodeRun{
 					CreatedAt:     time.Now().UTC(),
@@ -258,7 +294,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 
 				messageq.MsgSend("coderunfilelogs."+msg.RunID, sendmsg)
 				database.DBConn.Create(&logmsg)
-				if config.Debug == "true" {
+				if wrkerconfig.Debug == "true" {
 					clog.Error(line)
 				}
 			}
@@ -282,7 +318,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		// TasksStatus[msg.TaskID] = "run"
 		TasksStatus.Set(msg.RunID, "run")
 
-		if config.Debug == "true" {
+		if wrkerconfig.Debug == "true" {
 			// log.Println("tasks before pid:", task)
 		}
 		err := cmd.Start()
@@ -294,7 +330,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			}
 
 			uid := uuid.NewString()
-			line := config.Secrets.Replace(err.Error())
+			line := wrkerconfig.Secrets.Replace(err.Error())
 
 			logmsg := modelmain.LogsCodeRun{
 				CreatedAt:     time.Now().UTC(),
@@ -319,7 +355,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 
 			messageq.MsgSend("coderunfilelogs."+msg.RunID, sendmsg)
 			database.DBConn.Create(&logmsg)
-			if config.Debug == "true" {
+			if wrkerconfig.Debug == "true" {
 				clog.Error(line)
 			}
 
@@ -330,7 +366,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		Tasks.Set(msg.RunID, task)
 		// Tasks[msg.TaskID] = task
 
-		if config.Debug == "true" {
+		if wrkerconfig.Debug == "true" {
 			// fmt.Println("PID ", cmd.Process.Pid)
 			// log.Println("tasks after pid:", Tasks)
 			// log.Println(err)
@@ -357,12 +393,12 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		} else {
 			statusUpdate = "Success"
 		}
-		if config.Debug == "true" {
+		if wrkerconfig.Debug == "true" {
 			// log.Println(i, err)
 		}
 	}
 
-	if config.Debug == "true" {
+	if wrkerconfig.Debug == "true" {
 		// log.Println("Update task as " + statusUpdate + " - " + msg.TaskID)
 	}
 
@@ -384,7 +420,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 	TasksStatus.Remove(msg.RunID)
 	Tasks.Remove(msg.RunID)
 
-	if config.Debug == "true" {
+	if wrkerconfig.Debug == "true" {
 		// log.Println("tasks after del:", Tasks)
 	}
 
