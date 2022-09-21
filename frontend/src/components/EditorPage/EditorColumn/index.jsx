@@ -224,7 +224,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 },
             });
         }
-    }, []);
+    }, [theme.palette.mode]);
 
     const getLanguage = (filename) => {
         if (!filename) {
@@ -290,7 +290,9 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                                 sx={{ display: 'flex', alignItems: 'center', paddingLeft: '12px', paddingRight: '8px' }}
                                                 onClick={(e) => handleTabClose(tabs, e)}
                                                 style={{ marginLeft: 0, paddingLeft: 12 }}>
-                                                {tabs.isEditing && <Box sx={{ width: 8, height: 8, marginRight: 1, backgroundColor: 'secondary.main', borderRadius: '50%' }} />}
+                                                {tabs.diffValue && tabs.content !== tabs.diffValue && (
+                                                    <Box sx={{ width: 8, height: 8, marginRight: 1, backgroundColor: 'secondary.main', borderRadius: '50%' }} />
+                                                )}
                                                 <Box component={FontAwesomeIcon} icon={faTimes} sx={{ fontSize: 13 }} color="editorPage.fileManagerIcon" />
                                             </Box>
                                         }
@@ -363,7 +365,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 ) : null}
 
                 <Box zIndex={10} height="100%">
-                    {getEditorValue() != undefined ? (
+                    {getEditorValue() !== undefined ? (
                         <MonacoEditor
                             editorDidMount={handleEditorOnMount}
                             language={getLanguage(EditorGlobal.selectedFile.get()?.name)}
