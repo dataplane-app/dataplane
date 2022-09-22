@@ -52,7 +52,7 @@ func (r *mutationResolver) CreateFolderNode(ctx context.Context, input *privateg
 		FolderID:      input.FolderID,
 		ParentID:      input.ParentID,
 		FolderName:    input.FolderName,
-		FType:         input.FType,
+		FType:         "node-folder",
 		Level:         uuid.NewString(),
 		Active:        input.Active,
 	}
@@ -181,12 +181,14 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 	deleteFolder := dpconfig.CodeDirectory + folderpath
 
 	// Zip and put in trash
-	err = filesystem.ZipSource(deleteFolder, trashPath+string(v)+"-"+id+"-"+f.FolderName+".zip")
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		err = filesystem.ZipSource(deleteFolder, trashPath+string(v)+"-"+id+"-"+f.FolderName+".zip")
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to zip folder for backup before deletion.")
 		}
-		return "", errors.New("Failed to zip folder for backup before deletion.")
 	}
 
 	// Add to database
@@ -208,12 +210,14 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 	}
 
 	// 2. ----- Delete folder and all its contents from directory
-	err = os.RemoveAll(deleteFolder)
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		err = os.RemoveAll(deleteFolder)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to remove folder and contents.")
 		}
-		return "", errors.New("Failed to remove folder and contents.")
 	}
 
 	// 3. ----- Delete folder and all its contents from the database
@@ -312,6 +316,16 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 
 	if dpconfig.Debug == "true" {
 		logging.PrintSecretsRedact("Rename: ", dpconfig.CodeDirectory+folderpath, " -> ", dpconfig.CodeDirectory+parentFolderpath+folderID+"_"+newName)
+	}
+
+	/*
+		Instruct workers to delete the node folder in cache
+		Remove from cache
+	*/
+	err = dfscache.InvalidateCacheNode(nodeID, environmentID, folderpath)
+	if err != nil {
+		log.Println("Remove file invalidate file cache", err)
+		return "", errors.New("Remove file invalidate file cache.")
 	}
 
 	return "Success", nil

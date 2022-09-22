@@ -28,3 +28,4 @@
 - [ ] Move a folder
 - [x] Create or amend a file
 - [ ] Multi worker group pipeline
+- [ ] Relative imports in python folders work

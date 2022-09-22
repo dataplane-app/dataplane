@@ -84,6 +84,9 @@ func DistributedStorageDownload(environmentID string, folder string, folderID st
 
 				// Look up folder structure
 				newdir, err := filesystem.FolderConstructByID(database.DBConn, file.FolderID, environmentID, "pipelines")
+
+				// log.Println("Worker new dir:", newdir)
+
 				if err != nil {
 					log.Println(err)
 					return err

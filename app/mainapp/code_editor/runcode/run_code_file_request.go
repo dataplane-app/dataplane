@@ -52,6 +52,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 	var folderMap string
 	var folderIDMap string
 
+	/* Folder that is at node level */
 	folderMap = parentfolderdata
 	folderIDMap = filesdata.FolderID
 	if dpconfig.Debug == "true" {

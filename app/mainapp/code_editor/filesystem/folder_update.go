@@ -48,24 +48,24 @@ func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFo
 	updateOLDDirectory = dpconfig.CodeDirectory + OLDDirectory
 	updateNewDirectory = dpconfig.CodeDirectory + NewDirectory
 
-	if dpconfig.FSCodeFileStorage == "LocalFile" {
-		if _, err := os.Stat(updateOLDDirectory); os.IsNotExist(err) {
-			// path/to/whatever does not exist
-			if dpconfig.Debug == "true" {
-				log.Println("Update directory doesn't exist: ", updateOLDDirectory)
-			}
-			return models.CodeFolders{}, "", ""
+	// if dpconfig.FSCodeFileStorage == "LocalFile" {
+	if _, err := os.Stat(updateOLDDirectory); os.IsNotExist(err) {
+		// path/to/whatever does not exist
+		if dpconfig.Debug == "true" {
+			log.Println("Update directory doesn't exist: ", updateOLDDirectory)
+		}
+		return models.CodeFolders{}, "", ""
 
-		} else {
-			err = os.Rename(updateOLDDirectory, updateNewDirectory)
-			if err != nil {
-				log.Println("Rename pipeline dir err:", err)
-			}
-			if dpconfig.Debug == "true" {
-				log.Println("Directory change: ", updateOLDDirectory, "->", updateNewDirectory)
-			}
+	} else {
+		err = os.Rename(updateOLDDirectory, updateNewDirectory)
+		if err != nil {
+			log.Println("Rename pipeline dir err:", err)
+		}
+		if dpconfig.Debug == "true" {
+			log.Println("Directory change: ", updateOLDDirectory, "->", updateNewDirectory)
 		}
 	}
+	// }
 
 	return Newinput, updateOLDDirectory, updateNewDirectory
 
