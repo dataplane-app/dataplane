@@ -40,7 +40,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
         let text = '';
         graphQlResp.forEach((log) => {
             if (!keys.includes(log.uid)) {
-                text += `\n${formatDate(log.created_at)} ${log.log}`;
+                text += log.log === 'Run' || log.log === 'Success' || log.log === 'Fail' ? `\n${formatDate(log.created_at)} ${log.log}` : `\n${log.log}`;
             }
         });
         text = text.replace(/\n/, '');
