@@ -118,7 +118,8 @@ func (CodeFilesCache) TableName() string {
 type CodeFilesCache struct {
 	FileID           string     `gorm:"primaryKey;type:varchar(48);" json:"file_id"`
 	NodeID           string     `gorm:"primaryKey;type:varchar(48);" json:"node_id"`
-	WorkerGroup      string     `gorm:"type:varchar(48);" json:"worker_group"`
+	WorkerID         string     `gorm:"primaryKey;type:varchar(48);" json:"worker_id"`
+	WorkerGroup      string     `json:"worker_group"`
 	EnvironmentID    string     `gorm:"type:varchar(55);" json:"environment_id"`
 	ChecksumMD5Check bool       `gorm:"default:false;" json:"checksum_md5_check"`
 	CreatedAt        time.Time  `json:"created_at"`
@@ -132,8 +133,9 @@ func (CodeNodeCache) TableName() string {
 }
 
 type CodeNodeCache struct {
-	WorkerGroup   string     `gorm:"type:varchar(48);" json:"worker_group"`
+	WorkerID      string     `gorm:"primaryKey;type:varchar(48);" json:"worker_id"`
 	NodeID        string     `gorm:"primaryKey;type:varchar(48);" json:"node_id"`
+	WorkerGroup   string     `json:"worker_group"`
 	EnvironmentID string     `gorm:"type:varchar(55);" json:"environment_id"`
 	CacheValid    bool       `gorm:"default:false;" json:"cache_valid"`
 	CreatedAt     time.Time  `json:"created_at"`

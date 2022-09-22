@@ -7,7 +7,6 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/utilities"
-	"dataplane/workers/runtask"
 	"errors"
 	"log"
 	"strconv"
@@ -119,7 +118,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 				RunType:       RunType,
 			}
 
-			var response runtask.TaskResponse
+			var response models.TaskResponse
 
 			// log.Println("Task channel: ", "task."+workerGroup+"."+loadbalanceNext)
 

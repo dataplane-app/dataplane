@@ -28,7 +28,7 @@ func DistributedStorageDownload(environmentID string, folder string, folderID st
 
 	/* node cache is a higher level cache for the node */
 	nodeCache := models.CodeNodeCache{}
-	err := database.DBConn.Select("cache_valid").Where("node_id = ? and environment_id = ? and worker_group = ?", nodeID, environmentID, wrkerconfig.WorkerGroup).First(&nodeCache).Error
+	err := database.DBConn.Select("cache_valid").Where("node_id = ? and environment_id = ? and worker_id = ?", nodeID, environmentID, wrkerconfig.WorkerID).First(&nodeCache).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return err
 	}
@@ -62,13 +62,13 @@ func DistributedStorageDownload(environmentID string, folder string, folderID st
         FROM code_files_cache cfc
         WHERE   
 		cf.file_id = cfc.file_id and 
-		cfc.worker_group = ? and 
+		cfc.worker_id = ? and 
 		cf.node_id = cfc.node_id and 
 		cf.environment_id = cfc.environment_id
         )
 		`
 
-		err = database.DBConn.Raw(query, nodeID, wrkerconfig.WorkerGroup).Scan(&FilesOutput).Error
+		err = database.DBConn.Raw(query, nodeID, wrkerconfig.WorkerID).Scan(&FilesOutput).Error
 		if err != nil {
 			log.Println("Download cached files: ", err)
 			return err
@@ -177,6 +177,7 @@ func DistributedStorageDownload(environmentID string, folder string, folderID st
 				FileID:           file.FileID,
 				NodeID:           nodeID,
 				WorkerGroup:      wrkerconfig.WorkerGroup,
+				WorkerID:         wrkerconfig.WorkerID,
 				EnvironmentID:    environmentID,
 				ChecksumMD5Check: true,
 			})
@@ -196,6 +197,7 @@ func DistributedStorageDownload(environmentID string, folder string, folderID st
 		writeNodeCache := models.CodeNodeCache{
 			WorkerGroup:   wrkerconfig.WorkerGroup,
 			NodeID:        nodeID,
+			WorkerID:      wrkerconfig.WorkerID,
 			EnvironmentID: environmentID,
 			CacheValid:    true,
 		}

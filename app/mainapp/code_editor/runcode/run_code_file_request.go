@@ -8,7 +8,6 @@ import (
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/utilities"
-	"dataplane/workers/runtask"
 	"encoding/json"
 	"errors"
 	"log"
@@ -170,7 +169,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 				logging.PrintSecretsRedact(err2.Error.Error())
 			}
 
-			var response runtask.TaskResponse
+			var response models.TaskResponse
 
 			// ----- Are the files downloaded from distributed storage -----
 			/*
@@ -228,7 +227,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 		}
 
 		UpdateCodeRun(TaskFinal)
-		response := runtask.TaskResponse{R: "ok"}
+		response := models.TaskResponse{R: "ok"}
 		_, errnats := messageq.MsgReply("coderunupdate", TaskFinal, &response)
 		if errnats != nil {
 			logging.PrintSecretsRedact(errnats)

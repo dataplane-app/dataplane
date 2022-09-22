@@ -3,6 +3,7 @@ package filesystem
 import (
 	"dataplane/mainapp/database/models"
 	"errors"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -14,7 +15,11 @@ func FolderConstructByID(db *gorm.DB, id string, environmentID string, subfolder
 	var currentFolder models.CodeFolders
 
 	// Needs to check that environment id is matched for security but equally when it reaches platform level is not excluded.
-	db.Where("folder_id=? and environment_id in (?, ?)", id, environmentID, "d_platform").First(&currentFolder)
+	err := db.Where("folder_id=? and environment_id in (?, ?)", id, environmentID, "d_platform").First(&currentFolder).Error
+	if err != nil {
+		log.Println("Folder construct:", err)
+		return "", errors.New("File record not found.")
+	}
 
 	if currentFolder.FolderID != id {
 		return "", errors.New("File record not found.")

@@ -7,7 +7,7 @@ import (
 	"context"
 	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
@@ -350,7 +350,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return "", errors.New("Failed to copy deployment files.")
+		return "", errors.New("Duplicate: Failed to copy pipeline files.")
 	}
 
 	// Copy pipeline, nodes and edges

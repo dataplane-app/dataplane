@@ -6,7 +6,6 @@ import (
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
-	"dataplane/workers/runtask"
 	"errors"
 	"log"
 	"strconv"
@@ -54,7 +53,7 @@ func WorkerCancelTask(taskid string) error {
 			WorkerID:      task.WorkerID,
 		}
 
-		var response runtask.TaskResponse
+		var response models.TaskResponse
 		_, errnats := messageq.MsgReply("taskcancel."+task.WorkerGroup+"."+task.WorkerID, tasksend, &response)
 
 		if errnats != nil {

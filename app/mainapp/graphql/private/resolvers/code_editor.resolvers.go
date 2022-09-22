@@ -6,14 +6,16 @@ package privateresolvers
 import (
 	"context"
 	permissions "dataplane/mainapp/auth_permissions"
+	dfscache "dataplane/mainapp/code_editor/dfs_cache"
 	"dataplane/mainapp/code_editor/filesystem"
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"errors"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -333,7 +335,12 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 		return "", errors.New("Requires permissions.")
 	}
 
-	folderpath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
+	// log.Println("File ID:", fileID)
+	folderpath, errf := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
+	if errf != nil {
+		log.Println("Remove file:", errf)
+		return "", errors.New("File ID not found.")
+	}
 
 	// Make sure there is a path
 	if strings.TrimSpace(folderpath) == "" {
@@ -392,21 +399,26 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	deleteFile := dpconfig.CodeDirectory + filepath
 	trashPath := dpconfig.CodeDirectory + trashParent + "trash/"
 
-	// Zip and put in trash
-	err = filesystem.ZipSource(deleteFile, trashPath+string(v)+"-"+id+"-"+f.FileName+".zip")
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+	/*
+		Local folder operations for LocalFile storage
+		Zip and put in trash
+	*/
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		err = filesystem.ZipSource(deleteFile, trashPath+string(v)+"-"+id+"-"+f.FileName+".zip")
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to zip backup before deletion.")
 		}
-		return "", errors.New("Failed to zip backup before deletion.")
-	}
 
-	err = os.Remove(deleteFile)
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+		err = os.Remove(deleteFile)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to delete file in directory.")
 		}
-		return "", errors.New("Failed to delete file in directory.")
 	}
 
 	// Delete file from database
@@ -419,6 +431,27 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete file database error.")
+	}
+
+	fs := models.CodeFilesStore{}
+
+	err = database.DBConn.Where("file_id = ? and environment_id = ?", fileID, environmentID).Delete(&fs).Error
+
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Delete file store in database error.")
+	}
+
+	/*
+		Instruct workers to delete the node folder in cache
+		Remove from cache
+	*/
+	err = dfscache.InvalidateCacheNode(nodeID, environmentID, filepath)
+	if err != nil {
+		log.Println("Remove file invalidate file cache", err)
+		return "", errors.New("Remove file invalidate file cache.")
 	}
 
 	return "Success", nil

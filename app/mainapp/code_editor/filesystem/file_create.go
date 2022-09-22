@@ -2,7 +2,8 @@ package filesystem
 
 import (
 	"crypto/md5"
-	"dataplane/mainapp/config"
+	dfscache "dataplane/mainapp/code_editor/dfs_cache"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"errors"
@@ -86,6 +87,12 @@ func CreateFile(input models.CodeFiles, Folder string, Content []byte) (models.C
 	}).Create(&codefile).Error
 	if errdb != nil {
 		log.Println("Create file in database:", errdb)
+		return input, returnpath, errors.New("Create file in database error")
+	}
+
+	errcache := dfscache.InvalidateCacheSingle(input.NodeID, input.EnvironmentID, input.FileID)
+	if errcache != nil {
+		log.Println("Create file cache invalidate:", errdb)
 	}
 
 	return input, returnpath, nil

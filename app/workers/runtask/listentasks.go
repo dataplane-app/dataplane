@@ -10,11 +10,6 @@ import (
 	"time"
 )
 
-type TaskResponse struct {
-	R string
-	M string
-}
-
 func ListenTasks() {
 
 	// Responding to a task request
@@ -45,7 +40,7 @@ func ListenTasks() {
 			UpdateWorkerTasks(TaskFinal)
 		}
 
-		x := TaskResponse{R: response, M: message}
+		x := modelmain.TaskResponse{R: response, M: message}
 		messageq.NATSencoded.Publish(reply, x)
 
 		if x.R == "ok" {
@@ -87,7 +82,7 @@ func ListenTasks() {
 
 		response := "ok"
 		message := "ok"
-		x := TaskResponse{R: response, M: message}
+		x := modelmain.TaskResponse{R: response, M: message}
 		messageq.NATSencoded.Publish(reply, x)
 
 	})
