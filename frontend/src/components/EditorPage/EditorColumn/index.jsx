@@ -448,6 +448,8 @@ export const useUploadFileNodeHook = (pipeline) => {
             }
             EditorGlobal.selectedFile.content.set(EditorGlobal.selectedFile.diffValue.value);
             EditorGlobal.selectedFile.isEditing.set(false);
+            const id = await response.text();
+            EditorGlobal.selectedFile.id.set(id);
             enqueueSnackbar('File saved.', { variant: 'success' });
         } catch (error) {
             enqueueSnackbar("Can't save file: " + error, { variant: 'error' });
