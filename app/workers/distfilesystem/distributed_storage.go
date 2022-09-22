@@ -1,4 +1,4 @@
-package runcodeworker
+package distfilesystem
 
 import (
 	"dataplane/mainapp/code_editor/filesystem"
@@ -73,6 +73,8 @@ func DistributedStorageDownload(environmentID string, folder string, folderID st
 			log.Println("Download cached files: ", err)
 			return err
 		}
+
+		// distfilesystem.BatchFileWrite(FilesOutput, folderID, environmentID, folder)
 
 		for i, file := range FilesOutput {
 

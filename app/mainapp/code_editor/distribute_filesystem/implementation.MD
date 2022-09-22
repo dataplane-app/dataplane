@@ -20,12 +20,12 @@
 * When Database - no files in shared volume
 * On migration - no breaking changes
 - [ ] Duplicate a pipeline
-- [ ] Create a pipeline
+- [x] Create a pipeline
 - [ ] Edit a pipeline
 - [ ] Deploy a pipleline
-- [ ] Delete a folder in a node
-- [ ] Rename a folder in a node
+- [x] Delete a folder in a node
+- [x] Rename a folder in a node
 - [ ] Move a folder
 - [x] Create or amend a file
 - [ ] Multi worker group pipeline
-- [ ] Relative imports in python folders work
+- [x] Relative imports in python folders work

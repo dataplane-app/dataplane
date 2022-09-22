@@ -33,14 +33,14 @@ Delete a file, move file or folder name change - invalidate the node cache, remo
 */
 func InvalidateCacheNode(nodeID string, environmentID string, folderpath string) error {
 	// Write to node level cache
-	err := database.DBConn.Debug().Model(&models.CodeNodeCache{}).Where("node_id = ? and environment_id = ?", nodeID, environmentID).Update("cache_valid", false).Error
+	err := database.DBConn.Model(&models.CodeNodeCache{}).Where("node_id = ? and environment_id = ?", nodeID, environmentID).Update("cache_valid", false).Error
 
 	if err != nil {
 		return err
 	}
 
 	// Write to file level cache (file gets overwritten)
-	err = database.DBConn.Debug().Where("node_id = ? and environment_id = ?", nodeID, environmentID).Delete(&models.CodeFilesCache{}).Error
+	err = database.DBConn.Where("node_id = ? and environment_id = ?", nodeID, environmentID).Delete(&models.CodeFilesCache{}).Error
 
 	if err != nil {
 		return err

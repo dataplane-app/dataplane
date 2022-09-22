@@ -4,6 +4,7 @@ import (
 	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/messageq"
 	"log"
+	"os"
 )
 
 /*
@@ -17,12 +18,27 @@ func ListenDisributedStorageDownload() {
 	channelremoval := "DisributedStorageRemoval." + wrkerconfig.WorkerGroup
 
 	messageq.NATSencoded.Subscribe(channelremoval, func(subj, reply string, parentFolder string) {
-		log.Println("Received folder for deletion:", parentFolder)
+
+		if wrkerconfig.Debug == "true" {
+			log.Println("Received folder for deletion:", parentFolder)
+		}
 
 		response := "ok"
 		message := "ok"
 
 		//Remove folder for this worker
+		if wrkerconfig.Debug == "true" {
+			log.Println("Remove cached folders: ", wrkerconfig.FSCodeDirectory+parentFolder)
+		}
+
+		errfs := os.RemoveAll(wrkerconfig.FSCodeDirectory + parentFolder)
+		if errfs != nil {
+			log.Println(errfs)
+		}
+		// errfs := distfilesystem.RemoveWorkerFolder(parentFolder)
+		// if errfs != nil {
+		// 	log.Println(errfs)
+		// }
 
 		//Send back response
 		x := TaskResponse{R: response, M: message}

@@ -89,7 +89,7 @@ func CreateFiles() {
 	// 1 worker per batch
 	workers := int(math.Ceil(float64(recordCount / batchSize)))
 	log.Println("Number of workers: ", workers)
-	utilities.BatchFileWrite(workers, batchSize, filedata, rootFolder)
+	utilities.BatchFileWriteOld(workers, batchSize, filedata, rootFolder)
 
 	log.Println("Complete.")
 

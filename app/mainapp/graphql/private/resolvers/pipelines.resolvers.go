@@ -114,13 +114,16 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	}
 
 	// Should create a directory as follows code_directory/
-	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
 
-	foldercreate, _, _ := filesystem.CreateFolder(pipelinedir, pfolder+"pipelines/")
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
 
-	thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID, "pipelines")
+		foldercreate, _, _ := filesystem.CreateFolder(pipelinedir, pfolder+"pipelines/")
 
-	git.PlainInit(dpconfig.CodeDirectory+thisfolder, false)
+		thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID, "pipelines")
+
+		git.PlainInit(dpconfig.CodeDirectory+thisfolder, false)
+	}
 
 	return pipelineID, nil
 }
@@ -174,24 +177,26 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 		return "", errors.New("Update pipeline folder error.")
 	}
 
-	OLDinput := models.CodeFolders{
-		EnvironmentID: oldfolder.EnvironmentID,
-		ParentID:      parentfolder.FolderID,
-		FolderName:    oldfolder.FolderName,
-		Level:         "pipeline",
-		FType:         "folder",
-		Active:        true,
-	}
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		OLDinput := models.CodeFolders{
+			EnvironmentID: oldfolder.EnvironmentID,
+			ParentID:      parentfolder.FolderID,
+			FolderName:    oldfolder.FolderName,
+			Level:         "pipeline",
+			FType:         "folder",
+			Active:        true,
+		}
 
-	Newinput := models.CodeFolders{
-		EnvironmentID: oldfolder.EnvironmentID,
-		ParentID:      parentfolder.FolderID,
-		FolderName:    name,
-		Level:         "pipeline",
-		FType:         "folder",
-		Active:        true,
+		Newinput := models.CodeFolders{
+			EnvironmentID: oldfolder.EnvironmentID,
+			ParentID:      parentfolder.FolderID,
+			FolderName:    name,
+			Level:         "pipeline",
+			FType:         "folder",
+			Active:        true,
+		}
+		filesystem.UpdateFolder(oldfolder.FolderID, OLDinput, Newinput, pfolder+"pipelines/")
 	}
-	filesystem.UpdateFolder(oldfolder.FolderID, OLDinput, Newinput, pfolder+"pipelines/")
 
 	return "Success", nil
 }

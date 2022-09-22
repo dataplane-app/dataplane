@@ -257,6 +257,16 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 		return "", errors.New("Delete file database error.")
 	}
 
+	/*
+		Instruct workers to delete the node folder in cache
+		Remove from cache
+	*/
+	err = dfscache.InvalidateCacheNode(nodeID, environmentID, folderpath)
+	if err != nil {
+		log.Println("Remove file invalidate file cache", err)
+		return "", errors.New("Remove file invalidate file cache.")
+	}
+
 	return "Success", nil
 }
 
@@ -324,8 +334,8 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 	*/
 	err = dfscache.InvalidateCacheNode(nodeID, environmentID, folderpath)
 	if err != nil {
-		log.Println("Remove file invalidate file cache", err)
-		return "", errors.New("Remove file invalidate file cache.")
+		log.Println("Rename folder invalidate file cache", err)
+		return "", errors.New("Rename folder invalidate file cache.")
 	}
 
 	return "Success", nil

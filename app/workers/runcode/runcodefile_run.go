@@ -7,6 +7,7 @@ import (
 	modelmain "dataplane/mainapp/database/models"
 	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
+	"dataplane/workers/distfilesystem"
 	"dataplane/workers/messageq"
 	"encoding/json"
 	"log"
@@ -128,7 +129,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			// Database download
 			codeDirectory = wrkerconfig.FSCodeDirectory
 			directoryRun = codeDirectory + msg.Folder
-			err := DistributedStorageDownload(msg.EnvironmentID, msg.Folder, msg.FolderID, msg.NodeID)
+			err := distfilesystem.DistributedStorageDownload(msg.EnvironmentID, msg.Folder, msg.FolderID, msg.NodeID)
 			if err != nil {
 				statusUpdate = "Fail"
 				if TasksStatusWG != "cancel" {

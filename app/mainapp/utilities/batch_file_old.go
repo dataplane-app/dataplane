@@ -16,7 +16,7 @@ package utilities
 
 import (
 	"context"
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -29,7 +29,6 @@ import (
 )
 
 type FileContent struct {
-	URL      string `json:"url"`
 	FileName string `json:"fileName"`
 	Size     int64  `json:"size"`
 	MimeType string `json:"mimeType"`
@@ -44,7 +43,7 @@ go test -timeout 30s -count=1 -v -run ^TestBatchProcess$ dataplane/mainapp/utili
 var textback = make(chan string)
 var errback = make(chan string)
 
-func BatchFileWrite(poolsize int, maxBatchSize int, items []FileContent, folderLocation string) {
+func BatchFileWriteOld(poolsize int, maxBatchSize int, items []FileContent, folderLocation string) {
 
 	// ---- Workers
 	// initial queue pool

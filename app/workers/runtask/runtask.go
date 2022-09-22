@@ -7,6 +7,7 @@ import (
 	modelmain "dataplane/mainapp/database/models"
 	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
+	"dataplane/workers/distfilesystem"
 	"dataplane/workers/messageq"
 	"log"
 	"os"
@@ -147,11 +148,40 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			break
 		}
 
+		codeDirectory := wrkerconfig.CodeDirectory
+		directoryRun := codeDirectory + msg.Folder + "/"
+
+		switch wrkerconfig.FSCodeFileStorage {
+		case "Database":
+			// Database download
+			codeDirectory = wrkerconfig.FSCodeDirectory
+			directoryRun = codeDirectory + msg.Folder + "/"
+			err := distfilesystem.DistributedStorageDownload(msg.EnvironmentID, msg.Folder+"/", msg.FolderID, msg.NodeID)
+			if err != nil {
+				statusUpdate = "Fail"
+				if TasksStatusWG != "cancel" {
+					TasksStatus.Set(msg.RunID, "error")
+					// TasksStatus[msg.TaskID] = "error"
+				}
+			}
+		case "LocalFile":
+
+			// Nothing to do, the files will use a shared volume
+			codeDirectory = wrkerconfig.CodeDirectory
+			directoryRun = codeDirectory + msg.Folder + "/"
+
+		default:
+			// Database download
+			codeDirectory = wrkerconfig.FSCodeDirectory
+			directoryRun = codeDirectory + msg.Folder + "/"
+
+		}
+
 		// Detect if folder is being requested
 		if strings.Contains(v, "${{nodedirectory}}") {
 
-			directoryRun := wrkerconfig.CodeDirectory + msg.Folder + "/"
-			// log.Println(directoryRun)
+			// directoryRun := wrkerconfig.CodeDirectory + msg.Folder + "/"
+			log.Println(directoryRun)
 
 			// construct the directory if the directory cant be found
 			var newdir string
@@ -167,11 +197,11 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 				}
 
 				if wrkerconfig.Debug == "true" {
-					log.Println("Reconstructed:", wrkerconfig.CodeDirectory+newdir)
+					log.Println("Reconstructed:", codeDirectory+newdir)
 				}
 
 				if err == nil {
-					directoryRun = wrkerconfig.CodeDirectory + newdir
+					directoryRun = codeDirectory + newdir
 				}
 
 			}
