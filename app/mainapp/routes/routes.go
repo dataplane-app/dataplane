@@ -5,7 +5,7 @@ import (
 	permissions "dataplane/mainapp/auth_permissions"
 	distributefilesystem "dataplane/mainapp/code_editor/distribute_filesystem"
 	"dataplane/mainapp/code_editor/filesystem"
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/migrations"
 	"dataplane/mainapp/database/models"
@@ -372,7 +372,7 @@ func Setup(port string) *fiber.App {
 			return errors.New("Create folder - build parent folder failed")
 		}
 
-		_, _, err = filesystem.CreateFile(input, parentFolder, doc)
+		File, _, err := filesystem.CreateFile(input, parentFolder, doc)
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				log.Println(err)
@@ -389,7 +389,7 @@ func Setup(port string) *fiber.App {
 		// 	return errors.New("Failed to find file record.")
 		// }
 
-		return c.SendString("Success")
+		return c.SendString(File.FileID)
 	})
 
 	// Sync folders to Database
