@@ -24,7 +24,7 @@ import (
 
 NOTE: Node ID is the node in the graph and not the worker ID.
 */
-func DistributedStorageDownload(environmentID string, folder string, folderID string, nodeID string) error {
+func DistributedStoragePipelineDownload(environmentID string, folder string, folderID string, nodeID string) error {
 
 	/* node cache is a higher level cache for the node */
 	nodeCache := models.CodeNodeCache{}
@@ -75,6 +75,7 @@ func DistributedStorageDownload(environmentID string, folder string, folderID st
 		}
 
 		// distfilesystem.BatchFileWrite(FilesOutput, folderID, environmentID, folder)
+		// log.Println("==== FS:", RunType, version)
 
 		for i, file := range FilesOutput {
 

@@ -67,3 +67,11 @@ func InvalidateCacheNode(nodeID string, environmentID string, folderpath string)
 
 	return nil
 }
+
+/*
+Delete or change pipeline.
+*/
+
+/*
+Delete or change deployment.
+*/

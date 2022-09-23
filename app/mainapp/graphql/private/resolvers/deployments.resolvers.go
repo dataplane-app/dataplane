@@ -161,12 +161,14 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	// log.Println("Destination folder:", destinationfolder)
 
 	// Create a folder for the version and copy files across
-	err = utilities.CopyDirectory(foldertocopy, destinationfolder)
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		err = utilities.CopyDirectory(foldertocopy, destinationfolder)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to copy deployment files.")
 		}
-		return "", errors.New("Failed to copy deployment files.")
 	}
 
 	// Copy pipeline, nodes and edges
@@ -306,6 +308,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		})
 	}
 
+	// files
 	deployFiles := []*models.DeployCodeFiles{}
 	for _, n := range files {
 		deployFiles = append(deployFiles, &models.DeployCodeFiles{
@@ -319,6 +322,20 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 			Level:         n.Level,
 			FType:         n.FType,
 			Active:        n.Active,
+		})
+	}
+
+	// deploy Files Data
+	deployFilesData := []*models.DeployFilesStore{}
+	for _, n := range filesData {
+		deployFilesData = append(deployFilesData, &models.DeployFilesStore{
+			FileID:        n.FileID,
+			Version:       createPipeline.Version,
+			FileStore:     n.FileStore,
+			EnvironmentID: createPipeline.EnvironmentID,
+			ChecksumMD5:   n.ChecksumMD5,
+			External:      n.External,
+			RunInclude:    n.RunInclude,
 		})
 	}
 
@@ -374,6 +391,17 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	// Files create
 	if len(deployFiles) > 0 {
 		err = database.DBConn.Create(&deployFiles).Error
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to create deployment pipeline.")
+		}
+	}
+
+	// Files data create
+	if len(deployFilesData) > 0 {
+		err = database.DBConn.Create(&deployFilesData).Error
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)

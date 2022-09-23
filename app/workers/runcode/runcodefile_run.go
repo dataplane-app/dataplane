@@ -129,7 +129,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			// Database download
 			codeDirectory = wrkerconfig.FSCodeDirectory
 			directoryRun = codeDirectory + msg.Folder
-			err := distfilesystem.DistributedStorageDownload(msg.EnvironmentID, msg.Folder, msg.FolderID, msg.NodeID)
+			err := distfilesystem.DistributedStoragePipelineDownload(msg.EnvironmentID, msg.Folder, msg.FolderID, msg.NodeID)
 			if err != nil {
 				statusUpdate = "Fail"
 				if TasksStatusWG != "cancel" {

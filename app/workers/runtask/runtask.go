@@ -156,7 +156,16 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			// Database download
 			codeDirectory = wrkerconfig.FSCodeDirectory
 			directoryRun = codeDirectory + msg.Folder + "/"
-			err := distfilesystem.DistributedStorageDownload(msg.EnvironmentID, msg.Folder+"/", msg.FolderID, msg.NodeID)
+
+			// msg.RunType, msg.Version
+			var err error
+			switch msg.RunType {
+			case "deployment":
+				err = distfilesystem.DistributedStorageDeploymentDownload(msg.EnvironmentID, msg.Folder+"/", msg.FolderID, msg.NodeID, msg.RunType, msg.Version)
+			default:
+				err = distfilesystem.DistributedStoragePipelineDownload(msg.EnvironmentID, msg.Folder+"/", msg.FolderID, msg.NodeID)
+			}
+
 			if err != nil {
 				statusUpdate = "Fail"
 				if TasksStatusWG != "cancel" {
@@ -181,14 +190,14 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		if strings.Contains(v, "${{nodedirectory}}") {
 
 			// directoryRun := wrkerconfig.CodeDirectory + msg.Folder + "/"
-			log.Println(directoryRun)
+			// log.Println("==== Directory:", directoryRun)
 
 			// construct the directory if the directory cant be found
 			var newdir string
 			if _, err := os.Stat(directoryRun); os.IsNotExist(err) {
-				if wrkerconfig.Debug == "true" {
-					log.Println("Directory not found:", directoryRun)
-				}
+				// if wrkerconfig.Debug == "true" {
+				// 	log.Println("Directory not found:", directoryRun)
+				// }
 				switch msg.RunType {
 				case "deployment":
 					newdir, err = filesystem.DeployFolderConstructByID(database.DBConn, msg.FolderID, msg.EnvironmentID, "deployments", msg.Version)

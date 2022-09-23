@@ -22,11 +22,14 @@
 - [x] Duplicate a pipeline
 - [x] Create a pipeline
 - [ ] Edit a pipeline
-- [ ] Deploy a pipleline
+- [x] Deploy a pipleline
 - [x] Delete a folder in a node
 - [x] Rename a folder in a node
 - [ ] Move a folder
 - [x] Create or amend a file
 - [ ] Multi worker group pipeline
 - [x] Relative imports in python folders work
-- [ ] Install packages
+- [x] Install packages
+- [x] Run a deployment
+- [ ] Delete a pipeline - files and db
+- [ ] Delete a deployment - files and db
