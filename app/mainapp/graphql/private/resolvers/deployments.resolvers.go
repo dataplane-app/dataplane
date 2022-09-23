@@ -7,7 +7,7 @@ import (
 	"context"
 	permissions "dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
@@ -131,6 +131,15 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrieve pipeline folders database error")
+	}
+
+	filesData := []*models.CodeFilesStore{}
+	err = database.DBConn.Model(models.CodeFilesStore{}).Where("code_files.pipeline_id = ? and code_files.environment_id = ?", pipelineID, fromEnvironmentID).Joins("inner join code_files on code_files_store.file_id = code_files.file_id and code_files_store.environment_id = code_files.environment_id").Scan(&filesData).Error
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline file contents database error")
 	}
 
 	// Obtain folder structure for pipeline

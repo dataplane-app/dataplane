@@ -262,8 +262,19 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return "", errors.New("Retrieve pipeline folders database error")
+		return "", errors.New("Retrieve pipeline files database error")
 	}
+
+	filesData := []*models.CodeFilesStore{}
+	err = database.DBConn.Model(models.CodeFilesStore{}).Where("code_files.pipeline_id = ? and code_files.environment_id = ?", pipelineID, environmentID).Joins("inner join code_files on code_files_store.file_id = code_files.file_id and code_files_store.environment_id = code_files.environment_id").Scan(&filesData).Error
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline file contents database error")
+	}
+
+	// log.Println("Files Data:", filesDataMap, filesData)
 
 	// Obtain folder structure for pipeline
 	pipelineFolder := models.CodeFolders{}
@@ -343,19 +354,23 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	// Takes folder ID generated from create folder
 	thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID, "pipelines")
 
-	git.PlainInit(dpconfig.CodeDirectory+thisfolder, false)
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		git.PlainInit(dpconfig.CodeDirectory+thisfolder, false)
+	}
 
 	// ---------- Move across all the files --------------
 
 	destinationfolder := dpconfig.CodeDirectory + thisfolder
 
 	// // Create a folder for the version and copy files across
-	err = utilities.CopyDirectory(foldertocopy, destinationfolder)
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		err = utilities.CopyDirectory(foldertocopy, destinationfolder)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Duplicate: Failed to copy pipeline files.")
 		}
-		return "", errors.New("Duplicate: Failed to copy pipeline files.")
 	}
 
 	// Copy pipeline, nodes and edges
@@ -547,15 +562,23 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 				Active:        n.Active,
 			})
 
-			log.Println("ParentID, FolderID", folderIDOLDNew[n.ParentID], folderIDOLDNew[n.FolderID])
+			// log.Println("ParentID, FolderID", folderIDOLDNew[n.ParentID], folderIDOLDNew[n.FolderID])
 		}
 
 	}
 
+	// Create new file IDs
+	newFileIDs := make(map[string]string, len(files))
+	for _, n := range files {
+		newFileIDs[n.FileID] = uuid.NewString()
+	}
+
 	deployFiles := []*models.CodeFiles{}
 	for _, n := range files {
+
+		/* use the original fileID to map to content */
 		deployFiles = append(deployFiles, &models.CodeFiles{
-			FileID:        uuid.NewString(),
+			FileID:        newFileIDs[n.FileID],
 			FolderID:      folderIDOLDNew[n.FolderID],
 			EnvironmentID: environmentID,
 			PipelineID:    pipelineIDNew,
@@ -566,6 +589,24 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 			Active:        n.Active,
 		})
 	}
+
+	deployFilesData := []*models.CodeFilesStore{}
+	for _, n := range filesData {
+		deployFilesData = append(deployFilesData, &models.CodeFilesStore{
+			FileID:        newFileIDs[n.FileID],
+			FileStore:     n.FileStore,
+			EnvironmentID: n.EnvironmentID,
+			ChecksumMD5:   n.ChecksumMD5,
+			External:      n.External,
+			RunInclude:    n.RunInclude,
+		})
+	}
+
+	filesData = []*models.CodeFilesStore{}
+	// // folders
+	// deployFilesData := []*models.CodeFilesStore{}
+	// for _, n := range folders {
+	// }
 	// log.Println(jsonstring)
 	var res interface{}
 	json.Unmarshal([]byte(jsonstring), &res)
@@ -590,7 +631,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return "", errors.New("Failed to create duplicate pipeline.")
+		return "", errors.New("Failed to create duplicate pipeline - Nodes DB.")
 	}
 
 	// // Edges create
@@ -600,7 +641,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
-			return "", errors.New("Failed to create duplicate pipeline.")
+			return "", errors.New("Failed to create duplicate pipeline - Edges DB.")
 		}
 	}
 
@@ -611,42 +652,44 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
-			return "", errors.New("Failed to create deployment pipeline.")
+			return "", errors.New("Failed to create duplicate pipeline - Folders DB.")
 		}
 	}
 
 	// Rename the folders
-	for _, n := range folders {
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		for _, n := range folders {
 
-		if n.Level != "pipeline" {
-			fromFolder, _ := filesystem.FolderConstructByID(database.DBConn, n.FolderID, environmentID, "pipelines")
-			toFolder, _ := filesystem.FolderConstructByID(database.DBConn, folderIDOLDNew[n.FolderID], environmentID, "pipelines")
+			if n.Level != "pipeline" {
+				fromFolder, _ := filesystem.FolderConstructByID(database.DBConn, n.FolderID, environmentID, "pipelines")
+				toFolder, _ := filesystem.FolderConstructByID(database.DBConn, folderIDOLDNew[n.FolderID], environmentID, "pipelines")
 
-			// The folders are already copied into the new directoy, we need to reference that directory and not the existing one
+				// The folders are already copied into the new directoy, we need to reference that directory and not the existing one
 
-			// log.Println("From:", fromFolder)
-			// log.Println("From:", existingPipelineFolderID, folderIDOLDNew[existingPipelineFolderID])
+				// log.Println("From:", fromFolder)
+				// log.Println("From:", existingPipelineFolderID, folderIDOLDNew[existingPipelineFolderID])
 
-			fromFolder = strings.ReplaceAll(dpconfig.CodeDirectory+fromFolder, existingPipelineFolderID+"_"+existingPipelineFolderName, folderIDOLDNew[existingPipelineFolderID]+"_"+foldercreate.FolderName)
+				fromFolder = strings.ReplaceAll(dpconfig.CodeDirectory+fromFolder, existingPipelineFolderID+"_"+existingPipelineFolderName, folderIDOLDNew[existingPipelineFolderID]+"_"+foldercreate.FolderName)
 
-			// log.Println("From:", fromFolder)
+				// log.Println("From:", fromFolder)
 
-			toFolder = dpconfig.CodeDirectory + toFolder
+				toFolder = dpconfig.CodeDirectory + toFolder
 
-			if _, err := os.Stat(fromFolder); os.IsNotExist(err) {
-				// path/to/whatever does not exist
-				if dpconfig.Debug == "true" {
-					log.Println("Update directory doesn't exist: ", fromFolder)
-				}
-				return "", errors.New("Failed to find existing pipeline directory. Duplicated pipeline will not work.")
+				if _, err := os.Stat(fromFolder); os.IsNotExist(err) {
+					// path/to/whatever does not exist
+					if dpconfig.Debug == "true" {
+						log.Println("Update directory doesn't exist: ", fromFolder)
+					}
+					return "", errors.New("Failed to find existing pipeline directory. Duplicated pipeline will not work.")
 
-			} else {
-				err = os.Rename(fromFolder, toFolder)
-				if err != nil {
-					log.Println("Rename pipeline dir err:", err)
-				}
-				if dpconfig.Debug == "true" {
-					log.Println("Directory change: ", fromFolder, "->", toFolder)
+				} else {
+					err = os.Rename(fromFolder, toFolder)
+					if err != nil {
+						log.Println("Rename pipeline dir err:", err)
+					}
+					if dpconfig.Debug == "true" {
+						log.Println("Directory change: ", fromFolder, "->", toFolder)
+					}
 				}
 			}
 		}
@@ -659,8 +702,20 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
-			return "", errors.New("Failed to create deployment pipeline.")
+			return "", errors.New("Failed to create duplicate pipeline - Files DB.")
 		}
+
+	}
+
+	if len(deployFilesData) > 0 {
+		err = database.DBConn.Create(&deployFilesData).Error
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to create duplicate pipeline - Files Data DB.")
+		}
+
 	}
 
 	// // Add back to schedule

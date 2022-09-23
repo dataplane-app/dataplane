@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/logging"
 	"log"
 	"time"
@@ -19,6 +19,7 @@ var Securetimeout = make(chan int)
 
 func SecureTimeout(connection *websocket.Conn) {
 	time.Sleep(1 * time.Hour)
+
 	if _, ok := clients[connection]; ok {
 		unregister <- connection
 		cm := websocket.FormatCloseMessage(websocket.CloseTryAgainLater, "reconnect")
