@@ -32,6 +32,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/websocket/v2"
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm/clause"
 )
 
@@ -393,9 +394,11 @@ func Setup(port string) *fiber.App {
 		pipelineID := c.Locals("pipelineID").(string)
 		environmentID := c.Locals("environmentID").(string)
 
+		var jsonPayload datatypes.JSON = c.Body()
+
 		// Run pipeline
 		runID := uuid.NewString()
-		pipelines.RunPipeline(pipelineID, environmentID, runID)
+		pipelines.RunPipeline(pipelineID, environmentID, runID, jsonPayload)
 
 		return c.SendString("Success")
 	})
@@ -405,9 +408,11 @@ func Setup(port string) *fiber.App {
 		pipelineID := c.Locals("pipelineID").(string)
 		environmentID := c.Locals("environmentID").(string)
 
+		var jsonPayload datatypes.JSON = c.Body()
+
 		// Run pipeline
 		runID := uuid.NewString()
-		pipelines.RunPipeline(pipelineID, environmentID, runID)
+		pipelines.RunPipeline(pipelineID, environmentID, runID, jsonPayload)
 
 		return c.SendString("Success")
 	})

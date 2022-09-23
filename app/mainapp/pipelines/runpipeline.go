@@ -14,13 +14,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 )
 
 type Command struct {
 	Command string `json:command`
 }
 
-func RunPipeline(pipelineID string, environmentID string, runID string) (models.PipelineRuns, error) {
+func RunPipeline(pipelineID string, environmentID string, runID string, runJson ...datatypes.JSON) (models.PipelineRuns, error) {
 
 	// start := time.Now().UTC()
 
@@ -41,6 +42,27 @@ func RunPipeline(pipelineID string, environmentID string, runID string) (models.
 	}
 
 	// Retrieve folders
+
+	// Check if a runJson is submitted
+	if runJson != nil && len(runJson[0]) != 0 {
+		run := models.PipelineApiTriggerRuns{
+			RunID:         runID,
+			PipelineID:    pipelineID,
+			EnvironmentID: environmentID,
+			RunType:       "pipeline",
+			RunJSON:       runJson[0],
+			CreatedAt:     time.Now().UTC(),
+		}
+
+		err = database.DBConn.Create(&run).Error
+		if err != nil {
+
+			if config.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return models.PipelineRuns{}, err
+		}
+	}
 
 	// Create a run
 	run := models.PipelineRuns{

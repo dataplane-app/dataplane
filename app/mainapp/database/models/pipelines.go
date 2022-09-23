@@ -129,3 +129,19 @@ type PipelineApiKeys struct {
 	CreatedAt     time.Time  `json:"created_at"`
 	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
 }
+
+func (PipelineApiTriggerRuns) IsEntity() {}
+
+func (PipelineApiTriggerRuns) TableName() string {
+	return "pipeline_api_trigger_runs"
+}
+
+type PipelineApiTriggerRuns struct {
+	RunID         string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"run_id"`
+	PipelineID    string         `gorm:"index:idx_pipelineid_api_trigger_runs;" json:"pipeline_id"`
+	EnvironmentID string         `json:"environment_id"`
+	RunType       string         `json:"run_type"` //deploy or pipeline
+	RunJSON       datatypes.JSON `json:"run_json"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     *time.Time     `json:"updated_at"`
+}
