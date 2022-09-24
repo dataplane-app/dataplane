@@ -1,13 +1,14 @@
 package admintests
 
 import (
-	"dataplane/mainapp/Tests/testutils"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
 	"log"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/dataplane-app/dataplane/mainapp/Tests/testutils"
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/assert"

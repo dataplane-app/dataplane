@@ -2,15 +2,16 @@ package filesystem
 
 import (
 	"crypto/md5"
-	dfscache "dataplane/mainapp/code_editor/dfs_cache"
-	dpconfig "dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
 	"errors"
 	"fmt"
 	"log"
 	"os"
 	"time"
+
+	dfscache "github.com/dataplane-app/dataplane/mainapp/code_editor/dfs_cache"
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm/clause"

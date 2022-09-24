@@ -1,10 +1,11 @@
 package routinetasks
 
 import (
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database/models"
 	"log"
 	"strconv"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
 
 	"github.com/go-co-op/gocron"
 	"gorm.io/gorm"

@@ -1,12 +1,14 @@
 package main
 
 import (
-	"dataplane/mainapp/routes"
-	workerroutes "dataplane/workers/routes"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+
+	workerroutes "github.com/dataplane-app/dataplane/workers/routes"
+
+	"github.com/dataplane-app/dataplane/mainapp/routes"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

@@ -2,16 +2,18 @@ package runcodeworker
 
 import (
 	"bufio"
-	"dataplane/mainapp/database/models"
-	modelmain "dataplane/mainapp/database/models"
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/database"
-	"dataplane/workers/messageq"
 	"log"
 	"os"
 	"os/exec"
 	"syscall"
 	"time"
+
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	modelmain "github.com/dataplane-app/dataplane/mainapp/database/models"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
+	"github.com/dataplane-app/dataplane/workers/database"
+	"github.com/dataplane-app/dataplane/workers/messageq"
 
 	"github.com/google/uuid"
 	clog "github.com/pieterclaerhout/go-log"

@@ -4,7 +4,8 @@ import { Grid, Tooltip, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle } from 'react-flow-renderer';
-import { useGlobalFlowState } from '../../../pages/PipelineEdit';
+import { useLocation } from 'react-router-dom';
+import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import customNodeStyle from '../../../utils/customNodeStyle';
 import { customSourceHandle, customSourceHandleDragging } from '../../../utils/handleStyles';
@@ -17,35 +18,37 @@ const ApiNode = (props) => {
     const theme = useTheme();
 
     // Global state
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
     const RunState = useGlobalRunState();
 
     const [isEditorPage, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
     const [borderColor, setBorderColor] = useState('#c4c4c4');
 
+    // Determine if editor page
+    const { pathname } = useLocation();
     useEffect(() => {
-        setIsEditorPage(FlowState.isEditorPage.get());
+        if (pathname.includes('/pipelines/flow/')) {
+            setIsEditorPage(true);
+        }
+    }, [pathname]);
+
+    useEffect(() => {
         setIsSelected(FlowState.selectedElement.get()?.id === props.id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    useEffect(() => {
-        setIsEditorPage(FlowState.isEditorPage.get());
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.isEditorPage.get()]);
-
-    useEffect(() => {
-        setIsSelected(FlowState.selectedElement.get()?.id === props.id);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [FlowState.selectedElement.get()]);
-
     // Set border color on node status change
+    let nodeStatus = RunState.runObject?.nodes?.get() && RunState.runObject?.nodes[props.id].status?.get();
     useEffect(() => {
-        setBorderColor(getColor(RunState[props.id]?.status?.get()));
+        if (nodeStatus) {
+            setBorderColor(getColor(nodeStatus));
+        } else {
+            setBorderColor(getColor());
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [RunState[props.id].status?.get()]);
+    }, [nodeStatus]);
 
     return (
         <Box sx={{ ...customNodeStyle, border: `3px solid ${borderColor}` }}>

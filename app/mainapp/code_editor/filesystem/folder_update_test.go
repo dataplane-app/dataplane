@@ -1,19 +1,21 @@
 package filesystem
 
 import (
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
 	"log"
 	"os"
 	"testing"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
 
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
 /*
 Update pipeline folder test
-go test -count=1 -timeout 30s -v -run ^TestUpdateFolder$ dataplane/mainapp/utilities
+go test -count=1 -timeout 30s -v -run ^TestUpdateFolder$ github.com/dataplane-app/dataplane/mainapp/utilities
 */
 func TestUpdateFolder(t *testing.T) {
 

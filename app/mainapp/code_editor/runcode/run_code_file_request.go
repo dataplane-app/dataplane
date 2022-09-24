@@ -1,19 +1,20 @@
 package runcode
 
 import (
-	"dataplane/mainapp/code_editor/filesystem"
-	dpconfig "dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/logging"
-	"dataplane/mainapp/messageq"
-	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"errors"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/dataplane-app/dataplane/mainapp/code_editor/filesystem"
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/logging"
+	"github.com/dataplane-app/dataplane/mainapp/messageq"
+	"github.com/dataplane-app/dataplane/mainapp/utilities"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

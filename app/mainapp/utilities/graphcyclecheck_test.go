@@ -1,16 +1,17 @@
 package utilities
 
 import (
-	"dataplane/mainapp/database/models"
 	"log"
 	"testing"
+
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
 
 	"github.com/stretchr/testify/assert"
 )
 
 /*
 Run Super secret squirrel function test
-go test -timeout 30s -v -run ^TestGraphCycleCheckFunction$ dataplane/mainapp/utilities
+go test -timeout 30s -v -run ^TestGraphCycleCheckFunction$ github.com/dataplane-app/dataplane/mainapp/utilities
 */
 
 // node1 > [node2, node3, node4] > node5 > node6

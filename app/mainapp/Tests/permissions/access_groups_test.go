@@ -1,12 +1,13 @@
 package permissiontests
 
 import (
-	"dataplane/mainapp/Tests/testutils"
-	"dataplane/mainapp/database"
 	"log"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/dataplane-app/dataplane/mainapp/Tests/testutils"
+	"github.com/dataplane-app/dataplane/mainapp/database"
 
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"

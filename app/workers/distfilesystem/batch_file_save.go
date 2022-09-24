@@ -16,11 +16,6 @@ package distfilesystem
 
 import (
 	"context"
-	"dataplane/mainapp/code_editor/filesystem"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/utilities"
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/database"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -29,13 +24,20 @@ import (
 	"os"
 	"time"
 
+	"github.com/dataplane-app/dataplane/mainapp/code_editor/filesystem"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/utilities"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
+	"github.com/dataplane-app/dataplane/workers/database"
+
 	"github.com/golang-queue/contrib/zerolog"
 	"github.com/golang-queue/queue"
 )
 
 /*
 Run Super secret squirrel function test
-go test -timeout 30s -count=1 -v -run ^TestBatchProcess$ dataplane/mainapp/utilities
+go test -timeout 30s -count=1 -v -run ^TestBatchProcess$ github.com/dataplane-app/dataplane/mainapp/utilities
 */
 type msgback struct {
 	Msg string
