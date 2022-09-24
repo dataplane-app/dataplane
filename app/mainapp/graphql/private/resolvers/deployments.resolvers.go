@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	dfscache "dataplane/mainapp/code_editor/dfs_cache"
 	"dataplane/mainapp/code_editor/filesystem"
 	dpconfig "dataplane/mainapp/config"
@@ -769,7 +769,7 @@ func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentI
 	return "Pipeline trigger updated", nil
 }
 
-func (r *mutationResolver) ClearFileCacheDeployment(ctx context.Context, environmentID string, deploymentID string) (string, error) {
+func (r *mutationResolver) ClearFileCacheDeployment(ctx context.Context, environmentID string, deploymentID string, version string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 	version := "remove"

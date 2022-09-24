@@ -221,7 +221,7 @@ type ComplexityRoot struct {
 		AddSecretToWorkerGroup             func(childComplexity int, environmentID string, workerGroup string, secret string) int
 		AddUpdatePipelineFlow              func(childComplexity int, input *PipelineFlowInput, environmentID string, pipelineID string) int
 		AddUserToEnvironment               func(childComplexity int, userID string, environmentID string) int
-		ClearFileCacheDeployment           func(childComplexity int, environmentID string, deploymentID string) int
+		ClearFileCacheDeployment           func(childComplexity int, environmentID string, deploymentID string, version string) int
 		ClearFileCachePipeline             func(childComplexity int, environmentID string, pipelineID string) int
 		CreateAccessGroup                  func(childComplexity int, environmentID string, name string, description *string) int
 		CreateFolderNode                   func(childComplexity int, input *FolderNodeInput) int
@@ -572,7 +572,7 @@ type MutationResolver interface {
 	AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*WorkerGroupsNodes) (string, error)
 	DeleteDeployment(ctx context.Context, environmentID string, pipelineID string, version string) (string, error)
 	TurnOnOffDeployment(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error)
-	ClearFileCacheDeployment(ctx context.Context, environmentID string, deploymentID string) (string, error)
+	ClearFileCacheDeployment(ctx context.Context, environmentID string, deploymentID string, version string) (string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 	DeploymentPermissionsToUser(ctx context.Context, environmentID string, resourceID string, access []string, userID string) (string, error)
@@ -1568,7 +1568,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ClearFileCacheDeployment(childComplexity, args["environmentID"].(string), args["deploymentID"].(string)), true
+		return e.complexity.Mutation.ClearFileCacheDeployment(childComplexity, args["environmentID"].(string), args["deploymentID"].(string), args["version"].(string)), true
 
 	case "Mutation.clearFileCachePipeline":
 		if e.complexity.Mutation.ClearFileCachePipeline == nil {
@@ -4168,6 +4168,15 @@ func (ec *executionContext) field_Mutation_clearFileCacheDeployment_args(ctx con
 		}
 	}
 	args["deploymentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["version"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["version"] = arg2
 	return args, nil
 }
 
@@ -13588,7 +13597,7 @@ func (ec *executionContext) _Mutation_clearFileCacheDeployment(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ClearFileCacheDeployment(rctx, fc.Args["environmentID"].(string), fc.Args["deploymentID"].(string))
+		return ec.resolvers.Mutation().ClearFileCacheDeployment(rctx, fc.Args["environmentID"].(string), fc.Args["deploymentID"].(string), fc.Args["version"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

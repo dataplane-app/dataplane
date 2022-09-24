@@ -14,12 +14,12 @@ const DeploymentTableItem = (props) => {
     const FlowState = useGlobalFlowState();
 
     //Props
-    const { handleCloseMenu, id, name, online, environmentID, nodeTypeDesc, setIsOpenDeletePipeline, setDeployments, deploy_active } = props;
+    const { handleCloseMenu, id, name, version, online, environmentID, nodeTypeDesc, setIsOpenDeletePipeline, setDeployments, deploy_active } = props;
 
     // Graphql hook
     const getDeployments = useGetDeploymentsHook(setDeployments, environmentID);
     const turnOnOffDeployment = useTurnOnOffDeploymentHook(id, environmentID, handleCloseMenu, getDeployments);
-    const clearFileCacheDeployment = useClearFileCacheDeploymentHook(environmentID, id);
+    const clearFileCacheDeployment = useClearFileCacheDeploymentHook(environmentID, id, version);
 
     const permissionClick = () => {
         handleCloseMenu();
@@ -89,7 +89,7 @@ function useGetDeploymentsHook(setDeployments, environmentID) {
     };
 }
 
-function useClearFileCacheDeploymentHook(environmentID, deploymentID) {
+function useClearFileCacheDeploymentHook(environmentID, deploymentID, version) {
     // GraphQL hook
     const clearFileCacheDeployment = useClearFileCacheDeployment();
 
@@ -97,7 +97,7 @@ function useClearFileCacheDeploymentHook(environmentID, deploymentID) {
 
     // Clear file cache
     return async () => {
-        const response = await clearFileCacheDeployment({ environmentID, deploymentID });
+        const response = await clearFileCacheDeployment({ environmentID, deploymentID, version });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't clear file cache: " + (response.msg || response.r || response.error), { variant: 'error' });

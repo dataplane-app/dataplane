@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation clearFileCacheDeployment($environmentID: String!, $deploymentID: String!) {
-        clearFileCacheDeployment(environmentID: $environmentID, deploymentID: $deploymentID)
+    mutation clearFileCacheDeployment($environmentID: String!, $deploymentID: String!, $version: String!) {
+        clearFileCacheDeployment(environmentID: $environmentID, deploymentID: $deploymentID, version: $version)
     }
 `;
 
