@@ -1309,6 +1309,18 @@ func (r *mutationResolver) ClearFileCachePipeline(ctx context.Context, environme
 		return "", errors.New("Requires permissions.")
 	}
 
+	// ----- remove cache from workers --------
+	var parentfolder models.CodeFolders
+	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ?", environmentID, pipelineID, "pipeline").First(&parentfolder)
+
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
+	errcache := dfscache.InvalidateCachePipeline(environmentID, folderpath, pipelineID)
+	if errcache != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(errcache)
+		}
+	}
+
 	return "Success", nil
 	// panic(fmt.Errorf("not implemented"))
 }

@@ -8,4 +8,4 @@ resources:
   - nats-deployment.yaml
   - postgresql-deploy.yaml
   - postgresql-storage.yaml
-  - dp-code-files-storage.yaml
+  - redis-deploy.yaml

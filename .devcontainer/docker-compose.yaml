@@ -6,7 +6,7 @@ volumes:
 services:
 
   redis-service:
-    image: eqalpha/keydb:alpine_x86_64_v6.2.2
+    image: redis:7.0.5-bullseye
     ports:
       - 6379
 
@@ -99,7 +99,6 @@ services:
       DP_WORKER_LANGUAGES: "Python"
       DP_WORKER_LOAD_PACKAGES: "Python"
       DP_CODE_FILE_STORAGE: "Database" #Database, LocalFile, S3
-      DP_SYNC_FILE_BATCHES: "100" # 100 files synced at once
 
 networks:
   default:
