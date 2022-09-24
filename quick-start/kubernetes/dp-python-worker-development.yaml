@@ -1,34 +1,16 @@
-kind: Service
-apiVersion: v1
-metadata:
-  name: dataplane-worker
-  namespace: default
-  labels:
-    app: dataplane-worker
-spec:
-  ports:
-    - name: tcp
-      protocol: TCP
-      #      port = port connected to ingress
-      port: 9005
-      # targetPort = port on container
-      targetPort: 9005
-  selector:
-    app: dataplane-worker
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dataplane-worker
+  name: dataplane-worker-dev
 spec:
-  replicas: 4
+  replicas: 3
   selector:
     matchLabels:
-      app: dataplane-worker
+      app: dataplane-worker-dev
   template:
     metadata:
       labels:
-        app: dataplane-worker
+        app: dataplane-worker-dev
     spec:
       securityContext:
         runAsUser: 10001
@@ -43,8 +25,9 @@ spec:
           image: dataplane/dataplane-worker-python:latest
           imagePullPolicy: Always
           volumeMounts:
-          - mountPath: "/dataplane/dfs-code-files/"
-            name: dp-code-cache-volume
+            - mountPath: "/dataplane/dfs-code-files"
+              name: dp-code-cache-volume
+              subPath: dfs-code-files
           command:
             - "./dataplane-worker"
           ports:
@@ -89,7 +72,7 @@ spec:
             - name: DP_WORKER_HEARTBEAT_SECONDS
               value: "1"
             - name: DP_WORKER_GROUP
-              value: "python_1"
+              value: "python_dev"
             # vm, container, kubernetes
             - name: DP_WORKER_TYPE
               value: "vm"

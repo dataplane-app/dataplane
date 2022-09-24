@@ -4,7 +4,8 @@ kind: Kustomization
 resources:
   - dp-ingress.yaml
   - dp-main-deployment.yaml
-  - dp-python-worker-deployment.yaml
+  - dp-python-worker-development.yaml
+  - dp-python-worker-production.yaml
   - nats-deployment.yaml
   - postgresql-deploy.yaml
   - postgresql-storage.yaml
