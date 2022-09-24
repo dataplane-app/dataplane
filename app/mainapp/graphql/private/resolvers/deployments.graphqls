@@ -159,5 +159,5 @@ extend type Mutation {
 	+ **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
-   clearFileCacheDeployment(environmentID: String!, deploymentID: String!): String!
+   clearFileCacheDeployment(environmentID: String!, deploymentID: String!, version: String!): String!
 }
