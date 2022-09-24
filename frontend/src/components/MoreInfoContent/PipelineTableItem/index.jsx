@@ -1,7 +1,7 @@
 import { MenuItem } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
-import { useClearFileCache } from '../../../graphql/clearFileCache';
+import { useClearFileCachePipeline } from '../../../graphql/clearFileCachePipeline';
 import { useGetPipelines } from '../../../graphql/getPipelines';
 import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
 import { useGlobalFlowState } from '../../../pages/PipelineEdit';
@@ -19,7 +19,7 @@ const PipelineItemTable = (props) => {
     // Graphql hook
     const getPipelines = useGetPipelinesHook(setPipelines, environmentID);
     const turnOnOffPipeline = useTurnOnOffPipelineHook(id, environmentID, handleCloseMenu, getPipelines);
-    const clearFileCache = useClearFileCacheHook(environmentID, id);
+    const clearFileCachePipeline = useClearFileCachePipelineHook(environmentID, id);
 
     const manageEdit = () => {
         FlowState.isEditorPage.get(true);
@@ -58,7 +58,7 @@ const PipelineItemTable = (props) => {
     };
 
     const clearCacheClick = () => {
-        clearFileCache();
+        clearFileCachePipeline();
         handleCloseMenu();
     };
 
@@ -139,15 +139,15 @@ function useGetPipelinesHook(setPipelines, environmentID) {
     };
 }
 
-function useClearFileCacheHook(environmentID, pipelineID) {
+function useClearFileCachePipelineHook(environmentID, pipelineID) {
     // GraphQL hook
-    const clearFileCache = useClearFileCache();
+    const clearFileCachePipeline = useClearFileCachePipeline();
 
     const { enqueueSnackbar } = useSnackbar();
 
     // Clear file cache
     return async () => {
-        const response = await clearFileCache({ environmentID, pipelineID });
+        const response = await clearFileCachePipeline({ environmentID, pipelineID });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't clear file cache: " + (response.msg || response.r || response.error), { variant: 'error' });

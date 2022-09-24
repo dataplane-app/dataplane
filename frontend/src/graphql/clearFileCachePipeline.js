@@ -4,12 +4,12 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation clearFileCache($environmentID: String!, $pipelineID: String!) {
-        clearFileCache(environmentID: $environmentID, pipelineID: $pipelineID)
+    mutation clearFileCachePipeline($environmentID: String!, $pipelineID: String!) {
+        clearFileCachePipeline(environmentID: $environmentID, pipelineID: $pipelineID)
     }
 `;
 
-export const useClearFileCache = () => {
+export const useClearFileCachePipeline = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -24,7 +24,7 @@ export const useClearFileCache = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.clearFileCache;
+            return res?.clearFileCachePipeline;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

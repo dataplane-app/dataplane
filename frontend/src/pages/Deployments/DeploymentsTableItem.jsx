@@ -1,7 +1,7 @@
 import { MenuItem } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
-import { useClearFileCache } from '../../graphql/clearFileCache';
+import { useClearFileCacheDeployment } from '../../graphql/clearFileCacheDeployment';
 import { useGetDeployments } from '../../graphql/getDeployments';
 import { useGlobalFlowState } from '../PipelineEdit';
 import { useTurnOnOffDeploymentHook } from './TurnOffDeploymentDrawer';
@@ -19,7 +19,7 @@ const DeploymentTableItem = (props) => {
     // Graphql hook
     const getDeployments = useGetDeploymentsHook(setDeployments, environmentID);
     const turnOnOffDeployment = useTurnOnOffDeploymentHook(id, environmentID, handleCloseMenu, getDeployments);
-    const clearFileCache = useClearFileCacheHook(environmentID, id);
+    const clearFileCacheDeployment = useClearFileCacheDeploymentHook(environmentID, id);
 
     const permissionClick = () => {
         handleCloseMenu();
@@ -44,7 +44,7 @@ const DeploymentTableItem = (props) => {
     };
 
     const clearCacheClick = () => {
-        clearFileCache();
+        clearFileCacheDeployment();
         handleCloseMenu();
     };
 
@@ -89,15 +89,15 @@ function useGetDeploymentsHook(setDeployments, environmentID) {
     };
 }
 
-function useClearFileCacheHook(environmentID, pipelineID) {
+function useClearFileCacheDeploymentHook(environmentID, deploymentID) {
     // GraphQL hook
-    const clearFileCache = useClearFileCache();
+    const clearFileCacheDeployment = useClearFileCacheDeployment();
 
     const { enqueueSnackbar } = useSnackbar();
 
     // Clear file cache
     return async () => {
-        const response = await clearFileCache({ environmentID, pipelineID });
+        const response = await clearFileCacheDeployment({ environmentID, deploymentID });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't clear file cache: " + (response.msg || response.r || response.error), { variant: 'error' });
