@@ -1,9 +1,10 @@
 package main
 
 import (
-	"dataplane/workers/cmetric"
 	"fmt"
 	"time"
+
+	"github.com/dataplane-app/dataplane/workers/cmetric"
 )
 
 func main() {

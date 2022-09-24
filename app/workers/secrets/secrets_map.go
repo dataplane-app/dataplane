@@ -1,13 +1,15 @@
 package secrets
 
 import (
-	modelmain "dataplane/mainapp/database/models"
-	"dataplane/mainapp/utilities"
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/database"
 	"log"
 	"os"
 	"strings"
+
+	modelmain "github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/utilities"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
+	"github.com/dataplane-app/dataplane/workers/database"
 )
 
 var SecretsArray = []string{}
