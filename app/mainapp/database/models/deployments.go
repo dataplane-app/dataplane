@@ -51,7 +51,7 @@ type DeployPipelineNodes struct {
 	Meta          datatypes.JSON `json:"meta"`
 	Dependency    datatypes.JSON `json:"dependency"`
 	Destination   datatypes.JSON `json:"destination"`
-	WorkerGroup   string         `json:"worker_group"` //Inherits Pipeline workergroup unless specified
+	WorkerGroup   string         `gorm:"index:idx_dp_workergroup_nodes;" json:"worker_group"` //Inherits Pipeline workergroup unless specified
 	Active        bool           `json:"active"`
 	// FolderID       string         `json:"folder_id"`
 	// ParentFolderID string         `json:"parent_folder_id"`
@@ -119,6 +119,23 @@ type DeployCodeFiles struct {
 	Level         string     `json:"level" ` //platform, environment, node, other
 	FType         string     `json:"f_type"` //folder, file, bin
 	Active        bool       `json:"active"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     *time.Time `json:"updated_at"`
+	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
+}
+
+func (DeployFilesStore) TableName() string {
+	return "deploy_files_store"
+}
+
+type DeployFilesStore struct {
+	FileID        string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
+	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64); json:"version"`
+	FileStore     []byte     `gorm:"type:bytea; json:"file_store"`
+	EnvironmentID string     `gorm:"type:varchar(55); json:"environment_id"`
+	ChecksumMD5   string     `gorm:"type:varchar(55); json:"checksum_md5"`
+	External      bool       `gorm:"default:False" json:"external"`
+	RunInclude    bool       `gorm:"default:True" json:"run_include"`
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     *time.Time `json:"updated_at"`
 	DeletedAt     *time.Time `json:"deleted_at,omitempty"`

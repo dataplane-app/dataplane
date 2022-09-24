@@ -3,7 +3,7 @@ package runtask
 import (
 	"dataplane/mainapp/database/models"
 	modelmain "dataplane/mainapp/database/models"
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/messageq"
 	"log"
@@ -54,7 +54,7 @@ func UpdateWorkerTasks(msg modelmain.WorkerTasks) {
 
 	errnat := messageq.MsgSend("taskupdate."+msg.EnvironmentID+"."+msg.RunID, msg)
 	if errnat != nil {
-		if config.Debug == "true" {
+		if wrkerconfig.Debug == "true" {
 			log.Println(errnat)
 		}
 

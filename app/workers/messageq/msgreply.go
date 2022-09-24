@@ -10,7 +10,7 @@ func MsgReply(channel string, msg interface{}, response interface{}) (interface{
 	if err != nil {
 
 	}
-	// if config.MQDebug == "true" {
+	// if wrkerconfig.MQDebug == "true" {
 	// 	log.Println("response:", response)
 	// }
 	return response, err

@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/logging"
 	"log"
 	"time"
@@ -19,6 +19,7 @@ var Securetimeout = make(chan int)
 
 func SecureTimeout(connection *websocket.Conn) {
 	time.Sleep(1 * time.Hour)
+
 	if _, ok := clients[connection]; ok {
 		unregister <- connection
 		cm := websocket.FormatCloseMessage(websocket.CloseTryAgainLater, "reconnect")
@@ -26,7 +27,7 @@ func SecureTimeout(connection *websocket.Conn) {
 			// handle error
 			log.Println(err)
 		}
-		if config.MQDebug == "true" {
+		if dpconfig.MQDebug == "true" {
 			log.Println("connection unregistered by SecureTimeout")
 		}
 	}
@@ -39,13 +40,13 @@ func RunHub() {
 			clients[connection] = client{}
 			go SecureTimeout(connection)
 			// go func() { Securetimeout <- 0 }()
-			if config.MQDebug == "true" {
+			if dpconfig.MQDebug == "true" {
 				log.Println("connection registered")
 			}
 
 		case message := <-broadcast:
 
-			if config.MQDebug == "true" {
+			if dpconfig.MQDebug == "true" {
 				logging.PrintSecretsRedact("message received:", string(message))
 			}
 
@@ -64,7 +65,7 @@ func RunHub() {
 		case connection := <-unregister:
 			// Remove the client from the hub
 			delete(clients, connection)
-			if config.MQDebug == "true" {
+			if dpconfig.MQDebug == "true" {
 				log.Println("connection unregistered")
 			}
 		}

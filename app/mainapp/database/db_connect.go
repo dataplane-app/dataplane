@@ -23,7 +23,7 @@ func DBConnect() {
 		logging.PrintSecretsRedact(err.Error())
 		log.Fatal("Failed to connect to database")
 	}
-	//DBConn.Config.PrepareStmt = true
+	//DBConn.dpconfig.PrepareStmt = true
 }
 
 func DB() (*gorm.DB, error) {

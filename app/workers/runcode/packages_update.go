@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"dataplane/mainapp/database/models"
 	modelmain "dataplane/mainapp/database/models"
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/messageq"
 	"log"
@@ -60,7 +60,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 			// Read line by line and process it
 			for scanner.Scan() {
 				uid := uuid.NewString()
-				line := config.Secrets.Replace(scanner.Text())
+				line := wrkerconfig.Secrets.Replace(scanner.Text())
 
 				sendmsg := modelmain.LogsSend{
 					CreatedAt: time.Now().UTC(),
@@ -70,7 +70,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 				}
 
 				messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
-				if config.Debug == "true" {
+				if wrkerconfig.Debug == "true" {
 					clog.Info(line)
 				}
 			}
@@ -96,7 +96,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 			// Read line by line and process it
 			for scannerErr.Scan() {
 				uid := uuid.NewString()
-				line := config.Secrets.Replace(scannerErr.Text())
+				line := wrkerconfig.Secrets.Replace(scannerErr.Text())
 
 				sendmsg := modelmain.LogsSend{
 					CreatedAt: time.Now().UTC(),
@@ -106,7 +106,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 				}
 
 				messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
-				if config.Debug == "true" {
+				if wrkerconfig.Debug == "true" {
 					clog.Error(line)
 				}
 			}
@@ -120,7 +120,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 		if err != nil {
 
 			uid := uuid.NewString()
-			line := config.Secrets.Replace(err.Error())
+			line := wrkerconfig.Secrets.Replace(err.Error())
 
 			sendmsg := modelmain.LogsSend{
 				CreatedAt: time.Now().UTC(),
@@ -130,7 +130,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 			}
 
 			messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
-			if config.Debug == "true" {
+			if wrkerconfig.Debug == "true" {
 				clog.Error(line)
 			}
 

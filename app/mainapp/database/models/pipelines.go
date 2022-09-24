@@ -48,7 +48,7 @@ type PipelineNodes struct {
 	Meta          datatypes.JSON `json:"meta"`
 	Dependency    datatypes.JSON `json:"dependency"`
 	Destination   datatypes.JSON `json:"destination"`
-	WorkerGroup   string         `json:"worker_group"` //Inherits Pipeline workergroup unless specified
+	WorkerGroup   string         `gorm:"index:idx_workergroup_nodes;" json:"worker_group"` //Inherits Pipeline workergroup unless specified
 	Active        bool           `json:"active"`
 	// FolderID       string         `json:"folder_id"`
 	// ParentFolderID string         `json:"parent_folder_id"`

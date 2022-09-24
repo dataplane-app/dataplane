@@ -46,14 +46,14 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 		ID:          uuid.New().String(),
 		Name:        input.Name,
 		Description: *input.Description,
-		PlatformID:  config.PlatformID,
+		PlatformID:  dpconfig.PlatformID,
 		Active:      true,
 	}
 
 	err := database.DBConn.Create(&e).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		if strings.Contains(err.Error(), "duplicate key") {
@@ -79,7 +79,7 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, e.ID, "")
 	filesystem.CreateFolder(dir, pfolder)
 
-	if config.Debug == "true" {
+	if dpconfig.Debug == "true" {
 		log.Println("Environment dir created.")
 	}
 
@@ -121,11 +121,11 @@ func (r *mutationResolver) UpdateEnvironment(ctx context.Context, input *private
 		ID:          input.ID,
 		Name:        input.Name,
 		Description: *input.Description,
-		PlatformID:  config.PlatformID,
+		PlatformID:  dpconfig.PlatformID,
 	}).First(&e).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Rename environment database error.")
@@ -188,7 +188,7 @@ func (r *mutationResolver) UpdateDeactivateEnvironment(ctx context.Context, envi
 	err := database.DBConn.Where("id = ?", environmentID).First(&e).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Deactivate environment database error.")
@@ -203,7 +203,7 @@ func (r *mutationResolver) UpdateDeactivateEnvironment(ctx context.Context, envi
 		Updates(models.Environment{Active: false}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("DeactivateEnvironment database error.")
@@ -235,7 +235,7 @@ func (r *mutationResolver) UpdateActivateEnvironment(ctx context.Context, enviro
 	err := database.DBConn.Where("id = ?", environmentID).First(&e).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Activate environment database error.")
@@ -250,7 +250,7 @@ func (r *mutationResolver) UpdateActivateEnvironment(ctx context.Context, enviro
 		Updates(models.Environment{Active: true}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("ActivateEnvironment database error.")
@@ -281,7 +281,7 @@ func (r *mutationResolver) UpdateDeleteEnvironment(ctx context.Context, environm
 	err := database.DBConn.Where("id = ?", environmentID).Delete(&e).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("DeleteEnvironment database error.")
@@ -314,7 +314,7 @@ func (r *mutationResolver) UpdatePlatform(ctx context.Context, input *privategra
 	}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("update platform database error")
@@ -350,7 +350,7 @@ func (r *mutationResolver) AddUserToEnvironment(ctx context.Context, userID stri
 	err := database.DBConn.Clauses(clause.OnConflict{DoNothing: true}).Create(&e).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Add user to environment error.")
@@ -381,7 +381,7 @@ func (r *mutationResolver) RemoveUserFromEnvironment(ctx context.Context, userID
 	err := database.DBConn.Where("environment_id=? and user_id=?", environmentID, userID).Delete(&models.EnvironmentUser{}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Remove user from environment error.")
@@ -404,7 +404,7 @@ func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environm
 
 	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
 
-	// if config.Debug == "true" {
+	// if dpconfig.Debug == "true" {
 	// 	logging.PrintSecretsRedact("Permissions admin: ", admin, adminEnv)
 	// }
 
@@ -414,7 +414,7 @@ func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environm
 		err := database.DBConn.Where("platform_id=?", platformID).Find(&e).Error
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return nil, errors.New("Retrive me database error.")
@@ -460,7 +460,7 @@ func (r *queryResolver) GetEnvironment(ctx context.Context, environmentID string
 
 	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
 
-	// if config.Debug == "true" {
+	// if dpconfig.Debug == "true" {
 	// 	logging.PrintSecretsRedact("Permissions admin: ", admin, adminEnv)
 	// }
 
@@ -470,7 +470,7 @@ func (r *queryResolver) GetEnvironment(ctx context.Context, environmentID string
 		err := database.DBConn.Where("id=?", environmentID).Find(&e).Error
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return nil, errors.New("Retrive me database error.")
@@ -549,7 +549,7 @@ func (r *queryResolver) GetPlatform(ctx context.Context) (*privategraphql.Platfo
 	err := database.DBConn.First(&p).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrieve platform database error.")

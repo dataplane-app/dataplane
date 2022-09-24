@@ -34,31 +34,24 @@ spec:
         runAsUser: 10001
         runAsGroup: 10001
       volumes:
-        - name: dp-persistent-storage
-          persistentVolumeClaim:
-            claimName: dataplane-storage
+        - name: dp-code-cache-volume
+          emptyDir:
+            medium: Memory
+            sizeLimit: 250Mi
       containers:
         - name: container
           image: dataplane/dataplane-worker-python:latest
           imagePullPolicy: Always
+          volumeMounts:
+          - mountPath: "/dataplane/dfs-code-files/"
+            name: dp-code-cache-volume
           command:
             - "./dataplane-worker"
           ports:
             - containerPort: 9005
-          volumeMounts:
-            - name: dp-persistent-storage
-              mountPath: /appdev/code-files
-              subPath: code-files
-          resources:
-            limits:
-              memory: "500Mi"
-              cpu: "0.4"
-            requests:
-              memory: "100Mi"
-              cpu: "0.1"
           env:
             - name: DP_CODE_FOLDER
-              value: "/appdev/code-files/"
+              value: "/dataplane/code-files/"
             - name: secret_db_host
               value: timescaledb-service
             - name: secret_db_user 
@@ -97,9 +90,9 @@ spec:
               value: "1"
             - name: DP_WORKER_GROUP
               value: "python_1"
-      # vm, container, kubernetes
+            # vm, container, kubernetes
             - name: DP_WORKER_TYPE
-              value: "container"
+              value: "vm"
             - name: DP_WORKER_LB
               value: "roundrobin"
             - name: DP_WORKER_ENV
@@ -112,3 +105,7 @@ spec:
               value: "Python"
             - name: DP_WORKER_LOAD_PACKAGES
               value: "Python"
+            - name: DP_CODE_FILE_STORAGE
+              value: "Database"
+            - name: DP_DFS_CODE_FOLDER
+              value: "/dataplane/dfs-code-files/"

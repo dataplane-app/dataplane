@@ -1,7 +1,7 @@
 package filesystem
 
 import (
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"log"
@@ -23,14 +23,20 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 
 		id, err := gonanoid.Generate("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 7)
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println("Directory id error:", err)
 			}
 			continue
 		}
 
 		input.FolderID = id
-		foldername = input.FolderID + "_" + FolderFriendly(input.FolderName)
+
+		/* Node folders do not have IDs attached because they need to be referenced in code */
+		if input.FType == "node-folder" {
+			foldername = FolderFriendly(input.FolderName)
+		} else {
+			foldername = input.FolderID + "_" + FolderFriendly(input.FolderName)
+		}
 
 		input.FolderName = FolderFriendly(input.FolderName)
 
@@ -38,7 +44,7 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 
 		errdb := database.DBConn.Create(&input).Error
 		if errdb != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println("Directory create error:", errdb)
 			}
 			if i == 4 {
@@ -53,24 +59,26 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 
 	returnpath := parentFolder + foldername
 
-	createDirectory = config.CodeDirectory + parentFolder + foldername
+	createDirectory = dpconfig.CodeDirectory + parentFolder + foldername
 
-	if _, err := os.Stat(createDirectory); os.IsNotExist(err) {
-		// path/to/whatever does not exist
-		err := os.MkdirAll(createDirectory, os.ModePerm)
-		if err != nil {
-			if config.Debug == "true" {
-				log.Println("Create directory error:", err)
-				return input, returnpath, err
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		if _, err := os.Stat(createDirectory); os.IsNotExist(err) {
+			// path/to/whatever does not exist
+			err := os.MkdirAll(createDirectory, os.ModePerm)
+			if err != nil {
+				if dpconfig.Debug == "true" {
+					log.Println("Create directory error:", err)
+					return input, returnpath, err
+				}
 			}
-		}
-		if config.Debug == "true" {
-			log.Println("Created directory: ", createDirectory)
-		}
+			if dpconfig.Debug == "true" {
+				log.Println("Created directory: ", createDirectory)
+			}
 
-	} else {
-		if config.Debug == "true" {
-			log.Println("Directory already exists: ", createDirectory)
+		} else {
+			if dpconfig.Debug == "true" {
+				log.Println("Directory already exists: ", createDirectory)
+			}
 		}
 	}
 

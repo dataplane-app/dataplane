@@ -80,10 +80,10 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, subfolder stri
 				switch n.NodeTypeDesc {
 				// Python processor
 				case "python":
-					// log.Println("Node types:", n.NodeType, n.NodeTypeDesc, config.CodeDirectory+rfolder)
+					// log.Println("Node types:", n.NodeType, n.NodeTypeDesc, dpconfig.CodeDirectory+rfolder)
 					path, err := FileCreateProcessor(n.NodeTypeDesc, rfolder+"/", cfolder.FolderID, node)
 					if err != nil {
-						if config.Debug == "true" {
+						if dpconfig.Debug == "true" {
 							log.Println("Failed to create python processor file: ", err, path)
 						}
 					}
@@ -121,7 +121,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, subfolder stri
 
 			} else {
 				n.Action = "nochange"
-				if config.Debug == "true" {
+				if dpconfig.Debug == "true" {
 					log.Println("No change node directory: ", n.FolderID, n.NodeID)
 				}
 

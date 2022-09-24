@@ -44,7 +44,7 @@ func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environme
 	err := database.DBConn.Create(&workerSecret).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 
@@ -54,7 +54,7 @@ func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environme
 	// ---- update workers
 	errnat := messageq.MsgSend("updatesecrets."+workerGroup, "update")
 	if errnat != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(errnat)
 		}
 
@@ -87,7 +87,7 @@ func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, envi
 		Delete(&workerSecret).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 
@@ -97,7 +97,7 @@ func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, envi
 	// ---- update workers
 	errnat := messageq.MsgSend("updatesecrets."+workerGroup, "update")
 	if errnat != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(errnat)
 		}
 
@@ -214,7 +214,7 @@ func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentID strin
 
 	err := database.DBConn.Where("secret_id = ? and environment_id =?", secret, environmentID).Find(&s).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive users database error.")
@@ -260,7 +260,7 @@ func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentID
 		`, workerGroup, environmentID).Scan(&s).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive users database error.")

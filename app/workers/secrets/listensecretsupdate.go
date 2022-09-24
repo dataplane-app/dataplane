@@ -1,7 +1,7 @@
 package secrets
 
 import (
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/messageq"
 )
 
@@ -13,7 +13,7 @@ type TaskResponse struct {
 func ListenSecretUpdates() {
 
 	// Responding to a task request
-	messageq.NATSencoded.Subscribe("updatesecrets."+config.WorkerGroup, func(subj, reply string, msg string) {
+	messageq.NATSencoded.Subscribe("updatesecrets."+wrkerconfig.WorkerGroup, func(subj, reply string, msg string) {
 		// log.Println(msg)
 
 		MapSecrets()

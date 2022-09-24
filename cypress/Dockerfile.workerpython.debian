@@ -16,8 +16,10 @@ RUN CGO_ENABLED=0 go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane-worker
 
 FROM python:3.9.12-slim-bullseye
 
-# RUN apk update && apk add --no-cache tzdata make automake gcc g++ subversion python3-dev
-# RUN rm -rf /var/cache/apk/*
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+RUN apt-get update && apt install -y htop && rm -rf /var/lib/apt/lists/*
 
 
 # Create appuser
@@ -40,6 +42,10 @@ RUN chmod +x /dataplane/dataplane-worker
 
 RUN mkdir /dataplane/code-files/ && chown -R appuser:appuser /dataplane
 RUN chmod +w /dataplane/code-files/
+
+# Code folders
+RUN mkdir /dataplane/dfs-code-files/ && chown -R appuser:appuser /dataplane
+RUN chmod +w /dataplane/dfs-code-files/
 
 WORKDIR /dataplane
 

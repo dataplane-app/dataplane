@@ -3,7 +3,7 @@ package runcodeworker
 import (
 	"context"
 	modelmain "dataplane/mainapp/database/models"
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/messageq"
 	"log"
 	"syscall"
@@ -18,7 +18,7 @@ type TaskResponse struct {
 func ListenRunCode() {
 
 	// Responding to a task request
-	channel := "runcodefile." + config.WorkerGroup + "." + config.WorkerID
+	channel := "runcodefile." + wrkerconfig.WorkerGroup + "." + wrkerconfig.WorkerID
 	// log.Println("channel:", channel)
 	messageq.NATSencoded.Subscribe(channel, func(subj, reply string, msg modelmain.CodeRun) {
 		// log.Println("message:", msg)
@@ -26,10 +26,10 @@ func ListenRunCode() {
 		response := "ok"
 		message := "ok"
 		// msg.EnvironmentID
-		if config.EnvID != msg.EnvironmentID {
+		if wrkerconfig.EnvID != msg.EnvironmentID {
 			response = "failed"
 			message = "Incorrect environment"
-			if config.Debug == "true" {
+			if wrkerconfig.Debug == "true" {
 				log.Println("response", response, message)
 			}
 
@@ -59,11 +59,11 @@ func ListenRunCode() {
 			go coderunworker(ctx, msg)
 		}
 	})
-	if config.Debug == "true" {
+	if wrkerconfig.Debug == "true" {
 		log.Println("🎧 Listening for code runs on subject:", channel)
 	}
 
-	messageq.NATSencoded.Subscribe("runcodefilecancel."+config.WorkerGroup+"."+config.WorkerID, func(subj, reply string, msg modelmain.CodeRun) {
+	messageq.NATSencoded.Subscribe("runcodefilecancel."+wrkerconfig.WorkerGroup+"."+wrkerconfig.WorkerID, func(subj, reply string, msg modelmain.CodeRun) {
 		// Respond to cancelling a task
 		id := msg.RunID
 

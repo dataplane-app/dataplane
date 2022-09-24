@@ -33,7 +33,7 @@ func Canceltask() fiber.Handler {
 			EndDT:  time.Now().UTC(),
 			Status: "Fail",
 		}
-		var response TaskResponse
+		var response modelmain.TaskResponse
 		_, errnats := messageq.MsgReply("taskupdate", TaskUpdate, &response)
 
 		if errnats != nil {

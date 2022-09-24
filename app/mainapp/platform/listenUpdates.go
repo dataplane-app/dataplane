@@ -25,7 +25,7 @@ func PlatformNodeListen() {
 	messageq.NATSencoded.QueueSubscribe("mainapp-node-update", "mainapp-node-update", func(subj, reply string, msg models.PlatformNodeUpdate) {
 
 		// log.Println("Updated", msg.Leader == msg.NodeID)
-		// log.Println("Loaded leader", config.Leader)
+		// log.Println("Loaded leader", dpconfig.Leader)
 
 		switch msg.Status {
 		case "online":
@@ -42,7 +42,7 @@ func PlatformNodeListen() {
 
 			// If the the leader is the current node, update the time using postgresql clock to avoid time drift
 			// This part will not run if no leader is found
-			if config.Leader == nodeID {
+			if dpconfig.Leader == nodeID {
 				err2 = database.DBConn.Model(&models.PlatformLeader{}).Clauses(clause.OnConflict{
 					Columns:   []clause.Column{{Name: "leader"}},
 					DoUpdates: clause.AssignmentColumns([]string{"updated_at"}),
