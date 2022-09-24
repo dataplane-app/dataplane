@@ -13,7 +13,7 @@
 ### When
 - [x] New or edited file - simply add to database, invalidate node level cache and this will automatically added by reference to cache on run time.
 - [x] Delete a file, move file or folder name change - invalidate the node cache, remove all file level cache and remove the entire folder in each worker.
-- [ ] Pipeline change - invalidate the node cache (all nodes in pipeline), remove all file level cache and remove the entire folder in each worker.
+- [x] Pipeline change - invalidate the node cache (all nodes in pipeline), remove all file level cache and remove the entire folder in each worker.
 
 ### Testing
 * When LocalFile - files created in shared volume
@@ -21,7 +21,7 @@
 * On migration - no breaking changes
 - [x] Duplicate a pipeline
 - [x] Create a pipeline
-- [ ] Edit a pipeline
+- [x] Edit a pipeline
 - [x] Deploy a pipleline
 - [x] Delete a folder in a node
 - [x] Rename a folder in a node
@@ -31,5 +31,5 @@
 - [x] Relative imports in python folders work
 - [x] Install packages
 - [x] Run a deployment
-- [ ] Delete a pipeline - files and db
-- [ ] Delete a deployment - files and db
+- [x] Delete a pipeline - files and db
+- [x] Delete a deployment - files and db
