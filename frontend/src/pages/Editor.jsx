@@ -5,18 +5,7 @@ import FileManagerColumn from '../components/EditorPage/FileManager';
 import LogsColumn from '../components/EditorPage/LogsColumn';
 import PackageColumn from '../components/EditorPage/PackagesColumn';
 import Navbar from '../components/Navbar';
-import {
-    lgLayoutBash,
-    mdLayoutBash,
-    smLayoutBash,
-    xsLayoutBash,
-    xxsLayoutBash,
-    lgLayoutPython,
-    mdLayoutPython,
-    smLayoutPython,
-    xsLayoutPython,
-    xxsLayoutPython,
-} from '../utils/editorLayouts';
+import getGridLayouts from '../utils/editorLayouts';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -26,6 +15,7 @@ import { useSnackbar } from 'notistack';
 import { useGetPipeline } from '../graphql/getPipeline';
 import { useGetNode } from '../graphql/getNode';
 import InstallationLogsColumn from '../components/EditorPage/InstallationLogsColumn';
+import Markdown from '../components/EditorPage/Markdown';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -40,6 +30,7 @@ export const globalEditorState = createState({
     parentName: null,
     runID: null,
     runState: null,
+    markdown: 'view', // view or edit
 });
 
 export const useGlobalEditorState = () => useHookState(globalEditorState);
@@ -55,6 +46,12 @@ const PipelineEditor = () => {
     if (EditorGlobal.selectedFile?.id?.value === 'requirements.txt') {
         currentTab = 'install';
     }
+    if (EditorGlobal.selectedFile?.name?.value.slice(-3) === '.md') {
+        currentTab = 'markdown';
+    }
+
+    let isMarkdown = false;
+    isMarkdown = EditorGlobal?.selectedFile?.name?.get().slice(-3) === '.md';
 
     const [pipeline, setPipeline] = useState({});
 
@@ -64,22 +61,6 @@ const PipelineEditor = () => {
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
     const editorRef = useRef(null);
-
-    const layoutsBash = {
-        lg: lgLayoutBash,
-        md: mdLayoutBash,
-        sm: smLayoutBash,
-        xs: xsLayoutBash,
-        xxs: xxsLayoutBash,
-    };
-
-    const layoutsPython = {
-        lg: lgLayoutPython,
-        md: mdLayoutPython,
-        sm: smLayoutPython,
-        xs: xsLayoutPython,
-        xxs: xxsLayoutPython,
-    };
 
     const handleUnload = () => {
         console.log('Still editing');
@@ -143,15 +124,14 @@ const PipelineEditor = () => {
                             measureBeforeMount={true}
                             // onResizeStop={(e, _) => console.log('Resize', e, _)}
                             compactType="vertical"
-                            layouts={pipeline.nodeTypeDesc === 'python' ? layoutsPython : layoutsBash}
+                            layouts={getGridLayouts(pipeline.nodeTypeDesc, EditorGlobal.markdown.value, isMarkdown)}
                             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                             cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}>
                             <FileManagerColumn key="1" pipeline={pipeline} />
                             {pipeline.nodeTypeDesc === 'python' ? <PackageColumn key="2" pipeline={pipeline} packages={packages} setPackages={setPackages} /> : null}
                             <EditorColumn key="3" ref={editorRef} pipeline={pipeline} />
-                            {currentTab === 'code' ? (
-                                <LogsColumn key="4" pipeline={pipeline} />
-                            ) : (
+                            {currentTab === 'code' && <LogsColumn key="4" pipeline={pipeline} />}
+                            {currentTab === 'install' && (
                                 <InstallationLogsColumn
                                     key="4"
                                     environmentID={Environment.id.get()}
@@ -160,6 +140,7 @@ const PipelineEditor = () => {
                                     setPackages={setPackages}
                                 />
                             )}
+                            {currentTab === 'markdown' && EditorGlobal.markdown.get() === 'edit' && <Markdown key="4" />}
                         </ResponsiveGridLayout>
                     </Box>
                 </Box>
