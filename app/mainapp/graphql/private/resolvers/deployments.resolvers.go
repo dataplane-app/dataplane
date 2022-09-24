@@ -772,19 +772,30 @@ func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentI
 func (r *mutationResolver) ClearFileCacheDeployment(ctx context.Context, environmentID string, deploymentID string, version string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
-
+	version := "remove"
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: deploymentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: deploymentID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
 		return "", errors.New("Requires permissions.")
+	}
+
+	// ----- remove cache from workers --------
+	var parentfolder models.DeployCodeFolders
+	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ? and version =?", environmentID, deploymentID, "pipeline", version).First(&parentfolder)
+
+	folderpath2, _ := filesystem.DeployFolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "deployments", version)
+	errcache := dfscache.InvalidateCacheDeployment(environmentID, folderpath2, deploymentID, version)
+	if errcache != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(errcache)
+		}
 	}
 
 	return "Success", nil
