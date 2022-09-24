@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -26,6 +27,16 @@ NOTE: Node ID is the node in the graph and not the worker ID.
 */
 func DistributedStoragePipelineDownload(environmentID string, folder string, folderID string, nodeID string) error {
 
+	// log.Println("folder", folder)
+	if strings.Contains(folder, "/pipelines/") == false {
+		log.Println("Folder incorrect format - doesn't contain /pipelines/")
+		return errors.New("Folder incorrect format - doesn't contain /pipelines/")
+	}
+
+	if strings.Contains(folder, "_Platform") == false {
+		log.Println("Folder incorrect format - doesn't contain _Platform")
+		return errors.New("Folder incorrect format - doesn't contain _Platform")
+	}
 	/* node cache is a higher level cache for the node */
 	nodeCache := models.CodeNodeCache{}
 	err := database.DBConn.Select("cache_valid").Where("node_id = ? and environment_id = ? and worker_id = ?", nodeID, environmentID, wrkerconfig.WorkerID).First(&nodeCache).Error

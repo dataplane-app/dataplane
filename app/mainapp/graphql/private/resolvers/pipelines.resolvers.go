@@ -6,6 +6,7 @@ package privateresolvers
 import (
 	"context"
 	permissions "dataplane/mainapp/auth_permissions"
+	dfscache "dataplane/mainapp/code_editor/dfs_cache"
 	"dataplane/mainapp/code_editor/filesystem"
 	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -115,13 +116,13 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 
 	// Should create a directory as follows code_directory/
 
+	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
+
+	foldercreate, _, _ := filesystem.CreateFolder(pipelinedir, pfolder+"pipelines/")
+
+	thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID, "pipelines")
+
 	if dpconfig.FSCodeFileStorage == "LocalFile" {
-		pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
-
-		foldercreate, _, _ := filesystem.CreateFolder(pipelinedir, pfolder+"pipelines/")
-
-		thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID, "pipelines")
-
 		git.PlainInit(dpconfig.CodeDirectory+thisfolder, false)
 	}
 
@@ -1066,6 +1067,17 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	filesystem.FolderNodeAddUpdate(pipelineID, environmentID, "pipelines")
 
+	var parentfolder models.CodeFolders
+	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ?", environmentID, pipelineID, "pipeline").First(&parentfolder)
+
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
+	errcache := dfscache.InvalidateCachePipeline(environmentID, folderpath, pipelineID)
+	if errcache != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(errcache)
+		}
+	}
+
 	// ----- unlock the pipeline
 	err = database.DBConn.Model(&models.Pipelines{}).Where("pipeline_id = ?", pipelineID).Update("update_lock", false).Error
 	if err != nil {
@@ -1094,6 +1106,49 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 
 	if permOutcome == "denied" {
 		return "", errors.New("requires permissions")
+	}
+
+	// ----- remove cache from workers --------
+	var parentfolder models.CodeFolders
+	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ?", environmentID, pipelineID, "pipeline").First(&parentfolder)
+
+	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
+	errcache := dfscache.InvalidateCachePipeline(environmentID, folderpath, pipelineID)
+	if errcache != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(errcache)
+		}
+	}
+
+	// ---- delete files and folders
+	deleteQuery := `
+		DELETE FROM code_files_store
+		USING code_files
+		WHERE code_files.environment_id = ? and code_files.pipeline_id =? and 
+		code_files.file_id = code_files_store.file_id and code_files.environment_id = code_files_store.environment_id;
+		`
+	errdb := database.DBConn.Exec(deleteQuery, environmentID, pipelineID).Error
+
+	if errdb != nil {
+		logging.PrintSecretsRedact("Delete pipeline: ", errdb)
+	}
+
+	f := models.CodeFiles{}
+	errdb = database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Delete(&f).Error
+	if errdb != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(errdb)
+		}
+		return "", errors.New("Delete pipeline database error.")
+	}
+
+	f2 := models.CodeFolders{}
+	errdb = database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Delete(&f2).Error
+	if errdb != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(errdb)
+		}
+		return "", errors.New("Delete pipeline database error.")
 	}
 
 	// Delete the pipeline

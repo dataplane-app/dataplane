@@ -6,6 +6,7 @@ package privateresolvers
 import (
 	"context"
 	permissions "dataplane/mainapp/auth_permissions"
+	dfscache "dataplane/mainapp/code_editor/dfs_cache"
 	"dataplane/mainapp/code_editor/filesystem"
 	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -515,6 +516,38 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 		return "", errors.New("requires permissions")
 	}
 
+	// ----- remove cache from workers --------
+	var parentfolder models.DeployCodeFolders
+	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ? and version =?", environmentID, pipelineID, "pipeline", version).First(&parentfolder)
+
+	folderpath2, _ := filesystem.DeployFolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "deployments", version)
+	errcache := dfscache.InvalidateCacheDeployment(environmentID, folderpath2, pipelineID, version)
+	if errcache != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(errcache)
+		}
+	}
+
+	// ---- delete files and folders
+	deleteQuery := `
+		DELETE FROM deploy_files_store
+		USING deploy_code_files
+		WHERE 
+		deploy_code_files.environment_id = ? and 
+		deploy_code_files.pipeline_id =? and 
+		deploy_code_files.version =? and 
+
+		deploy_code_files.file_id = deploy_files_store.file_id and 
+		deploy_code_files.environment_id = deploy_files_store.environment_id and 
+		deploy_code_files.version = deploy_files_store.version
+		;
+		`
+	errdb := database.DBConn.Exec(deleteQuery, environmentID, pipelineID, version).Error
+
+	if errdb != nil {
+		logging.PrintSecretsRedact("Delete pipeline: ", errdb)
+	}
+
 	// Obtain deployment details
 	d := models.DeployPipelines{}
 	err := database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).First(&d).Error
@@ -595,22 +628,25 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 	}
 	folderpath, _ := filesystem.DeployFolderConstructByID(database.DBConn, folders.FolderID, environmentID, "deployments", version)
 	deleteFolder := dpconfig.CodeDirectory + folderpath
-	if _, err := os.Stat(deleteFolder); os.IsNotExist(err) {
 
-		if dpconfig.Debug == "true" {
-			log.Println("Directory doesnt exists, skipping delete folder: ", deleteFolder)
-		}
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		if _, err := os.Stat(deleteFolder); os.IsNotExist(err) {
 
-	} else {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact("Deleting folder: ", deleteFolder)
-		}
-		err = os.RemoveAll(deleteFolder)
-		if err != nil {
 			if dpconfig.Debug == "true" {
-				logging.PrintSecretsRedact(err)
+				log.Println("Directory doesnt exists, skipping delete folder: ", deleteFolder)
 			}
-			return "", errors.New("Failed to remove folder and contents.")
+
+		} else {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact("Deleting folder: ", deleteFolder)
+			}
+			err = os.RemoveAll(deleteFolder)
+			if err != nil {
+				if dpconfig.Debug == "true" {
+					logging.PrintSecretsRedact(err)
+				}
+				return "", errors.New("Failed to remove folder and contents.")
+			}
 		}
 	}
 
