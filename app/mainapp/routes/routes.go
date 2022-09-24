@@ -395,6 +395,7 @@ func Setup(port string) *fiber.App {
 
 	// Pipeline API Trigger public
 	app.Post("/app/public/api-trigger/:id", auth.ApiAuthMiddle(), func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
 		pipelineID := c.Locals("pipelineID").(string)
 		environmentID := c.Locals("environmentID").(string)
 
@@ -404,11 +405,12 @@ func Setup(port string) *fiber.App {
 		runID := uuid.NewString()
 		pipelines.RunPipeline(pipelineID, environmentID, runID, jsonPayload)
 
-		return c.SendString("Success")
+		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
 	})
 
 	// Pipeline API Trigger private
 	app.Post("/app/private/api-trigger/:id", auth.ApiAuthMiddle(), func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
 		pipelineID := c.Locals("pipelineID").(string)
 		environmentID := c.Locals("environmentID").(string)
 
@@ -418,7 +420,7 @@ func Setup(port string) *fiber.App {
 		runID := uuid.NewString()
 		pipelines.RunPipeline(pipelineID, environmentID, runID, jsonPayload)
 
-		return c.SendString("Success")
+		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
 	})
 
 	// Check healthz
