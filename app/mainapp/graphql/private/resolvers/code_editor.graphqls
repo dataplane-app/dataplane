@@ -112,17 +112,5 @@ extend type Mutation {
 	"""
    updateCodePackages(workerGroup: String!, language: String!, packages: String!, environmentID: String!, pipelineID: String!): String!
 
-   """
-	Clear file cache for pipelines.
-	+ **Route**: Private
-    + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines, specific_pipeline[write]
-	"""
-   clearFileCachePipeline(environmentID: String!, pipelineID: String!): String!
 
-      """
-	Clear file cache for deployments.
-	+ **Route**: Private
-    + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines, specific_pipeline[write]
-	"""
-   clearFileCacheDeployment(environmentID: String!, deploymentID: String!): String!
 }
