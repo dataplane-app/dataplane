@@ -85,9 +85,11 @@ const PipelineEditor = () => {
             parentName: null,
             runID: null,
             runState: null,
+            markdown: 'view',
         });
         history.push(`/pipelines/view/${pipeline.pipelineID}`);
     };
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <AppBar
