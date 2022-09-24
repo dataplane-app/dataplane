@@ -49,8 +49,6 @@ services:
     image: dataplane/dataplane:latest
     ports:
       - 9002:9001
-    volumes:
-      - testcypress-code-files:/dataplane/code-files/
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       secret_db_host: postgres-test
@@ -73,14 +71,12 @@ services:
       DP_CLEANTASKS_DAYS: "60"
       DP_REMOVELOGS_DAYS: "60"
       DP_CODE_FILE_STORAGE: "Database"
-      DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"
+      DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
 
   mainapp2-cypresstest:
     image: dataplane/dataplane:latest
     deploy:
       replicas: 2
-    volumes:
-      - testcypress-code-files:/dataplane/code-files/
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       secret_db_host: postgres-test
@@ -103,7 +99,7 @@ services:
       DP_CLEANTASKS_DAYS: "60"
       DP_REMOVELOGS_DAYS: "60"
       DP_CODE_FILE_STORAGE: "Database"
-      DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"
+      DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
 
   dataplane-worker-cypresstest:
     image: dataplane/dataplane-worker-python:latest
@@ -111,8 +107,6 @@ services:
     cpus: 1.5
     deploy:
       replicas: 3
-    volumes:
-      - testcypress-code-files:/dataplane/code-files/
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       secret_db_host: postgres-test
@@ -140,8 +134,4 @@ services:
       DP_WORKER_LANGUAGES: "Python"
       DP_WORKER_LOAD_PACKAGES: "Python"
       DP_CODE_FILE_STORAGE: "Database"
-      DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"
-
-volumes:
-  testcypress-code-files:
-  # testcypress-postgres:
+      DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
