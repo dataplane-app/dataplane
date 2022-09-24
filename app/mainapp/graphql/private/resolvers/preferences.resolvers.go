@@ -27,7 +27,7 @@ func (r *mutationResolver) UpdatePreferences(ctx context.Context, input *private
 		Create(&p).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Get preferences database error.")
@@ -46,7 +46,7 @@ func (r *queryResolver) GetAllPreferences(ctx context.Context) ([]*privategraphq
 	err := database.DBConn.Where("user_id = ?", userID).Find(&p).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact("Get all preferences:", err)
 		}
 		return nil, errors.New("Get preferences database error.")
@@ -64,7 +64,7 @@ func (r *queryResolver) GetOnePreference(ctx context.Context, preference string)
 	err := database.DBConn.Where("user_id = ? AND preference = ?", userID, preference).First(&p).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact("Get one preference:", err)
 		}
 		return nil, errors.New("Get preferences database error.")

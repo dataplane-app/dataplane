@@ -32,22 +32,22 @@ func CreateFolderSubs(db *gorm.DB, environmentID string) (string, error) {
 
 	for _, n := range folders {
 
-		createDirectory := config.CodeDirectory + parentFolder + n
+		createDirectory := dpconfig.CodeDirectory + parentFolder + n
 
 		if _, err := os.Stat(createDirectory); os.IsNotExist(err) {
 			// path/to/whatever does not exist
 			err := os.MkdirAll(createDirectory, os.ModePerm)
 			if err != nil {
-				if config.Debug == "true" {
+				if dpconfig.Debug == "true" {
 					log.Println("Create directory error:", err)
 				}
 			}
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println("Created sub directory: ", createDirectory)
 			}
 
 		} else {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println("Directory already exists: ", createDirectory)
 			}
 		}

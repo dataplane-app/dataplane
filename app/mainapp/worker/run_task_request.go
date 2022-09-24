@@ -1,13 +1,12 @@
 package worker
 
 import (
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
 	"dataplane/mainapp/messageq"
 	"dataplane/mainapp/utilities"
-	"dataplane/workers/config"
-	"dataplane/workers/runtask"
 	"errors"
 	"log"
 	"strconv"
@@ -85,7 +84,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 
 			// if a worker group goes offline in between, choose the next in the load balancer and retry
 
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println("Worker LB:", onlineWorkers[0].LB, onlineWorkers)
 			}
 
@@ -99,7 +98,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 			}
 
 			// Send the request to the worker
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println("Selected worker:", onlineWorkers[0].LB, loadbalanceNext)
 			}
 
@@ -119,7 +118,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 				RunType:       RunType,
 			}
 
-			var response runtask.TaskResponse
+			var response models.TaskResponse
 
 			// log.Println("Task channel: ", "task."+workerGroup+"."+loadbalanceNext)
 
@@ -144,7 +143,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 			// } else {
 			// 	log.Println(loadbalanceNext + " not online, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
 			// }
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				log.Println("Send to worker", response.R, response.M)
 			}
 		}
@@ -170,7 +169,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 
 		errnat := messageq.MsgSend("taskupdate."+envID+"."+runid, TaskFinal)
 		if errnat != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(errnat)
 			}
 

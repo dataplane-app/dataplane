@@ -1,7 +1,7 @@
 package database
 
 import (
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"fmt"
 	"log"
 	"os"
@@ -20,13 +20,13 @@ func DBConnect() {
 	var err error
 	DBConn, err = DB()
 	if err != nil {
-		if config.Debug == "true" {
+		if wrkerconfig.Debug == "true" {
 			log.Println(err.Error())
 		}
 
 		log.Fatal("Failed to connect to database")
 	}
-	//DBConn.Config.PrepareStmt = true
+	//DBConn.wrkerconfig.PrepareStmt = true
 }
 
 func DB() (*gorm.DB, error) {

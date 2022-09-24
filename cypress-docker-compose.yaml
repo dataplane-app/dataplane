@@ -3,7 +3,7 @@ version: '2.4'
 services:
 
   redis-service:
-    image: eqalpha/keydb:alpine_x86_64_v6.2.2
+    image: redis:7.0.5-bullseye
     ports:
       - 6379
 
@@ -53,8 +53,6 @@ services:
       dockerfile: cypress/Dockerfile.main.alpine
     ports:
       - 9002:9001
-    volumes:
-      - testcypress-code-files:/dataplane/code-files/
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       secret_db_host: postgres-test
@@ -76,6 +74,9 @@ services:
       DP_SCHEDULER_DEBUG: "false"
       DP_CLEANTASKS_DAYS: "60"
       DP_REMOVELOGS_DAYS: "60"
+      DP_CODE_FILE_STORAGE: "Database"
+      DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
+      
 
   mainapp2-cypresstest:
     build:
@@ -83,8 +84,6 @@ services:
       dockerfile: cypress/Dockerfile.main.alpine
     deploy:
       replicas: 2
-    volumes:
-      - testcypress-code-files:/dataplane/code-files/
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       secret_db_host: postgres-test
@@ -106,6 +105,8 @@ services:
       DP_SCHEDULER_DEBUG: "false"
       DP_CLEANTASKS_DAYS: "60"
       DP_REMOVELOGS_DAYS: "60"
+      DP_CODE_FILE_STORAGE: "Database"
+      DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
 
   dataplane-worker-cypresstest:
     build:
@@ -114,9 +115,7 @@ services:
     # mem_limit: 512MB
     # cpus: 1.5
     deploy:
-      replicas: 1
-    volumes:
-      - testcypress-code-files:/dataplane/code-files/
+      replicas: 2
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       secret_db_host: postgres-test
@@ -143,7 +142,42 @@ services:
       DP_WORKER_PORT: "9005"
       DP_WORKER_LANGUAGES: "Python"
       DP_WORKER_LOAD_PACKAGES: "Python"
+      DP_CODE_FILE_STORAGE: "Database"
+      DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
 
-volumes:
-  testcypress-code-files:
-  # testcypress-postgres:
+  dataplane-worker-cypresstest-prod:
+    build:
+      context: ./
+      dockerfile: cypress/Dockerfile.workerpython.debian
+    # mem_limit: 512MB
+    # cpus: 1.5
+    deploy:
+      replicas: 2
+    environment:
+      DP_CODE_FOLDER: "/dataplane/code-files/"
+      secret_db_host: postgres-test
+      secret_db_user: postgres
+      secret_db_pwd: "Hello123!"
+      secret_db_ssl: "disable"
+      secret_db_port: "5432"
+      secret_db_database: "testcypress"
+      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
+      DP_DATABASE: "timescaledb"
+      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_MODE: "development"
+      DP_DEBUG: "true"
+      DP_DB_DEBUG: "false"
+      DP_MQ_DEBUG: "false"
+      DP_METRIC_DEBUG: "false"
+      DP_SCHEDULER_DEBUG: "false"
+      DP_WORKER_HEARTBEAT_SECONDS: "1"
+      DP_WORKER_GROUP: "python_1"
+      DP_WORKER_CMD: "/bin/sh"
+      DP_WORKER_TYPE: "vm"
+      DP_WORKER_LB: "roundrobin"
+      DP_WORKER_ENV: "Production"
+      DP_WORKER_PORT: "9005"
+      DP_WORKER_LANGUAGES: "Python"
+      DP_WORKER_LOAD_PACKAGES: "Python"
+      DP_CODE_FILE_STORAGE: "Database"
+      DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"

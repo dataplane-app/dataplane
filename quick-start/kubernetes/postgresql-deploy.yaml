@@ -61,7 +61,7 @@ metadata:
     app: timescaledb
 spec:
   ports:
-    - name: http
+    - name: tcp
       protocol: TCP
       #      port = port connected to ingress
       port: 5432

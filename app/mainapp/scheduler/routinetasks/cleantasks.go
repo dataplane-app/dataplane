@@ -16,8 +16,8 @@ func CleanTasks(s *gocron.Scheduler, db *gorm.DB) {
 
 	s.Every(1).Day().At("01:00").Do(func() {
 
-		result := db.Where("created_at < NOW() - INTERVAL '? days'", config.CleanTasks).Delete(&models.WorkerTasks{})
-		if config.Debug == "true" {
+		result := db.Where("created_at < NOW() - INTERVAL '? days'", dpconfig.CleanTasks).Delete(&models.WorkerTasks{})
+		if dpconfig.Debug == "true" {
 			log.Println("Removed old tasks")
 		}
 

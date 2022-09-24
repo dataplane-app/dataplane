@@ -1,7 +1,7 @@
 package migrations
 
 import (
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database/models"
 	"fmt"
 	"log"
@@ -22,7 +22,7 @@ import (
 
 func Migrate() {
 
-	migrateVersion := "0.0.40"
+	migrateVersion := "0.0.53"
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -103,6 +103,11 @@ func Migrate() {
 			&models.PlatformLeader{},
 			&models.Scheduler{},
 			&models.SchedulerLock{},
+
+			// ---- Files and folders ---
+			&models.CodeFilesStore{},
+			&models.CodeFilesCache{},
+			&models.CodeNodeCache{},
 			&models.CodeFolders{},
 			&models.CodeFiles{},
 			&models.CodeGitCommits{},
@@ -117,6 +122,9 @@ func Migrate() {
 			&models.DeployPipelineEdges{},
 			&models.DeployCodeFolders{},
 			&models.DeployCodeFiles{},
+			&models.DeployFilesStore{},
+			&models.DeployCodeFilesCache{},
+			&models.DeployCodeNodeCache{},
 		)
 		if err1 != nil {
 			panic(err1)
@@ -130,7 +138,7 @@ func Migrate() {
 
 		hypertable := "SELECT create_hypertable('logs_platform', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
 
-		if hypertable != "" && config.DPDatabase == "timescaledb" {
+		if hypertable != "" && dpconfig.DPDatabase == "timescaledb" {
 			if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
 				panic(err)
 			}
@@ -138,7 +146,7 @@ func Migrate() {
 
 		hypertable = "SELECT create_hypertable('logs_workers', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
 
-		if hypertable != "" && config.DPDatabase == "timescaledb" {
+		if hypertable != "" && dpconfig.DPDatabase == "timescaledb" {
 			if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
 				panic(err)
 			}
@@ -146,7 +154,7 @@ func Migrate() {
 
 		hypertable = "SELECT create_hypertable('logs_code_run', 'created_at', if_not_exists => TRUE, chunk_time_interval=> INTERVAL '7 Days');"
 
-		if hypertable != "" && config.DPDatabase == "timescaledb" {
+		if hypertable != "" && dpconfig.DPDatabase == "timescaledb" {
 			if err := dbConn.Model(&models.LogsPlatform{}).Exec(hypertable).Error; err != nil {
 				panic(err)
 			}

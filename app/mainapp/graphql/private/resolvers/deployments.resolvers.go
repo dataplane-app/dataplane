@@ -5,9 +5,10 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
+	permissions "dataplane/mainapp/auth_permissions"
+	dfscache "dataplane/mainapp/code_editor/dfs_cache"
 	"dataplane/mainapp/code_editor/filesystem"
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
@@ -76,7 +77,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	err := database.DBConn.Where("pipeline_id = ? and version = ? and environment_id = ?", "d-"+pipelineID, version, toEnvironmentID).First(&deploypipeline).Error
 
 	if err != nil && err != gorm.ErrRecordNotFound {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrieve pipeline database error")
@@ -91,7 +92,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	pipeline := models.Pipelines{}
 	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).First(&pipeline).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrieve pipeline database error")
@@ -100,7 +101,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	pipelineNodes := []*models.PipelineNodes{}
 	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&pipelineNodes).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrieve pipeline database error")
@@ -109,7 +110,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	pipelineEdges := []*models.PipelineEdges{}
 	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&pipelineEdges).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrieve pipeline database error")
@@ -118,7 +119,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	folders := []*models.CodeFolders{}
 	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&folders).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrieve pipeline folders database error")
@@ -127,17 +128,26 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	files := []*models.CodeFiles{}
 	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&files).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrieve pipeline folders database error")
+	}
+
+	filesData := []*models.CodeFilesStore{}
+	err = database.DBConn.Model(models.CodeFilesStore{}).Where("code_files.pipeline_id = ? and code_files.environment_id = ?", pipelineID, fromEnvironmentID).Joins("inner join code_files on code_files_store.file_id = code_files.file_id and code_files_store.environment_id = code_files.environment_id").Scan(&filesData).Error
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Retrieve pipeline file contents database error")
 	}
 
 	// Obtain folder structure for pipeline
 	pipelineFolder := models.CodeFolders{}
 	err = database.DBConn.Where("pipeline_id = ? and environment_id = ? and level = ?", pipelineID, fromEnvironmentID, "pipeline").First(&pipelineFolder).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrieve pipeline folders database error")
@@ -146,18 +156,20 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, pipelineFolder.ParentID, fromEnvironmentID, "")
 	foldertocopy, _ := filesystem.FolderConstructByID(database.DBConn, pipelineFolder.FolderID, fromEnvironmentID, "pipelines")
 
-	foldertocopy = config.CodeDirectory + foldertocopy
-	destinationfolder := config.CodeDirectory + pfolder + "deployments/" + pipelineFolder.FolderID + "_" + pipelineFolder.FolderName + "/" + version + "/"
+	foldertocopy = dpconfig.CodeDirectory + foldertocopy
+	destinationfolder := dpconfig.CodeDirectory + pfolder + "deployments/" + pipelineFolder.FolderID + "_" + pipelineFolder.FolderName + "/" + version + "/"
 	// log.Println("Folder to copy:", foldertocopy)
 	// log.Println("Destination folder:", destinationfolder)
 
 	// Create a folder for the version and copy files across
-	err = utilities.CopyDirectory(foldertocopy, destinationfolder)
-	if err != nil {
-		if config.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		err = utilities.CopyDirectory(foldertocopy, destinationfolder)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to copy deployment files.")
 		}
-		return "", errors.New("Failed to copy deployment files.")
 	}
 
 	// Copy pipeline, nodes and edges
@@ -297,6 +309,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		})
 	}
 
+	// files
 	deployFiles := []*models.DeployCodeFiles{}
 	for _, n := range files {
 		deployFiles = append(deployFiles, &models.DeployCodeFiles{
@@ -313,6 +326,20 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		})
 	}
 
+	// deploy Files Data
+	deployFilesData := []*models.DeployFilesStore{}
+	for _, n := range filesData {
+		deployFilesData = append(deployFilesData, &models.DeployFilesStore{
+			FileID:        n.FileID,
+			Version:       createPipeline.Version,
+			FileStore:     n.FileStore,
+			EnvironmentID: createPipeline.EnvironmentID,
+			ChecksumMD5:   n.ChecksumMD5,
+			External:      n.External,
+			RunInclude:    n.RunInclude,
+		})
+	}
+
 	// Replace references to old pipeline
 	var res interface{}
 	json.Unmarshal([]byte(jsonstring), &res)
@@ -325,7 +352,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	// Pipeline create
 	err = database.DBConn.Create(&createPipeline).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to create deployment pipeline.")
@@ -334,7 +361,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	// Nodes create
 	err = database.DBConn.Create(&deployNodes).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to create deployment pipeline.")
@@ -344,7 +371,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	if len(deployEdges) > 0 {
 		err = database.DBConn.Create(&deployEdges).Error
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return "", errors.New("Failed to create deployment pipeline.")
@@ -355,7 +382,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	if len(deployFolders) > 0 {
 		err = database.DBConn.Create(&deployFolders).Error
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return "", errors.New("Failed to create deployment pipeline.")
@@ -366,7 +393,18 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	if len(deployFiles) > 0 {
 		err = database.DBConn.Create(&deployFiles).Error
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to create deployment pipeline.")
+		}
+	}
+
+	// Files data create
+	if len(deployFilesData) > 0 {
+		err = database.DBConn.Create(&deployFilesData).Error
+		if err != nil {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return "", errors.New("Failed to create deployment pipeline.")
@@ -384,7 +422,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	where pipeline_id = ? and environment_id = ?
 	`, version, "d-"+pipelineID, toEnvironmentID).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to create deployment pipeline.")
@@ -394,7 +432,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	err = database.DBConn.Model(&models.DeployPipelineNodes{}).Where("pipeline_id = ? and environment_id = ? and version <> ? and trigger_online = true", "d-"+pipelineID, toEnvironmentID, version).Update("trigger_online", false).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 	}
@@ -415,7 +453,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 		)
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return "", errors.New("Add permission to user database error.")
@@ -478,12 +516,44 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 		return "", errors.New("requires permissions")
 	}
 
+	// ----- remove cache from workers --------
+	var parentfolder models.DeployCodeFolders
+	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ? and version =?", environmentID, pipelineID, "pipeline", version).First(&parentfolder)
+
+	folderpath2, _ := filesystem.DeployFolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "deployments", version)
+	errcache := dfscache.InvalidateCacheDeployment(environmentID, folderpath2, pipelineID, version)
+	if errcache != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(errcache)
+		}
+	}
+
+	// ---- delete files and folders
+	deleteQuery := `
+		DELETE FROM deploy_files_store
+		USING deploy_code_files
+		WHERE 
+		deploy_code_files.environment_id = ? and 
+		deploy_code_files.pipeline_id =? and 
+		deploy_code_files.version =? and 
+
+		deploy_code_files.file_id = deploy_files_store.file_id and 
+		deploy_code_files.environment_id = deploy_files_store.environment_id and 
+		deploy_code_files.version = deploy_files_store.version
+		;
+		`
+	errdb := database.DBConn.Exec(deleteQuery, environmentID, pipelineID, version).Error
+
+	if errdb != nil {
+		logging.PrintSecretsRedact("Delete pipeline: ", errdb)
+	}
+
 	// Obtain deployment details
 	d := models.DeployPipelines{}
 	err := database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).First(&d).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete deployment database error.")
@@ -495,7 +565,7 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&p).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete deployment database error.")
@@ -507,7 +577,7 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&n).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete deployment nodes database error.")
@@ -519,7 +589,7 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&e).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete deployment edges database error.")
@@ -551,29 +621,32 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ? and level=?", pipelineID, environmentID, version, "pipeline").First(&folders).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete deployment edges database error.")
 	}
 	folderpath, _ := filesystem.DeployFolderConstructByID(database.DBConn, folders.FolderID, environmentID, "deployments", version)
-	deleteFolder := config.CodeDirectory + folderpath
-	if _, err := os.Stat(deleteFolder); os.IsNotExist(err) {
+	deleteFolder := dpconfig.CodeDirectory + folderpath
 
-		if config.Debug == "true" {
-			log.Println("Directory doesnt exists, skipping delete folder: ", deleteFolder)
-		}
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		if _, err := os.Stat(deleteFolder); os.IsNotExist(err) {
 
-	} else {
-		if config.Debug == "true" {
-			logging.PrintSecretsRedact("Deleting folder: ", deleteFolder)
-		}
-		err = os.RemoveAll(deleteFolder)
-		if err != nil {
-			if config.Debug == "true" {
-				logging.PrintSecretsRedact(err)
+			if dpconfig.Debug == "true" {
+				log.Println("Directory doesnt exists, skipping delete folder: ", deleteFolder)
 			}
-			return "", errors.New("Failed to remove folder and contents.")
+
+		} else {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact("Deleting folder: ", deleteFolder)
+			}
+			err = os.RemoveAll(deleteFolder)
+			if err != nil {
+				if dpconfig.Debug == "true" {
+					logging.PrintSecretsRedact(err)
+				}
+				return "", errors.New("Failed to remove folder and contents.")
+			}
 		}
 	}
 
@@ -583,7 +656,7 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&f).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete deployment edges database error.")
@@ -595,7 +668,7 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&fi).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete deployment edges database error.")
@@ -636,7 +709,7 @@ func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentI
 	err = database.DBConn.Where("pipeline_id = ? AND node_type = ? and version = ? and environment_id = ?", pipelineID, "trigger", d.Version, environmentID).First(&p).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to retrieve trigger node.")
@@ -655,7 +728,7 @@ func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentI
 		Select("trigger_online").Updates(&n).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Failed to update trigger node.")
@@ -694,6 +767,39 @@ func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentI
 	}
 
 	return "Pipeline trigger updated", nil
+}
+
+func (r *mutationResolver) ClearFileCacheDeployment(ctx context.Context, environmentID string, deploymentID string, version string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: deploymentID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	// ----- remove cache from workers --------
+	var parentfolder models.DeployCodeFolders
+	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ? and version =?", environmentID, deploymentID, "pipeline", version).First(&parentfolder)
+
+	folderpath2, _ := filesystem.DeployFolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "deployments", version)
+	errcache := dfscache.InvalidateCacheDeployment(environmentID, folderpath2, deploymentID, version)
+	if errcache != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(errcache)
+		}
+	}
+
+	return "Success", nil
+	// panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) GetActiveDeployment(ctx context.Context, pipelineID string, environmentID string) (*privategraphql.Deployments, error) {
@@ -744,7 +850,7 @@ order by a.created_at desc
 			query, pipelineID, environmentID).Scan(&p).Error
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return nil, errors.New("Retrive pipelines database error.")
@@ -814,7 +920,7 @@ order by a.created_at desc`
 			query, currentUser, currentUser, pipelineID, environmentID).Scan(&p).Error
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 
@@ -878,7 +984,7 @@ order by a.created_at desc
 			query, pipelineID, environmentID, version).Scan(&p).Error
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return nil, errors.New("Retrive pipelines database error.")
@@ -948,7 +1054,7 @@ order by a.created_at desc`
 			query, currentUser, currentUser, pipelineID, environmentID, version).Scan(&p).Error
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 
@@ -1014,7 +1120,7 @@ order by a.created_at desc
 			query, environmentID).Scan(&p).Error
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return nil, errors.New("Retrive pipelines database error.")
@@ -1084,7 +1190,7 @@ order by a.created_at desc`
 			query, currentUser, currentUser, environmentID).Scan(&p).Error
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 
@@ -1125,7 +1231,7 @@ func (r *queryResolver) GetDeploymentFlow(ctx context.Context, pipelineID string
 	err := database.DBConn.Where("pipeline_id = ? and version = ? and environment_id = ?", pipelineID, version, environmentID).Find(&nodes).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrieve pipeline nodes database error")
@@ -1137,7 +1243,7 @@ func (r *queryResolver) GetDeploymentFlow(ctx context.Context, pipelineID string
 	err = database.DBConn.Where("pipeline_id = ? and version = ? and environment_id = ?", pipelineID, version, environmentID).Find(&edges).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("retrive pipeline edges database error")
@@ -1187,7 +1293,7 @@ func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID str
 	var pipelineNodes []*models.PipelineNodes
 	err := database.DBConn.Where("pipeline_id =? and environment_id =? and (worker_group = '') IS FALSE", pipelineID, fromEnvironmentID).Find(&pipelineNodes).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 			return []*privategraphql.NonDefaultNodes{}, errors.New("Error retrieving node specific worker groups, try again.")
 		}

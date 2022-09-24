@@ -1,4 +1,4 @@
-package config
+package dpconfig
 
 import (
 	"os"
@@ -34,6 +34,13 @@ var MQDebug string = "false"
 var CodeDirectory string
 var DPDatabase string = ""
 
+// File storage
+var FSCodeFileStorage string
+var FSCodeFileBatches int
+var FSCodeDirectory string
+
+// Available storage methods: Database, LocalFile, S3
+
 func LoadConfig() {
 
 	// Clean tasks set
@@ -64,7 +71,26 @@ func LoadConfig() {
 	}
 
 	CodeDirectory = os.Getenv("DP_CODE_FOLDER")
+	if CodeDirectory == "" {
+		CodeDirectory = "/appdev/code-files/"
+	}
 
 	DPDatabase = os.Getenv("DP_DATABASE")
+
+	/* --- CODE FILE FS ---- */
+	FSCodeFileStorage = os.Getenv("DP_CODE_FILE_STORAGE")
+	if FSCodeFileStorage == "" {
+		FSCodeFileStorage = "Database"
+	}
+
+	FSCodeFileBatches, _ = strconv.Atoi(os.Getenv("DP_SYNC_FILE_BATCHES"))
+	if FSCodeFileBatches == 0 {
+		FSCodeFileBatches = 100
+	}
+
+	FSCodeDirectory = os.Getenv("DP_DFS_CODE_FOLDER")
+	if FSCodeDirectory == "" {
+		FSCodeDirectory = "/appdev/dfs-code-files/"
+	}
 
 }

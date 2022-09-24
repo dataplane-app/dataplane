@@ -23,7 +23,7 @@ func GraphCycleCheck(edges []*models.PipelineEdges, node string) bool {
 	// Topologically sort nodes.
 	_, err := graph.TopSort(node)
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			log.Println(err)
 		}
 		return true

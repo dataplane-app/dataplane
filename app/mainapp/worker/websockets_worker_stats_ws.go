@@ -54,7 +54,7 @@ func WorkerStatsWs(conn *websocket.Conn, subject string) {
 			return
 		}
 
-		if config.MQDebug == "true" {
+		if dpconfig.MQDebug == "true" {
 			logging.PrintSecretsRedact("message received from client:", mt, string(message))
 		}
 

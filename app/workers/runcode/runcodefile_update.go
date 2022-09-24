@@ -3,9 +3,10 @@ package runcodeworker
 import (
 	"dataplane/mainapp/database/models"
 	modelmain "dataplane/mainapp/database/models"
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/messageq"
+	"fmt"
 	"log"
 	"time"
 
@@ -55,10 +56,27 @@ func UpdateRunCodeFile(msg modelmain.CodeRun) {
 
 	errnat := messageq.MsgSend("coderunupdate."+msg.EnvironmentID+"."+msg.RunID, msg)
 	if errnat != nil {
-		if config.Debug == "true" {
+		if wrkerconfig.Debug == "true" {
 			log.Println(errnat)
 		}
 
+	}
+
+	/*
+		Send back complete action
+		stop.Sub(start)
+	*/
+	runtime := time.Now().UTC().Sub(msg.CreatedAt)
+
+	if msg.Status == "Fail" || msg.Status == "Success" {
+		sendmsg := modelmain.LogsSend{
+			CreatedAt: time.Now().UTC(),
+			UID:       uuid.NewString(),
+			Log:       fmt.Sprintf("Run time: %v", runtime),
+			LogType:   "action",
+		}
+
+		messageq.MsgSend("coderunfilelogs."+msg.RunID, sendmsg)
 	}
 
 	sendmsg := modelmain.LogsSend{

@@ -40,17 +40,17 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: dataplane-worker
-  name: dataplane-worker
+    app: redis
+  name: redis-service
   namespace: default
 spec:
   ports:
   - name: tcp
-    port: 9005
+    port: 6379
     protocol: TCP
-    targetPort: 9005
+    targetPort: 6379
   selector:
-    app: dataplane-worker
+    app: redis
 ---
 apiVersion: v1
 kind: Service
@@ -61,7 +61,7 @@ metadata:
   namespace: default
 spec:
   ports:
-  - name: http
+  - name: tcp
     port: 5432
     protocol: TCP
     targetPort: 5432
@@ -103,17 +103,6 @@ spec:
     requests:
       storage: 10Gi
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: dataplane-storage
-spec:
-  accessModes:
-  - ReadWriteMany
-  resources:
-    requests:
-      storage: 5Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -133,7 +122,7 @@ spec:
         - ./dataplane
         env:
         - name: DP_CODE_FOLDER
-          value: /appdev/code-files/
+          value: /dataplane/code-files/
         - name: secret_db_host
           value: timescaledb-service
         - name: secret_db_user
@@ -173,49 +162,39 @@ spec:
           value: "60"
         - name: DP_REMOVELOGS_DAYS
           value: "60"
+        - name: DP_CODE_FILE_STORAGE
+          value: Database
+        - name: DP_DFS_CODE_FOLDER
+          value: /dataplane/dfs-code-files/
         image: dataplane/dataplane:latest
+        imagePullPolicy: Always
         name: container
         ports:
         - containerPort: 9000
-        resources:
-          limits:
-            cpu: "0.2"
-            memory: 200Mi
-          requests:
-            cpu: "0.1"
-            memory: 100Mi
-        volumeMounts:
-        - mountPath: /appdev/code-files
-          name: dp-persistent-storage
-          subPath: code-files
       securityContext:
         runAsGroup: 10001
         runAsUser: 10001
-      volumes:
-      - name: dp-persistent-storage
-        persistentVolumeClaim:
-          claimName: dataplane-storage
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dataplane-worker
+  name: dataplane-worker-dev
 spec:
-  replicas: 4
+  replicas: 3
   selector:
     matchLabels:
-      app: dataplane-worker
+      app: dataplane-worker-dev
   template:
     metadata:
       labels:
-        app: dataplane-worker
+        app: dataplane-worker-dev
     spec:
       containers:
       - command:
         - ./dataplane-worker
         env:
         - name: DP_CODE_FOLDER
-          value: /appdev/code-files/
+          value: /dataplane/code-files/
         - name: secret_db_host
           value: timescaledb-service
         - name: secret_db_user
@@ -254,9 +233,9 @@ spec:
         - name: DP_WORKER_HEARTBEAT_SECONDS
           value: "1"
         - name: DP_WORKER_GROUP
-          value: python_1
+          value: python_dev
         - name: DP_WORKER_TYPE
-          value: container
+          value: vm
         - name: DP_WORKER_LB
           value: roundrobin
         - name: DP_WORKER_ENV
@@ -269,28 +248,147 @@ spec:
           value: Python
         - name: DP_WORKER_LOAD_PACKAGES
           value: Python
+        - name: DP_CODE_FILE_STORAGE
+          value: Database
+        - name: DP_DFS_CODE_FOLDER
+          value: /dataplane/dfs-code-files/
         image: dataplane/dataplane-worker-python:latest
+        imagePullPolicy: Always
         name: container
         ports:
         - containerPort: 9005
-        resources:
-          limits:
-            cpu: "0.4"
-            memory: 500Mi
-          requests:
-            cpu: "0.1"
-            memory: 100Mi
         volumeMounts:
-        - mountPath: /appdev/code-files
-          name: dp-persistent-storage
-          subPath: code-files
+        - mountPath: /dataplane/dfs-code-files
+          name: dp-code-cache-volume
+          subPath: dfs-code-files
       securityContext:
         runAsGroup: 10001
         runAsUser: 10001
       volumes:
-      - name: dp-persistent-storage
-        persistentVolumeClaim:
-          claimName: dataplane-storage
+      - emptyDir:
+          medium: Memory
+          sizeLimit: 250Mi
+        name: dp-code-cache-volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dataplane-worker-prod
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dataplane-worker-prod
+  template:
+    metadata:
+      labels:
+        app: dataplane-worker-prod
+    spec:
+      containers:
+      - command:
+        - ./dataplane-worker
+        env:
+        - name: DP_CODE_FOLDER
+          value: /dataplane/code-files/
+        - name: secret_db_host
+          value: timescaledb-service
+        - name: secret_db_user
+          value: postgres
+        - name: secret_db_pwd
+          value: Hello123!
+        - name: secret_db_ssl
+          value: disable
+        - name: secret_db_port
+          value: "5432"
+        - name: secret_db_database
+          value: dataplane
+        - name: secret_jwt_secret
+          value: 117943e8-9d43-49ac-aa4d-9c64004c8992
+        - name: secret_encryption_key
+          value: '%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB'
+        - name: database
+          value: timescaledb
+        - name: DP_PORT
+          value: "9000"
+        - name: DP_NATS
+          value: nats://nats-0.nats.default.svc:4222, nats://nats-1.nats.default.svc:4222,
+            nats-3.nats.default.svc:4222
+        - name: DP_MODE
+          value: development
+        - name: DP_DEBUG
+          value: "false"
+        - name: DP_DB_DEBUG
+          value: "false"
+        - name: DP_MQ_DEBUG
+          value: "false"
+        - name: DP_METRIC_DEBUG
+          value: "false"
+        - name: DP_SCHEDULER_DEBUG
+          value: "true"
+        - name: DP_WORKER_HEARTBEAT_SECONDS
+          value: "1"
+        - name: DP_WORKER_GROUP
+          value: python_prod
+        - name: DP_WORKER_TYPE
+          value: vm
+        - name: DP_WORKER_LB
+          value: roundrobin
+        - name: DP_WORKER_ENV
+          value: Production
+        - name: DP_WORKER_CMD
+          value: /bin/sh
+        - name: DP_WORKER_PORT
+          value: "9005"
+        - name: DP_WORKER_LANGUAGES
+          value: Python
+        - name: DP_WORKER_LOAD_PACKAGES
+          value: Python
+        - name: DP_CODE_FILE_STORAGE
+          value: Database
+        - name: DP_DFS_CODE_FOLDER
+          value: /dataplane/dfs-code-files/
+        image: dataplane/dataplane-worker-python:latest
+        imagePullPolicy: Always
+        name: container
+        ports:
+        - containerPort: 9005
+        volumeMounts:
+        - mountPath: /dataplane/dfs-code-files
+          name: dp-code-cache-volume
+          subPath: dfs-code-files
+      securityContext:
+        runAsGroup: 10001
+        runAsUser: 10001
+      volumes:
+      - emptyDir:
+          medium: Memory
+          sizeLimit: 250Mi
+        name: dp-code-cache-volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redis
+  name: redis
+spec:
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - image: redis:7.0.5-bullseye
+        name: container
+        ports:
+        - containerPort: 6379
+      securityContext:
+        fsGroup: 999
+        runAsGroup: 999
+        runAsUser: 999
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -367,7 +465,7 @@ spec:
               fieldPath: metadata.namespace
         - name: CLUSTER_ADVERTISE
           value: $(POD_NAME).nats.$(POD_NAMESPACE).svc
-        image: nats:2.7.4-alpine
+        image: nats:2.8.1-alpine
         lifecycle:
           preStop:
             exec:

@@ -3,7 +3,7 @@ package secrets
 import (
 	modelmain "dataplane/mainapp/database/models"
 	"dataplane/mainapp/utilities"
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
 	"log"
 	"os"
@@ -54,7 +54,7 @@ func MapSecrets() {
 	ws.worker_group_id = ? and
 	s.environment_id = ? and
 	s.secret_type='custom'
-	`, config.WorkerGroup, config.EnvID).Scan(&loadsecrets).Error; err != nil {
+	`, wrkerconfig.WorkerGroup, wrkerconfig.EnvID).Scan(&loadsecrets).Error; err != nil {
 		log.Println("DB: Could not load secret")
 	}
 
@@ -69,7 +69,7 @@ func MapSecrets() {
 
 	// log.Println("Secrets array :", len(SecretsArray), SecretsArray)
 	// The replacer is comma separated first is key then replacement - that is why append is twice above
-	config.Secrets = strings.NewReplacer(SecretsArray...)
+	wrkerconfig.Secrets = strings.NewReplacer(SecretsArray...)
 	log.Println("🐿  Secrets loaded")
 
 }

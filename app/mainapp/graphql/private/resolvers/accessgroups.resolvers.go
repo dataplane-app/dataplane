@@ -46,7 +46,7 @@ func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID 
 
 	err := database.DBConn.Create(&e).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Add access group database error.")
@@ -81,7 +81,7 @@ func (r *mutationResolver) UpdateAccessGroup(ctx context.Context, input *private
 	}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("update user database error")
@@ -114,7 +114,7 @@ func (r *mutationResolver) ActivateAccessGroup(ctx context.Context, accessGroupI
 	err := database.DBConn.Where("access_group_id = ?", accessGroupID).First(&p).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrive me database error.")
@@ -129,7 +129,7 @@ func (r *mutationResolver) ActivateAccessGroup(ctx context.Context, accessGroupI
 		Updates(models.PermissionsAccessGroups{Active: true}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Activate access group database error.")
@@ -140,7 +140,7 @@ func (r *mutationResolver) ActivateAccessGroup(ctx context.Context, accessGroupI
 		Updates(models.PermissionsAccessGUsers{Active: true}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Activate access group database error.")
@@ -173,7 +173,7 @@ func (r *mutationResolver) DeactivateAccessGroup(ctx context.Context, accessGrou
 	err := database.DBConn.Where("access_group_id = ?", accessGroupID).First(&p).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Retrive me database error.")
@@ -188,7 +188,7 @@ func (r *mutationResolver) DeactivateAccessGroup(ctx context.Context, accessGrou
 		Updates(models.PermissionsAccessGroups{Active: false}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Deactivate access group database error.")
@@ -199,7 +199,7 @@ func (r *mutationResolver) DeactivateAccessGroup(ctx context.Context, accessGrou
 		Updates(models.PermissionsAccessGUsers{Active: false}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Deactivate access group database error.")
@@ -237,7 +237,7 @@ func (r *mutationResolver) DeleteAccessGroup(ctx context.Context, accessGroupID 
 		return "", errors.New("User to access group relationship not found.")
 	}
 	if err.Error != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Add access group database error.")
@@ -274,7 +274,7 @@ func (r *mutationResolver) UpdatePermissionToAccessGroup(ctx context.Context, en
 
 	err := database.DBConn.Where("access_group_id =?", accessGroupID).First(&p).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Add access group database error.")
@@ -299,7 +299,7 @@ func (r *mutationResolver) UpdatePermissionToAccessGroup(ctx context.Context, en
 	)
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Add access group permission database error.")
@@ -330,7 +330,7 @@ func (r *mutationResolver) UpdateUserToAccessGroup(ctx context.Context, environm
 
 	err := database.DBConn.Where("access_group_id =?", accessGroupID).First(&p).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Add access group database error.")
@@ -349,7 +349,7 @@ func (r *mutationResolver) UpdateUserToAccessGroup(ctx context.Context, environm
 
 	err = database.DBConn.Create(&e).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Add access group database error.")
@@ -387,7 +387,7 @@ func (r *mutationResolver) RemoveUserFromAccessGroup(ctx context.Context, userID
 		return "", errors.New("User to access group relationship not found.")
 	}
 	if err.Error != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Add access group database error.")
@@ -427,7 +427,7 @@ func (r *queryResolver) GetAccessGroups(ctx context.Context, userID string, envi
 `, environmentID, currentUser).Find(&cUser)
 
 		if result.Error != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(result.Error)
 			}
 			return nil, errors.New("User not part of environment.")
@@ -441,7 +441,7 @@ func (r *queryResolver) GetAccessGroups(ctx context.Context, userID string, envi
 
 	err := database.DBConn.Where("environment_id = ?", environmentID).Find(&e).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive users database error.")
@@ -470,7 +470,7 @@ func (r *queryResolver) GetAccessGroup(ctx context.Context, userID string, envir
 
 	err := database.DBConn.Where("access_group_id = ? and environment_id =?", accessGroupID, environmentID).First(&e).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive users database error.")
@@ -513,7 +513,7 @@ func (r *queryResolver) GetUserAccessGroups(ctx context.Context, userID string, 
 		`, userID, environmentID).Scan(&e).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive users database error.")
@@ -560,7 +560,7 @@ func (r *queryResolver) GetAccessGroupUsers(ctx context.Context, environmentID s
 		`, accessGroupID, environmentID).Scan(&e).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive users database error.")

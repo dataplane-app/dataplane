@@ -54,7 +54,7 @@ func GenerateAccessClaims(userID string, username string, usertype string) strin
 		AuthenticationType: "PASSWORD",
 		PreferredUsername:  username,
 		UserType:           usertype, //admin or user
-		PlatformID:         config.PlatformID,
+		PlatformID:         dpconfig.PlatformID,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)

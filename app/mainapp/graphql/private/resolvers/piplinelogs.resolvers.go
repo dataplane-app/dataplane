@@ -36,7 +36,7 @@ func (r *queryResolver) GetNodeLogs(ctx context.Context, runID string, pipelineI
 	err := database.DBConn.Select("created_at", "log", "uid", "log_type").Order("created_at asc").Where("environment_id = ? and run_id=? and node_id=?", environmentID, runID, nodeID).Find(&p).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive logs database error.")
@@ -67,7 +67,7 @@ func (r *queryResolver) GetCodeFileRunLogs(ctx context.Context, runID string, pi
 	err := database.DBConn.Select("created_at", "log", "uid", "log_type").Order("created_at asc").Where("environment_id = ? and run_id=?", environmentID, runID).Find(&p).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive logs database error.")

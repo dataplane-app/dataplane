@@ -1,7 +1,7 @@
 package filesystem
 
 import (
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"log"
@@ -45,12 +45,13 @@ func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFo
 	}
 
 	// Updare the directory
-	updateOLDDirectory = config.CodeDirectory + OLDDirectory
-	updateNewDirectory = config.CodeDirectory + NewDirectory
+	updateOLDDirectory = dpconfig.CodeDirectory + OLDDirectory
+	updateNewDirectory = dpconfig.CodeDirectory + NewDirectory
 
+	// if dpconfig.FSCodeFileStorage == "LocalFile" {
 	if _, err := os.Stat(updateOLDDirectory); os.IsNotExist(err) {
 		// path/to/whatever does not exist
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			log.Println("Update directory doesn't exist: ", updateOLDDirectory)
 		}
 		return models.CodeFolders{}, "", ""
@@ -60,10 +61,11 @@ func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFo
 		if err != nil {
 			log.Println("Rename pipeline dir err:", err)
 		}
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			log.Println("Directory change: ", updateOLDDirectory, "->", updateNewDirectory)
 		}
 	}
+	// }
 
 	return Newinput, updateOLDDirectory, updateNewDirectory
 
