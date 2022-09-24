@@ -111,4 +111,11 @@ extend type Mutation {
     + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines, specific_pipeline[write]
 	"""
    updateCodePackages(workerGroup: String!, language: String!, packages: String!, environmentID: String!, pipelineID: String!): String!
+
+   """
+	Clear file cache.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines, specific_pipeline[write]
+	"""
+   clearFileCache(environmentID: String!, pipelineID: String!): String!
 }
