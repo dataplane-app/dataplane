@@ -7,7 +7,7 @@ import (
 	"context"
 	"dataplane/mainapp/auth"
 	permissions "dataplane/mainapp/auth_permissions"
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	privategraphql "dataplane/mainapp/graphql/private"
@@ -186,7 +186,7 @@ func (r *mutationResolver) GeneratePipelineTrigger(ctx context.Context, pipeline
 	}).Create(&trigger).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 
@@ -217,7 +217,7 @@ func (r *mutationResolver) AddPipelineAPIKey(ctx context.Context, triggerID stri
 	//  Hash API key
 	hashedApiKey, err := auth.Encrypt(apiKey)
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("unable to hash api key")
@@ -234,7 +234,7 @@ func (r *mutationResolver) AddPipelineAPIKey(ctx context.Context, triggerID stri
 
 	err = database.DBConn.Create(&keys).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Register database error.")
@@ -266,7 +266,7 @@ func (r *mutationResolver) DeletePipelineAPIKey(ctx context.Context, apiKey stri
 	query := database.DBConn.Where("pipeline_id = ? and environment_id = ? and api_key = ?",
 		pipelineID, environmentID, apiKey).Delete(&k)
 	if query.Error != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(query.Error)
 		}
 		return "", errors.New("Delete pipeline key database error.")
@@ -447,7 +447,7 @@ func (r *queryResolver) GetPipelineTrigger(ctx context.Context, pipelineID strin
 		if err.Error() == "record not found" {
 			return nil, errors.New("record not found")
 		}
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive pipeline trigger database error.")
@@ -478,7 +478,7 @@ func (r *queryResolver) GetPipelineAPIKeys(ctx context.Context, pipelineID strin
 
 	err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&e).Error
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive pipeline trigger database error.")

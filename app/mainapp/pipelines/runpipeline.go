@@ -2,7 +2,7 @@ package pipelines
 
 import (
 	"dataplane/mainapp/code_editor/filesystem"
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
@@ -57,7 +57,7 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 		err = database.DBConn.Create(&run).Error
 		if err != nil {
 
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return models.PipelineRuns{}, err

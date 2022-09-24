@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"dataplane/mainapp/config"
+	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
 	"dataplane/mainapp/database/models"
 	"dataplane/mainapp/logging"
@@ -22,7 +22,7 @@ func ApiAuthMiddle() func(*fiber.Ctx) error {
 
 		err := database.DBConn.Where("trigger_id = ?", triggerID).First(&trigger).Error
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return c.Status(fiber.StatusForbidden).SendString("Retrive pipeline trigger database error.")
@@ -33,7 +33,7 @@ func ApiAuthMiddle() func(*fiber.Ctx) error {
 
 			err := database.DBConn.Where("trigger_id = ?", triggerID).Find(&keys).Error
 			if err != nil {
-				if config.Debug == "true" {
+				if dpconfig.Debug == "true" {
 					logging.PrintSecretsRedact(err)
 				}
 				return c.Status(fiber.StatusForbidden).SendString("Retrive pipeline trigger database error.")

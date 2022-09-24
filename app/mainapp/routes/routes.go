@@ -424,6 +424,8 @@ func Setup(port string) *fiber.App {
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {
 		return c.SendString("Hello 👋! Healthy 🍏")
+	})
+
 	// Sync folders to Database
 	app.Post("/sync-folder-database", func(c *fiber.Ctx) error {
 		distributefilesystem.MoveCodeFilesToDB(database.DBConn)
