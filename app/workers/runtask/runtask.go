@@ -151,6 +151,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		codeDirectory := wrkerconfig.CodeDirectory
 		directoryRun := codeDirectory + msg.Folder + "/"
 
+		var errfs error
 		switch wrkerconfig.FSCodeFileStorage {
 		case "Database":
 			// Database download
@@ -158,21 +159,13 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			directoryRun = codeDirectory + msg.Folder + "/"
 
 			// msg.RunType, msg.Version
-			var err error
 			switch msg.RunType {
 			case "deployment":
-				err = distfilesystem.DistributedStorageDeploymentDownload(msg.EnvironmentID, msg.Folder+"/", msg.FolderID, msg.NodeID, msg.RunType, msg.Version)
+				errfs = distfilesystem.DistributedStorageDeploymentDownload(msg.EnvironmentID, msg.Folder+"/", msg.FolderID, msg.NodeID, msg.RunType, msg.Version)
 			default:
-				err = distfilesystem.DistributedStoragePipelineDownload(msg.EnvironmentID, msg.Folder+"/", msg.FolderID, msg.NodeID)
+				errfs = distfilesystem.DistributedStoragePipelineDownload(msg.EnvironmentID, msg.Folder+"/", msg.FolderID, msg.NodeID)
 			}
 
-			if err != nil {
-				statusUpdate = "Fail"
-				if TasksStatusWG != "cancel" {
-					TasksStatus.Set(msg.RunID, "error")
-					// TasksStatus[msg.TaskID] = "error"
-				}
-			}
 		case "LocalFile":
 
 			// Nothing to do, the files will use a shared volume
@@ -184,6 +177,39 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			codeDirectory = wrkerconfig.FSCodeDirectory
 			directoryRun = codeDirectory + msg.Folder + "/"
 
+		}
+
+		if errfs != nil {
+			statusUpdate = "Fail"
+			if TasksStatusWG != "cancel" {
+				TasksStatus.Set(msg.RunID, "error")
+				// TasksStatus[msg.TaskID] = "error"
+			}
+
+			uid := uuid.NewString()
+			logmsg := modelmain.LogsWorkers{
+				CreatedAt:     time.Now().UTC(),
+				UID:           uid,
+				EnvironmentID: msg.EnvironmentID,
+				RunID:         msg.RunID,
+				NodeID:        msg.NodeID,
+				TaskID:        msg.TaskID,
+				Category:      "task",
+				Log:           wrkerconfig.Secrets.Replace(errfs.Error()),
+				LogType:       "error",
+			}
+
+			sendmsg := modelmain.LogsSend{
+				CreatedAt: logmsg.CreatedAt,
+				UID:       uid,
+				Log:       wrkerconfig.Secrets.Replace(errfs.Error()),
+				LogType:   "error",
+			}
+
+			messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
+			database.DBConn.Create(&logmsg)
+
+			break
 		}
 
 		// Detect if folder is being requested

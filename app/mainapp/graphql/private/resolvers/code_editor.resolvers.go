@@ -5,7 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
+	"dataplane/mainapp/auth_permissions"
 	dfscache "dataplane/mainapp/code_editor/dfs_cache"
 	"dataplane/mainapp/code_editor/filesystem"
 	dpconfig "dataplane/mainapp/config"

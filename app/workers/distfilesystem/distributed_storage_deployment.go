@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -25,6 +26,16 @@ import (
 NOTE: Node ID is the node in the graph and not the worker ID.
 */
 func DistributedStorageDeploymentDownload(environmentID string, folder string, folderID string, nodeID string, RunType string, version string) error {
+
+	if strings.Contains(folder, "/deployments/") == false {
+		log.Println("Folder incorrect format - doesn't contain /deployments/")
+		return errors.New("Folder incorrect format - doesn't contain /deployments/")
+	}
+
+	if strings.Contains(folder, "_Platform") == false {
+		log.Println("Folder incorrect format - doesn't contain _Platform")
+		return errors.New("Folder incorrect format - doesn't contain _Platform")
+	}
 
 	/* node cache is a higher level cache for the node */
 	nodeCache := models.CodeNodeCache{}

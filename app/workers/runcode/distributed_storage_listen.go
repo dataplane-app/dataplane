@@ -5,6 +5,7 @@ import (
 	"dataplane/workers/messageq"
 	"log"
 	"os"
+	"strings"
 )
 
 /*
@@ -26,27 +27,31 @@ func ListenDisributedStorageDownload() {
 		response := "ok"
 		message := "ok"
 
-		//Remove folder for this worker
-		if wrkerconfig.Debug == "true" {
-			log.Println("Remove cached folders: ", wrkerconfig.FSCodeDirectory+parentFolder)
-		}
+		x := TaskResponse{R: response, M: message}
 
-		errfs := os.RemoveAll(wrkerconfig.FSCodeDirectory + parentFolder)
-		if errfs != nil {
-			log.Println(errfs)
+		if strings.Contains(parentFolder, "_Platform") == false {
+			log.Println("Folder incorrect format - doesn't contain _Platform")
+			x.R = "fail"
+			x.M = "Folder incorrect format - doesn't contain _Platform"
+
+		} else {
+
+			//Remove folder for this worker
+			if wrkerconfig.Debug == "true" {
+				log.Println("Remove cached folders: ", wrkerconfig.FSCodeDirectory+parentFolder)
+			}
+
+			errfs := os.RemoveAll(wrkerconfig.FSCodeDirectory + parentFolder)
+			if errfs != nil {
+				log.Println(errfs)
+				x.R = "fail"
+				x.M = errfs.Error()
+			}
 		}
-		// errfs := distfilesystem.RemoveWorkerFolder(parentFolder)
-		// if errfs != nil {
-		// 	log.Println(errfs)
-		// }
 
 		//Send back response
-		x := TaskResponse{R: response, M: message}
 		err := messageq.NATSencoded.Publish(reply, x)
-
 		if err != nil {
-			x.R = "fail"
-			x.M = err.Error()
 			log.Println(err.Error())
 		}
 
