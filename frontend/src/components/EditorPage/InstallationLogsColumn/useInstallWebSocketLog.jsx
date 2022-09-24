@@ -26,6 +26,7 @@ const websocketEndpoint = new_uri;
 
 export default function useInstallWebSocketLog(environmentID, workerGroup, pipelineID, setWebsocketResp, setPackages) {
     const [socketResponse, setSocketResponse] = useState('');
+    const [isInstallationComplete, setIsInstallationComplete] = useState(false);
     const reconnectOnClose = useRef(true);
     const ws = useRef(null);
 
@@ -95,20 +96,7 @@ export default function useInstallWebSocketLog(environmentID, workerGroup, pipel
                 // If the run is complete, return
                 if (resp.log_type === 'action' && resp.log === 'complete') {
                     EditorGlobal.installState.set('Success');
-
-                    // Get packages for packages column after a successful install
-                    (async () => {
-                        const response = await getCodePackages({ environmentID, pipelineID, workerGroup, language });
-
-                        if (response.r || response.error) {
-                            enqueueSnackbar("Can't get packages: " + (response.msg || response.r || response.error), { variant: 'error' });
-                        } else if (response.errors) {
-                            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-                        } else {
-                            setPackages(response.packages);
-                        }
-                    })();
-
+                    setIsInstallationComplete(true);
                     return;
                 }
 
@@ -145,6 +133,26 @@ export default function useInstallWebSocketLog(environmentID, workerGroup, pipel
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.installState.get()]);
+
+    useEffect(() => {
+        if (isInstallationComplete === false) return;
+
+        // Get packages for packages column after a successful install
+        (async () => {
+            const response = await getCodePackages({ environmentID, pipelineID, workerGroup, language });
+
+            if (response.r || response.error) {
+                enqueueSnackbar("Can't get packages: " + (response.msg || response.r || response.error), { variant: 'error' });
+            } else if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            } else {
+                setPackages(response.packages);
+            }
+        })();
+
+        setIsInstallationComplete(false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isInstallationComplete]);
 
     return socketResponse;
 }

@@ -117,7 +117,7 @@ func TestSpecificPipelines(t *testing.T) {
 	err := database.DBConn.Where("name = ?", `test_`+pipelineId).Find(&p).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		log.Println(errors.New("Retrive pipelines database error."))
@@ -378,7 +378,7 @@ func TestSpecificPipelines(t *testing.T) {
 	err = database.DBConn.Where("access_group_id = ?", accessgroup).Delete(&ag).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		log.Println(errors.New("Retrive pipelines database error."))

@@ -221,6 +221,8 @@ type ComplexityRoot struct {
 		AddSecretToWorkerGroup             func(childComplexity int, environmentID string, workerGroup string, secret string) int
 		AddUpdatePipelineFlow              func(childComplexity int, input *PipelineFlowInput, environmentID string, pipelineID string) int
 		AddUserToEnvironment               func(childComplexity int, userID string, environmentID string) int
+		ClearFileCacheDeployment           func(childComplexity int, environmentID string, deploymentID string, version string) int
+		ClearFileCachePipeline             func(childComplexity int, environmentID string, pipelineID string) int
 		CreateAccessGroup                  func(childComplexity int, environmentID string, name string, description *string) int
 		CreateFolderNode                   func(childComplexity int, input *FolderNodeInput) int
 		CreateSecret                       func(childComplexity int, input *AddSecretsInput) int
@@ -570,6 +572,7 @@ type MutationResolver interface {
 	AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*WorkerGroupsNodes) (string, error)
 	DeleteDeployment(ctx context.Context, environmentID string, pipelineID string, version string) (string, error)
 	TurnOnOffDeployment(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error)
+	ClearFileCacheDeployment(ctx context.Context, environmentID string, deploymentID string, version string) (string, error)
 	UpdateMe(ctx context.Context, input *AddUpdateMeInput) (*models.Users, error)
 	UpdateChangeMyPassword(ctx context.Context, password string) (*string, error)
 	DeploymentPermissionsToUser(ctx context.Context, environmentID string, resourceID string, access []string, userID string) (string, error)
@@ -585,6 +588,7 @@ type MutationResolver interface {
 	AddUpdatePipelineFlow(ctx context.Context, input *PipelineFlowInput, environmentID string, pipelineID string) (string, error)
 	DeletePipeline(ctx context.Context, environmentID string, pipelineID string) (string, error)
 	TurnOnOffPipeline(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error)
+	ClearFileCachePipeline(ctx context.Context, environmentID string, pipelineID string) (string, error)
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	RunPipelines(ctx context.Context, pipelineID string, environmentID string, runType string, runID string) (*models.PipelineRuns, error)
 	StopPipelines(ctx context.Context, pipelineID string, runID string, environmentID string, runType string) (*models.PipelineRuns, error)
@@ -1553,6 +1557,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddUserToEnvironment(childComplexity, args["user_id"].(string), args["environment_id"].(string)), true
+
+	case "Mutation.clearFileCacheDeployment":
+		if e.complexity.Mutation.ClearFileCacheDeployment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_clearFileCacheDeployment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ClearFileCacheDeployment(childComplexity, args["environmentID"].(string), args["deploymentID"].(string), args["version"].(string)), true
+
+	case "Mutation.clearFileCachePipeline":
+		if e.complexity.Mutation.ClearFileCachePipeline == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_clearFileCachePipeline_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ClearFileCachePipeline(childComplexity, args["environmentID"].(string), args["pipelineID"].(string)), true
 
 	case "Mutation.createAccessGroup":
 		if e.complexity.Mutation.CreateAccessGroup == nil {
@@ -4116,6 +4144,63 @@ func (ec *executionContext) field_Mutation_addUserToEnvironment_args(ctx context
 		}
 	}
 	args["environment_id"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_clearFileCacheDeployment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["deploymentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deploymentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["deploymentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["version"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["version"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_clearFileCachePipeline_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["pipelineID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pipelineID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pipelineID"] = arg1
 	return args, nil
 }
 
@@ -13498,6 +13583,61 @@ func (ec *executionContext) fieldContext_Mutation_turnOnOffDeployment(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_clearFileCacheDeployment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_clearFileCacheDeployment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ClearFileCacheDeployment(rctx, fc.Args["environmentID"].(string), fc.Args["deploymentID"].(string), fc.Args["version"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_clearFileCacheDeployment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_clearFileCacheDeployment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_updateMe(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_updateMe(ctx, field)
 	if err != nil {
@@ -14329,6 +14469,61 @@ func (ec *executionContext) fieldContext_Mutation_turnOnOffPipeline(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_turnOnOffPipeline_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_clearFileCachePipeline(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_clearFileCachePipeline(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ClearFileCachePipeline(rctx, fc.Args["environmentID"].(string), fc.Args["pipelineID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_clearFileCachePipeline(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_clearFileCachePipeline_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -29414,6 +29609,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "clearFileCacheDeployment":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_clearFileCacheDeployment(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "updateMe":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -29538,6 +29742,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_turnOnOffPipeline(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "clearFileCachePipeline":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_clearFileCachePipeline(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {

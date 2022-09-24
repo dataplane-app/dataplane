@@ -3,7 +3,7 @@ version: '2.4'
 services:
 
   redis-service:
-    image: eqalpha/keydb:alpine_x86_64_v6.2.2
+    image: redis:7.0.5-bullseye
     ports:
       - 6379
 
@@ -76,6 +76,7 @@ services:
       DP_SCHEDULER_DEBUG: "false"
       DP_CLEANTASKS_DAYS: "60"
       DP_REMOVELOGS_DAYS: "60"
+      DP_CODE_FILE_STORAGE: "Database"
 
   mainapp2-cypresstest:
     build:
@@ -106,11 +107,13 @@ services:
       DP_SCHEDULER_DEBUG: "false"
       DP_CLEANTASKS_DAYS: "60"
       DP_REMOVELOGS_DAYS: "60"
+      DP_CODE_FILE_STORAGE: "Database"
+      DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"
 
   dataplane-worker-cypresstest:
     build:
       context: ./
-      dockerfile: cypress/Dockerfile.workerpython.ubuntu
+      dockerfile: cypress/Dockerfile.workerpython.debian
     # mem_limit: 512MB
     # cpus: 1.5
     deploy:
@@ -143,6 +146,8 @@ services:
       DP_WORKER_PORT: "9005"
       DP_WORKER_LANGUAGES: "Python"
       DP_WORKER_LOAD_PACKAGES: "Python"
+      DP_CODE_FILE_STORAGE: "Database"
+      DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"
 
 volumes:
   testcypress-code-files:

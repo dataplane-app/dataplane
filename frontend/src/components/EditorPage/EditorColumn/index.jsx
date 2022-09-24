@@ -13,6 +13,8 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import MonacoEditor, { monaco } from 'react-monaco-editor';
 import { v4 as uuidv4 } from 'uuid';
+import { MarkdownContent } from '../Markdown';
+import isMarkdown from '../../../utils/isMarkdown';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
@@ -224,7 +226,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 },
             });
         }
-    }, []);
+    }, [theme.palette.mode]);
 
     const getLanguage = (filename) => {
         if (!filename) {
@@ -259,6 +261,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                     bottom: 0,
                     overflow: 'hidden',
                 }}>
+                {/* Tabs */}
                 <Grid container flexWrap="noWrap" sx={{ width: rest?.style?.width, overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
                     <Tabs
                         value={tabValue}
@@ -285,12 +288,12 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                         icon={
                                             <Box
                                                 aria-label="close"
-                                                disableRipple
-                                                disableFocusRipple
                                                 sx={{ display: 'flex', alignItems: 'center', paddingLeft: '12px', paddingRight: '8px' }}
                                                 onClick={(e) => handleTabClose(tabs, e)}
                                                 style={{ marginLeft: 0, paddingLeft: 12 }}>
-                                                {tabs.isEditing && <Box sx={{ width: 8, height: 8, marginRight: 1, backgroundColor: 'secondary.main', borderRadius: '50%' }} />}
+                                                {tabs.diffValue && tabs.content !== tabs.diffValue && (
+                                                    <Box sx={{ width: 8, height: 8, marginRight: 1, backgroundColor: 'secondary.main', borderRadius: '50%' }} />
+                                                )}
                                                 <Box component={FontAwesomeIcon} icon={faTimes} sx={{ fontSize: 13 }} color="editorPage.fileManagerIcon" />
                                             </Box>
                                         }
@@ -314,6 +317,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                     </Tabs>
                 </Grid>
 
+                {/* Tab buttons and filenames */}
                 {EditorGlobal.tabs.get().length > 0 && EditorGlobal.selectedFile.get() && Object.keys(EditorGlobal.selectedFile.attach(Downgraded).get().length > 0) ? (
                     <Grid
                         container
@@ -325,7 +329,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                             {EditorGlobal.selectedFile.name.value}
                         </Typography>
 
-                        {EditorGlobal.selectedFile.id.get() !== 'requirements.txt' ? (
+                        {/* Buttons for code */}
+                        {EditorGlobal.selectedFile.id.get() !== 'requirements.txt' && !isMarkdown(EditorGlobal.selectedFile.name.get()) && (
                             <Box>
                                 {isRunning ? (
                                     <Button onClick={codeEditorStop} variant="text" color="error" sx={{ height: '32px', fontSize: '0.75rem', minWidth: '60px' }}>
@@ -335,7 +340,12 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                     <Button
                                         onClick={codeEditorRun}
                                         variant="text"
-                                        sx={{ height: '32px', color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null, fontSize: '0.75rem', minWidth: '60px' }}>
+                                        sx={{
+                                            height: '32px',
+                                            color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null,
+                                            fontSize: '0.75rem',
+                                            minWidth: '60px',
+                                        }}>
                                         Run
                                     </Button>
                                 )}
@@ -344,11 +354,19 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                     onClick={uploadFileNode}
                                     variant="text"
                                     disabled={!EditorGlobal.selectedFile.diffValue.get()}
-                                    sx={{ height: '32px', color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null, fontSize: '0.75rem', minWidth: '60px' }}>
+                                    sx={{
+                                        height: '32px',
+                                        color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null,
+                                        fontSize: '0.75rem',
+                                        minWidth: '60px',
+                                    }}>
                                     Save
                                 </Button>
                             </Box>
-                        ) : (
+                        )}
+
+                        {/* Buttons for installations */}
+                        {EditorGlobal.selectedFile.id.get() === 'requirements.txt' && (
                             <Button
                                 onClick={() => {
                                     EditorGlobal.installState.set('Running');
@@ -359,26 +377,77 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                 Install
                             </Button>
                         )}
+
+                        {/* Buttons for markdown */}
+                        {isMarkdown(EditorGlobal.selectedFile.name.get()) && (
+                            <Box>
+                                {EditorGlobal.markdown.get() === 'edit' ? (
+                                    <Button
+                                        onClick={uploadFileNode}
+                                        variant="text"
+                                        sx={{
+                                            height: '32px',
+                                            color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null,
+                                            fontSize: '0.75rem',
+                                            minWidth: '60px',
+                                        }}>
+                                        Save
+                                    </Button>
+                                ) : null}
+                                {EditorGlobal.markdown.get() === 'edit' ? (
+                                    <Button
+                                        onClick={() => EditorGlobal.markdown.set('view')}
+                                        variant="text"
+                                        sx={{
+                                            height: '32px',
+                                            color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null,
+                                            fontSize: '0.75rem',
+                                            minWidth: '60px',
+                                        }}>
+                                        View
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        onClick={() => EditorGlobal.markdown.set('edit')}
+                                        variant="text"
+                                        sx={{
+                                            height: '32px',
+                                            color: theme.palette.mode === 'dark' ? 'editorPage.fileManagerIcon' : null,
+                                            fontSize: '0.75rem',
+                                            minWidth: '60px',
+                                        }}>
+                                        Edit
+                                    </Button>
+                                )}
+                            </Box>
+                        )}
                     </Grid>
                 ) : null}
 
-                <Box zIndex={10} height="100%">
-                    {getEditorValue() != undefined ? (
-                        <MonacoEditor
-                            editorDidMount={handleEditorOnMount}
-                            language={getLanguage(EditorGlobal.selectedFile.get()?.name)}
-                            value={getEditorValue()}
-                            theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}
-                            height="100%"
-                            onChange={handleEditorChange}
-                            options={{
-                                minimap: { enabled: false },
-                                hideCursorInOverviewRuler: { enabled: true },
-                            }}
-                        />
-                    ) : null}
-                </Box>
+                {/* Editor */}
+                {EditorGlobal.markdown.get() !== 'view' || !isMarkdown(EditorGlobal?.selectedFile?.name?.get()) ? (
+                    <Box zIndex={10} height="100%">
+                        {getEditorValue() !== undefined ? (
+                            <MonacoEditor
+                                editorDidMount={handleEditorOnMount}
+                                language={getLanguage(EditorGlobal.selectedFile.get()?.name)}
+                                value={getEditorValue()}
+                                theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}
+                                height="100%"
+                                onChange={handleEditorChange}
+                                options={{
+                                    minimap: { enabled: false },
+                                    hideCursorInOverviewRuler: { enabled: true },
+                                }}
+                            />
+                        ) : null}
+                    </Box>
+                ) : null}
 
+                {/* Markdown */}
+                {EditorGlobal.markdown.get() === 'view' ? <MarkdownContent bottomPadding={true} /> : null}
+
+                {/* If no file behaviour */}
                 <Grid
                     sx={{
                         backgroundColor: '#fff',
@@ -446,6 +515,8 @@ export const useUploadFileNodeHook = (pipeline) => {
             }
             EditorGlobal.selectedFile.content.set(EditorGlobal.selectedFile.diffValue.value);
             EditorGlobal.selectedFile.isEditing.set(false);
+            const id = await response.text();
+            EditorGlobal.selectedFile.id.set(id);
             enqueueSnackbar('File saved.', { variant: 'success' });
         } catch (error) {
             enqueueSnackbar("Can't save file: " + error, { variant: 'error' });

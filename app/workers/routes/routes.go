@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"dataplane/workers/database"
 	"dataplane/workers/database/models"
 	"dataplane/workers/messageq"
@@ -27,7 +27,7 @@ func Setup(port string) *fiber.App {
 
 	start := time.Now()
 
-	config.LoadConfig()
+	wrkerconfig.LoadConfig()
 
 	// ------- DATABASE CONNECT ------
 
@@ -38,21 +38,21 @@ func Setup(port string) *fiber.App {
 	messageq.NATSConnect()
 
 	// ------ Validate worker data ---------
-	if config.WorkerGroup == "" {
+	if wrkerconfig.WorkerGroup == "" {
 		panic("Requires worker_group environment variable")
 	}
 
 	// Validate group name
 	var isStringAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
-	if !isStringAlphaNumeric(config.WorkerGroup) {
+	if !isStringAlphaNumeric(wrkerconfig.WorkerGroup) {
 		panic("Worker group - Only [a-z], [A-Z], [0-9] and _ are allowed")
 	}
 
-	if config.WorkerType == "" {
+	if wrkerconfig.WorkerType == "" {
 		panic("Requires worker_type environment variable")
 	}
 
-	if config.WorkerEnv == "" {
+	if wrkerconfig.WorkerEnv == "" {
 		panic("Requires worker_env environment variable")
 	}
 
@@ -60,9 +60,9 @@ func Setup(port string) *fiber.App {
 	for i := 0; i < 50000; i++ {
 		platform := models.Platform{}
 		database.DBConn.First(&platform)
-		config.PlatformID = platform.ID
+		wrkerconfig.PlatformID = platform.ID
 
-		if config.PlatformID != "" {
+		if wrkerconfig.PlatformID != "" {
 			break
 		} else {
 			log.Printf("😩 Platform not setup - waiting for main app to start: try number. %d, retry in 5 seconds", i+1)
@@ -71,28 +71,28 @@ func Setup(port string) *fiber.App {
 
 	}
 
-	log.Println("🎯 Platform ID: ", config.PlatformID)
+	log.Println("🎯 Platform ID: ", wrkerconfig.PlatformID)
 
 	e := models.Environment{}
-	database.DBConn.First(&e, "name = ?", config.WorkerEnv)
+	database.DBConn.First(&e, "name = ?", wrkerconfig.WorkerEnv)
 
-	// if e.Name != config.WorkerEnv  {
-	// 	panic("Warning: Envrionment not found. Be sure environment is setup with mainapp - " + config.WorkerEnv)
+	// if e.Name != wrkerconfig.WorkerEnv  {
+	// 	panic("Warning: Envrionment not found. Be sure environment is setup with mainapp - " + wrkerconfig.WorkerEnv)
 	// }
 
 	// For first time users create a development environment ID
-	if e.ID == "" && config.WorkerEnv == "Development" {
+	if e.ID == "" && wrkerconfig.WorkerEnv == "Development" {
 		e = models.Environment{
 			ID:         uuid.New().String(),
 			Name:       "Development",
-			PlatformID: config.PlatformID,
+			PlatformID: wrkerconfig.PlatformID,
 			Active:     true,
 		}
 
 		err := database.DBConn.Create(&e).Error
 
 		if err != nil {
-			if config.Debug == "true" {
+			if wrkerconfig.Debug == "true" {
 				log.Println(err)
 			}
 			panic("Failed to create a development environment on first use.")
@@ -100,16 +100,16 @@ func Setup(port string) *fiber.App {
 
 	}
 
-	config.EnvName = e.Name
-	config.EnvID = e.ID
-	log.Println("🌳 Environment name and ID: ", config.EnvName, " - ", config.EnvID)
+	wrkerconfig.EnvName = e.Name
+	wrkerconfig.EnvID = e.ID
+	log.Println("🌳 Environment name and ID: ", wrkerconfig.EnvName, " - ", wrkerconfig.EnvID)
 
 	// ------- LOAD secrets (must be loaded after environment id to load for this environment) ------
 	secrets.MapSecrets()
 
 	// Load a worker ID
-	config.WorkerID = uuid.NewString()
-	log.Println("👷 Worker Group and ID: ", config.WorkerGroup, " - ", config.WorkerID)
+	wrkerconfig.WorkerID = uuid.NewString()
+	log.Println("👷 Worker Group and ID: ", wrkerconfig.WorkerGroup, " - ", wrkerconfig.WorkerID)
 
 	//recover from panic
 	app.Use(recover.New())
@@ -117,10 +117,10 @@ func Setup(port string) *fiber.App {
 	// add timer field to response header
 	app.Use(Timer())
 
-	config.Scheduler = gocron.NewScheduler(time.UTC)
-	config.Scheduler.StartAsync()
+	wrkerconfig.Scheduler = gocron.NewScheduler(time.UTC)
+	wrkerconfig.Scheduler.StartAsync()
 
-	if config.Debug == "true" {
+	if wrkerconfig.Debug == "true" {
 		app.Use(logger.New(
 			logger.Config{
 				Format: "✨ Latency: ${latency} Time:${time} Status: ${status} Path:${path} \n",
@@ -132,8 +132,10 @@ func Setup(port string) *fiber.App {
 		// Query:${query}
 	}
 
+	// ------- LOAD DS Files ------
+
 	// ------- LOAD packages ------
-	runcodeworker.CodeLoadPackages(config.CodeLanguages, config.CodeLoadPackages, config.EnvID, config.WorkerGroup)
+	runcodeworker.CodeLoadPackages(wrkerconfig.CodeLanguages, wrkerconfig.CodeLoadPackages, wrkerconfig.EnvID, wrkerconfig.WorkerGroup)
 
 	// Runner
 	// app.Post("/runner", runtask.Runtask())
@@ -151,13 +153,14 @@ func Setup(port string) *fiber.App {
 	runtask.ListenTasks()
 	runcodeworker.ListenRunCode()
 	runcodeworker.CodeLoadPackagesListen()
+	runcodeworker.ListenDisributedStorageDownload()
 
 	/* Every 5 seconds tell mainapp about my status
 	Needs to be called after listen for tasks to avoid timing issues when accepting tasks
 	*/
-	workerhealth.WorkerHealthStart(config.Scheduler)
+	workerhealth.WorkerHealthStart(wrkerconfig.Scheduler)
 	log.Println("🚚 Submitting workers")
-	workerhealth.WorkerLoad(config.Scheduler)
+	workerhealth.WorkerLoad(wrkerconfig.Scheduler)
 
 	stop := time.Now()
 	// Do something with response

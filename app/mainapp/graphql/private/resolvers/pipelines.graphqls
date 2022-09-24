@@ -170,4 +170,11 @@ extend type Mutation {
   + **Permissions**: admin_platform, admin_environment, specific_pipeline[write]
   """
   turnOnOffPipeline(environmentID: String!, pipelineID: String!, online: Boolean!): String!
+
+  """
+	Clear file cache for pipelines.
+	+ **Route**: Private
+  + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines, specific_pipeline[write]
+	"""
+   clearFileCachePipeline(environmentID: String!, pipelineID: String!): String!
 }

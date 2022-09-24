@@ -35,7 +35,7 @@ func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nod
 
 	runData, err := runcode.RunCodeFile(workerGroup, fileID, environmentID, pipelineID, nodeID, nodeTypeDesc, runID)
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Failed to run code.")
@@ -73,7 +73,7 @@ func (r *mutationResolver) StopCERun(ctx context.Context, pipelineID string, run
 
 	err := runcode.RunCodeFileCancel(runID, environmentID)
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "fail", errors.New("Failed to cancel code run.")

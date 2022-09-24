@@ -40,7 +40,7 @@ func (r *mutationResolver) PipelinePermissionsToUser(ctx context.Context, enviro
 		userID, "specific_pipeline", resourceID, environmentID).Delete(&models.Permissions{}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete pipelines permission to user database error.")
@@ -60,7 +60,7 @@ func (r *mutationResolver) PipelinePermissionsToUser(ctx context.Context, enviro
 		)
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return "", errors.New("Add permission to user database error.")
@@ -94,7 +94,7 @@ func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context,
 		accessGroupID, "specific_pipeline", resourceID, environmentID).Delete(&models.Permissions{}).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return "", errors.New("Delete pipelines permission to user database error.")
@@ -114,7 +114,7 @@ func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context,
 		)
 
 		if err != nil {
-			if config.Debug == "true" {
+			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
 			return "", errors.New("Add permission to user database error.")

@@ -62,7 +62,7 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 	}
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 
@@ -140,7 +140,7 @@ func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string,
 	err = database.DBConn.Updates(&run).Error
 	if err != nil {
 
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return &models.PipelineRuns{}, err

@@ -94,7 +94,7 @@ func RunNextPipeline() {
 					"status":     "Success",
 					"ended_at":   run.EndedAt})
 				if errnat != nil {
-					if config.Debug == "true" {
+					if dpconfig.Debug == "true" {
 						logging.PrintSecretsRedact(errnat)
 					}
 
@@ -174,12 +174,12 @@ func RunNextPipeline() {
 				err = worker.WorkerRunTask(s.WorkerGroup, s.TaskID, s.RunID, s.EnvironmentID, s.PipelineID, s.NodeID, commandsend, s.Folder, s.FolderID, s.Version, s.RunType)
 				// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s})
 				if err != nil {
-					if config.Debug == "true" {
+					if dpconfig.Debug == "true" {
 						logging.PrintSecretsRedact(err)
 					}
 
 				} else {
-					if config.Debug == "true" {
+					if dpconfig.Debug == "true" {
 						logging.PrintSecretsRedact("Next step:", s.RunID, " -> ", s.TaskID)
 					}
 				}
@@ -201,7 +201,7 @@ func RunNextPipeline() {
 	})
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 

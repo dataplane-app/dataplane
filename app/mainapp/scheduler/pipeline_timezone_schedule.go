@@ -10,8 +10,8 @@ import (
 
 func PipelineTimezoneScheduler(timezone string) error {
 
-	if tmp, ok := config.PipelineScheduler.Get(timezone); ok {
-		// if scheduler, ok := config.PipelineScheduler[timezone]; ok {
+	if tmp, ok := dpconfig.PipelineScheduler.Get(timezone); ok {
+		// if scheduler, ok := dpconfig.PipelineScheduler[timezone]; ok {
 		//skip
 		scheduler := tmp.(*gocron.Scheduler)
 		if scheduler.IsRunning() {
@@ -29,9 +29,9 @@ func PipelineTimezoneScheduler(timezone string) error {
 			return err
 		}
 
-		config.PipelineScheduler.Set(timezone, gocron.NewScheduler(location))
-		// config.PipelineScheduler[timezone] = gocron.NewScheduler(location)
-		if tmp, ok := config.PipelineScheduler.Get(timezone); ok {
+		dpconfig.PipelineScheduler.Set(timezone, gocron.NewScheduler(location))
+		// dpconfig.PipelineScheduler[timezone] = gocron.NewScheduler(location)
+		if tmp, ok := dpconfig.PipelineScheduler.Get(timezone); ok {
 			scheduler := tmp.(*gocron.Scheduler)
 			scheduler.StartAsync()
 		}

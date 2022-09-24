@@ -44,7 +44,7 @@ func secureTimeoutq(room string, connection *websocket.Conn) {
 				// handle error
 				log.Println(err)
 			}
-			if config.MQDebug == "true" {
+			if dpconfig.MQDebug == "true" {
 				log.Println("connection unregistered by SecureTimeout")
 			}
 		}
@@ -75,13 +75,13 @@ func RunHubRooms() {
 
 			go secureTimeoutq(register.room, register.conn)
 			// go func() { Securetimeout <- 0 }()
-			if config.MQDebug == "true" {
+			if dpconfig.MQDebug == "true" {
 				log.Println("connection registered")
 			}
 
 		case message := <-broadcastq:
 
-			if config.MQDebug == "true" {
+			if dpconfig.MQDebug == "true" {
 				logging.PrintSecretsRedact("room:", message.room, "message received:", string(message.data))
 			}
 
@@ -124,7 +124,7 @@ func RunHubRooms() {
 			}
 			// Remove the client from the hub
 			// delete(clientsq, connection)
-			if config.MQDebug == "true" {
+			if dpconfig.MQDebug == "true" {
 				log.Println("connection for room:" + register.room + " unregistered")
 				// log.Println("connections:", clientsq)
 			}

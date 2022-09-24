@@ -19,28 +19,28 @@ func LeaderElection() {
 		DoUpdates: clause.AssignmentColumns([]string{"updated_at"}),
 	}).Create(map[string]interface{}{
 		"leader":     true,
-		"node_id":    config.MainAppID,
+		"node_id":    dpconfig.MainAppID,
 		"updated_at": gorm.Expr("now() at time zone 'utc'"),
 	})
 	if err2.Error != nil {
 		log.Println(err2.Error.Error())
 	}
 
-	config.Leader = config.MainAppID
+	dpconfig.Leader = dpconfig.MainAppID
 
 	// Remove any schedules
 	scheduler.RemovePipelineSchedules()
 
 	// I am the leader, load schedules.
-	if config.Leader == config.MainAppID {
+	if dpconfig.Leader == dpconfig.MainAppID {
 
-		if config.Debug == "true" || config.SchedulerDebug == "true" {
-			log.Println("Leader election:", config.MainAppID, config.Leader == config.MainAppID)
+		if dpconfig.Debug == "true" || dpconfig.SchedulerDebug == "true" {
+			log.Println("Leader election:", dpconfig.MainAppID, dpconfig.Leader == dpconfig.MainAppID)
 		}
 
 		// Load the pipleine schedules
 		scheduler.LoadPipelineSchedules()
-		if config.Debug == "true" || config.SchedulerDebug == "true" {
+		if dpconfig.Debug == "true" || dpconfig.SchedulerDebug == "true" {
 			log.Println("Schedules loaded.")
 		}
 

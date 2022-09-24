@@ -73,7 +73,7 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	err = database.DBConn.Updates(&platformData).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		if strings.Contains(err.Error(), "duplicate key") {
@@ -86,7 +86,7 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	err = database.DBConn.Create(&userData).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		if strings.Contains(err.Error(), "duplicate key") {
@@ -120,7 +120,7 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	err = database.DBConn.Create(&preferences).Error
 
 	if err != nil {
-		if config.Debug == "true" {
+		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Register database error.")

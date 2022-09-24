@@ -1,7 +1,7 @@
 package logging
 
 import (
-	"dataplane/workers/config"
+	wrkerconfig "dataplane/workers/config"
 	"fmt"
 	"log"
 )
@@ -15,5 +15,5 @@ func PrintSecretsRedact(logmessages ...interface{}) {
 
 	}
 
-	log.Println(config.Secrets.Replace(printString))
+	log.Println(wrkerconfig.Secrets.Replace(printString))
 }

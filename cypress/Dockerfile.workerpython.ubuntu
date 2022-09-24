@@ -22,10 +22,11 @@ ENV TZ=UTC
 # RUN apk update && apk add --no-cache tzdata make automake gcc g++ subversion python3-dev
 # RUN rm -rf /var/cache/apk/*
 RUN apt update
-RUN apt install -y software-properties-common
+RUN apt install -y software-properties-common --no-install-recommends
 RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt install -y python3.9 htop wget curl python3-pip
+RUN apt install -y python3.9 htop wget curl python3-pip --no-install-recommends
 RUN apt clean
+RUN rm -rf /var/lib/apt/lists/*
 
 # Create appuser
 ENV USER=appuser
@@ -47,6 +48,10 @@ RUN chmod +x /dataplane/dataplane-worker
 
 RUN mkdir /dataplane/code-files/ && chown -R appuser:appuser /dataplane
 RUN chmod +w /dataplane/code-files/
+
+# Code folders
+RUN mkdir /dataplane/dfs-code-files/ && chown -R appuser:appuser /dataplane
+RUN chmod +w /dataplane/dfs-code-files/
 
 WORKDIR /dataplane
 

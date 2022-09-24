@@ -2,8 +2,14 @@ version: '3'
 
 volumes:
   node_modules:
-
+      
 services:
+
+  redis-service:
+    image: redis:7.0.5-bullseye
+    ports:
+      - 6379
+
   postgres:
     image: timescale/timescaledb:2.5.1-pg14
     ports:
@@ -18,7 +24,7 @@ services:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 60s
       retries: 5
-    restart: always
+    # restart: always
 
   nats:
     image: nats:2.7.4-scratch
@@ -62,6 +68,7 @@ services:
       - ../:/appdev
     environment:
       DP_CODE_FOLDER: "/appdev/code-files/"
+      DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"
       secret_db_host: postgres
       secret_db_user: postgres
       secret_db_pwd: "Hello123!"
@@ -91,6 +98,7 @@ services:
       DP_WORKER_PORT: "9005"
       DP_WORKER_LANGUAGES: "Python"
       DP_WORKER_LOAD_PACKAGES: "Python"
+      DP_CODE_FILE_STORAGE: "Database" #Database, LocalFile, S3
 
 networks:
   default:

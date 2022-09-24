@@ -15,6 +15,7 @@ type Platform struct {
 	Complete         bool       `json:"complete"`
 	MigrationVersion string     `json:"migration_version"`
 	One              bool       `gorm:"index:idx_one_platform,unique;" json:"one"`
+	CodeFileStorage  string     `json:"code_file_storage"`
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        *time.Time `json:"updated_at"`
 	DeletedAt        *time.Time `json:"deleted_at,omitempty"`

@@ -12,7 +12,7 @@ import (
 func ZipSource(source, target string) error {
 
 	// Create trash directory if it doesn't exist
-	newpath := filepath.Join(config.CodeDirectory, "trash")
+	newpath := filepath.Join(dpconfig.CodeDirectory, "trash")
 	err := os.MkdirAll(newpath, os.ModePerm)
 	if err != nil {
 		return err
