@@ -32,7 +32,7 @@ export default function EventRunButton(environmentId, pipelineId, runId, setRuns
             // Define nodes object if it hasn't been defined and set trigger node to Success
             if (RunState.runObject.get() === null) {
                 // Get trigger id
-                const triggerNodeId = FlowState.elements.get().filter((a) => a.type === 'scheduleNode' || a.type === 'playNode')[0].id;
+                const triggerNodeId = FlowState.elements.get().filter((a) => a.type === 'scheduleNode' || a.type === 'playNode' || a.type === 'apiNode')[0].id;
                 RunState.runObject.set({ nodes: { [triggerNodeId]: { status: 'Success' } } });
             }
 

@@ -1,10 +1,12 @@
 package filesystem
 
 import (
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
 	"log"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
 )
 
 type FolderNodeUpdate struct {

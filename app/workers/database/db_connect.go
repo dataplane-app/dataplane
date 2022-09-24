@@ -1,12 +1,13 @@
 package database
 
 import (
-	wrkerconfig "dataplane/workers/config"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

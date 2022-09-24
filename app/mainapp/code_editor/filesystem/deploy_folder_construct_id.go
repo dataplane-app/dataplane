@@ -1,8 +1,9 @@
 package filesystem
 
 import (
-	"dataplane/mainapp/database/models"
 	"errors"
+
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
 
 	"gorm.io/gorm"
 )

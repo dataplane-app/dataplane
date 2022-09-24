@@ -1,12 +1,13 @@
 package tests
 
 import (
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/database"
-	"dataplane/workers/secrets"
 	"log"
 	"os"
 	"testing"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
+	"github.com/dataplane-app/dataplane/workers/database"
+	"github.com/dataplane-app/dataplane/workers/secrets"
 
 	"github.com/stretchr/testify/assert"
 )

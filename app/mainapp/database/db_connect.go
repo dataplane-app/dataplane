@@ -1,12 +1,13 @@
 package database
 
 import (
-	"dataplane/mainapp/logging"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/dataplane-app/dataplane/mainapp/logging"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

@@ -1,8 +1,8 @@
 package secrets
 
 import (
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/messageq"
+	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
+	"github.com/dataplane-app/dataplane/workers/messageq"
 )
 
 type TaskResponse struct {

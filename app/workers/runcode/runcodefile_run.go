@@ -3,12 +3,6 @@ package runcodeworker
 import (
 	"bufio"
 	"context"
-	"dataplane/mainapp/code_editor/filesystem"
-	modelmain "dataplane/mainapp/database/models"
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/database"
-	"dataplane/workers/distfilesystem"
-	"dataplane/workers/messageq"
 	"encoding/json"
 	"log"
 	"os"
@@ -16,6 +10,14 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/dataplane-app/dataplane/mainapp/code_editor/filesystem"
+	modelmain "github.com/dataplane-app/dataplane/mainapp/database/models"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
+	"github.com/dataplane-app/dataplane/workers/database"
+	"github.com/dataplane-app/dataplane/workers/distfilesystem"
+	"github.com/dataplane-app/dataplane/workers/messageq"
 
 	"github.com/google/uuid"
 	cmap "github.com/orcaman/concurrent-map"

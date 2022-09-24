@@ -1,13 +1,14 @@
 package pipelinetests
 
 import (
-	"dataplane/mainapp/Tests/testutils"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
 	"log"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/dataplane-app/dataplane/mainapp/Tests/testutils"
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
 
 	"github.com/bxcodec/faker/v3"
 	jsoniter "github.com/json-iterator/go"
@@ -16,7 +17,7 @@ import (
 
 /*
 For individual tests - in separate window run: go run server.go
-go test -p 1 -v -count=1 -run TestPipelines dataplane/mainapp/Tests/pipelines
+go test -p 1 -v -count=1 -run TestPipelines github.com/dataplane-app/dataplane/mainapp/Tests/pipelines
 * Login
 * Create pipeline
 * Get pipeline

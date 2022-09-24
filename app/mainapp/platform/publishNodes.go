@@ -1,13 +1,16 @@
 package platform
 
 import (
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/messageq"
-	"dataplane/mainapp/scheduler"
-	"dataplane/workers/logging"
 	"log"
+
+	"github.com/dataplane-app/dataplane/workers/logging"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/messageq"
+	"github.com/dataplane-app/dataplane/mainapp/scheduler"
 
 	"github.com/go-co-op/gocron"
 	"gorm.io/gorm"

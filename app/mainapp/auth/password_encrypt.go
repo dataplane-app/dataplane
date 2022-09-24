@@ -1,8 +1,9 @@
 package auth
 
 import (
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/logging"
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/mainapp/logging"
 
 	"golang.org/x/crypto/bcrypt"
 )

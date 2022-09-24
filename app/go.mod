@@ -1,4 +1,4 @@
-module dataplane
+module github.com/dataplane-app/dataplane
 
 go 1.18
 

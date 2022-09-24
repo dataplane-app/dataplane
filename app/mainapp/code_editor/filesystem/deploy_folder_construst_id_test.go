@@ -1,16 +1,17 @@
 package filesystem
 
 import (
-	"dataplane/mainapp/database"
 	"fmt"
 	"log"
 	"testing"
 	"time"
+
+	"github.com/dataplane-app/dataplane/mainapp/database"
 )
 
 /*
 Run Super secret squirrel function test
-go test -count=1 -timeout 30s -v -run ^TestDeployFolderConstructByID$ dataplane/mainapp/code_editor/filesystem
+go test -count=1 -timeout 30s -v -run ^TestDeployFolderConstructByID$ github.com/dataplane-app/dataplane/mainapp/code_editor/filesystem
 */
 func TestDeployFolderConstructByID(t *testing.T) {
 

@@ -1,13 +1,14 @@
 package auth
 
 import (
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/logme"
 	"fmt"
 	"os"
 	"time"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/logme"
 
 	"github.com/golang-jwt/jwt/v4"
 	uuid2 "github.com/google/uuid"

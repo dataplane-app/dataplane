@@ -1,13 +1,14 @@
 package logme
 
 import (
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/migrations"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/logging"
 	"errors"
 	"os"
 	"testing"
+
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/migrations"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/logging"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -1,21 +1,6 @@
 package routes
 
 import (
-	"dataplane/mainapp/auth"
-	permissions "dataplane/mainapp/auth_permissions"
-	distributefilesystem "dataplane/mainapp/code_editor/distribute_filesystem"
-	"dataplane/mainapp/code_editor/filesystem"
-	dpconfig "dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/migrations"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/logging"
-	"dataplane/mainapp/messageq"
-	"dataplane/mainapp/pipelines"
-	"dataplane/mainapp/platform"
-	"dataplane/mainapp/scheduler"
-	"dataplane/mainapp/scheduler/routinetasks"
-	"dataplane/mainapp/worker"
 	"errors"
 	"fmt"
 	"log"
@@ -23,6 +8,22 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/dataplane-app/dataplane/mainapp/auth"
+	permissions "github.com/dataplane-app/dataplane/mainapp/auth_permissions"
+	distributefilesystem "github.com/dataplane-app/dataplane/mainapp/code_editor/distribute_filesystem"
+	"github.com/dataplane-app/dataplane/mainapp/code_editor/filesystem"
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/migrations"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/logging"
+	"github.com/dataplane-app/dataplane/mainapp/messageq"
+	"github.com/dataplane-app/dataplane/mainapp/pipelines"
+	"github.com/dataplane-app/dataplane/mainapp/platform"
+	"github.com/dataplane-app/dataplane/mainapp/scheduler"
+	"github.com/dataplane-app/dataplane/mainapp/scheduler/routinetasks"
+	"github.com/dataplane-app/dataplane/mainapp/worker"
 
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-co-op/gocron"
@@ -33,6 +34,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/websocket/v2"
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm/clause"
 )
 
@@ -390,6 +392,41 @@ func Setup(port string) *fiber.App {
 		// }
 
 		return c.SendString(File.FileID)
+	})
+
+	// Pipeline API Trigger public
+	app.Post("/app/public/api-trigger/:id", auth.ApiAuthMiddle(), func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
+		pipelineID := c.Locals("pipelineID").(string)
+		environmentID := c.Locals("environmentID").(string)
+
+		var jsonPayload datatypes.JSON = c.Body()
+
+		// Run pipeline
+		runID := uuid.NewString()
+		pipelines.RunPipeline(pipelineID, environmentID, runID, jsonPayload)
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
+	})
+
+	// Pipeline API Trigger private
+	app.Post("/app/private/api-trigger/:id", auth.ApiAuthMiddle(), func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
+		pipelineID := c.Locals("pipelineID").(string)
+		environmentID := c.Locals("environmentID").(string)
+
+		var jsonPayload datatypes.JSON = c.Body()
+
+		// Run pipeline
+		runID := uuid.NewString()
+		pipelines.RunPipeline(pipelineID, environmentID, runID, jsonPayload)
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
+	})
+
+	// Check healthz
+	app.Get("/healthz", func(c *fiber.Ctx) error {
+		return c.SendString("Hello 👋! Healthy 🍏")
 	})
 
 	// Sync folders to Database
