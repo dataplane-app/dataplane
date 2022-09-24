@@ -14,6 +14,7 @@ import Tab from '@mui/material/Tab';
 import MonacoEditor, { monaco } from 'react-monaco-editor';
 import { v4 as uuidv4 } from 'uuid';
 import { MarkdownContent } from '../Markdown';
+import isMarkdown from '../../../utils/isMarkdown';
 
 const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
 
@@ -329,7 +330,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         </Typography>
 
                         {/* Buttons for code */}
-                        {EditorGlobal.selectedFile.id.get() !== 'requirements.txt' && EditorGlobal.selectedFile.name.get().slice(-3) !== '.md' && (
+                        {EditorGlobal.selectedFile.id.get() !== 'requirements.txt' && !isMarkdown(EditorGlobal.selectedFile.name.get()) && (
                             <Box>
                                 {isRunning ? (
                                     <Button onClick={codeEditorStop} variant="text" color="error" sx={{ height: '32px', fontSize: '0.75rem', minWidth: '60px' }}>
@@ -378,7 +379,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                         )}
 
                         {/* Buttons for markdown */}
-                        {EditorGlobal.selectedFile.name.get().slice(-3) === '.md' && (
+                        {isMarkdown(EditorGlobal.selectedFile.name.get()) && (
                             <Box>
                                 {EditorGlobal.markdown.get() === 'edit' ? (
                                     <Button
@@ -424,7 +425,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 ) : null}
 
                 {/* Editor */}
-                {EditorGlobal.markdown.get() !== 'view' || EditorGlobal?.selectedFile?.name?.get().slice(-3) !== '.md' ? (
+                {EditorGlobal.markdown.get() !== 'view' || !isMarkdown(EditorGlobal?.selectedFile?.name?.get()) ? (
                     <Box zIndex={10} height="100%">
                         {getEditorValue() !== undefined ? (
                             <MonacoEditor

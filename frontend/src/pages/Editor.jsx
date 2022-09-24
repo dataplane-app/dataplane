@@ -16,6 +16,7 @@ import { useGetPipeline } from '../graphql/getPipeline';
 import { useGetNode } from '../graphql/getNode';
 import InstallationLogsColumn from '../components/EditorPage/InstallationLogsColumn';
 import Markdown from '../components/EditorPage/Markdown';
+import isMarkdown from '../utils/isMarkdown';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -46,12 +47,9 @@ const PipelineEditor = () => {
     if (EditorGlobal.selectedFile?.id?.value === 'requirements.txt') {
         currentTab = 'install';
     }
-    if (EditorGlobal.selectedFile?.name?.value.slice(-3) === '.md') {
+    if (isMarkdown(EditorGlobal.selectedFile?.name?.value)) {
         currentTab = 'markdown';
     }
-
-    let isMarkdown = false;
-    isMarkdown = EditorGlobal?.selectedFile?.name?.get().slice(-3) === '.md';
 
     const [pipeline, setPipeline] = useState({});
 
@@ -87,9 +85,11 @@ const PipelineEditor = () => {
             parentName: null,
             runID: null,
             runState: null,
+            markdown: 'view',
         });
         history.push(`/pipelines/view/${pipeline.pipelineID}`);
     };
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <AppBar
@@ -124,7 +124,7 @@ const PipelineEditor = () => {
                             measureBeforeMount={true}
                             // onResizeStop={(e, _) => console.log('Resize', e, _)}
                             compactType="vertical"
-                            layouts={getGridLayouts(pipeline.nodeTypeDesc, EditorGlobal.markdown.value, isMarkdown)}
+                            layouts={getGridLayouts(pipeline.nodeTypeDesc, EditorGlobal.markdown.value, isMarkdown(EditorGlobal.selectedFile?.name?.value))}
                             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                             cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}>
                             <FileManagerColumn key="1" pipeline={pipeline} />
