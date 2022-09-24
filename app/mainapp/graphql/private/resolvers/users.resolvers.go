@@ -5,15 +5,18 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth"
-	"dataplane/mainapp/auth_permissions"
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	privategraphql "dataplane/mainapp/graphql/private"
-	"dataplane/mainapp/logging"
 	"errors"
 	"strings"
+
+	permissions "github.com/dataplane-app/dataplane/mainapp/auth_permissions"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/mainapp/auth"
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	privategraphql "github.com/dataplane-app/dataplane/mainapp/graphql/private"
+	"github.com/dataplane-app/dataplane/mainapp/logging"
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"

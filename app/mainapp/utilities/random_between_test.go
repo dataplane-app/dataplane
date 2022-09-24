@@ -21,7 +21,7 @@ type pairs struct {
 
 /*
 Run Random function test
-go test -count=1 -timeout 30s -v -run ^TestRandBetweenInt$ dataplane/mainapp/utilities
+go test -count=1 -timeout 30s -v -run ^TestRandBetweenInt$ github.com/dataplane-app/dataplane/mainapp/utilities
 */
 
 func TestRandBetweenInt(t *testing.T) {

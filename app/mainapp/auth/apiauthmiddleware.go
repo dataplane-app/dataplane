@@ -1,11 +1,12 @@
 package auth
 
 import (
-	dpconfig "dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/logging"
 	"net/http"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/logging"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"

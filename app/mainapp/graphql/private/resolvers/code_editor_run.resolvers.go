@@ -5,13 +5,16 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
-	"dataplane/mainapp/code_editor/runcode"
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database/models"
-	privategraphql "dataplane/mainapp/graphql/private"
-	"dataplane/mainapp/logging"
 	"errors"
+
+	permissions "github.com/dataplane-app/dataplane/mainapp/auth_permissions"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/mainapp/code_editor/runcode"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	privategraphql "github.com/dataplane-app/dataplane/mainapp/graphql/private"
+	"github.com/dataplane-app/dataplane/mainapp/logging"
 )
 
 func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string, runID string) (*privategraphql.CERun, error) {

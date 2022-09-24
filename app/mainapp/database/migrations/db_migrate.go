@@ -1,16 +1,17 @@
 package migrations
 
 import (
-	dpconfig "dataplane/mainapp/config"
-	"dataplane/mainapp/database/models"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+
 	// "gorm.io/gorm/clause"
-	"dataplane/mainapp/code_editor/filesystem"
+	"github.com/dataplane-app/dataplane/mainapp/code_editor/filesystem"
 
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"

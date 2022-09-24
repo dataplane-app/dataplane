@@ -1,17 +1,18 @@
 package filesystem
 
 import (
-	"dataplane/mainapp/config"
 	"fmt"
 	"log"
 	"os"
 	"testing"
 	"time"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
 )
 
 /*
 Run Super secret squirrel function test
-go test -count=1 -timeout 30s -v -run ^TestZIPFolder$ dataplane/mainapp/filesystem
+go test -count=1 -timeout 30s -v -run ^TestZIPFolder$ github.com/dataplane-app/dataplane/mainapp/filesystem
 */
 func TestZIPFolder(t *testing.T) {
 

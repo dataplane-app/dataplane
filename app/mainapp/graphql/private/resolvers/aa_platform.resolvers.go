@@ -5,16 +5,19 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth_permissions"
-	"dataplane/mainapp/code_editor/filesystem"
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	privategraphql "dataplane/mainapp/graphql/private"
-	"dataplane/mainapp/logging"
 	"errors"
 	"log"
 	"strings"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+
+	permissions "github.com/dataplane-app/dataplane/mainapp/auth_permissions"
+
+	"github.com/dataplane-app/dataplane/mainapp/code_editor/filesystem"
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	privategraphql "github.com/dataplane-app/dataplane/mainapp/graphql/private"
+	"github.com/dataplane-app/dataplane/mainapp/logging"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm/clause"

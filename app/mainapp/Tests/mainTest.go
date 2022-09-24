@@ -1,18 +1,20 @@
 package main
 
 import (
-	"dataplane/mainapp/Tests/testutils"
-	"dataplane/mainapp/auth"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/routes"
-	workerroutes "dataplane/workers/routes"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+
+	workerroutes "github.com/dataplane-app/dataplane/workers/routes"
+
+	"github.com/dataplane-app/dataplane/mainapp/Tests/testutils"
+	"github.com/dataplane-app/dataplane/mainapp/auth"
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/routes"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/google/uuid"

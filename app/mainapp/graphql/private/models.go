@@ -3,7 +3,7 @@
 package privategraphql
 
 import (
-	"dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
 	"time"
 )
 

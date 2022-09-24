@@ -1,9 +1,10 @@
 package scheduler
 
 import (
-	"dataplane/mainapp/config"
 	"log"
 	"time"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
 
 	"github.com/go-co-op/gocron"
 )

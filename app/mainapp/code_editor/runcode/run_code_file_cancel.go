@@ -1,15 +1,16 @@
 package runcode
 
 import (
-	dpconfig "dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/logging"
-	"dataplane/mainapp/messageq"
 	"errors"
 	"log"
 	"strconv"
 	"time"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/logging"
+	"github.com/dataplane-app/dataplane/mainapp/messageq"
 
 	"gorm.io/gorm/clause"
 )

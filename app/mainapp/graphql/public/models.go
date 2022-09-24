@@ -3,7 +3,7 @@
 package publicgraphql
 
 import (
-	"dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
 )
 
 type AddAdminsInput struct {

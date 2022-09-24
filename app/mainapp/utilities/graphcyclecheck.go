@@ -1,11 +1,13 @@
 package utilities
 
 import (
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database/models"
 	"fmt"
 	"log"
 	"strings"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
 )
 
 func GraphCycleCheck(edges []*models.PipelineEdges, node string) bool {

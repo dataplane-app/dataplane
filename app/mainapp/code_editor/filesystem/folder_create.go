@@ -1,11 +1,12 @@
 package filesystem
 
 import (
-	dpconfig "dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
 	"log"
 	"os"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
 
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )

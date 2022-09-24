@@ -2,10 +2,11 @@ package filesystem
 
 import (
 	"archive/zip"
-	"dataplane/mainapp/config"
 	"io"
 	"os"
 	"path/filepath"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
 )
 
 // Source https://gosamples.dev/zip-file/

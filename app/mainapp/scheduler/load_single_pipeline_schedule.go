@@ -1,12 +1,14 @@
 package scheduler
 
 import (
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/logging"
-	"dataplane/mainapp/pipelines"
 	"log"
+
+	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/mainapp/logging"
+	"github.com/dataplane-app/dataplane/mainapp/pipelines"
 
 	"github.com/go-co-op/gocron"
 	"github.com/google/uuid"
