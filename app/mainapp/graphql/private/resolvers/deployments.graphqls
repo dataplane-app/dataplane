@@ -153,4 +153,11 @@ extend type Mutation {
   + **Permissions**: admin_platform, admin_environment, specific_pipeline[write]
   """
   turnOnOffDeployment(environmentID: String!, pipelineID: String!, online: Boolean!): String!
+
+        """
+	Clear file cache for deployments.
+	+ **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines, specific_pipeline[write]
+	"""
+   clearFileCacheDeployment(environmentID: String!, deploymentID: String!, version: String!): String!
 }

@@ -16,11 +16,11 @@ go test -count=1 -timeout 30s -v -run ^TestZIPFolder$ dataplane/mainapp/filesyst
 func TestZIPFolder(t *testing.T) {
 
 	// database.DBConnect()
-	config.LoadConfig()
+	dpconfig.LoadConfig()
 
-	createDirectory := config.CodeDirectory + "/test/zipfolder/"
+	createDirectory := dpconfig.CodeDirectory + "/test/zipfolder/"
 
-	zipDirectory := config.CodeDirectory + "/test/trash/"
+	zipDirectory := dpconfig.CodeDirectory + "/test/trash/"
 
 	zipfile := zipDirectory + "ziptest.zip"
 

@@ -46,6 +46,22 @@ type CodeFiles struct {
 	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
 }
 
+func (CodeFilesStore) TableName() string {
+	return "code_files_store"
+}
+
+type CodeFilesStore struct {
+	FileID        string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
+	FileStore     []byte     `gorm:"type:bytea;" json:"file_store"`
+	EnvironmentID string     `gorm:"type:varchar(55);" json:"environment_id"`
+	ChecksumMD5   string     `gorm:"type:varchar(55);" json:"checksum_md5"`
+	External      bool       `gorm:"default:False" json:"external"`
+	RunInclude    bool       `gorm:"default:True" json:"run_include"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     *time.Time `json:"updated_at"`
+	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
+}
+
 func (CodeGitCommits) IsEntity() {}
 
 func (CodeGitCommits) TableName() string {
@@ -91,4 +107,81 @@ type FileDuplicate struct {
 	FileID string `json:"file_id"`
 	OldDir string `json:"old_dir"`
 	NewDir string `json:"new_dir"`
+}
+
+func (CodeFilesCache) IsEntity() {}
+
+func (CodeFilesCache) TableName() string {
+	return "code_files_cache"
+}
+
+type CodeFilesCache struct {
+	FileID           string     `gorm:"primaryKey;type:varchar(48);" json:"file_id"`
+	NodeID           string     `gorm:"primaryKey;type:varchar(48);" json:"node_id"`
+	WorkerID         string     `gorm:"primaryKey;type:varchar(48);" json:"worker_id"`
+	WorkerGroup      string     `json:"worker_group"`
+	EnvironmentID    string     `gorm:"type:varchar(55);" json:"environment_id"`
+	ChecksumMD5Check bool       `gorm:"default:false;" json:"checksum_md5_check"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        *time.Time `json:"updated_at"`
+}
+
+func (CodeNodeCache) IsEntity() {}
+
+func (CodeNodeCache) TableName() string {
+	return "code_node_cache"
+}
+
+type CodeNodeCache struct {
+	WorkerID      string     `gorm:"primaryKey;type:varchar(48);" json:"worker_id"`
+	NodeID        string     `gorm:"primaryKey;type:varchar(48);" json:"node_id"`
+	WorkerGroup   string     `json:"worker_group"`
+	EnvironmentID string     `gorm:"type:varchar(55);" json:"environment_id"`
+	CacheValid    bool       `gorm:"default:false;" json:"cache_valid"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     *time.Time `json:"updated_at"`
+}
+
+/* Output from cache to download files */
+type CodeFilesCacheOutput struct {
+	FileID      string `json:"file_id"`
+	FolderID    string `json:"folder_id"`
+	FileName    string `json:"file_name"`
+	ChecksumMD5 string `json:"checksum_md5"`
+	FileStore   []byte `gorm:"type:bytea;" json:"file_store"`
+}
+
+func (DeployCodeFilesCache) IsEntity() {}
+
+func (DeployCodeFilesCache) TableName() string {
+	return "deploy_code_files_cache"
+}
+
+type DeployCodeFilesCache struct {
+	FileID           string     `gorm:"primaryKey;type:varchar(48);" json:"file_id"`
+	NodeID           string     `gorm:"primaryKey;type:varchar(48);" json:"node_id"`
+	Version          string     `gorm:"primaryKey;type:varchar(48);" json:"version"`
+	WorkerID         string     `gorm:"primaryKey;type:varchar(48);" json:"worker_id"`
+	WorkerGroup      string     `json:"worker_group"`
+	EnvironmentID    string     `gorm:"type:varchar(55);" json:"environment_id"`
+	ChecksumMD5Check bool       `gorm:"default:false;" json:"checksum_md5_check"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        *time.Time `json:"updated_at"`
+}
+
+func (DeployCodeNodeCache) IsEntity() {}
+
+func (DeployCodeNodeCache) TableName() string {
+	return "deploy_code_node_cache"
+}
+
+type DeployCodeNodeCache struct {
+	WorkerID      string     `gorm:"primaryKey;type:varchar(48);" json:"worker_id"`
+	NodeID        string     `gorm:"primaryKey;type:varchar(48);" json:"node_id"`
+	Version       string     `gorm:"primaryKey;type:varchar(48);" json:"version"`
+	WorkerGroup   string     `json:"worker_group"`
+	EnvironmentID string     `gorm:"type:varchar(55);" json:"environment_id"`
+	CacheValid    bool       `gorm:"default:false;" json:"cache_valid"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     *time.Time `json:"updated_at"`
 }

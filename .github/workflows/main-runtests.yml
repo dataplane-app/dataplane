@@ -31,6 +31,11 @@ jobs:
         ports:
           - 5432:5432
       
+      redis:
+        image: redis:7.0.5-bullseye
+        ports: 
+          - 6379:6379
+
       nats:
         image: nats:2.7.0-scratch
         ports:

@@ -34,7 +34,7 @@ func MultiplePermissionChecks(
 	for i, _ := range outcomes {
 		outcomes[i] = <-c
 		// fmt.Println("key: ", i, " - ", outcomes[i])
-		// if config.Debug == "true" {
+		// if dpconfig.Debug == "true" {
 		// 	logging.PrintSecretsRedact("Perms: ", outcomes[i].Perm.Subject, outcomes[i].Result)
 		// }
 

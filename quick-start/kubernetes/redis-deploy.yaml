@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      # annotations:
+      #   linkerd.io/inject: enabled
+      labels:
+        app: redis
+    spec:
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      containers:
+        - image: redis:7.0.5-bullseye
+          name: container
+          ports:
+            - containerPort: 6379
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis-service
+  namespace: default
+  labels:
+    app: redis
+spec:
+  ports:
+    - name: tcp
+      protocol: TCP
+      #      port = port connected to ingress
+      port: 6379
+      # targetPort = port on container
+      targetPort: 6379
+  selector:
+    app: redis

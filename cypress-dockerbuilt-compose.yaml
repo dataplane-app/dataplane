@@ -2,6 +2,11 @@ version: '2.4'
 
 services:
 
+  redis-service:
+    image: redis:7.0.5-bullseye
+    ports:
+      - 6379
+
   postgres-test:
     image: timescale/timescaledb:2.5.1-pg14
     environment:
@@ -14,7 +19,7 @@ services:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 30s
       retries: 5
-    restart: always
+    # restart: always
 
   nats:
     image: nats:2.7.4-scratch
@@ -67,6 +72,8 @@ services:
       DP_SCHEDULER_DEBUG: "false"
       DP_CLEANTASKS_DAYS: "60"
       DP_REMOVELOGS_DAYS: "60"
+      DP_CODE_FILE_STORAGE: "Database"
+      DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"
 
   mainapp2-cypresstest:
     image: dataplane/dataplane:latest
@@ -95,6 +102,8 @@ services:
       DP_SCHEDULER_DEBUG: "false"
       DP_CLEANTASKS_DAYS: "60"
       DP_REMOVELOGS_DAYS: "60"
+      DP_CODE_FILE_STORAGE: "Database"
+      DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"
 
   dataplane-worker-cypresstest:
     image: dataplane/dataplane-worker-python:latest
@@ -130,6 +139,8 @@ services:
       DP_WORKER_PORT: "9005"
       DP_WORKER_LANGUAGES: "Python"
       DP_WORKER_LOAD_PACKAGES: "Python"
+      DP_CODE_FILE_STORAGE: "Database"
+      DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"
 
 volumes:
   testcypress-code-files:

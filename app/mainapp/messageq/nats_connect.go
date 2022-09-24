@@ -50,5 +50,5 @@ func NATSConnect() {
 	}
 
 	log.Println("📧 NATS connected")
-	//DBConn.Config.PrepareStmt = true
+	//DBConn.dpconfig.PrepareStmt = true
 }

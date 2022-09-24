@@ -15,7 +15,7 @@ import (
 
 func mytask(nodeID string, pipelineID string, environmentID string, timezone string, runType string) {
 
-	if config.SchedulerDebug == "true" {
+	if dpconfig.SchedulerDebug == "true" {
 		log.Println("Schedule run:", nodeID, timezone)
 	}
 
@@ -42,7 +42,7 @@ func mytask(nodeID string, pipelineID string, environmentID string, timezone str
 	}
 
 	if err != nil {
-		if config.SchedulerDebug == "true" {
+		if dpconfig.SchedulerDebug == "true" {
 			logging.PrintSecretsRedact(runType+" schedule run error:", err)
 		}
 	}
@@ -61,12 +61,12 @@ func LoadSingleSchedule(s models.Scheduler) {
 
 		if err == nil && s.Online {
 
-			if tmp, ok := config.PipelineScheduler.Get(s.Timezone); ok {
+			if tmp, ok := dpconfig.PipelineScheduler.Get(s.Timezone); ok {
 				PipelineScheduler = tmp.(*gocron.Scheduler)
 			}
 
 			PSJob, _ := PipelineScheduler.Cron(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, s.Timezone, s.RunType)
-			config.PipelineSchedulerJob.Set(s.NodeID, PSJob)
+			dpconfig.PipelineSchedulerJob.Set(s.NodeID, PSJob)
 		}
 	case "cronseconds":
 
@@ -74,18 +74,18 @@ func LoadSingleSchedule(s models.Scheduler) {
 
 		if err == nil && s.Online {
 
-			if tmp, ok := config.PipelineScheduler.Get("UTC"); ok {
+			if tmp, ok := dpconfig.PipelineScheduler.Get("UTC"); ok {
 				PipelineScheduler = tmp.(*gocron.Scheduler)
 			}
 
 			PSJob, _ := PipelineScheduler.CronWithSeconds(s.Schedule).Do(mytask, s.NodeID, s.PipelineID, s.EnvironmentID, "UTC", s.RunType)
-			config.PipelineSchedulerJob.Set(s.NodeID, PSJob)
+			dpconfig.PipelineSchedulerJob.Set(s.NodeID, PSJob)
 
 		}
 
 	}
 
-	if config.SchedulerDebug == "true" {
+	if dpconfig.SchedulerDebug == "true" {
 		log.Println("Scheduler add: ", s.Timezone, s.NodeID, "Online:", s.Online, s.RunType)
 	}
 
