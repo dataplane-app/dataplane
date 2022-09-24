@@ -1,6 +1,7 @@
 import { MenuItem } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
+import { useClearFileCacheDeployment } from '../../graphql/clearFileCacheDeployment';
 import { useGetDeployments } from '../../graphql/getDeployments';
 import { useGlobalFlowState } from '../PipelineEdit';
 import { useTurnOnOffDeploymentHook } from './TurnOffDeploymentDrawer';
@@ -18,6 +19,7 @@ const DeploymentTableItem = (props) => {
     // Graphql hook
     const getDeployments = useGetDeploymentsHook(setDeployments, environmentID);
     const turnOnOffDeployment = useTurnOnOffDeploymentHook(id, environmentID, handleCloseMenu, getDeployments);
+    const clearFileCacheDeployment = useClearFileCacheDeploymentHook(environmentID, id);
 
     const permissionClick = () => {
         handleCloseMenu();
@@ -41,6 +43,11 @@ const DeploymentTableItem = (props) => {
         handleCloseMenu();
     };
 
+    const clearCacheClick = () => {
+        clearFileCacheDeployment();
+        handleCloseMenu();
+    };
+
     return (
         <>
             {nodeTypeDesc !== 'play' && deploy_active ? (
@@ -50,6 +57,9 @@ const DeploymentTableItem = (props) => {
             ) : null}
             <MenuItem sx={{ color: 'cyan.main' }} onClick={permissionClick}>
                 Permissions
+            </MenuItem>
+            <MenuItem sx={{ color: 'cyan.main' }} onClick={clearCacheClick}>
+                Clear file cache
             </MenuItem>
             <MenuItem sx={{ color: 'error.main' }} onClick={deleteClick}>
                 Delete
@@ -75,6 +85,26 @@ function useGetDeploymentsHook(setDeployments, environmentID) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setDeployments(response);
+        }
+    };
+}
+
+function useClearFileCacheDeploymentHook(environmentID, deploymentID) {
+    // GraphQL hook
+    const clearFileCacheDeployment = useClearFileCacheDeployment();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Clear file cache
+    return async () => {
+        const response = await clearFileCacheDeployment({ environmentID, deploymentID });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't clear file cache: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
         }
     };
 }

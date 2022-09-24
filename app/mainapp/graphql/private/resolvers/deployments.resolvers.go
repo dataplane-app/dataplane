@@ -5,8 +5,7 @@ package privateresolvers
 
 import (
 	"context"
-	permissions "dataplane/mainapp/auth_permissions"
-	dfscache "dataplane/mainapp/code_editor/dfs_cache"
+	"dataplane/mainapp/auth_permissions"
 	"dataplane/mainapp/code_editor/filesystem"
 	dpconfig "dataplane/mainapp/config"
 	"dataplane/mainapp/database"
@@ -767,6 +766,28 @@ func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentI
 	}
 
 	return "Pipeline trigger updated", nil
+}
+
+func (r *mutationResolver) ClearFileCacheDeployment(ctx context.Context, environmentID string, deploymentID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
+		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: deploymentID, Access: "write", EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	return "Success", nil
+	// panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) GetActiveDeployment(ctx context.Context, pipelineID string, environmentID string) (*privategraphql.Deployments, error) {
