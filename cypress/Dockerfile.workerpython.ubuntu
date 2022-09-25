@@ -4,14 +4,14 @@ RUN mkdir -p /go/src/build
 
 WORKDIR /go/src/build
 
-COPY go.mod .
-COPY go.sum .
+COPY go.mod /go/src/build/go.mod
+COPY go.sum /go/src/build/go.sum
 RUN go mod download
 
-ADD app /go/src/build/
+ADD app /go/src/build/app
 
 ARG SKAFFOLD_GO_GCFLAGS
-RUN CGO_ENABLED=0 go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane-worker workers/worker.go
+RUN CGO_ENABLED=0 go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane-worker app/workers/worker.go
 
 
 FROM ubuntu:22.04
