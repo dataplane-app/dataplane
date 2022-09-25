@@ -1,11 +1,13 @@
 package worker
 
 import (
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/logging"
-	"dataplane/mainapp/messageq"
 	"log"
 	"strings"
+
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/logging"
+	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 
 	"github.com/gofiber/websocket/v2"
 	"github.com/nats-io/nats.go"

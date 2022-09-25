@@ -1,9 +1,10 @@
 package routes
 
 import (
-	generated "dataplane/mainapp/graphql/public"
-	publicgraphql "dataplane/mainapp/graphql/public/resolvers"
 	"net/http"
+
+	generated "github.com/dataplane-app/dataplane/app/mainapp/graphql/public"
+	publicgraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/public/resolvers"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/gofiber/fiber/v2"

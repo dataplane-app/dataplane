@@ -1,17 +1,19 @@
 package pipelines
 
 import (
-	"dataplane/mainapp/code_editor/filesystem"
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/logging"
-	"dataplane/mainapp/messageq"
-	"dataplane/mainapp/worker"
 	"encoding/json"
 	"log"
 	"os"
 	"time"
+
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/logging"
+	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
+	"github.com/dataplane-app/dataplane/app/mainapp/worker"
 
 	"github.com/google/uuid"
 )

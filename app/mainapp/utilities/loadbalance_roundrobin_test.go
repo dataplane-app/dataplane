@@ -1,16 +1,17 @@
 package utilities
 
 import (
-	"dataplane/mainapp/database/models"
 	"fmt"
 	"log"
 	"testing"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
 	"github.com/stretchr/testify/assert"
 )
 
 /*
-go test -timeout 30s -v -run ^TestRoundRobin$ dataplane/mainapp/utilities
+go test -timeout 30s -v -run ^TestRoundRobin$ github.com/dataplane-app/dataplane/app/mainapp/utilities
 */
 func TestRoundRobin(t *testing.T) {
 

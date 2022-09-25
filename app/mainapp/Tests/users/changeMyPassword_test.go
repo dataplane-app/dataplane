@@ -1,11 +1,12 @@
 package usertests
 
 import (
-	"dataplane/mainapp/Tests/testutils"
 	"log"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/Tests/testutils"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/assert"

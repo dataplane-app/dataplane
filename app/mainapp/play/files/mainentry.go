@@ -1,10 +1,11 @@
 package main
 
 import (
-	distributefilesystem "dataplane/mainapp/code_editor/distribute_filesystem"
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
 	"log"
+
+	distributefilesystem "github.com/dataplane-app/dataplane/app/mainapp/code_editor/distribute_filesystem"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
 )
 
 func main() {

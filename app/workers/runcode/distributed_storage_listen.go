@@ -1,11 +1,12 @@
 package runcodeworker
 
 import (
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/messageq"
 	"log"
 	"os"
 	"strings"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
+	"github.com/dataplane-app/dataplane/app/workers/messageq"
 )
 
 /*

@@ -1,11 +1,12 @@
 package worker
 
 import (
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/messageq"
 	"log"
 	"os"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

@@ -1,9 +1,10 @@
 package main
 
 import (
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/database"
 	"log"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
+	"github.com/dataplane-app/dataplane/app/workers/database"
 )
 
 func main() {

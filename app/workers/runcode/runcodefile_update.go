@@ -1,14 +1,16 @@
 package runcodeworker
 
 import (
-	"dataplane/mainapp/database/models"
-	modelmain "dataplane/mainapp/database/models"
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/database"
-	"dataplane/workers/messageq"
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
+	"github.com/dataplane-app/dataplane/app/workers/database"
+	"github.com/dataplane-app/dataplane/app/workers/messageq"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm/clause"

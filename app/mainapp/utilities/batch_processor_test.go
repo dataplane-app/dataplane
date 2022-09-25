@@ -33,7 +33,7 @@ type FileItem struct {
 
 /*
 Run Super secret squirrel function test
-go test -timeout 30s -count=1 -v -run ^TestBatchProcess$ dataplane/mainapp/utilities
+go test -timeout 30s -count=1 -v -run ^TestBatchProcess$ github.com/dataplane-app/dataplane/app/mainapp/utilities
 */
 func backgroundwriter(textback chan string) {
 	for {

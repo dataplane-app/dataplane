@@ -370,6 +370,12 @@ const Flow = () => {
                 setSelectedElement(newNode);
                 FlowState.isOpenSchedulerDrawer.set(true);
             }
+
+            if (type.nodeType === 'apiNode') {
+                FlowState.selectedElement.set(newNode);
+                setSelectedElement(newNode);
+                FlowState.isOpenAPIDrawer.set(true);
+            }
             return;
         }
     };
@@ -485,7 +491,12 @@ const Flow = () => {
                 />
             </Drawer>
 
-            <Drawer anchor="right" open={FlowState.isOpenAPIDrawer.get()} onClose={() => FlowState.isOpenAPIDrawer.set(false)}>
+            <Drawer
+                hideBackdrop
+                sx={{ width: 'calc(100% - 203px)', zIndex: 1099, [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
+                anchor="right"
+                open={FlowState.isOpenAPIDrawer.get()}
+                onClose={() => FlowState.isOpenAPIDrawer.set(false)}>
                 <APITRiggerDrawer handleClose={() => FlowState.isOpenAPIDrawer.set(false)} />
             </Drawer>
 

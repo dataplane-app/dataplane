@@ -5,16 +5,18 @@ package publicresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth"
-	permissions "dataplane/mainapp/auth_permissions"
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	publicgraphql "dataplane/mainapp/graphql/public"
-	"dataplane/mainapp/logging"
 	"errors"
 	"os"
 	"strings"
+
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/auth"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	publicgraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/public"
+	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"

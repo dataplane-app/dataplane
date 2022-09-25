@@ -2,13 +2,15 @@ package distributefilesystem
 
 import (
 	"crypto/md5"
-	"dataplane/mainapp/code_editor/filesystem"
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
 	"fmt"
 	"log"
 	"os"
+
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
 	"gorm.io/gorm"
 )

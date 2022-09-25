@@ -1,9 +1,10 @@
 package main
 
 import (
-	"dataplane/workers/routes"
 	"log"
 	"os"
+
+	"github.com/dataplane-app/dataplane/app/workers/routes"
 )
 
 func main() {

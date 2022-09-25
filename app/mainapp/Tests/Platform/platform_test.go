@@ -1,12 +1,13 @@
 package admintests
 
 import (
-	"dataplane/mainapp/Tests/testutils"
-	"dataplane/mainapp/database"
 	"log"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/Tests/testutils"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
 
 	"github.com/bxcodec/faker/v3"
 

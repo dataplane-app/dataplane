@@ -1,18 +1,19 @@
 package routes
 
 import (
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/database"
-	"dataplane/workers/database/models"
-	"dataplane/workers/messageq"
-	runcodeworker "dataplane/workers/runcode"
-	"dataplane/workers/runtask"
-	"dataplane/workers/secrets"
-	"dataplane/workers/workerhealth"
 	"fmt"
 	"log"
 	"regexp"
 	"time"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
+	"github.com/dataplane-app/dataplane/app/workers/database"
+	"github.com/dataplane-app/dataplane/app/workers/database/models"
+	"github.com/dataplane-app/dataplane/app/workers/messageq"
+	runcodeworker "github.com/dataplane-app/dataplane/app/workers/runcode"
+	"github.com/dataplane-app/dataplane/app/workers/runtask"
+	"github.com/dataplane-app/dataplane/app/workers/secrets"
+	"github.com/dataplane-app/dataplane/app/workers/workerhealth"
 
 	"github.com/go-co-op/gocron"
 	"github.com/gofiber/fiber/v2"

@@ -1,16 +1,18 @@
 package distfilesystem
 
 import (
-	"dataplane/mainapp/code_editor/filesystem"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/utilities"
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/database"
 	"errors"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
+	"github.com/dataplane-app/dataplane/app/workers/database"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

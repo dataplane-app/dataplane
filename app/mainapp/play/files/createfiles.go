@@ -1,11 +1,12 @@
 package main
 
 import (
-	"dataplane/mainapp/utilities"
 	"encoding/json"
 	"fmt"
 	"log"
 	"math"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
 
 	"github.com/bxcodec/faker/v4"
 	"github.com/google/uuid"

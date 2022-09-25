@@ -1,13 +1,15 @@
 package workerhealth
 
 import (
-	"dataplane/mainapp/database/models"
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/messageq"
 	"log"
 	"math"
 	"os"
 	"time"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
+	"github.com/dataplane-app/dataplane/app/workers/messageq"
 
 	"github.com/go-co-op/gocron"
 	"github.com/shirou/gopsutil/cpu"

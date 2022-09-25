@@ -1,12 +1,13 @@
 package secrettests
 
 import (
-	"dataplane/mainapp/Tests/testutils"
-	"dataplane/mainapp/database"
 	"log"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/Tests/testutils"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/assert"

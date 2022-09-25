@@ -1,26 +1,28 @@
 package pipelines
 
 import (
-	"dataplane/mainapp/code_editor/filesystem"
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	"dataplane/mainapp/logging"
-	"dataplane/mainapp/messageq"
-	"dataplane/mainapp/worker"
 	"encoding/json"
 	"log"
 	"os"
 	"time"
 
+	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/logging"
+	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
+	"github.com/dataplane-app/dataplane/app/mainapp/worker"
+
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 )
 
 type Command struct {
 	Command string `json:command`
 }
 
-func RunPipeline(pipelineID string, environmentID string, runID string) (models.PipelineRuns, error) {
+func RunPipeline(pipelineID string, environmentID string, runID string, runJson ...datatypes.JSON) (models.PipelineRuns, error) {
 
 	// start := time.Now().UTC()
 
@@ -41,6 +43,27 @@ func RunPipeline(pipelineID string, environmentID string, runID string) (models.
 	}
 
 	// Retrieve folders
+
+	// Check if a runJson is submitted
+	if runJson != nil && len(runJson[0]) != 0 {
+		run := models.PipelineApiTriggerRuns{
+			RunID:         runID,
+			PipelineID:    pipelineID,
+			EnvironmentID: environmentID,
+			RunType:       "pipeline",
+			RunJSON:       runJson[0],
+			CreatedAt:     time.Now().UTC(),
+		}
+
+		err = database.DBConn.Create(&run).Error
+		if err != nil {
+
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return models.PipelineRuns{}, err
+		}
+	}
 
 	// Create a run
 	run := models.PipelineRuns{

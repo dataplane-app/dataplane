@@ -1,10 +1,11 @@
 package messageq
 
 import (
-	wrkerconfig "dataplane/workers/config"
 	"log"
 	"os"
 	"time"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
 
 	"github.com/nats-io/nats.go"
 )

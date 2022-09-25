@@ -1,16 +1,17 @@
 package migrations
 
 import (
-	dpconfig "dataplane/mainapp/config"
-	"dataplane/mainapp/database/models"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+
 	// "gorm.io/gorm/clause"
-	"dataplane/mainapp/code_editor/filesystem"
+	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
@@ -22,7 +23,7 @@ import (
 
 func Migrate() {
 
-	migrateVersion := "0.0.52"
+	migrateVersion := "0.0.53"
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -86,6 +87,9 @@ func Migrate() {
 			&models.PipelineNodes{},
 			&models.PipelineEdges{},
 			&models.PipelineRuns{},
+			&models.PipelineApiTriggerRuns{},
+			&models.PipelineApiTriggers{},
+			&models.PipelineApiKeys{},
 			&models.ResourceTypeStruct{},
 			&models.Secrets{},
 

@@ -2,12 +2,14 @@ package runcodeworker
 
 import (
 	"context"
-	modelmain "dataplane/mainapp/database/models"
-	wrkerconfig "dataplane/workers/config"
-	"dataplane/workers/messageq"
 	"log"
 	"syscall"
 	"time"
+
+	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
+
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
+	"github.com/dataplane-app/dataplane/app/workers/messageq"
 )
 
 type TaskResponse struct {

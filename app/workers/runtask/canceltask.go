@@ -1,11 +1,13 @@
 package runtask
 
 import (
-	modelmain "dataplane/mainapp/database/models"
-	"dataplane/workers/messageq"
 	"log"
 	"syscall"
 	"time"
+
+	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
+
+	"github.com/dataplane-app/dataplane/app/workers/messageq"
 
 	"github.com/gofiber/fiber/v2"
 )

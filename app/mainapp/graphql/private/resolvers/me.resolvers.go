@@ -5,13 +5,15 @@ package privateresolvers
 
 import (
 	"context"
-	"dataplane/mainapp/auth"
-	"dataplane/mainapp/config"
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
-	privategraphql "dataplane/mainapp/graphql/private"
-	"dataplane/mainapp/logging"
 	"errors"
+
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/auth"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
+	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 )
 
 func (r *mutationResolver) UpdateMe(ctx context.Context, input *privategraphql.AddUpdateMeInput) (*models.Users, error) {

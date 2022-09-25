@@ -1,5 +1,5 @@
 import { faClock } from '@fortawesome/free-regular-svg-icons';
-import { faMapMarkedAlt, faPlayCircle, faRunning } from '@fortawesome/free-solid-svg-icons';
+import { faMapMarkedAlt, faPlayCircle, faRunning, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Typography } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
@@ -59,12 +59,13 @@ const EditorSidebar = () => {
                     eventType: 'scheduleNode',
                     data: { triggerOnline: false, genericdata: { schedule: '', timezone, scheduleType: '' } },
                 },
-                // {
-                //     id: uuidv4(),
-                //     icon: faGlobe,
-                //     text: 'API',
-                //     eventType: 'apiNode',
-                // },
+                {
+                    id: uuidv4(),
+                    icon: faGlobe,
+                    text: 'API',
+                    eventType: 'apiNode',
+                    data: { triggerOnline: true },
+                },
             ],
         },
         {

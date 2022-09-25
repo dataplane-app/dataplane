@@ -1,10 +1,11 @@
 package filesystem
 
 import (
-	dpconfig "dataplane/mainapp/config"
-	"dataplane/mainapp/database/models"
 	"errors"
 	"log"
+
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 )
 
 /* Processor file will be overwritten */

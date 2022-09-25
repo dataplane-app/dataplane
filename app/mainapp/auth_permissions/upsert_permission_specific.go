@@ -1,9 +1,10 @@
 package permissions
 
 import (
-	"dataplane/mainapp/database"
-	"dataplane/mainapp/database/models"
 	"errors"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm/clause"
