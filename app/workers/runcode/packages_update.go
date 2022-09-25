@@ -2,9 +2,11 @@ package runcodeworker
 
 import (
 	"bufio"
+	"errors"
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 
@@ -25,6 +27,35 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 	var packagesfile string
 	var cmd *exec.Cmd
 	var packages models.CodePackages
+
+	if strings.Contains(wrkerconfig.CodeLoadPackages, language) == false {
+
+		uid := uuid.NewString()
+		line := "Packages disabled for code language: " + language
+
+		sendmsg := modelmain.LogsSend{
+			CreatedAt: time.Now().UTC(),
+			UID:       uid,
+			Log:       line,
+			LogType:   "error",
+		}
+
+		messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
+		if wrkerconfig.Debug == "true" {
+			clog.Error(line)
+		}
+
+		sendmsg = modelmain.LogsSend{
+			CreatedAt: time.Now().UTC(),
+			UID:       uuid.NewString(),
+			Log:       "complete",
+			LogType:   "action",
+		}
+
+		messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
+
+		return errors.New(line)
+	}
 
 	err2 := database.DBConn.Select("packages").Where("language = ? and environment_id=? and worker_group = ?", language, environmentID, workerGroup).First(&packages)
 	if err2.Error != nil && err2.Error != gorm.ErrRecordNotFound {
