@@ -12,7 +12,10 @@ import { useGetPipelineTrigger } from '../../../../graphql/getPipelineTrigger';
 import ApiKey from './ApiKey';
 import ApiTriggerExampleDrawer from '../../ApiTriggerExampleDrawer';
 
-const host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
+let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
+if (host === '') {
+    host = window.location.origin;
+}
 const PUBLIC = `${host}/app/public/api-trigger/`;
 const PRIVATE = `https://{{ HOST }}/app/private/api-trigger/`;
 
