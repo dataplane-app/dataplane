@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/dataplane-app/dataplane/mainapp/routes"
+	"github.com/dataplane-app/dataplane/app/mainapp/routes"
 )
 
 func main() {

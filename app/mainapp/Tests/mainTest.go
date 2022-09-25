@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	workerroutes "github.com/dataplane-app/dataplane/workers/routes"
+	workerroutes "github.com/dataplane-app/dataplane/app/workers/routes"
 
-	"github.com/dataplane-app/dataplane/mainapp/Tests/testutils"
-	"github.com/dataplane-app/dataplane/mainapp/auth"
-	"github.com/dataplane-app/dataplane/mainapp/database"
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
-	"github.com/dataplane-app/dataplane/mainapp/routes"
+	"github.com/dataplane-app/dataplane/app/mainapp/Tests/testutils"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/routes"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/google/uuid"

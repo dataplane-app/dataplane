@@ -14,49 +14,49 @@ model:
 
 models:
  User:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.Users
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.Users
  AvailablePermissions:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.ResourceTypeStruct
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.ResourceTypeStruct
  Environments:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.Environment
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.Environment
  Permissions:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.Permissions
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.Permissions
  PermissionsOutput:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.PermissionsOutput
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PermissionsOutput
  AccessGroups:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.PermissionsAccessGroups
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PermissionsAccessGroups
  PermissionsAccessGUsersOutput:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.PermissionsAccessGUsersOutput
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PermissionsAccessGUsersOutput
  Secrets:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.Secrets
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.Secrets
  SecretWorkerGroups:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.WorkerSecrets
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.WorkerSecrets
 #  Pipelines:
-#    model: github.com/dataplane-app/dataplane/mainapp/database/models.Pipelines
+#    model: github.com/dataplane-app/dataplane/app/mainapp/database/models.Pipelines
  PipelineEdges:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.PipelineEdges
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PipelineEdges
  PipelineNodes:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.PipelineNodes
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PipelineNodes
  PipelineRuns:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.PipelineRuns
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PipelineRuns
  PipelineApiTriggers:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.PipelineApiTriggers
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PipelineApiTriggers
  PipelineApiKeys:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.PipelineApiKeys
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PipelineApiKeys
  DeploymentRuns:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.PipelineRuns
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PipelineRuns
  DeploymentEdges:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.DeployPipelineEdges
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.DeployPipelineEdges
  DeploymentNodes:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.DeployPipelineNodes
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.DeployPipelineNodes
  LogsWorkers:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.LogsWorkers
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.LogsWorkers
  LogsCodeRun:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.LogsCodeRun
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.LogsCodeRun
  CodeFolders:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.CodeFolders
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.CodeFolders
  CodeFiles:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.CodeFiles
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.CodeFiles
 
 resolver:
   layout: follow-schema

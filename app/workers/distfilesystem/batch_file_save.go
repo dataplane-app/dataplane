@@ -24,12 +24,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/dataplane-app/dataplane/mainapp/code_editor/filesystem"
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
-	"github.com/dataplane-app/dataplane/mainapp/utilities"
+	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
 
-	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
-	"github.com/dataplane-app/dataplane/workers/database"
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
+	"github.com/dataplane-app/dataplane/app/workers/database"
 
 	"github.com/golang-queue/contrib/zerolog"
 	"github.com/golang-queue/queue"
@@ -37,7 +37,7 @@ import (
 
 /*
 Run Super secret squirrel function test
-go test -timeout 30s -count=1 -v -run ^TestBatchProcess$ github.com/dataplane-app/dataplane/mainapp/utilities
+go test -timeout 30s -count=1 -v -run ^TestBatchProcess$ github.com/dataplane-app/dataplane/app/mainapp/utilities
 */
 type msgback struct {
 	Msg string

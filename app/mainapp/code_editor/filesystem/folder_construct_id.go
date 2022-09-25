@@ -4,7 +4,7 @@ import (
 	"errors"
 	"log"
 
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
 	"gorm.io/gorm"
 )

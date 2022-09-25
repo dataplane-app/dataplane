@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 )
 
 /*
 Run Super secret squirrel function test
-go test -count=1 -timeout 30s -v -run ^TestZIPFolder$ github.com/dataplane-app/dataplane/mainapp/filesystem
+go test -count=1 -timeout 30s -v -run ^TestZIPFolder$ github.com/dataplane-app/dataplane/app/mainapp/filesystem
 */
 func TestZIPFolder(t *testing.T) {
 

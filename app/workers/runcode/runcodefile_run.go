@@ -11,13 +11,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dataplane-app/dataplane/mainapp/code_editor/filesystem"
-	modelmain "github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
+	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
-	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
-	"github.com/dataplane-app/dataplane/workers/database"
-	"github.com/dataplane-app/dataplane/workers/distfilesystem"
-	"github.com/dataplane-app/dataplane/workers/messageq"
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
+	"github.com/dataplane-app/dataplane/app/workers/database"
+	"github.com/dataplane-app/dataplane/app/workers/distfilesystem"
+	"github.com/dataplane-app/dataplane/app/workers/messageq"
 
 	"github.com/google/uuid"
 	cmap "github.com/orcaman/concurrent-map"

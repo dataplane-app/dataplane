@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dataplane-app/dataplane/mainapp/Tests/testutils"
-	"github.com/dataplane-app/dataplane/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/Tests/testutils"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +15,7 @@ import (
 
 /*
 For individual tests - in separate window run: go run server.go
-go test -p 1 -v -count=1 -run TestLogs github.com/dataplane-app/dataplane/mainapp/Tests/Logs
+go test -p 1 -v -count=1 -run TestLogs github.com/dataplane-app/dataplane/app/mainapp/Tests/Logs
 * Login
 * Get logs for node
 */

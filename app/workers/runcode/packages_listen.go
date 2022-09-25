@@ -1,11 +1,11 @@
 package runcodeworker
 
 import (
-	modelmain "github.com/dataplane-app/dataplane/mainapp/database/models"
+	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
-	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
-	"github.com/dataplane-app/dataplane/workers/logging"
-	"github.com/dataplane-app/dataplane/workers/messageq"
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
+	"github.com/dataplane-app/dataplane/app/workers/logging"
+	"github.com/dataplane-app/dataplane/app/workers/messageq"
 )
 
 func CodeLoadPackagesListen() {

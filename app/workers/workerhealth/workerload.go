@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
-	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
-	"github.com/dataplane-app/dataplane/workers/messageq"
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
+	"github.com/dataplane-app/dataplane/app/workers/messageq"
 
 	"github.com/go-co-op/gocron"
 	"github.com/shirou/gopsutil/cpu"

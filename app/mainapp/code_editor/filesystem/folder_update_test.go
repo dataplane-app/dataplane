@@ -5,17 +5,17 @@ import (
 	"os"
 	"testing"
 
-	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 
-	"github.com/dataplane-app/dataplane/mainapp/database"
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
 /*
 Update pipeline folder test
-go test -count=1 -timeout 30s -v -run ^TestUpdateFolder$ github.com/dataplane-app/dataplane/mainapp/utilities
+go test -count=1 -timeout 30s -v -run ^TestUpdateFolder$ github.com/dataplane-app/dataplane/app/mainapp/utilities
 */
 func TestUpdateFolder(t *testing.T) {
 

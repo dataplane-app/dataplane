@@ -14,10 +14,10 @@ model:
 
 models:
  User:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.Users
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.Users
 
  Platform:
-   model: github.com/dataplane-app/dataplane/mainapp/database/models.Platform
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.Platform
 
 resolver:
   layout: follow-schema

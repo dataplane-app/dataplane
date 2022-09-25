@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dataplane-app/dataplane/mainapp/Tests/testutils"
-	"github.com/dataplane-app/dataplane/mainapp/auth"
+	"github.com/dataplane-app/dataplane/app/mainapp/Tests/testutils"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/assert"

@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/dataplane-app/dataplane/mainapp/auth"
-	"github.com/dataplane-app/dataplane/mainapp/database"
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
-	publicgraphql "github.com/dataplane-app/dataplane/mainapp/graphql/public"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	publicgraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/public"
 
 	"golang.org/x/crypto/bcrypt"
 )

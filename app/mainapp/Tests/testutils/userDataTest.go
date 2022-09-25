@@ -1,7 +1,7 @@
 package testutils
 
 import (
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 )
 
 type UserTestDataPerms struct {

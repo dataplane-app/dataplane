@@ -6,9 +6,9 @@ import (
 	"os"
 	"os/exec"
 
-	workerroutes "github.com/dataplane-app/dataplane/workers/routes"
+	workerroutes "github.com/dataplane-app/dataplane/app/workers/routes"
 
-	"github.com/dataplane-app/dataplane/mainapp/routes"
+	"github.com/dataplane-app/dataplane/app/mainapp/routes"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

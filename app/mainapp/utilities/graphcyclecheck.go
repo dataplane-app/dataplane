@@ -5,9 +5,9 @@ import (
 	"log"
 	"strings"
 
-	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 )
 
 func GraphCycleCheck(edges []*models.PipelineEdges, node string) bool {

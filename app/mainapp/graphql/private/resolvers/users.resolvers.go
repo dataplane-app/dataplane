@@ -8,15 +8,15 @@ import (
 	"errors"
 	"strings"
 
-	permissions "github.com/dataplane-app/dataplane/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 
-	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 
-	"github.com/dataplane-app/dataplane/mainapp/auth"
-	"github.com/dataplane-app/dataplane/mainapp/database"
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
-	privategraphql "github.com/dataplane-app/dataplane/mainapp/graphql/private"
-	"github.com/dataplane-app/dataplane/mainapp/logging"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
+	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"

@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"strings"
 
-	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
 	// "gorm.io/gorm/clause"
-	"github.com/dataplane-app/dataplane/mainapp/code_editor/filesystem"
+	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
