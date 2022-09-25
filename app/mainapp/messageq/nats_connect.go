@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dataplane-app/dataplane/mainapp/logging"
+	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/encoders/protobuf"

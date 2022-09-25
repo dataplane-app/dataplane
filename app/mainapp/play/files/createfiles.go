@@ -6,7 +6,7 @@ import (
 	"log"
 	"math"
 
-	"github.com/dataplane-app/dataplane/mainapp/utilities"
+	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
 
 	"github.com/bxcodec/faker/v4"
 	"github.com/google/uuid"

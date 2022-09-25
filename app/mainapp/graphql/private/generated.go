@@ -5,7 +5,7 @@ package privategraphql
 import (
 	"bytes"
 	"context"
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"embed"
 	"errors"
 	"fmt"

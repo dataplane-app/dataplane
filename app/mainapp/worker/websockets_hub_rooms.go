@@ -4,9 +4,9 @@ import (
 	"log"
 	"time"
 
-	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 
-	"github.com/dataplane-app/dataplane/mainapp/logging"
+	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 
 	"github.com/gofiber/websocket/v2"
 	cmap "github.com/orcaman/concurrent-map"

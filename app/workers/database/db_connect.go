@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

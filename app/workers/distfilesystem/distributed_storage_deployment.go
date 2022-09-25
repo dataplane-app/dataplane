@@ -7,12 +7,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dataplane-app/dataplane/mainapp/code_editor/filesystem"
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
-	"github.com/dataplane-app/dataplane/mainapp/utilities"
+	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
 
-	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
-	"github.com/dataplane-app/dataplane/workers/database"
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
+	"github.com/dataplane-app/dataplane/app/workers/database"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

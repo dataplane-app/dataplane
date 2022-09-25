@@ -9,14 +9,14 @@ import (
 	"os"
 	"strings"
 
-	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 
-	"github.com/dataplane-app/dataplane/mainapp/auth"
-	permissions "github.com/dataplane-app/dataplane/mainapp/auth_permissions"
-	"github.com/dataplane-app/dataplane/mainapp/database"
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
-	publicgraphql "github.com/dataplane-app/dataplane/mainapp/graphql/public"
-	"github.com/dataplane-app/dataplane/mainapp/logging"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	publicgraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/public"
+	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"

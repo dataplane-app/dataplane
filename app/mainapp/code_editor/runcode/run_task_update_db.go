@@ -1,9 +1,9 @@
 package runcode
 
 import (
-	"github.com/dataplane-app/dataplane/mainapp/database"
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
-	"github.com/dataplane-app/dataplane/mainapp/logging"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 
 	"gorm.io/gorm/clause"
 )

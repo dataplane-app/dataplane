@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
-	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
-	"github.com/dataplane-app/dataplane/mainapp/database"
-	"github.com/dataplane-app/dataplane/mainapp/database/models"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 )
 
 func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFolders, parentFolder string) (Newoutput models.CodeFolders, updateOLDDirectory string, updateNewDirectory string) {

@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	wrkerconfig "github.com/dataplane-app/dataplane/workers/config"
+	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
 
 	"github.com/nats-io/nats.go"
 )

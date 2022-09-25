@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 
 	"github.com/go-co-op/gocron"
 )

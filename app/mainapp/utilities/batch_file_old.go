@@ -23,7 +23,7 @@ import (
 	"os"
 	"time"
 
-	dpconfig "github.com/dataplane-app/dataplane/mainapp/config"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 
 	"github.com/golang-queue/contrib/zerolog"
 	"github.com/golang-queue/queue"
@@ -38,7 +38,7 @@ type FileContent struct {
 
 /*
 Run Super secret squirrel function test
-go test -timeout 30s -count=1 -v -run ^TestBatchProcess$ github.com/dataplane-app/dataplane/mainapp/utilities
+go test -timeout 30s -count=1 -v -run ^TestBatchProcess$ github.com/dataplane-app/dataplane/app/mainapp/utilities
 */
 
 var textback = make(chan string)
