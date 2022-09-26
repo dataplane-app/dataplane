@@ -25,6 +25,7 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/google/uuid"
+	uuid2 "github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"gorm.io/gorm"
@@ -522,6 +523,10 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 			triggerType = "schedule"
 		}
 
+		if node.NodeType == "trigger" && node.NodeTypeDesc == "api" {
+			triggerType = "api"
+		}
+
 		deployNodes = append(deployNodes, &models.PipelineNodes{
 			NodeID:        nodesOLDNew[node.NodeID],
 			PipelineID:    pipelineIDNew,
@@ -753,6 +758,14 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 			}
 		}
 
+	}
+
+	if triggerType == "api" {
+		triggerID := uuid2.New().String()
+		apiKeyActive := false
+		publicLive := true
+		privateLive := true
+		r.GeneratePipelineTrigger(ctx, e.PipelineID, e.EnvironmentID, triggerID, apiKeyActive, publicLive, privateLive)
 	}
 
 	return "Success", nil

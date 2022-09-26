@@ -60,7 +60,10 @@ const APITRiggerDrawer = ({ handleClose }) => {
                     {/* Save/Close buttons */}
                     <Box top="26px" right="39px" display="flex" alignItems="center">
                         <Button //
-                            onClick={handleClose}
+                            onClick={() => {
+                                generatePipelineTrigger();
+                                handleClose();
+                            }}
                             type="submit"
                             variant="contained"
                             color="primary"
