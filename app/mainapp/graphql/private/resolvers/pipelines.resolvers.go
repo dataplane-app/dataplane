@@ -761,10 +761,24 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	}
 
 	if triggerType == "api" {
+		// Get trigger information of the existing pipeline
+		existing := models.PipelineApiTriggers{}
+
+		err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipeline.PipelineID, pipeline.EnvironmentID).First(&existing).Error
+		if err != nil {
+			if err.Error() == "record not found" {
+				return "", errors.New("record not found")
+			}
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Retrive pipeline trigger database error.")
+		}
+
 		triggerID := uuid2.New().String()
-		apiKeyActive := false
-		publicLive := true
-		privateLive := true
+		apiKeyActive := true
+		publicLive := existing.PublicLive
+		privateLive := existing.PrivateLive
 		r.GeneratePipelineTrigger(ctx, e.PipelineID, e.EnvironmentID, triggerID, apiKeyActive, publicLive, privateLive)
 	}
 
