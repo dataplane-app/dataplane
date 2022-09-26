@@ -1,4 +1,4 @@
-import { faGlobe } from '@fortawesome/free-solid-svg-icons';
+import { faPlug } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Grid, Tooltip, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
@@ -55,7 +55,7 @@ const ApiNode = (props) => {
             <Handle type="source" position="right" id="schedule" style={FlowState.isDragging.get() ? customSourceHandleDragging : customSourceHandle(theme.palette.mode)} />
 
             <Grid container alignItems="flex-start" wrap="nowrap">
-                <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faGlobe} />
+                <Box component={FontAwesomeIcon} fontSize={19} color="secondary.main" icon={faPlug} />
                 <Tooltip title={'Node ID: ' + props.id} placement="top">
                     <Grid item ml={1.5} textAlign="left">
                         <Typography fontSize={11} fontWeight={900}>
