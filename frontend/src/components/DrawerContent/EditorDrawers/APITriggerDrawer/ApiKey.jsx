@@ -32,7 +32,7 @@ function reducer(state, action) {
     }
 }
 
-export default function ApiKey({ apiKeyActive, setApiKeyActive, environmentID, triggerID }) {
+export default function ApiKey({ apiKeyActive, generatePipelineTrigger, environmentID, triggerID }) {
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const addPipelineApiKey = useAddPipelineApiKeyHook(environmentID, triggerID, dispatch);
@@ -51,14 +51,15 @@ export default function ApiKey({ apiKeyActive, setApiKeyActive, environmentID, t
 
     return (
         <Box>
-            <Typography variant="body1" fontSize="1.1875rem" lineHeight={2}>
+            <Typography variant="body1" fontSize="1.0625rem" lineHeight={2}>
                 API Key (optional)
             </Typography>
-            <Typography maxWidth={1000}>
+            <Typography maxWidth={1000} fontSize="0.75rem">
                 Enable an API key for additional security. The key will only be shown once. New keys can be created or rotated using the generate key button. A new key will not
                 replace an old key, this allows you to rotate your keys without disruption to service. You can allow keys to expire or remove old keys. Once a key expires, it will
                 deny access on that key.
             </Typography>
+
             <Box display="flex" alignItems="center" mt={3}>
                 <IOSSwitch
                     sx={{
@@ -72,7 +73,7 @@ export default function ApiKey({ apiKeyActive, setApiKeyActive, environmentID, t
                             border: 0,
                         },
                     }}
-                    onClick={() => setApiKeyActive(!apiKeyActive)}
+                    onClick={() => generatePipelineTrigger({ apiKeyActive: !apiKeyActive })}
                     checked={apiKeyActive}
                     inputProps={{ 'aria-label': 'controlled' }}
                 />
@@ -80,29 +81,32 @@ export default function ApiKey({ apiKeyActive, setApiKeyActive, environmentID, t
                     {apiKeyActive ? 'Use an API key' : 'No key'}
                 </Typography>
             </Box>
-            <Box display="flex" alignItems="center" mt={3}>
-                <Typography fontSize="1.1875rem">Create key</Typography>
+            {(apiKeyActive === true || state.storedKeys.length) > 0 && (
+                <Box display="flex" alignItems="center" mt={3}>
+                    <Typography fontSize="1.0625rem">Create key</Typography>
 
-                <FormControl sx={{ marginLeft: '40px', width: '220px' }}>
-                    <InputLabel id="demo-simple-select-label">Expires in</InputLabel>
-                    <Select
-                        size="small"
-                        labelId="select-expiration-label"
-                        value={state.expiration}
-                        label="Expires in"
-                        onChange={(e) => dispatch({ type: 'set', key: 'expiration', value: e.target.value })}>
-                        <MenuItem value={0}>never</MenuItem>
-                        <MenuItem value={3}>3 months</MenuItem>
-                        <MenuItem value={6}>6 months</MenuItem>
-                        <MenuItem value={9}>9 months</MenuItem>
-                        <MenuItem value={12}>12 months</MenuItem>
-                        <MenuItem value={24}>24 months</MenuItem>
-                    </Select>
-                </FormControl>
-                <Button onClick={onGenerateKey} type="submit" variant="contained" color="primary" style={{ paddingLeft: '16px', paddingRight: '16px', marginLeft: '20px' }}>
-                    Generate key
-                </Button>
-            </Box>
+                    <FormControl sx={{ marginLeft: '40px', width: '220px' }}>
+                        <InputLabel id="demo-simple-select-label">Expires in</InputLabel>
+                        <Select
+                            size="small"
+                            labelId="select-expiration-label"
+                            value={state.expiration}
+                            label="Expires in"
+                            onChange={(e) => dispatch({ type: 'set', key: 'expiration', value: e.target.value })}>
+                            <MenuItem value={0}>never</MenuItem>
+                            <MenuItem value={3}>3 months</MenuItem>
+                            <MenuItem value={6}>6 months</MenuItem>
+                            <MenuItem value={9}>9 months</MenuItem>
+                            <MenuItem value={12}>12 months</MenuItem>
+                            <MenuItem value={24}>24 months</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <Button onClick={onGenerateKey} type="submit" variant="contained" color="primary" style={{ paddingLeft: '16px', paddingRight: '16px', marginLeft: '20px' }}>
+                        Generate key
+                    </Button>
+                </Box>
+            )}
+
             <List sx={{ width: '800px', marginTop: '8px' }}>
                 {state.storedKeys.map((apiKey, idx) => (
                     <ListItem
