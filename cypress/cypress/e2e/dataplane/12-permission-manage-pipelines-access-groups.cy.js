@@ -11,18 +11,18 @@ describe('Give pipeline permission to a user', function () {
 
         cy.get('#email').type('admin@email.com').should('have.value', 'admin@email.com');
         cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
-        cy.contains('button', 'Login').should('be.visible', { timeout: 6000 }).click();
+        cy.contains('button', 'Login').should('exist', { timeout: 6000 }).click();
         cy.url().should('include', '/webapp');
     });
 
     it('Add Access group', function () {
-        cy.contains('Access groups').should('be.visible', { timeout: 6000 }).click();
-        cy.contains('button', 'Add').should('be.visible', { timeout: 6000 }).click();
+        cy.contains('Access groups').should('exist', { timeout: 6000 }).click();
+        cy.contains('button', 'Add').should('exist', { timeout: 6000 }).click();
 
         cy.get('#name').type('Pipeline Access Group').should('have.value', 'Pipeline Access Group');
         cy.get('#description').type('Description').should('have.value', 'Description');
 
-        cy.contains('Save').should('be.visible', { timeout: 6000 }).click();
+        cy.contains('Save').should('exist', { timeout: 6000 }).click();
 
         cy.get('#notistack-snackbar').should('contain', 'Success');
 
@@ -31,21 +31,21 @@ describe('Give pipeline permission to a user', function () {
 
     it('Add user Jimmy to Access group', function () {
         cy.get('#members_autocomplete_access_group').type('Jimmy User', { force: true }).should('have.value', 'Jimmy User');
-        cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('be.visible', { timeout: 6000 }).click();
-        cy.get('#members_autocomplete_access_group').parent().parent().parent().next().should('be.visible', { timeout: 6000 }).click({ force: true });
+        cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
+        cy.get('#members_autocomplete_access_group').parent().parent().parent().next().should('exist', { timeout: 6000 }).click({ force: true });
         cy.get('#notistack-snackbar').should('contain', 'Success');
     });
 
     it('Give "View all pipelines" permission to Access group', function () {
         cy.get('#available_permissions_autocomplete').type('View all pipelines', { force: true }).should('have.value', 'View all pipelines');
-        cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('be.visible', { timeout: 6000 }).click();
+        cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
         cy.get('#available_permissions_autocomplete').parent().parent().parent().next().click({ force: true });
         cy.get('#notistack-snackbar').should('contain', 'Success');
     });
 
     it('Give "Manage pipeline permissions" permission to Access group', function () {
         cy.get('#available_permissions_autocomplete').type('Manage pipeline permissions', { force: true }).should('have.value', 'Manage pipeline permissions');
-        cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('be.visible', { timeout: 6000 }).click();
+        cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
         cy.get('#available_permissions_autocomplete').parent().parent().parent().next().click({ force: true });
         cy.get('#notistack-snackbar').should('contain', 'Success');
     });
@@ -56,7 +56,7 @@ describe('Give pipeline permission to a user', function () {
 
         cy.get('#email').type('environment@email.com').should('have.value', 'environment@email.com');
         cy.get('#password').type('environment123!').should('have.value', 'environment123!');
-        cy.contains('button', 'Login').should('be.visible', { timeout: 6000 }).click();
+        cy.contains('button', 'Login').should('exist', { timeout: 6000 }).click();
 
         cy.get('td h3').first().should('have.text', 'Cypress Pipeline');
     });
@@ -64,13 +64,13 @@ describe('Give pipeline permission to a user', function () {
     // #2 Verify user belongs to an access group with 'Manage pipeline permissions' can edit pipeline permissions
     it('Add Permission', function () {
         cy.contains('Pipelines').click({ force: true });
-        cy.contains('button', 'Manage').should('be.visible', { timeout: 6000 }).click({ force: true });
-        cy.contains('Permissions').should('be.visible', { timeout: 6000 }).click({ force: true });
-        cy.contains('button', 'Add user').should('be.visible', { timeout: 6000 }).click({ force: true });
+        cy.contains('button', 'Manage').should('exist', { timeout: 6000 }).click({ force: true });
+        cy.contains('Permissions').should('exist', { timeout: 6000 }).click({ force: true });
+        cy.contains('button', 'Add user').should('exist', { timeout: 6000 }).click({ force: true });
         cy.get('#environment_users_autocomplete').type('Jimmy User - environment@email.com', { force: true }).should('have.value', 'Jimmy User - environment@email.com');
-        cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('be.visible', { timeout: 6000 }).click();
-        cy.get('.MuiDrawer-paper').contains('View').should('be.visible', { timeout: 6000 }).click();
-        cy.contains('button', 'Save').should('be.visible', { timeout: 6000 }).click({ force: true });
+        cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
+        cy.get('.MuiDrawer-paper').contains('View').should('exist', { timeout: 6000 }).click();
+        cy.contains('button', 'Save').should('exist', { timeout: 6000 }).click({ force: true });
     });
 
     it('Verify Permission', function () {
@@ -84,7 +84,7 @@ describe('Give pipeline permission to a user', function () {
 
         cy.get('#email').type('changeuser@email.com').should('have.value', 'changeuser@email.com');
         cy.get('#password').type('changeuser123!').should('have.value', 'changeuser123!');
-        cy.contains('button', 'Login').should('be.visible', { timeout: 6000 }).click();
+        cy.contains('button', 'Login').should('exist', { timeout: 6000 }).click();
 
         cy.get('td').should('not.exist');
     });
