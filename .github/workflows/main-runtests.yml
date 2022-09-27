@@ -75,7 +75,7 @@ jobs:
 
       - name: Run Go Tests
         env: 
-          DP_DB_HOST: postgres
+          DP_DB_HOST: localhost
           DP_DB_USER: postgres
           DP_DB_SSL: "disable"
           DP_DB_PORT: "5432"
