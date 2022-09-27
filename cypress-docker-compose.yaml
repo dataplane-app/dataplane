@@ -55,14 +55,12 @@ services:
       - 9002:9001
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
-      secret_db_host: postgres-test
-      secret_db_user: postgres
+      DP_DB_HOST: postgres-test
+      DP_DB_USER: postgres
+      DP_DB_SSL: "disable"
+      DP_DB_PORT: "5432"
+      DP_DB_DATABASE: "testcypress"
       secret_db_pwd: "Hello123!"
-      secret_db_ssl: "disable"
-      secret_db_port: "5432"
-      secret_db_database: "testcypress"
-      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
-      secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
       DP_DATABASE: "timescaledb"
       DP_PORT: "9001"
       DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
@@ -86,14 +84,12 @@ services:
       replicas: 2
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
-      secret_db_host: postgres-test
-      secret_db_user: postgres
+      DP_DB_HOST: postgres-test
+      DP_DB_USER: postgres
+      DP_DB_SSL: "disable"
+      DP_DB_PORT: "5432"
+      DP_DB_DATABASE: "testcypress"
       secret_db_pwd: "Hello123!"
-      secret_db_ssl: "disable"
-      secret_db_port: "5432"
-      secret_db_database: "testcypress"
-      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
-      secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
       DP_DATABASE: "timescaledb"
       DP_PORT: "9001"
       DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
@@ -118,13 +114,12 @@ services:
       replicas: 2
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
-      secret_db_host: postgres-test
-      secret_db_user: postgres
+      DP_DB_HOST: postgres-test
+      DP_DB_USER: postgres
+      DP_DB_SSL: "disable"
+      DP_DB_PORT: "5432"
+      DP_DB_DATABASE: "testcypress"
       secret_db_pwd: "Hello123!"
-      secret_db_ssl: "disable"
-      secret_db_port: "5432"
-      secret_db_database: "testcypress"
-      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
       DP_DATABASE: "timescaledb"
       DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
       DP_MODE: "development"
@@ -155,13 +150,12 @@ services:
       replicas: 2
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
-      secret_db_host: postgres-test
-      secret_db_user: postgres
+      DP_DB_HOST: postgres-test
+      DP_DB_USER: postgres
+      DP_DB_SSL: "disable"
+      DP_DB_PORT: "5432"
+      DP_DB_DATABASE: "testcypress"
       secret_db_pwd: "Hello123!"
-      secret_db_ssl: "disable"
-      secret_db_port: "5432"
-      secret_db_database: "testcypress"
-      secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
       DP_DATABASE: "timescaledb"
       DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
       DP_MODE: "development"

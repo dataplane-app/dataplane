@@ -7,8 +7,8 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
-	"github.com/dataplane-app/dataplane/app/workers/database"
 	"github.com/dataplane-app/dataplane/app/workers/messageq"
 
 	"gorm.io/gorm/clause"

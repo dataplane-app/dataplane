@@ -23,7 +23,9 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/platform"
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler"
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler/routinetasks"
+	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
 	"github.com/dataplane-app/dataplane/app/mainapp/worker"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-co-op/gocron"
@@ -80,10 +82,17 @@ func Setup(port string) *fiber.App {
 	/* --- First time setup, workers will wait for this to be available ---- */
 	if u.ID == "" {
 
+		encryptKey, errn := gonanoid.Generate("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 32)
+		if errn != nil {
+			panic(errn)
+		}
+
 		// #Code File Storage: Database, LocalFile, S3
 		platformData := &models.Platform{
 			ID:              uuid.New().String(),
 			CodeFileStorage: dpconfig.FSCodeFileStorage,
+			JwtToken:        uuid.New().String(),
+			EncryptKey:      encryptKey,
 			Complete:        false,
 			One:             true,
 		}
@@ -183,6 +192,30 @@ func Setup(port string) *fiber.App {
 		distributefilesystem.MoveCodeFilesToDB(database.DBConn)
 		distributefilesystem.DeployFilesToDB(database.DBConn)
 		database.DBConn.Model(&models.Platform{}).Where("id = ?", u.ID).Update("code_file_storage", dpconfig.FSCodeFileStorage)
+	}
+
+	/* Load JWT secret if doesn't exist */
+	if u.JwtToken == "" {
+		tokenGen := uuid.NewString()
+		database.DBConn.Model(&models.Platform{}).Where("id = ?", u.ID).Update("jwt_token", tokenGen)
+		u.JwtToken = tokenGen
+	}
+
+	auth.JwtKey = []byte(u.JwtToken)
+
+	/* Load encrypt key if doesn't exist */
+	if u.EncryptKey == "" {
+		encryptkey, err := gonanoid.Generate("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 32)
+		if err == nil {
+			database.DBConn.Model(&models.Platform{}).Where("id = ?", u.ID).Update("encrypt_key", encryptkey)
+		}
+		u.EncryptKey = encryptkey
+	}
+
+	if os.Getenv("secret_encryption_key") == "" {
+		utilities.Encryptphrase = u.EncryptKey
+	} else {
+		utilities.Encryptphrase = os.Getenv("secret_encryption_key")
 	}
 
 	/* --- Run the scheduler ---- */
@@ -395,7 +428,7 @@ func Setup(port string) *fiber.App {
 	})
 
 	// Pipeline API Trigger public
-	app.Post("/app/public/api-trigger/:id", auth.ApiAuthMiddle(), func(c *fiber.Ctx) error {
+	app.Post("/app/public/api-trigger/:id", auth.ApiAuthMiddle("public"), func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
 		pipelineID := c.Locals("pipelineID").(string)
 		environmentID := c.Locals("environmentID").(string)
@@ -410,7 +443,7 @@ func Setup(port string) *fiber.App {
 	})
 
 	// Pipeline API Trigger private
-	app.Post("/app/private/api-trigger/:id", auth.ApiAuthMiddle(), func(c *fiber.Ctx) error {
+	app.Post("/app/private/api-trigger/:id", auth.ApiAuthMiddle("private"), func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
 		pipelineID := c.Locals("pipelineID").(string)
 		environmentID := c.Locals("environmentID").(string)

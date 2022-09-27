@@ -1,5 +1,5 @@
 import { faClock } from '@fortawesome/free-regular-svg-icons';
-import { faMapMarkedAlt, faPlayCircle, faRunning, faGlobe } from '@fortawesome/free-solid-svg-icons';
+import { faMapMarkedAlt, faPlayCircle, faRunning, faPlug } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Typography } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
@@ -61,7 +61,7 @@ const EditorSidebar = () => {
                 },
                 {
                     id: uuidv4(),
-                    icon: faGlobe,
+                    icon: faPlug,
                     text: 'API',
                     eventType: 'apiNode',
                     data: { triggerOnline: true },

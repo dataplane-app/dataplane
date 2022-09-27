@@ -2,8 +2,8 @@ import { Box, Typography, Grid, Button, Drawer } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import { useTable, useGlobalFilter } from 'react-table';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
-import { faClock } from '@fortawesome/free-regular-svg-icons';
+import { faPlayCircle, faClock } from '@fortawesome/free-regular-svg-icons';
+import { faPlug } from '@fortawesome/free-solid-svg-icons';
 import PipelineItemTable from '../../MoreInfoContent/PipelineTableItem';
 import { useHistory } from 'react-router-dom';
 import MoreInfoMenuPipeline from '../../MoreInfoMenuPipeline';
@@ -94,7 +94,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipel
                                 component={FontAwesomeIcon}
                                 fontSize={19}
                                 sx={{ color: 'secondary.main' }}
-                                icon={row.value.node_type_desc === 'play' ? faPlayCircle : faClock}
+                                icon={row.value.node_type_desc === 'play' ? faPlayCircle : row.value.node_type_desc === 'schedule' ? faClock : faPlug}
                                 mr={1.5}
                             />
                             <Typography color="secondary.main" variant="body2">

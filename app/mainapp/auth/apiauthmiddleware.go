@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func ApiAuthMiddle() func(*fiber.Ctx) error {
+func ApiAuthMiddle(publicOrPrivate string) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
 		triggerID := string(c.Params("id"))
@@ -29,15 +29,41 @@ func ApiAuthMiddle() func(*fiber.Ctx) error {
 			return c.Status(fiber.StatusForbidden).SendString("Retrive pipeline trigger database error.")
 		}
 
+		if publicOrPrivate == "public" {
+			if trigger.PublicLive == false {
+				return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+					"Data Platform": "Dataplane",
+					"Error":         "Endpoint is offline",
+				})
+			}
+		}
+
+		if publicOrPrivate == "private" {
+			if trigger.PrivateLive == false {
+				return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+					"Data Platform": "Dataplane",
+					"Error":         "Endpoint is offline",
+				})
+			}
+		}
+
 		if trigger.APIKeyActive == true {
 			keys := []models.PipelineApiKeys{}
 
-			err := database.DBConn.Where("trigger_id = ?", triggerID).Find(&keys).Error
+			err := database.DBConn.Where("trigger_id = ? and (expires_at > now() or expires_at is NULL)", triggerID).Find(&keys).Error
 			if err != nil {
 				if dpconfig.Debug == "true" {
 					logging.PrintSecretsRedact(err)
 				}
 				return c.Status(fiber.StatusForbidden).SendString("Retrive pipeline trigger database error.")
+			}
+
+			// If no keys are found
+			if len(keys) == 0 {
+				return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+					"Data Platform": "Dataplane",
+					"Error":         "Unauthorized",
+				})
 			}
 
 			// Look for a match in all keys
@@ -50,7 +76,8 @@ func ApiAuthMiddle() func(*fiber.Ctx) error {
 					}
 
 					return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
-						"r": "Unauthorized",
+						"Data Platform": "Dataplane",
+						"Error":         "Unauthorized",
 					})
 				}
 

@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
-	"github.com/dataplane-app/dataplane/app/workers/database"
 )
 
 func main() {

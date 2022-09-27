@@ -29,7 +29,7 @@ func MapSecrets() {
 
 	for _, e := range os.Environ() {
 		pair := strings.SplitN(e, "=", 2)
-		if strings.Contains(pair[0], "secret") {
+		if strings.Contains(pair[0], "secret") && pair[1] != "" {
 			SecretsArray = append(SecretsArray, pair[1])
 			SecretsArray = append(SecretsArray, Green+"** Secret **"+Reset)
 		}

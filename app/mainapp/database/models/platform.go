@@ -16,6 +16,8 @@ type Platform struct {
 	MigrationVersion string     `json:"migration_version"`
 	One              bool       `gorm:"index:idx_one_platform,unique;" json:"one"`
 	CodeFileStorage  string     `json:"code_file_storage"`
+	JwtToken         string     `json:"jwt_token"`
+	EncryptKey       string     `json:"encrypt_key"`
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        *time.Time `json:"updated_at"`
 	DeletedAt        *time.Time `json:"deleted_at,omitempty"`

@@ -13,7 +13,6 @@ var EnvName string
 var EnvID string
 var WorkerID string
 var PlatformID string
-var EncryptSecret string
 var WorkerGroup string
 var WorkerType string
 var WorkerEnv string
@@ -38,8 +37,6 @@ func LoadConfig() {
 	if Debug == "" {
 		Debug = "false"
 	}
-
-	EncryptSecret = os.Getenv("secret_encryption_key")
 
 	WorkerGroup = os.Getenv("DP_WORKER_GROUP")
 	WorkerType = os.Getenv("DP_WORKER_TYPE")

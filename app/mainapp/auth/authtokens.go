@@ -2,7 +2,6 @@ package auth
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -16,7 +15,7 @@ import (
 	jwt2 "github.com/lestrrat-go/jwx/jwt"
 )
 
-var jwtKey = []byte(os.Getenv("secret_jwt_secret"))
+var JwtKey []byte
 
 type Claims struct {
 	// Standard claims
@@ -59,7 +58,7 @@ func GenerateAccessClaims(userID string, username string, usertype string) strin
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString(JwtKey)
 	if err != nil {
 		logme.PlatformLogger(models.LogsPlatform{
 			EnvironmentID: "d_platform",
@@ -96,7 +95,7 @@ func GenerateRefreshToken(userID string) string {
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshclaims)
 
-	refreshTokenString, err := refreshToken.SignedString(jwtKey)
+	refreshTokenString, err := refreshToken.SignedString(JwtKey)
 	if err != nil {
 		logme.PlatformLogger(models.LogsPlatform{
 			EnvironmentID: "d_platform",
@@ -134,7 +133,7 @@ func RenewAccessToken(refreshToken string) (string, error) {
 	token, err := jwt2.Parse(
 		[]byte(refreshToken),
 		jwt2.WithValidate(true),
-		jwt2.WithVerify(jwa.HS256, []byte(jwtKey)))
+		jwt2.WithVerify(jwa.HS256, []byte(JwtKey)))
 
 	if err != nil {
 		return "", fmt.Errorf("token error: %v", err)
@@ -168,7 +167,7 @@ func ValidateAccessToken(accessToken string) (bool, *Claims) {
 	token, err := jwt2.Parse(
 		[]byte(accessToken),
 		jwt2.WithValidate(true),
-		jwt2.WithVerify(jwa.HS256, []byte(jwtKey)))
+		jwt2.WithVerify(jwa.HS256, []byte(JwtKey)))
 
 	if err != nil {
 		return false, nil
