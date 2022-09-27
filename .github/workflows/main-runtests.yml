@@ -75,14 +75,12 @@ jobs:
 
       - name: Run Go Tests
         env: 
-          secret_db_host: localhost
-          secret_db_user: postgres
+          DP_DB_HOST: postgres
+          DP_DB_USER: postgres
+          DP_DB_SSL: "disable"
+          DP_DB_PORT: "5432"
+          DP_DB_DATABASE: "dataplane"
           secret_db_pwd: "Hello123!"
-          secret_db_ssl: "disable"
-          secret_db_port: "5432"
-          secret_db_database: "dataplane"
-          secret_jwt_secret: "117943e8-9d43-49ac-aa4d-9c64004c8992"
-          secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
           DP_DATABASE: "timescaledb"
           DP_MODE: "development"
           DP_DEBUG: "true"
@@ -99,4 +97,7 @@ jobs:
           DP_CLEANTASKS_DAYS: "60"
           DP_REMOVELOGS_DAYS: "60"
           DP_CODE_FOLDER: "${{ github.workspace }}/appdev/code-files/"
+          DP_CODE_FILE_STORAGE: "Database"
+          DP_DFS_CODE_FOLDER: "${{ github.workspace }}/appdev/dfs-code-files/"
+
         run: cd app/mainapp && time go run Tests/mainTest.go
