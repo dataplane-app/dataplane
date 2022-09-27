@@ -14,3 +14,4 @@ var App *fiber.App
 var GraphQLUrlPublic string = "http://localhost:9000/app/public/graphql"
 var GraphQLUrlPrivate string = "http://localhost:9000/app/private/graphql"
 var RefreshTokenUrl string = "http://localhost:9000/app/refreshtoken"
+var JWTToken []byte

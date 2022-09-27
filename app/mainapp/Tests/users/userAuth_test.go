@@ -3,6 +3,7 @@ package usertests
 import (
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
@@ -24,6 +25,7 @@ go test -p 1 -v -count=1 -run TestUserAuth dataplane/Tests/users
 */
 func TestUserAuth(t *testing.T) {
 
+	auth.JwtKey = []byte(os.Getenv("JWTToken"))
 	graphQLPublicUrl := testutils.GraphQLUrlPublic
 
 	//--------- Login ------------

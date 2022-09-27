@@ -3,10 +3,12 @@ package usertests
 import (
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/Tests/testutils"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/assert"
@@ -20,6 +22,7 @@ go test -p 1 -v -count=1 -run TestChangePassword dataplane/Tests/users
 * Change password
 */
 func TestChangeUserPassword(t *testing.T) {
+	auth.JwtKey = []byte(os.Getenv("JWTToken"))
 
 	graphQLUrl := testutils.GraphQLUrlPublic
 	graphQLUrlPrivate := testutils.GraphQLUrlPrivate
