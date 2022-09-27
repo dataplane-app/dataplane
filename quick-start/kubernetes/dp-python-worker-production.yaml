@@ -35,23 +35,19 @@ spec:
           env:
             - name: DP_CODE_FOLDER
               value: "/dataplane/code-files/"
-            - name: secret_db_host
+            - name: DP_DB_HOST
               value: timescaledb-service
-            - name: secret_db_user 
+            - name: DP_DB_USER
               value: postgres
             - name: secret_db_pwd 
               value: "Hello123!"
-            - name: secret_db_ssl 
+            - name: DP_DB_SSL
               value: "disable"
-            - name: secret_db_port
+            - name: DP_DB_PORT
               value: "5432"
-            - name: secret_db_database
+            - name: DP_DB_DATABASE
               value: "dataplane"
-            - name: secret_jwt_secret
-              value: "117943e8-9d43-49ac-aa4d-9c64004c8992"
-            - name: secret_encryption_key
-              value: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
-            - name: database
+            - name: DP_DATABASE
               value: "timescaledb"
             - name: DP_PORT
               value: "9000"

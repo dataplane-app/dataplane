@@ -28,8 +28,8 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
 
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
-	"github.com/dataplane-app/dataplane/app/workers/database"
 
 	"github.com/golang-queue/contrib/zerolog"
 	"github.com/golang-queue/queue"

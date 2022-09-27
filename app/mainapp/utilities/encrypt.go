@@ -6,15 +6,15 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"io"
-	"os"
 )
 
-var phrase string = os.Getenv("secret_encryption_key")
+var Encryptphrase string
 
 //   Takes plain string and returns AES encypted version in base64 format
 func Encrypt(text string) (string, error) {
+
 	textByte := []byte(text)
-	key := []byte(phrase)
+	key := []byte(Encryptphrase)
 
 	// generate a new aes cipher using our 32 byte long key
 	c, err := aes.NewCipher(key)
@@ -52,11 +52,12 @@ func Encrypt(text string) (string, error) {
 
 // Takes AES encypted string in base64 format and returns plain string
 func Decrypt(text string) (string, error) {
+
 	encryptedTextByte, err := base64.StdEncoding.DecodeString(text)
 	if err != nil {
 		return "", err
 	}
-	key := []byte(phrase)
+	key := []byte(Encryptphrase)
 
 	c, err := aes.NewCipher(key)
 	if err != nil {
