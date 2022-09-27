@@ -4,28 +4,28 @@ describe('Add Environment', function () {
 
         cy.get('#email').type('admin@email.com').should('have.value', 'admin@email.com');
         cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
-        cy.contains('button', 'Login').click();
+        cy.contains('button', 'Login').should('exist', { timeout: 6000 }).click();
         cy.url().should('include', '/webapp');
     });
 
     it('Add Environment', function () {
-        cy.contains('Settings').click();
-        cy.contains('button', 'Add').click();
+        cy.contains('Settings').should('exist', { timeout: 6000 }).click();
+        cy.contains('button', 'Add').should('exist', { timeout: 6000 }).click();
 
         cy.get('#name').type('ProductionCy').should('have.value', 'ProductionCy');
         cy.get('#description').type('Description').should('have.value', 'Description');
 
-        cy.get('#environment-save').click();
+        cy.get('#environment-save').should('exist', { timeout: 6000 }).click();
 
         cy.get('#notistack-snackbar').should('contain', 'Environment added: ProductionCy');
     });
 
     it('Delete Environment', function () {
         cy.wait(50);
-        cy.contains('ProductionCy').click();
+        cy.contains('ProductionCy').should('exist', { timeout: 6000 }).click();
 
-        cy.contains('Delete environment').click();
-        cy.contains('Yes').click();
+        cy.contains('Delete environment').should('exist', { timeout: 6000 }).click();
+        cy.contains('Yes').should('exist', { timeout: 6000 }).click();
 
         cy.get('#notistack-snackbar').should('contain', 'Success');
     });

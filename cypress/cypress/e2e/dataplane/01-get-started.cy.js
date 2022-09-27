@@ -15,7 +15,7 @@ describe('Get started', function () {
         cy.get('.MuiSwitch-input').click();
         cy.get('.MuiSwitch-input').click();
 
-        cy.contains('Next').click();
-        cy.url().should('include', '/congratulations');
+        cy.contains('Next').should('be.visible', { timeout: 6000 }).click();
+        cy.url({ timeout: 8000 }).should('include', '/congratulations');
     });
 });

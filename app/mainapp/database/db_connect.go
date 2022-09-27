@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/logging"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -21,7 +19,7 @@ func DBConnect() {
 	var err error
 	DBConn, err = DB()
 	if err != nil {
-		logging.PrintSecretsRedact(err.Error())
+		log.Println(err.Error())
 		log.Fatal("Failed to connect to database")
 	}
 	//DBConn.dpconfig.PrepareStmt = true
@@ -32,12 +30,12 @@ func DB() (*gorm.DB, error) {
 	// dialect, connectionURL := postgresConnectionURL(config)
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		os.Getenv("secret_db_user"),
+		os.Getenv("DP_DB_USER"),
 		os.Getenv("secret_db_pwd"),
-		os.Getenv("secret_db_host"),
-		os.Getenv("secret_db_port"),
-		os.Getenv("secret_db_database"),
-		os.Getenv("secret_db_ssl"),
+		os.Getenv("DP_DB_HOST"),
+		os.Getenv("DP_DB_PORT"),
+		os.Getenv("DP_DB_DATABASE"),
+		os.Getenv("DP_DB_SSL"),
 	)
 
 	// log.Println(connectionURL)
@@ -71,7 +69,7 @@ func DB() (*gorm.DB, error) {
 		if err == nil {
 			break
 		} else {
-			log.Printf("😩 db: connection failure: %v, try number. %d, retry in 5 seconds", logging.Secrets.Replace(err.Error()), i+1)
+			log.Printf("😩 db: connection failure: %v, try number. %d, retry in 5 seconds", err.Error(), i+1)
 			time.Sleep(time.Second * 5)
 		}
 	}

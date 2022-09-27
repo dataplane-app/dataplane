@@ -3,6 +3,7 @@ package admintests
 import (
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
@@ -24,6 +25,7 @@ go test -p 1 -v -count=1 -run TestAdminSetup dataplane/Tests/Platform
 */
 func TestAdminSetup(t *testing.T) {
 
+	auth.JwtKey = []byte(os.Getenv("JWTToken"))
 	testUser := testutils.AdminUser
 	testPassword := testutils.AdminPassword
 

@@ -58,8 +58,11 @@ func main() {
 	}()
 	// go MockingBird()
 	// mb.Start()
+	os.Setenv("JWTToken", string(auth.JwtKey))
 
 	// log.Println("App:", testutils.App)
+
+	log.Println("Print JWT secret:", string(auth.JwtKey))
 
 	var t *testing.T
 
