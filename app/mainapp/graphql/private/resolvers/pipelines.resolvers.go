@@ -25,6 +25,7 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/google/uuid"
+	uuid2 "github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"gorm.io/gorm"
@@ -522,6 +523,10 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 			triggerType = "schedule"
 		}
 
+		if node.NodeType == "trigger" && node.NodeTypeDesc == "api" {
+			triggerType = "api"
+		}
+
 		deployNodes = append(deployNodes, &models.PipelineNodes{
 			NodeID:        nodesOLDNew[node.NodeID],
 			PipelineID:    pipelineIDNew,
@@ -753,6 +758,28 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 			}
 		}
 
+	}
+
+	if triggerType == "api" {
+		// Get trigger information of the existing pipeline
+		existing := models.PipelineApiTriggers{}
+
+		err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipeline.PipelineID, pipeline.EnvironmentID).First(&existing).Error
+		if err != nil {
+			if err.Error() == "record not found" {
+				return "", errors.New("record not found")
+			}
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Retrive pipeline trigger database error.")
+		}
+
+		triggerID := uuid2.New().String()
+		apiKeyActive := true
+		publicLive := existing.PublicLive
+		privateLive := existing.PrivateLive
+		r.GeneratePipelineTrigger(ctx, e.PipelineID, e.EnvironmentID, triggerID, apiKeyActive, publicLive, privateLive)
 	}
 
 	return "Success", nil
