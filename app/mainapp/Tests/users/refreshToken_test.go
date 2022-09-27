@@ -3,6 +3,7 @@ package usertests
 import (
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
@@ -19,6 +20,11 @@ go test -p 1 -v -count=1 -run TestRefreshToken dataplane/Tests/users
 * Refresh token
 */
 func TestRefreshToken(t *testing.T) {
+
+	// database.DBConnect()
+	// u := models.Platform{}
+	// database.DBConn.Select("jwt_token").First(&u)
+	auth.JwtKey = []byte(os.Getenv("JWTToken"))
 
 	graphQLUrl := testutils.GraphQLUrlPublic
 
@@ -61,6 +67,7 @@ func TestRefreshToken(t *testing.T) {
 	accessTokenExchange := jsoniter.Get(exchangeUserResponse, "access_token").ToString()
 
 	// log.Println("Exchanged token: ", accessTokenExchange)
+	log.Println(string(auth.JwtKey))
 	validatetokenExchange, _ := auth.ValidateAccessToken(accessTokenExchange)
 	assert.Equalf(t, true, validatetokenExchange, "Exchange access token validation")
 
