@@ -82,17 +82,10 @@ func Setup(port string) *fiber.App {
 	/* --- First time setup, workers will wait for this to be available ---- */
 	if u.ID == "" {
 
-		encryptKey, errn := gonanoid.Generate("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 32)
-		if errn != nil {
-			panic(errn)
-		}
-
 		// #Code File Storage: Database, LocalFile, S3
 		platformData := &models.Platform{
 			ID:              uuid.New().String(),
 			CodeFileStorage: dpconfig.FSCodeFileStorage,
-			JwtToken:        uuid.New().String(),
-			EncryptKey:      encryptKey,
 			Complete:        false,
 			One:             true,
 		}
@@ -191,13 +184,13 @@ func Setup(port string) *fiber.App {
 		log.Println("💽 Sync files to database")
 		distributefilesystem.MoveCodeFilesToDB(database.DBConn)
 		distributefilesystem.DeployFilesToDB(database.DBConn)
-		database.DBConn.Model(&models.Platform{}).Where("id = ?", u.ID).Update("code_file_storage", dpconfig.FSCodeFileStorage)
+		database.DBConn.Model(&models.Platform{}).Where("id = ?", dpconfig.PlatformID).Update("code_file_storage", dpconfig.FSCodeFileStorage)
 	}
 
 	/* Load JWT secret if doesn't exist */
 	if u.JwtToken == "" {
 		tokenGen := uuid.NewString()
-		database.DBConn.Model(&models.Platform{}).Where("id = ?", u.ID).Update("jwt_token", tokenGen)
+		database.DBConn.Model(&models.Platform{}).Where("id = ?", dpconfig.PlatformID).Update("jwt_token", tokenGen)
 		u.JwtToken = tokenGen
 	}
 
@@ -207,7 +200,7 @@ func Setup(port string) *fiber.App {
 	if u.EncryptKey == "" {
 		encryptkey, err := gonanoid.Generate("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 32)
 		if err == nil {
-			database.DBConn.Model(&models.Platform{}).Where("id = ?", u.ID).Update("encrypt_key", encryptkey)
+			database.DBConn.Model(&models.Platform{}).Where("id = ?", dpconfig.PlatformID).Update("encrypt_key", encryptkey)
 		}
 		u.EncryptKey = encryptkey
 	}

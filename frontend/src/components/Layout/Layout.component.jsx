@@ -28,7 +28,7 @@ const Layout = ({ children }) => {
                     [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', backgroundColor: 'background.main' },
                 }}>
                 <Toolbar style={{ padding: 0 }} />
-                <Box sx={{ overflow: 'auto', height: '100%' }}>
+                <Box className="disable-scrollbar" sx={{ overflow: 'auto', height: '100%' }}>
                     <Sidebar />
                 </Box>
             </Drawer>
