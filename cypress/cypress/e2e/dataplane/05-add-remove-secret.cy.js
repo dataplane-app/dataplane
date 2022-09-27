@@ -4,19 +4,19 @@ describe('Add Secret', function () {
 
         cy.get('#email').type('admin@email.com').should('have.value', 'admin@email.com');
         cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
-        cy.contains('button', 'Login').click();
+        cy.contains('button', 'Login').should('exist', { timeout: 6000 }).click();
         cy.url().should('include', '/webapp');
     });
 
     it('Add Secret', function () {
-        cy.contains('Secret').click();
-        cy.contains('button', 'Add').click();
+        cy.contains('Secret').should('exist', { timeout: 6000 }).click();
+        cy.contains('button', 'Add').should('exist', { timeout: 6000 }).click();
 
         cy.get('#name').type('CySecret').should('have.value', 'CySecret');
         cy.get('#description').type('Description').should('have.value', 'Description');
         cy.get('#secret').type('Hello123!').should('have.value', 'Hello123!');
 
-        cy.contains('Save').click();
+        cy.contains('Save').should('exist', { timeout: 6000 }).click();
 
         cy.get('#notistack-snackbar').should('contain', 'Success');
     });
@@ -24,8 +24,8 @@ describe('Add Secret', function () {
     it('Delete Secret', function () {
         cy.contains('CySecret').click();
 
-        cy.contains('Delete secret').click();
-        cy.contains('Yes').click();
+        cy.contains('Delete secret').should('exist', { timeout: 6000 }).click();
+        cy.contains('Yes').should('exist', { timeout: 6000 }).click();
 
         cy.get('#notistack-snackbar').should('contain', 'Success');
     });
