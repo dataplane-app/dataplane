@@ -114,7 +114,14 @@ const LogsDrawer = ({ environmentId, handleClose }) => {
                 <ScrollFollow
                     startFollowing={true}
                     render={({ follow, onScroll }) => (
-                        <LazyLog selectableLines={true} enableSearch text={filteredGraphqlResp + websocketResp} follow={follow} onScroll={onScroll} />
+                        <LazyLog
+                            style={{ fontFamily: 'Roboto', fontSize: '0.875rem' }}
+                            selectableLines={true}
+                            enableSearch
+                            text={filteredGraphqlResp + websocketResp}
+                            follow={follow}
+                            onScroll={onScroll}
+                        />
                     )}
                 />
             </Box>
