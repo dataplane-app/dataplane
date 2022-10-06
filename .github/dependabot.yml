@@ -5,20 +5,20 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "monthly"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule: 
-      interval: daily
+      interval: monthly
   - package-ecosystem: "docker"
     directory: "/docker-build"
     schedule:
-      interval: "daily"
+      interval: "monthly"
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
-      interval: "daily"
+      interval: "monthly"
   - package-ecosystem: "npm"
     directory: "/cypress"
     schedule:
-      interval: "daily"
+      interval: "monthly"
