@@ -203,7 +203,7 @@ github.com/gofiber/utils
 # github.com/gofiber/websocket/v2 v2.0.22
 ## explicit; go 1.14
 github.com/gofiber/websocket/v2
-# github.com/golang-jwt/jwt/v4 v4.4.1
+# github.com/golang-jwt/jwt/v4 v4.4.2
 ## explicit; go 1.16
 github.com/golang-jwt/jwt/v4
 # github.com/golang-queue/contrib v0.0.1
