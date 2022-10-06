@@ -1,6 +1,3 @@
-// This is verifies successful installation of
-// python package requests==2.28.1
-
 describe('Add/remove python file', function () {
     it('Login as admin', function () {
         cy.visit('http://localhost:9002/webapp/login');
