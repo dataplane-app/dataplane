@@ -34,7 +34,7 @@ describe('Create pipelines', { retries: 5 }, function () {
         // Add
         cy.get('#drag_scheduleNode') // Schedule node
             .should('exist', { timeout: 6000 })
-            .trigger('dragstart', { dataTransfer })
+            .trigger('dragstart', { dataTransfer, force: true })
             .should('exist', { timeout: 6000 });
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
         cy.contains('Trigger - Scheduler')
@@ -57,7 +57,7 @@ describe('Create pipelines', { retries: 5 }, function () {
         // Add
         cy.get('#drag_pythonNode') // Python node
             .should('exist', { timeout: 6000 })
-            .trigger('dragstart', { dataTransfer })
+            .trigger('dragstart', { dataTransfer, force: true })
             .should('exist', { timeout: 6000 });
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
         cy.get('[type=submit]').should('exist', { timeout: 6000 }).click(); // Save
@@ -71,7 +71,7 @@ describe('Create pipelines', { retries: 5 }, function () {
         // Add
         cy.get('#drag_checkpointNode') // Checkpoint node
             .should('exist', { timeout: 6000 })
-            .trigger('dragstart', { dataTransfer })
+            .trigger('dragstart', { dataTransfer, force: true })
             .should('exist', { timeout: 6000 });
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
         // Move
@@ -143,7 +143,7 @@ describe('Create pipelines', { retries: 5 }, function () {
         // Add
         cy.get('#drag_playNode') // Play node //
             .should('exist', { timeout: 6000 })
-            .trigger('dragstart', { dataTransfer })
+            .trigger('dragstart', { dataTransfer, force: true })
             .should('exist', { timeout: 6000 });
         // .should('exist', { timeout: 6000 });
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
@@ -156,7 +156,7 @@ describe('Create pipelines', { retries: 5 }, function () {
         // Add
         cy.get('#drag_pythonNode') // Python node
             .should('exist', { timeout: 6000 })
-            .trigger('dragstart', { dataTransfer })
+            .trigger('dragstart', { dataTransfer, force: true })
             .should('exist', { timeout: 6000 });
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
         cy.get('[type=submit]').should('exist', { timeout: 6000 }).click(); // Save
@@ -170,7 +170,7 @@ describe('Create pipelines', { retries: 5 }, function () {
         // Add
         cy.get('#drag_checkpointNode') // Checkpoint node
             .should('exist', { timeout: 6000 })
-            .trigger('dragstart', { dataTransfer })
+            .trigger('dragstart', { dataTransfer, force: true })
             .should('exist', { timeout: 6000 });
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
         // Move
