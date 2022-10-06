@@ -517,7 +517,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                                 </Tooltip>
                             ) : null}
                             <Tooltip title="Delete" id="hi" placement="bottom" PopperProps={{ sx: { '& .MuiTooltip-tooltipPlacementBottom': { marginTop: '0px !important' } } }}>
-                                <IconButton sx={{ pointerEvents: 'all' }} aria-label="Remove folder" onClick={handleDeleteIconClick}>
+                                <IconButton sx={{ pointerEvents: 'all' }} aria-label="Delete" onClick={handleDeleteIconClick}>
                                     <Box component={FontAwesomeIcon} icon={faTimes} sx={{ color: 'editorPage.fileManagerIcon', fontSize: '0.75rem' }} />
                                 </IconButton>
                             </Tooltip>
@@ -534,6 +534,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                     <input
                         onKeyPress={whatTypeIsCreating === 'file' ? handleNewFileDone : handleNewFolderDone}
                         ref={newFileRef}
+                        id={'new_file_input'}
                         style={{ width: '90%', marginLeft: 10, background: 'transparent', border: 'none', color: theme.palette.editorPage.fileManagerText }}
                         type="text"
                         value={whatTypeIsCreating === 'file' ? newFileName : newFolderName}
@@ -602,7 +603,7 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                     </Typography>
                     <Grid item display="flex" alignItems="center">
                         <Tooltip title="New file" placement="bottom" PopperProps={{ sx: { '& .MuiTooltip-tooltipPlacementBottom': { marginTop: '0px !important' } } }}>
-                            <IconButton aria-label="New File" onClick={() => handleNewFileIconClick(data.id.get())}>
+                            <IconButton id="new_file_button" aria-label="New File" onClick={() => handleNewFileIconClick(data.id.get())}>
                                 <Box component={FontAwesomeIcon} icon={faFile} sx={{ color: 'editorPage.fileManagerIcon', fontSize: 11 }} />
                             </IconButton>
                         </Tooltip>
