@@ -20,8 +20,7 @@ describe('Deployment and deployment turn off', function () {
                 cy.contains('Manage').should('be.visible', { timeout: 6000 }).click({ force: true });
             });
         cy.contains('button', 'Manage').should('be.visible', { timeout: 6000 }).click({ force: true });
-        cy.contains(/^Deploy$/)
-        .click({ force: true });
+        cy.contains(/^Deploy$/).click({ force: true });
         cy.contains('Environment').parent().type('Development');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('be.visible', { timeout: 6000 }).click();
 
