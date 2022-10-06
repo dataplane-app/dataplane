@@ -14,7 +14,7 @@ ARG SKAFFOLD_GO_GCFLAGS
 RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane app/mainapp/server.go
 
 
-FROM node:16.10.0-bullseye-slim as builder2
+FROM node:18.10.0-bullseye-slim as builder2
 
 RUN mkdir -p /node
 RUN mkdir -p /node/app/mainapp/frontbuild
