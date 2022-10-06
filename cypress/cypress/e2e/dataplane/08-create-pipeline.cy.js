@@ -32,7 +32,7 @@ describe('Create pipelines', { retries: 5 }, function () {
         const dataTransfer = new DataTransfer();
         // Schedule Trigger
         // Add
-        cy.get('#Triggers div:nth-child(3)') // Schedule node
+        cy.get('#drag_scheduleNode') // Schedule node
             .should('exist', { timeout: 6000 })
             .trigger('dragstart', { dataTransfer })
             .should('exist', { timeout: 6000 });
@@ -55,7 +55,8 @@ describe('Create pipelines', { retries: 5 }, function () {
 
         // Python node
         // Add
-        cy.get('#Processors div:nth-child(2)') // Python node
+        cy.get('#drag_pythonNode') // Python node
+            .should('exist', { timeout: 6000 })
             .trigger('dragstart', { dataTransfer })
             .should('exist', { timeout: 6000 });
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
@@ -68,7 +69,7 @@ describe('Create pipelines', { retries: 5 }, function () {
 
         // Checkpoint
         // Add
-        cy.get('#Checkpoints div:nth-child(2)') // Checkpoint node
+        cy.get('#drag_checkpointNode') // Checkpoint node
             .should('exist', { timeout: 6000 })
             .trigger('dragstart', { dataTransfer })
             .should('exist', { timeout: 6000 });
@@ -140,10 +141,10 @@ describe('Create pipelines', { retries: 5 }, function () {
         const dataTransfer = new DataTransfer();
         // Play Trigger
         // Add
-        cy.get('#Triggers div:nth-child(2)') // Play node //
-            .should('have.class', 'MuiGrid-root', { timeout: 6000 })
+        cy.get('#drag_playNode') // Play node //
+            .should('exist', { timeout: 6000 })
             .trigger('dragstart', { dataTransfer })
-            .should('have.class', 'MuiGrid-root', { timeout: 6000 });
+            .should('exist', { timeout: 6000 });
         // .should('exist', { timeout: 6000 });
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
         // Move
@@ -153,7 +154,7 @@ describe('Create pipelines', { retries: 5 }, function () {
 
         // Python node
         // Add
-        cy.get('#Processors div:nth-child(2)') // Python node
+        cy.get('#drag_pythonNode') // Python node
             .should('exist', { timeout: 6000 })
             .trigger('dragstart', { dataTransfer })
             .should('exist', { timeout: 6000 });
@@ -167,7 +168,7 @@ describe('Create pipelines', { retries: 5 }, function () {
 
         // Checkpoint
         // Add
-        cy.get('#Checkpoints div:nth-child(2)') // Checkpoint node
+        cy.get('#drag_checkpointNode') // Checkpoint node
             .should('exist', { timeout: 6000 })
             .trigger('dragstart', { dataTransfer })
             .should('exist', { timeout: 6000 });
