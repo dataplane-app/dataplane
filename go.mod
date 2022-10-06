@@ -12,7 +12,7 @@ require (
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/gofiber/adaptor/v2 v2.1.24
 	github.com/gofiber/fiber/v2 v2.38.1
-	github.com/gofiber/websocket/v2 v2.0.22
+	github.com/gofiber/websocket/v2 v2.1.0
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/golang-queue/contrib v0.0.1
 	github.com/golang-queue/queue v0.1.3
