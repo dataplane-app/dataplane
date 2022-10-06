@@ -435,7 +435,7 @@ github.com/valyala/fasthttp/stackless
 # github.com/valyala/tcplisten v1.0.0
 ## explicit; go 1.12
 github.com/valyala/tcplisten
-# github.com/vektah/gqlparser/v2 v2.4.4
+# github.com/vektah/gqlparser/v2 v2.5.1
 ## explicit; go 1.16
 github.com/vektah/gqlparser/v2
 github.com/vektah/gqlparser/v2/ast
