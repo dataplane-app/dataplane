@@ -9,36 +9,28 @@ package fiber
 
 import (
 	"bufio"
-	"crypto/tls"
-	"crypto/x509"
+	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"os"
-	"path/filepath"
 	"reflect"
-	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
-	"text/tabwriter"
 	"time"
 
 	"encoding/json"
+	"encoding/xml"
 
-	"github.com/gofiber/fiber/v2/internal/colorable"
-	"github.com/gofiber/fiber/v2/internal/isatty"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/valyala/fasthttp"
 )
 
 // Version of current fiber package
-const Version = "2.34.0"
+const Version = "2.38.1"
 
 // Handler defines a function to serve HTTP requests.
 type Handler = func(*Ctx) error
@@ -72,16 +64,18 @@ type Storage interface {
 
 // ErrorHandler defines a function that will process all errors
 // returned from any handlers in the stack
-//  cfg := fiber.Config{}
-//  cfg.ErrorHandler = func(c *Ctx, err error) error {
-//   code := StatusInternalServerError
-//   if e, ok := err.(*Error); ok {
-//     code = e.Code
-//   }
-//   c.Set(HeaderContentType, MIMETextPlainCharsetUTF8)
-//   return c.Status(code).SendString(err.Error())
-//  }
-//  app := fiber.New(cfg)
+//
+//	cfg := fiber.Config{}
+//	cfg.ErrorHandler = func(c *Ctx, err error) error {
+//	 code := StatusInternalServerError
+//	 var e *fiber.Error
+//	 if errors.As(err, &e) {
+//	   code = e.Code
+//	 }
+//	 c.Set(HeaderContentType, MIMETextPlainCharsetUTF8)
+//	 return c.Status(code).SendString(err.Error())
+//	}
+//	app := fiber.New(cfg)
 type ErrorHandler = func(*Ctx, error) error
 
 // Error represents an error that occurred while handling a request.
@@ -116,10 +110,12 @@ type App struct {
 	// Mounted and main apps
 	appList map[string]*App
 	// Hooks
-	hooks *hooks
+	hooks *Hooks
 	// Latest route & group
 	latestRoute *Route
 	latestGroup *Group
+	// TLS handler
+	tlsHandler *TLSHandler
 }
 
 // Config is a struct holding the server settings.
@@ -331,6 +327,13 @@ type Config struct {
 	// Default: json.Unmarshal
 	JSONDecoder utils.JSONUnmarshal `json:"-"`
 
+	// XMLEncoder set by an external client of Fiber it will use the provided implementation of a
+	// XMLMarshal
+	//
+	// Allowing for flexibility in using another XML library for encoding
+	// Default: xml.Marshal
+	XMLEncoder utils.XMLMarshal `json:"-"`
+
 	// Known networks are "tcp", "tcp4" (IPv4-only), "tcp6" (IPv6-only)
 	// WARNING: When prefork is set to true, only "tcp4" and "tcp6" can be chose.
 	//
@@ -366,9 +369,21 @@ type Config struct {
 	trustedProxiesMap  map[string]struct{}
 	trustedProxyRanges []*net.IPNet
 
+	// If set to true, c.IP() and c.IPs() will validate IP addresses before returning them.
+	// Also, c.IP() will return only the first valid IP rather than just the raw header
+	// WARNING: this has a performance cost associated with it.
+	//
+	// Default: false
+	EnableIPValidation bool `json:"enable_ip_validation"`
+
 	// If set to true, will print all routes with their method, path and handler.
 	// Default: false
 	EnablePrintRoutes bool `json:"enable_print_routes"`
+
+	// You can define custom color scheme. They'll be used for startup message, route list and some middlewares.
+	//
+	// Optional. Default: DefaultColors
+	ColorScheme Colors `json:"color_scheme"`
 }
 
 // Static defines configuration options when defining static assets.
@@ -432,7 +447,8 @@ const (
 // DefaultErrorHandler that process return errors from handlers
 var DefaultErrorHandler = func(c *Ctx, err error) error {
 	code := StatusInternalServerError
-	if e, ok := err.(*Error); ok {
+	var e *Error
+	if errors.As(err, &e) {
 		code = e.Code
 	}
 	c.Set(HeaderContentType, MIMETextPlainCharsetUTF8)
@@ -440,12 +456,15 @@ var DefaultErrorHandler = func(c *Ctx, err error) error {
 }
 
 // New creates a new Fiber named instance.
-//  app := fiber.New()
+//
+//	app := fiber.New()
+//
 // You can pass optional configuration options by passing a Config struct:
-//  app := fiber.New(fiber.Config{
-//      Prefork: true,
-//      ServerHeader: "Fiber",
-//  })
+//
+//	app := fiber.New(fiber.Config{
+//	    Prefork: true,
+//	    ServerHeader: "Fiber",
+//	})
 func New(config ...Config) *App {
 	// Create a new app
 	app := &App{
@@ -511,6 +530,9 @@ func New(config ...Config) *App {
 	if app.config.JSONDecoder == nil {
 		app.config.JSONDecoder = json.Unmarshal
 	}
+	if app.config.XMLEncoder == nil {
+		app.config.XMLEncoder = xml.Marshal
+	}
 	if app.config.Network == "" {
 		app.config.Network = NetworkTCP4
 	}
@@ -519,6 +541,9 @@ func New(config ...Config) *App {
 	for _, ipAddress := range app.config.TrustedProxies {
 		app.handleTrustedProxy(ipAddress)
 	}
+
+	// Override colors
+	app.config.ColorScheme = defaultColors(app.config.ColorScheme)
 
 	// Init appList
 	app.appList[""] = app
@@ -543,6 +568,14 @@ func (app *App) handleTrustedProxy(ipAddress string) {
 	} else {
 		app.config.trustedProxiesMap[ipAddress] = struct{}{}
 	}
+}
+
+// SetTLSHandler You can use SetTLSHandler to use ClientHelloInfo when using TLS with Listener.
+func (app *App) SetTLSHandler(tlsHandler *TLSHandler) {
+	// Attach the tlsHandler to the config
+	app.mutex.Lock()
+	app.tlsHandler = tlsHandler
+	app.mutex.Unlock()
 }
 
 // Mount attaches another app instance as a sub-router along a routing path.
@@ -575,7 +608,7 @@ func (app *App) Mount(prefix string, fiber *App) Router {
 	return app
 }
 
-// Assign name to specific route.
+// Name Assign name to specific route.
 func (app *App) Name(name string) Router {
 	app.mutex.Lock()
 	if strings.HasPrefix(app.latestRoute.path, app.latestGroup.Prefix) {
@@ -592,7 +625,7 @@ func (app *App) Name(name string) Router {
 	return app
 }
 
-// Get route by name
+// GetRoute Get route by name
 func (app *App) GetRoute(name string) Route {
 	for _, routes := range app.stack {
 		for _, route := range routes {
@@ -608,15 +641,15 @@ func (app *App) GetRoute(name string) Route {
 // Use registers a middleware route that will match requests
 // with the provided prefix (which is optional and defaults to "/").
 //
-//  app.Use(func(c *fiber.Ctx) error {
-//       return c.Next()
-//  })
-//  app.Use("/api", func(c *fiber.Ctx) error {
-//       return c.Next()
-//  })
-//  app.Use("/api", handler, func(c *fiber.Ctx) error {
-//       return c.Next()
-//  })
+//	app.Use(func(c *fiber.Ctx) error {
+//	     return c.Next()
+//	})
+//	app.Use("/api", func(c *fiber.Ctx) error {
+//	     return c.Next()
+//	})
+//	app.Use("/api", handler, func(c *fiber.Ctx) error {
+//	     return c.Next()
+//	})
 //
 // This method will match all HTTP verbs: GET, POST, PUT, HEAD etc...
 func (app *App) Use(args ...interface{}) Router {
@@ -709,8 +742,9 @@ func (app *App) All(path string, handlers ...Handler) Router {
 }
 
 // Group is used for Routes with common prefix to define a new sub-router with optional middleware.
-//  api := app.Group("/api")
-//  api.Get("/users", handler)
+//
+//	api := app.Group("/api")
+//	api.Get("/users", handler)
 func (app *App) Group(prefix string, handlers ...Handler) Router {
 	if len(handlers) > 0 {
 		app.register(methodUse, prefix, handlers...)
@@ -753,154 +787,6 @@ func NewError(code int, message ...string) *Error {
 		err.Message = message[0]
 	}
 	return err
-}
-
-// Listener can be used to pass a custom listener.
-func (app *App) Listener(ln net.Listener) error {
-	// Prefork is supported for custom listeners
-	if app.config.Prefork {
-		addr, tlsConfig := lnMetadata(app.config.Network, ln)
-		return app.prefork(app.config.Network, addr, tlsConfig)
-	}
-	// prepare the server for the start
-	app.startupProcess()
-	// Print startup message
-	if !app.config.DisableStartupMessage {
-		app.startupMessage(ln.Addr().String(), getTlsConfig(ln) != nil, "")
-	}
-	// Print routes
-	if app.config.EnablePrintRoutes {
-		app.printRoutesMessage()
-	}
-	// Start listening
-	return app.server.Serve(ln)
-}
-
-// Listen serves HTTP requests from the given addr.
-//
-//  app.Listen(":8080")
-//  app.Listen("127.0.0.1:8080")
-func (app *App) Listen(addr string) error {
-	// Start prefork
-	if app.config.Prefork {
-		return app.prefork(app.config.Network, addr, nil)
-	}
-	// Setup listener
-	ln, err := net.Listen(app.config.Network, addr)
-	if err != nil {
-		return err
-	}
-	// prepare the server for the start
-	app.startupProcess()
-	// Print startup message
-	if !app.config.DisableStartupMessage {
-		app.startupMessage(ln.Addr().String(), false, "")
-	}
-	// Print routes
-	if app.config.EnablePrintRoutes {
-		app.printRoutesMessage()
-	}
-	// Start listening
-	return app.server.Serve(ln)
-}
-
-// ListenTLS serves HTTPS requests from the given addr.
-// certFile and keyFile are the paths to TLS certificate and key file:
-//  app.ListenTLS(":8080", "./cert.pem", "./cert.key")
-func (app *App) ListenTLS(addr, certFile, keyFile string) error {
-	// Check for valid cert/key path
-	if len(certFile) == 0 || len(keyFile) == 0 {
-		return errors.New("tls: provide a valid cert or key path")
-	}
-	// Prefork is supported
-	if app.config.Prefork {
-		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-		if err != nil {
-			return fmt.Errorf("tls: cannot load TLS key pair from certFile=%q and keyFile=%q: %s", certFile, keyFile, err)
-		}
-		config := &tls.Config{
-			MinVersion: tls.VersionTLS12,
-			Certificates: []tls.Certificate{
-				cert,
-			},
-		}
-		return app.prefork(app.config.Network, addr, config)
-	}
-	// Setup listener
-	ln, err := net.Listen(app.config.Network, addr)
-	if err != nil {
-		return err
-	}
-	// prepare the server for the start
-	app.startupProcess()
-	// Print startup message
-	if !app.config.DisableStartupMessage {
-		app.startupMessage(ln.Addr().String(), true, "")
-	}
-	// Print routes
-	if app.config.EnablePrintRoutes {
-		app.printRoutesMessage()
-	}
-	// Start listening
-	return app.server.ServeTLS(ln, certFile, keyFile)
-}
-
-// ListenMutualTLS serves HTTPS requests from the given addr.
-// certFile, keyFile and clientCertFile are the paths to TLS certificate and key file:
-//  app.ListenMutualTLS(":8080", "./cert.pem", "./cert.key", "./client.pem")
-func (app *App) ListenMutualTLS(addr, certFile, keyFile, clientCertFile string) error {
-	// Check for valid cert/key path
-	if len(certFile) == 0 || len(keyFile) == 0 {
-		return errors.New("tls: provide a valid cert or key path")
-	}
-
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return fmt.Errorf("tls: cannot load TLS key pair from certFile=%q and keyFile=%q: %s", certFile, keyFile, err)
-	}
-
-	clientCACert, err := ioutil.ReadFile(filepath.Clean(clientCertFile))
-	if err != nil {
-		return err
-	}
-	clientCertPool := x509.NewCertPool()
-	clientCertPool.AppendCertsFromPEM(clientCACert)
-
-	config := &tls.Config{
-		MinVersion: tls.VersionTLS12,
-		ClientAuth: tls.RequireAndVerifyClientCert,
-		ClientCAs:  clientCertPool,
-		Certificates: []tls.Certificate{
-			cert,
-		},
-	}
-
-	// Prefork is supported
-	if app.config.Prefork {
-		return app.prefork(app.config.Network, addr, config)
-	}
-
-	// Setup listener
-	ln, err := tls.Listen(app.config.Network, addr, config)
-	if err != nil {
-		return err
-	}
-
-	// prepare the server for the start
-	app.startupProcess()
-
-	// Print startup message
-	if !app.config.DisableStartupMessage {
-		app.startupMessage(ln.Addr().String(), true, "")
-	}
-
-	// Print routes
-	if app.config.EnablePrintRoutes {
-		app.printRoutesMessage()
-	}
-
-	// Start listening
-	return app.server.Serve(ln)
 }
 
 // Config returns the app config as value ( read-only ).
@@ -950,7 +836,7 @@ func (app *App) Server() *fasthttp.Server {
 }
 
 // Hooks returns the hook struct to register hooks.
-func (app *App) Hooks() *hooks {
+func (app *App) Hooks() *Hooks {
 	return app.hooks
 }
 
@@ -974,6 +860,11 @@ func (app *App) Test(req *http.Request, msTimeout ...int) (resp *http.Response, 
 		return nil, err
 	}
 
+	// adding back the query from URL, since dump cleans it
+	dumps := bytes.Split(dump, []byte(" "))
+	dumps[1] = []byte(req.URL.String())
+	dump = bytes.Join(dumps, []byte(" "))
+
 	// Create test connection
 	conn := new(testConn)
 
@@ -987,7 +878,15 @@ func (app *App) Test(req *http.Request, msTimeout ...int) (resp *http.Response, 
 	// Serve conn to server
 	channel := make(chan error)
 	go func() {
+		var returned bool
+		defer func() {
+			if !returned {
+				channel <- fmt.Errorf("runtime.Goexit() called in handler or server panic")
+			}
+		}()
+
 		channel <- app.server.ServeConn(conn)
+		returned = true
 	}()
 
 	// Wait for callback
@@ -1128,263 +1027,4 @@ func (app *App) startupProcess() *App {
 	app.buildTree()
 	app.mutex.Unlock()
 	return app
-}
-
-// startupMessage prepares the startup message with the handler number, port, address and other information
-func (app *App) startupMessage(addr string, tls bool, pids string) {
-	// ignore child processes
-	if IsChild() {
-		return
-	}
-
-	const (
-		cBlack = "\u001b[90m"
-		// cRed   = "\u001b[91m"
-		cCyan = "\u001b[96m"
-		// cGreen = "\u001b[92m"
-		// cYellow  = "\u001b[93m"
-		// cBlue    = "\u001b[94m"
-		// cMagenta = "\u001b[95m"
-		// cWhite   = "\u001b[97m"
-		cReset = "\u001b[0m"
-	)
-
-	value := func(s string, width int) string {
-		pad := width - len(s)
-		str := ""
-		for i := 0; i < pad; i++ {
-			str += "."
-		}
-		if s == "Disabled" {
-			str += " " + s
-		} else {
-			str += fmt.Sprintf(" %s%s%s", cCyan, s, cBlack)
-		}
-		return str
-	}
-
-	center := func(s string, width int) string {
-		pad := strconv.Itoa((width - len(s)) / 2)
-		str := fmt.Sprintf("%"+pad+"s", " ")
-		str += s
-		str += fmt.Sprintf("%"+pad+"s", " ")
-		if len(str) < width {
-			str += " "
-		}
-		return str
-	}
-
-	centerValue := func(s string, width int) string {
-		pad := strconv.Itoa((width - len(s)) / 2)
-		str := fmt.Sprintf("%"+pad+"s", " ")
-		str += fmt.Sprintf("%s%s%s", cCyan, s, cBlack)
-		str += fmt.Sprintf("%"+pad+"s", " ")
-		if len(str)-10 < width {
-			str += " "
-		}
-		return str
-	}
-
-	pad := func(s string, width int) (str string) {
-		toAdd := width - len(s)
-		str += s
-		for i := 0; i < toAdd; i++ {
-			str += " "
-		}
-		return
-	}
-
-	host, port := parseAddr(addr)
-	if host == "" {
-		if app.config.Network == NetworkTCP6 {
-			host = "[::1]"
-		} else {
-			host = "0.0.0.0"
-		}
-	}
-
-	scheme := "http"
-	if tls {
-		scheme = "https"
-	}
-
-	isPrefork := "Disabled"
-	if app.config.Prefork {
-		isPrefork = "Enabled"
-	}
-
-	procs := strconv.Itoa(runtime.GOMAXPROCS(0))
-	if !app.config.Prefork {
-		procs = "1"
-	}
-
-	mainLogo := cBlack + " ┌───────────────────────────────────────────────────┐\n"
-	if app.config.AppName != "" {
-		mainLogo += " │ " + centerValue(app.config.AppName, 49) + " │\n"
-	}
-	mainLogo += " │ " + centerValue(" Fiber v"+Version, 49) + " │\n"
-
-	if host == "0.0.0.0" {
-		mainLogo +=
-			" │ " + center(fmt.Sprintf("%s://127.0.0.1:%s", scheme, port), 49) + " │\n" +
-				" │ " + center(fmt.Sprintf("(bound on host 0.0.0.0 and port %s)", port), 49) + " │\n"
-	} else {
-		mainLogo +=
-			" │ " + center(fmt.Sprintf("%s://%s:%s", scheme, host, port), 49) + " │\n"
-	}
-
-	mainLogo += fmt.Sprintf(
-		" │                                                   │\n"+
-			" │ Handlers %s  Processes %s │\n"+
-			" │ Prefork .%s  PID ....%s │\n"+
-			" └───────────────────────────────────────────────────┘"+
-			cReset,
-		value(strconv.Itoa(int(app.handlersCount)), 14), value(procs, 12),
-		value(isPrefork, 14), value(strconv.Itoa(os.Getpid()), 14),
-	)
-
-	var childPidsLogo string
-	if app.config.Prefork {
-		var childPidsTemplate string
-		childPidsTemplate += "%s"
-		childPidsTemplate += " ┌───────────────────────────────────────────────────┐\n%s"
-		childPidsTemplate += " └───────────────────────────────────────────────────┘"
-		childPidsTemplate += "%s"
-
-		newLine := " │ %s%s%s │"
-
-		// Turn the `pids` variable (in the form ",a,b,c,d,e,f,etc") into a slice of PIDs
-		var pidSlice []string
-		for _, v := range strings.Split(pids, ",") {
-			if v != "" {
-				pidSlice = append(pidSlice, v)
-			}
-		}
-
-		var lines []string
-		thisLine := "Child PIDs ... "
-		var itemsOnThisLine []string
-
-		addLine := func() {
-			lines = append(lines,
-				fmt.Sprintf(
-					newLine,
-					cBlack,
-					thisLine+cCyan+pad(strings.Join(itemsOnThisLine, ", "), 49-len(thisLine)),
-					cBlack,
-				),
-			)
-		}
-
-		for _, pid := range pidSlice {
-			if len(thisLine+strings.Join(append(itemsOnThisLine, pid), ", ")) > 49 {
-				addLine()
-				thisLine = ""
-				itemsOnThisLine = []string{pid}
-			} else {
-				itemsOnThisLine = append(itemsOnThisLine, pid)
-			}
-		}
-
-		// Add left over items to their own line
-		if len(itemsOnThisLine) != 0 {
-			addLine()
-		}
-
-		// Form logo
-		childPidsLogo = fmt.Sprintf(childPidsTemplate,
-			cBlack,
-			strings.Join(lines, "\n")+"\n",
-			cReset,
-		)
-	}
-
-	// Combine both the child PID logo and the main Fiber logo
-
-	// Pad the shorter logo to the length of the longer one
-	splitMainLogo := strings.Split(mainLogo, "\n")
-	splitChildPidsLogo := strings.Split(childPidsLogo, "\n")
-
-	mainLen := len(splitMainLogo)
-	childLen := len(splitChildPidsLogo)
-
-	if mainLen > childLen {
-		diff := mainLen - childLen
-		for i := 0; i < diff; i++ {
-			splitChildPidsLogo = append(splitChildPidsLogo, "")
-		}
-	} else {
-		diff := childLen - mainLen
-		for i := 0; i < diff; i++ {
-			splitMainLogo = append(splitMainLogo, "")
-		}
-	}
-
-	// Combine the two logos, line by line
-	output := "\n"
-	for i := range splitMainLogo {
-		output += cBlack + splitMainLogo[i] + " " + splitChildPidsLogo[i] + "\n"
-	}
-
-	out := colorable.NewColorableStdout()
-	if os.Getenv("TERM") == "dumb" || os.Getenv("NO_COLOR") == "1" || (!isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd())) {
-		out = colorable.NewNonColorable(os.Stdout)
-	}
-
-	_, _ = fmt.Fprintln(out, output)
-}
-
-// printRoutesMessage print all routes with method, path, name and handlers
-// in a format of table, like this:
-// method | path | name      | handlers
-// GET    | /    | routeName | github.com/gofiber/fiber/v2.emptyHandler
-// HEAD   | /    |           | github.com/gofiber/fiber/v2.emptyHandler
-func (app *App) printRoutesMessage() {
-	// ignore child processes
-	if IsChild() {
-		return
-	}
-
-	const (
-		// cBlack = "\u001b[90m"
-		// cRed   = "\u001b[91m"
-		cCyan   = "\u001b[96m"
-		cGreen  = "\u001b[92m"
-		cYellow = "\u001b[93m"
-		cBlue   = "\u001b[94m"
-		// cMagenta = "\u001b[95m"
-		cWhite = "\u001b[97m"
-		// cReset = "\u001b[0m"
-	)
-	var routes []RouteMessage
-	for _, routeStack := range app.stack {
-		for _, route := range routeStack {
-			var newRoute = RouteMessage{}
-			newRoute.name = route.Name
-			newRoute.method = route.Method
-			newRoute.path = route.Path
-			for _, handler := range route.Handlers {
-				newRoute.handlers += runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name() + " "
-			}
-			routes = append(routes, newRoute)
-		}
-	}
-
-	out := colorable.NewColorableStdout()
-	if os.Getenv("TERM") == "dumb" || os.Getenv("NO_COLOR") == "1" || (!isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd())) {
-		out = colorable.NewNonColorable(os.Stdout)
-	}
-
-	w := tabwriter.NewWriter(out, 1, 1, 1, ' ', 0)
-	// Sort routes by path
-	sort.Slice(routes, func(i, j int) bool {
-		return routes[i].path < routes[j].path
-	})
-	_, _ = fmt.Fprintf(w, "%smethod\t%s| %spath\t%s| %sname\t%s| %shandlers\n", cBlue, cWhite, cGreen, cWhite, cCyan, cWhite, cYellow)
-	_, _ = fmt.Fprintf(w, "%s------\t%s| %s----\t%s| %s----\t%s| %s--------\n", cBlue, cWhite, cGreen, cWhite, cCyan, cWhite, cYellow)
-	for _, route := range routes {
-		_, _ = fmt.Fprintf(w, "%s%s\t%s| %s%s\t%s| %s%s\t%s| %s%s\n", cBlue, route.method, cWhite, cGreen, route.path, cWhite, cCyan, route.name, cWhite, cYellow, route.handlers)
-	}
-
-	_ = w.Flush()
 }
