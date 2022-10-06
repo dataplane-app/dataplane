@@ -1,0 +1,24 @@
+# https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule: 
+      interval: monthly
+  - package-ecosystem: "docker"
+    directory: "/docker-build"
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "npm"
+    directory: "/cypress"
+    schedule:
+      interval: "monthly"
