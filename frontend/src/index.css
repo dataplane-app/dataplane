@@ -159,3 +159,9 @@ code {
     background: transparent; /* Chrome/Safari/Webkit */
     width: 0px;
 }
+
+/* React lazy-log */
+.react-lazylog a {
+    margin-left: 0;
+    margin-right: 0;
+}

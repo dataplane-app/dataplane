@@ -2,7 +2,7 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Drawer, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGeneratePipelineTrigger } from '../../../../graphql/generatePipelineTrigger';
 import { useGlobalEnvironmentState } from '../../../EnviromentDropdown';
@@ -16,8 +16,8 @@ let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
 if (host === '') {
     host = window.location.origin;
 }
-const PUBLIC = `${host}/app/public/api-trigger/`;
-const PRIVATE = `https://{{ HOST }}/app/private/api-trigger/`;
+const PUBLIC = `${host}/publicapi/api-trigger/`;
+const PRIVATE = `https://{{ HOST }}/privateapi/api-trigger/`;
 
 const initialState = {
     publicLive: true,

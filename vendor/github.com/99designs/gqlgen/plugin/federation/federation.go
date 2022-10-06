@@ -1,6 +1,7 @@
 package federation
 
 import (
+	_ "embed"
 	"fmt"
 	"sort"
 	"strings"
@@ -13,6 +14,9 @@ import (
 	"github.com/99designs/gqlgen/plugin"
 	"github.com/99designs/gqlgen/plugin/federation/fieldset"
 )
+
+//go:embed federation.gotpl
+var federationTemplate string
 
 type federation struct {
 	Entities []*Entity
@@ -85,7 +89,7 @@ func (f *federation) InjectSourceEarly() *ast.Source {
 	input := `
 	scalar _Any
 	scalar _FieldSet
-	
+
 	directive @external on FIELD_DEFINITION
 	directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
 	directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
@@ -98,10 +102,10 @@ func (f *federation) InjectSourceEarly() *ast.Source {
 `
 	} else if f.Version == 2 {
 		input += `
-	directive @key(fields: _FieldSet!, resolvable: Boolean) repeatable on OBJECT | INTERFACE
+	directive @key(fields: _FieldSet!, resolvable: Boolean = true) repeatable on OBJECT | INTERFACE
 	directive @link(import: [String!], url: String!) repeatable on SCHEMA
 	directive @shareable on OBJECT | FIELD_DEFINITION
-	directive @tag repeatable on OBJECT | FIELD_DEFINITION | INTERFACE | UNION
+	directive @tag(name: String!) repeatable on FIELD_DEFINITION | INTERFACE | OBJECT | UNION | ARGUMENT_DEFINITION | SCALAR | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
 	directive @override(from: String!) on FIELD_DEFINITION
 	directive @inaccessible on SCALAR | OBJECT | FIELD_DEFINITION | ARGUMENT_DEFINITION | INTERFACE | UNION | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
 `
@@ -274,6 +278,7 @@ func (f *federation) GenerateCode(data *codegen.Data) error {
 		Data:            f,
 		GeneratedHeader: true,
 		Packages:        data.Config.Packages,
+		Template:        federationTemplate,
 	})
 }
 

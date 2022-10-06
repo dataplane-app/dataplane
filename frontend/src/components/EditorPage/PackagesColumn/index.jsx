@@ -45,6 +45,8 @@ const PackageColumn = forwardRef(({ children, pipeline, packages, setPackages, .
                     borderColor: 'editorPage.borderColor',
                     p: 1,
                     height: '100%',
+                    overflowY: 'scroll',
+                    paddingBottom: '25px',
                 }}>
                 <Grid container alignItems="center" justifyContent="space-between">
                     <Typography fontSize={12} fontWeight={700}>

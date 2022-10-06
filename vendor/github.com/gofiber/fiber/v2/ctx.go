@@ -7,6 +7,7 @@ package fiber
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -39,10 +40,38 @@ const (
 	queryTag     = "query"
 	reqHeaderTag = "reqHeader"
 	bodyTag      = "form"
+	paramsTag    = "params"
 )
 
 // userContextKey define the key name for storing context.Context in *fasthttp.RequestCtx
 const userContextKey = "__local_user_context__"
+
+var (
+	// decoderPoolMap helps to improve BodyParser's, QueryParser's and ReqHeaderParser's performance
+	decoderPoolMap = map[string]*sync.Pool{}
+	// tags is used to classify parser's pool
+	tags = []string{queryTag, bodyTag, reqHeaderTag, paramsTag}
+)
+
+func init() {
+	for _, tag := range tags {
+		decoderPoolMap[tag] = &sync.Pool{New: func() interface{} {
+			return decoderBuilder(ParserConfig{
+				IgnoreUnknownKeys: true,
+				ZeroEmpty:         true,
+			})
+		}}
+	}
+}
+
+// SetParserDecoder allow globally change the option of form decoder, update decoderPool
+func SetParserDecoder(parserConfig ParserConfig) {
+	for _, tag := range tags {
+		decoderPoolMap[tag] = &sync.Pool{New: func() interface{} {
+			return decoderBuilder(parserConfig)
+		}}
+	}
+}
 
 // Ctx represents the Context which hold the HTTP request and response.
 // It has methods for the request query string, parameters, body, HTTP headers and so on.
@@ -64,6 +93,17 @@ type Ctx struct {
 	fasthttp            *fasthttp.RequestCtx // Reference to *fasthttp.RequestCtx
 	matched             bool                 // Non use route matched
 	viewBindMap         *dictpool.Dict       // Default view map to bind template engine
+}
+
+// TLSHandler object
+type TLSHandler struct {
+	clientHelloInfo *tls.ClientHelloInfo
+}
+
+// GetClientInfo Callback function to set CHI
+func (t *TLSHandler) GetClientInfo(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
+	t.clientHelloInfo = info
+	return nil, nil
 }
 
 // Range data for c.Range
@@ -141,6 +181,7 @@ func (app *App) ReleaseCtx(c *Ctx) {
 	c.fasthttp = nil
 	if c.viewBindMap != nil {
 		dictpool.ReleaseDict(c.viewBindMap)
+		c.viewBindMap = nil
 	}
 	app.pool.Put(c)
 }
@@ -297,21 +338,6 @@ func (c *Ctx) Body() []byte {
 	return body
 }
 
-// decoderPool helps to improve BodyParser's, QueryParser's and ReqHeaderParser's performance
-var decoderPool = &sync.Pool{New: func() interface{} {
-	return decoderBuilder(ParserConfig{
-		IgnoreUnknownKeys: true,
-		ZeroEmpty:         true,
-	})
-}}
-
-// SetParserDecoder allow globally change the option of form decoder, update decoderPool
-func SetParserDecoder(parserConfig ParserConfig) {
-	decoderPool = &sync.Pool{New: func() interface{} {
-		return decoderBuilder(parserConfig)
-	}}
-}
-
 func decoderBuilder(parserConfig ParserConfig) interface{} {
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(parserConfig.IgnoreUnknownKeys)
@@ -451,7 +477,7 @@ func (c *Ctx) Cookie(cookie *Cookie) {
 	fasthttp.ReleaseCookie(fcookie)
 }
 
-// Cookies is used for getting a cookie value by key.
+// Cookies are used for getting a cookie value by key.
 // Defaults to the empty string "" if the cookie doesn't exist.
 // If a default value is given, it will return that value if the cookie doesn't exist.
 // The returned value is only valid within the handler. Do not store any references.
@@ -517,12 +543,7 @@ func (c *Ctx) Format(body interface{}) error {
 	case "txt":
 		return c.SendString(b)
 	case "xml":
-		raw, err := xml.Marshal(body)
-		if err != nil {
-			return fmt.Errorf("error serializing xml: %v", body)
-		}
-		c.fasthttp.Response.SetBody(raw)
-		return nil
+		return c.XML(body)
 	}
 	return c.SendString(b)
 }
@@ -653,33 +674,94 @@ func (c *Ctx) Port() string {
 }
 
 // IP returns the remote IP address of the request.
+// If ProxyHeader and IP Validation is configured, it will parse that header and return the first valid IP address.
 // Please use Config.EnableTrustedProxyCheck to prevent header spoofing, in case when your app is behind the proxy.
 func (c *Ctx) IP() string {
 	if c.IsProxyTrusted() && len(c.app.config.ProxyHeader) > 0 {
-		return c.Get(c.app.config.ProxyHeader)
+		return c.extractIPFromHeader(c.app.config.ProxyHeader)
 	}
 
 	return c.fasthttp.RemoteIP().String()
 }
 
-// IPs returns an string slice of IP addresses specified in the X-Forwarded-For request header.
-func (c *Ctx) IPs() (ips []string) {
-	header := c.fasthttp.Request.Header.Peek(HeaderXForwardedFor)
-	if len(header) == 0 {
-		return
+// validateIPIfEnabled will return the input IP when validation is disabled.
+// when validation is enabled, it will return an empty string if the input is not a valid IP.
+func (c *Ctx) validateIPIfEnabled(ip string) string {
+	if c.app.config.EnableIPValidation && net.ParseIP(ip) == nil {
+		return ""
 	}
-	ips = make([]string, bytes.Count(header, []byte(","))+1)
-	var commaPos, i int
+	return ip
+}
+
+// extractIPsFromHeader will return a slice of IPs it found given a header name in the order they appear.
+// When IP validation is enabled, any invalid IPs will be omitted.
+func (c *Ctx) extractIPsFromHeader(header string) (ipsFound []string) {
+	headerValue := c.Get(header)
+
+	// try to gather IPs in the input with minimal allocations to improve performance
+	ips := make([]string, bytes.Count([]byte(headerValue), []byte(","))+1)
+	var commaPos, i, validCount int
 	for {
-		commaPos = bytes.IndexByte(header, ',')
+		commaPos = bytes.IndexByte([]byte(headerValue), ',')
 		if commaPos != -1 {
-			ips[i] = utils.Trim(c.app.getString(header[:commaPos]), ' ')
-			header, i = header[commaPos+1:], i+1
+			ips[i] = c.validateIPIfEnabled(utils.Trim(headerValue[:commaPos], ' '))
+			if ips[i] != "" {
+				validCount++
+			}
+			headerValue, i = headerValue[commaPos+1:], i+1
 		} else {
-			ips[i] = utils.Trim(c.app.getString(header), ' ')
-			return
+			ips[i] = c.validateIPIfEnabled(utils.Trim(headerValue, ' '))
+			if ips[i] != "" {
+				validCount++
+			}
+			break
 		}
 	}
+
+	// filter out any invalid IP(s) that we found
+	if len(ips) == validCount {
+		ipsFound = ips
+	} else {
+		ipsFound = make([]string, validCount)
+		var validIndex int
+		for n := range ips {
+			if ips[n] != "" {
+				ipsFound[validIndex] = ips[n]
+				validIndex++
+			}
+		}
+	}
+	return
+}
+
+// extractIPFromHeader will attempt to pull the real client IP from the given header when IP validation is enabled.
+// currently, it will return the first valid IP address in header.
+// when IP validation is disabled, it will simply return the value of the header without any inspection.
+func (c *Ctx) extractIPFromHeader(header string) string {
+	if c.app.config.EnableIPValidation {
+		// extract all IPs from the header's value
+		ips := c.extractIPsFromHeader(header)
+
+		// since X-Forwarded-For has no RFC, it's really up to the proxy to decide whether to append
+		// or prepend IPs to this list. For example, the AWS ALB will prepend but the F5 BIG-IP will append ;(
+		// for now lets just go with the first value in the list...
+		if len(ips) > 0 {
+			return ips[0]
+		}
+
+		// return the IP from the stack if we could not find any valid Ips
+		return c.fasthttp.RemoteIP().String()
+	}
+
+	// default behaviour if IP validation is not enabled is just to return whatever value is
+	// in the proxy header. Even if it is empty or invalid
+	return c.Get(c.app.config.ProxyHeader)
+}
+
+// IPs returns a string slice of IP addresses specified in the X-Forwarded-For request header.
+// When IP validation is enabled, only valid IPs are returned.
+func (c *Ctx) IPs() (ips []string) {
+	return c.extractIPsFromHeader(HeaderXForwardedFor)
 }
 
 // Is returns the matching content type,
@@ -733,6 +815,18 @@ func (c *Ctx) JSONP(data interface{}, callback ...string) error {
 	c.setCanonical(HeaderXContentTypeOptions, "nosniff")
 	c.fasthttp.Response.Header.SetContentType(MIMEApplicationJavaScriptCharsetUTF8)
 	return c.SendString(result)
+}
+
+// XML converts any interface or string to XML.
+// This method also sets the content header to application/xml.
+func (c *Ctx) XML(data interface{}) error {
+	raw, err := c.app.config.XMLEncoder(data)
+	if err != nil {
+		return err
+	}
+	c.fasthttp.Response.SetBodyRaw(raw)
+	c.fasthttp.Response.Header.SetContentType(MIMEApplicationXML)
+	return nil
 }
 
 // Links joins the links followed by the property to populate the response's Link HTTP header field.
@@ -789,6 +883,15 @@ func (c *Ctx) MultipartForm() (*multipart.Form, error) {
 	return c.fasthttp.MultipartForm()
 }
 
+// ClientHelloInfo return CHI from context
+func (c *Ctx) ClientHelloInfo() *tls.ClientHelloInfo {
+	if c.app.tlsHandler != nil {
+		return c.app.tlsHandler.clientHelloInfo
+	}
+
+	return nil
+}
+
 // Next executes the next method in the stack that matches the current route.
 func (c *Ctx) Next() (err error) {
 	// Increment handler index
@@ -832,7 +935,7 @@ func (c *Ctx) Params(key string, defaultValue ...string) string {
 		if len(key) != len(c.route.Params[i]) {
 			continue
 		}
-		if c.route.Params[i] == key {
+		if c.route.Params[i] == key || (!c.app.config.CaseSensitive && utils.EqualFold(c.route.Params[i], key)) {
 			// in case values are not here
 			if len(c.values) <= i || len(c.values[i]) == 0 {
 				break
@@ -843,7 +946,7 @@ func (c *Ctx) Params(key string, defaultValue ...string) string {
 	return defaultString("", defaultValue)
 }
 
-// Params is used to get all route parameters.
+// AllParams Params is used to get all route parameters.
 // Using Params method to get params.
 func (c *Ctx) AllParams() map[string]string {
 	params := make(map[string]string, len(c.route.Params))
@@ -854,11 +957,20 @@ func (c *Ctx) AllParams() map[string]string {
 	return params
 }
 
+// ParamsParser binds the param string to a struct.
+func (c *Ctx) ParamsParser(out interface{}) error {
+	params := make(map[string][]string, len(c.route.Params))
+	for _, param := range c.route.Params {
+		params[param] = append(params[param], c.Params(param))
+	}
+	return c.parseToStruct(paramsTag, out, params)
+}
+
 // ParamsInt is used to get an integer from the route parameters
 // it defaults to zero if the parameter is not found or if the
 // parameter cannot be converted to an integer
 // If a default value is given, it will return that value in case the param
-// doesn't exist or cannot be converted to an integrer
+// doesn't exist or cannot be converted to an integer
 func (c *Ctx) ParamsInt(key string, defaultValue ...int) (int, error) {
 	// Use Atoi to convert the param to an int or return zero and an error
 	value, err := strconv.Atoi(c.Params(key))
@@ -1009,8 +1121,8 @@ func (c *Ctx) ReqHeaderParser(out interface{}) error {
 
 func (c *Ctx) parseToStruct(aliasTag string, out interface{}, data map[string][]string) error {
 	// Get decoder from pool
-	schemaDecoder := decoderPool.Get().(*schema.Decoder)
-	defer decoderPool.Put(schemaDecoder)
+	schemaDecoder := decoderPoolMap[aliasTag].Get().(*schema.Decoder)
+	defer decoderPoolMap[aliasTag].Put(schemaDecoder)
 
 	// Set alias tag
 	schemaDecoder.SetAliasTag(aliasTag)
@@ -1126,7 +1238,7 @@ func (c *Ctx) Redirect(location string, status ...int) error {
 	return nil
 }
 
-// Add vars to default view var map binding to template engine.
+// Bind Add vars to default view var map binding to template engine.
 // Variables are read by the Render method and may be overwritten.
 func (c *Ctx) Bind(vars Map) error {
 	// init viewBindMap - lazy map
@@ -1144,23 +1256,27 @@ func (c *Ctx) Bind(vars Map) error {
 func (c *Ctx) getLocationFromRoute(route Route, params Map) (string, error) {
 	buf := bytebufferpool.Get()
 	for _, segment := range route.routeParser.segs {
-		if segment.IsParam {
-			for key, val := range params {
-				if key == segment.ParamName || segment.IsGreedy {
-					_, err := buf.WriteString(utils.ToString(val))
-					if err != nil {
-						return "", err
-					}
-				}
-			}
-		} else {
+		if !segment.IsParam {
 			_, err := buf.WriteString(segment.Const)
 			if err != nil {
 				return "", err
 			}
+			continue
+		}
+
+		for key, val := range params {
+			isSame := key == segment.ParamName || (!c.app.config.CaseSensitive && utils.EqualFold(key, segment.ParamName))
+			isGreedy := segment.IsGreedy && len(key) == 1 && isInCharset(key[0], greedyParameters)
+			if isSame || isGreedy {
+				_, err := buf.WriteString(utils.ToString(val))
+				if err != nil {
+					return "", err
+				}
+			}
 		}
 	}
 	location := buf.String()
+	// release buffer
 	bytebufferpool.Put(buf)
 	return location, nil
 }
@@ -1442,7 +1558,6 @@ func (c *Ctx) SendStream(stream io.Reader, size ...int) error {
 		c.fasthttp.Response.SetBodyStream(stream, size[0])
 	} else {
 		c.fasthttp.Response.SetBodyStream(stream, -1)
-		c.setCanonical(HeaderContentLength, strconv.Itoa(len(c.fasthttp.Response.Body())))
 	}
 
 	return nil
