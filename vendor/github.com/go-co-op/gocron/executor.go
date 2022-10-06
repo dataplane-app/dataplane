@@ -47,6 +47,17 @@ func (e *executor) start() {
 		case f := <-e.jobFunctions:
 			runningJobsWg.Add(1)
 			go func() {
+				panicHandlerMutex.RLock()
+				defer panicHandlerMutex.RUnlock()
+
+				if panicHandler != nil {
+					defer func() {
+						if r := recover(); r != interface{}(nil) {
+							panicHandler(f.name, r)
+						}
+					}()
+				}
+
 				defer runningJobsWg.Done()
 
 				if e.maxRunningJobs != nil {
@@ -75,11 +86,17 @@ func (e *executor) start() {
 					defer e.maxRunningJobs.Release(1)
 				}
 
+				runJob := func() {
+					f.incrementRunState()
+					callJobFunc(f.eventListeners.onBeforeJobExecution)
+					callJobFuncWithParams(f.function, f.parameters)
+					callJobFunc(f.eventListeners.onAfterJobExecution)
+					f.decrementRunState()
+				}
+
 				switch f.runConfig.mode {
 				case defaultMode:
-					f.incrementRunState()
-					callJobFuncWithParams(f.function, f.parameters)
-					f.decrementRunState()
+					runJob()
 				case singletonMode:
 					_, _, _ = f.limiter.Do("main", func() (interface{}, error) {
 						select {
@@ -89,9 +106,7 @@ func (e *executor) start() {
 							return nil, nil
 						default:
 						}
-						f.incrementRunState()
-						callJobFuncWithParams(f.function, f.parameters)
-						f.decrementRunState()
+						runJob()
 						return nil, nil
 					})
 				}
