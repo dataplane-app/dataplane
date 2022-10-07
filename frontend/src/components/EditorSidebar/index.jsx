@@ -134,6 +134,7 @@ const EditorSidebar = () => {
                         {inpt.content.map((cont) => (
                             <Grid
                                 key={cont.id}
+                                id={`drag_${cont.eventType}`}
                                 container
                                 alignItems="center"
                                 sx={{ ...defaultParentStyle, '&:hover': { backgroundColor: 'sidebar.main' } }}
