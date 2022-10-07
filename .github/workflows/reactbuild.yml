@@ -2,7 +2,7 @@ name: ReactBuild
 
 on:
   push:
-    branches: [ main ]
+    branches: [ reactbuild ]
 
 jobs:
   build:

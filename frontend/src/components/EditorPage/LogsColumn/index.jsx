@@ -131,7 +131,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                                 text={filteredGraphqlResp + websocketResp + ' '}
                                 follow={follow}
                                 onScroll={onScroll}
-                                style={{ background: theme.palette.editorPage.logBackground }}
+                                style={{ background: theme.palette.editorPage.logBackground, fontFamily: 'Roboto', fontSize: '0.875rem' }}
                             />
                         )}
                     />

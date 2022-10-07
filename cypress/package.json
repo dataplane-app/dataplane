@@ -28,8 +28,8 @@
     },
     "devDependencies": {
         "autoprefixer": "^9",
-        "cypress": "^10.0.2",
+        "cypress": "^10.9.0",
         "eslint-plugin-cypress": "^2.12.1",
-        "prettier": "2.5.1"
+        "prettier": "2.7.1"
     }
 }
