@@ -26,6 +26,12 @@ describe('Add/remove python file', function () {
         cy.get('#notistack-snackbar').should('contain', 'File saved.');
     });
 
+    it('Type in code editor', function () {
+        cy.get('.view-lines.monaco-mouse-cursor-text').click();
+        cy.get('.view-lines.monaco-mouse-cursor-text').type('Dataplane Code');
+        cy.contains(/^Dataplane Code$/).should('be.visible', { timeout: 6000 });
+    });
+
     it('Delete file', function () {
         // Click on delete button
         cy.get('.MuiTreeView-root ul > div > div > li:nth-child(3) button:nth-child(2)').click({ force: true });
