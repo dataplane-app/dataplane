@@ -1,3 +1,25 @@
+### Python setup 
+```
+# Specify the location to pip.conf
+export PIP_CONFIG_FILE=/dataplane/pip.conf
+```
+
+Specify location for pip modules to be installed in pip.conf
+```
+[global]
+target=/dataplane/pip-packages/
+```
+
+Check drive usage -h = friendly size, looking for usage of tmpfs
+```
+df -h
+```
+
+Where is python looking for dependencies
+```
+python -m site
+```
+
 ### Release steps
 ```
 1. Merged pull request into main after manual test
