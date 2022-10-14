@@ -18,13 +18,13 @@ export const getGridLayouts = (language, markdownState, isMarkdown) => {
         ],
         md: [
             { i: '1', x: 0, y: 0, w: 2, h: fileManagerHeight },
-            { i: '2', x: 0, y: 2, w: 2, h: 2 },
+            { i: '2', x: 0, y: 2, w: 2, h: 1.5 },
             { i: '3', x: 2, y: 0, w: markdownEditorWidthMd, h: 4 },
             { i: '4', x: 6, y: 0, w: 2, h: 4 },
         ],
         sm: [
             { i: '1', x: 0, y: 0, w: 1, h: fileManagerHeight },
-            { i: '2', x: 0, y: 2, w: 1, h: 2 },
+            { i: '2', x: 0, y: 2, w: 1, h: 1.5 },
             { i: '3', x: 1, y: 0, w: markdownEditorWidthSm, h: 4 },
             { i: '4', x: 2, y: 0, w: 1, h: 4 },
         ],

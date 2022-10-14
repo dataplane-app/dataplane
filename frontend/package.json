@@ -12,7 +12,7 @@
         "@fortawesome/free-brands-svg-icons": "^5.15.4",
         "@fortawesome/free-regular-svg-icons": "^5.15.4",
         "@fortawesome/free-solid-svg-icons": "^5.15.4",
-        "@fortawesome/react-fontawesome": "^0.1.16",
+        "@fortawesome/react-fontawesome": "^0.2.0",
         "@hookstate/core": "3.0.13",
         "@mui/lab": "^5.0.0-alpha.71",
         "@mui/material": "^5.2.3",
@@ -50,9 +50,9 @@
         "react-lazylog": "^4.5.3",
         "react-lottie": "^1.2.3",
         "react-markdown": "^8.0.3",
-        "react-monaco-editor": "^0.48.0",
+        "react-monaco-editor": "^0.50.1",
         "react-router-dom": "5.2.0",
-        "react-scripts": "5.0.0",
+        "react-scripts": "5.0.1",
         "react-table": "^7.7.0",
         "regex-parser": "^2.2.11",
         "rehype-highlight": "^5.0.2",
@@ -93,6 +93,6 @@
     },
     "devDependencies": {
         "autoprefixer": "^9",
-        "prettier": "2.5.1"
+        "prettier": "2.7.1"
     }
 }
