@@ -127,7 +127,7 @@ func WorkerHealthStart(s *gocron.Scheduler) {
 		}
 
 		// Go type Publisher
-		err := messageq.MsgSend("workergroupstats."+wrkerconfig.WorkerGroup, workerdata)
+		err := messageq.MsgSend("workergroupstats."+wrkerconfig.EnvID+"."+wrkerconfig.WorkerGroup, workerdata)
 		if err != nil {
 			logging.PrintSecretsRedact("NATS error:", err)
 		}
