@@ -245,6 +245,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 				}
 
 				messageq.MsgSend("coderunfilelogs."+msg.RunID, sendmsg)
+				// log.Println("coderunfilelogs." + msg.RunID)
 				database.DBConn.Create(&logmsg)
 				if wrkerconfig.Debug == "true" {
 					clog.Info(line)

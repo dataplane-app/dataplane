@@ -1,4 +1,4 @@
-package worker
+package wsockets
 
 import (
 	"log"
@@ -6,40 +6,21 @@ import (
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
-
 	"github.com/gofiber/websocket/v2"
 	"github.com/nats-io/nats.go"
 )
 
-// var Broadcast1 = make(chan []byte)
-
-type MsgResult1 struct {
-	Message []byte
-	Err     error
-}
-
-var messagereceive1 = make(chan MsgResult)
-var disconnectConn1 = make(chan string)
+var quit = make(chan bool)
 
 // https://github.com/gorilla/websocket/blob/master/examples/chat/client.go
 
 // https://github.com/marcelo-tm/testws/blob/master/main.go
-func RoomUpdatesOLD(conn *websocket.Conn, environmentID string, subject string, id string) {
 
-	// ---- Permissions and security checks
+func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id string) {
 
-	// currentUser := conn.Locals("currentUser")
-	// platformID := conn.Locals("platformID")
 	room := ""
 	subjectmsg := ""
-
-	// ----- Permissions
-	// perms := []models.Permissions{
-	// 	{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
-	// 	{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
-	// }
 
 	if environmentID == "*" {
 		log.Println("Environment wildcard not allowed")
@@ -49,16 +30,16 @@ func RoomUpdatesOLD(conn *websocket.Conn, environmentID string, subject string, 
 	switch subject {
 	case "taskupdate." + environmentID + "." + id:
 		// fmt.Println("one")
-		room = "pipeline-run-updates"
+		room = "pipeline-run-updates." + environmentID + "." + id
 		subjectmsg = "taskupdate." + environmentID + "." + id
 
 	case "codepackage." + environmentID + "." + id:
 		// fmt.Println("one")
-		room = "code-package-install"
+		room = "code-package-install." + environmentID + "." + id
 		subjectmsg = "codepackage." + environmentID + "." + id
 
 	case "workerlogs." + id:
-		room = "worker-logs"
+		room = "worker-logs." + id
 		subjectmsg = "workerlogs." + id
 
 		if strings.Contains(id, "*") {
@@ -66,7 +47,7 @@ func RoomUpdatesOLD(conn *websocket.Conn, environmentID string, subject string, 
 			return
 		}
 	case "coderunfilelogs." + id:
-		room = "coderunfile-logs"
+		room = "coderunfilelogs." + id
 		subjectmsg = "coderunfilelogs." + id
 
 		if strings.Contains(id, "*") {
@@ -78,28 +59,25 @@ func RoomUpdatesOLD(conn *websocket.Conn, environmentID string, subject string, 
 		return
 	}
 
-	// permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
-
-	// if permOutcome == "denied" {
-	// 	logging.PrintSecretsRedact("Requires permissions")
-	// 	// return
-	// }
+	log.Println("Room", room)
 
 	sub, _ := messageq.NATSencoded.Subscribe(subjectmsg, func(m *nats.Msg) {
 
-		broadcastq <- message{room: room, data: m.Data}
+		Broadcast <- Message{Room: room, Data: m.Data}
 
 	})
 
 	// When the function returns, unregister the client and close the connection
 	defer func() {
-		unregisterq <- subscription{conn: conn, room: room}
-		conn.Close()
+		Unregister <- Subscription{Conn: conn, Room: room}
 		sub.Unsubscribe()
+		// Stop the broadcasting messages
+		quit <- true
+		conn.Close()
 	}()
 
 	// Register the client
-	registerq <- subscription{conn: conn, room: room}
+	Register <- Subscription{Conn: conn, Room: room}
 
 	// go SecureTimeout()
 
@@ -108,17 +86,18 @@ func RoomUpdatesOLD(conn *websocket.Conn, environmentID string, subject string, 
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+
 				if dpconfig.Debug == "true" {
 					log.Println("read error:", err)
 				}
+
 			}
 			return
 		}
 
 		if dpconfig.MQDebug == "true" {
-			logging.PrintSecretsRedact("message received from client:", mt, string(message))
+			log.Println("message received from client:", mt, string(message))
 		}
-
 	}
 
 }

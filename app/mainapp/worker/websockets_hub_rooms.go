@@ -53,7 +53,7 @@ func secureTimeoutq(room string, connection *websocket.Conn) {
 	}
 }
 
-func RunHubRooms() {
+func RunHubRoomsOLD() {
 	for {
 		select {
 		case register := <-registerq:

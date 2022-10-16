@@ -24,6 +24,7 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler"
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler/routinetasks"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
+	wsockets "github.com/dataplane-app/dataplane/app/mainapp/websockets"
 	"github.com/dataplane-app/dataplane/app/mainapp/worker"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 
@@ -221,7 +222,7 @@ func Setup(port string) *fiber.App {
 
 	// Start websocket hubs
 	go worker.RunHub()
-	go worker.RunHubRooms()
+	go wsockets.RunHub()
 
 	//recover from panic
 	app.Use(recover.New())
@@ -306,9 +307,9 @@ func Setup(port string) *fiber.App {
 		// log.Println(c.Query("token"))
 		// room := string(c.Params("room"))
 		environment := string(c.Params("environment"))
-		subject := string(c.Query("subject"))
+		room := string(c.Query("subject"))
 		id := string(c.Query("id"))
-		worker.RoomUpdates(c, environment, subject, id)
+		wsockets.RoomUpdates(c, environment, room, id)
 	}))
 
 	// Download code files
