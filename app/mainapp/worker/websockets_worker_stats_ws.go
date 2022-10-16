@@ -25,7 +25,7 @@ var disconnectConn = make(chan string)
 // https://github.com/gorilla/websocket/blob/master/examples/chat/client.go
 
 // https://github.com/marcelo-tm/testws/blob/master/main.go
-func WorkerStatsWs(conn *websocket.Conn, subject string) {
+func WorkerStatsWsOLD(conn *websocket.Conn, subject string) {
 
 	// Subscribe to a specific worker group when the connection is open
 	sub, _ := messageq.NATSencoded.Subscribe(subject, func(m *nats.Msg) {

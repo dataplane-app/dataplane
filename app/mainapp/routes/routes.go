@@ -221,7 +221,6 @@ func Setup(port string) *fiber.App {
 	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expires < ?", time.Now())
 
 	// Start websocket hubs
-	go worker.RunHub()
 	go wsockets.RunHub()
 
 	//recover from panic
@@ -295,12 +294,6 @@ func Setup(port string) *fiber.App {
 		}
 		return fiber.ErrUpgradeRequired
 	})
-
-	app.Get("/app/ws/workerstats/:workergroup", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
-
-		// log.Println(c.Query("token"))
-		worker.WorkerStatsWs(c, "workerstats."+c.Params("workergroup"))
-	}))
 
 	app.Get("/app/ws/rooms/:environment", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
 

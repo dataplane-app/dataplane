@@ -46,6 +46,7 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 			log.Println("Wildcards not allowed")
 			return
 		}
+
 	case "coderunfilelogs." + id:
 		room = "coderunfilelogs." + id
 		subjectmsg = "coderunfilelogs." + id
@@ -54,6 +55,25 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 			log.Println("Wildcards not allowed")
 			return
 		}
+
+	case "workerlogs." + id:
+		room = "worker-logs." + id
+		subjectmsg = "workerlogs." + id
+
+		if strings.Contains(id, "*") {
+			log.Println("Wildcards not allowed")
+			return
+		}
+
+	case "workergroupstats." + id:
+		room = "worker-group-stats." + id
+		subjectmsg = "workergroupstats." + id
+
+		if strings.Contains(id, "*") {
+			log.Println("Wildcards not allowed")
+			return
+		}
+
 	default:
 		log.Println("subject not found")
 		return

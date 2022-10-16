@@ -34,7 +34,7 @@ func SecureTimeout(connection *websocket.Conn) {
 	}
 }
 
-func RunHub() {
+func RunHubOLD() {
 	for {
 		select {
 		case connection := <-register:
