@@ -48,7 +48,7 @@ export default function useWebSocket(workerId) {
 
     useEffect(() => {
         function connect() {
-            ws.current = new WebSocket(`${websocketEndpoint}/${workerId}?token=${authToken.get()}`);
+            ws.current = new WebSocket(`${websocketEndpoint}/workergroupstats.${workerId}?token=${authToken.get()}`);
 
             ws.current.onopen = () => ConsoleLogHelper('ws opened');
             ws.current.onclose = () => {
