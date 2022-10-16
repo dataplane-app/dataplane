@@ -1,9 +1,9 @@
 import { styled } from '@mui/system';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Button, Drawer, Grid, TextField, Typography, useTheme } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import { IOSSwitch } from '../components/DrawerContent/SchedulerDrawer/IOSSwitch';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { useGetEnvironments } from '../graphql/getEnvironments';
@@ -15,6 +15,23 @@ import { useState as useHookState } from '@hookstate/core';
 import { useGetPipelineHook } from './PipelineRuns';
 import { useGetActiveDeployment } from '../graphql/getActiveDeployment';
 import { useGetWorkerGroups } from '../graphql/getWorkerGroups';
+import DeployAPITRiggerDrawer from '../components/DrawerContent/DeployAPITriggerDrawer';
+import { v4 as uuidv4 } from 'uuid';
+import { useGeneratePipelineTrigger } from '../graphql/generatePipelineTrigger';
+import { useGetPipelineTrigger } from '../graphql/getPipelineTrigger';
+
+let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
+if (host === '') {
+    host = window.location.origin;
+}
+const PUBLIC = `${host}/publicapi/api-trigger/`;
+const PRIVATE = `https://{{ HOST }}/privateapi/api-trigger/`;
+
+const initialState = {
+    publicLive: true,
+    privateLive: true,
+    apiKeyActive: false,
+};
 
 const Deploy = () => {
     // Environment global state
@@ -29,6 +46,13 @@ const Deploy = () => {
     const [live, setLive] = useState(true);
     const [workerGroup, setWorkerGroup] = useState(null);
     const nonDefaultWGNodes = useHookState([]);
+    // Local state for trigger
+    const [apiDrawerOpen, setApiDrawerOpen] = useState(false);
+    const [triggerID, setTriggerID] = useState(() => uuidv4());
+    const [switches, dispatch] = useReducer((switches, newState) => ({ ...switches, ...newState }), initialState);
+
+    // Theme hook
+    const theme = useTheme();
 
     // React hook form
     const { register, handleSubmit, reset } = useForm();
@@ -44,11 +68,14 @@ const Deploy = () => {
     const addDeployment = useAddDeploymentHook();
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
     const getActiveDeployment = useGetDeploymentHook(selectedEnvironment?.id, 'd-' + pipelineId, setDeployment);
+    // Graphql API Trigger Hooks
+    const getPipelineTriggerHook = useGetPipelineTriggerHook(Environment.id.get(), setTriggerID, dispatch);
 
     useEffect(() => {
         if (!Environment.id?.get()) return;
         getEnvironments();
         getPipeline();
+        getPipelineTriggerHook();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id?.get()]);
@@ -130,7 +157,7 @@ const Deploy = () => {
                     </Button>
                 </Box>
                 <Grid container>
-                    <Grid item>
+                    <Grid item mr={20} mb={5}>
                         <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
                             Deploy to environment
                         </Typography>
@@ -244,8 +271,33 @@ const Deploy = () => {
                         ) : null}
                     </Grid>
 
+                    {/* Right side */}
                     {nonDefaultWGNodes.get().length > 0 ? (
-                        <Grid ml={20} mt={17}>
+                        <Grid mb={5}>
+                            <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
+                                API Trigger
+                            </Typography>
+                            <Typography onClick={() => setApiDrawerOpen(true)} fontSize="0.8125rem" mb={4} color="primary.main" sx={{ cursor: 'pointer' }}>
+                                Configure API trigger
+                            </Typography>
+
+                            <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
+                                Public -<span style={{ color: switches.publicLive ? theme.palette.success.main : '#F80000' }}>{switches.publicLive ? ' Live ' : ' Offline '}</span>-
+                                Key Protected
+                            </Typography>
+                            <Typography fontSize="0.875rem" mb={4}>
+                                {PUBLIC + triggerID}
+                            </Typography>
+
+                            <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
+                                Private -
+                                <span style={{ color: switches.privateLive ? theme.palette.success.main : '#F80000' }}>{switches.privateLive ? ' Live ' : ' Offline '}</span>- No
+                                key
+                            </Typography>
+                            <Typography fontSize="0.875rem" mb={6}>
+                                {PRIVATE + triggerID}
+                            </Typography>
+
                             <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
                                 Node specific worker groups
                             </Typography>
@@ -277,6 +329,19 @@ const Deploy = () => {
                         </Grid>
                     ) : null}
                 </Grid>
+                <Drawer
+                    hideBackdrop
+                    sx={{ width: 'calc(100% - 203px)', zIndex: 1099, [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
+                    anchor="right"
+                    open={apiDrawerOpen}
+                    onClose={() => setApiDrawerOpen(false)}>
+                    <DeployAPITRiggerDrawer //
+                        handleClose={() => setApiDrawerOpen(false)}
+                        triggerID={triggerID}
+                        switches={switches}
+                        dispatch={dispatch}
+                    />
+                </Drawer>
             </Box>
         </form>
     );
@@ -379,7 +444,6 @@ const useGetDeploymentHook = (environmentID, pipelineID, setDeployment) => {
     };
 };
 
-// ------- Custom Hooks
 const useGetWorkerGroupsHook = (setWorkerGroups, selectedEnvironment) => {
     // GraphQL hook
     const getWorkerGroups = useGetWorkerGroups();
@@ -398,6 +462,33 @@ const useGetWorkerGroupsHook = (setWorkerGroups, selectedEnvironment) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setWorkerGroups(response);
+        }
+    };
+};
+
+// ----- Custom API Trigger hook
+const useGetPipelineTriggerHook = (environmentID, setTriggerID, dispatch) => {
+    // GraphQL hook
+    const getPipelineTrigger = useGetPipelineTrigger();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    // Get access groups
+    return async () => {
+        const response = await getPipelineTrigger({ pipelineID: pipelineId, environmentID });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get api triggers: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            if (response.errors[0].message === 'record not found') return;
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            const { triggerID, publicLive, privateLive, apiKeyActive } = response;
+            setTriggerID(triggerID);
+            dispatch({ publicLive, privateLive, apiKeyActive });
         }
     };
 };
