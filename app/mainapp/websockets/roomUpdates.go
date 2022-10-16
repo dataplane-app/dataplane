@@ -33,10 +33,20 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 		room = "pipeline-run-updates." + environmentID + "." + id
 		subjectmsg = "taskupdate." + environmentID + "." + id
 
+		if strings.Contains(id, "*") {
+			log.Println("Wildcards not allowed")
+			return
+		}
+
 	case "codepackage." + environmentID + "." + id:
 		// fmt.Println("one")
 		room = "code-package-install." + environmentID + "." + id
 		subjectmsg = "codepackage." + environmentID + "." + id
+
+		if strings.Contains(id, "*") {
+			log.Println("Wildcards not allowed")
+			return
+		}
 
 	case "workerlogs." + environmentID + "." + id:
 		room = "worker-logs." + id
@@ -70,7 +80,7 @@ func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id 
 		return
 	}
 
-	log.Println("Room", room)
+	// log.Println("Room", room)
 
 	sub, _ := messageq.NATSencoded.Subscribe(subjectmsg, func(m *nats.Msg) {
 
