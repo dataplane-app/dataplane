@@ -435,6 +435,21 @@ func Setup(port string) *fiber.App {
 		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
 	})
 
+	// Pipeline API Trigger private
+	app.Post("/privateapi/api-trigger/:id", auth.ApiAuthMiddle("private"), func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
+		pipelineID := c.Locals("pipelineID").(string)
+		environmentID := c.Locals("environmentID").(string)
+
+		var jsonPayload datatypes.JSON = c.Body()
+
+		// Run pipeline
+		runID := uuid.NewString()
+		pipelines.RunPipeline(pipelineID, environmentID, runID, jsonPayload)
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
+	})
+
 	// Deployment API Trigger public
 	app.Post("/publicapi/api-trigger/:version/:id", auth.ApiAuthMiddle("public"), func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
@@ -452,17 +467,19 @@ func Setup(port string) *fiber.App {
 		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
 	})
 
-	// Pipeline API Trigger private
-	app.Post("/privateapi/api-trigger/:id", auth.ApiAuthMiddle("private"), func(c *fiber.Ctx) error {
+	// Deployment API Trigger private
+	app.Post("/publicapi/api-trigger/:version/:id", auth.ApiAuthMiddle("private"), func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
-		pipelineID := c.Locals("pipelineID").(string)
+		pipelineID := c.Locals("deploymentID").(string)
 		environmentID := c.Locals("environmentID").(string)
+		version := string(c.Params("version"))
 
 		var jsonPayload datatypes.JSON = c.Body()
+		var jsonVersion datatypes.JSON = []byte(fmt.Sprintf(`{"version":"%s"}`, strings.Trim(version, "v")))
 
-		// Run pipeline
+		// Run deployment
 		runID := uuid.NewString()
-		pipelines.RunPipeline(pipelineID, environmentID, runID, jsonPayload)
+		pipelines.RunDeployment(pipelineID, environmentID, runID, jsonPayload, jsonVersion)
 
 		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
 	})
