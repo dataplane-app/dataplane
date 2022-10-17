@@ -9,15 +9,14 @@ import (
 	"log"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
-
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
-
 	"gorm.io/gorm/clause"
 )
 
+// UpdatePreferences is the resolver for the updatePreferences field.
 func (r *mutationResolver) UpdatePreferences(ctx context.Context, input *privategraphql.AddPreferencesInput) (*string, error) {
 	// Retrieve userID from access token
 	userID := ctx.Value("currentUser").(string)
@@ -39,6 +38,7 @@ func (r *mutationResolver) UpdatePreferences(ctx context.Context, input *private
 	return &response, nil
 }
 
+// GetAllPreferences is the resolver for the getAllPreferences field.
 func (r *queryResolver) GetAllPreferences(ctx context.Context) ([]*privategraphql.Preferences, error) {
 	// Retrieve userID from access token
 	userID := ctx.Value("currentUser").(string)
@@ -57,6 +57,7 @@ func (r *queryResolver) GetAllPreferences(ctx context.Context) ([]*privategraphq
 	return p, nil
 }
 
+// GetOnePreference is the resolver for the getOnePreference field.
 func (r *queryResolver) GetOnePreference(ctx context.Context, preference string) (*privategraphql.Preferences, error) {
 	// Retrieve userID from access token
 	userID := ctx.Value("currentUser").(string)

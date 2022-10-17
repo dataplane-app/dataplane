@@ -4,18 +4,18 @@ import { Box, Button, Drawer, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGeneratePipelineTrigger } from '../../../graphql/generatePipelineTrigger';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { IOSSwitch } from '../SchedulerDrawer/IOSSwitch';
 import ApiKey from './ApiKey';
 import ApiTriggerExampleDrawer from '../ApiTriggerExampleDrawer';
+import { useGenerateDeploymentTrigger } from '../../../graphql/generateDeploymentTrigger';
 
 let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
 if (host === '') {
     host = window.location.origin;
 }
-const PUBLIC = `${host}/publicapi/api-trigger/`;
-const PRIVATE = `https://{{ HOST }}/privateapi/api-trigger/`;
+const PUBLIC = `${host}/publicapi/api-trigger/latest/`;
+const PRIVATE = `https://{{ HOST }}/privateapi/api-trigger/latest/`;
 
 const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, dispatch }) => {
     // Global state
@@ -26,7 +26,7 @@ const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, dispatch }) 
     const [isExamplePrivate, setIsExamplePrivate] = useState(false);
 
     // Custom GraphQL hooks
-    const generatePipelineTrigger = useGeneratePipelineTriggerHook(Environment.id.get(), triggerID, switches, dispatch);
+    const generateDeploymentTrigger = useGenerateDeploymentTriggerHook(Environment.id.get(), triggerID, switches, dispatch);
 
     return (
         <Box position="relative" width="100%" mb={10}>
@@ -44,7 +44,7 @@ const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, dispatch }) 
                     <Box top="26px" right="39px" display="flex" alignItems="center">
                         <Button //
                             onClick={() => {
-                                generatePipelineTrigger();
+                                generateDeploymentTrigger();
                                 handleClose();
                             }}
                             type="submit"
@@ -75,11 +75,11 @@ const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, dispatch }) 
                         </Typography>
                     </Box>
                     <Typography variant="subtitle2" fontSize="0.75rem" fontWeight={400}>
-                        Anyone with this link can trigger this workflow.
+                        Anyone with this link can trigger this workflow. To use a specific version, change “latest” with this format “v1.2.4”
                     </Typography>
                     <Box display="flex" alignItems="center" mt={3}>
                         <IOSSwitch
-                            onClick={() => generatePipelineTrigger({ publicLive: !switches.publicLive })}
+                            onClick={() => generateDeploymentTrigger({ publicLive: !switches.publicLive })}
                             checked={switches.publicLive}
                             inputProps={{ 'aria-label': 'controlled' }}
                         />
@@ -127,7 +127,7 @@ const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, dispatch }) 
 
                     <Box display="flex" alignItems="center" mt={3}>
                         <IOSSwitch
-                            onClick={() => generatePipelineTrigger({ privateLive: !switches.privateLive })}
+                            onClick={() => generateDeploymentTrigger({ privateLive: !switches.privateLive })}
                             checked={switches.privateLive}
                             inputProps={{ 'aria-label': 'controlled' }}
                         />
@@ -150,7 +150,7 @@ const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, dispatch }) 
                 <Box mb={10} />
 
                 {/* API Key */}
-                <ApiKey apiKeyActive={switches.apiKeyActive} generatePipelineTrigger={generatePipelineTrigger} environmentID={Environment.id.get()} triggerID={triggerID} />
+                <ApiKey apiKeyActive={switches.apiKeyActive} generateDeploymentTrigger={generateDeploymentTrigger} environmentID={Environment.id.get()} triggerID={triggerID} />
             </Box>
             <Drawer
                 anchor="right"
@@ -178,9 +178,9 @@ export default DeployAPITRiggerDrawer;
 
 // ---------- Custom Hooks
 
-const useGeneratePipelineTriggerHook = (environmentID, triggerID, switches, dispatch) => {
+const useGenerateDeploymentTriggerHook = (environmentID, triggerID, switches, dispatch) => {
     // GraphQL hook
-    const generatePipelineTrigger = useGeneratePipelineTrigger();
+    const generateDeploymentTrigger = useGenerateDeploymentTrigger();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -191,8 +191,8 @@ const useGeneratePipelineTriggerHook = (environmentID, triggerID, switches, disp
 
     // Get access groups
     return async (update) => {
-        const response = await generatePipelineTrigger({
-            pipelineID: pipelineId,
+        const response = await generateDeploymentTrigger({
+            deploymentID: 'd-' + pipelineId,
             environmentID,
             triggerID,
             apiKeyActive,

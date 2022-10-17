@@ -23,7 +23,7 @@ import (
 
 func Migrate() {
 
-	migrateVersion := "0.0.54"
+	migrateVersion := "0.0.55"
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -126,6 +126,9 @@ func Migrate() {
 			&models.DeployFilesStore{},
 			&models.DeployCodeFilesCache{},
 			&models.DeployCodeNodeCache{},
+			&models.DeploymentApiTriggers{},
+			&models.DeploymentApiTriggerRuns{},
+			&models.DeploymentApiKeys{},
 		)
 		if err1 != nil {
 			panic(err1)

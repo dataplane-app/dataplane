@@ -7,15 +7,15 @@ import (
 	"context"
 	"errors"
 
-	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
-
 	"github.com/dataplane-app/dataplane/app/mainapp/auth"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 )
 
+// UpdateMe is the resolver for the updateMe field.
 func (r *mutationResolver) UpdateMe(ctx context.Context, input *privategraphql.AddUpdateMeInput) (*models.Users, error) {
 	// Retrieve userID from access token
 	userID := ctx.Value("currentUser").(string)
@@ -50,6 +50,7 @@ func (r *mutationResolver) UpdateMe(ctx context.Context, input *privategraphql.A
 	}, nil
 }
 
+// UpdateChangeMyPassword is the resolver for the updateChangeMyPassword field.
 func (r *mutationResolver) UpdateChangeMyPassword(ctx context.Context, password string) (*string, error) {
 	// Permission: logged in user
 
@@ -76,6 +77,7 @@ func (r *mutationResolver) UpdateChangeMyPassword(ctx context.Context, password 
 	return &response, nil
 }
 
+// Me is the resolver for the me field.
 func (r *queryResolver) Me(ctx context.Context) (*models.Users, error) {
 	// Retrieve userID from access token
 	userID := ctx.Value("currentUser").(string)

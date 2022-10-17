@@ -3,8 +3,9 @@
 package privategraphql
 
 import (
-	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"time"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 )
 
 type AccessGroupsInput struct {

@@ -11,7 +11,7 @@ import (
 	"os"
 	"strings"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dfscache "github.com/dataplane-app/dataplane/app/mainapp/code_editor/dfs_cache"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -21,26 +21,30 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
-
 	"gorm.io/gorm"
 )
 
+// Meta is the resolver for the meta field.
 func (r *deploymentEdgesResolver) Meta(ctx context.Context, obj *models.DeployPipelineEdges) (interface{}, error) {
 	return obj.Meta, nil
 }
 
+// Commands is the resolver for the commands field.
 func (r *deploymentNodesResolver) Commands(ctx context.Context, obj *models.DeployPipelineNodes) (interface{}, error) {
 	return obj.Commands, nil
 }
 
+// Meta is the resolver for the meta field.
 func (r *deploymentNodesResolver) Meta(ctx context.Context, obj *models.DeployPipelineNodes) (interface{}, error) {
 	return obj.Meta, nil
 }
 
+// RunJSON is the resolver for the run_json field.
 func (r *deploymentRunsResolver) RunJSON(ctx context.Context, obj *models.PipelineRuns) (interface{}, error) {
 	return obj.RunJSON, nil
 }
 
+// AddDeployment is the resolver for the addDeployment field.
 func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*privategraphql.WorkerGroupsNodes) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -500,6 +504,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	return "OK", nil
 }
 
+// DeleteDeployment is the resolver for the deleteDeployment field.
 func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID string, pipelineID string, version string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -681,6 +686,7 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 	return response, nil
 }
 
+// TurnOnOffDeployment is the resolver for the turnOnOffDeployment field.
 func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -770,6 +776,7 @@ func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentI
 	return "Pipeline trigger updated", nil
 }
 
+// ClearFileCacheDeployment is the resolver for the clearFileCacheDeployment field.
 func (r *mutationResolver) ClearFileCacheDeployment(ctx context.Context, environmentID string, deploymentID string, version string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -803,6 +810,7 @@ func (r *mutationResolver) ClearFileCacheDeployment(ctx context.Context, environ
 	// panic(fmt.Errorf("not implemented"))
 }
 
+// GetActiveDeployment is the resolver for the getActiveDeployment field.
 func (r *queryResolver) GetActiveDeployment(ctx context.Context, pipelineID string, environmentID string) (*privategraphql.Deployments, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -937,6 +945,7 @@ order by a.created_at desc`
 	return &p, nil
 }
 
+// GetDeployment is the resolver for the getDeployment field.
 func (r *queryResolver) GetDeployment(ctx context.Context, pipelineID string, environmentID string, version string) (*privategraphql.Deployments, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1071,6 +1080,7 @@ order by a.created_at desc`
 	return &p, nil
 }
 
+// GetDeployments is the resolver for the getDeployments field.
 func (r *queryResolver) GetDeployments(ctx context.Context, environmentID string) ([]*privategraphql.Deployments, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1207,6 +1217,7 @@ order by a.created_at desc`
 	return p, nil
 }
 
+// GetDeploymentFlow is the resolver for the getDeploymentFlow field.
 func (r *queryResolver) GetDeploymentFlow(ctx context.Context, pipelineID string, environmentID string, version string) (*privategraphql.DeploymentFlow, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1258,6 +1269,7 @@ func (r *queryResolver) GetDeploymentFlow(ctx context.Context, pipelineID string
 	return &flow, nil
 }
 
+// GetNonDefaultWGNodes is the resolver for the getNonDefaultWGNodes field.
 func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string) ([]*privategraphql.NonDefaultNodes, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1317,6 +1329,7 @@ func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID str
 	return resp, nil
 }
 
+// GetDeploymentRuns is the resolver for the getDeploymentRuns field.
 func (r *queryResolver) GetDeploymentRuns(ctx context.Context, deploymentID string, environmentID string, version string) ([]*models.PipelineRuns, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

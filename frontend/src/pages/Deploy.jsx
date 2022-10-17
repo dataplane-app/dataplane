@@ -17,15 +17,14 @@ import { useGetActiveDeployment } from '../graphql/getActiveDeployment';
 import { useGetWorkerGroups } from '../graphql/getWorkerGroups';
 import DeployAPITRiggerDrawer from '../components/DrawerContent/DeployAPITriggerDrawer';
 import { v4 as uuidv4 } from 'uuid';
-import { useGeneratePipelineTrigger } from '../graphql/generatePipelineTrigger';
-import { useGetPipelineTrigger } from '../graphql/getPipelineTrigger';
+import { useGetDeploymentTrigger } from '../graphql/getDeploymentTrigger';
 
 let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
 if (host === '') {
     host = window.location.origin;
 }
-const PUBLIC = `${host}/publicapi/api-trigger/`;
-const PRIVATE = `https://{{ HOST }}/privateapi/api-trigger/`;
+const PUBLIC = `${host}/publicapi/api-trigger/latest/`;
+const PRIVATE = `https://{{ HOST }}/privateapi/api-trigger/latest/`;
 
 const initialState = {
     publicLive: true,
@@ -69,13 +68,13 @@ const Deploy = () => {
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
     const getActiveDeployment = useGetDeploymentHook(selectedEnvironment?.id, 'd-' + pipelineId, setDeployment);
     // Graphql API Trigger Hooks
-    const getPipelineTriggerHook = useGetPipelineTriggerHook(Environment.id.get(), setTriggerID, dispatch);
+    const getDeploymentTriggerHook = useGetDeploymentTriggerHook(Environment.id.get(), setTriggerID, dispatch);
 
     useEffect(() => {
         if (!Environment.id?.get()) return;
         getEnvironments();
         getPipeline();
-        getPipelineTriggerHook();
+        getDeploymentTriggerHook();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id?.get()]);
@@ -467,9 +466,9 @@ const useGetWorkerGroupsHook = (setWorkerGroups, selectedEnvironment) => {
 };
 
 // ----- Custom API Trigger hook
-const useGetPipelineTriggerHook = (environmentID, setTriggerID, dispatch) => {
+const useGetDeploymentTriggerHook = (environmentID, setTriggerID, dispatch) => {
     // GraphQL hook
-    const getPipelineTrigger = useGetPipelineTrigger();
+    const getDeploymentTrigger = useGetDeploymentTrigger();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -478,7 +477,7 @@ const useGetPipelineTriggerHook = (environmentID, setTriggerID, dispatch) => {
 
     // Get access groups
     return async () => {
-        const response = await getPipelineTrigger({ pipelineID: pipelineId, environmentID });
+        const response = await getDeploymentTrigger({ deploymentID: 'd-' + pipelineId, environmentID });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get api triggers: " + (response.msg || response.r || response.error), { variant: 'error' });
