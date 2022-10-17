@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	"github.com/gofiber/websocket/v2"
@@ -17,72 +18,41 @@ var quit = make(chan bool)
 
 // https://github.com/marcelo-tm/testws/blob/master/main.go
 
-func RoomUpdates(conn *websocket.Conn, environmentID string, subject string, id string) {
+func RoomUpdates(conn *websocket.Conn, room string) {
 
-	room := ""
-	subjectmsg := ""
-
-	if environmentID == "*" {
-		log.Println("Environment wildcard not allowed")
+	if strings.Contains(room, "*") {
+		log.Println("Wildcards not allowed")
 		return
 	}
 
-	switch subject {
-	case "taskupdate." + environmentID + "." + id:
-		// fmt.Println("one")
-		room = "pipeline-run-updates." + environmentID + "." + id
-		subjectmsg = "taskupdate." + environmentID + "." + id
+	// log.Println("Subject:", subject)
 
-		if strings.Contains(id, "*") {
-			log.Println("Wildcards not allowed")
-			return
-		}
+	/* Rooms:
+	taskupdate.<envID>.<runID>
+	codepackage.<envID>.<workergroup>
+	workerlogs.<envID>.<runID>.<nodeID>
+	coderunfilelogs.<envID>.<runID>
+	workergroupstats.<envID>.<workergroup>
+	*/
 
-	case "codepackage." + environmentID + "." + id:
-		// fmt.Println("one")
-		room = "code-package-install." + environmentID + "." + id
-		subjectmsg = "codepackage." + environmentID + "." + id
+	/* To prevent subscribing to any NATS messaging - only specific to frontend */
+	availableRooms := []string{
+		"taskupdate.",
+		"codepackage.",
+		"workerlogs.",
+		"coderunfilelogs.",
+		"workergroupstats."}
 
-		if strings.Contains(id, "*") {
-			log.Println("Wildcards not allowed")
-			return
-		}
-
-	case "workerlogs." + environmentID + "." + id:
-		room = "worker-logs." + id
-		subjectmsg = "workerlogs." + id
-
-		if strings.Contains(id, "*") {
-			log.Println("Wildcards not allowed")
-			return
-		}
-
-	case "coderunfilelogs." + environmentID + "." + id:
-		room = "coderunfilelogs." + id
-		subjectmsg = "coderunfilelogs." + id
-
-		if strings.Contains(id, "*") {
-			log.Println("Wildcards not allowed")
-			return
-		}
-
-	case "workergroupstats." + environmentID + "." + id:
-		room = "worker-group-stats." + id
-		subjectmsg = "workergroupstats." + id
-
-		if strings.Contains(id, "*") {
-			log.Println("Wildcards not allowed")
-			return
-		}
-
-	default:
+	if utilities.InArrayContains(room, availableRooms) {
 		log.Println("subject not found")
 		return
 	}
 
-	// log.Println("Room", room)
+	if dpconfig.MQDebug == "true" {
+		log.Println("Real-time Room:", room)
+	}
 
-	sub, _ := messageq.NATSencoded.Subscribe(subjectmsg, func(m *nats.Msg) {
+	sub, _ := messageq.NATSencoded.Subscribe(room, func(m *nats.Msg) {
 
 		Broadcast <- Message{Room: room, Data: m.Data}
 

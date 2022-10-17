@@ -295,14 +295,11 @@ func Setup(port string) *fiber.App {
 		return fiber.ErrUpgradeRequired
 	})
 
-	app.Get("/app/ws/rooms/:environment", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
+	app.Get("/app/ws/rooms/:room", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
 
-		// log.Println(c.Query("token"))
-		// room := string(c.Params("room"))
-		environment := string(c.Params("environment"))
-		room := string(c.Query("subject"))
-		id := string(c.Query("id"))
-		wsockets.RoomUpdates(c, environment, room, id)
+		room := string(c.Params("room"))
+
+		wsockets.RoomUpdates(c, room)
 	}))
 
 	// Download code files
