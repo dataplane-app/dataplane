@@ -165,7 +165,8 @@ const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, dispatch }) 
                         setIsOpenExampleDrawer(false);
                         setIsExamplePrivate(false);
                     }}
-                    host={isExamplePrivate ? 'https://{{ HOST }}' : host}
+                    //
+                    host={isExamplePrivate ? PRIVATE : PUBLIC}
                     triggerID={triggerID}
                     isExamplePrivate={isExamplePrivate}
                 />
