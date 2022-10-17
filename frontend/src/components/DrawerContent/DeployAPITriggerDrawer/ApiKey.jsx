@@ -1,4 +1,4 @@
-import { Box, Button, FormControl, InputLabel, List, ListItem, MenuItem, Select, Typography } from '@mui/material';
+import { Box, Button, FormControl, InputLabel, List, ListItem, MenuItem, Select, Typography, useTheme } from '@mui/material';
 import { useEffect, useReducer } from 'react';
 import { IOSSwitch } from '../SchedulerDrawer/IOSSwitch';
 import { customAlphabet } from 'nanoid';
@@ -48,6 +48,8 @@ export default function ApiKey({ apiKeyActive, generateDeploymentTrigger, enviro
         const expiresAt = state.expiration === 0 ? null : DateTime.now().plus({ months: state.expiration }).toISO();
         addDeploymentApiKey(expiresAt);
     }
+
+    const theme = useTheme();
 
     return (
         <Box>
@@ -116,7 +118,9 @@ export default function ApiKey({ apiKeyActive, generateDeploymentTrigger, enviro
                             paddingLeft: 0,
                             borderBottom: idx === state.storedKeys.length - 1 ? '1px solid #BABABA' : null,
                         }}>
-                        <Typography sx={{ background: apiKey.apiKeyTail ? 'null' : '#EEE', borderRadius: '6px', padding: '5px 15px' }}>{formatAPIKey(apiKey)}</Typography>
+                        <Typography sx={{ background: apiKey.apiKeyTail ? 'null' : theme.palette.apiKey.background, borderRadius: '6px', padding: '5px 15px' }}>
+                            {formatAPIKey(apiKey)}
+                        </Typography>
                         <Typography ml={0} position="absolute" left="245px">
                             {formatDate(apiKey.expiresAt)}
                         </Typography>

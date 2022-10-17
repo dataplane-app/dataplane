@@ -62,6 +62,9 @@ const createCustomTheme = (mode) => ({
                   editorPageBg: {
                       main: '#F4F6F9',
                   },
+                  apiKey: {
+                      background: '#eee',
+                  },
               }
             : {
                   success: {
@@ -117,6 +120,9 @@ const createCustomTheme = (mode) => ({
                   },
                   editorPageBg: {
                       main: 'rgba(14, 25, 40, 1)',
+                  },
+                  apiKey: {
+                      background: '#0073C6',
                   },
               }),
     },

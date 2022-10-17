@@ -11,11 +11,16 @@ export default function AlertDialog({ openDialog, handleClose, deleteKey, keyToB
         <Dialog open={openDialog} onClose={handleClose} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">
             <DialogTitle id="alert-dialog-title">Delete API Key?</DialogTitle>
             <DialogContent>
-                <DialogContentText id="alert-dialog-description">Are you sure you would like to delete key: ****-****-****-{keyToBeDeleted.tail}</DialogContentText>
+                <DialogContentText color="main.primary" id="alert-dialog-description">
+                    Are you sure you would like to delete key: ****-****-****-{keyToBeDeleted.tail}
+                </DialogContentText>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={handleClose}>No</Button>
+            <DialogActions sx={{ paddingBottom: '20px', paddingRight: '20px' }}>
+                <Button variant="contained" onClick={handleClose}>
+                    No
+                </Button>
                 <Button
+                    variant="contained"
                     onClick={() => {
                         deleteKey(keyToBeDeleted.key);
                         handleClose();
