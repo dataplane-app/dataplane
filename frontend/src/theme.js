@@ -122,7 +122,7 @@ const createCustomTheme = (mode) => ({
                       main: 'rgba(14, 25, 40, 1)',
                   },
                   apiKey: {
-                      background: '#0073C6',
+                      background: 'rgb(0, 80, 138)',
                   },
               }),
     },
