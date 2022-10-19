@@ -2,7 +2,7 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Tab, Tabs, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { prepareInputForBackend, useGlobalFlowState } from '../../../pages/PipelineEdit';
+import { prepareInputForBackend } from '../../../pages/PipelineEdit';
 import { IOSSwitch } from './IOSSwitch';
 import { CronTab } from './CronTab';
 import { CronSecondsTab } from './CronSecondsTab';
@@ -13,7 +13,7 @@ import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from '../../../utils/PipelinePrepareGraphInput';
 import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
 
-const ScheduleDrawer = ({ handleClose, environmentId }) => {
+const ScheduleDrawer = ({ handleClose, environmentId, getPipeline }) => {
     // Flow state
     const FlowState = useGlobalPipelineRun();
 
@@ -30,7 +30,7 @@ const ScheduleDrawer = ({ handleClose, environmentId }) => {
 
     // Custom Graphql hook
     const getPipelineFlow = useGetPipelineFlowHook(environmentId);
-    const updatePipelineFlow = useAddUpdatePipelineFlowHook(environmentId, getPipelineFlow);
+    const updatePipelineFlow = useAddUpdatePipelineFlowHook(environmentId, getPipelineFlow, getPipeline);
 
     // Schedule state
     const [scheduleStatement, setScheduleStatement] = useState('');
@@ -185,7 +185,7 @@ function TabPanel(props) {
     );
 }
 
-export const useAddUpdatePipelineFlowHook = (environmentID, getPipelineFlow) => {
+export const useAddUpdatePipelineFlowHook = (environmentID, getPipelineFlow, getPipeline) => {
     // GraphQL hook
     const addUpdatePipelineFlow = useAddUpdatePipelineFlow();
 
@@ -209,6 +209,7 @@ export const useAddUpdatePipelineFlowHook = (environmentID, getPipelineFlow) => 
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getPipelineFlow();
+            getPipeline();
         }
     };
 };

@@ -237,6 +237,7 @@ const View = () => {
                 <ScheduleDrawer
                     handleClose={() => FlowState.isOpenSchedulerDrawer.set(false)} //
                     environmentId={Environment.id.get()}
+                    getPipeline={getPipeline}
                 />
             </Drawer>
         </Box>
