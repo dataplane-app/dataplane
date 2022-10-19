@@ -103,7 +103,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
                             <Typography color="secondary.main" variant="body2">
                                 {row.value.node_type_desc[0]?.toUpperCase() + row.value.node_type_desc.slice(1) + ' trigger'}
                                 {row.value.schedule && ' - ' + cronZone(row.value.schedule, MeData.timezone.get(), row.value.schedule_type)}
-                                {row.value.node_type_desc !== 'play' && ' ' + getTimeZone(row.value.timezone)}
+                                {row.value.node_type_desc === 'schedule' && ' ' + getTimeZone(row.value.timezone)}
                             </Typography>
                         </Box>
                     ) : null,
