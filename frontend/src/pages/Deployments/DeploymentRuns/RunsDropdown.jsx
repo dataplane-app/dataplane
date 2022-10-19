@@ -144,18 +144,17 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
                     // Timer set start and end date
                     RunState.runObject?.runStart.set(response[0].created_at);
                     RunState.runObject?.runEnd.set(response[0].ended_at);
-
-                    // Check if run button clicked on deployments table
-                    if (!state) return;
-                    if (state) {
-                        const clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: false });
-                        const runButton = document.getElementById('deployment-run-button');
-                        runButton.dispatchEvent(clickEvent);
-                    }
-                    // Clear state after a run to avoid a re-run on refresh
-                    window.history.replaceState({}, document.title);
                 }
             }
+            // Check if run button clicked on deployments table
+            if (!state) return;
+            if (state) {
+                const clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: false });
+                const runButton = document.getElementById('deployment-run-button');
+                runButton.dispatchEvent(clickEvent);
+            }
+            // Clear state after a run to avoid a re-run on refresh
+            window.history.replaceState({}, document.title);
         })();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
