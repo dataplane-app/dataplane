@@ -141,16 +141,16 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
                     Every 6 hours
                 </Typography>
                 <Typography sx={{ cursor: 'pointer' }} mt={0.5} color="primary.main" fontSize={13} onClick={() => setScheduleStatement('0 8 * * *')}>
-                    Every day at 8am ({timezone})
+                    Every day at 8am (UTC)
                 </Typography>
                 <Typography sx={{ cursor: 'pointer' }} mt={0.5} color="primary.main" fontSize={13} onClick={() => setScheduleStatement('0 11 * * 5')}>
-                    Every Friday at 11am ({timezone})
+                    Every Friday at 11am (UTC)
                 </Typography>
-                <Typography sx={{ cursor: 'pointer' }} mt={0.5} color="primary.main" fontSize={13} onClick={() => setScheduleStatement('0 23 * * 1-5')}>
-                    At 11pm, Monday through Friday ({timezone})
+                <Typography sx={{ cursor: 'pointer' }} mt={0.5} color="primary.main" fontSize={13} onClick={() => setScheduleStatement('0 22 * * 1-5')}>
+                    At 10pm, Monday through Friday (UTC)
                 </Typography>
                 <Typography sx={{ cursor: 'pointer' }} mt={0.5} color="primary.main" fontSize={13} onClick={() => setScheduleStatement('0 14 5 * *')}>
-                    Every month on day 5 at 2pm ({timezone})
+                    Every month on day 5 at 2pm (UTC)
                 </Typography>
             </Box>
         </Box>
