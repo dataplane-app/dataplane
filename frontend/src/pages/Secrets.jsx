@@ -80,11 +80,9 @@ const Secrets = () => {
             <Typography component="h2" variant="h2" color="text.primary">
                 Secrets
             </Typography>
-
             <Typography variant="subtitle2" mt=".20rem">
                 Environment: {Environment.name.get()}
             </Typography>
-
             <Box mt={4} sx={{ width: { md: '570px' } }}>
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
@@ -137,7 +135,6 @@ const Secrets = () => {
                                         border: 1,
                                         borderColor: 'divider',
                                         padding: '15px 0',
-                                        cursor: 'pointer',
                                         '&:hover': { background: 'background.hoverSecondary' },
                                         'td:last-child': { textAlign: 'center' },
                                     }}>
@@ -162,9 +159,16 @@ const CustomSecretName = ({ row, onClick }) => {
     const [name] = row.value;
 
     return (
-        <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start" onClick={onClick}>
+        <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
             <Box display="flex">
-                <Typography component="h4" variant="h3" sx={{ color: `${row.row.original.SecretType !== 'environment' ? 'cyan.main' : 'text.main'}` }}>
+                <Typography
+                    onClick={row.row.original.SecretType !== 'environment' ? onClick : null}
+                    component="h4"
+                    variant="h3"
+                    sx={{
+                        color: `${row.row.original.SecretType !== 'environment' ? 'cyan.main' : 'text.main'}`,
+                        cursor: row.row.original.SecretType !== 'environment' ? 'pointer' : '',
+                    }}>
                     {name}
                 </Typography>
 
@@ -172,7 +176,16 @@ const CustomSecretName = ({ row, onClick }) => {
                     Last updated: {formatDate(row.row.original.UpdatedAt)}
                 </Typography>
             </Box>
-            {row.row.original.EnvVar && <Typography variant="subtitle1">Environment variable: {row.row.original.EnvVar}</Typography>}
+            <Box display="flex">
+                {row.row.original.EnvVar && <Typography variant="subtitle1">Environment variable: {row.row.original.EnvVar}</Typography>}
+                <Button //
+                    onClick={() => navigator.clipboard.writeText(row.row.original.EnvVar)}
+                    variant="text"
+                    size="small"
+                    sx={{ width: '20px', height: '20px', fontSize: '0.75rem' }}>
+                    Copy
+                </Button>
+            </Box>
             <Typography mt={1} component="h5" variant="subtitle1">
                 {row.row.original.SecretType === 'custom' ? row.row.original.Description : '******'}
             </Typography>
