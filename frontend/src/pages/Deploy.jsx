@@ -18,6 +18,7 @@ import { useGetWorkerGroups } from '../graphql/getWorkerGroups';
 import DeployAPITRiggerDrawer from '../components/DrawerContent/DeployAPITriggerDrawer';
 import { v4 as uuidv4 } from 'uuid';
 import { useGetDeploymentTrigger } from '../graphql/getDeploymentTrigger';
+import { useGenerateDeploymentTrigger } from '../graphql/generateDeploymentTrigger';
 
 let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
 if (host === '') {
@@ -69,6 +70,7 @@ const Deploy = () => {
     const getActiveDeployment = useGetDeploymentHook(selectedEnvironment?.id, 'd-' + pipelineId, setDeployment);
     // Graphql API Trigger Hooks
     const getDeploymentTriggerHook = useGetDeploymentTriggerHook(Environment.id.get(), setTriggerID, dispatch);
+    const generateDeploymentTrigger = useGenerateDeploymentTriggerHook(Environment.id.get(), triggerID, switches, dispatch);
 
     useEffect(() => {
         if (!Environment.id?.get()) return;
@@ -137,6 +139,7 @@ const Deploy = () => {
         };
 
         addDeployment(input);
+        generateDeploymentTrigger();
     };
 
     return (
@@ -338,7 +341,7 @@ const Deploy = () => {
                         handleClose={() => setApiDrawerOpen(false)}
                         triggerID={triggerID}
                         switches={switches}
-                        dispatch={dispatch}
+                        generateDeploymentTrigger={generateDeploymentTrigger}
                     />
                 </Drawer>
             </Box>
@@ -488,6 +491,42 @@ const useGetDeploymentTriggerHook = (environmentID, setTriggerID, dispatch) => {
             const { triggerID, publicLive, privateLive, apiKeyActive } = response;
             setTriggerID(triggerID);
             dispatch({ publicLive, privateLive, apiKeyActive });
+        }
+    };
+};
+
+// ---------- Custom Hooks
+
+const useGenerateDeploymentTriggerHook = (environmentID, triggerID, switches, dispatch) => {
+    // GraphQL hook
+    const generateDeploymentTrigger = useGenerateDeploymentTrigger();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { apiKeyActive, publicLive, privateLive } = switches;
+
+    // Get access groups
+    return async (update) => {
+        const response = await generateDeploymentTrigger({
+            deploymentID: 'd-' + pipelineId,
+            environmentID,
+            triggerID,
+            apiKeyActive,
+            publicLive,
+            privateLive,
+            ...update,
+        });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't generate api triggers: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            // enqueueSnackbar('Success', { variant: 'success' });
+            dispatch(update);
         }
     };
 };

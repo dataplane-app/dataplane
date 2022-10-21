@@ -8,7 +8,6 @@ import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { IOSSwitch } from '../SchedulerDrawer/IOSSwitch';
 import ApiKey from './ApiKey';
 import ApiTriggerExampleDrawer from '../ApiTriggerExampleDrawer';
-import { useGenerateDeploymentTrigger } from '../../../graphql/generateDeploymentTrigger';
 
 let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
 if (host === '') {
@@ -17,16 +16,13 @@ if (host === '') {
 const PUBLIC = `${host}/publicapi/api-trigger/latest/`;
 const PRIVATE = `https://{{ HOST }}/privateapi/api-trigger/latest/`;
 
-const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, dispatch }) => {
+const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, generateDeploymentTrigger }) => {
     // Global state
     const Environment = useGlobalEnvironmentState();
 
     // Local state
     const [isOpenExampleDrawer, setIsOpenExampleDrawer] = useState(false);
     const [isExamplePrivate, setIsExamplePrivate] = useState(false);
-
-    // Custom GraphQL hooks
-    const generateDeploymentTrigger = useGenerateDeploymentTriggerHook(Environment.id.get(), triggerID, switches, dispatch);
 
     return (
         <Box position="relative" width="100%" mb={10}>
@@ -176,39 +172,3 @@ const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, dispatch }) 
 };
 
 export default DeployAPITRiggerDrawer;
-
-// ---------- Custom Hooks
-
-const useGenerateDeploymentTriggerHook = (environmentID, triggerID, switches, dispatch) => {
-    // GraphQL hook
-    const generateDeploymentTrigger = useGenerateDeploymentTrigger();
-
-    const { enqueueSnackbar } = useSnackbar();
-
-    // URI parameter
-    const { pipelineId } = useParams();
-
-    const { apiKeyActive, publicLive, privateLive } = switches;
-
-    // Get access groups
-    return async (update) => {
-        const response = await generateDeploymentTrigger({
-            deploymentID: 'd-' + pipelineId,
-            environmentID,
-            triggerID,
-            apiKeyActive,
-            publicLive,
-            privateLive,
-            ...update,
-        });
-
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't generate api triggers: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            // enqueueSnackbar('Success', { variant: 'success' });
-            dispatch(update);
-        }
-    };
-};

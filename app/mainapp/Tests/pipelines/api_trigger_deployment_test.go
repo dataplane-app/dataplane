@@ -277,7 +277,7 @@ func TestApiTriggerDeployments(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
-	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete pipeline 200 status code")
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Add deployment 200 status code")
 
 	// -------- Generate Deployment trigger -------------
 	mutation = `mutation { 
@@ -297,7 +297,7 @@ func TestApiTriggerDeployments(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
-	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete pipeline 200 status code")
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Generate deployment trigger 200 status code")
 
 	// -------- Add API key -------------
 	mutation = `mutation { 
@@ -366,7 +366,7 @@ func TestApiTriggerDeployments(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
-	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete pipeline 200 status code")
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Get Deployment trigger 200 status code")
 
 	// -------- Run deployment API trigger -------------
 	client := &http.Client{}
@@ -399,7 +399,7 @@ func TestApiTriggerDeployments(t *testing.T) {
 		t.Errorf("Error in graphql response")
 	}
 
-	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Delete pipeline 200 status code")
+	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Run deployment API trigger 200 status code")
 
 	// -------- Delete API key -------------
 	mutation = `mutation { 
