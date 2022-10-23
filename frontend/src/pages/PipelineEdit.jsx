@@ -69,7 +69,7 @@ export const edgeTypes = {
     custom: CustomEdge,
 };
 
-const useAddUpdatePipelineFlowfunc = () => {
+const useAddUpdatePipelineFlowHook = () => {
     // GraphQL hook
     const addUpdatePipelineFlow = useAddUpdatePipelineFlow();
 
@@ -133,7 +133,7 @@ const Flow = () => {
     // Graphql Hooks
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
     const getPipelineFlow = useGetPipelineFlowHook(Environment.id.get(), pipeline);
-    const updatePipelineFlow = useAddUpdatePipelineFlowfunc();
+    const updatePipelineFlow = useAddUpdatePipelineFlowHook();
 
     //Offset states and refs
     const [offsetHeight, setOffsetHeight] = useState(0);
@@ -614,7 +614,7 @@ const useGetPipelineHook = (environmentID, setPipeline) => {
 };
 
 // ----- Utility function
-function prepareInputForBackend(input) {
+export function prepareInputForBackend(input) {
     const nodesInput = [];
     const edgesInput = [];
 

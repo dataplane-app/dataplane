@@ -1,13 +1,19 @@
 import { MenuItem } from '@mui/material';
 import { useGlobalFlowState } from '../../../pages/PipelineEdit';
+import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
 
 const ScheduleTriggerNodeItem = (props) => {
     // Flow global state
     const FlowState = useGlobalFlowState();
+    const PipelineRunState = useGlobalPipelineRun();
 
     const handleOpenScheduler = () => {
         props.handleCloseMenu();
-        FlowState.isOpenSchedulerDrawer.set(true);
+        if (window.location.pathname.includes('view')) {
+            PipelineRunState.isOpenSchedulerDrawer.set(true);
+        } else {
+            FlowState.isOpenSchedulerDrawer.set(true);
+        }
     };
 
     const handleDeleteElement = () => {
@@ -20,9 +26,11 @@ const ScheduleTriggerNodeItem = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={handleOpenScheduler}>
                 Scheduler
             </MenuItem>
-            <MenuItem sx={{ color: 'error.main' }} onClick={handleDeleteElement}>
-                Delete
-            </MenuItem>
+            {FlowState.isEditorPage.get() && (
+                <MenuItem sx={{ color: 'error.main' }} onClick={handleDeleteElement}>
+                    Delete
+                </MenuItem>
+            )}
         </>
     );
 };

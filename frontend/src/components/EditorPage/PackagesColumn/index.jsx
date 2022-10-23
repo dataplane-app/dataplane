@@ -8,7 +8,9 @@ import { useGetCodePackages } from '../../../graphql/getCodePackages';
 const PackageColumn = forwardRef(({ children, pipeline, packages, setPackages, ...rest }, ref) => {
     const EditorGlobal = useGlobalEditorState();
 
-    const handleEdit = () => {
+    const handleEdit = async () => {
+        const packages = await getCodePackages();
+
         const newFolderMock = {
             id: 'requirements.txt',
             name: 'requirements.txt',
@@ -18,8 +20,8 @@ const PackageColumn = forwardRef(({ children, pipeline, packages, setPackages, .
 
         const activeTabs = EditorGlobal.tabs.get();
         if (activeTabs.some((a) => a.id === 'requirements.txt')) {
-            const file = JSON.parse(JSON.stringify(activeTabs.filter((a) => a.id === 'requirements.txt')[0]));
-            EditorGlobal.selectedFile.set(file);
+            EditorGlobal.selectedFile.diffValue.set(packages);
+            EditorGlobal.selectedFile.content.set(packages);
             return;
         }
 
@@ -100,6 +102,7 @@ export const useGetCodePackagesHook = (pipeline, setPackages) => {
         } else {
             setPackages(response.packages);
             EditorGlobal.selectedFile?.isEditing?.set(false);
+            return response.packages;
         }
     };
 };
