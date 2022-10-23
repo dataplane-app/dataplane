@@ -82,15 +82,13 @@ const ScheduleNode = (props) => {
                 </Tooltip>
             </Grid>
 
-            {isEditorPage && (
-                <Grid position="absolute" bottom={2} right={9} container wrap="nowrap" width="auto" alignItems="center" justifyContent="space-between">
-                    <Box mt={2}>
-                        <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
-                            <ScheduleTriggerNodeItem />
-                        </MoreInfoMenu>
-                    </Box>
-                </Grid>
-            )}
+            <Grid position="absolute" bottom={2} right={9} container wrap="nowrap" width="auto" alignItems="center" justifyContent="space-between">
+                <Box mt={2}>
+                    <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
+                        <ScheduleTriggerNodeItem />
+                    </MoreInfoMenu>
+                </Box>
+            </Grid>
         </Box>
     );
 };

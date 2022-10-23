@@ -45,6 +45,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     const codeEditorRun = useRunCEFileHook(rest.pipeline, setIsRunning);
     const codeEditorStop = useStopCEFileHook(rest.pipeline, EditorGlobal.runID.get(), setIsRunning);
 
+    // Set tabValue
     useEffect(() => {
         const fileIndex = EditorGlobal.tabs
             .get()
@@ -188,6 +189,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             // Make sure a change is made to allow ctrl+s
             if (EditorGlobal.selectedFile.fType.value === 'package' && EditorGlobal.selectedFile.diffValue.get()) {
                 EditorGlobal.installState.set('Running');
+                EditorGlobal.selectedFile.content.set(EditorGlobal.selectedFile.diffValue.value);
             }
         }
     };
