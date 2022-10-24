@@ -3,17 +3,21 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { Downgraded } from '@hookstate/core';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useSnackbar } from 'notistack';
+import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
+import { useAddUpdatePipelineFlow } from '../../../graphql/addUpdatePipelineFlow';
+import { useParams } from 'react-router-dom';
+import { prepareInputForBackend } from '../../../pages/PipelineEdit';
+import { useGetPipelineFlowHook } from '../SchedulerDrawerRunPage';
 
-const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGroup }) => {
+const ProcessTypeDrawer = ({ handleClose, environmentID, workerGroup }) => {
     // React hook form
     const { register, handleSubmit, reset } = useForm();
 
     // Flow state
-    const FlowState = useGlobalFlowState();
+    const FlowState = useGlobalPipelineRun();
 
     // Local state
     const [selectedElement, setSelectedElement] = useState('-');
@@ -22,6 +26,8 @@ const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGrou
 
     // Custom GraphQL hook
     const getWorkerGroups = useGetWorkerGroupsHook(environmentID, setWorkerGroups);
+    const getPipelineFlow = useGetPipelineFlowHook(environmentID);
+    const updatePipelineFlow = useAddUpdatePipelineFlowHook(environmentID, getPipelineFlow);
 
     // Fill the form with selected element information
     useEffect(() => {
@@ -46,19 +52,23 @@ const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGrou
     }, []);
 
     async function onSubmit(data) {
-        setElements((els) =>
-            els.map((el) => {
-                if (el.id === selectedElement.id) {
-                    el.data = {
-                        ...el.data,
-                        name: data.name,
-                        description: data.description,
-                        workerGroup: data.workerGroup === 'default' ? '' : data.workerGroup,
-                    };
-                }
-                return el;
-            })
-        );
+        const elements = JSON.parse(JSON.stringify(FlowState.elements.value));
+
+        const elementsNew = elements.map((el) => {
+            if (el.id === selectedElement.id) {
+                el.data = {
+                    ...el.data,
+                    name: data.name,
+                    description: data.description,
+                    workerGroup: data.workerGroup === 'default' ? '' : data.workerGroup,
+                };
+            }
+            return el;
+        });
+
+        FlowState.elements.set(elementsNew);
+        updatePipelineFlow(elementsNew);
+
         handleClose();
     }
 
@@ -139,6 +149,34 @@ const useGetWorkerGroupsHook = (environmentID, setWorkerGroups) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setWorkerGroups(response);
+        }
+    };
+};
+
+const useAddUpdatePipelineFlowHook = (environmentID, getPipelineFlow) => {
+    // GraphQL hook
+    const addUpdatePipelineFlow = useAddUpdatePipelineFlow();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Update pipeline flow
+    return async (rawInput) => {
+        // Prepare input to match the structure in the backend
+        const input = prepareInputForBackend(rawInput);
+
+        const response = await addUpdatePipelineFlow({ input, pipelineID: pipelineId, environmentID });
+
+        if (response.r || response.error) {
+            closeSnackbar();
+            enqueueSnackbar(`Can't update flow: ` + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getPipelineFlow();
         }
     };
 };
