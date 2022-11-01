@@ -20,7 +20,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/lestrrat-go/jwx v1.2.25
 	github.com/matoous/go-nanoid/v2 v2.0.0
-	github.com/nats-io/nats.go v1.16.0
+	github.com/nats-io/nats.go v1.19.0
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/pieterclaerhout/go-log v1.14.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
