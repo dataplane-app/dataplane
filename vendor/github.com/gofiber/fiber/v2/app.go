@@ -9,7 +9,6 @@ package fiber
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"net"
@@ -30,7 +29,7 @@ import (
 )
 
 // Version of current fiber package
-const Version = "2.38.1"
+const Version = "2.39.0"
 
 // Handler defines a function to serve HTTP requests.
 type Handler = func(*Ctx) error
@@ -421,6 +420,11 @@ type Static struct {
 	// Optional. Default value 0.
 	MaxAge int `json:"max_age"`
 
+	// ModifyResponse defines a function that allows you to alter the response.
+	//
+	// Optional. Default: nil
+	ModifyResponse Handler
+
 	// Next defines a function to skip this middleware when returned true.
 	//
 	// Optional. Default: nil
@@ -636,6 +640,24 @@ func (app *App) GetRoute(name string) Route {
 	}
 
 	return Route{}
+}
+
+// GetRoutes Get all routes. When filterUseOption equal to true, it will filter the routes registered by the middleware.
+func (app *App) GetRoutes(filterUseOption ...bool) []Route {
+	var rs []Route
+	var filterUse bool
+	if len(filterUseOption) != 0 {
+		filterUse = filterUseOption[0]
+	}
+	for _, routes := range app.stack {
+		for _, route := range routes {
+			if filterUse && route.use {
+				continue
+			}
+			rs = append(rs, *route)
+		}
+	}
+	return rs
 }
 
 // Use registers a middleware route that will match requests
@@ -859,11 +881,6 @@ func (app *App) Test(req *http.Request, msTimeout ...int) (resp *http.Response, 
 	if err != nil {
 		return nil, err
 	}
-
-	// adding back the query from URL, since dump cleans it
-	dumps := bytes.Split(dump, []byte(" "))
-	dumps[1] = []byte(req.URL.String())
-	dump = bytes.Join(dumps, []byte(" "))
 
 	// Create test connection
 	conn := new(testConn)
