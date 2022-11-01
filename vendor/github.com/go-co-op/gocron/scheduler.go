@@ -26,8 +26,9 @@ type Scheduler struct {
 	runningMutex  sync.RWMutex
 	running       bool // represents if the scheduler is running at the moment or not
 
-	time     timeWrapper // wrapper around time.Time
-	executor *executor   // executes jobs passed via chan
+	time     TimeWrapper // wrapper around time.Time
+	timer    func(d time.Duration, f func()) *time.Timer
+	executor *executor // executes jobs passed via chan
 
 	tags sync.Map // for storing tags when unique tags is set
 
@@ -36,6 +37,9 @@ type Scheduler struct {
 	waitForInterval bool // defaults jobs to waiting for first interval to start
 	singletonMode   bool // defaults all jobs to use SingletonMode()
 	jobCreated      bool // so the scheduler knows a job was created prior to calling Every or Cron
+
+	startBlockingStopChanMutex sync.Mutex
+	startBlockingStopChan      chan struct{} // stops the scheduler
 }
 
 // days in a week
@@ -52,6 +56,7 @@ func NewScheduler(loc *time.Location) *Scheduler {
 		time:       &trueTime{},
 		executor:   &executor,
 		tagsUnique: false,
+		timer:      afterFunc,
 	}
 }
 
@@ -62,10 +67,14 @@ func (s *Scheduler) SetMaxConcurrentJobs(n int, mode limitMode) {
 	s.executor.limitMode = mode
 }
 
-// StartBlocking starts all jobs and blocks the current thread
+// StartBlocking starts all jobs and blocks the current thread.
+// This blocking method can be stopped with Stop() from a separate goroutine.
 func (s *Scheduler) StartBlocking() {
 	s.StartAsync()
-	<-make(chan bool)
+	s.startBlockingStopChanMutex.Lock()
+	s.startBlockingStopChan = make(chan struct{}, 1)
+	s.startBlockingStopChanMutex.Unlock()
+	<-s.startBlockingStopChan
 }
 
 // StartAsync starts all jobs without blocking the current thread
@@ -75,7 +84,7 @@ func (s *Scheduler) StartAsync() {
 	}
 }
 
-//start starts the scheduler, scheduling and running jobs
+// start starts the scheduler, scheduling and running jobs
 func (s *Scheduler) start() {
 	go s.executor.start()
 	s.setRunning(true)
@@ -84,7 +93,7 @@ func (s *Scheduler) start() {
 
 func (s *Scheduler) runJobs(jobs []*Job) {
 	for _, job := range jobs {
-		s.scheduleNextRun(job)
+		s.runContinuous(job)
 	}
 }
 
@@ -155,18 +164,13 @@ type nextRun struct {
 }
 
 // scheduleNextRun Compute the instant when this Job should run next
-func (s *Scheduler) scheduleNextRun(job *Job) {
+func (s *Scheduler) scheduleNextRun(job *Job) (bool, nextRun) {
 	now := s.now()
-	lastRun := job.LastRun()
 	if !s.jobPresent(job) {
-		return
+		return false, nextRun{}
 	}
 
-	if job.getStartsImmediately() {
-		s.run(job)
-		lastRun = now
-		job.setStartsImmediately(false)
-	}
+	lastRun := now
 
 	if job.neverRan() {
 		// Increment startAtTime to the future
@@ -183,32 +187,25 @@ func (s *Scheduler) scheduleNextRun(job *Job) {
 				job.startAtTime = job.startAtTime.Add(duration * count)
 			}
 		}
-		lastRun = now
+	} else {
+		lastRun = job.LastRun()
 	}
 
 	if !job.shouldRun() {
 		s.RemoveByReference(job)
-		return
+		return false, nextRun{}
 	}
 
 	next := s.durationToNextRun(lastRun, job)
 
+	job.setLastRun(job.NextRun())
 	if next.dateTime.IsZero() {
-		job.setNextRun(lastRun.Add(next.duration))
+		next.dateTime = lastRun.Add(next.duration)
+		job.setNextRun(next.dateTime)
 	} else {
 		job.setNextRun(next.dateTime)
 	}
-	job.setTimer(time.AfterFunc(next.duration, func() {
-		if !next.dateTime.IsZero() {
-			for {
-				if time.Now().Unix() >= next.dateTime.Unix() {
-					break
-				}
-			}
-		}
-		s.run(job)
-		s.scheduleNextRun(job)
-	}))
+	return true, next
 }
 
 // durationToNextRun calculate how much time to the next run, depending on unit
@@ -267,7 +264,7 @@ func (s *Scheduler) calculateMonths(job *Job, lastRun time.Time) nextRun {
 
 		return nextRunResult
 	}
-	next := lastRunRoundedMidnight.Add(job.getFirstAtTime()).AddDate(0, job.interval, 0)
+	next := lastRunRoundedMidnight.Add(job.getFirstAtTime()).AddDate(0, job.getInterval(), 0)
 	return nextRun{duration: until(lastRun, next), dateTime: next}
 }
 
@@ -275,7 +272,7 @@ func calculateNextRunForLastDayOfMonth(s *Scheduler, job *Job, lastRun time.Time
 	// Calculate the last day of the next month, by adding job.interval+1 months (i.e. the
 	// first day of the month after the next month), and subtracting one day, unless the
 	// last run occurred before the end of the month.
-	addMonth := job.interval
+	addMonth := job.getInterval()
 	atTime := job.getAtTime(lastRun)
 	if testDate := lastRun.AddDate(0, 0, 1); testDate.Month() != lastRun.Month() &&
 		!s.roundToMidnight(lastRun).Add(atTime).After(lastRun) {
@@ -298,14 +295,14 @@ func calculateNextRunForMonth(s *Scheduler, job *Job, lastRun time.Time, dayOfMo
 	difference := absDuration(lastRun.Sub(jobDay))
 	next := lastRun
 	if jobDay.Before(lastRun) { // shouldn't run this month; schedule for next interval minus day difference
-		next = next.AddDate(0, job.interval, -0)
+		next = next.AddDate(0, job.getInterval(), -0)
 		next = next.Add(-difference)
 		natTime = job.getFirstAtTime()
 	} else {
-		if job.interval == 1 && !jobDay.Equal(lastRun) { // every month counts current month
-			next = next.AddDate(0, job.interval-1, 0)
+		if job.getInterval() == 1 && !jobDay.Equal(lastRun) { // every month counts current month
+			next = next.AddDate(0, job.getInterval()-1, 0)
 		} else { // should run next month interval
-			next = next.AddDate(0, job.interval, 0)
+			next = next.AddDate(0, job.getInterval(), 0)
 			natTime = job.getFirstAtTime()
 		}
 		next = next.Add(difference)
@@ -328,21 +325,21 @@ func (s *Scheduler) calculateWeekday(job *Job, lastRun time.Time) nextRun {
 }
 
 func (s *Scheduler) calculateWeeks(job *Job, lastRun time.Time) nextRun {
-	totalDaysDifference := int(job.interval) * 7
+	totalDaysDifference := int(job.getInterval()) * 7
 	next := s.roundToMidnight(lastRun).Add(job.getFirstAtTime()).AddDate(0, 0, totalDaysDifference)
 	return nextRun{duration: until(lastRun, next), dateTime: next}
 }
 
 func (s *Scheduler) calculateTotalDaysDifference(lastRun time.Time, daysToWeekday int, job *Job) int {
-	if job.interval > 1 && job.RunCount() < len(job.Weekdays()) { // just count weeks after the first jobs were done
-		return daysToWeekday
-	}
-	if job.interval > 1 && job.RunCount() >= len(job.Weekdays()) {
-		if daysToWeekday > 0 {
-			return int(job.interval)*7 - (allWeekDays - daysToWeekday)
+	if job.getInterval() > 1 {
+		// just count weeks after the first jobs were done
+		if job.RunCount() < len(job.Weekdays()) {
+			return daysToWeekday
 		}
-
-		return int(job.interval) * 7
+		if daysToWeekday > 0 {
+			return int(job.getInterval())*7 - (allWeekDays - daysToWeekday)
+		}
+		return int(job.getInterval()) * 7
 	}
 
 	if daysToWeekday == 0 { // today, at future time or already passed
@@ -356,8 +353,7 @@ func (s *Scheduler) calculateTotalDaysDifference(lastRun time.Time, daysToWeekda
 }
 
 func (s *Scheduler) calculateDays(job *Job, lastRun time.Time) nextRun {
-
-	if job.interval == 1 {
+	if job.getInterval() == 1 {
 		lastRunDayPlusJobAtTime := s.roundToMidnight(lastRun).Add(job.getAtTime(lastRun))
 
 		// handle occasional occurrence of job running to quickly / too early such that last run was within a second of now
@@ -371,7 +367,7 @@ func (s *Scheduler) calculateDays(job *Job, lastRun time.Time) nextRun {
 		}
 	}
 
-	nextRunAtTime := s.roundToMidnight(lastRun).Add(job.getFirstAtTime()).AddDate(0, 0, job.interval).In(s.Location())
+	nextRunAtTime := s.roundToMidnight(lastRun).Add(job.getFirstAtTime()).AddDate(0, 0, job.getInterval()).In(s.Location())
 	return nextRun{duration: until(lastRun, nextRunAtTime), dateTime: nextRunAtTime}
 }
 
@@ -404,7 +400,7 @@ func (s *Scheduler) calculateDuration(job *Job) time.Duration {
 		}
 	}
 
-	interval := job.interval
+	interval := job.getInterval()
 	switch job.getUnit() {
 	case milliseconds:
 		return time.Duration(interval) * time.Millisecond
@@ -418,7 +414,8 @@ func (s *Scheduler) calculateDuration(job *Job) time.Duration {
 }
 
 func shouldRunAtSpecificTime(job *Job) bool {
-	return job.getAtTime(job.lastRun) != 0
+	jobLastRun := job.LastRun()
+	return job.getAtTime(jobLastRun) != 0
 }
 
 func (s *Scheduler) remainingDaysToWeekday(lastRun time.Time, job *Job) int {
@@ -475,40 +472,51 @@ func (s *Scheduler) NextRun() (*Job, time.Time) {
 	return s.Jobs()[0], s.Jobs()[0].NextRun()
 }
 
+// EveryRandom schedules a new period Job that runs at random intervals
+// between the provided lower (inclusive) and upper (inclusive) bounds.
+// The default unit is Seconds(). Call a different unit in the chain
+// if you would like to change that. For example, Minutes(), Hours(), etc.
+func (s *Scheduler) EveryRandom(lower, upper int) *Scheduler {
+	job := s.newJob(0)
+	if s.updateJob || s.jobCreated {
+		job = s.getCurrentJob()
+	}
+
+	job.setRandomInterval(lower, upper)
+
+	if s.updateJob || s.jobCreated {
+		s.setJobs(append(s.Jobs()[:len(s.Jobs())-1], job))
+		if s.jobCreated {
+			s.jobCreated = false
+		}
+	} else {
+		s.setJobs(append(s.Jobs(), job))
+	}
+
+	return s
+}
+
 // Every schedules a new periodic Job with an interval.
 // Interval can be an int, time.Duration or a string that
 // parses with time.ParseDuration().
 // Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 func (s *Scheduler) Every(interval interface{}) *Scheduler {
-	job := &Job{}
+	job := s.newJob(0)
 	if s.updateJob || s.jobCreated {
 		job = s.getCurrentJob()
 	}
 
 	switch interval := interval.(type) {
 	case int:
-		if !(s.updateJob || s.jobCreated) {
-			job = s.newJob(interval)
-		} else {
-			job = s.newJob(interval)
-		}
+		job.interval = interval
 		if interval <= 0 {
 			job.error = wrapOrError(job.error, ErrInvalidInterval)
 		}
 	case time.Duration:
-		if !(s.updateJob || s.jobCreated) {
-			job = s.newJob(0)
-		} else {
-			job.interval = 0
-		}
+		job.interval = 0
 		job.setDuration(interval)
 		job.setUnit(duration)
 	case string:
-		if !(s.updateJob || s.jobCreated) {
-			job = s.newJob(0)
-		} else {
-			job.interval = 0
-		}
 		d, err := time.ParseDuration(interval)
 		if err != nil {
 			job.error = wrapOrError(job.error, err)
@@ -516,11 +524,6 @@ func (s *Scheduler) Every(interval interface{}) *Scheduler {
 		job.setDuration(d)
 		job.setUnit(duration)
 	default:
-		if !(s.updateJob || s.jobCreated) {
-			job = s.newJob(0)
-		} else {
-			job.interval = 0
-		}
 		job.error = wrapOrError(job.error, ErrInvalidIntervalType)
 	}
 
@@ -543,9 +546,58 @@ func (s *Scheduler) run(job *Job) {
 
 	job.mu.Lock()
 	defer job.mu.Unlock()
-	job.setLastRun(s.now())
+
+	if job.runWithDetails {
+		switch len(job.parameters) {
+		case job.parametersLen:
+			job.parameters = append(job.parameters, job.copy())
+		case job.parametersLen + 1:
+			job.parameters[job.parametersLen] = job.copy()
+		default:
+			// something is really wrong and we should never get here
+			job.error = wrapOrError(job.error, ErrInvalidFunctionParameters)
+			return
+		}
+	}
+
+	s.executor.jobFunctions <- job.jobFunction.copy()
 	job.runCount++
-	s.executor.jobFunctions <- job.jobFunction
+}
+
+func (s *Scheduler) runContinuous(job *Job) {
+	shouldRun, next := s.scheduleNextRun(job)
+	if !shouldRun {
+		return
+	}
+
+	if !job.getStartsImmediately() {
+		job.setStartsImmediately(true)
+	} else {
+		s.run(job)
+	}
+
+	nextRun := next.dateTime.Sub(s.now())
+	if nextRun < 0 {
+		time.Sleep(absDuration(nextRun))
+		shouldRun, next := s.scheduleNextRun(job)
+		if !shouldRun {
+			return
+		}
+		nextRun = next.dateTime.Sub(s.now())
+	}
+
+	job.setTimer(s.timer(nextRun, func() {
+		if !next.dateTime.IsZero() {
+			for {
+				n := s.now().UnixNano() - next.dateTime.UnixNano()
+				if n >= 0 {
+					break
+				}
+				s.time.Sleep(time.Duration(n))
+			}
+		}
+		s.runContinuous(job)
+	}))
 }
 
 // RunAll run all Jobs regardless if they are scheduled to run or not
@@ -696,6 +748,17 @@ Jobs:
 	return nil, ErrJobNotFoundWithTag
 }
 
+// MonthFirstWeekday sets the job to run the first specified weekday of the month
+func (s *Scheduler) MonthFirstWeekday(weekday time.Weekday) *Scheduler {
+	_, month, day := s.time.Now(time.UTC).Date()
+
+	if day < 7 {
+		return s.Cron(fmt.Sprintf("0 0 %d %d %d", day, month, weekday))
+	}
+
+	return s.Cron(fmt.Sprintf("0 0 %d %d %d", day, month+1, weekday))
+}
+
 // LimitRunsTo limits the number of executions of this job to n.
 // Upon reaching the limit, the job is removed from the scheduler.
 func (s *Scheduler) LimitRunsTo(i int) *Scheduler {
@@ -770,15 +833,23 @@ func (s *Scheduler) Stop() {
 
 func (s *Scheduler) stop() {
 	s.setRunning(false)
+	s.stopJobs(s.jobs)
 	s.executor.stop()
+	s.StopBlockingChan()
 }
 
-// Do specifies the jobFunc that should be called every time the Job runs
-func (s *Scheduler) Do(jobFun interface{}, params ...interface{}) (*Job, error) {
+func (s *Scheduler) stopJobs(jobs []*Job) {
+	for _, job := range jobs {
+		job.stop()
+	}
+}
+
+func (s *Scheduler) doCommon(jobFun interface{}, params ...interface{}) (*Job, error) {
 	job := s.getCurrentJob()
 
 	jobUnit := job.getUnit()
-	if job.getAtTime(job.lastRun) != 0 && (jobUnit <= hours || jobUnit >= duration) {
+	jobLastRun := job.LastRun()
+	if job.getAtTime(jobLastRun) != 0 && (jobUnit <= hours || jobUnit >= duration) {
 		job.error = wrapOrError(job.error, ErrAtTimeNotSupported)
 	}
 
@@ -786,7 +857,7 @@ func (s *Scheduler) Do(jobFun interface{}, params ...interface{}) (*Job, error) 
 		job.error = wrapOrError(job.error, ErrWeekdayNotSupported)
 	}
 
-	if job.unit != crontab && job.interval == 0 {
+	if job.unit != crontab && job.getInterval() == 0 {
 		if job.unit != duration {
 			job.error = wrapOrError(job.error, ErrInvalidInterval)
 		}
@@ -806,13 +877,6 @@ func (s *Scheduler) Do(jobFun interface{}, params ...interface{}) (*Job, error) 
 		return nil, ErrNotAFunction
 	}
 
-	f := reflect.ValueOf(jobFun)
-	if len(params) != f.Type().NumIn() {
-		s.RemoveByReference(job)
-		job.error = wrapOrError(job.error, ErrWrongParams)
-		return nil, job.error
-	}
-
 	fname := getFunctionName(jobFun)
 	if job.name != fname {
 		job.function = jobFun
@@ -820,12 +884,46 @@ func (s *Scheduler) Do(jobFun interface{}, params ...interface{}) (*Job, error) 
 		job.name = fname
 	}
 
+	f := reflect.ValueOf(jobFun)
+	expectedParamLength := f.Type().NumIn()
+	if job.runWithDetails {
+		expectedParamLength--
+	}
+
+	if len(params) != expectedParamLength {
+		s.RemoveByReference(job)
+		job.error = wrapOrError(job.error, ErrWrongParams)
+		return nil, job.error
+	}
+
+	if job.runWithDetails && f.Type().In(len(params)).Kind() != reflect.ValueOf(*job).Kind() {
+		s.RemoveByReference(job)
+		job.error = wrapOrError(job.error, ErrDoWithJobDetails)
+		return nil, job.error
+	}
+
 	// we should not schedule if not running since we can't foresee how long it will take for the scheduler to start
 	if s.IsRunning() {
-		s.scheduleNextRun(job)
+		s.runContinuous(job)
 	}
 
 	return job, nil
+}
+
+// Do specifies the jobFunc that should be called every time the Job runs
+func (s *Scheduler) Do(jobFun interface{}, params ...interface{}) (*Job, error) {
+	return s.doCommon(jobFun, params...)
+}
+
+// DoWithJobDetails specifies the jobFunc that should be called every time the Job runs
+// and additionally passes the details of the current job to the jobFunc.
+// The last argument of the function must be a gocron.Job that will be passed by
+// the scheduler when the function is called.
+func (s *Scheduler) DoWithJobDetails(jobFun interface{}, params ...interface{}) (*Job, error) {
+	job := s.getCurrentJob()
+	job.runWithDetails = true
+	job.parametersLen = len(params)
+	return s.doCommon(jobFun, params...)
 }
 
 // At schedules the Job at a specific time of day in the form "HH:MM:SS" or "HH:MM"
@@ -1076,7 +1174,7 @@ func (s *Scheduler) Sunday() *Scheduler {
 
 func (s *Scheduler) getCurrentJob() *Job {
 	if len(s.Jobs()) == 0 {
-		s.setJobs([]*Job{{}})
+		s.setJobs([]*Job{s.newJob(0)})
 		s.jobCreated = true
 	}
 	return s.Jobs()[len(s.Jobs())-1]
@@ -1121,6 +1219,12 @@ func (s *Scheduler) Update() (*Job, error) {
 	s.updateJob = false
 	job.stop()
 	job.ctx, job.cancel = context.WithCancel(context.Background())
+	job.setStartsImmediately(false)
+
+	if job.runWithDetails {
+		return s.DoWithJobDetails(job.function, job.parameters...)
+	}
+
 	return s.Do(job.function, job.parameters...)
 }
 
@@ -1138,7 +1242,12 @@ func (s *Scheduler) cron(cronExpression string, withSeconds bool) *Scheduler {
 		job = s.getCurrentJob()
 	}
 
-	withLocation := fmt.Sprintf("CRON_TZ=%s %s", s.location.String(), cronExpression)
+	var withLocation string
+	if strings.HasPrefix(cronExpression, "TZ=") || strings.HasPrefix(cronExpression, "CRON_TZ=") {
+		withLocation = cronExpression
+	} else {
+		withLocation = fmt.Sprintf("CRON_TZ=%s %s", s.location.String(), cronExpression)
+	}
 
 	var (
 		cronSchedule cron.Schedule
@@ -1202,4 +1311,26 @@ func (s *Scheduler) StartImmediately() *Scheduler {
 	job := s.getCurrentJob()
 	job.startsImmediately = true
 	return s
+}
+
+// CustomTime takes an in a struct that implements the TimeWrapper interface
+// allowing the caller to mock the time used by the scheduler. This is useful
+// for tests relying on gocron.
+func (s *Scheduler) CustomTime(customTimeWrapper TimeWrapper) {
+	s.time = customTimeWrapper
+}
+
+// CustomTimer takes in a function that mirrors the time.AfterFunc
+// This is used to mock the time.AfterFunc function used by the scheduler
+// for testing long intervals in a short amount of time.
+func (s *Scheduler) CustomTimer(customTimer func(d time.Duration, f func()) *time.Timer) {
+	s.timer = customTimer
+}
+
+func (s *Scheduler) StopBlockingChan() {
+	s.startBlockingStopChanMutex.Lock()
+	if s.startBlockingStopChan != nil {
+		s.startBlockingStopChan <- struct{}{}
+	}
+	s.startBlockingStopChanMutex.Unlock()
 }
