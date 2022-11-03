@@ -12,14 +12,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func ApiAuthMiddle(publicOrPrivate string) func(*fiber.Ctx) error {
+func ApiAuthMiddleDeployment(publicOrPrivate string) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
 		key := string(c.Request().Header.Peek("apikey"))
 		triggerID := string(c.Params("id"))
 
 		// Get trigger info
-		trigger := models.PipelineApiTriggers{}
+		trigger := models.DeploymentApiTriggers{}
 
 		err := database.DBConn.Where("trigger_id = ?", triggerID).First(&trigger).Error
 		if err != nil {
@@ -48,7 +48,7 @@ func ApiAuthMiddle(publicOrPrivate string) func(*fiber.Ctx) error {
 		}
 
 		if trigger.APIKeyActive == true {
-			keys := []models.PipelineApiKeys{}
+			keys := []models.DeploymentApiKeys{}
 
 			err := database.DBConn.Where("trigger_id = ? and (expires_at > now() or expires_at is NULL)", triggerID).Find(&keys).Error
 			if err != nil {
@@ -89,7 +89,7 @@ func ApiAuthMiddle(publicOrPrivate string) func(*fiber.Ctx) error {
 
 		// --- Pass through context
 		c.Locals("environmentID", trigger.EnvironmentID)
-		c.Locals("pipelineID", trigger.PipelineID)
+		c.Locals("deploymentID", trigger.DeploymentID)
 
 		return c.Next()
 	}
