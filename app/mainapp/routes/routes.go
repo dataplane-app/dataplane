@@ -451,7 +451,7 @@ func Setup(port string) *fiber.App {
 	})
 
 	// Deployment API Trigger public
-	app.Post("/publicapi/api-trigger/:version/:id", auth.ApiAuthMiddle("public"), func(c *fiber.Ctx) error {
+	app.Post("/publicapi/deployment/api-trigger/:version/:id", auth.ApiAuthMiddleDeployment("public"), func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
 		pipelineID := c.Locals("deploymentID").(string)
 		environmentID := c.Locals("environmentID").(string)
@@ -468,7 +468,7 @@ func Setup(port string) *fiber.App {
 	})
 
 	// Deployment API Trigger private
-	app.Post("/publicapi/api-trigger/:version/:id", auth.ApiAuthMiddle("private"), func(c *fiber.Ctx) error {
+	app.Post("/publicapi/deployment/api-trigger/:version/:id", auth.ApiAuthMiddleDeployment("private"), func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
 		pipelineID := c.Locals("deploymentID").(string)
 		environmentID := c.Locals("environmentID").(string)
