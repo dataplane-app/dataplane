@@ -13,6 +13,7 @@ import { getColor } from '../utils';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import cronZone from '../../../utils/cronZone';
 import { getTimeZone } from '../../../utils/formatDate';
+import { useParams } from 'react-router-dom';
 
 const ScheduleNode = (props) => {
     // Theme hook
@@ -26,6 +27,8 @@ const ScheduleNode = (props) => {
     const [, setIsSelected] = useState(false);
     const [borderColor, setBorderColor] = useState('#c4c4c4');
     const [schedule, setSchedule] = useState(null);
+
+    const { pipelineId } = useParams();
 
     useEffect(() => {
         setIsEditorPage(FlowState.isEditorPage.get());
@@ -82,13 +85,15 @@ const ScheduleNode = (props) => {
                 </Tooltip>
             </Grid>
 
-            <Grid position="absolute" bottom={2} right={9} container wrap="nowrap" width="auto" alignItems="center" justifyContent="space-between">
-                <Box mt={2}>
-                    <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
-                        <ScheduleTriggerNodeItem />
-                    </MoreInfoMenu>
-                </Box>
-            </Grid>
+            {pipelineId ? (
+                <Grid position="absolute" bottom={2} right={9} container wrap="nowrap" width="auto" alignItems="center" justifyContent="space-between">
+                    <Box mt={2}>
+                        <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
+                            <ScheduleTriggerNodeItem />
+                        </MoreInfoMenu>
+                    </Box>
+                </Grid>
+            ) : null}
         </Box>
     );
 };
