@@ -11,34 +11,52 @@ type PipelineRuns {
 }
 
 type WorkerTasks {
-    task_id:        String!
+    task_id: String!
     environment_id: String!
-    run_id:         String!
-    worker_group:   String!
-    worker_id:      String!
-    pipeline_id:    String!
-    node_id:        String!
-    start_dt:       Time
-    end_dt:         Time
-    status:         String!
-    reason:         String!
+    run_id: String!
+    worker_group: String!
+    worker_id: String!
+    pipeline_id: String!
+    node_id: String!
+    start_dt: Time
+    end_dt: Time
+    status: String!
+    reason: String!
 }
 
 type PipelineApiTriggers {
     triggerID: String!
-	pipelineID: String!
-	environmentID: String!
-	apiKeyActive: Boolean!
-	publicLive: Boolean!
-	privateLive: Boolean!
+    pipelineID: String!
+    environmentID: String!
+    apiKeyActive: Boolean!
+    publicLive: Boolean!
+    privateLive: Boolean!
+}
+
+type DeploymentApiTriggers {
+    triggerID: String!
+    deploymentID: String!
+    environmentID: String!
+    apiKeyActive: Boolean!
+    publicLive: Boolean!
+    privateLive: Boolean!
 }
 
 type PipelineApiKeys {
     triggerID: String!
     apiKey: String!
     apiKeyTail: String!
-	pipelineID: String!
-	environmentID: String!
+    pipelineID: String!
+    environmentID: String!
+    expiresAt: Time
+}
+
+type DeploymentApiKeys {
+    triggerID: String!
+    apiKey: String!
+    apiKeyTail: String!
+    deploymentID: String!
+    environmentID: String!
     expiresAt: Time
 }
 
@@ -50,7 +68,7 @@ extend type Query {
     """
     pipelineTasksRun(pipelineID: String!, runID: String!, environmentID: String!): [WorkerTasks!]!
 
-        """
+    """
     Get a single pipeline run status.
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
@@ -72,13 +90,26 @@ extend type Query {
     getPipelineTrigger(pipelineID: String!, environmentID: String!): PipelineApiTriggers!
 
     """
+    Get deployment api trigger.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    getDeploymentTrigger(deploymentID: String!, environmentID: String!): DeploymentApiTriggers!
+
+    """
     Get api keys for a specific pipeline.
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
     getPipelineApiKeys(pipelineID: String!, environmentID: String!): [PipelineApiKeys!]!
-}
 
+    """
+    Get api keys for a specific deployment.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    getDeploymentApiKeys(deploymentID: String!, environmentID: String!): [DeploymentApiKeys!]!
+}
 
 extend type Mutation {
     """
@@ -104,16 +135,37 @@ extend type Mutation {
     generatePipelineTrigger(pipelineID: String!, environmentID: String!, triggerID: String!, apiKeyActive: Boolean!, publicLive: Boolean!, privateLive: Boolean!): String!
 
     """
+    Generate deployment api trigger.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    generateDeploymentTrigger(deploymentID: String!, environmentID: String!, triggerID: String!, apiKeyActive: Boolean!, publicLive: Boolean!, privateLive: Boolean!): String!
+
+    """
     Add pipeline api key.
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
-    addPipelineApiKey(triggerID: String!, apiKey: String!, pipelineID: String!,  environmentID: String!, expiresAt: Time): String!
+    addPipelineApiKey(triggerID: String!, apiKey: String!, pipelineID: String!, environmentID: String!, expiresAt: Time): String!
+
+    """
+    Add deployment api key.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    addDeploymentApiKey(triggerID: String!, apiKey: String!, deploymentID: String!, environmentID: String!, expiresAt: Time): String!
 
     """
     Delete pipeline api key.
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
     """
-    deletePipelineApiKey(apiKey: String!, pipelineID: String!,  environmentID: String!): String!
+    deletePipelineApiKey(apiKey: String!, pipelineID: String!, environmentID: String!): String!
+
+    """
+    Delete deployment api key.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    deleteDeploymentApiKey(apiKey: String!, deploymentID: String!, environmentID: String!): String!
 }

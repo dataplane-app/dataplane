@@ -10,20 +10,18 @@ import (
 	"regexp"
 	"strings"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
-
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
-
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
-
 	"gorm.io/gorm"
 )
 
+// CreateSecret is the resolver for the createSecret field.
 func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraphql.AddSecretsInput) (*models.Secrets, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -83,6 +81,7 @@ func (r *mutationResolver) CreateSecret(ctx context.Context, input *privategraph
 	return &secretData, nil
 }
 
+// UpdateSecret is the resolver for the updateSecret field.
 func (r *mutationResolver) UpdateSecret(ctx context.Context, input *privategraphql.UpdateSecretsInput) (*models.Secrets, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -119,6 +118,7 @@ func (r *mutationResolver) UpdateSecret(ctx context.Context, input *privategraph
 	return &secretData, nil
 }
 
+// UpdateSecretValue is the resolver for the updateSecretValue field.
 func (r *mutationResolver) UpdateSecretValue(ctx context.Context, secret string, value string, environmentID string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -203,6 +203,7 @@ func (r *mutationResolver) UpdateSecretValue(ctx context.Context, secret string,
 	return &response, nil
 }
 
+// UpdateDeleteSecret is the resolver for the updateDeleteSecret field.
 func (r *mutationResolver) UpdateDeleteSecret(ctx context.Context, secret string, environmentID string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -235,6 +236,7 @@ func (r *mutationResolver) UpdateDeleteSecret(ctx context.Context, secret string
 	return &response, nil
 }
 
+// GetSecret is the resolver for the getSecret field.
 func (r *queryResolver) GetSecret(ctx context.Context, secret string, environmentID string) (*models.Secrets, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -267,6 +269,7 @@ func (r *queryResolver) GetSecret(ctx context.Context, secret string, environmen
 	return &s, nil
 }
 
+// GetSecrets is the resolver for the getSecrets field.
 func (r *queryResolver) GetSecrets(ctx context.Context, environmentID string) ([]*models.Secrets, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

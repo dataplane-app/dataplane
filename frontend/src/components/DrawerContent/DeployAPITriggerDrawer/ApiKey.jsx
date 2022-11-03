@@ -1,16 +1,16 @@
 import { Box, Button, FormControl, InputLabel, List, ListItem, MenuItem, Select, Typography, useTheme } from '@mui/material';
 import { useEffect, useReducer } from 'react';
-import { IOSSwitch } from '../../SchedulerDrawer/IOSSwitch';
+import { IOSSwitch } from '../SchedulerDrawer/IOSSwitch';
 import { customAlphabet } from 'nanoid';
 import { DateTime } from 'luxon';
-import { useAddPipelineApiKey } from '../../../../graphql/addPipelineApiKey';
 import { useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { useGetPipelineApiKeys } from '../../../../graphql/getPipelineApiKeys';
-import { useDeletePipelineApiKey } from '../../../../graphql/deletePipelineApiKey';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import AlertDialog from './AlertDialog';
+import { useAddDeploymentApiKey } from '../../../graphql/addDeploymentApiKey';
+import { useGetDeploymentApiKeys } from '../../../graphql/getDeploymentApiKeys';
+import { useDeleteDeploymentApiKey } from '../../../graphql/deleteDeploymentApiKey';
 
 const initialState = {
     storedKeys: [],
@@ -32,21 +32,21 @@ function reducer(state, action) {
     }
 }
 
-export default function ApiKey({ apiKeyActive, generatePipelineTrigger, environmentID, triggerID }) {
+export default function ApiKey({ apiKeyActive, generateDeploymentTrigger, environmentID, triggerID }) {
     const [state, dispatch] = useReducer(reducer, initialState);
 
-    const addPipelineApiKey = useAddPipelineApiKeyHook(environmentID, triggerID, dispatch);
-    const getPipelineApiKeys = useGetPipelineApiKeysHook(environmentID, dispatch);
-    const deletePipelineApiKey = useDeletePipelineApiKeyHook(environmentID, dispatch);
+    const addDeploymentApiKey = useAddDeploymentApiKeyHook(environmentID, triggerID, dispatch);
+    const getDeploymentApiKeys = useGetDeploymentApiKeysHook(environmentID, dispatch);
+    const deleteDeploymentApiKey = useDeleteDevelopmentApiKeyHook(environmentID, dispatch);
 
     useEffect(() => {
-        getPipelineApiKeys();
+        getDeploymentApiKeys();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [environmentID]);
 
     function onGenerateKey() {
         const expiresAt = state.expiration === 0 ? null : DateTime.now().plus({ months: state.expiration }).toISO();
-        addPipelineApiKey(expiresAt);
+        addDeploymentApiKey(expiresAt);
     }
 
     const theme = useTheme();
@@ -75,7 +75,7 @@ export default function ApiKey({ apiKeyActive, generatePipelineTrigger, environm
                             border: 0,
                         },
                     }}
-                    onClick={() => generatePipelineTrigger({ apiKeyActive: !apiKeyActive })}
+                    onClick={() => generateDeploymentTrigger({ apiKeyActive: !apiKeyActive })}
                     checked={apiKeyActive}
                     inputProps={{ 'aria-label': 'controlled' }}
                 />
@@ -153,7 +153,7 @@ export default function ApiKey({ apiKeyActive, generatePipelineTrigger, environm
                 <AlertDialog
                     openDialog={state.openDialog}
                     handleClose={() => dispatch({ type: 'set', key: 'openDialog', value: false })}
-                    deleteKey={deletePipelineApiKey}
+                    deleteKey={deleteDeploymentApiKey}
                     keyToBeDeleted={state.keyToBeDeleted}
                 />
             ) : null}
@@ -162,9 +162,9 @@ export default function ApiKey({ apiKeyActive, generatePipelineTrigger, environm
 }
 
 // Graphql hooks
-const useAddPipelineApiKeyHook = (environmentID, triggerID, dispatch) => {
+const useAddDeploymentApiKeyHook = (environmentID, triggerID, dispatch) => {
     // GraphQL hook
-    const addPipelineApiKey = useAddPipelineApiKey();
+    const addDeploymentApiKey = useAddDeploymentApiKey();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -174,13 +174,13 @@ const useAddPipelineApiKeyHook = (environmentID, triggerID, dispatch) => {
     // Get access groups
     return async (expiresAt) => {
         const newKey = {
-            pipelineID: pipelineId,
+            deploymentID: 'd-' + pipelineId,
             environmentID,
             triggerID,
             apiKey: generateKey(),
             expiresAt,
         };
-        const response = await addPipelineApiKey(newKey);
+        const response = await addDeploymentApiKey(newKey);
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't add api key: " + (response.msg || response.r || response.error), { variant: 'error' });
@@ -192,9 +192,9 @@ const useAddPipelineApiKeyHook = (environmentID, triggerID, dispatch) => {
     };
 };
 
-const useDeletePipelineApiKeyHook = (environmentID, dispatch) => {
+const useDeleteDevelopmentApiKeyHook = (environmentID, dispatch) => {
     // GraphQL hook
-    const deletePipelineKey = useDeletePipelineApiKey();
+    const deleteDeploymentKey = useDeleteDeploymentApiKey();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -204,11 +204,11 @@ const useDeletePipelineApiKeyHook = (environmentID, dispatch) => {
     // Get access groups
     return async (apiKey) => {
         const newKey = {
-            pipelineID: pipelineId,
+            deploymentID: 'd-' + pipelineId,
             environmentID,
             apiKey,
         };
-        const response = await deletePipelineKey(newKey);
+        const response = await deleteDeploymentKey(newKey);
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't delete api key: " + (response.msg || response.r || response.error), { variant: 'error' });
@@ -220,9 +220,9 @@ const useDeletePipelineApiKeyHook = (environmentID, dispatch) => {
     };
 };
 
-const useGetPipelineApiKeysHook = (environmentID, dispatch) => {
+const useGetDeploymentApiKeysHook = (environmentID, dispatch) => {
     // GraphQL hook
-    const getPipelineApiKeys = useGetPipelineApiKeys();
+    const getDeploymentApiKeys = useGetDeploymentApiKeys();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -231,7 +231,7 @@ const useGetPipelineApiKeysHook = (environmentID, dispatch) => {
 
     // Get access groups
     return async () => {
-        const response = await getPipelineApiKeys({ pipelineID: pipelineId, environmentID });
+        const response = await getDeploymentApiKeys({ deploymentID: 'd-' + pipelineId, environmentID });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get api keys: " + (response.msg || response.r || response.error), { variant: 'error' });

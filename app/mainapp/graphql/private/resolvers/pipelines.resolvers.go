@@ -22,15 +22,16 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
-
 	git "github.com/go-git/go-git/v5"
 	"github.com/google/uuid"
 	uuid2 "github.com/google/uuid"
+
 	jsoniter "github.com/json-iterator/go"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"gorm.io/gorm"
 )
 
+// AddPipeline is the resolver for the addPipeline field.
 func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -131,6 +132,7 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 	return pipelineID, nil
 }
 
+// UpdatePipeline is the resolver for the updatePipeline field.
 func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string, name string, environmentID string, description string, workerGroup string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -204,6 +206,7 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 	return "Success", nil
 }
 
+// DuplicatePipeline is the resolver for the duplicatePipeline field.
 func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID string, name string, environmentID string, description string, workerGroup string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -785,6 +788,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	return "Success", nil
 }
 
+// AddUpdatePipelineFlow is the resolver for the addUpdatePipelineFlow field.
 func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *privategraphql.PipelineFlowInput, environmentID string, pipelineID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1119,6 +1123,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	return "success", nil
 }
 
+// DeletePipeline is the resolver for the deletePipeline field.
 func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID string, pipelineID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1236,6 +1241,7 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 	return response, nil
 }
 
+// TurnOnOffPipeline is the resolver for the turnOnOffPipeline field.
 func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1319,6 +1325,7 @@ func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID 
 	return "Pipeline trigger updated", nil
 }
 
+// ClearFileCachePipeline is the resolver for the clearFileCachePipeline field.
 func (r *mutationResolver) ClearFileCachePipeline(ctx context.Context, environmentID string, pipelineID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1353,18 +1360,22 @@ func (r *mutationResolver) ClearFileCachePipeline(ctx context.Context, environme
 	// panic(fmt.Errorf("not implemented"))
 }
 
+// Meta is the resolver for the meta field.
 func (r *pipelineEdgesResolver) Meta(ctx context.Context, obj *models.PipelineEdges) (interface{}, error) {
 	return obj.Meta, nil
 }
 
+// Commands is the resolver for the commands field.
 func (r *pipelineNodesResolver) Commands(ctx context.Context, obj *models.PipelineNodes) (interface{}, error) {
 	return obj.Commands, nil
 }
 
+// Meta is the resolver for the meta field.
 func (r *pipelineNodesResolver) Meta(ctx context.Context, obj *models.PipelineNodes) (interface{}, error) {
 	return obj.Meta, nil
 }
 
+// GetPipeline is the resolver for the getPipeline field.
 func (r *queryResolver) GetPipeline(ctx context.Context, pipelineID string, environmentID string) (*privategraphql.Pipelines, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1507,6 +1518,7 @@ order by a.created_at desc`
 	return &p, nil
 }
 
+// GetPipelines is the resolver for the getPipelines field.
 func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) ([]*privategraphql.Pipelines, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1648,6 +1660,7 @@ order by a.created_at desc`
 	return p, nil
 }
 
+// GetPipelineFlow is the resolver for the getPipelineFlow field.
 func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, environmentID string) (*privategraphql.PipelineFlow, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -1712,6 +1725,7 @@ func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, 
 	return &flow, nil
 }
 
+// GetNode is the resolver for the getNode field.
 func (r *queryResolver) GetNode(ctx context.Context, nodeID string, environmentID string, pipelineID string) (*models.PipelineNodes, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

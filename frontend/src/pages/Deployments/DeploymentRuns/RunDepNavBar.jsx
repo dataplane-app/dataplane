@@ -138,7 +138,7 @@ export default function RunDepNavBar({ environmentID, deployment }) {
                             id="deployment-run-button"
                             onClick={RunButtonClick}
                             variant="outlined"
-                            sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                            sx={{ width: 70, marginRight: '24px', fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                             Run
                         </Button>
                     ))}

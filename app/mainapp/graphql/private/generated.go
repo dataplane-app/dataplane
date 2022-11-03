@@ -5,7 +5,6 @@ package privategraphql
 import (
 	"bytes"
 	"context"
-	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"embed"
 	"errors"
 	"fmt"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -108,6 +108,24 @@ type ComplexityRoot struct {
 	CodeTree struct {
 		Files   func(childComplexity int) int
 		Folders func(childComplexity int) int
+	}
+
+	DeploymentApiKeys struct {
+		APIKey        func(childComplexity int) int
+		APIKeyTail    func(childComplexity int) int
+		DeploymentID  func(childComplexity int) int
+		EnvironmentID func(childComplexity int) int
+		ExpiresAt     func(childComplexity int) int
+		TriggerID     func(childComplexity int) int
+	}
+
+	DeploymentApiTriggers struct {
+		APIKeyActive  func(childComplexity int) int
+		DeploymentID  func(childComplexity int) int
+		EnvironmentID func(childComplexity int) int
+		PrivateLive   func(childComplexity int) int
+		PublicLive    func(childComplexity int) int
+		TriggerID     func(childComplexity int) int
 	}
 
 	DeploymentEdges struct {
@@ -216,6 +234,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		ActivateAccessGroup                func(childComplexity int, accessGroupID string, environmentID string) int
 		AddDeployment                      func(childComplexity int, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*WorkerGroupsNodes) int
+		AddDeploymentAPIKey                func(childComplexity int, triggerID string, apiKey string, deploymentID string, environmentID string, expiresAt *time.Time) int
 		AddEnvironment                     func(childComplexity int, input *AddEnvironmentInput) int
 		AddPipeline                        func(childComplexity int, name string, environmentID string, description string, workerGroup string) int
 		AddPipelineAPIKey                  func(childComplexity int, triggerID string, apiKey string, pipelineID string, environmentID string, expiresAt *time.Time) int
@@ -231,6 +250,7 @@ type ComplexityRoot struct {
 		DeactivateAccessGroup              func(childComplexity int, accessGroupID string, environmentID string) int
 		DeleteAccessGroup                  func(childComplexity int, accessGroupID string, environmentID string) int
 		DeleteDeployment                   func(childComplexity int, environmentID string, pipelineID string, version string) int
+		DeleteDeploymentAPIKey             func(childComplexity int, apiKey string, deploymentID string, environmentID string) int
 		DeleteFileNode                     func(childComplexity int, environmentID string, fileID string, nodeID string, pipelineID string) int
 		DeleteFolderNode                   func(childComplexity int, environmentID string, folderID string, nodeID string, pipelineID string) int
 		DeletePermissionToUser             func(childComplexity int, userID string, permissionID string, environmentID string) int
@@ -241,6 +261,7 @@ type ComplexityRoot struct {
 		DeploymentPermissionsToAccessGroup func(childComplexity int, environmentID string, resourceID string, access []string, accessGroupID string) int
 		DeploymentPermissionsToUser        func(childComplexity int, environmentID string, resourceID string, access []string, userID string) int
 		DuplicatePipeline                  func(childComplexity int, pipelineID string, name string, environmentID string, description string, workerGroup string) int
+		GenerateDeploymentTrigger          func(childComplexity int, deploymentID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool) int
 		GeneratePipelineTrigger            func(childComplexity int, pipelineID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool) int
 		MoveFileNode                       func(childComplexity int, fileID string, toFolderID string, environmentID string, pipelineID string) int
 		MoveFolderNode                     func(childComplexity int, folderID string, toFolderID string, environmentID string, pipelineID string) int
@@ -444,8 +465,10 @@ type ComplexityRoot struct {
 		GetCodeFileRunLogs              func(childComplexity int, runID string, pipelineID string, environmentID string) int
 		GetCodePackages                 func(childComplexity int, workerGroup string, language string, environmentID string, pipelineID string) int
 		GetDeployment                   func(childComplexity int, pipelineID string, environmentID string, version string) int
+		GetDeploymentAPIKeys            func(childComplexity int, deploymentID string, environmentID string) int
 		GetDeploymentFlow               func(childComplexity int, pipelineID string, environmentID string, version string) int
 		GetDeploymentRuns               func(childComplexity int, deploymentID string, environmentID string, version string) int
+		GetDeploymentTrigger            func(childComplexity int, deploymentID string, environmentID string) int
 		GetDeployments                  func(childComplexity int, environmentID string) int
 		GetEnvironment                  func(childComplexity int, environmentID string) int
 		GetEnvironments                 func(childComplexity int) int
@@ -616,8 +639,11 @@ type MutationResolver interface {
 	RunPipelines(ctx context.Context, pipelineID string, environmentID string, runType string, runID string) (*models.PipelineRuns, error)
 	StopPipelines(ctx context.Context, pipelineID string, runID string, environmentID string, runType string) (*models.PipelineRuns, error)
 	GeneratePipelineTrigger(ctx context.Context, pipelineID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool) (string, error)
+	GenerateDeploymentTrigger(ctx context.Context, deploymentID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool) (string, error)
 	AddPipelineAPIKey(ctx context.Context, triggerID string, apiKey string, pipelineID string, environmentID string, expiresAt *time.Time) (string, error)
+	AddDeploymentAPIKey(ctx context.Context, triggerID string, apiKey string, deploymentID string, environmentID string, expiresAt *time.Time) (string, error)
 	DeletePipelineAPIKey(ctx context.Context, apiKey string, pipelineID string, environmentID string) (string, error)
+	DeleteDeploymentAPIKey(ctx context.Context, apiKey string, deploymentID string, environmentID string) (string, error)
 	CreateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
 	UpdateSecret(ctx context.Context, input *UpdateSecretsInput) (*models.Secrets, error)
 	UpdateSecretValue(ctx context.Context, secret string, value string, environmentID string) (*string, error)
@@ -683,7 +709,9 @@ type QueryResolver interface {
 	GetSinglepipelineRun(ctx context.Context, pipelineID string, runID string, environmentID string) (*models.PipelineRuns, error)
 	GetPipelineRuns(ctx context.Context, pipelineID string, environmentID string) ([]*models.PipelineRuns, error)
 	GetPipelineTrigger(ctx context.Context, pipelineID string, environmentID string) (*models.PipelineApiTriggers, error)
+	GetDeploymentTrigger(ctx context.Context, deploymentID string, environmentID string) (*models.DeploymentApiTriggers, error)
 	GetPipelineAPIKeys(ctx context.Context, pipelineID string, environmentID string) ([]*models.PipelineApiKeys, error)
+	GetDeploymentAPIKeys(ctx context.Context, deploymentID string, environmentID string) ([]*models.DeploymentApiKeys, error)
 	GetSecret(ctx context.Context, secret string, environmentID string) (*models.Secrets, error)
 	GetSecrets(ctx context.Context, environmentID string) ([]*models.Secrets, error)
 	LogoutUser(ctx context.Context) (*string, error)
@@ -969,6 +997,90 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CodeTree.Folders(childComplexity), true
+
+	case "DeploymentApiKeys.apiKey":
+		if e.complexity.DeploymentApiKeys.APIKey == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiKeys.APIKey(childComplexity), true
+
+	case "DeploymentApiKeys.apiKeyTail":
+		if e.complexity.DeploymentApiKeys.APIKeyTail == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiKeys.APIKeyTail(childComplexity), true
+
+	case "DeploymentApiKeys.deploymentID":
+		if e.complexity.DeploymentApiKeys.DeploymentID == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiKeys.DeploymentID(childComplexity), true
+
+	case "DeploymentApiKeys.environmentID":
+		if e.complexity.DeploymentApiKeys.EnvironmentID == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiKeys.EnvironmentID(childComplexity), true
+
+	case "DeploymentApiKeys.expiresAt":
+		if e.complexity.DeploymentApiKeys.ExpiresAt == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiKeys.ExpiresAt(childComplexity), true
+
+	case "DeploymentApiKeys.triggerID":
+		if e.complexity.DeploymentApiKeys.TriggerID == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiKeys.TriggerID(childComplexity), true
+
+	case "DeploymentApiTriggers.apiKeyActive":
+		if e.complexity.DeploymentApiTriggers.APIKeyActive == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiTriggers.APIKeyActive(childComplexity), true
+
+	case "DeploymentApiTriggers.deploymentID":
+		if e.complexity.DeploymentApiTriggers.DeploymentID == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiTriggers.DeploymentID(childComplexity), true
+
+	case "DeploymentApiTriggers.environmentID":
+		if e.complexity.DeploymentApiTriggers.EnvironmentID == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiTriggers.EnvironmentID(childComplexity), true
+
+	case "DeploymentApiTriggers.privateLive":
+		if e.complexity.DeploymentApiTriggers.PrivateLive == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiTriggers.PrivateLive(childComplexity), true
+
+	case "DeploymentApiTriggers.publicLive":
+		if e.complexity.DeploymentApiTriggers.PublicLive == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiTriggers.PublicLive(childComplexity), true
+
+	case "DeploymentApiTriggers.triggerID":
+		if e.complexity.DeploymentApiTriggers.TriggerID == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiTriggers.TriggerID(childComplexity), true
 
 	case "DeploymentEdges.active":
 		if e.complexity.DeploymentEdges.Active == nil {
@@ -1526,6 +1638,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddDeployment(childComplexity, args["pipelineID"].(string), args["fromEnvironmentID"].(string), args["toEnvironmentID"].(string), args["version"].(string), args["workerGroup"].(string), args["liveactive"].(bool), args["nodeWorkerGroup"].([]*WorkerGroupsNodes)), true
 
+	case "Mutation.addDeploymentApiKey":
+		if e.complexity.Mutation.AddDeploymentAPIKey == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addDeploymentApiKey_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddDeploymentAPIKey(childComplexity, args["triggerID"].(string), args["apiKey"].(string), args["deploymentID"].(string), args["environmentID"].(string), args["expiresAt"].(*time.Time)), true
+
 	case "Mutation.addEnvironment":
 		if e.complexity.Mutation.AddEnvironment == nil {
 			break
@@ -1706,6 +1830,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteDeployment(childComplexity, args["environmentID"].(string), args["pipelineID"].(string), args["version"].(string)), true
 
+	case "Mutation.deleteDeploymentApiKey":
+		if e.complexity.Mutation.DeleteDeploymentAPIKey == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteDeploymentApiKey_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteDeploymentAPIKey(childComplexity, args["apiKey"].(string), args["deploymentID"].(string), args["environmentID"].(string)), true
+
 	case "Mutation.deleteFileNode":
 		if e.complexity.Mutation.DeleteFileNode == nil {
 			break
@@ -1825,6 +1961,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DuplicatePipeline(childComplexity, args["pipelineID"].(string), args["name"].(string), args["environmentID"].(string), args["description"].(string), args["workerGroup"].(string)), true
+
+	case "Mutation.generateDeploymentTrigger":
+		if e.complexity.Mutation.GenerateDeploymentTrigger == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_generateDeploymentTrigger_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GenerateDeploymentTrigger(childComplexity, args["deploymentID"].(string), args["environmentID"].(string), args["triggerID"].(string), args["apiKeyActive"].(bool), args["publicLive"].(bool), args["privateLive"].(bool)), true
 
 	case "Mutation.generatePipelineTrigger":
 		if e.complexity.Mutation.GeneratePipelineTrigger == nil {
@@ -3167,6 +3315,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetDeployment(childComplexity, args["pipelineID"].(string), args["environmentID"].(string), args["version"].(string)), true
 
+	case "Query.getDeploymentApiKeys":
+		if e.complexity.Query.GetDeploymentAPIKeys == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getDeploymentApiKeys_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetDeploymentAPIKeys(childComplexity, args["deploymentID"].(string), args["environmentID"].(string)), true
+
 	case "Query.getDeploymentFlow":
 		if e.complexity.Query.GetDeploymentFlow == nil {
 			break
@@ -3190,6 +3350,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetDeploymentRuns(childComplexity, args["deploymentID"].(string), args["environmentID"].(string), args["version"].(string)), true
+
+	case "Query.getDeploymentTrigger":
+		if e.complexity.Query.GetDeploymentTrigger == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getDeploymentTrigger_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetDeploymentTrigger(childComplexity, args["deploymentID"].(string), args["environmentID"].(string)), true
 
 	case "Query.getDeployments":
 		if e.complexity.Query.GetDeployments == nil {
@@ -4103,6 +4275,57 @@ func (ec *executionContext) field_Mutation_activateAccessGroup_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_addDeploymentApiKey_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["triggerID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("triggerID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["triggerID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["apiKey"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKey"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["apiKey"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["deploymentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deploymentID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["deploymentID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg3
+	var arg4 *time.Time
+	if tmp, ok := rawArgs["expiresAt"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAt"))
+		arg4, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["expiresAt"] = arg4
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_addDeployment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4163,7 +4386,7 @@ func (ec *executionContext) field_Mutation_addDeployment_args(ctx context.Contex
 	var arg6 []*WorkerGroupsNodes
 	if tmp, ok := rawArgs["nodeWorkerGroup"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeWorkerGroup"))
-		arg6, err = ec.unmarshalOWorkerGroupsNodes2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroupsNodes(ctx, tmp)
+		arg6, err = ec.unmarshalOWorkerGroupsNodes2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkerGroupsNodes(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4178,7 +4401,7 @@ func (ec *executionContext) field_Mutation_addEnvironment_args(ctx context.Conte
 	var arg0 *AddEnvironmentInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddEnvironmentInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddEnvironmentInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAddEnvironmentInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAddEnvironmentInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4319,7 +4542,7 @@ func (ec *executionContext) field_Mutation_addUpdatePipelineFlow_args(ctx contex
 	var arg0 *PipelineFlowInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOPipelineFlowInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineFlowInput(ctx, tmp)
+		arg0, err = ec.unmarshalOPipelineFlowInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineFlowInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4466,7 +4689,7 @@ func (ec *executionContext) field_Mutation_createFolderNode_args(ctx context.Con
 	var arg0 *FolderNodeInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOFolderNodeInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐFolderNodeInput(ctx, tmp)
+		arg0, err = ec.unmarshalOFolderNodeInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐFolderNodeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4481,7 +4704,7 @@ func (ec *executionContext) field_Mutation_createSecret_args(ctx context.Context
 	var arg0 *AddSecretsInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddSecretsInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddSecretsInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAddSecretsInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAddSecretsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4496,7 +4719,7 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	var arg0 *AddUsersInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddUsersInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddUsersInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAddUsersInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAddUsersInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4550,6 +4773,39 @@ func (ec *executionContext) field_Mutation_deleteAccessGroup_args(ctx context.Co
 		}
 	}
 	args["environmentID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteDeploymentApiKey_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["apiKey"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKey"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["apiKey"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["deploymentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deploymentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["deploymentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg2
 	return args, nil
 }
 
@@ -4967,6 +5223,66 @@ func (ec *executionContext) field_Mutation_duplicatePipeline_args(ctx context.Co
 		}
 	}
 	args["workerGroup"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_generateDeploymentTrigger_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["deploymentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deploymentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["deploymentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["triggerID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("triggerID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["triggerID"] = arg2
+	var arg3 bool
+	if tmp, ok := rawArgs["apiKeyActive"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyActive"))
+		arg3, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["apiKeyActive"] = arg3
+	var arg4 bool
+	if tmp, ok := rawArgs["publicLive"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicLive"))
+		arg4, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["publicLive"] = arg4
+	var arg5 bool
+	if tmp, ok := rawArgs["privateLive"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("privateLive"))
+		arg5, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["privateLive"] = arg5
 	return args, nil
 }
 
@@ -5615,7 +5931,7 @@ func (ec *executionContext) field_Mutation_updateAccessGroup_args(ctx context.Co
 	var arg0 *AccessGroupsInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAccessGroupsInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAccessGroupsInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAccessGroupsInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAccessGroupsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -5675,7 +5991,7 @@ func (ec *executionContext) field_Mutation_updateChangePassword_args(ctx context
 	var arg0 *ChangePasswordInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOChangePasswordInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐChangePasswordInput(ctx, tmp)
+		arg0, err = ec.unmarshalOChangePasswordInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐChangePasswordInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -5825,7 +6141,7 @@ func (ec *executionContext) field_Mutation_updateEnvironment_args(ctx context.Co
 	var arg0 *UpdateEnvironment
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdateEnvironment2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateEnvironment(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateEnvironment2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐUpdateEnvironment(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -5840,7 +6156,7 @@ func (ec *executionContext) field_Mutation_updateMe_args(ctx context.Context, ra
 	var arg0 *AddUpdateMeInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddUpdateMeInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddUpdateMeInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAddUpdateMeInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAddUpdateMeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -6008,7 +6324,7 @@ func (ec *executionContext) field_Mutation_updatePlatform_args(ctx context.Conte
 	var arg0 *UpdatePlatformInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOupdatePlatformInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdatePlatformInput(ctx, tmp)
+		arg0, err = ec.unmarshalOupdatePlatformInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐUpdatePlatformInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -6023,7 +6339,7 @@ func (ec *executionContext) field_Mutation_updatePreferences_args(ctx context.Co
 	var arg0 *AddPreferencesInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOAddPreferencesInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddPreferencesInput(ctx, tmp)
+		arg0, err = ec.unmarshalOAddPreferencesInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAddPreferencesInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -6071,7 +6387,7 @@ func (ec *executionContext) field_Mutation_updateSecret_args(ctx context.Context
 	var arg0 *UpdateSecretsInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdateSecretsInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateSecretsInput(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateSecretsInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐUpdateSecretsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -6119,7 +6435,7 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 	var arg0 *UpdateUsersInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUpdateUsersInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateUsersInput(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateUsersInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐUpdateUsersInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -6404,6 +6720,30 @@ func (ec *executionContext) field_Query_getCodePackages_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_getDeploymentApiKeys_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["deploymentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deploymentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["deploymentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_getDeploymentFlow_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -6467,6 +6807,30 @@ func (ec *executionContext) field_Query_getDeploymentRuns_args(ctx context.Conte
 		}
 	}
 	args["version"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getDeploymentTrigger_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["deploymentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deploymentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["deploymentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
 	return args, nil
 }
 
@@ -8856,7 +9220,7 @@ func (ec *executionContext) _CodeTree_files(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*models.CodeFiles)
 	fc.Result = res
-	return ec.marshalNCodeFiles2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFilesᚄ(ctx, field.Selections, res)
+	return ec.marshalNCodeFiles2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐCodeFilesᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CodeTree_files(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8914,7 +9278,7 @@ func (ec *executionContext) _CodeTree_folders(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*models.CodeFolders)
 	fc.Result = res
-	return ec.marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFoldersᚄ(ctx, field.Selections, res)
+	return ec.marshalNCodeFolders2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐCodeFoldersᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CodeTree_folders(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8939,6 +9303,531 @@ func (ec *executionContext) fieldContext_CodeTree_folders(ctx context.Context, f
 				return ec.fieldContext_CodeFolders_active(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type CodeFolders", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiKeys_triggerID(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiKeys) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiKeys_triggerID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TriggerID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiKeys_triggerID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiKeys",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiKeys_apiKey(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiKeys) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiKeys_apiKey(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.APIKey, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiKeys_apiKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiKeys",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiKeys_apiKeyTail(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiKeys) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiKeys_apiKeyTail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.APIKeyTail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiKeys_apiKeyTail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiKeys",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiKeys_deploymentID(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiKeys) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiKeys_deploymentID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeploymentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiKeys_deploymentID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiKeys",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiKeys_environmentID(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiKeys) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiKeys_environmentID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvironmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiKeys_environmentID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiKeys",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiKeys_expiresAt(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiKeys) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiKeys_expiresAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExpiresAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiKeys_expiresAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiKeys",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiTriggers_triggerID(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiTriggers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiTriggers_triggerID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TriggerID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiTriggers_triggerID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiTriggers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiTriggers_deploymentID(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiTriggers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiTriggers_deploymentID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeploymentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiTriggers_deploymentID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiTriggers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiTriggers_environmentID(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiTriggers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiTriggers_environmentID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvironmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiTriggers_environmentID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiTriggers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiTriggers_apiKeyActive(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiTriggers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiTriggers_apiKeyActive(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.APIKeyActive, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiTriggers_apiKeyActive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiTriggers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiTriggers_publicLive(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiTriggers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiTriggers_publicLive(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PublicLive, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiTriggers_publicLive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiTriggers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiTriggers_privateLive(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiTriggers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiTriggers_privateLive(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PrivateLive, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiTriggers_privateLive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiTriggers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9324,7 +10213,7 @@ func (ec *executionContext) _DeploymentFlow_edges(ctx context.Context, field gra
 	}
 	res := resTmp.([]*models.DeployPipelineEdges)
 	fc.Result = res
-	return ec.marshalNDeploymentEdges2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineEdgesᚄ(ctx, field.Selections, res)
+	return ec.marshalNDeploymentEdges2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineEdgesᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DeploymentFlow_edges(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9386,7 +10275,7 @@ func (ec *executionContext) _DeploymentFlow_nodes(ctx context.Context, field gra
 	}
 	res := resTmp.([]*models.DeployPipelineNodes)
 	fc.Result = res
-	return ec.marshalNDeploymentNodes2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineNodesᚄ(ctx, field.Selections, res)
+	return ec.marshalNDeploymentNodes2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineNodesᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DeploymentFlow_nodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12347,7 +13236,7 @@ func (ec *executionContext) _Mutation_addEnvironment(ctx context.Context, field 
 	}
 	res := resTmp.(*models.Environment)
 	fc.Result = res
-	return ec.marshalOEnvironments2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+	return ec.marshalOEnvironments2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_addEnvironment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12409,7 +13298,7 @@ func (ec *executionContext) _Mutation_updateEnvironment(ctx context.Context, fie
 	}
 	res := resTmp.(*models.Environment)
 	fc.Result = res
-	return ec.marshalOEnvironments2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+	return ec.marshalOEnvironments2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateEnvironment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -13226,7 +14115,7 @@ func (ec *executionContext) _Mutation_createFolderNode(ctx context.Context, fiel
 	}
 	res := resTmp.(*models.CodeFolders)
 	fc.Result = res
-	return ec.marshalNCodeFolders2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx, field.Selections, res)
+	return ec.marshalNCodeFolders2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createFolderNode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -13680,7 +14569,7 @@ func (ec *executionContext) _Mutation_runCEFile(ctx context.Context, field graph
 	}
 	res := resTmp.(*CERun)
 	fc.Result = res
-	return ec.marshalNCERun2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCERun(ctx, field.Selections, res)
+	return ec.marshalNCERun2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐCERun(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_runCEFile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -14027,7 +14916,7 @@ func (ec *executionContext) _Mutation_updateMe(ctx context.Context, field graphq
 	}
 	res := resTmp.(*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateMe(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -14974,7 +15863,7 @@ func (ec *executionContext) _Mutation_runPipelines(ctx context.Context, field gr
 	}
 	res := resTmp.(*models.PipelineRuns)
 	fc.Result = res
-	return ec.marshalNPipelineRuns2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx, field.Selections, res)
+	return ec.marshalNPipelineRuns2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_runPipelines(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -15049,7 +15938,7 @@ func (ec *executionContext) _Mutation_stopPipelines(ctx context.Context, field g
 	}
 	res := resTmp.(*models.PipelineRuns)
 	fc.Result = res
-	return ec.marshalNPipelineRuns2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx, field.Selections, res)
+	return ec.marshalNPipelineRuns2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_stopPipelines(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -15151,6 +16040,61 @@ func (ec *executionContext) fieldContext_Mutation_generatePipelineTrigger(ctx co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_generateDeploymentTrigger(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_generateDeploymentTrigger(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().GenerateDeploymentTrigger(rctx, fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string), fc.Args["triggerID"].(string), fc.Args["apiKeyActive"].(bool), fc.Args["publicLive"].(bool), fc.Args["privateLive"].(bool))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_generateDeploymentTrigger(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_generateDeploymentTrigger_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_addPipelineApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_addPipelineApiKey(ctx, field)
 	if err != nil {
@@ -15200,6 +16144,61 @@ func (ec *executionContext) fieldContext_Mutation_addPipelineApiKey(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_addPipelineApiKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_addDeploymentApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addDeploymentApiKey(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddDeploymentAPIKey(rctx, fc.Args["triggerID"].(string), fc.Args["apiKey"].(string), fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string), fc.Args["expiresAt"].(*time.Time))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_addDeploymentApiKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addDeploymentApiKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -15261,6 +16260,61 @@ func (ec *executionContext) fieldContext_Mutation_deletePipelineApiKey(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_deleteDeploymentApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteDeploymentApiKey(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteDeploymentAPIKey(rctx, fc.Args["apiKey"].(string), fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteDeploymentApiKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteDeploymentApiKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createSecret(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createSecret(ctx, field)
 	if err != nil {
@@ -15286,7 +16340,7 @@ func (ec *executionContext) _Mutation_createSecret(ctx context.Context, field gr
 	}
 	res := resTmp.(*models.Secrets)
 	fc.Result = res
-	return ec.marshalOSecrets2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
+	return ec.marshalOSecrets2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createSecret(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -15354,7 +16408,7 @@ func (ec *executionContext) _Mutation_updateSecret(ctx context.Context, field gr
 	}
 	res := resTmp.(*models.Secrets)
 	fc.Result = res
-	return ec.marshalOSecrets2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
+	return ec.marshalOSecrets2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateSecret(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -15526,7 +16580,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	}
 	res := resTmp.(*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -18292,7 +19346,7 @@ func (ec *executionContext) _PipelineFlow_edges(ctx context.Context, field graph
 	}
 	res := resTmp.([]*models.PipelineEdges)
 	fc.Result = res
-	return ec.marshalNPipelineEdges2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineEdgesᚄ(ctx, field.Selections, res)
+	return ec.marshalNPipelineEdges2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineEdgesᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PipelineFlow_edges(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -18352,7 +19406,7 @@ func (ec *executionContext) _PipelineFlow_nodes(ctx context.Context, field graph
 	}
 	res := resTmp.([]*models.PipelineNodes)
 	fc.Result = res
-	return ec.marshalNPipelineNodes2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineNodesᚄ(ctx, field.Selections, res)
+	return ec.marshalNPipelineNodes2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineNodesᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PipelineFlow_nodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20833,7 +21887,7 @@ func (ec *executionContext) _Query_getEnvironments(ctx context.Context, field gr
 	}
 	res := resTmp.([]*models.Environment)
 	fc.Result = res
-	return ec.marshalOEnvironments2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+	return ec.marshalOEnvironments2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getEnvironments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20884,7 +21938,7 @@ func (ec *executionContext) _Query_getEnvironment(ctx context.Context, field gra
 	}
 	res := resTmp.(*models.Environment)
 	fc.Result = res
-	return ec.marshalOEnvironments2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+	return ec.marshalOEnvironments2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getEnvironment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20946,7 +22000,7 @@ func (ec *executionContext) _Query_getUserEnvironments(ctx context.Context, fiel
 	}
 	res := resTmp.([]*models.Environment)
 	fc.Result = res
-	return ec.marshalOEnvironments2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
+	return ec.marshalOEnvironments2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getUserEnvironments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21008,7 +22062,7 @@ func (ec *executionContext) _Query_getPlatform(ctx context.Context, field graphq
 	}
 	res := resTmp.(*Platform)
 	fc.Result = res
-	return ec.marshalOPlatform2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPlatform(ctx, field.Selections, res)
+	return ec.marshalOPlatform2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPlatform(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getPlatform(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21059,7 +22113,7 @@ func (ec *executionContext) _Query_getAccessGroups(ctx context.Context, field gr
 	}
 	res := resTmp.([]*models.PermissionsAccessGroups)
 	fc.Result = res
-	return ec.marshalOAccessGroups2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, field.Selections, res)
+	return ec.marshalOAccessGroups2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getAccessGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21123,7 +22177,7 @@ func (ec *executionContext) _Query_getAccessGroup(ctx context.Context, field gra
 	}
 	res := resTmp.(*models.PermissionsAccessGroups)
 	fc.Result = res
-	return ec.marshalOAccessGroups2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, field.Selections, res)
+	return ec.marshalOAccessGroups2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getAccessGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21187,7 +22241,7 @@ func (ec *executionContext) _Query_getUserAccessGroups(ctx context.Context, fiel
 	}
 	res := resTmp.([]*models.PermissionsAccessGUsersOutput)
 	fc.Result = res
-	return ec.marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, field.Selections, res)
+	return ec.marshalOPermissionsAccessGUsersOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getUserAccessGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21251,7 +22305,7 @@ func (ec *executionContext) _Query_getAccessGroupUsers(ctx context.Context, fiel
 	}
 	res := resTmp.([]*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getAccessGroupUsers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21321,7 +22375,7 @@ func (ec *executionContext) _Query_myAccessGroups(ctx context.Context, field gra
 	}
 	res := resTmp.([]*models.PermissionsAccessGUsersOutput)
 	fc.Result = res
-	return ec.marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, field.Selections, res)
+	return ec.marshalOPermissionsAccessGUsersOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_myAccessGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21374,7 +22428,7 @@ func (ec *executionContext) _Query_filesNode(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*CodeTree)
 	fc.Result = res
-	return ec.marshalOCodeTree2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCodeTree(ctx, field.Selections, res)
+	return ec.marshalOCodeTree2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐCodeTree(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_filesNode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21432,7 +22486,7 @@ func (ec *executionContext) _Query_getCodePackages(ctx context.Context, field gr
 	}
 	res := resTmp.(*CodePackages)
 	fc.Result = res
-	return ec.marshalOCodePackages2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCodePackages(ctx, field.Selections, res)
+	return ec.marshalOCodePackages2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐCodePackages(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getCodePackages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21494,7 +22548,7 @@ func (ec *executionContext) _Query_getActiveDeployment(ctx context.Context, fiel
 	}
 	res := resTmp.(*Deployments)
 	fc.Result = res
-	return ec.marshalODeployments2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, field.Selections, res)
+	return ec.marshalODeployments2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getActiveDeployment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21584,7 +22638,7 @@ func (ec *executionContext) _Query_getDeployment(ctx context.Context, field grap
 	}
 	res := resTmp.(*Deployments)
 	fc.Result = res
-	return ec.marshalODeployments2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, field.Selections, res)
+	return ec.marshalODeployments2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getDeployment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21674,7 +22728,7 @@ func (ec *executionContext) _Query_getDeployments(ctx context.Context, field gra
 	}
 	res := resTmp.([]*Deployments)
 	fc.Result = res
-	return ec.marshalODeployments2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, field.Selections, res)
+	return ec.marshalODeployments2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getDeployments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21764,7 +22818,7 @@ func (ec *executionContext) _Query_getDeploymentFlow(ctx context.Context, field 
 	}
 	res := resTmp.(*DeploymentFlow)
 	fc.Result = res
-	return ec.marshalODeploymentFlow2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentFlow(ctx, field.Selections, res)
+	return ec.marshalODeploymentFlow2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeploymentFlow(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getDeploymentFlow(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21822,7 +22876,7 @@ func (ec *executionContext) _Query_getNonDefaultWGNodes(ctx context.Context, fie
 	}
 	res := resTmp.([]*NonDefaultNodes)
 	fc.Result = res
-	return ec.marshalONonDefaultNodes2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐNonDefaultNodes(ctx, field.Selections, res)
+	return ec.marshalONonDefaultNodes2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐNonDefaultNodes(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getNonDefaultWGNodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21901,7 +22955,7 @@ func (ec *executionContext) _Query_getDeploymentRuns(ctx context.Context, field 
 	}
 	res := resTmp.([]*models.PipelineRuns)
 	fc.Result = res
-	return ec.marshalNDeploymentRuns2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRunsᚄ(ctx, field.Selections, res)
+	return ec.marshalNDeploymentRuns2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRunsᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getDeploymentRuns(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21975,7 +23029,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 	}
 	res := resTmp.(*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_me(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22034,7 +23088,7 @@ func (ec *executionContext) _Query_myDeploymentPermissions(ctx context.Context, 
 	}
 	res := resTmp.([]*DeploymentPermissionsOutput)
 	fc.Result = res
-	return ec.marshalODeploymentPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalODeploymentPermissionsOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_myDeploymentPermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22103,7 +23157,7 @@ func (ec *executionContext) _Query_userSingleDeploymentPermissions(ctx context.C
 	}
 	res := resTmp.(*DeploymentPermissionsOutput)
 	fc.Result = res
-	return ec.marshalODeploymentPermissionsOutput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalODeploymentPermissionsOutput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_userSingleDeploymentPermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22183,7 +23237,7 @@ func (ec *executionContext) _Query_userDeploymentPermissions(ctx context.Context
 	}
 	res := resTmp.([]*DeploymentPermissionsOutput)
 	fc.Result = res
-	return ec.marshalODeploymentPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalODeploymentPermissionsOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_userDeploymentPermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22263,7 +23317,7 @@ func (ec *executionContext) _Query_deploymentPermissions(ctx context.Context, fi
 	}
 	res := resTmp.([]*DeploymentPermissionsOutput)
 	fc.Result = res
-	return ec.marshalODeploymentPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalODeploymentPermissionsOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_deploymentPermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22343,7 +23397,7 @@ func (ec *executionContext) _Query_myPipelinePermissions(ctx context.Context, fi
 	}
 	res := resTmp.([]*PipelinePermissionsOutput)
 	fc.Result = res
-	return ec.marshalOPipelinePermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalOPipelinePermissionsOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_myPipelinePermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22412,7 +23466,7 @@ func (ec *executionContext) _Query_userPipelinePermissions(ctx context.Context, 
 	}
 	res := resTmp.([]*PipelinePermissionsOutput)
 	fc.Result = res
-	return ec.marshalOPipelinePermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalOPipelinePermissionsOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_userPipelinePermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22492,7 +23546,7 @@ func (ec *executionContext) _Query_userSinglePipelinePermissions(ctx context.Con
 	}
 	res := resTmp.(*PipelinePermissionsOutput)
 	fc.Result = res
-	return ec.marshalOPipelinePermissionsOutput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalOPipelinePermissionsOutput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_userSinglePipelinePermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22572,7 +23626,7 @@ func (ec *executionContext) _Query_pipelinePermissions(ctx context.Context, fiel
 	}
 	res := resTmp.([]*PipelinePermissionsOutput)
 	fc.Result = res
-	return ec.marshalOPipelinePermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalOPipelinePermissionsOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_pipelinePermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22652,7 +23706,7 @@ func (ec *executionContext) _Query_availablePermissions(ctx context.Context, fie
 	}
 	res := resTmp.([]*models.ResourceTypeStruct)
 	fc.Result = res
-	return ec.marshalOAvailablePermissions2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx, field.Selections, res)
+	return ec.marshalOAvailablePermissions2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_availablePermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22716,7 +23770,7 @@ func (ec *executionContext) _Query_myPermissions(ctx context.Context, field grap
 	}
 	res := resTmp.([]*models.PermissionsOutput)
 	fc.Result = res
-	return ec.marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalOPermissionsOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_myPermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22779,7 +23833,7 @@ func (ec *executionContext) _Query_userPermissions(ctx context.Context, field gr
 	}
 	res := resTmp.([]*models.PermissionsOutput)
 	fc.Result = res
-	return ec.marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
+	return ec.marshalOPermissionsOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_userPermissions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22853,7 +23907,7 @@ func (ec *executionContext) _Query_getPipeline(ctx context.Context, field graphq
 	}
 	res := resTmp.(*Pipelines)
 	fc.Result = res
-	return ec.marshalOPipelines2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx, field.Selections, res)
+	return ec.marshalOPipelines2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getPipeline(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22937,7 +23991,7 @@ func (ec *executionContext) _Query_getPipelines(ctx context.Context, field graph
 	}
 	res := resTmp.([]*Pipelines)
 	fc.Result = res
-	return ec.marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx, field.Selections, res)
+	return ec.marshalOPipelines2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getPipelines(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23021,7 +24075,7 @@ func (ec *executionContext) _Query_getPipelineFlow(ctx context.Context, field gr
 	}
 	res := resTmp.(*PipelineFlow)
 	fc.Result = res
-	return ec.marshalOPipelineFlow2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineFlow(ctx, field.Selections, res)
+	return ec.marshalOPipelineFlow2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineFlow(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getPipelineFlow(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23079,7 +24133,7 @@ func (ec *executionContext) _Query_getNode(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*models.PipelineNodes)
 	fc.Result = res
-	return ec.marshalOPipelineNodes2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineNodes(ctx, field.Selections, res)
+	return ec.marshalOPipelineNodes2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineNodes(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getNode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23157,7 +24211,7 @@ func (ec *executionContext) _Query_getNodeLogs(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*models.LogsWorkers)
 	fc.Result = res
-	return ec.marshalOLogsWorkers2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsWorkersᚄ(ctx, field.Selections, res)
+	return ec.marshalOLogsWorkers2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐLogsWorkersᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getNodeLogs(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23219,7 +24273,7 @@ func (ec *executionContext) _Query_getCodeFileRunLogs(ctx context.Context, field
 	}
 	res := resTmp.([]*models.LogsCodeRun)
 	fc.Result = res
-	return ec.marshalOLogsCodeRun2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsCodeRunᚄ(ctx, field.Selections, res)
+	return ec.marshalOLogsCodeRun2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐLogsCodeRunᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getCodeFileRunLogs(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23281,7 +24335,7 @@ func (ec *executionContext) _Query_getAllPreferences(ctx context.Context, field 
 	}
 	res := resTmp.([]*Preferences)
 	fc.Result = res
-	return ec.marshalOPreferences2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx, field.Selections, res)
+	return ec.marshalOPreferences2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getAllPreferences(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23328,7 +24382,7 @@ func (ec *executionContext) _Query_getOnePreference(ctx context.Context, field g
 	}
 	res := resTmp.(*Preferences)
 	fc.Result = res
-	return ec.marshalOPreferences2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx, field.Selections, res)
+	return ec.marshalOPreferences2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getOnePreference(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23389,7 +24443,7 @@ func (ec *executionContext) _Query_pipelineTasksRun(ctx context.Context, field g
 	}
 	res := resTmp.([]*WorkerTasks)
 	fc.Result = res
-	return ec.marshalNWorkerTasks2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerTasksᚄ(ctx, field.Selections, res)
+	return ec.marshalNWorkerTasks2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkerTasksᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_pipelineTasksRun(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23465,7 +24519,7 @@ func (ec *executionContext) _Query_getSinglepipelineRun(ctx context.Context, fie
 	}
 	res := resTmp.(*models.PipelineRuns)
 	fc.Result = res
-	return ec.marshalOPipelineRuns2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx, field.Selections, res)
+	return ec.marshalOPipelineRuns2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getSinglepipelineRun(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23540,7 +24594,7 @@ func (ec *executionContext) _Query_getPipelineRuns(ctx context.Context, field gr
 	}
 	res := resTmp.([]*models.PipelineRuns)
 	fc.Result = res
-	return ec.marshalNPipelineRuns2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRunsᚄ(ctx, field.Selections, res)
+	return ec.marshalNPipelineRuns2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRunsᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getPipelineRuns(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23615,7 +24669,7 @@ func (ec *executionContext) _Query_getPipelineTrigger(ctx context.Context, field
 	}
 	res := resTmp.(*models.PipelineApiTriggers)
 	fc.Result = res
-	return ec.marshalNPipelineApiTriggers2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiTriggers(ctx, field.Selections, res)
+	return ec.marshalNPipelineApiTriggers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiTriggers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getPipelineTrigger(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23656,6 +24710,75 @@ func (ec *executionContext) fieldContext_Query_getPipelineTrigger(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getDeploymentTrigger(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getDeploymentTrigger(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetDeploymentTrigger(rctx, fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.DeploymentApiTriggers)
+	fc.Result = res
+	return ec.marshalNDeploymentApiTriggers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeploymentApiTriggers(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getDeploymentTrigger(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "triggerID":
+				return ec.fieldContext_DeploymentApiTriggers_triggerID(ctx, field)
+			case "deploymentID":
+				return ec.fieldContext_DeploymentApiTriggers_deploymentID(ctx, field)
+			case "environmentID":
+				return ec.fieldContext_DeploymentApiTriggers_environmentID(ctx, field)
+			case "apiKeyActive":
+				return ec.fieldContext_DeploymentApiTriggers_apiKeyActive(ctx, field)
+			case "publicLive":
+				return ec.fieldContext_DeploymentApiTriggers_publicLive(ctx, field)
+			case "privateLive":
+				return ec.fieldContext_DeploymentApiTriggers_privateLive(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DeploymentApiTriggers", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getDeploymentTrigger_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getPipelineApiKeys(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getPipelineApiKeys(ctx, field)
 	if err != nil {
@@ -23684,7 +24807,7 @@ func (ec *executionContext) _Query_getPipelineApiKeys(ctx context.Context, field
 	}
 	res := resTmp.([]*models.PipelineApiKeys)
 	fc.Result = res
-	return ec.marshalNPipelineApiKeys2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiKeysᚄ(ctx, field.Selections, res)
+	return ec.marshalNPipelineApiKeys2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiKeysᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getPipelineApiKeys(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23725,6 +24848,75 @@ func (ec *executionContext) fieldContext_Query_getPipelineApiKeys(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getDeploymentApiKeys(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getDeploymentApiKeys(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetDeploymentAPIKeys(rctx, fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.DeploymentApiKeys)
+	fc.Result = res
+	return ec.marshalNDeploymentApiKeys2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeploymentApiKeysᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getDeploymentApiKeys(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "triggerID":
+				return ec.fieldContext_DeploymentApiKeys_triggerID(ctx, field)
+			case "apiKey":
+				return ec.fieldContext_DeploymentApiKeys_apiKey(ctx, field)
+			case "apiKeyTail":
+				return ec.fieldContext_DeploymentApiKeys_apiKeyTail(ctx, field)
+			case "deploymentID":
+				return ec.fieldContext_DeploymentApiKeys_deploymentID(ctx, field)
+			case "environmentID":
+				return ec.fieldContext_DeploymentApiKeys_environmentID(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_DeploymentApiKeys_expiresAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DeploymentApiKeys", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getDeploymentApiKeys_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getSecret(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getSecret(ctx, field)
 	if err != nil {
@@ -23750,7 +24942,7 @@ func (ec *executionContext) _Query_getSecret(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*models.Secrets)
 	fc.Result = res
-	return ec.marshalOSecrets2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
+	return ec.marshalOSecrets2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getSecret(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23818,7 +25010,7 @@ func (ec *executionContext) _Query_getSecrets(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*models.Secrets)
 	fc.Result = res
-	return ec.marshalOSecrets2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
+	return ec.marshalOSecrets2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getSecrets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23927,7 +25119,7 @@ func (ec *executionContext) _Query_getUser(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23997,7 +25189,7 @@ func (ec *executionContext) _Query_getUsers(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getUsers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -24056,7 +25248,7 @@ func (ec *executionContext) _Query_getUsersFromEnvironment(ctx context.Context, 
 	}
 	res := resTmp.([]*models.Users)
 	fc.Result = res
-	return ec.marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getUsersFromEnvironment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -24126,7 +25318,7 @@ func (ec *executionContext) _Query_getWorkers(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*Workers)
 	fc.Result = res
-	return ec.marshalOWorkers2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx, field.Selections, res)
+	return ec.marshalOWorkers2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getWorkers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -24206,7 +25398,7 @@ func (ec *executionContext) _Query_getWorkerGroups(ctx context.Context, field gr
 	}
 	res := resTmp.([]*WorkerGroup)
 	fc.Result = res
-	return ec.marshalOWorkerGroup2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroup(ctx, field.Selections, res)
+	return ec.marshalOWorkerGroup2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkerGroup(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getWorkerGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -24274,7 +25466,7 @@ func (ec *executionContext) _Query_getSecretGroups(ctx context.Context, field gr
 	}
 	res := resTmp.([]*models.WorkerSecrets)
 	fc.Result = res
-	return ec.marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx, field.Selections, res)
+	return ec.marshalOSecretWorkerGroups2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getSecretGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -24334,7 +25526,7 @@ func (ec *executionContext) _Query_getWorkerGroupSecrets(ctx context.Context, fi
 	}
 	res := resTmp.([]*models.Secrets)
 	fc.Result = res
-	return ec.marshalOSecrets2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
+	return ec.marshalOSecrets2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getWorkerGroupSecrets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -28430,7 +29622,12 @@ func (ec *executionContext) unmarshalInputAccessGroupsInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"AccessGroupID", "Name", "Description", "Active", "EnvironmentID"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "AccessGroupID":
 			var err error
@@ -28485,7 +29682,12 @@ func (ec *executionContext) unmarshalInputAddEnvironmentInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"name", "description"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "name":
 			var err error
@@ -28516,7 +29718,12 @@ func (ec *executionContext) unmarshalInputAddPreferencesInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"preference", "value"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "preference":
 			var err error
@@ -28547,7 +29754,12 @@ func (ec *executionContext) unmarshalInputAddSecretsInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"Secret", "Description", "Value", "EnvironmentId", "Active"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "Secret":
 			var err error
@@ -28602,7 +29814,12 @@ func (ec *executionContext) unmarshalInputAddUpdateMeInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"first_name", "last_name", "email", "job_title", "timezone"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "first_name":
 			var err error
@@ -28657,7 +29874,12 @@ func (ec *executionContext) unmarshalInputAddUsersInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"first_name", "last_name", "email", "job_title", "password", "timezone"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "first_name":
 			var err error
@@ -28720,7 +29942,12 @@ func (ec *executionContext) unmarshalInputChangePasswordInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"password", "user_id"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "password":
 			var err error
@@ -28751,7 +29978,12 @@ func (ec *executionContext) unmarshalInputDataInput(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"language", "genericdata"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "language":
 			var err error
@@ -28782,7 +30014,12 @@ func (ec *executionContext) unmarshalInputFolderNodeInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"folderID", "parentID", "environmentID", "pipelineID", "nodeID", "folderName", "fType", "active"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "folderID":
 			var err error
@@ -28861,7 +30098,12 @@ func (ec *executionContext) unmarshalInputPipelineEdgesInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"edgeID", "from", "to", "meta", "active"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "edgeID":
 			var err error
@@ -28891,7 +30133,7 @@ func (ec *executionContext) unmarshalInputPipelineEdgesInput(ctx context.Context
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meta"))
-			it.Meta, err = ec.unmarshalNPipelineEdgesMetaInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesMetaInput(ctx, v)
+			it.Meta, err = ec.unmarshalNPipelineEdgesMetaInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesMetaInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -28916,7 +30158,12 @@ func (ec *executionContext) unmarshalInputPipelineEdgesMetaInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"sourceHandle", "targetHandle", "edgeType", "arrowHeadType"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "sourceHandle":
 			var err error
@@ -28963,13 +30210,18 @@ func (ec *executionContext) unmarshalInputPipelineFlowInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"nodesInput", "edgesInput", "json"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "nodesInput":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodesInput"))
-			it.NodesInput, err = ec.unmarshalNPipelineNodesInput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesInputᚄ(ctx, v)
+			it.NodesInput, err = ec.unmarshalNPipelineNodesInput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -28977,7 +30229,7 @@ func (ec *executionContext) unmarshalInputPipelineFlowInput(ctx context.Context,
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("edgesInput"))
-			it.EdgesInput, err = ec.unmarshalNPipelineEdgesInput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesInputᚄ(ctx, v)
+			it.EdgesInput, err = ec.unmarshalNPipelineEdgesInput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -29002,7 +30254,12 @@ func (ec *executionContext) unmarshalInputPipelineNodesInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"nodeID", "name", "nodeType", "nodeTypeDesc", "triggerOnline", "description", "commands", "meta", "workerGroup", "active"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "nodeID":
 			var err error
@@ -29064,7 +30321,7 @@ func (ec *executionContext) unmarshalInputPipelineNodesInput(ctx context.Context
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meta"))
-			it.Meta, err = ec.unmarshalNPipelineNodesMetaInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesMetaInput(ctx, v)
+			it.Meta, err = ec.unmarshalNPipelineNodesMetaInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesMetaInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -29097,13 +30354,18 @@ func (ec *executionContext) unmarshalInputPipelineNodesMetaInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"position", "data"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "position":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("position"))
-			it.Position, err = ec.unmarshalNPositionInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPositionInput(ctx, v)
+			it.Position, err = ec.unmarshalNPositionInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPositionInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -29111,7 +30373,7 @@ func (ec *executionContext) unmarshalInputPipelineNodesMetaInput(ctx context.Con
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("data"))
-			it.Data, err = ec.unmarshalODataInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDataInput(ctx, v)
+			it.Data, err = ec.unmarshalODataInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDataInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -29128,7 +30390,12 @@ func (ec *executionContext) unmarshalInputPositionInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"x", "y"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "x":
 			var err error
@@ -29159,7 +30426,12 @@ func (ec *executionContext) unmarshalInputUpdateEnvironment(ctx context.Context,
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"id", "name", "description"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "id":
 			var err error
@@ -29198,7 +30470,12 @@ func (ec *executionContext) unmarshalInputUpdateSecretsInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"Secret", "Description", "EnvironmentId", "Active"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "Secret":
 			var err error
@@ -29245,7 +30522,12 @@ func (ec *executionContext) unmarshalInputUpdateUsersInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"user_id", "first_name", "last_name", "email", "job_title", "timezone"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "user_id":
 			var err error
@@ -29308,7 +30590,12 @@ func (ec *executionContext) unmarshalInputWorkerGroupsNodes(ctx context.Context,
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"NodeID", "WorkerGroup"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "NodeID":
 			var err error
@@ -29339,7 +30626,12 @@ func (ec *executionContext) unmarshalInputupdatePlatformInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"id", "business_name", "timezone", "complete"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "id":
 			var err error
@@ -29769,6 +31061,129 @@ func (ec *executionContext) _CodeTree(ctx context.Context, sel ast.SelectionSet,
 		case "folders":
 
 			out.Values[i] = ec._CodeTree_folders(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var deploymentApiKeysImplementors = []string{"DeploymentApiKeys"}
+
+func (ec *executionContext) _DeploymentApiKeys(ctx context.Context, sel ast.SelectionSet, obj *models.DeploymentApiKeys) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deploymentApiKeysImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeploymentApiKeys")
+		case "triggerID":
+
+			out.Values[i] = ec._DeploymentApiKeys_triggerID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "apiKey":
+
+			out.Values[i] = ec._DeploymentApiKeys_apiKey(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "apiKeyTail":
+
+			out.Values[i] = ec._DeploymentApiKeys_apiKeyTail(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deploymentID":
+
+			out.Values[i] = ec._DeploymentApiKeys_deploymentID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "environmentID":
+
+			out.Values[i] = ec._DeploymentApiKeys_environmentID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "expiresAt":
+
+			out.Values[i] = ec._DeploymentApiKeys_expiresAt(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var deploymentApiTriggersImplementors = []string{"DeploymentApiTriggers"}
+
+func (ec *executionContext) _DeploymentApiTriggers(ctx context.Context, sel ast.SelectionSet, obj *models.DeploymentApiTriggers) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deploymentApiTriggersImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeploymentApiTriggers")
+		case "triggerID":
+
+			out.Values[i] = ec._DeploymentApiTriggers_triggerID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deploymentID":
+
+			out.Values[i] = ec._DeploymentApiTriggers_deploymentID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "environmentID":
+
+			out.Values[i] = ec._DeploymentApiTriggers_environmentID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "apiKeyActive":
+
+			out.Values[i] = ec._DeploymentApiTriggers_apiKeyActive(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "publicLive":
+
+			out.Values[i] = ec._DeploymentApiTriggers_publicLive(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "privateLive":
+
+			out.Values[i] = ec._DeploymentApiTriggers_privateLive(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -30981,6 +32396,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "generateDeploymentTrigger":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_generateDeploymentTrigger(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "addPipelineApiKey":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -30990,10 +32414,28 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "addDeploymentApiKey":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addDeploymentApiKey(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "deletePipelineApiKey":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deletePipelineApiKey(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteDeploymentApiKey":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteDeploymentApiKey(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -33040,6 +34482,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "getDeploymentTrigger":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getDeploymentTrigger(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "getPipelineApiKeys":
 			field := field
 
@@ -33050,6 +34515,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getPipelineApiKeys(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getDeploymentApiKeys":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getDeploymentApiKeys(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -34097,11 +35585,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCERun2dataplaneᚋmainappᚋgraphqlᚋprivateᚐCERun(ctx context.Context, sel ast.SelectionSet, v CERun) graphql.Marshaler {
+func (ec *executionContext) marshalNCERun2githubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐCERun(ctx context.Context, sel ast.SelectionSet, v CERun) graphql.Marshaler {
 	return ec._CERun(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCERun2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCERun(ctx context.Context, sel ast.SelectionSet, v *CERun) graphql.Marshaler {
+func (ec *executionContext) marshalNCERun2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐCERun(ctx context.Context, sel ast.SelectionSet, v *CERun) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34111,7 +35599,7 @@ func (ec *executionContext) marshalNCERun2ᚖdataplaneᚋmainappᚋgraphqlᚋpri
 	return ec._CERun(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNCodeFiles2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFilesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.CodeFiles) graphql.Marshaler {
+func (ec *executionContext) marshalNCodeFiles2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐCodeFilesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.CodeFiles) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -34135,7 +35623,7 @@ func (ec *executionContext) marshalNCodeFiles2ᚕᚖdataplaneᚋmainappᚋdataba
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCodeFiles2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFiles(ctx, sel, v[i])
+			ret[i] = ec.marshalNCodeFiles2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐCodeFiles(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -34155,7 +35643,7 @@ func (ec *executionContext) marshalNCodeFiles2ᚕᚖdataplaneᚋmainappᚋdataba
 	return ret
 }
 
-func (ec *executionContext) marshalNCodeFiles2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFiles(ctx context.Context, sel ast.SelectionSet, v *models.CodeFiles) graphql.Marshaler {
+func (ec *executionContext) marshalNCodeFiles2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐCodeFiles(ctx context.Context, sel ast.SelectionSet, v *models.CodeFiles) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34165,11 +35653,11 @@ func (ec *executionContext) marshalNCodeFiles2ᚖdataplaneᚋmainappᚋdatabase�
 	return ec._CodeFiles(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNCodeFolders2dataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v models.CodeFolders) graphql.Marshaler {
+func (ec *executionContext) marshalNCodeFolders2githubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v models.CodeFolders) graphql.Marshaler {
 	return ec._CodeFolders(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFoldersᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.CodeFolders) graphql.Marshaler {
+func (ec *executionContext) marshalNCodeFolders2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐCodeFoldersᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.CodeFolders) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -34193,7 +35681,7 @@ func (ec *executionContext) marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdata
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCodeFolders2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx, sel, v[i])
+			ret[i] = ec.marshalNCodeFolders2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -34213,7 +35701,7 @@ func (ec *executionContext) marshalNCodeFolders2ᚕᚖdataplaneᚋmainappᚋdata
 	return ret
 }
 
-func (ec *executionContext) marshalNCodeFolders2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v *models.CodeFolders) graphql.Marshaler {
+func (ec *executionContext) marshalNCodeFolders2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐCodeFolders(ctx context.Context, sel ast.SelectionSet, v *models.CodeFolders) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34223,7 +35711,7 @@ func (ec *executionContext) marshalNCodeFolders2ᚖdataplaneᚋmainappᚋdatabas
 	return ec._CodeFolders(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDeploymentEdges2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineEdgesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.DeployPipelineEdges) graphql.Marshaler {
+func (ec *executionContext) marshalNDeploymentApiKeys2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeploymentApiKeysᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.DeploymentApiKeys) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -34247,7 +35735,7 @@ func (ec *executionContext) marshalNDeploymentEdges2ᚕᚖdataplaneᚋmainappᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDeploymentEdges2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineEdges(ctx, sel, v[i])
+			ret[i] = ec.marshalNDeploymentApiKeys2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeploymentApiKeys(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -34267,7 +35755,75 @@ func (ec *executionContext) marshalNDeploymentEdges2ᚕᚖdataplaneᚋmainappᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNDeploymentEdges2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineEdges(ctx context.Context, sel ast.SelectionSet, v *models.DeployPipelineEdges) graphql.Marshaler {
+func (ec *executionContext) marshalNDeploymentApiKeys2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeploymentApiKeys(ctx context.Context, sel ast.SelectionSet, v *models.DeploymentApiKeys) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DeploymentApiKeys(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNDeploymentApiTriggers2githubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeploymentApiTriggers(ctx context.Context, sel ast.SelectionSet, v models.DeploymentApiTriggers) graphql.Marshaler {
+	return ec._DeploymentApiTriggers(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDeploymentApiTriggers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeploymentApiTriggers(ctx context.Context, sel ast.SelectionSet, v *models.DeploymentApiTriggers) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DeploymentApiTriggers(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNDeploymentEdges2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineEdgesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.DeployPipelineEdges) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDeploymentEdges2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineEdges(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDeploymentEdges2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineEdges(ctx context.Context, sel ast.SelectionSet, v *models.DeployPipelineEdges) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34277,7 +35833,7 @@ func (ec *executionContext) marshalNDeploymentEdges2ᚖdataplaneᚋmainappᚋdat
 	return ec._DeploymentEdges(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDeploymentNodes2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineNodesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.DeployPipelineNodes) graphql.Marshaler {
+func (ec *executionContext) marshalNDeploymentNodes2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineNodesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.DeployPipelineNodes) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -34301,7 +35857,7 @@ func (ec *executionContext) marshalNDeploymentNodes2ᚕᚖdataplaneᚋmainappᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDeploymentNodes2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineNodes(ctx, sel, v[i])
+			ret[i] = ec.marshalNDeploymentNodes2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineNodes(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -34321,7 +35877,7 @@ func (ec *executionContext) marshalNDeploymentNodes2ᚕᚖdataplaneᚋmainappᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNDeploymentNodes2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineNodes(ctx context.Context, sel ast.SelectionSet, v *models.DeployPipelineNodes) graphql.Marshaler {
+func (ec *executionContext) marshalNDeploymentNodes2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeployPipelineNodes(ctx context.Context, sel ast.SelectionSet, v *models.DeployPipelineNodes) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34331,7 +35887,7 @@ func (ec *executionContext) marshalNDeploymentNodes2ᚖdataplaneᚋmainappᚋdat
 	return ec._DeploymentNodes(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDeploymentRuns2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRunsᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PipelineRuns) graphql.Marshaler {
+func (ec *executionContext) marshalNDeploymentRuns2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRunsᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PipelineRuns) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -34355,7 +35911,7 @@ func (ec *executionContext) marshalNDeploymentRuns2ᚕᚖdataplaneᚋmainappᚋd
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDeploymentRuns2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx, sel, v[i])
+			ret[i] = ec.marshalNDeploymentRuns2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -34375,7 +35931,7 @@ func (ec *executionContext) marshalNDeploymentRuns2ᚕᚖdataplaneᚋmainappᚋd
 	return ret
 }
 
-func (ec *executionContext) marshalNDeploymentRuns2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx context.Context, sel ast.SelectionSet, v *models.PipelineRuns) graphql.Marshaler {
+func (ec *executionContext) marshalNDeploymentRuns2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx context.Context, sel ast.SelectionSet, v *models.PipelineRuns) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34415,7 +35971,7 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNLogsCodeRun2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsCodeRun(ctx context.Context, sel ast.SelectionSet, v *models.LogsCodeRun) graphql.Marshaler {
+func (ec *executionContext) marshalNLogsCodeRun2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐLogsCodeRun(ctx context.Context, sel ast.SelectionSet, v *models.LogsCodeRun) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34425,7 +35981,7 @@ func (ec *executionContext) marshalNLogsCodeRun2ᚖdataplaneᚋmainappᚋdatabas
 	return ec._LogsCodeRun(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNLogsWorkers2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsWorkers(ctx context.Context, sel ast.SelectionSet, v *models.LogsWorkers) graphql.Marshaler {
+func (ec *executionContext) marshalNLogsWorkers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐLogsWorkers(ctx context.Context, sel ast.SelectionSet, v *models.LogsWorkers) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34435,7 +35991,7 @@ func (ec *executionContext) marshalNLogsWorkers2ᚖdataplaneᚋmainappᚋdatabas
 	return ec._LogsWorkers(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPipelineApiKeys2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiKeysᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PipelineApiKeys) graphql.Marshaler {
+func (ec *executionContext) marshalNPipelineApiKeys2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiKeysᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PipelineApiKeys) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -34459,7 +36015,7 @@ func (ec *executionContext) marshalNPipelineApiKeys2ᚕᚖdataplaneᚋmainappᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPipelineApiKeys2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiKeys(ctx, sel, v[i])
+			ret[i] = ec.marshalNPipelineApiKeys2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiKeys(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -34479,7 +36035,7 @@ func (ec *executionContext) marshalNPipelineApiKeys2ᚕᚖdataplaneᚋmainappᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNPipelineApiKeys2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiKeys(ctx context.Context, sel ast.SelectionSet, v *models.PipelineApiKeys) graphql.Marshaler {
+func (ec *executionContext) marshalNPipelineApiKeys2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiKeys(ctx context.Context, sel ast.SelectionSet, v *models.PipelineApiKeys) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34489,11 +36045,11 @@ func (ec *executionContext) marshalNPipelineApiKeys2ᚖdataplaneᚋmainappᚋdat
 	return ec._PipelineApiKeys(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPipelineApiTriggers2dataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiTriggers(ctx context.Context, sel ast.SelectionSet, v models.PipelineApiTriggers) graphql.Marshaler {
+func (ec *executionContext) marshalNPipelineApiTriggers2githubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiTriggers(ctx context.Context, sel ast.SelectionSet, v models.PipelineApiTriggers) graphql.Marshaler {
 	return ec._PipelineApiTriggers(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPipelineApiTriggers2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiTriggers(ctx context.Context, sel ast.SelectionSet, v *models.PipelineApiTriggers) graphql.Marshaler {
+func (ec *executionContext) marshalNPipelineApiTriggers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiTriggers(ctx context.Context, sel ast.SelectionSet, v *models.PipelineApiTriggers) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34503,7 +36059,7 @@ func (ec *executionContext) marshalNPipelineApiTriggers2ᚖdataplaneᚋmainapp�
 	return ec._PipelineApiTriggers(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPipelineEdges2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineEdgesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PipelineEdges) graphql.Marshaler {
+func (ec *executionContext) marshalNPipelineEdges2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineEdgesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PipelineEdges) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -34527,7 +36083,7 @@ func (ec *executionContext) marshalNPipelineEdges2ᚕᚖdataplaneᚋmainappᚋda
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPipelineEdges2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineEdges(ctx, sel, v[i])
+			ret[i] = ec.marshalNPipelineEdges2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineEdges(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -34547,7 +36103,7 @@ func (ec *executionContext) marshalNPipelineEdges2ᚕᚖdataplaneᚋmainappᚋda
 	return ret
 }
 
-func (ec *executionContext) marshalNPipelineEdges2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineEdges(ctx context.Context, sel ast.SelectionSet, v *models.PipelineEdges) graphql.Marshaler {
+func (ec *executionContext) marshalNPipelineEdges2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineEdges(ctx context.Context, sel ast.SelectionSet, v *models.PipelineEdges) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34557,7 +36113,7 @@ func (ec *executionContext) marshalNPipelineEdges2ᚖdataplaneᚋmainappᚋdatab
 	return ec._PipelineEdges(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNPipelineEdgesInput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesInputᚄ(ctx context.Context, v interface{}) ([]*PipelineEdgesInput, error) {
+func (ec *executionContext) unmarshalNPipelineEdgesInput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesInputᚄ(ctx context.Context, v interface{}) ([]*PipelineEdgesInput, error) {
 	var vSlice []interface{}
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -34566,7 +36122,7 @@ func (ec *executionContext) unmarshalNPipelineEdgesInput2ᚕᚖdataplaneᚋmaina
 	res := make([]*PipelineEdgesInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNPipelineEdgesInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNPipelineEdgesInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -34574,17 +36130,17 @@ func (ec *executionContext) unmarshalNPipelineEdgesInput2ᚕᚖdataplaneᚋmaina
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNPipelineEdgesInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesInput(ctx context.Context, v interface{}) (*PipelineEdgesInput, error) {
+func (ec *executionContext) unmarshalNPipelineEdgesInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesInput(ctx context.Context, v interface{}) (*PipelineEdgesInput, error) {
 	res, err := ec.unmarshalInputPipelineEdgesInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNPipelineEdgesMetaInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesMetaInput(ctx context.Context, v interface{}) (*PipelineEdgesMetaInput, error) {
+func (ec *executionContext) unmarshalNPipelineEdgesMetaInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineEdgesMetaInput(ctx context.Context, v interface{}) (*PipelineEdgesMetaInput, error) {
 	res, err := ec.unmarshalInputPipelineEdgesMetaInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNPipelineNodes2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineNodesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PipelineNodes) graphql.Marshaler {
+func (ec *executionContext) marshalNPipelineNodes2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineNodesᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PipelineNodes) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -34608,7 +36164,7 @@ func (ec *executionContext) marshalNPipelineNodes2ᚕᚖdataplaneᚋmainappᚋda
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPipelineNodes2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineNodes(ctx, sel, v[i])
+			ret[i] = ec.marshalNPipelineNodes2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineNodes(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -34628,7 +36184,7 @@ func (ec *executionContext) marshalNPipelineNodes2ᚕᚖdataplaneᚋmainappᚋda
 	return ret
 }
 
-func (ec *executionContext) marshalNPipelineNodes2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineNodes(ctx context.Context, sel ast.SelectionSet, v *models.PipelineNodes) graphql.Marshaler {
+func (ec *executionContext) marshalNPipelineNodes2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineNodes(ctx context.Context, sel ast.SelectionSet, v *models.PipelineNodes) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34638,7 +36194,7 @@ func (ec *executionContext) marshalNPipelineNodes2ᚖdataplaneᚋmainappᚋdatab
 	return ec._PipelineNodes(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNPipelineNodesInput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesInputᚄ(ctx context.Context, v interface{}) ([]*PipelineNodesInput, error) {
+func (ec *executionContext) unmarshalNPipelineNodesInput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesInputᚄ(ctx context.Context, v interface{}) ([]*PipelineNodesInput, error) {
 	var vSlice []interface{}
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -34647,7 +36203,7 @@ func (ec *executionContext) unmarshalNPipelineNodesInput2ᚕᚖdataplaneᚋmaina
 	res := make([]*PipelineNodesInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNPipelineNodesInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNPipelineNodesInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -34655,21 +36211,21 @@ func (ec *executionContext) unmarshalNPipelineNodesInput2ᚕᚖdataplaneᚋmaina
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNPipelineNodesInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesInput(ctx context.Context, v interface{}) (*PipelineNodesInput, error) {
+func (ec *executionContext) unmarshalNPipelineNodesInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesInput(ctx context.Context, v interface{}) (*PipelineNodesInput, error) {
 	res, err := ec.unmarshalInputPipelineNodesInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNPipelineNodesMetaInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesMetaInput(ctx context.Context, v interface{}) (*PipelineNodesMetaInput, error) {
+func (ec *executionContext) unmarshalNPipelineNodesMetaInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineNodesMetaInput(ctx context.Context, v interface{}) (*PipelineNodesMetaInput, error) {
 	res, err := ec.unmarshalInputPipelineNodesMetaInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNPipelineRuns2dataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx context.Context, sel ast.SelectionSet, v models.PipelineRuns) graphql.Marshaler {
+func (ec *executionContext) marshalNPipelineRuns2githubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx context.Context, sel ast.SelectionSet, v models.PipelineRuns) graphql.Marshaler {
 	return ec._PipelineRuns(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPipelineRuns2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRunsᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PipelineRuns) graphql.Marshaler {
+func (ec *executionContext) marshalNPipelineRuns2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRunsᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PipelineRuns) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -34693,7 +36249,7 @@ func (ec *executionContext) marshalNPipelineRuns2ᚕᚖdataplaneᚋmainappᚋdat
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPipelineRuns2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx, sel, v[i])
+			ret[i] = ec.marshalNPipelineRuns2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -34713,7 +36269,7 @@ func (ec *executionContext) marshalNPipelineRuns2ᚕᚖdataplaneᚋmainappᚋdat
 	return ret
 }
 
-func (ec *executionContext) marshalNPipelineRuns2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx context.Context, sel ast.SelectionSet, v *models.PipelineRuns) graphql.Marshaler {
+func (ec *executionContext) marshalNPipelineRuns2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx context.Context, sel ast.SelectionSet, v *models.PipelineRuns) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -34723,7 +36279,7 @@ func (ec *executionContext) marshalNPipelineRuns2ᚖdataplaneᚋmainappᚋdataba
 	return ec._PipelineRuns(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNPositionInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPositionInput(ctx context.Context, v interface{}) (*PositionInput, error) {
+func (ec *executionContext) unmarshalNPositionInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPositionInput(ctx context.Context, v interface{}) (*PositionInput, error) {
 	res, err := ec.unmarshalInputPositionInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
@@ -34811,7 +36367,7 @@ func (ec *executionContext) marshalNTime2ᚖtimeᚐTime(ctx context.Context, sel
 	return res
 }
 
-func (ec *executionContext) marshalNWorkerTasks2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerTasksᚄ(ctx context.Context, sel ast.SelectionSet, v []*WorkerTasks) graphql.Marshaler {
+func (ec *executionContext) marshalNWorkerTasks2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkerTasksᚄ(ctx context.Context, sel ast.SelectionSet, v []*WorkerTasks) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -34835,7 +36391,7 @@ func (ec *executionContext) marshalNWorkerTasks2ᚕᚖdataplaneᚋmainappᚋgrap
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNWorkerTasks2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerTasks(ctx, sel, v[i])
+			ret[i] = ec.marshalNWorkerTasks2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkerTasks(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -34855,7 +36411,7 @@ func (ec *executionContext) marshalNWorkerTasks2ᚕᚖdataplaneᚋmainappᚋgrap
 	return ret
 }
 
-func (ec *executionContext) marshalNWorkerTasks2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerTasks(ctx context.Context, sel ast.SelectionSet, v *WorkerTasks) graphql.Marshaler {
+func (ec *executionContext) marshalNWorkerTasks2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkerTasks(ctx context.Context, sel ast.SelectionSet, v *WorkerTasks) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -35118,7 +36674,7 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAccessGroups2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsAccessGroups) graphql.Marshaler {
+func (ec *executionContext) marshalOAccessGroups2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsAccessGroups) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35145,7 +36701,7 @@ func (ec *executionContext) marshalOAccessGroups2ᚕᚖdataplaneᚋmainappᚋdat
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOAccessGroups2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, sel, v[i])
+			ret[i] = ec.marshalOAccessGroups2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35159,14 +36715,14 @@ func (ec *executionContext) marshalOAccessGroups2ᚕᚖdataplaneᚋmainappᚋdat
 	return ret
 }
 
-func (ec *executionContext) marshalOAccessGroups2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsAccessGroups) graphql.Marshaler {
+func (ec *executionContext) marshalOAccessGroups2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGroups(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsAccessGroups) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._AccessGroups(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOAccessGroupsInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAccessGroupsInput(ctx context.Context, v interface{}) (*AccessGroupsInput, error) {
+func (ec *executionContext) unmarshalOAccessGroupsInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAccessGroupsInput(ctx context.Context, v interface{}) (*AccessGroupsInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -35174,7 +36730,7 @@ func (ec *executionContext) unmarshalOAccessGroupsInput2ᚖdataplaneᚋmainapp�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOAddEnvironmentInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddEnvironmentInput(ctx context.Context, v interface{}) (*AddEnvironmentInput, error) {
+func (ec *executionContext) unmarshalOAddEnvironmentInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAddEnvironmentInput(ctx context.Context, v interface{}) (*AddEnvironmentInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -35182,7 +36738,7 @@ func (ec *executionContext) unmarshalOAddEnvironmentInput2ᚖdataplaneᚋmainapp
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOAddPreferencesInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddPreferencesInput(ctx context.Context, v interface{}) (*AddPreferencesInput, error) {
+func (ec *executionContext) unmarshalOAddPreferencesInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAddPreferencesInput(ctx context.Context, v interface{}) (*AddPreferencesInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -35190,7 +36746,7 @@ func (ec *executionContext) unmarshalOAddPreferencesInput2ᚖdataplaneᚋmainapp
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOAddSecretsInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddSecretsInput(ctx context.Context, v interface{}) (*AddSecretsInput, error) {
+func (ec *executionContext) unmarshalOAddSecretsInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAddSecretsInput(ctx context.Context, v interface{}) (*AddSecretsInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -35198,7 +36754,7 @@ func (ec *executionContext) unmarshalOAddSecretsInput2ᚖdataplaneᚋmainappᚋg
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOAddUpdateMeInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddUpdateMeInput(ctx context.Context, v interface{}) (*AddUpdateMeInput, error) {
+func (ec *executionContext) unmarshalOAddUpdateMeInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAddUpdateMeInput(ctx context.Context, v interface{}) (*AddUpdateMeInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -35206,7 +36762,7 @@ func (ec *executionContext) unmarshalOAddUpdateMeInput2ᚖdataplaneᚋmainappᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOAddUsersInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐAddUsersInput(ctx context.Context, v interface{}) (*AddUsersInput, error) {
+func (ec *executionContext) unmarshalOAddUsersInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAddUsersInput(ctx context.Context, v interface{}) (*AddUsersInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -35230,7 +36786,7 @@ func (ec *executionContext) marshalOAny2interface(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalOAvailablePermissions2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx context.Context, sel ast.SelectionSet, v []*models.ResourceTypeStruct) graphql.Marshaler {
+func (ec *executionContext) marshalOAvailablePermissions2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx context.Context, sel ast.SelectionSet, v []*models.ResourceTypeStruct) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35257,7 +36813,7 @@ func (ec *executionContext) marshalOAvailablePermissions2ᚕᚖdataplaneᚋmaina
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOAvailablePermissions2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx, sel, v[i])
+			ret[i] = ec.marshalOAvailablePermissions2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35271,7 +36827,7 @@ func (ec *executionContext) marshalOAvailablePermissions2ᚕᚖdataplaneᚋmaina
 	return ret
 }
 
-func (ec *executionContext) marshalOAvailablePermissions2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx context.Context, sel ast.SelectionSet, v *models.ResourceTypeStruct) graphql.Marshaler {
+func (ec *executionContext) marshalOAvailablePermissions2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐResourceTypeStruct(ctx context.Context, sel ast.SelectionSet, v *models.ResourceTypeStruct) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35304,7 +36860,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOChangePasswordInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐChangePasswordInput(ctx context.Context, v interface{}) (*ChangePasswordInput, error) {
+func (ec *executionContext) unmarshalOChangePasswordInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐChangePasswordInput(ctx context.Context, v interface{}) (*ChangePasswordInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -35312,21 +36868,21 @@ func (ec *executionContext) unmarshalOChangePasswordInput2ᚖdataplaneᚋmainapp
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOCodePackages2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCodePackages(ctx context.Context, sel ast.SelectionSet, v *CodePackages) graphql.Marshaler {
+func (ec *executionContext) marshalOCodePackages2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐCodePackages(ctx context.Context, sel ast.SelectionSet, v *CodePackages) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._CodePackages(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOCodeTree2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐCodeTree(ctx context.Context, sel ast.SelectionSet, v *CodeTree) graphql.Marshaler {
+func (ec *executionContext) marshalOCodeTree2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐCodeTree(ctx context.Context, sel ast.SelectionSet, v *CodeTree) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._CodeTree(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalODataInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDataInput(ctx context.Context, v interface{}) (*DataInput, error) {
+func (ec *executionContext) unmarshalODataInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDataInput(ctx context.Context, v interface{}) (*DataInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -35334,14 +36890,14 @@ func (ec *executionContext) unmarshalODataInput2ᚖdataplaneᚋmainappᚋgraphql
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalODeploymentFlow2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentFlow(ctx context.Context, sel ast.SelectionSet, v *DeploymentFlow) graphql.Marshaler {
+func (ec *executionContext) marshalODeploymentFlow2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeploymentFlow(ctx context.Context, sel ast.SelectionSet, v *DeploymentFlow) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DeploymentFlow(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODeploymentPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v []*DeploymentPermissionsOutput) graphql.Marshaler {
+func (ec *executionContext) marshalODeploymentPermissionsOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v []*DeploymentPermissionsOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35368,7 +36924,7 @@ func (ec *executionContext) marshalODeploymentPermissionsOutput2ᚕᚖdataplane�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalODeploymentPermissionsOutput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx, sel, v[i])
+			ret[i] = ec.marshalODeploymentPermissionsOutput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35382,14 +36938,14 @@ func (ec *executionContext) marshalODeploymentPermissionsOutput2ᚕᚖdataplane�
 	return ret
 }
 
-func (ec *executionContext) marshalODeploymentPermissionsOutput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v *DeploymentPermissionsOutput) graphql.Marshaler {
+func (ec *executionContext) marshalODeploymentPermissionsOutput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeploymentPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v *DeploymentPermissionsOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DeploymentPermissionsOutput(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODeployments2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx context.Context, sel ast.SelectionSet, v []*Deployments) graphql.Marshaler {
+func (ec *executionContext) marshalODeployments2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx context.Context, sel ast.SelectionSet, v []*Deployments) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35416,7 +36972,7 @@ func (ec *executionContext) marshalODeployments2ᚕᚖdataplaneᚋmainappᚋgrap
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalODeployments2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, sel, v[i])
+			ret[i] = ec.marshalODeployments2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35430,14 +36986,14 @@ func (ec *executionContext) marshalODeployments2ᚕᚖdataplaneᚋmainappᚋgrap
 	return ret
 }
 
-func (ec *executionContext) marshalODeployments2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx context.Context, sel ast.SelectionSet, v *Deployments) graphql.Marshaler {
+func (ec *executionContext) marshalODeployments2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐDeployments(ctx context.Context, sel ast.SelectionSet, v *Deployments) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Deployments(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOEnvironments2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx context.Context, sel ast.SelectionSet, v []*models.Environment) graphql.Marshaler {
+func (ec *executionContext) marshalOEnvironments2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx context.Context, sel ast.SelectionSet, v []*models.Environment) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35464,7 +37020,7 @@ func (ec *executionContext) marshalOEnvironments2ᚕᚖdataplaneᚋmainappᚋdat
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOEnvironments2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, sel, v[i])
+			ret[i] = ec.marshalOEnvironments2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35478,14 +37034,14 @@ func (ec *executionContext) marshalOEnvironments2ᚕᚖdataplaneᚋmainappᚋdat
 	return ret
 }
 
-func (ec *executionContext) marshalOEnvironments2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx context.Context, sel ast.SelectionSet, v *models.Environment) graphql.Marshaler {
+func (ec *executionContext) marshalOEnvironments2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐEnvironment(ctx context.Context, sel ast.SelectionSet, v *models.Environment) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Environments(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOFolderNodeInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐFolderNodeInput(ctx context.Context, v interface{}) (*FolderNodeInput, error) {
+func (ec *executionContext) unmarshalOFolderNodeInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐFolderNodeInput(ctx context.Context, v interface{}) (*FolderNodeInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -35493,7 +37049,7 @@ func (ec *executionContext) unmarshalOFolderNodeInput2ᚖdataplaneᚋmainappᚋg
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOLogsCodeRun2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsCodeRunᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.LogsCodeRun) graphql.Marshaler {
+func (ec *executionContext) marshalOLogsCodeRun2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐLogsCodeRunᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.LogsCodeRun) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35520,7 +37076,7 @@ func (ec *executionContext) marshalOLogsCodeRun2ᚕᚖdataplaneᚋmainappᚋdata
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNLogsCodeRun2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsCodeRun(ctx, sel, v[i])
+			ret[i] = ec.marshalNLogsCodeRun2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐLogsCodeRun(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35540,7 +37096,7 @@ func (ec *executionContext) marshalOLogsCodeRun2ᚕᚖdataplaneᚋmainappᚋdata
 	return ret
 }
 
-func (ec *executionContext) marshalOLogsWorkers2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsWorkersᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.LogsWorkers) graphql.Marshaler {
+func (ec *executionContext) marshalOLogsWorkers2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐLogsWorkersᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.LogsWorkers) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35567,7 +37123,7 @@ func (ec *executionContext) marshalOLogsWorkers2ᚕᚖdataplaneᚋmainappᚋdata
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNLogsWorkers2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐLogsWorkers(ctx, sel, v[i])
+			ret[i] = ec.marshalNLogsWorkers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐLogsWorkers(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35587,7 +37143,7 @@ func (ec *executionContext) marshalOLogsWorkers2ᚕᚖdataplaneᚋmainappᚋdata
 	return ret
 }
 
-func (ec *executionContext) marshalONonDefaultNodes2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐNonDefaultNodes(ctx context.Context, sel ast.SelectionSet, v []*NonDefaultNodes) graphql.Marshaler {
+func (ec *executionContext) marshalONonDefaultNodes2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐNonDefaultNodes(ctx context.Context, sel ast.SelectionSet, v []*NonDefaultNodes) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35614,7 +37170,7 @@ func (ec *executionContext) marshalONonDefaultNodes2ᚕᚖdataplaneᚋmainappᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalONonDefaultNodes2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐNonDefaultNodes(ctx, sel, v[i])
+			ret[i] = ec.marshalONonDefaultNodes2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐNonDefaultNodes(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35628,14 +37184,14 @@ func (ec *executionContext) marshalONonDefaultNodes2ᚕᚖdataplaneᚋmainappᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalONonDefaultNodes2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐNonDefaultNodes(ctx context.Context, sel ast.SelectionSet, v *NonDefaultNodes) graphql.Marshaler {
+func (ec *executionContext) marshalONonDefaultNodes2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐNonDefaultNodes(ctx context.Context, sel ast.SelectionSet, v *NonDefaultNodes) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._NonDefaultNodes(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsAccessGUsersOutput) graphql.Marshaler {
+func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsAccessGUsersOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35662,7 +37218,7 @@ func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplan
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOPermissionsAccessGUsersOutput2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, sel, v[i])
+			ret[i] = ec.marshalOPermissionsAccessGUsersOutput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35676,14 +37232,14 @@ func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚕᚖdataplan
 	return ret
 }
 
-func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsAccessGUsersOutput) graphql.Marshaler {
+func (ec *executionContext) marshalOPermissionsAccessGUsersOutput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsAccessGUsersOutput(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsAccessGUsersOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._PermissionsAccessGUsersOutput(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsOutput) graphql.Marshaler {
+func (ec *executionContext) marshalOPermissionsOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v []*models.PermissionsOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35710,7 +37266,7 @@ func (ec *executionContext) marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainapp�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOPermissionsOutput2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, sel, v[i])
+			ret[i] = ec.marshalOPermissionsOutput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35724,21 +37280,21 @@ func (ec *executionContext) marshalOPermissionsOutput2ᚕᚖdataplaneᚋmainapp�
 	return ret
 }
 
-func (ec *executionContext) marshalOPermissionsOutput2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsOutput) graphql.Marshaler {
+func (ec *executionContext) marshalOPermissionsOutput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPermissionsOutput(ctx context.Context, sel ast.SelectionSet, v *models.PermissionsOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._PermissionsOutput(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPipelineFlow2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineFlow(ctx context.Context, sel ast.SelectionSet, v *PipelineFlow) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelineFlow2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineFlow(ctx context.Context, sel ast.SelectionSet, v *PipelineFlow) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._PipelineFlow(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOPipelineFlowInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelineFlowInput(ctx context.Context, v interface{}) (*PipelineFlowInput, error) {
+func (ec *executionContext) unmarshalOPipelineFlowInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelineFlowInput(ctx context.Context, v interface{}) (*PipelineFlowInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -35746,14 +37302,14 @@ func (ec *executionContext) unmarshalOPipelineFlowInput2ᚖdataplaneᚋmainapp�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOPipelineNodes2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineNodes(ctx context.Context, sel ast.SelectionSet, v *models.PipelineNodes) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelineNodes2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineNodes(ctx context.Context, sel ast.SelectionSet, v *models.PipelineNodes) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._PipelineNodes(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPipelinePermissionsOutput2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx context.Context, sel ast.SelectionSet, v []*PipelinePermissionsOutput) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelinePermissionsOutput2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx context.Context, sel ast.SelectionSet, v []*PipelinePermissionsOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35780,7 +37336,7 @@ func (ec *executionContext) marshalOPipelinePermissionsOutput2ᚕᚖdataplaneᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOPipelinePermissionsOutput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, sel, v[i])
+			ret[i] = ec.marshalOPipelinePermissionsOutput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35794,21 +37350,21 @@ func (ec *executionContext) marshalOPipelinePermissionsOutput2ᚕᚖdataplaneᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalOPipelinePermissionsOutput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx context.Context, sel ast.SelectionSet, v *PipelinePermissionsOutput) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelinePermissionsOutput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelinePermissionsOutput(ctx context.Context, sel ast.SelectionSet, v *PipelinePermissionsOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._PipelinePermissionsOutput(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPipelineRuns2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx context.Context, sel ast.SelectionSet, v *models.PipelineRuns) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelineRuns2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineRuns(ctx context.Context, sel ast.SelectionSet, v *models.PipelineRuns) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._PipelineRuns(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx context.Context, sel ast.SelectionSet, v []*Pipelines) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelines2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx context.Context, sel ast.SelectionSet, v []*Pipelines) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35835,7 +37391,7 @@ func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋgraphq
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOPipelines2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx, sel, v[i])
+			ret[i] = ec.marshalOPipelines2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35849,21 +37405,21 @@ func (ec *executionContext) marshalOPipelines2ᚕᚖdataplaneᚋmainappᚋgraphq
 	return ret
 }
 
-func (ec *executionContext) marshalOPipelines2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx context.Context, sel ast.SelectionSet, v *Pipelines) graphql.Marshaler {
+func (ec *executionContext) marshalOPipelines2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPipelines(ctx context.Context, sel ast.SelectionSet, v *Pipelines) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Pipelines(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPlatform2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPlatform(ctx context.Context, sel ast.SelectionSet, v *Platform) graphql.Marshaler {
+func (ec *executionContext) marshalOPlatform2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPlatform(ctx context.Context, sel ast.SelectionSet, v *Platform) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Platform(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPreferences2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx context.Context, sel ast.SelectionSet, v []*Preferences) graphql.Marshaler {
+func (ec *executionContext) marshalOPreferences2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx context.Context, sel ast.SelectionSet, v []*Preferences) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35890,7 +37446,7 @@ func (ec *executionContext) marshalOPreferences2ᚕᚖdataplaneᚋmainappᚋgrap
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOPreferences2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx, sel, v[i])
+			ret[i] = ec.marshalOPreferences2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35904,14 +37460,14 @@ func (ec *executionContext) marshalOPreferences2ᚕᚖdataplaneᚋmainappᚋgrap
 	return ret
 }
 
-func (ec *executionContext) marshalOPreferences2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx context.Context, sel ast.SelectionSet, v *Preferences) graphql.Marshaler {
+func (ec *executionContext) marshalOPreferences2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐPreferences(ctx context.Context, sel ast.SelectionSet, v *Preferences) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Preferences(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx context.Context, sel ast.SelectionSet, v []*models.WorkerSecrets) graphql.Marshaler {
+func (ec *executionContext) marshalOSecretWorkerGroups2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx context.Context, sel ast.SelectionSet, v []*models.WorkerSecrets) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35938,7 +37494,7 @@ func (ec *executionContext) marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋmainapp
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOSecretWorkerGroups2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx, sel, v[i])
+			ret[i] = ec.marshalOSecretWorkerGroups2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -35952,14 +37508,14 @@ func (ec *executionContext) marshalOSecretWorkerGroups2ᚕᚖdataplaneᚋmainapp
 	return ret
 }
 
-func (ec *executionContext) marshalOSecretWorkerGroups2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx context.Context, sel ast.SelectionSet, v *models.WorkerSecrets) graphql.Marshaler {
+func (ec *executionContext) marshalOSecretWorkerGroups2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx context.Context, sel ast.SelectionSet, v *models.WorkerSecrets) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._SecretWorkerGroups(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOSecrets2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx context.Context, sel ast.SelectionSet, v []*models.Secrets) graphql.Marshaler {
+func (ec *executionContext) marshalOSecrets2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx context.Context, sel ast.SelectionSet, v []*models.Secrets) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -35986,7 +37542,7 @@ func (ec *executionContext) marshalOSecrets2ᚕᚖdataplaneᚋmainappᚋdatabase
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOSecrets2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, sel, v[i])
+			ret[i] = ec.marshalOSecrets2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -36000,7 +37556,7 @@ func (ec *executionContext) marshalOSecrets2ᚕᚖdataplaneᚋmainappᚋdatabase
 	return ret
 }
 
-func (ec *executionContext) marshalOSecrets2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx context.Context, sel ast.SelectionSet, v *models.Secrets) graphql.Marshaler {
+func (ec *executionContext) marshalOSecrets2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐSecrets(ctx context.Context, sel ast.SelectionSet, v *models.Secrets) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -36059,7 +37615,7 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	return res
 }
 
-func (ec *executionContext) unmarshalOUpdateEnvironment2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateEnvironment(ctx context.Context, v interface{}) (*UpdateEnvironment, error) {
+func (ec *executionContext) unmarshalOUpdateEnvironment2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐUpdateEnvironment(ctx context.Context, v interface{}) (*UpdateEnvironment, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -36067,7 +37623,7 @@ func (ec *executionContext) unmarshalOUpdateEnvironment2ᚖdataplaneᚋmainapp�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOUpdateSecretsInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateSecretsInput(ctx context.Context, v interface{}) (*UpdateSecretsInput, error) {
+func (ec *executionContext) unmarshalOUpdateSecretsInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐUpdateSecretsInput(ctx context.Context, v interface{}) (*UpdateSecretsInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -36075,7 +37631,7 @@ func (ec *executionContext) unmarshalOUpdateSecretsInput2ᚖdataplaneᚋmainapp�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOUpdateUsersInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdateUsersInput(ctx context.Context, v interface{}) (*UpdateUsersInput, error) {
+func (ec *executionContext) unmarshalOUpdateUsersInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐUpdateUsersInput(ctx context.Context, v interface{}) (*UpdateUsersInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -36083,7 +37639,7 @@ func (ec *executionContext) unmarshalOUpdateUsersInput2ᚖdataplaneᚋmainappᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx context.Context, sel ast.SelectionSet, v []*models.Users) graphql.Marshaler {
+func (ec *executionContext) marshalOUser2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx context.Context, sel ast.SelectionSet, v []*models.Users) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -36110,7 +37666,7 @@ func (ec *executionContext) marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, sel, v[i])
+			ret[i] = ec.marshalOUser2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -36124,14 +37680,14 @@ func (ec *executionContext) marshalOUser2ᚕᚖdataplaneᚋmainappᚋdatabaseᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalOUser2ᚖdataplaneᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx context.Context, sel ast.SelectionSet, v *models.Users) graphql.Marshaler {
+func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐUsers(ctx context.Context, sel ast.SelectionSet, v *models.Users) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOWorkerGroup2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroup(ctx context.Context, sel ast.SelectionSet, v []*WorkerGroup) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkerGroup2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkerGroup(ctx context.Context, sel ast.SelectionSet, v []*WorkerGroup) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -36158,7 +37714,7 @@ func (ec *executionContext) marshalOWorkerGroup2ᚕᚖdataplaneᚋmainappᚋgrap
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOWorkerGroup2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroup(ctx, sel, v[i])
+			ret[i] = ec.marshalOWorkerGroup2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkerGroup(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -36172,14 +37728,14 @@ func (ec *executionContext) marshalOWorkerGroup2ᚕᚖdataplaneᚋmainappᚋgrap
 	return ret
 }
 
-func (ec *executionContext) marshalOWorkerGroup2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroup(ctx context.Context, sel ast.SelectionSet, v *WorkerGroup) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkerGroup2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkerGroup(ctx context.Context, sel ast.SelectionSet, v *WorkerGroup) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._WorkerGroup(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOWorkerGroupsNodes2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroupsNodes(ctx context.Context, v interface{}) ([]*WorkerGroupsNodes, error) {
+func (ec *executionContext) unmarshalOWorkerGroupsNodes2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkerGroupsNodes(ctx context.Context, v interface{}) ([]*WorkerGroupsNodes, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -36191,7 +37747,7 @@ func (ec *executionContext) unmarshalOWorkerGroupsNodes2ᚕᚖdataplaneᚋmainap
 	res := make([]*WorkerGroupsNodes, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOWorkerGroupsNodes2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroupsNodes(ctx, vSlice[i])
+		res[i], err = ec.unmarshalOWorkerGroupsNodes2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkerGroupsNodes(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -36199,7 +37755,7 @@ func (ec *executionContext) unmarshalOWorkerGroupsNodes2ᚕᚖdataplaneᚋmainap
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOWorkerGroupsNodes2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkerGroupsNodes(ctx context.Context, v interface{}) (*WorkerGroupsNodes, error) {
+func (ec *executionContext) unmarshalOWorkerGroupsNodes2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkerGroupsNodes(ctx context.Context, v interface{}) (*WorkerGroupsNodes, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -36207,7 +37763,7 @@ func (ec *executionContext) unmarshalOWorkerGroupsNodes2ᚖdataplaneᚋmainapp�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOWorkers2ᚕᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx context.Context, sel ast.SelectionSet, v []*Workers) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkers2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx context.Context, sel ast.SelectionSet, v []*Workers) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -36234,7 +37790,7 @@ func (ec *executionContext) marshalOWorkers2ᚕᚖdataplaneᚋmainappᚋgraphql�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOWorkers2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx, sel, v[i])
+			ret[i] = ec.marshalOWorkers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -36248,7 +37804,7 @@ func (ec *executionContext) marshalOWorkers2ᚕᚖdataplaneᚋmainappᚋgraphql�
 	return ret
 }
 
-func (ec *executionContext) marshalOWorkers2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx context.Context, sel ast.SelectionSet, v *Workers) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐWorkers(ctx context.Context, sel ast.SelectionSet, v *Workers) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -36457,7 +38013,7 @@ func (ec *executionContext) marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 	return ec.___Type(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOupdatePlatformInput2ᚖdataplaneᚋmainappᚋgraphqlᚋprivateᚐUpdatePlatformInput(ctx context.Context, v interface{}) (*UpdatePlatformInput, error) {
+func (ec *executionContext) unmarshalOupdatePlatformInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐUpdatePlatformInput(ctx context.Context, v interface{}) (*UpdatePlatformInput, error) {
 	if v == nil {
 		return nil, nil
 	}

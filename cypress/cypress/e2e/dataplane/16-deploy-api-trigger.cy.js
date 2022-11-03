@@ -1,6 +1,6 @@
 // Tests for deployment and turn off deployment
 
-describe('Deployment and deployment turn off', function () {
+describe('Deploy API trigger', function () {
     it('Login as admin', function () {
         cy.visit('http://localhost:9002/webapp/login');
 
@@ -10,8 +10,8 @@ describe('Deployment and deployment turn off', function () {
         cy.url().should('include', '/webapp');
     });
 
-    it('Deploy schedule pipeline', function () {
-        cy.contains('Cypress Schedule Pipeline')
+    it('Deploy API pipeline', function () {
+        cy.contains('Cypress API Pipeline')
             .first()
             .parent()
             .parent()
@@ -27,30 +27,16 @@ describe('Deployment and deployment turn off', function () {
         cy.contains('Default worker group').parent().should('exist', { timeout: 6000 }).click();
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
 
-        cy.contains('button', 'Deploy').should('exist', { timeout: 6000 }).click();
+        // Trigger deployment
+        cy.contains('localhost').then((path) => {
+            cy.contains('button', 'Deploy')
+                .should('exist', { timeout: 6000 })
+                .click()
+                .then(() => {
+                    cy.request('POST', path.text());
+                });
+        });
+
         cy.wait(100);
-    });
-
-    it('Turn off schedule deployment', function () {
-        cy.contains('Cypress Schedule Pipeline')
-            .first()
-            .parent()
-            .parent()
-            .parent()
-            .within(() => {
-                cy.contains('Manage').should('exist', { timeout: 6000 }).click({ force: true });
-            });
-
-        cy.contains('Turn off').should('exist', { timeout: 6000 }).click({ force: true });
-        cy.contains('Yes').should('exist', { timeout: 6000 }).click({ force: true });
-
-        cy.contains('Cypress Schedule Pipeline')
-            .first()
-            .parent()
-            .parent()
-            .parent()
-            .within(() => {
-                cy.contains('Offline');
-            });
     });
 });

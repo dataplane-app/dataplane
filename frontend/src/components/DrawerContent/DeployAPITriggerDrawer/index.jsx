@@ -2,48 +2,27 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Drawer, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { useEffect, useReducer, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGeneratePipelineTrigger } from '../../../../graphql/generatePipelineTrigger';
-import { useGlobalEnvironmentState } from '../../../EnviromentDropdown';
-import { IOSSwitch } from '../../SchedulerDrawer/IOSSwitch';
-import { v4 as uuidv4 } from 'uuid';
-import { useGetPipelineTrigger } from '../../../../graphql/getPipelineTrigger';
+import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
+import { IOSSwitch } from '../SchedulerDrawer/IOSSwitch';
 import ApiKey from './ApiKey';
-import ApiTriggerExampleDrawer from '../../ApiTriggerExampleDrawer';
+import ApiTriggerExampleDrawer from '../ApiTriggerExampleDrawer';
 
 let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
 if (host === '') {
     host = window.location.origin;
 }
-const PUBLIC = `${host}/publicapi/api-trigger/`;
-const PRIVATE = `https://{{ HOST }}/privateapi/api-trigger/`;
+const PUBLIC = `${host}/publicapi/api-trigger/latest/`;
+const PRIVATE = `https://{{ HOST }}/privateapi/api-trigger/latest/`;
 
-const initialState = {
-    publicLive: true,
-    privateLive: true,
-    apiKeyActive: false,
-};
-
-const APITRiggerDrawer = ({ handleClose }) => {
+const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, generateDeploymentTrigger }) => {
     // Global state
     const Environment = useGlobalEnvironmentState();
 
     // Local state
-    const [triggerID, setTriggerID] = useState(() => uuidv4());
     const [isOpenExampleDrawer, setIsOpenExampleDrawer] = useState(false);
     const [isExamplePrivate, setIsExamplePrivate] = useState(false);
-    const [switches, dispatch] = useReducer((switches, newState) => ({ ...switches, ...newState }), initialState);
-
-    // Custom GraphQL hooks
-    const generatePipelineTrigger = useGeneratePipelineTriggerHook(Environment.id.get(), triggerID, switches, dispatch);
-    const getPipelineTriggerHook = useGetPipelineTriggerHook(Environment.id.get(), setTriggerID, dispatch);
-
-    useEffect(() => {
-        getPipelineTriggerHook();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [Environment.id.get()]);
 
     return (
         <Box position="relative" width="100%" mb={10}>
@@ -61,7 +40,7 @@ const APITRiggerDrawer = ({ handleClose }) => {
                     <Box top="26px" right="39px" display="flex" alignItems="center">
                         <Button //
                             onClick={() => {
-                                generatePipelineTrigger();
+                                generateDeploymentTrigger();
                                 handleClose();
                             }}
                             type="submit"
@@ -92,11 +71,11 @@ const APITRiggerDrawer = ({ handleClose }) => {
                         </Typography>
                     </Box>
                     <Typography variant="subtitle2" fontSize="0.75rem" fontWeight={400}>
-                        Anyone with this link can trigger this workflow.
+                        Anyone with this link can trigger this workflow. To use a specific version, change “latest” with this format “v1.2.4”
                     </Typography>
                     <Box display="flex" alignItems="center" mt={3}>
                         <IOSSwitch
-                            onClick={() => generatePipelineTrigger({ publicLive: !switches.publicLive })}
+                            onClick={() => generateDeploymentTrigger({ publicLive: !switches.publicLive })}
                             checked={switches.publicLive}
                             inputProps={{ 'aria-label': 'controlled' }}
                         />
@@ -144,7 +123,7 @@ const APITRiggerDrawer = ({ handleClose }) => {
 
                     <Box display="flex" alignItems="center" mt={3}>
                         <IOSSwitch
-                            onClick={() => generatePipelineTrigger({ privateLive: !switches.privateLive })}
+                            onClick={() => generateDeploymentTrigger({ privateLive: !switches.privateLive })}
                             checked={switches.privateLive}
                             inputProps={{ 'aria-label': 'controlled' }}
                         />
@@ -167,7 +146,7 @@ const APITRiggerDrawer = ({ handleClose }) => {
                 <Box mb={10} />
 
                 {/* API Key */}
-                <ApiKey apiKeyActive={switches.apiKeyActive} generatePipelineTrigger={generatePipelineTrigger} environmentID={Environment.id.get()} triggerID={triggerID} />
+                <ApiKey apiKeyActive={switches.apiKeyActive} generateDeploymentTrigger={generateDeploymentTrigger} environmentID={Environment.id.get()} triggerID={triggerID} />
             </Box>
             <Drawer
                 anchor="right"
@@ -182,6 +161,7 @@ const APITRiggerDrawer = ({ handleClose }) => {
                         setIsOpenExampleDrawer(false);
                         setIsExamplePrivate(false);
                     }}
+                    //
                     host={isExamplePrivate ? PRIVATE : PUBLIC}
                     triggerID={triggerID}
                     isExamplePrivate={isExamplePrivate}
@@ -191,66 +171,4 @@ const APITRiggerDrawer = ({ handleClose }) => {
     );
 };
 
-export default APITRiggerDrawer;
-
-// ---------- Custom Hooks
-
-const useGeneratePipelineTriggerHook = (environmentID, triggerID, switches, dispatch) => {
-    // GraphQL hook
-    const generatePipelineTrigger = useGeneratePipelineTrigger();
-
-    const { enqueueSnackbar } = useSnackbar();
-
-    // URI parameter
-    const { pipelineId } = useParams();
-
-    const { apiKeyActive, publicLive, privateLive } = switches;
-
-    // Get access groups
-    return async (update) => {
-        const response = await generatePipelineTrigger({
-            pipelineID: pipelineId,
-            environmentID,
-            triggerID,
-            apiKeyActive,
-            publicLive,
-            privateLive,
-            ...update,
-        });
-
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't generate api triggers: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            // enqueueSnackbar('Success', { variant: 'success' });
-            dispatch(update);
-        }
-    };
-};
-
-const useGetPipelineTriggerHook = (environmentID, setTriggerID, dispatch) => {
-    // GraphQL hook
-    const getPipelineTrigger = useGetPipelineTrigger();
-
-    const { enqueueSnackbar } = useSnackbar();
-
-    // URI parameter
-    const { pipelineId } = useParams();
-
-    // Get access groups
-    return async () => {
-        const response = await getPipelineTrigger({ pipelineID: pipelineId, environmentID });
-
-        if (response.r || response.error) {
-            enqueueSnackbar("Can't get api triggers: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            if (response.errors[0].message === 'record not found') return;
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            const { triggerID, publicLive, privateLive, apiKeyActive } = response;
-            setTriggerID(triggerID);
-            dispatch({ publicLive, privateLive, apiKeyActive });
-        }
-    };
-};
+export default DeployAPITRiggerDrawer;
