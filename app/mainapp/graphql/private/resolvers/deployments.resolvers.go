@@ -484,7 +484,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 					ScheduleType:  psc.ScheduleType,
 					Schedule:      psc.Schedule,
 					Timezone:      psc.Timezone,
-					Online:        online,
+					Online:        liveactive,
 					RunType:       "deployment",
 				}
 				// Add back to schedule
