@@ -9,20 +9,18 @@ import (
 	"log"
 	"strings"
 
-	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
-
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
-
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
-
 	"github.com/google/uuid"
 	"gorm.io/gorm/clause"
 )
 
+// AddEnvironment is the resolver for the addEnvironment field.
 func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategraphql.AddEnvironmentInput) (*models.Environment, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -96,6 +94,7 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 	}, nil
 }
 
+// UpdateEnvironment is the resolver for the updateEnvironment field.
 func (r *mutationResolver) UpdateEnvironment(ctx context.Context, input *privategraphql.UpdateEnvironment) (*models.Environment, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -169,6 +168,7 @@ func (r *mutationResolver) UpdateEnvironment(ctx context.Context, input *private
 	}, nil
 }
 
+// UpdateDeactivateEnvironment is the resolver for the updateDeactivateEnvironment field.
 func (r *mutationResolver) UpdateDeactivateEnvironment(ctx context.Context, environmentID string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -216,6 +216,7 @@ func (r *mutationResolver) UpdateDeactivateEnvironment(ctx context.Context, envi
 	return &response, nil
 }
 
+// UpdateActivateEnvironment is the resolver for the updateActivateEnvironment field.
 func (r *mutationResolver) UpdateActivateEnvironment(ctx context.Context, environmentID string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -263,6 +264,7 @@ func (r *mutationResolver) UpdateActivateEnvironment(ctx context.Context, enviro
 	return &response, nil
 }
 
+// UpdateDeleteEnvironment is the resolver for the updateDeleteEnvironment field.
 func (r *mutationResolver) UpdateDeleteEnvironment(ctx context.Context, environmentID string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -294,6 +296,7 @@ func (r *mutationResolver) UpdateDeleteEnvironment(ctx context.Context, environm
 	return &response, nil
 }
 
+// UpdatePlatform is the resolver for the updatePlatform field.
 func (r *mutationResolver) UpdatePlatform(ctx context.Context, input *privategraphql.UpdatePlatformInput) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -327,6 +330,7 @@ func (r *mutationResolver) UpdatePlatform(ctx context.Context, input *privategra
 	return &response, nil
 }
 
+// AddUserToEnvironment is the resolver for the addUserToEnvironment field.
 func (r *mutationResolver) AddUserToEnvironment(ctx context.Context, userID string, environmentID string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -364,6 +368,7 @@ func (r *mutationResolver) AddUserToEnvironment(ctx context.Context, userID stri
 	return &rtn, nil
 }
 
+// RemoveUserFromEnvironment is the resolver for the removeUserFromEnvironment field.
 func (r *mutationResolver) RemoveUserFromEnvironment(ctx context.Context, userID string, environmentID string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -395,6 +400,7 @@ func (r *mutationResolver) RemoveUserFromEnvironment(ctx context.Context, userID
 	return &rtn, nil
 }
 
+// GetEnvironments is the resolver for the getEnvironments field.
 func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environment, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -451,6 +457,7 @@ func (r *queryResolver) GetEnvironments(ctx context.Context) ([]*models.Environm
 	return e, nil
 }
 
+// GetEnvironment is the resolver for the getEnvironment field.
 func (r *queryResolver) GetEnvironment(ctx context.Context, environmentID string) (*models.Environment, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -503,6 +510,7 @@ func (r *queryResolver) GetEnvironment(ctx context.Context, environmentID string
 	return &e, nil
 }
 
+// GetUserEnvironments is the resolver for the getUserEnvironments field.
 func (r *queryResolver) GetUserEnvironments(ctx context.Context, userID string, environmentID string) ([]*models.Environment, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -546,6 +554,7 @@ func (r *queryResolver) GetUserEnvironments(ctx context.Context, userID string, 
 	return e, nil
 }
 
+// GetPlatform is the resolver for the getPlatform field.
 func (r *queryResolver) GetPlatform(ctx context.Context) (*privategraphql.Platform, error) {
 	p := privategraphql.Platform{}
 

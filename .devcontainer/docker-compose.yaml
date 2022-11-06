@@ -65,7 +65,7 @@ services:
       # - 3000:3000
     volumes:
       - node_modules:/appdev/frontend/node_modules
-      - ../:/appdev
+      - ../:/appdev:cached
     environment:
       DP_CODE_FOLDER: "/appdev/code-files/"
       DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"

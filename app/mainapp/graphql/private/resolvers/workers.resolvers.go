@@ -7,19 +7,17 @@ import (
 	"context"
 	"errors"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
-
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
-
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
-
 	"gorm.io/gorm"
 )
 
+// AddSecretToWorkerGroup is the resolver for the addSecretToWorkerGroup field.
 func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environmentID string, workerGroup string, secret string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -67,6 +65,7 @@ func (r *mutationResolver) AddSecretToWorkerGroup(ctx context.Context, environme
 	return &response, nil
 }
 
+// DeleteSecretFromWorkerGroup is the resolver for the deleteSecretFromWorkerGroup field.
 func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, environmentID string, workerGroup string, secret string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -110,6 +109,7 @@ func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, envi
 	return &response, nil
 }
 
+// GetWorkers is the resolver for the getWorkers field.
 func (r *queryResolver) GetWorkers(ctx context.Context, environmentID string) ([]*privategraphql.Workers, error) {
 	var resp []*privategraphql.Workers
 
@@ -155,6 +155,7 @@ func (r *queryResolver) GetWorkers(ctx context.Context, environmentID string) ([
 	return resp, nil
 }
 
+// GetWorkerGroups is the resolver for the getWorkerGroups field.
 func (r *queryResolver) GetWorkerGroups(ctx context.Context, environmentID string) ([]*privategraphql.WorkerGroup, error) {
 	var resp []*privategraphql.WorkerGroup
 
@@ -196,6 +197,7 @@ func (r *queryResolver) GetWorkerGroups(ctx context.Context, environmentID strin
 	return resp, nil
 }
 
+// GetSecretGroups is the resolver for the getSecretGroups field.
 func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentID string, secret string) ([]*models.WorkerSecrets, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -226,6 +228,7 @@ func (r *queryResolver) GetSecretGroups(ctx context.Context, environmentID strin
 	return s, nil
 }
 
+// GetWorkerGroupSecrets is the resolver for the getWorkerGroupSecrets field.
 func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentID string, workerGroup string) ([]*models.Secrets, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

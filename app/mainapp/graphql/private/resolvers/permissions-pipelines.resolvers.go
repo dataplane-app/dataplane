@@ -7,18 +7,16 @@ import (
 	"context"
 	"errors"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
-
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
-
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
-
 	"gorm.io/gorm"
 )
 
+// PipelinePermissionsToUser is the resolver for the pipelinePermissionsToUser field.
 func (r *mutationResolver) PipelinePermissionsToUser(ctx context.Context, environmentID string, resourceID string, access []string, userID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -73,6 +71,7 @@ func (r *mutationResolver) PipelinePermissionsToUser(ctx context.Context, enviro
 	return "Access permissions updated.", nil
 }
 
+// PipelinePermissionsToAccessGroup is the resolver for the pipelinePermissionsToAccessGroup field.
 func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context, environmentID string, resourceID string, access []string, accessGroupID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -127,6 +126,7 @@ func (r *mutationResolver) PipelinePermissionsToAccessGroup(ctx context.Context,
 	return "Access permissions updated.", nil
 }
 
+// MyPipelinePermissions is the resolver for the myPipelinePermissions field.
 func (r *queryResolver) MyPipelinePermissions(ctx context.Context) ([]*privategraphql.PipelinePermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 
@@ -242,6 +242,7 @@ func (r *queryResolver) MyPipelinePermissions(ctx context.Context) ([]*privategr
 	return PermissionsOutput, nil
 }
 
+// UserPipelinePermissions is the resolver for the userPipelinePermissions field.
 func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID string, environmentID string, subjectType string) ([]*privategraphql.PipelinePermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -369,6 +370,7 @@ func (r *queryResolver) UserPipelinePermissions(ctx context.Context, userID stri
 	return PermissionsOutput, nil
 }
 
+// UserSinglePipelinePermissions is the resolver for the userSinglePipelinePermissions field.
 func (r *queryResolver) UserSinglePipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string, subjectType string) (*privategraphql.PipelinePermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -497,6 +499,7 @@ GROUP BY
 	return PermissionsOutput, nil
 }
 
+// PipelinePermissions is the resolver for the pipelinePermissions field.
 func (r *queryResolver) PipelinePermissions(ctx context.Context, userID string, environmentID string, pipelineID string) ([]*privategraphql.PipelinePermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

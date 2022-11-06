@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dfscache "github.com/dataplane-app/dataplane/app/mainapp/code_editor/dfs_cache"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -21,11 +21,11 @@ import (
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
-
 	"github.com/google/uuid"
 	"gorm.io/gorm/clause"
 )
 
+// CreateFolderNode is the resolver for the createFolderNode field.
 func (r *mutationResolver) CreateFolderNode(ctx context.Context, input *privategraphql.FolderNodeInput) (*models.CodeFolders, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -71,6 +71,7 @@ func (r *mutationResolver) CreateFolderNode(ctx context.Context, input *privateg
 	return &rFolderout, nil
 }
 
+// MoveFolderNode is the resolver for the moveFolderNode field.
 func (r *mutationResolver) MoveFolderNode(ctx context.Context, folderID string, toFolderID string, environmentID string, pipelineID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -125,6 +126,7 @@ func (r *mutationResolver) MoveFolderNode(ctx context.Context, folderID string, 
 	return "Success", nil
 }
 
+// DeleteFolderNode is the resolver for the deleteFolderNode field.
 func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID string, folderID string, nodeID string, pipelineID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -271,6 +273,7 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 	return "Success", nil
 }
 
+// RenameFolder is the resolver for the renameFolder field.
 func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID string, folderID string, nodeID string, pipelineID string, newName string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -342,6 +345,7 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 	return "Success", nil
 }
 
+// DeleteFileNode is the resolver for the deleteFileNode field.
 func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -482,6 +486,7 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 	return "Success", nil
 }
 
+// RenameFile is the resolver for the renameFile field.
 func (r *mutationResolver) RenameFile(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string, newName string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -543,6 +548,7 @@ func (r *mutationResolver) RenameFile(ctx context.Context, environmentID string,
 	return "Success", nil
 }
 
+// MoveFileNode is the resolver for the moveFileNode field.
 func (r *mutationResolver) MoveFileNode(ctx context.Context, fileID string, toFolderID string, environmentID string, pipelineID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -603,6 +609,7 @@ func (r *mutationResolver) MoveFileNode(ctx context.Context, fileID string, toFo
 	return "Success", nil
 }
 
+// UpdateCodePackages is the resolver for the updateCodePackages field.
 func (r *mutationResolver) UpdateCodePackages(ctx context.Context, workerGroup string, language string, packages string, environmentID string, pipelineID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -648,6 +655,7 @@ func (r *mutationResolver) UpdateCodePackages(ctx context.Context, workerGroup s
 	return "Success", nil
 }
 
+// FilesNode is the resolver for the filesNode field.
 func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nodeID string, pipelineID string) (*privategraphql.CodeTree, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -696,6 +704,7 @@ func (r *queryResolver) FilesNode(ctx context.Context, environmentID string, nod
 	return &t, nil
 }
 
+// GetCodePackages is the resolver for the getCodePackages field.
 func (r *queryResolver) GetCodePackages(ctx context.Context, workerGroup string, language string, environmentID string, pipelineID string) (*privategraphql.CodePackages, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

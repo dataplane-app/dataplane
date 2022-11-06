@@ -72,6 +72,10 @@ docker tag dataplane/dataplane-worker-python:$dpversion dataplane/dataplane-work
 docker push dataplane/dataplane-worker-python:$dpversion
 docker tag dataplane/dataplane-worker-python:$dpversion dataplane/dataplane-worker-python:latest
 docker push dataplane/dataplane-worker-python:latest
+
+docker build -t dataplane/dataplane-worker-python-ubuntu:latest -f docker-build/Dockerfile.workerpython.ubuntu .
+docker tag dataplane/dataplane-worker-python-ubuntu:latest dataplane/dataplane-worker-python-ubuntu:latest
+docker push dataplane/dataplane-worker-python-ubuntu:latest
 ```
 
 Test

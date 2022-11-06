@@ -16,6 +16,7 @@ import { useGlobalFlowState } from '../PipelineEdit';
 import { useGlobalMeState } from '../../components/Navbar';
 import cronZone from '../../utils/cronZone';
 import { getTimeZone } from '../../utils/formatDate';
+import DeployAPITRiggerTableDrawer from '../../components/DrawerContent/DeployAPITriggerTableDrawer';
 
 const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDeployments }) => {
     // React router
@@ -32,6 +33,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
 
     // Drawer state
     const [isOpenDeletePipeline, setIsOpenDeletePipeline] = useState(false);
+    const [isOpenAPI, setIsOpenAPI] = useState(false);
     const [pipelineName, setPipelineName] = useState('');
     const [pipelineId, setPipelineId] = useState('');
     const [version, setVersion] = useState('');
@@ -62,6 +64,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
                                 environmentID={row.value[3]}
                                 nodeTypeDesc={row.value[4]}
                                 setIsOpenDeletePipeline={setIsOpenDeletePipeline}
+                                openAPI={() => setIsOpenAPI(true)}
                                 setDeployments={setDeployments}
                                 deploy_active={row.value[6]}
                                 version={row.value[5]}
@@ -103,7 +106,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
                             <Typography color="secondary.main" variant="body2">
                                 {row.value.node_type_desc[0]?.toUpperCase() + row.value.node_type_desc.slice(1) + ' trigger'}
                                 {row.value.schedule && ' - ' + cronZone(row.value.schedule, MeData.timezone.get(), row.value.schedule_type)}
-                                {row.value.node_type_desc !== 'play' && ' ' + getTimeZone(row.value.timezone)}
+                                {row.value.node_type_desc === 'schedule' && ' ' + getTimeZone(row.value.timezone)}
                             </Typography>
                         </Box>
                     ) : null,
@@ -240,6 +243,18 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
                         environmentID={environmentID}
                         name={pipelineName}
                         setDeployments={setDeployments}
+                    />
+                </Drawer>
+
+                <Drawer
+                    hideBackdrop
+                    sx={{ width: 'calc(100% - 203px)', zIndex: 1099, [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
+                    anchor="right"
+                    open={isOpenAPI}
+                    onClose={() => setIsOpenAPI(false)}>
+                    <DeployAPITRiggerTableDrawer //
+                        handleClose={() => setIsOpenAPI(false)}
+                        deploymentId={pipelineId}
                     />
                 </Drawer>
             </Box>

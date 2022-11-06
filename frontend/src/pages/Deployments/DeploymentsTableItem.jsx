@@ -14,7 +14,7 @@ const DeploymentTableItem = (props) => {
     const FlowState = useGlobalFlowState();
 
     //Props
-    const { handleCloseMenu, id, name, version, online, environmentID, nodeTypeDesc, setIsOpenDeletePipeline, setDeployments, deploy_active } = props;
+    const { handleCloseMenu, id, name, version, online, environmentID, nodeTypeDesc, setIsOpenDeletePipeline, setDeployments, deploy_active, openAPI } = props;
 
     // Graphql hook
     const getDeployments = useGetDeploymentsHook(setDeployments, environmentID);
@@ -48,6 +48,11 @@ const DeploymentTableItem = (props) => {
         handleCloseMenu();
     };
 
+    const handleAPISettings = () => {
+        openAPI();
+        handleCloseMenu();
+    };
+
     return (
         <>
             {nodeTypeDesc !== 'play' && deploy_active ? (
@@ -58,6 +63,11 @@ const DeploymentTableItem = (props) => {
             <MenuItem sx={{ color: 'cyan.main' }} onClick={permissionClick}>
                 Permissions
             </MenuItem>
+            {nodeTypeDesc === 'api' ? (
+                <MenuItem sx={{ color: 'cyan.main' }} onClick={handleAPISettings}>
+                    API settings
+                </MenuItem>
+            ) : null}
             <MenuItem sx={{ color: 'cyan.main' }} onClick={clearCacheClick}>
                 Clear file cache
             </MenuItem>

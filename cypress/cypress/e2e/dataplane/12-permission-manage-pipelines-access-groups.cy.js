@@ -58,7 +58,7 @@ describe('Give pipeline permission to a user', function () {
         cy.get('#password').type('environment123!').should('have.value', 'environment123!');
         cy.contains('button', 'Login').should('exist', { timeout: 6000 }).click();
 
-        cy.get('td h3').first().should('have.text', 'Cypress Pipeline');
+        cy.get('td h3').first().should('have.text', 'Cypress API Pipeline');
     });
 
     // #2 Verify user belongs to an access group with 'Manage pipeline permissions' can edit pipeline permissions

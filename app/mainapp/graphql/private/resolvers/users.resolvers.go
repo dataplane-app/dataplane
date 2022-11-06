@@ -8,20 +8,18 @@ import (
 	"errors"
 	"strings"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
-
-	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
-
 	"github.com/dataplane-app/dataplane/app/mainapp/auth"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
-
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
+// CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql.AddUsersInput) (*models.Users, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -94,6 +92,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *privategraphql
 	}, nil
 }
 
+// UpdateUser is the resolver for the updateUser field.
 func (r *mutationResolver) UpdateUser(ctx context.Context, input *privategraphql.UpdateUsersInput) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -129,6 +128,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, input *privategraphql
 	return &response, nil
 }
 
+// UpdateChangePassword is the resolver for the updateChangePassword field.
 func (r *mutationResolver) UpdateChangePassword(ctx context.Context, input *privategraphql.ChangePasswordInput) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -166,6 +166,7 @@ func (r *mutationResolver) UpdateChangePassword(ctx context.Context, input *priv
 	return &response, nil
 }
 
+// UpdateDeactivateUser is the resolver for the updateDeactivateUser field.
 func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -222,6 +223,7 @@ func (r *mutationResolver) UpdateDeactivateUser(ctx context.Context, userid stri
 	return &response, nil
 }
 
+// UpdateActivateUser is the resolver for the updateActivateUser field.
 func (r *mutationResolver) UpdateActivateUser(ctx context.Context, userid string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -273,6 +275,7 @@ func (r *mutationResolver) UpdateActivateUser(ctx context.Context, userid string
 	return &response, nil
 }
 
+// UpdateDeleteUser is the resolver for the updateDeleteUser field.
 func (r *mutationResolver) UpdateDeleteUser(ctx context.Context, userid string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -313,6 +316,7 @@ func (r *mutationResolver) UpdateDeleteUser(ctx context.Context, userid string) 
 	return &response, nil
 }
 
+// LogoutUser is the resolver for the logoutUser field.
 func (r *queryResolver) LogoutUser(ctx context.Context) (*string, error) {
 	// Permission: logged in user
 
@@ -330,6 +334,7 @@ func (r *queryResolver) LogoutUser(ctx context.Context) (*string, error) {
 	return &response, nil
 }
 
+// GetUser is the resolver for the getUser field.
 func (r *queryResolver) GetUser(ctx context.Context, userID string) (*models.Users, error) {
 	e := models.Users{}
 
@@ -343,6 +348,7 @@ func (r *queryResolver) GetUser(ctx context.Context, userID string) (*models.Use
 	return &e, nil
 }
 
+// GetUsers is the resolver for the getUsers field.
 func (r *queryResolver) GetUsers(ctx context.Context) ([]*models.Users, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -371,6 +377,7 @@ func (r *queryResolver) GetUsers(ctx context.Context) ([]*models.Users, error) {
 	return e, nil
 }
 
+// GetUsersFromEnvironment is the resolver for the getUsersFromEnvironment field.
 func (r *queryResolver) GetUsersFromEnvironment(ctx context.Context, environmentID string) ([]*models.Users, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

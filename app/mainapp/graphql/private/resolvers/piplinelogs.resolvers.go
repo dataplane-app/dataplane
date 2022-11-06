@@ -7,15 +7,14 @@ import (
 	"context"
 	"errors"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
-
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
-
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 )
 
+// GetNodeLogs is the resolver for the getNodeLogs field.
 func (r *queryResolver) GetNodeLogs(ctx context.Context, runID string, pipelineID string, nodeID string, environmentID string) ([]*models.LogsWorkers, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -47,6 +46,7 @@ func (r *queryResolver) GetNodeLogs(ctx context.Context, runID string, pipelineI
 	return p, nil
 }
 
+// GetCodeFileRunLogs is the resolver for the getCodeFileRunLogs field.
 func (r *queryResolver) GetCodeFileRunLogs(ctx context.Context, runID string, pipelineID string, environmentID string) ([]*models.LogsCodeRun, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

@@ -24,7 +24,7 @@ const DeploymentViewPageItem = (props) => {
     };
     return (
         <>
-            {props.version === version ? (
+            {props.version === version && props.pipeline.deploy_active ? (
                 <MenuItem sx={{ color: 'cyan.main' }} onClick={handleRun}>
                     Run
                 </MenuItem>
