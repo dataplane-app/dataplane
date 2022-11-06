@@ -8,19 +8,17 @@ import (
 	"errors"
 	"log"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
-
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
-
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
-
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
+// CreateAccessGroup is the resolver for the createAccessGroup field.
 func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID string, name string, description *string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -58,6 +56,7 @@ func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID 
 	return e.AccessGroupID, nil
 }
 
+// UpdateAccessGroup is the resolver for the updateAccessGroup field.
 func (r *mutationResolver) UpdateAccessGroup(ctx context.Context, input *privategraphql.AccessGroupsInput) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -94,6 +93,7 @@ func (r *mutationResolver) UpdateAccessGroup(ctx context.Context, input *private
 	return response, nil
 }
 
+// ActivateAccessGroup is the resolver for the activateAccessGroup field.
 func (r *mutationResolver) ActivateAccessGroup(ctx context.Context, accessGroupID string, environmentID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -153,6 +153,7 @@ func (r *mutationResolver) ActivateAccessGroup(ctx context.Context, accessGroupI
 	return response, nil
 }
 
+// DeactivateAccessGroup is the resolver for the deactivateAccessGroup field.
 func (r *mutationResolver) DeactivateAccessGroup(ctx context.Context, accessGroupID string, environmentID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -212,6 +213,7 @@ func (r *mutationResolver) DeactivateAccessGroup(ctx context.Context, accessGrou
 	return response, nil
 }
 
+// DeleteAccessGroup is the resolver for the deleteAccessGroup field.
 func (r *mutationResolver) DeleteAccessGroup(ctx context.Context, accessGroupID string, environmentID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -249,6 +251,7 @@ func (r *mutationResolver) DeleteAccessGroup(ctx context.Context, accessGroupID 
 	return accessGroupID, nil
 }
 
+// UpdatePermissionToAccessGroup is the resolver for the updatePermissionToAccessGroup field.
 func (r *mutationResolver) UpdatePermissionToAccessGroup(ctx context.Context, environmentID string, resource string, resourceID string, access string, accessGroupID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -311,6 +314,7 @@ func (r *mutationResolver) UpdatePermissionToAccessGroup(ctx context.Context, en
 	return perm.ID, nil
 }
 
+// UpdateUserToAccessGroup is the resolver for the updateUserToAccessGroup field.
 func (r *mutationResolver) UpdateUserToAccessGroup(ctx context.Context, environmentID string, userID string, accessGroupID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -361,6 +365,7 @@ func (r *mutationResolver) UpdateUserToAccessGroup(ctx context.Context, environm
 	return "success", nil
 }
 
+// RemoveUserFromAccessGroup is the resolver for the removeUserFromAccessGroup field.
 func (r *mutationResolver) RemoveUserFromAccessGroup(ctx context.Context, userID string, accessGroupID string, environmentID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -399,6 +404,7 @@ func (r *mutationResolver) RemoveUserFromAccessGroup(ctx context.Context, userID
 	return e.AccessGroupID, nil
 }
 
+// GetAccessGroups is the resolver for the getAccessGroups field.
 func (r *queryResolver) GetAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGroups, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -452,6 +458,7 @@ func (r *queryResolver) GetAccessGroups(ctx context.Context, userID string, envi
 	return e, nil
 }
 
+// GetAccessGroup is the resolver for the getAccessGroup field.
 func (r *queryResolver) GetAccessGroup(ctx context.Context, userID string, environmentID string, accessGroupID string) (*models.PermissionsAccessGroups, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -481,6 +488,7 @@ func (r *queryResolver) GetAccessGroup(ctx context.Context, userID string, envir
 	return e, nil
 }
 
+// GetUserAccessGroups is the resolver for the getUserAccessGroups field.
 func (r *queryResolver) GetUserAccessGroups(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsAccessGUsersOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -525,6 +533,7 @@ func (r *queryResolver) GetUserAccessGroups(ctx context.Context, userID string, 
 	return e, nil
 }
 
+// GetAccessGroupUsers is the resolver for the getAccessGroupUsers field.
 func (r *queryResolver) GetAccessGroupUsers(ctx context.Context, environmentID string, accessGroupID string) ([]*models.Users, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -572,6 +581,7 @@ func (r *queryResolver) GetAccessGroupUsers(ctx context.Context, environmentID s
 	return e, nil
 }
 
+// MyAccessGroups is the resolver for the myAccessGroups field.
 func (r *queryResolver) MyAccessGroups(ctx context.Context) ([]*models.PermissionsAccessGUsersOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 

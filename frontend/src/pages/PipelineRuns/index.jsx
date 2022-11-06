@@ -23,6 +23,8 @@ import { useGlobalRunState } from './GlobalRunState';
 import { edgeTypes, nodeTypes } from './NodeTypes';
 import TurnOffPipelineDrawerRunPipeline from '../../components/DrawerContent/TurnOffPipelineDrawerRunPipeline';
 import ScheduleDrawer from '../../components/DrawerContent/SchedulerDrawerRunPage';
+import { useGlobalFlowState } from '../PipelineEdit';
+import ProcessTypeDrawer from '../../components/DrawerContent/ProcessTypeDrawerRunPage';
 
 const View = () => {
     // Retrieve global environments from drop down - selected environment ID
@@ -43,6 +45,7 @@ const View = () => {
     // Runstate = run updates on graph structure
     const FlowState = useGlobalPipelineRun();
     const RunState = useGlobalRunState();
+    const DrawerState = useGlobalFlowState();
 
     // On page load, clear the global run state
     useEffect(() => {
@@ -50,6 +53,13 @@ const View = () => {
             selectedRunID: null,
             runObject: null,
         });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            FlowState.elements.set([]);
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -238,6 +248,14 @@ const View = () => {
                     handleClose={() => FlowState.isOpenSchedulerDrawer.set(false)} //
                     environmentId={Environment.id.get()}
                     getPipeline={getPipeline}
+                />
+            </Drawer>
+
+            <Drawer anchor="right" open={DrawerState.isOpenConfigureDrawer.get()} onClose={() => DrawerState.isOpenConfigureDrawer.set(false)}>
+                <ProcessTypeDrawer //
+                    environmentID={Environment.id.get()}
+                    handleClose={() => DrawerState.isOpenConfigureDrawer.set(false)}
+                    workerGroup={pipeline?.workerGroup}
                 />
             </Drawer>
         </Box>

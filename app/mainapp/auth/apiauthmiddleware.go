@@ -15,8 +15,8 @@ import (
 func ApiAuthMiddle(publicOrPrivate string) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
-		triggerID := string(c.Params("id"))
 		key := string(c.Request().Header.Peek("apikey"))
+		triggerID := string(c.Params("id"))
 
 		// Get trigger info
 		trigger := models.PipelineApiTriggers{}
@@ -90,6 +90,7 @@ func ApiAuthMiddle(publicOrPrivate string) func(*fiber.Ctx) error {
 		// --- Pass through context
 		c.Locals("environmentID", trigger.EnvironmentID)
 		c.Locals("pipelineID", trigger.PipelineID)
+
 		return c.Next()
 	}
 }

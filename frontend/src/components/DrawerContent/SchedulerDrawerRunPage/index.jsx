@@ -185,7 +185,7 @@ function TabPanel(props) {
     );
 }
 
-export const useAddUpdatePipelineFlowHook = (environmentID, getPipelineFlow, getPipeline) => {
+const useAddUpdatePipelineFlowHook = (environmentID, getPipelineFlow, getPipeline) => {
     // GraphQL hook
     const addUpdatePipelineFlow = useAddUpdatePipelineFlow();
 
@@ -214,7 +214,7 @@ export const useAddUpdatePipelineFlowHook = (environmentID, getPipelineFlow, get
     };
 };
 
-const useGetPipelineFlowHook = (environmentID) => {
+export const useGetPipelineFlowHook = (environmentID) => {
     // GraphQL hook
     const getPipelineFlow = useGetPipelineFlow();
 

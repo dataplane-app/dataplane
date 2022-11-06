@@ -9,7 +9,7 @@ export default function StatusChips() {
     const FlowState = useGlobalPipelineRun();
 
     return (
-        <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }} ml={3} mr={1}>
+        <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }} mr={1}>
             <CustomChip amount={Object.values(FlowState.elements?.get()).filter((a) => a.type !== 'custom').length || '0'} label="Steps" margin={2} customColor="orange" />
             <CustomChip
                 amount={(RunState.runObject?.nodes?.get() && Object?.values(RunState.runObject?.nodes.get())?.filter((a) => a?.status === 'Queue').length) || '0'}

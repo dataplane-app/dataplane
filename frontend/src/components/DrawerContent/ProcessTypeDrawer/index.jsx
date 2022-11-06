@@ -95,6 +95,7 @@ const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGrou
                             onChange={(event, newValue) => {
                                 setSelectedWorkerGroup(newValue);
                             }}
+                            isOptionEqualToValue={(option, value) => option.WorkerGroup === value.WorkerGroup}
                             renderInput={(params) => (
                                 <TextField
                                     {...params} //

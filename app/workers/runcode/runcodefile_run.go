@@ -197,6 +197,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, "DP_NODEID="+msg.NodeID)
 		cmd.Env = append(cmd.Env, "DP_RUNID="+msg.RunID)
+		cmd.Env = append(cmd.Env, "DP_ENVID="+msg.EnvironmentID)
 
 		// Request the OS to assign process group to the new process, to which all its children will belong
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}

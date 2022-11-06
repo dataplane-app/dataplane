@@ -182,7 +182,7 @@ const APITRiggerDrawer = ({ handleClose }) => {
                         setIsOpenExampleDrawer(false);
                         setIsExamplePrivate(false);
                     }}
-                    host={isExamplePrivate ? 'https://{{ HOST }}' : host}
+                    host={isExamplePrivate ? PRIVATE : PUBLIC}
                     triggerID={triggerID}
                     isExamplePrivate={isExamplePrivate}
                 />
