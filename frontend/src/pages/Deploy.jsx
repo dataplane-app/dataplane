@@ -24,8 +24,8 @@ let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
 if (host === '') {
     host = window.location.origin;
 }
-const PUBLIC = `${host}/publicapi/api-trigger/latest/`;
-const PRIVATE = `https://{{ HOST }}/privateapi/api-trigger/latest/`;
+const PUBLIC = `${host}/publicapi/deployment/api-trigger/latest/`;
+const PRIVATE = `https://{{ HOST }}/privateapi/deployment/api-trigger/latest/`;
 
 const initialState = {
     publicLive: true,

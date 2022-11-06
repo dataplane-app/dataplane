@@ -1,9 +1,7 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Drawer, Typography } from '@mui/material';
-import { useSnackbar } from 'notistack';
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { IOSSwitch } from '../SchedulerDrawer/IOSSwitch';
 import ApiKey from './ApiKey';
@@ -13,8 +11,8 @@ let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
 if (host === '') {
     host = window.location.origin;
 }
-const PUBLIC = `${host}/publicapi/api-trigger/latest/`;
-const PRIVATE = `https://{{ HOST }}/privateapi/api-trigger/latest/`;
+const PUBLIC = `${host}/publicapi/deployment/api-trigger/latest/`;
+const PRIVATE = `https://{{ HOST }}/privateapi/deployment/api-trigger/latest/`;
 
 const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, generateDeploymentTrigger }) => {
     // Global state
