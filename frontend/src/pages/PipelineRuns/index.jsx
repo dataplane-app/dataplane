@@ -56,6 +56,13 @@ const View = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    useEffect(() => {
+        return () => {
+            FlowState.elements.set([]);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // Page states
     const [isOpenPublishDrawer, setIsOpenPublishDrawer] = useState(false);
     const [, setIsLoadingFlow] = useState(true);
