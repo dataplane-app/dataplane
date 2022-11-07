@@ -72,12 +72,12 @@ describe('Give pipeline permission to a user', function () {
     });
 
     it('Verify Permission', function () {
-        cy.wait(50);
+        cy.wait(150);
 
         cy.contains('Pipeline permissions >').parent().parent().parent().parent().scrollTo('left');
 
         cy.get('td h4')
-            .contains('Jimmy')
+            .contains('Jimmy User')
             .should('exist', { timeout: 6000 })
             .parent()
             .parent()
