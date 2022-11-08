@@ -73,6 +73,15 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
 
     const theme = useTheme();
 
+    // Show component on a new run
+    const runState = EditorGlobal.runState.get();
+    useEffect(() => {
+        if (runState === 'Running') {
+            setIsHidden(false);
+        }
+    }, [runState]);
+
+    // Hide component on initial load, default behaviour
     let showLogs = EditorGlobal.showLogs.get();
     if (!showLogs && isHidden === null) return null;
 
