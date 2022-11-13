@@ -72,8 +72,20 @@ describe('Give pipeline permission to a user', function () {
     });
 
     it('Verify Permission', function () {
-        cy.wait(50);
-        cy.get('td h4').contains('Jimmy').parent().parent().next().next().contains('View').prev().should('have.css', 'color', 'rgb(114, 184, 66)');
+        cy.wait(150);
+
+        cy.contains('Pipeline permissions >').parent().parent().parent().parent().scrollTo('left');
+
+        cy.get('td h4')
+            .contains('Jimmy User')
+            .should('exist', { timeout: 6000 })
+            .parent()
+            .parent()
+            .next()
+            .next()
+            .contains('View')
+            .prev()
+            .should('have.css', 'color', 'rgb(114, 184, 66)');
     });
 
     // #3 Verify user without 'View all pipelines' permission can't view pipelines

@@ -4,24 +4,24 @@ describe('Add/remove python file', function () {
 
         cy.get('#email').type('admin@email.com').should('have.value', 'admin@email.com');
         cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
-        cy.contains('button', 'Login').should('be.visible', { timeout: 6000 }).click();
+        cy.contains('button', 'Login').should('exist', { timeout: 6000 }).click();
         cy.url().should('include', '/webapp');
-        cy.contains('Cypress Pipeline').should('be.visible', { timeout: 6000 }).click();
+        cy.contains('Cypress Pipeline').should('exist', { timeout: 6000 }).click();
 
         cy.get('.react-flow').within(() => {
-            cy.get('#long-button').should('be.visible', { timeout: 6000 }).click();
+            cy.get('#long-button').should('exist', { timeout: 6000 }).click();
         });
 
-        cy.contains('Code').should('be.visible', { timeout: 6000 }).click();
-        cy.contains('Edit').should('be.visible', { timeout: 6000 }).click();
+        cy.contains('Code').should('exist', { timeout: 6000 }).click();
+        cy.contains('Edit').should('exist', { timeout: 6000 }).click();
     });
 
     it('Make file', function () {
         cy.get('#new_file_button') //
-            .should('be.visible', { timeout: 6000 })
+            .should('exist', { timeout: 6000 })
             .click({ force: true })
-            .should('be.visible', { timeout: 6000 });
-        cy.get('#new_file_input').should('be.visible', { timeout: 6000 }).type('file.py{enter}');
+            .should('exist', { timeout: 6000 });
+        cy.get('#new_file_input').should('exist', { timeout: 6000 }).type('file.py{enter}');
 
         cy.get('#notistack-snackbar').should('contain', 'File saved.');
     });
@@ -29,14 +29,14 @@ describe('Add/remove python file', function () {
     it('Type in code editor', function () {
         cy.get('.view-lines.monaco-mouse-cursor-text').click();
         cy.get('.view-lines.monaco-mouse-cursor-text').type('Dataplane Code');
-        cy.contains(/^Dataplane Code$/).should('be.visible', { timeout: 6000 });
+        cy.contains(/^Dataplane Code$/).should('exist', { timeout: 6000 });
     });
 
     it('Delete file', function () {
         // Click on delete button
         cy.get('.MuiTreeView-root ul > div > div > li:nth-child(3) button:nth-child(2)').click({ force: true });
 
-        cy.contains('Yes').should('be.visible', { timeout: 6000 }).click({ force: true });
+        cy.contains('Yes').should('exist', { timeout: 6000 }).click({ force: true });
 
         cy.get('#notistack-snackbar').should('contain', 'Success');
     });
