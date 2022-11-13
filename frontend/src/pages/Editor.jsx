@@ -31,6 +31,7 @@ export const globalEditorState = createState({
     parentName: null,
     runID: null,
     runState: null,
+    showLogs: false,
     markdown: 'edit', // view or edit
 });
 
@@ -85,10 +86,13 @@ const PipelineEditor = () => {
             parentName: null,
             runID: null,
             runState: null,
+            showLogs: false,
             markdown: 'edit',
         });
         history.push(`/pipelines/view/${pipeline.pipelineID}`);
     };
+
+    let showLogs = EditorGlobal.showLogs.get();
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -124,7 +128,7 @@ const PipelineEditor = () => {
                             measureBeforeMount={true}
                             // onResizeStop={(e, _) => console.log('Resize', e, _)}
                             compactType="vertical"
-                            layouts={getGridLayouts(pipeline.nodeTypeDesc, EditorGlobal.markdown.value, isMarkdown(EditorGlobal.selectedFile?.name?.value))}
+                            layouts={getGridLayouts(pipeline.nodeTypeDesc, EditorGlobal.markdown.value, isMarkdown(EditorGlobal.selectedFile?.name?.value), showLogs)}
                             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                             cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}>
                             <FileManagerColumn key="1" pipeline={pipeline} />

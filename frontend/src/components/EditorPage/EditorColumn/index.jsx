@@ -119,6 +119,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         EditorGlobal.installState.set(null);
 
         EditorGlobal.runState.set(null);
+        EditorGlobal.showLogs.set(false);
         // If no selection, return
         if (!EditorGlobal.selectedFile.value || EditorGlobal.selectedFile.fType.value === 'folder') return;
 
