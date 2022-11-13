@@ -21,7 +21,7 @@ jobs:
       - name: Server health check
         uses: jtalk/url-health-check-action@v2
         with:
-          url: http://127.0.0.1:9002/healthz
+          url: http://localhost:9002/healthz
           max-attempts: 7
           retry-delay: 5s
           retry-all: true
