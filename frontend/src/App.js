@@ -21,7 +21,7 @@ import NotFound from './pages/NotFound';
 import Pipelines from './pages/PipelinesView';
 import Deployments from './pages/Deployments';
 import Workers from './pages/Workers/Workers';
-import WorkerDetail from './pages/Workers/WorkerDetail';
+import WorkerDetail from './pages/Workers/ServerWorkers/WorkerDetail';
 import SecretDetail from './pages/SecretDetail';
 import Secrets from './pages/Secrets';
 import Settings from './pages/Settings';
