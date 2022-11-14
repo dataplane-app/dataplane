@@ -16,8 +16,8 @@ export default function Workers() {
         <Box sx={{ width: '100%' }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-                    <Tab label="Server Workers" id="tab-0" aria-controls="tabpanel-0" sx={{ px: 0 }} />
-                    <Tab label="RPA Workers" id="tab-0" aria-controls="tabpanel-0" sx={{ ml: 2, px: 0 }} />
+                    <Tab label="Server Workers" id="tab-0" aria-controls="tabpanel-0" sx={{ px: 0, color: 'primary.main' }} />
+                    <Tab label="RPA Workers" id="tab-0" aria-controls="tabpanel-0" sx={{ ml: 2, px: 0, color: 'primary.main' }} />
                 </Tabs>
             </Box>
             <TabPanel value={value} index={0}>

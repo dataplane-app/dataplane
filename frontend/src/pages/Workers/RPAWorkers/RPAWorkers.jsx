@@ -140,7 +140,7 @@ export default function RPAWorkers() {
                                     sx={{
                                         borderTopLeftRadius: idx === 0 ? 5 : 0,
                                         borderTopRightRadius: idx === headerGroup.headers.length - 1 ? 5 : 0,
-                                        border: '1px solid #B9B9B9',
+                                        border: '1px solid',
                                         borderLeft: idx === 0 ? '1px solid' : 0,
                                         borderColor: 'editorPage.borderColor',
                                         backgroundColor: 'background.worker',
@@ -173,10 +173,10 @@ export default function RPAWorkers() {
                                             sx={{
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                border: '1px solid #B9B9B9',
-                                                borderColor: 'divider',
+                                                border: '1px solid',
+                                                borderColor: 'editorPage.borderColor',
                                                 height: '50px',
-                                                borderLeft: idx === 0 ? '1px solid #B9B9B9' : 0,
+                                                borderLeft: idx === 0 ? '1px solid editorPage.borderColor' : 0,
                                                 // If last cell of last row
                                                 borderBottomRightRadius: idx === row.cells.length - 1 && i === rows.length - 1 ? '5px' : 0,
                                                 // If first cell of last row

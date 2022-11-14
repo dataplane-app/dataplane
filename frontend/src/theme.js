@@ -91,7 +91,7 @@ const createCustomTheme = (mode) => ({
                       secondary: 'rgba(9, 30, 58, 1)',
                       hoverMain: 'rgba(14, 25, 40, .30)',
                       hoverSecondary: 'rgba(9, 30, 58, .40)',
-                      worker: '#edf5fb',
+                      worker: '#0f376e',
                   },
                   sidebar: {
                       main: '#292929',
