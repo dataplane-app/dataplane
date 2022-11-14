@@ -5,16 +5,6 @@ import Box from '@mui/material/Box';
 import RPAWorkers from './RPAWorkers/RPAWorkers';
 import ServerWorkers from './ServerWorkers/ServerWorkers';
 
-function TabPanel(props) {
-    const { children, value, index, ...other } = props;
-
-    return (
-        <div role="tabpanel" hidden={value !== index} id={`tab-${index}`} aria-labelledby={`tabpanel-${index}`} {...other}>
-            {value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
-        </div>
-    );
-}
-
 export default function Workers() {
     const [value, setValue] = React.useState(0);
 
@@ -37,5 +27,15 @@ export default function Workers() {
                 <RPAWorkers />
             </TabPanel>
         </Box>
+    );
+}
+
+function TabPanel(props) {
+    const { children, value, index, ...other } = props;
+
+    return (
+        <div role="tabpanel" hidden={value !== index} id={`tab-${index}`} aria-labelledby={`tabpanel-${index}`} {...other}>
+            {value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+        </div>
     );
 }

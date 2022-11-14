@@ -1,14 +1,20 @@
 import { Box, Button, Drawer, Grid, Tooltip, Typography } from '@mui/material';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../../../components/CustomChip';
 import Search from '../../../components/Search';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import AddRPAWorkerDrawer from '../../../components/DrawerContent/AddRPAWorker';
+import EditRPAWorkerDrawer from '../../../components/DrawerContent/EditRPAWorker';
 
 const tableWidth = '850px';
 
 export default function RPAWorkers() {
+    const [showAddWorkerDrawer, setShowAddWorkerDrawer] = useState(false);
+    const [showEditWorkerDrawer, setShowEditWorkerDrawer] = useState(false);
+    const [name, setName] = useState('');
+
     const columns = useMemo(
         () => [
             {
@@ -21,7 +27,20 @@ export default function RPAWorkers() {
                                 {row.value[0]}
                             </Typography>
                         </Tooltip>
-                        <Box component={FontAwesomeIcon} fontSize={12} color="#7D7D7D" icon={faEdit} cursor="pointer" position="absolute" left="93px" top="2px" />
+                        <Box
+                            onClick={() => {
+                                setName(row.value[0]);
+                                setShowEditWorkerDrawer(true);
+                            }}
+                            component={FontAwesomeIcon}
+                            fontSize={12}
+                            color="#7D7D7D"
+                            icon={faEdit}
+                            cursor="pointer"
+                            position="absolute"
+                            left="93px"
+                            top="2px"
+                        />
 
                         <Typography variant="caption" lineHeight={1.2} fontWeight={700} color={row.value[1] === 'Online' ? 'success.main' : 'red'}>
                             {row.value[1]}
@@ -88,7 +107,7 @@ export default function RPAWorkers() {
                 <Button variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
                     Manage process groups
                 </Button>
-                <Button variant="contained" size="small">
+                <Button variant="contained" size="small" onClick={() => setShowAddWorkerDrawer(true)}>
                     Add worker
                 </Button>
             </Box>
@@ -177,16 +196,24 @@ export default function RPAWorkers() {
                 </Box>
             </Box>
 
-            {/* <Drawer anchor="right" open={isOpenSecrets} onClose={() => setIsOpenSecrets(!isOpenSecrets)}>
-                <SecretsDrawer
+            {/* Add worker drawer */}
+            <Drawer anchor="right" open={showAddWorkerDrawer} onClose={() => setShowAddWorkerDrawer(!showAddWorkerDrawer)}>
+                <AddRPAWorkerDrawer
                     handleClose={() => {
-                        setIsOpenSecrets(false);
-                        setSecretDrawerWorkGroup(null);
+                        setShowAddWorkerDrawer(false);
                     }}
-                    secretDrawerWorkGroup={secretDrawerWorkGroup}
-                    environmentID={Environment.id.get()}
                 />
-            </Drawer> */}
+            </Drawer>
+
+            {/* Edit worker drawer */}
+            <Drawer anchor="right" open={showEditWorkerDrawer} onClose={() => setShowEditWorkerDrawer(!showEditWorkerDrawer)}>
+                <EditRPAWorkerDrawer
+                    handleClose={() => {
+                        setShowEditWorkerDrawer(false);
+                    }}
+                    name={name}
+                />
+            </Drawer>
         </Box>
     );
 }
