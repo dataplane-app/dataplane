@@ -75,9 +75,11 @@ const PythonNode = (props) => {
                             {props.data.name}
                         </Typography>
 
-                        <Typography fontSize={9} mt={0.4}>
-                            {props.data.description}
-                        </Typography>
+                        <Tooltip title={props.data.description}>
+                            <Typography fontSize={9} mt={0.4} height="54px" width="80px" overflow="hidden">
+                                {props.data.description}
+                            </Typography>
+                        </Tooltip>
                     </Grid>
                 </Grid>
             </Tooltip>

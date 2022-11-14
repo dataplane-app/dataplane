@@ -1,6 +1,6 @@
 import { faRunning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Grid, Tooltip, Typography, useTheme } from '@mui/material';
+import { Grid, Toolbar, Tooltip, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 import { useEffect, useState } from 'react';
 import { Handle, Position } from 'react-flow-renderer';
@@ -73,9 +73,11 @@ const BashNode = (props) => {
                             {props.data.name}
                         </Typography>
 
-                        <Typography fontSize={9} mt={0.4}>
-                            {props.data.description}
-                        </Typography>
+                        <Tooltip title={props.data.description}>
+                            <Typography fontSize={9} mt={0.4} height="54px" width="80px" overflow="hidden">
+                                {props.data.description}
+                            </Typography>
+                        </Tooltip>
                     </Grid>
                 </Grid>
             </Tooltip>
