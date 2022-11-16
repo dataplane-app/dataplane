@@ -411,7 +411,10 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                     </Button>
                                 ) : (
                                     <Button
-                                        onClick={() => EditorGlobal.markdown.set('edit')}
+                                        onClick={() => {
+                                            EditorGlobal.showLogs.set(true);
+                                            EditorGlobal.markdown.set('edit');
+                                        }}
                                         variant="text"
                                         sx={{
                                             height: '32px',
