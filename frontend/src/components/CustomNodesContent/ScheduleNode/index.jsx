@@ -74,13 +74,22 @@ const ScheduleNode = (props) => {
                             Schedule trigger
                         </Typography>
 
-                        <Typography fontSize={10} mt={1}>
-                            {schedule}
-                        </Typography>
+                        <Tooltip
+                            title={
+                                <>
+                                    {schedule} <br /> {getTimeZone(props.data.genericdata.timezone)}
+                                </>
+                            }>
+                            <Box height="80px" width="80px" overflow="hidden">
+                                <Typography fontSize={10} mt={1}>
+                                    {schedule}
+                                </Typography>
 
-                        <Typography fontSize={10} mt={1}>
-                            {getTimeZone(props.data.genericdata.timezone)}
-                        </Typography>
+                                <Typography fontSize={10} mt={1}>
+                                    {getTimeZone(props.data.genericdata.timezone)}
+                                </Typography>
+                            </Box>
+                        </Tooltip>
                     </Grid>
                 </Tooltip>
             </Grid>
