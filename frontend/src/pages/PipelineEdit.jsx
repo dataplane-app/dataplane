@@ -513,7 +513,7 @@ const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
 const nodeWidth = 172;
-const nodeHeight = 36;
+const nodeHeight = 72;
 
 const setAutoLayout = (elements) => {
     dagreGraph.setGraph({ rankdir: 'LR' });
