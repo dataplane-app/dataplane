@@ -72,6 +72,7 @@ export function MarkdownContent({ bottomPadding = false, sx }) {
             }}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
+                // rehypePlugins={[rehypeRaw, rehypeSanitize]}
                 children={EditorGlobal.selectedFile?.diffValue?.value || EditorGlobal.selectedFile?.content?.value}
                 components={{
                     code({ node, inline, className, children, ...props }) {
