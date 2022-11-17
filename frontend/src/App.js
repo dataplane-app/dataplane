@@ -233,7 +233,7 @@ function App() {
                                                     exact
                                                     path="/learn"
                                                     component={() => {
-                                                        window.open('https://learn.dataplane.app', '_blank');
+                                                        window.open('https://dataplane.app/docs/', '_blank');
                                                         return null;
                                                     }}
                                                 />
