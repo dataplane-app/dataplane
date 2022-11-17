@@ -3,11 +3,11 @@
 // 3 - Editor
 // 4 - Logs
 
-export const getGridLayouts = (language, markdownState, isMarkdown) => {
+export const getGridLayouts = (language, markdownState, isMarkdown, showLogs) => {
     const fileManagerHeight = language === 'python' ? 2.5 : 4;
-    const markdownEditorWidthLg = markdownState === 'view' && isMarkdown ? 10 : 5;
-    const markdownEditorWidthMd = markdownState === 'view' && isMarkdown ? 4 : 2;
-    const markdownEditorWidthSm = markdownState === 'view' && isMarkdown ? 2 : 1;
+    const markdownEditorWidthLg = markdownState === 'view' && isMarkdown ? 10 : showLogs ? 5 : 10;
+    const markdownEditorWidthMd = markdownState === 'view' && isMarkdown ? 4 : showLogs ? 2 : 4;
+    const markdownEditorWidthSm = markdownState === 'view' && isMarkdown ? 2 : showLogs ? 1 : 2;
 
     return {
         lg: [

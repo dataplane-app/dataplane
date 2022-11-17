@@ -119,6 +119,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         EditorGlobal.installState.set(null);
 
         EditorGlobal.runState.set(null);
+        EditorGlobal.showLogs.set(false);
         // If no selection, return
         if (!EditorGlobal.selectedFile.value || EditorGlobal.selectedFile.fType.value === 'folder') return;
 
@@ -410,7 +411,10 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                     </Button>
                                 ) : (
                                     <Button
-                                        onClick={() => EditorGlobal.markdown.set('edit')}
+                                        onClick={() => {
+                                            EditorGlobal.showLogs.set(true);
+                                            EditorGlobal.markdown.set('edit');
+                                        }}
                                         variant="text"
                                         sx={{
                                             height: '32px',

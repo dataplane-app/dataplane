@@ -1,6 +1,6 @@
 import { faCheckCircle, faExclamationCircle, faRunning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { forwardRef, useEffect, useState } from 'react';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
 import CustomDragHandle from '../../CustomDragHandle';
@@ -18,6 +18,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const [graphQlResp, setGraphQlResp] = useState([]);
     const [keys, setKeys] = useState([]);
     const [render, setRender] = useState(0);
+    const [isHidden, setIsHidden] = useState(null);
 
     // Global states
     const EditorGlobal = useGlobalEditorState();
@@ -72,6 +73,32 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
 
     const theme = useTheme();
 
+    // Show component on a new run
+    const runState = EditorGlobal.runState.get();
+    useEffect(() => {
+        if (runState === 'Running') {
+            setIsHidden(false);
+        }
+    }, [runState]);
+
+    // Hide component on initial load, default behaviour
+    let showLogs = EditorGlobal.showLogs.get();
+    if (!showLogs && isHidden === null) return null;
+
+    if (isHidden)
+        return (
+            <Button
+                onClick={() => {
+                    EditorGlobal.showLogs.set(true);
+                    return setIsHidden(false);
+                }}
+                sx={{ position: 'absolute', zIndex: 1000, top: '11px', right: '16px' }}
+                variant="contained"
+                size="small">
+                Show Logs
+            </Button>
+        );
+
     return (
         <div {...rest} ref={ref}>
             <Box
@@ -82,6 +109,16 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
                     borderColor: 'editorPage.borderColor',
                     pb: 4,
                 }}>
+                <Button
+                    onClick={() => {
+                        EditorGlobal.showLogs.set(false);
+                        setIsHidden(true);
+                    }}
+                    sx={{ position: 'absolute', zIndex: 1, top: '17px', right: '16px' }}
+                    variant="contained"
+                    size="small">
+                    Hide
+                </Button>
                 <Box sx={{ background: 'editorPage.logBackground', color: '#d6d6d6' }} display="flex" alignItems="flex-start" flexDirection="row" pl={6} pr={4} pt={3} pb={0}>
                     <Box component={FontAwesomeIcon} fontSize={24} color="secondary.main" icon={faRunning} mr={2} />
 

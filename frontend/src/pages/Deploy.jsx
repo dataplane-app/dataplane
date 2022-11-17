@@ -276,40 +276,47 @@ const Deploy = () => {
                     {/* Right side */}
                     {nonDefaultWGNodes.get().length > 0 ? (
                         <Grid mb={5}>
-                            <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
-                                API Trigger
-                            </Typography>
-                            <Typography onClick={() => setApiDrawerOpen(true)} fontSize="0.8125rem" mb={4} color="primary.main" sx={{ cursor: 'pointer' }}>
-                                Configure API trigger
-                            </Typography>
+                            {pipeline.node_type_desc === 'api' ? (
+                                <>
+                                    <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
+                                        API Trigger
+                                    </Typography>
+                                    <Typography onClick={() => setApiDrawerOpen(true)} fontSize="0.8125rem" mb={4} color="primary.main" sx={{ cursor: 'pointer' }}>
+                                        Configure API trigger
+                                    </Typography>
 
-                            <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
-                                Public -<span style={{ color: switches.publicLive ? theme.palette.success.main : '#F80000' }}>{switches.publicLive ? ' Live ' : ' Offline '}</span>-
-                                Key Protected
-                            </Typography>
-                            <Typography fontSize="0.875rem" mb={4}>
-                                {PUBLIC + triggerID}
-                            </Typography>
+                                    <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
+                                        Public -
+                                        <span style={{ color: switches.publicLive ? theme.palette.success.main : '#F80000' }}>{switches.publicLive ? ' Live ' : ' Offline '}</span>-
+                                        Key Protected
+                                    </Typography>
+                                    <Typography fontSize="0.875rem" mb={4}>
+                                        {PUBLIC + triggerID}
+                                    </Typography>
 
-                            <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
-                                Private -
-                                <span style={{ color: switches.privateLive ? theme.palette.success.main : '#F80000' }}>{switches.privateLive ? ' Live ' : ' Offline '}</span>- No
-                                key
-                            </Typography>
-                            <Typography fontSize="0.875rem" mb={6}>
-                                {PRIVATE + triggerID}
-                            </Typography>
+                                    <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
+                                        Private -
+                                        <span style={{ color: switches.privateLive ? theme.palette.success.main : '#F80000' }}>
+                                            {switches.privateLive ? ' Live ' : ' Offline '}
+                                        </span>
+                                        - No key
+                                    </Typography>
+                                    <Typography fontSize="0.875rem" mb={6}>
+                                        {PRIVATE + triggerID}
+                                    </Typography>
 
-                            <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
-                                Node specific worker groups
-                            </Typography>
-                            <Typography mt={0.5} variant="body1" color="text.primary" fontWeight="400" fontSize="0.875rem" maxWidth={480}>
-                                Node specific worker groups are any nodes in the pipeline that do not use the default worker group.
-                            </Typography>
+                                    <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
+                                        Node specific worker groups
+                                    </Typography>
+                                    <Typography mt={0.5} mb={3} variant="body1" color="text.primary" fontWeight="400" fontSize="0.875rem" maxWidth={480}>
+                                        Node specific worker groups are any nodes in the pipeline that do not use the default worker group.
+                                    </Typography>
+                                </>
+                            ) : null}
 
                             {nonDefaultWGNodes.get().map((a) => (
                                 <Box key={a.name}>
-                                    <Typography mt={3} component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
+                                    <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
                                         {a.name}
                                     </Typography>
                                     <Typography mb={1} variant="body1" color="text.primary" fontWeight="400" fontSize="0.875rem" maxWidth={480}>
