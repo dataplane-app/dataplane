@@ -41,6 +41,7 @@ import 'react-resizable/css/styles.css';
 import DeploymentPermissions from './pages/Deployments/DeploymentPermissions';
 import RPAWorkers from './pages/Workers/RPAWorkers/RPAWorkers';
 import RPASSettings from './pages/Workers/RPAWorkers/RPASettings';
+import RPAManage from './pages/Workers/RPAWorkers/RPAManage';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
@@ -155,11 +156,15 @@ function App() {
                                             '/feedback',
                                             '/learn',
                                             '/temp/settings',
+                                            '/temp/manage',
                                         ]}>
                                         <Switch>
                                             <Layout>
                                                 <Route exact path="/temp/settings">
                                                     <RPASSettings />
+                                                </Route>
+                                                <Route exact path="/temp/manage">
+                                                    <RPAManage />
                                                 </Route>
                                                 <Route exact path="/">
                                                     <Pipelines />
