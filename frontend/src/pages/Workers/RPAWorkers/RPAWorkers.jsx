@@ -107,9 +107,11 @@ export default function RPAWorkers() {
                 <Typography id="test" component="h2" variant="h2" color="text.primary">
                     RPA Workers
                 </Typography>
+
                 <Button onClick={() => history.push('/rpa')} variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
                     Manage process groups
                 </Button>
+
                 <Button variant="contained" size="small" onClick={() => setShowAddWorkerDrawer(true)}>
                     Add worker
                 </Button>
