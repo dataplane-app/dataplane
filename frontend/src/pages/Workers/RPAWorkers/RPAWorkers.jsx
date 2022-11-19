@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../../../components/CustomChip';
 import Search from '../../../components/Search';
-import { faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faFilter } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AddRPAWorkerDrawer from '../../../components/DrawerContent/AddRPAWorker';
 import EditRPAWorkerDrawer from '../../../components/DrawerContent/EditRPAWorker';
@@ -119,6 +119,14 @@ export default function RPAWorkers() {
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
                         <CustomChip amount={data.length} label="RPA Workers" margin={2} customColor="orange" />
+                    </Grid>
+
+                    <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
+                        <Box component={FontAwesomeIcon} icon={faFilter} sx={{ fontSize: 12, color: '#b9b9b9' }} />
+
+                        <Typography variant="subtitle1" color="#737373" ml={1}>
+                            Process group = Python 1
+                        </Typography>
                     </Grid>
 
                     <Grid item display="flex" alignItems="center" sx={{ marginLeft: 'auto', marginRight: '2px' }}>
