@@ -32,7 +32,7 @@ export const globalEditorState = createState({
     runID: null,
     runState: null,
     showLogs: false,
-    markdown: 'edit', // view or edit
+    markdown: 'view', // view or edit
 });
 
 export const useGlobalEditorState = () => useHookState(globalEditorState);
@@ -87,7 +87,7 @@ const PipelineEditor = () => {
             runID: null,
             runState: null,
             showLogs: false,
-            markdown: 'edit',
+            markdown: 'view',
         });
         history.push(`/pipelines/view/${pipeline.pipelineID}`);
     };
