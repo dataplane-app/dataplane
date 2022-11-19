@@ -39,6 +39,7 @@ import Deploy from './pages/Deploy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import DeploymentPermissions from './pages/Deployments/DeploymentPermissions';
+import RPAWorkers from './pages/Workers/RPAWorkers/RPAWorkers';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
@@ -129,6 +130,8 @@ function App() {
                                             '/',
                                             '/workers',
                                             '/workers/:workerId',
+                                            '/rpa',
+                                            '/rpa/workers',
                                             '/teams',
                                             '/teams/:teamId',
                                             '/access/:accessId',
@@ -166,7 +169,13 @@ function App() {
                                                     <DeploymentPermissions />
                                                 </Route>
                                                 <Route exact path="/workers">
-                                                    <Workers />
+                                                    <Workers tab={0} />
+                                                </Route>
+                                                <Route exact path="/rpa">
+                                                    <Workers tab={1} />
+                                                </Route>
+                                                <Route exact path="/rpa/workers/">
+                                                    <RPAWorkers />
                                                 </Route>
                                                 <Route exact path="/workers/:workerId">
                                                     <WorkerDetail />

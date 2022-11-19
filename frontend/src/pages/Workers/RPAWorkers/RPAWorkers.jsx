@@ -7,6 +7,7 @@ import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AddRPAWorkerDrawer from '../../../components/DrawerContent/AddRPAWorker';
 import EditRPAWorkerDrawer from '../../../components/DrawerContent/EditRPAWorker';
+import { useHistory } from 'react-router-dom';
 
 const tableWidth = '850px';
 
@@ -14,6 +15,8 @@ export default function RPAWorkers() {
     const [showAddWorkerDrawer, setShowAddWorkerDrawer] = useState(false);
     const [showEditWorkerDrawer, setShowEditWorkerDrawer] = useState(false);
     const [name, setName] = useState('');
+
+    const history = useHistory();
 
     const columns = useMemo(
         () => [
@@ -104,7 +107,7 @@ export default function RPAWorkers() {
                 <Typography id="test" component="h2" variant="h2" color="text.primary">
                     RPA Workers
                 </Typography>
-                <Button variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
+                <Button onClick={() => history.push('/rpa')} variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
                     Manage process groups
                 </Button>
                 <Button variant="contained" size="small" onClick={() => setShowAddWorkerDrawer(true)}>

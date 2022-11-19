@@ -2,14 +2,18 @@ import * as React from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import RPAWorkers from './RPAWorkers/RPAWorkers';
 import ServerWorkers from './ServerWorkers/ServerWorkers';
+import ProcessGroups from './RPAWorkers/ProcessGroups';
+import { useHistory } from 'react-router-dom';
 
-export default function Workers() {
-    const [value, setValue] = React.useState(0);
+export default function Workers({ tab }) {
+    const [value] = React.useState(tab);
 
-    const handleChange = (event, newValue) => {
-        setValue(newValue);
+    const history = useHistory();
+
+    const handleChange = (event) => {
+        event.target.id === 'tab-0' && history.push('/workers');
+        event.target.id === 'tab-1' && history.push('/rpa');
     };
 
     return (
@@ -17,14 +21,14 @@ export default function Workers() {
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
                     <Tab label="Server Workers" id="tab-0" aria-controls="tabpanel-0" sx={{ px: 0, color: 'primary.main' }} />
-                    <Tab label="RPA Workers" id="tab-0" aria-controls="tabpanel-0" sx={{ ml: 2, px: 0, color: 'primary.main' }} />
+                    <Tab label="RPA Workers" id="tab-1" aria-controls="tabpanel-1" sx={{ ml: 2, px: 0, color: 'primary.main' }} />
                 </Tabs>
             </Box>
             <TabPanel value={value} index={0}>
                 <ServerWorkers />
             </TabPanel>
             <TabPanel value={value} index={1}>
-                <RPAWorkers />
+                <ProcessGroups />
             </TabPanel>
         </Box>
     );
