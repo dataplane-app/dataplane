@@ -78,3 +78,19 @@ type WorkerGroup struct {
 	LB          string `json:"LB"`
 	WorkerType  string `json:"WorkerType"` //container, kubernetes
 }
+
+func (RemoteProcessGroups) IsEntity() {}
+
+func (RemoteProcessGroups) TableName() string {
+	return "remote_process_groups"
+}
+
+type RemoteProcessGroups struct {
+	Name          string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"name"`
+	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"environment_id"`
+	Description   string     `json:"description"`
+	LB            string     `json:"lb"`
+	WorkerType    string     `json:"remote_process_type"`
+	Language      string     `json:"language"`
+	UpdatedAt     *time.Time `json:"updated_at"`
+}

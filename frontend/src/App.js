@@ -40,8 +40,9 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import DeploymentPermissions from './pages/Deployments/DeploymentPermissions';
 import RPAWorkers from './pages/Workers/RPAWorkers/RPAWorkers';
-import RPASSettings from './pages/Workers/RPAWorkers/RPASettings';
+import RPASettings from './pages/Workers/RPAWorkers/RPASettings';
 import RPAManage from './pages/Workers/RPAWorkers/RPAManage';
+import RPAProcessManage from './pages/Workers/RPAWorkers/ProcessGroupManage';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
@@ -157,11 +158,15 @@ function App() {
                                             '/learn',
                                             '/temp/settings',
                                             '/temp/manage',
+                                            '/temp/processmanage',
                                         ]}>
                                         <Switch>
                                             <Layout>
+                                                <Route exact path="/temp/processmanage">
+                                                    <RPAProcessManage />
+                                                </Route>
                                                 <Route exact path="/temp/settings">
-                                                    <RPASSettings />
+                                                    <RPASettings />
                                                 </Route>
                                                 <Route exact path="/temp/manage">
                                                     <RPAManage />

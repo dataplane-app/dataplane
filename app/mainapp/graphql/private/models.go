@@ -247,6 +247,15 @@ type Preferences struct {
 	Value      string `json:"value"`
 }
 
+type RemoteProcessGroups struct {
+	Name          string `json:"Name"`
+	EnvironmentID string `json:"EnvironmentID"`
+	Description   string `json:"Description"`
+	Lb            string `json:"LB"`
+	WorkerType    string `json:"WorkerType"`
+	Language      string `json:"Language"`
+}
+
 type UpdateEnvironment struct {
 	ID          string  `json:"id"`
 	Name        string  `json:"name"`

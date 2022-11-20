@@ -1,17 +1,26 @@
-import { Box, Grid, Typography } from '@mui/material';
+import { Box, Grid, Button, Typography } from '@mui/material';
+import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
-import ProcessGroups from './ProcessGroups';
 import Control from './Control';
 import Details from './Details';
 import Environments from './Environments';
+import Packages from './Packages';
 
-export default function RPAManage() {
+export default function RPAProcessManage({ handleClose }) {
     return (
-        <Box className="page" width="83%">
-            <Grid container alignItems="flex-start" flexDirection="column">
+        <Box className="page" width="100%">
+            <Grid container alignItems="center">
                 <Typography component="h2" variant="h2" color="text.primary">
-                    RPA Workers {'>'} Jack’s computer
+                    Process group {'>'} Python 1
                 </Typography>
+                <Button
+                    onClick={handleClose}
+                    style={{ paddingLeft: '16px', paddingRight: '16px', marginLeft: 'auto' }}
+                    variant="text"
+                    startIcon={<FontAwesomeIcon icon={faTimes} />}>
+                    Close
+                </Button>
             </Grid>
 
             <Grid container mt="2.56rem" alignItems="flex-start" gap="5%" justifyContent="space-between" flexWrap="nowrap">
@@ -30,10 +39,10 @@ export default function RPAManage() {
                     />
                 </Grid>
                 <Grid item sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column' }} mb={2}>
-                    <ProcessGroups environmentId={'accessGroup.EnvironmentID'} />
+                    <Environments environmentId={'accessGroup.EnvironmentID'} />
                 </Grid>
                 <Grid item sx={{ flex: 1 }}>
-                    <Environments environmentId={'accessGroup.EnvironmentID'} />
+                    <Packages />
                 </Grid>
             </Grid>
         </Box>

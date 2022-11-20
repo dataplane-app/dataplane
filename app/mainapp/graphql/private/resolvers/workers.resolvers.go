@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -106,6 +106,48 @@ func (r *mutationResolver) DeleteSecretFromWorkerGroup(ctx context.Context, envi
 	}
 
 	response := "Secret removed from work group"
+	return &response, nil
+}
+
+// AddRemoteProcessGroup is the resolver for the addRemoteProcessGroup field.
+func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmentID string, name string, description string) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	remoteProcessGroups := models.RemoteProcessGroups{
+		Name:          name,
+		EnvironmentID: environmentID,
+		Description:   description,
+		LB:            "",
+		WorkerType:    "",
+		Language:      "python",
+	}
+
+	err := database.DBConn.Create(&remoteProcessGroups).Error
+
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return nil, errors.New("Add secret to worker group database error.")
+	}
+
+	response := "success"
+
 	return &response, nil
 }
 
@@ -273,4 +315,47 @@ func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentID
 	}
 
 	return s, nil
+}
+
+// GetRemoteProcessGroups is the resolver for the getRemoteProcessGroups field.
+func (r *queryResolver) GetRemoteProcessGroups(ctx context.Context, environmentID string) ([]*privategraphql.RemoteProcessGroups, error) {
+	var resp []*privategraphql.RemoteProcessGroups
+
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_create_pipelines", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	var remoteProcessGroups []models.RemoteProcessGroups
+
+	err := database.DBConn.Where("environment_id =?", environmentID).Find(&remoteProcessGroups).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Remote process groups database error.")
+	}
+
+	for _, v := range remoteProcessGroups {
+		resp = append(resp, &privategraphql.RemoteProcessGroups{
+			Name:          v.Name,
+			Description:   v.Description,
+			EnvironmentID: v.EnvironmentID,
+			Lb:            v.LB,
+			WorkerType:    v.WorkerType,
+			Language:      v.Language,
+		})
+	}
+
+	return resp, nil
 }

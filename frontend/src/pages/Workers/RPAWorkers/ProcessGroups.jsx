@@ -1,5 +1,5 @@
 import { Box, Button, Drawer, Grid, Tooltip, Typography } from '@mui/material';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../../../components/CustomChip';
 import Search from '../../../components/Search';
@@ -9,19 +9,38 @@ import AddRPAWorkerDrawer from '../../../components/DrawerContent/AddRPAWorker';
 import EditRPAWorkerDrawer from '../../../components/DrawerContent/EditRPAWorker';
 import { useHistory } from 'react-router-dom';
 import pythonLogo from '../../../assets/images/pythonLogo.png';
+import AddProcessGroupDrawer from '../../../components/DrawerContent/AddProcessGroup';
+import { useGetRemoteProcessGroups } from '../../../graphql/getRemoteProcessGroups';
+import { useSnackbar } from 'notistack';
+import { useGlobalAuthState } from '../../../Auth/UserAuth';
+import decode from 'jwt-decode';
+import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
 
 const tableWidth = '850px';
 
 export default function ProcessGroups() {
-    const [showAddWorkerDrawer, setShowAddWorkerDrawer] = useState(false);
+    const [showAddProcessGroupDrawer, setShowAddProcessGroupDrawer] = useState(false);
     const [showEditWorkerDrawer, setShowEditWorkerDrawer] = useState(false);
     const [name, setName] = useState('');
+    const [remoteProcessGroups, setRemoteProcessGroups] = useState([]);
+
+    // Global environment state with hookstate
+    const Environment = useGlobalEnvironmentState();
+
+    // Custom hook
+    const getRemoteProcessGroups = useGetRemoteProcessGroupsHook(Environment.id.get(), setRemoteProcessGroups);
+
+    useEffect(() => {
+        getRemoteProcessGroups();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [Environment.id.get()]);
 
     const columns = useMemo(
         () => [
             {
                 Header: 'Member',
-                accessor: (row) => [row.name, row.type],
+                accessor: (row) => [row.Name, row.Description, row.Language],
                 Cell: (row) => (
                     <CustomWorker
                         row={row}
@@ -40,7 +59,7 @@ export default function ProcessGroups() {
     const { getTableProps, getTableBodyProps, rows, prepareRow, setGlobalFilter } = useTable(
         {
             columns,
-            data,
+            data: remoteProcessGroups,
         },
 
         useGlobalFilter
@@ -57,7 +76,7 @@ export default function ProcessGroups() {
                 <Button onClick={() => history.push('/rpa/workers')} variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
                     Manage workers
                 </Button>
-                <Button variant="contained" size="small">
+                <Button onClick={() => setShowAddProcessGroupDrawer(true)} variant="contained" size="small">
                     Add process group
                 </Button>
             </Box>
@@ -65,7 +84,7 @@ export default function ProcessGroups() {
             <Box mt={'45px'} sx={{ width: tableWidth }}>
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
-                        <CustomChip amount={data.length} label="Process groups" margin={2} customColor="orange" />
+                        <CustomChip amount={rows.length} label="Process groups" margin={2} customColor="orange" />
                     </Grid>
 
                     <Grid item display="flex" alignItems="center" sx={{ marginLeft: 'auto', marginRight: '2px' }}>
@@ -108,13 +127,9 @@ export default function ProcessGroups() {
                 </Box>
             </Box>
 
-            {/* Add worker drawer */}
-            <Drawer anchor="right" open={showAddWorkerDrawer} onClose={() => setShowAddWorkerDrawer(!showAddWorkerDrawer)}>
-                <AddRPAWorkerDrawer
-                    handleClose={() => {
-                        setShowAddWorkerDrawer(false);
-                    }}
-                />
+            {/* Add process group drawer */}
+            <Drawer anchor="right" open={showAddProcessGroupDrawer} onClose={() => setShowAddProcessGroupDrawer(false)}>
+                <AddProcessGroupDrawer handleClose={() => setShowAddProcessGroupDrawer(false)} getRemoteProcessGroups={getRemoteProcessGroups} />
             </Drawer>
 
             {/* Edit worker drawer */}
@@ -131,7 +146,7 @@ export default function ProcessGroups() {
 }
 
 const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup }) => {
-    const [name, type] = row.value;
+    const [name, description, type] = row.value;
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
@@ -139,7 +154,7 @@ const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup
                 {name}
             </Typography>
             <Typography component="h5" variant="subtitle1" onClick={onClick} sx={{ cursor: 'pointer' }}>
-                Python workers for generic work loads.
+                {description || 'Python workers for generic work loads.'}
             </Typography>
             <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: '8px' }}>
                 <Typography
@@ -159,7 +174,7 @@ const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup
                         setIsOpenSecrets(true);
                         // setSecretDrawerWorkGroup(workerGroup);
                     }}>
-                    Secrets
+                    Workers
                 </Typography>
                 {type === 'python' ? (
                     <Box position="relative" ml="auto">
@@ -175,9 +190,33 @@ const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup
     );
 };
 
-const data = [
-    {
-        name: 'Python 1',
-        type: 'python',
-    },
-];
+// ** Custom Hooks
+const useGetRemoteProcessGroupsHook = (environmentID, setRemoteProcessGroups) => {
+    // GraphQL hook
+    const getRemoteProcessGroups = useGetRemoteProcessGroups();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    const auth = useGlobalAuthState();
+    let { exp } = decode(auth.authToken.get());
+
+    // Get worker groups
+    return async () => {
+        // Check if the token expired
+        if (exp * 1000 < new Date().valueOf()) {
+            return;
+        }
+
+        const response = await getRemoteProcessGroups({ environmentID });
+
+        if (response === null) {
+            setRemoteProcessGroups([]);
+        } else if (response.r || response.error) {
+            enqueueSnackbar("Can't get remote process groups: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setRemoteProcessGroups(response.filter((a) => a.EnvironmentID === environmentID));
+        }
+    };
+};
