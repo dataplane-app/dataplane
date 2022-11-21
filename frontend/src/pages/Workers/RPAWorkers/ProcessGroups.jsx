@@ -152,10 +152,10 @@ const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
-            <Typography component="h4" variant="h3" mb={1} sx={{ color: 'cyan.main', cursor: 'pointer' }} onClick={onClick}>
+            <Typography component="h4" variant="h3" mb={1} sx={{ color: 'cyan.main' }} onClick={onClick}>
                 {name}
             </Typography>
-            <Typography component="h5" variant="subtitle1" onClick={onClick} sx={{ cursor: 'pointer' }}>
+            <Typography component="h5" variant="subtitle1" onClick={onClick}>
                 {description || 'Python workers for generic work loads.'}
             </Typography>
             <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: '8px' }}>

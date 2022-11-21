@@ -289,6 +289,45 @@ func (r *mutationResolver) AddUpdateRemotePackages(ctx context.Context, environm
 	return &response, nil
 }
 
+// DeleteRemotePackage is the resolver for the deleteRemotePackage field.
+func (r *mutationResolver) DeleteRemotePackage(ctx context.Context, id string, environmentID string) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_create_pipelines", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	err := database.DBConn.Where("remote_process_group_id = ? and environment_id = ?", id, environmentID).Delete(&models.RemotePackages{})
+
+	if err.RowsAffected == 0 {
+		return nil, errors.New("Remote process group relationship not found.")
+	}
+
+	if err.Error != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Remote process group database error.")
+	}
+
+	response := "Success"
+
+	return &response, nil
+
+}
+
 // GetWorkers is the resolver for the getWorkers field.
 func (r *queryResolver) GetWorkers(ctx context.Context, environmentID string) ([]*privategraphql.Workers, error) {
 	var resp []*privategraphql.Workers
@@ -521,4 +560,38 @@ func (r *queryResolver) GetRemoteProcessGroups(ctx context.Context, environmentI
 	}
 
 	return resp, nil
+}
+
+// GetRemotePackages is the resolver for the getRemotePackages field.
+func (r *queryResolver) GetRemotePackages(ctx context.Context, environmentID string, id string) ([]*privategraphql.RemotePackages, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_create_pipelines", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	var remotePackages []*privategraphql.RemotePackages
+
+	err := database.DBConn.Where("remote_process_group_id = ?", id).Find(&remotePackages).Error
+
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive users database error.")
+	}
+
+	return remotePackages, nil
 }

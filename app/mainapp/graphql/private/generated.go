@@ -258,6 +258,7 @@ type ComplexityRoot struct {
 		DeletePermissionToUser             func(childComplexity int, userID string, permissionID string, environmentID string) int
 		DeletePipeline                     func(childComplexity int, environmentID string, pipelineID string) int
 		DeletePipelineAPIKey               func(childComplexity int, apiKey string, pipelineID string, environmentID string) int
+		DeleteRemotePackage                func(childComplexity int, id string, environmentID string) int
 		DeleteRemoteProcessGroup           func(childComplexity int, id string, environmentID string) int
 		DeleteSecretFromWorkerGroup        func(childComplexity int, environmentID string, workerGroup string, secret string) int
 		DeleteSpecificPermission           func(childComplexity int, subject string, subjectID string, resourceID string, environmentID string) int
@@ -487,6 +488,7 @@ type ComplexityRoot struct {
 		GetPipelineTrigger              func(childComplexity int, pipelineID string, environmentID string) int
 		GetPipelines                    func(childComplexity int, environmentID string) int
 		GetPlatform                     func(childComplexity int) int
+		GetRemotePackages               func(childComplexity int, environmentID string, id string) int
 		GetRemoteProcessGroups          func(childComplexity int, environmentID string) int
 		GetSecret                       func(childComplexity int, secret string, environmentID string) int
 		GetSecretGroups                 func(childComplexity int, environmentID string, secret string) int
@@ -514,6 +516,13 @@ type ComplexityRoot struct {
 		UserPipelinePermissions         func(childComplexity int, userID string, environmentID string, subjectType string) int
 		UserSingleDeploymentPermissions func(childComplexity int, userID string, environmentID string, deploymentID string, subjectType string) int
 		UserSinglePipelinePermissions   func(childComplexity int, userID string, environmentID string, pipelineID string, subjectType string) int
+	}
+
+	RemotePackages struct {
+		EnvironmentID        func(childComplexity int) int
+		Language             func(childComplexity int) int
+		Packages             func(childComplexity int) int
+		RemoteProcessGroupID func(childComplexity int) int
 	}
 
 	RemoteProcessGroups struct {
@@ -676,6 +685,7 @@ type MutationResolver interface {
 	UpdateRemoteProcessGroup(ctx context.Context, id string, environmentID string, name string, description string, active bool) (*string, error)
 	DeleteRemoteProcessGroup(ctx context.Context, id string, environmentID string) (*string, error)
 	AddUpdateRemotePackages(ctx context.Context, environmentID string, removeProcessGroupID string, packages string, language string) (*string, error)
+	DeleteRemotePackage(ctx context.Context, id string, environmentID string) (*string, error)
 }
 type PipelineEdgesResolver interface {
 	Meta(ctx context.Context, obj *models.PipelineEdges) (interface{}, error)
@@ -744,6 +754,7 @@ type QueryResolver interface {
 	GetWorkerGroupSecrets(ctx context.Context, environmentID string, workerGroup string) ([]*models.Secrets, error)
 	GetSingleRemoteProcessGroup(ctx context.Context, environmentID string, id string) (*RemoteProcessGroups, error)
 	GetRemoteProcessGroups(ctx context.Context, environmentID string) ([]*RemoteProcessGroups, error)
+	GetRemotePackages(ctx context.Context, environmentID string, id string) ([]*RemotePackages, error)
 }
 
 type executableSchema struct {
@@ -1947,6 +1958,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeletePipelineAPIKey(childComplexity, args["apiKey"].(string), args["pipelineID"].(string), args["environmentID"].(string)), true
+
+	case "Mutation.deleteRemotePackage":
+		if e.complexity.Mutation.DeleteRemotePackage == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteRemotePackage_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteRemotePackage(childComplexity, args["id"].(string), args["environmentID"].(string)), true
 
 	case "Mutation.deleteRemoteProcessGroup":
 		if e.complexity.Mutation.DeleteRemoteProcessGroup == nil {
@@ -3591,6 +3614,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetPlatform(childComplexity), true
 
+	case "Query.getRemotePackages":
+		if e.complexity.Query.GetRemotePackages == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getRemotePackages_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetRemotePackages(childComplexity, args["environmentID"].(string), args["ID"].(string)), true
+
 	case "Query.getRemoteProcessGroups":
 		if e.complexity.Query.GetRemoteProcessGroups == nil {
 			break
@@ -3879,6 +3914,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.UserSinglePipelinePermissions(childComplexity, args["userID"].(string), args["environmentID"].(string), args["pipelineID"].(string), args["subjectType"].(string)), true
+
+	case "RemotePackages.EnvironmentID":
+		if e.complexity.RemotePackages.EnvironmentID == nil {
+			break
+		}
+
+		return e.complexity.RemotePackages.EnvironmentID(childComplexity), true
+
+	case "RemotePackages.Language":
+		if e.complexity.RemotePackages.Language == nil {
+			break
+		}
+
+		return e.complexity.RemotePackages.Language(childComplexity), true
+
+	case "RemotePackages.Packages":
+		if e.complexity.RemotePackages.Packages == nil {
+			break
+		}
+
+		return e.complexity.RemotePackages.Packages(childComplexity), true
+
+	case "RemotePackages.RemoteProcessGroupID":
+		if e.complexity.RemotePackages.RemoteProcessGroupID == nil {
+			break
+		}
+
+		return e.complexity.RemotePackages.RemoteProcessGroupID(childComplexity), true
 
 	case "RemoteProcessGroups.Active":
 		if e.complexity.RemoteProcessGroups.Active == nil {
@@ -5231,6 +5294,30 @@ func (ec *executionContext) field_Mutation_deletePipeline_args(ctx context.Conte
 		}
 	}
 	args["pipelineID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteRemotePackage_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
 	return args, nil
 }
 
@@ -7445,6 +7532,30 @@ func (ec *executionContext) field_Query_getPipelines_args(ctx context.Context, r
 		}
 	}
 	args["environmentID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getRemotePackages_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["ID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ID"] = arg1
 	return args, nil
 }
 
@@ -17529,6 +17640,58 @@ func (ec *executionContext) fieldContext_Mutation_addUpdateRemotePackages(ctx co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_deleteRemotePackage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteRemotePackage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteRemotePackage(rctx, fc.Args["id"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteRemotePackage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteRemotePackage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _NonDefaultNodes_nodeID(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_NonDefaultNodes_nodeID(ctx, field)
 	if err != nil {
@@ -26245,6 +26408,68 @@ func (ec *executionContext) fieldContext_Query_getRemoteProcessGroups(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getRemotePackages(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getRemotePackages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetRemotePackages(rctx, fc.Args["environmentID"].(string), fc.Args["ID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*RemotePackages)
+	fc.Result = res
+	return ec.marshalORemotePackages2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐRemotePackages(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getRemotePackages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "EnvironmentID":
+				return ec.fieldContext_RemotePackages_EnvironmentID(ctx, field)
+			case "RemoteProcessGroupID":
+				return ec.fieldContext_RemotePackages_RemoteProcessGroupID(ctx, field)
+			case "Packages":
+				return ec.fieldContext_RemotePackages_Packages(ctx, field)
+			case "Language":
+				return ec.fieldContext_RemotePackages_Language(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RemotePackages", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getRemotePackages_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -26369,6 +26594,182 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemotePackages_EnvironmentID(ctx context.Context, field graphql.CollectedField, obj *RemotePackages) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemotePackages_EnvironmentID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvironmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemotePackages_EnvironmentID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemotePackages",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemotePackages_RemoteProcessGroupID(ctx context.Context, field graphql.CollectedField, obj *RemotePackages) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemotePackages_RemoteProcessGroupID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RemoteProcessGroupID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemotePackages_RemoteProcessGroupID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemotePackages",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemotePackages_Packages(ctx context.Context, field graphql.CollectedField, obj *RemotePackages) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemotePackages_Packages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Packages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemotePackages_Packages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemotePackages",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemotePackages_Language(ctx context.Context, field graphql.CollectedField, obj *RemotePackages) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemotePackages_Language(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Language, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemotePackages_Language(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemotePackages",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -33521,6 +33922,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_addUpdateRemotePackages(ctx, field)
 			})
 
+		case "deleteRemotePackage":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteRemotePackage(ctx, field)
+			})
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -35799,6 +36206,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "getRemotePackages":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getRemotePackages(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "__type":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -35811,6 +36238,55 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				return ec._Query___schema(ctx, field)
 			})
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var remotePackagesImplementors = []string{"RemotePackages"}
+
+func (ec *executionContext) _RemotePackages(ctx context.Context, sel ast.SelectionSet, obj *RemotePackages) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, remotePackagesImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RemotePackages")
+		case "EnvironmentID":
+
+			out.Values[i] = ec._RemotePackages_EnvironmentID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "RemoteProcessGroupID":
+
+			out.Values[i] = ec._RemotePackages_RemoteProcessGroupID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Packages":
+
+			out.Values[i] = ec._RemotePackages_Packages(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Language":
+
+			out.Values[i] = ec._RemotePackages_Language(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -38583,6 +39059,54 @@ func (ec *executionContext) marshalOPreferences2ᚖgithubᚗcomᚋdataplaneᚑap
 		return graphql.Null
 	}
 	return ec._Preferences(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalORemotePackages2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐRemotePackages(ctx context.Context, sel ast.SelectionSet, v []*RemotePackages) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalORemotePackages2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐRemotePackages(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalORemotePackages2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐRemotePackages(ctx context.Context, sel ast.SelectionSet, v *RemotePackages) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._RemotePackages(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalORemoteProcessGroups2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐRemoteProcessGroups(ctx context.Context, sel ast.SelectionSet, v []*RemoteProcessGroups) graphql.Marshaler {

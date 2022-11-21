@@ -8,10 +8,10 @@ import Environments from './Environments';
 import Packages from './Packages';
 import { useSnackbar } from 'notistack';
 import { useGetSingleRemoteProcessGroup } from '../../../../graphql/getSingleRemoteProcessGroup';
-import { useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown';
 
-export default function RemoteProcessGroupManage({ handleClose }) {
+export default function RemoteProcessGroupManage() {
     const [remoteProcessGroup, setRemoteProcessGroup] = useState(null);
 
     // Global environment state with hookstate
@@ -26,14 +26,16 @@ export default function RemoteProcessGroupManage({ handleClose }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
 
+    const history = useHistory();
+
     return (
         <Box className="page" width="100%">
             <Grid container alignItems="center">
                 <Typography component="h2" variant="h2" color="text.primary">
-                    Process group {'>'} Python 1
+                    Process group {'> ' + remoteProcessGroup?.Name}
                 </Typography>
                 <Button
-                    onClick={handleClose}
+                    onClick={() => history.push('/remoteprocessgroups')}
                     style={{ paddingLeft: '16px', paddingRight: '16px', marginLeft: 'auto' }}
                     variant="text"
                     startIcon={<FontAwesomeIcon icon={faTimes} />}>
@@ -54,9 +56,11 @@ export default function RemoteProcessGroupManage({ handleClose }) {
                 ) : null}
 
                 {/* Environments */}
-                <Grid item xs={3} sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column' }} mb={2}>
-                    <Environments environmentId={Environment.id.get()} />
-                </Grid>
+                {Environment.id.get() ? (
+                    <Grid item xs={3} sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column' }} mb={2}>
+                        <Environments environmentId={Environment.id.get()} />
+                    </Grid>
+                ) : null}
 
                 {/* Packages */}
                 <Grid item xs={4} sx={{ flex: 1 }}>
