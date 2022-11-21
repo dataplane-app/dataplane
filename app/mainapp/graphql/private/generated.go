@@ -258,6 +258,7 @@ type ComplexityRoot struct {
 		DeletePermissionToUser             func(childComplexity int, userID string, permissionID string, environmentID string) int
 		DeletePipeline                     func(childComplexity int, environmentID string, pipelineID string) int
 		DeletePipelineAPIKey               func(childComplexity int, apiKey string, pipelineID string, environmentID string) int
+		DeleteRemoteProcessGroup           func(childComplexity int, id string, environmentID string) int
 		DeleteSecretFromWorkerGroup        func(childComplexity int, environmentID string, workerGroup string, secret string) int
 		DeleteSpecificPermission           func(childComplexity int, subject string, subjectID string, resourceID string, environmentID string) int
 		DeploymentPermissionsToAccessGroup func(childComplexity int, environmentID string, resourceID string, access []string, accessGroupID string) int
@@ -673,6 +674,7 @@ type MutationResolver interface {
 	DeleteSecretFromWorkerGroup(ctx context.Context, environmentID string, workerGroup string, secret string) (*string, error)
 	AddRemoteProcessGroup(ctx context.Context, environmentID string, name string, description string) (*string, error)
 	UpdateRemoteProcessGroup(ctx context.Context, id string, environmentID string, name string, description string, active bool) (*string, error)
+	DeleteRemoteProcessGroup(ctx context.Context, id string, environmentID string) (*string, error)
 	AddUpdateRemotePackages(ctx context.Context, environmentID string, removeProcessGroupID string, packages string, language string) (*string, error)
 }
 type PipelineEdgesResolver interface {
@@ -1945,6 +1947,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeletePipelineAPIKey(childComplexity, args["apiKey"].(string), args["pipelineID"].(string), args["environmentID"].(string)), true
+
+	case "Mutation.deleteRemoteProcessGroup":
+		if e.complexity.Mutation.DeleteRemoteProcessGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteRemoteProcessGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteRemoteProcessGroup(childComplexity, args["id"].(string), args["environmentID"].(string)), true
 
 	case "Mutation.deleteSecretFromWorkerGroup":
 		if e.complexity.Mutation.DeleteSecretFromWorkerGroup == nil {
@@ -5217,6 +5231,30 @@ func (ec *executionContext) field_Mutation_deletePipeline_args(ctx context.Conte
 		}
 	}
 	args["pipelineID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteRemoteProcessGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
 	return args, nil
 }
 
@@ -17381,6 +17419,58 @@ func (ec *executionContext) fieldContext_Mutation_updateRemoteProcessGroup(ctx c
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateRemoteProcessGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteRemoteProcessGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteRemoteProcessGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteRemoteProcessGroup(rctx, fc.Args["id"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteRemoteProcessGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteRemoteProcessGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -33417,6 +33507,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateRemoteProcessGroup(ctx, field)
+			})
+
+		case "deleteRemoteProcessGroup":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteRemoteProcessGroup(ctx, field)
 			})
 
 		case "addUpdateRemotePackages":

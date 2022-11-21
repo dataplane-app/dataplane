@@ -32,11 +32,11 @@ export default function DeactivateRemoteProcessGroup({ handleClose, remoteProces
                 </Box>
 
                 <Typography component="h2" variant="h2">
-                    {Active ? 'Deactivate' : 'Activate'} Remove process group - {Name}
+                    {Active ? 'Deactivate' : 'Activate'} remote process group - {Name}
                 </Typography>
 
                 <Typography variant="body2" sx={{ mt: 2 }}>
-                    You are about to {Active ? 'deactivate' : 'activate'} an access group, would you like to continue?
+                    You are about to {Active ? 'deactivate' : 'activate'} a remote process group, would you like to continue?
                 </Typography>
 
                 <Grid mt={4} display="flex" alignItems="center">

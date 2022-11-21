@@ -212,6 +212,42 @@ func (r *mutationResolver) UpdateRemoteProcessGroup(ctx context.Context, id stri
 	return &response, nil
 }
 
+// DeleteRemoteProcessGroup is the resolver for the deleteRemoteProcessGroup field.
+func (r *mutationResolver) DeleteRemoteProcessGroup(ctx context.Context, id string, environmentID string) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	err := database.DBConn.Where("id = ?", id).Delete(&models.RemoteProcessGroups{})
+
+	if err.RowsAffected == 0 {
+		return nil, errors.New("Remote process group relationship not found.")
+	}
+
+	if err.Error != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Remote process group database error.")
+	}
+
+	response := "Success"
+
+	return &response, nil
+}
+
 // AddUpdateRemotePackages is the resolver for the addUpdateRemotePackages field.
 func (r *mutationResolver) AddUpdateRemotePackages(ctx context.Context, environmentID string, removeProcessGroupID string, packages string, language string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)

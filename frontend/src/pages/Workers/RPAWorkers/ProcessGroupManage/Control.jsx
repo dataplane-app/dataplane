@@ -1,6 +1,7 @@
 import { Box, Typography, Button, Drawer } from '@mui/material';
 import { useState } from 'react';
 import DeactivateRemoteProcessGroup from '../../../../components/DrawerContent/DeactivateRemoteProcessGroup';
+import DeleteRemoteProcessGroupDrawer from '../../../../components/DrawerContent/DeleteRemoteProcessGroupDrawer';
 
 export default function Control({ environmentId, remoteProcessGroup, getSingleRemoteProcessGroup }) {
     // Sidebar state
@@ -47,13 +48,13 @@ export default function Control({ environmentId, remoteProcessGroup, getSingleRe
                 />
             </Drawer>
 
-            {/* <Drawer anchor="right" open={isOpenDelete} onClose={() => setIsOpenDelete(false)}>
-                <DeleteAccessGroupDrawer
+            <Drawer anchor="right" open={isOpenDelete} onClose={() => setIsOpenDelete(false)}>
+                <DeleteRemoteProcessGroupDrawer
                     handleClose={() => setIsOpenDelete(false)} //
-                    accessGroup={accessGroup}
+                    remoteProcessGroup={remoteProcessGroup}
                     environmentID={environmentId}
                 />
-            </Drawer> */}
+            </Drawer>
         </>
     );
 }
