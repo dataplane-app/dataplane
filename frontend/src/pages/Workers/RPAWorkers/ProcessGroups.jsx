@@ -18,7 +18,7 @@ import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdow
 
 const tableWidth = '850px';
 
-export default function ProcessGroups() {
+export default function RemoteProcessGroups() {
     const [showAddProcessGroupDrawer, setShowAddProcessGroupDrawer] = useState(false);
     const [showEditWorkerDrawer, setShowEditWorkerDrawer] = useState(false);
     const [name, setName] = useState('');
@@ -40,7 +40,7 @@ export default function ProcessGroups() {
         () => [
             {
                 Header: 'Member',
-                accessor: (row) => [row.Name, row.Description, row.Language],
+                accessor: (row) => [row.Name, row.Description, row.Language, row.ID],
                 Cell: (row) => (
                     <CustomWorker
                         row={row}
@@ -73,7 +73,7 @@ export default function ProcessGroups() {
                 <Typography id="test" component="h2" variant="h2" color="text.primary">
                     Process groups
                 </Typography>
-                <Button onClick={() => history.push('/rpa/workers')} variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
+                <Button onClick={() => history.push('/remoteprocessgroups/workers')} variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
                     Manage workers
                 </Button>
                 <Button onClick={() => setShowAddProcessGroupDrawer(true)} variant="contained" size="small">
@@ -146,7 +146,9 @@ export default function ProcessGroups() {
 }
 
 const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup }) => {
-    const [name, description, type] = row.value;
+    const [name, description, type, id] = row.value;
+
+    const history = useHistory();
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
@@ -161,8 +163,7 @@ const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup
                     component="h5"
                     sx={{ color: 'cyan.main', fontSize: ' 0.875rem', display: 'inline', cursor: 'pointer' }}
                     onClick={() => {
-                        setIsOpenSecrets(true);
-                        // setSecretDrawerWorkGroup(workerGroup);
+                        history.push(`/remoteprocessgroups/${id}`);
                     }}>
                     Configure
                 </Typography>
@@ -216,7 +217,7 @@ const useGetRemoteProcessGroupsHook = (environmentID, setRemoteProcessGroups) =>
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            setRemoteProcessGroups(response.filter((a) => a.EnvironmentID === environmentID));
+            setRemoteProcessGroups(response);
         }
     };
 };

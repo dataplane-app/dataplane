@@ -168,7 +168,46 @@ func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmen
 		return nil, errors.New("Add remote process group database error.")
 	}
 
-	response := "success"
+	response := "Success"
+
+	return &response, nil
+}
+
+// UpdateRemoteProcessGroup is the resolver for the updateRemoteProcessGroup field.
+func (r *mutationResolver) UpdateRemoteProcessGroup(ctx context.Context, id string, environmentID string, name string, description string, active bool) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	err := database.DBConn.Where("id = ?", id).
+		Select("active", "name", "description").
+		Updates(models.RemoteProcessGroups{
+			Name:        name,
+			Description: description,
+			Active:      active,
+		}).Error
+
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return nil, errors.New("Add remote process group database error.")
+	}
+
+	response := "Success"
 
 	return &response, nil
 }
@@ -209,7 +248,7 @@ func (r *mutationResolver) AddUpdateRemotePackages(ctx context.Context, environm
 		return nil, errors.New("Add remote process group database error.")
 	}
 
-	response := "success"
+	response := "Success"
 
 	return &response, nil
 }

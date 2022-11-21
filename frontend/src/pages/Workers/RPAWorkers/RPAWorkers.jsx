@@ -108,7 +108,7 @@ export default function RPAWorkers() {
                     RPA Workers
                 </Typography>
 
-                <Button onClick={() => history.push('/rpa')} variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
+                <Button onClick={() => history.push('/remoteprocessgroups')} variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
                     Manage process groups
                 </Button>
 

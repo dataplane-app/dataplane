@@ -14,7 +14,18 @@ export default function Packages() {
 
     return (
         <>
-            <Box sx={{ width: 344 }}>
+            <Box display="flex" gap={1}>
+                <FormControl fullWidth size="small">
+                    <Select //
+                        defaultValue="python"
+                        labelId="select-label"
+                        id="select"
+                        value={type}
+                        onChange={handleChange}>
+                        <MenuItem value={'python'}>Python</MenuItem>
+                        <MenuItem value={'bash'}>Bash</MenuItem>
+                    </Select>
+                </FormControl>
                 <FormControl fullWidth size="small">
                     <Select //
                         defaultValue="python"
@@ -27,7 +38,7 @@ export default function Packages() {
                     </Select>
                 </FormControl>
             </Box>
-            <Box sx={{ width: 344, height: 355, border: '1px solid rgba(0, 0, 0, 0.23)', mt: 1, p: '6px 6px 6px 16px', borderRadius: '5px' }}>
+            <Box sx={{ height: 355, border: '1px solid rgba(0, 0, 0, 0.23)', mt: 1, p: '6px 6px 6px 16px', borderRadius: '5px' }}>
                 <Box display="flex" alignItems="center" width="100%">
                     <Typography variant="subtitle1" fontWeight={700}>
                         Python packages

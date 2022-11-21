@@ -1,9 +1,8 @@
 import { Box, Typography, Button, Drawer } from '@mui/material';
 import { useState } from 'react';
-// import DeleteAccessGroupDrawer from './../../components/DrawerContent/DeleteAccessGroupDrawer';
-// import DeactivateAccessGroupDrawer from './../../components/DrawerContent/DeactivateAccessGroupDrawer';
+import DeactivateRemoteProcessGroup from '../../../../components/DrawerContent/DeactivateRemoteProcessGroup';
 
-export default function Control({ environmentId, accessGroup, getAccessGroup }) {
+export default function Control({ environmentId, remoteProcessGroup, getSingleRemoteProcessGroup }) {
     // Sidebar state
     const [isOpenDelete, setIsOpenDelete] = useState(false);
     const [isOpenDeactivate, setIsOpenDeactivate] = useState(false);
@@ -19,10 +18,10 @@ export default function Control({ environmentId, accessGroup, getAccessGroup }) 
                     size="small"
                     variant="outlined"
                     // color="error"
-                    color={false ? 'error' : 'success'}
+                    color={remoteProcessGroup.Active ? 'error' : 'success'}
                     onClick={() => setIsOpenDeactivate(true)}
                     sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                    {false ? 'Deactivate' : 'Activate'} worker
+                    {remoteProcessGroup.Active ? 'Deactivate' : 'Activate'} worker
                 </Button>
 
                 <Button
@@ -39,14 +38,14 @@ export default function Control({ environmentId, accessGroup, getAccessGroup }) 
                 </Typography>
             </Box>
 
-            {/* <Drawer anchor="right" open={isOpenDeactivate} onClose={() => setIsOpenDeactivate(false)}>
-                <DeactivateAccessGroupDrawer
-                    handleClose={() => setIsOpenDeactivate(false)}
-                    accessGroup={accessGroup}
+            <Drawer anchor="right" open={isOpenDeactivate} onClose={() => setIsOpenDeactivate(false)}>
+                <DeactivateRemoteProcessGroup
+                    handleClose={() => setIsOpenDeactivate(false)} //
+                    remoteProcessGroup={remoteProcessGroup}
                     environmentID={environmentId}
-                    getAccessGroup={getAccessGroup}
+                    getSingleRemoteProcessGroup={getSingleRemoteProcessGroup}
                 />
-            </Drawer> */}
+            </Drawer>
 
             {/* <Drawer anchor="right" open={isOpenDelete} onClose={() => setIsOpenDelete(false)}>
                 <DeleteAccessGroupDrawer

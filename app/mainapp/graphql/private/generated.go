@@ -297,6 +297,7 @@ type ComplexityRoot struct {
 		UpdatePipeline                     func(childComplexity int, pipelineID string, name string, environmentID string, description string, workerGroup string) int
 		UpdatePlatform                     func(childComplexity int, input *UpdatePlatformInput) int
 		UpdatePreferences                  func(childComplexity int, input *AddPreferencesInput) int
+		UpdateRemoteProcessGroup           func(childComplexity int, id string, environmentID string, name string, description string, active bool) int
 		UpdateSecret                       func(childComplexity int, input *UpdateSecretsInput) int
 		UpdateSecretValue                  func(childComplexity int, secret string, value string, environmentID string) int
 		UpdateUser                         func(childComplexity int, input *UpdateUsersInput) int
@@ -671,6 +672,7 @@ type MutationResolver interface {
 	AddSecretToWorkerGroup(ctx context.Context, environmentID string, workerGroup string, secret string) (*string, error)
 	DeleteSecretFromWorkerGroup(ctx context.Context, environmentID string, workerGroup string, secret string) (*string, error)
 	AddRemoteProcessGroup(ctx context.Context, environmentID string, name string, description string) (*string, error)
+	UpdateRemoteProcessGroup(ctx context.Context, id string, environmentID string, name string, description string, active bool) (*string, error)
 	AddUpdateRemotePackages(ctx context.Context, environmentID string, removeProcessGroupID string, packages string, language string) (*string, error)
 }
 type PipelineEdgesResolver interface {
@@ -2411,6 +2413,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdatePreferences(childComplexity, args["input"].(*AddPreferencesInput)), true
+
+	case "Mutation.updateRemoteProcessGroup":
+		if e.complexity.Mutation.UpdateRemoteProcessGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateRemoteProcessGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateRemoteProcessGroup(childComplexity, args["id"].(string), args["environmentID"].(string), args["name"].(string), args["description"].(string), args["active"].(bool)), true
 
 	case "Mutation.updateSecret":
 		if e.complexity.Mutation.UpdateSecret == nil {
@@ -6535,6 +6549,57 @@ func (ec *executionContext) field_Mutation_updatePreferences_args(ctx context.Co
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateRemoteProcessGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["description"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["description"] = arg3
+	var arg4 bool
+	if tmp, ok := rawArgs["active"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("active"))
+		arg4, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["active"] = arg4
 	return args, nil
 }
 
@@ -17264,6 +17329,58 @@ func (ec *executionContext) fieldContext_Mutation_addRemoteProcessGroup(ctx cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_addRemoteProcessGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateRemoteProcessGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateRemoteProcessGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateRemoteProcessGroup(rctx, fc.Args["id"].(string), fc.Args["environmentID"].(string), fc.Args["name"].(string), fc.Args["description"].(string), fc.Args["active"].(bool))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateRemoteProcessGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateRemoteProcessGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -33294,6 +33411,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_addRemoteProcessGroup(ctx, field)
+			})
+
+		case "updateRemoteProcessGroup":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateRemoteProcessGroup(ctx, field)
 			})
 
 		case "addUpdateRemotePackages":
