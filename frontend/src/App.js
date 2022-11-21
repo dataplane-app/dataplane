@@ -42,7 +42,7 @@ import DeploymentPermissions from './pages/Deployments/DeploymentPermissions';
 import RPAWorkers from './pages/Workers/RPAWorkers/RPAWorkers';
 import RPASettings from './pages/Workers/RPAWorkers/RPASettings';
 import RPAManage from './pages/Workers/RPAWorkers/RPAManage';
-import RPAProcessManage from './pages/Workers/RPAWorkers/ProcessGroupManage';
+import RemoteProcessGroupManage from './pages/Workers/RPAWorkers/ProcessGroupManage';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
@@ -133,8 +133,9 @@ function App() {
                                             '/',
                                             '/workers',
                                             '/workers/:workerId',
-                                            '/rpa',
-                                            '/rpa/workers',
+                                            '/remoteprocessgroups',
+                                            '/remoteprocessgroups/workers',
+                                            '/remoteprocessgroups/:groupId',
                                             '/teams',
                                             '/teams/:teamId',
                                             '/access/:accessId',
@@ -158,13 +159,9 @@ function App() {
                                             '/learn',
                                             '/temp/settings',
                                             '/temp/manage',
-                                            '/temp/processmanage',
                                         ]}>
                                         <Switch>
                                             <Layout>
-                                                <Route exact path="/temp/processmanage">
-                                                    <RPAProcessManage />
-                                                </Route>
                                                 <Route exact path="/temp/settings">
                                                     <RPASettings />
                                                 </Route>
@@ -186,11 +183,14 @@ function App() {
                                                 <Route exact path="/workers">
                                                     <Workers tab={0} />
                                                 </Route>
-                                                <Route exact path="/rpa">
+                                                <Route exact path="/remoteprocessgroups">
                                                     <Workers tab={1} />
                                                 </Route>
-                                                <Route exact path="/rpa/workers/">
+                                                <Route exact path="/remoteprocessgroups/workers/">
                                                     <RPAWorkers />
+                                                </Route>
+                                                <Route exact path="/remoteprocessgroups/:groupId">
+                                                    <RemoteProcessGroupManage />
                                                 </Route>
                                                 <Route exact path="/workers/:workerId">
                                                     <WorkerDetail />

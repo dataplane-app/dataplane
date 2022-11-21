@@ -86,11 +86,26 @@ func (RemoteProcessGroups) TableName() string {
 }
 
 type RemoteProcessGroups struct {
-	Name          string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"name"`
-	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"environment_id"`
-	Description   string     `json:"description"`
-	LB            string     `json:"lb"`
-	WorkerType    string     `json:"remote_process_type"`
-	Language      string     `json:"language"`
-	UpdatedAt     *time.Time `json:"updated_at"`
+	ID          string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"id"`
+	Name        string     `gorm:"type:varchar(255);" json:"name"`
+	Description string     `json:"description"`
+	LB          string     `json:"lb"`
+	WorkerType  string     `json:"remote_process_type"`
+	Active      bool       `json:"active"`
+	UpdatedAt   *time.Time `json:"updated_at"`
+}
+
+func (RemotePackages) IsEntity() {}
+
+func (RemotePackages) TableName() string {
+	return "remote_packages"
+}
+
+type RemotePackages struct {
+	EnvironmentID        string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"environment_id"`
+	RemoteProcessGroupID string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"remote_process_group_id"`
+	Packages             string     `json:"packages"`
+	Language             string     `gorm:"type:varchar(64);" json:"language"`
+	UpdatedAt            *time.Time `json:"updated_at"`
+	DeletedAt            *time.Time `json:"deleted_at,omitempty"`
 }

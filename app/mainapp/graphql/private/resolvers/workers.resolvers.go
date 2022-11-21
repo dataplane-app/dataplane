@@ -14,7 +14,9 @@ import (
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
+	uuid2 "github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // AddSecretToWorkerGroup is the resolver for the addSecretToWorkerGroup field.
@@ -127,13 +129,15 @@ func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmen
 		return nil, errors.New("Requires permissions.")
 	}
 
+	// Add process group
+	id := uuid2.New().String()
 	remoteProcessGroups := models.RemoteProcessGroups{
-		Name:          name,
-		EnvironmentID: environmentID,
-		Description:   description,
-		LB:            "",
-		WorkerType:    "",
-		Language:      "python",
+		ID:          id,
+		Name:        name,
+		Description: description,
+		LB:          "",
+		WorkerType:  "",
+		Active:      false,
 	}
 
 	err := database.DBConn.Create(&remoteProcessGroups).Error
@@ -143,7 +147,66 @@ func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmen
 			logging.PrintSecretsRedact(err)
 		}
 
-		return nil, errors.New("Add secret to worker group database error.")
+		return nil, errors.New("Add remote process group database error.")
+	}
+
+	// Attach to an environments
+	environment := models.RemotePackages{
+		RemoteProcessGroupID: id,
+		EnvironmentID:        environmentID,
+		Packages:             "",
+		Language:             "python",
+	}
+
+	err = database.DBConn.Create(&environment).Error
+
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return nil, errors.New("Add remote process group database error.")
+	}
+
+	response := "success"
+
+	return &response, nil
+}
+
+// AddUpdateRemotePackages is the resolver for the addUpdateRemotePackages field.
+func (r *mutationResolver) AddUpdateRemotePackages(ctx context.Context, environmentID string, removeProcessGroupID string, packages string, language string) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	envPackages := models.RemotePackages{
+		RemoteProcessGroupID: removeProcessGroupID,
+		EnvironmentID:        environmentID,
+		Packages:             packages,
+		Language:             language,
+	}
+
+	err := database.DBConn.Clauses(clause.OnConflict{
+		UpdateAll: true, // Updates all but primary keys
+	}).Create(&envPackages).Error
+
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Add remote process group database error.")
 	}
 
 	response := "success"
@@ -317,10 +380,8 @@ func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentID
 	return s, nil
 }
 
-// GetRemoteProcessGroups is the resolver for the getRemoteProcessGroups field.
-func (r *queryResolver) GetRemoteProcessGroups(ctx context.Context, environmentID string) ([]*privategraphql.RemoteProcessGroups, error) {
-	var resp []*privategraphql.RemoteProcessGroups
-
+// GetSingleRemoteProcessGroup is the resolver for the getSingleRemoteProcessGroup field.
+func (r *queryResolver) GetSingleRemoteProcessGroup(ctx context.Context, environmentID string, id string) (*privategraphql.RemoteProcessGroups, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -339,22 +400,49 @@ func (r *queryResolver) GetRemoteProcessGroups(ctx context.Context, environmentI
 		return nil, errors.New("Requires permissions.")
 	}
 
-	var remoteProcessGroups []models.RemoteProcessGroups
+	var remoteProcessGroup *privategraphql.RemoteProcessGroups
 
-	err := database.DBConn.Where("environment_id =?", environmentID).Find(&remoteProcessGroups).Error
+	err := database.DBConn.Where("id = ?", id).Find(&remoteProcessGroup).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errors.New("Remote process groups database error.")
 	}
 
-	for _, v := range remoteProcessGroups {
-		resp = append(resp, &privategraphql.RemoteProcessGroups{
-			Name:          v.Name,
-			Description:   v.Description,
-			EnvironmentID: v.EnvironmentID,
-			Lb:            v.LB,
-			WorkerType:    v.WorkerType,
-			Language:      v.Language,
-		})
+	return remoteProcessGroup, nil
+}
+
+// GetRemoteProcessGroups is the resolver for the getRemoteProcessGroups field.
+func (r *queryResolver) GetRemoteProcessGroups(ctx context.Context, environmentID string) ([]*privategraphql.RemoteProcessGroups, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_create_pipelines", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	var resp []*privategraphql.RemoteProcessGroups
+
+	err := database.DBConn.Raw(`
+	select 
+	rpg.*,
+	rp.language
+	from remote_process_groups rpg 
+	left join remote_packages rp on rpg.id = rp.remote_process_group_id 
+	where rp.environment_id = ?
+	`, environmentID).Scan(&resp).Error
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Remote process groups database error.")
 	}
 
 	return resp, nil

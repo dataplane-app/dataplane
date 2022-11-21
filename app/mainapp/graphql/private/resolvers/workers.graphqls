@@ -31,12 +31,13 @@ type SecretWorkerGroups {
 }
 
 type RemoteProcessGroups {
+	ID: 				String!
 	Name: 				String!
-	EnvironmentID:      String!
 	Description:        String!
 	LB:          		String!
 	WorkerType:  		String!
-	Language:           String!
+    Language:           String!
+    Active:             Boolean!
 }
 
 extend type Query {
@@ -71,6 +72,14 @@ extend type Query {
   getWorkerGroupSecrets(environmentID: String!, WorkerGroup: String!): [Secrets]
 
     """
+	Get a single process group.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+	+ **Security**: Based on environment selected
+	"""
+  getSingleRemoteProcessGroup(environmentID: String!, ID: String!): RemoteProcessGroups
+
+    """
 	Get remote process groups.
 	+ **Route**: Private
 	+ **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
@@ -103,4 +112,12 @@ extend type Mutation {
 	+ **Security**: Based on environment selected
 	"""
   addRemoteProcessGroup(environmentID: String!, name: String!, description: String!): String
+
+    """
+	Add remote packages.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_secrets
+	+ **Security**: Based on environment selected
+	"""
+  addUpdateRemotePackages(environmentID: String!, removeProcessGroupID: String!, packages: String!, language: String!): String
 }
