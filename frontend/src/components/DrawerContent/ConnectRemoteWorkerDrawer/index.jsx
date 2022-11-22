@@ -1,10 +1,7 @@
-import { Box, Typography, Button, Grid, FormControl, InputLabel, Select, MenuItem, List, ListItem } from '@mui/material';
-import { useEffect, useReducer } from 'react';
-import { useSnackbar } from 'notistack';
+import { Box, Typography, Button, FormControl, InputLabel, Select, MenuItem, List, ListItem } from '@mui/material';
+import { useReducer } from 'react';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useHistory } from 'react-router-dom';
-import { useDeleteRemoteProcessGroup } from '../../../graphql/deleteRemoteProcessGroup';
 import { useTheme } from '@emotion/react';
 import { DateTime } from 'luxon';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';

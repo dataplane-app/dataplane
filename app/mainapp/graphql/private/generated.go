@@ -496,6 +496,7 @@ type ComplexityRoot struct {
 		GetSecretGroups                 func(childComplexity int, environmentID string, secret string) int
 		GetSecrets                      func(childComplexity int, environmentID string) int
 		GetSingleRemoteProcessGroup     func(childComplexity int, environmentID string, id string) int
+		GetSingleRemoteWorker           func(childComplexity int, environmentID string, workerID string) int
 		GetSinglepipelineRun            func(childComplexity int, pipelineID string, runID string, environmentID string) int
 		GetUser                         func(childComplexity int, userID string) int
 		GetUserAccessGroups             func(childComplexity int, userID string, environmentID string) int
@@ -767,6 +768,7 @@ type QueryResolver interface {
 	GetRemoteProcessGroups(ctx context.Context, environmentID string) ([]*RemoteProcessGroups, error)
 	GetRemotePackages(ctx context.Context, environmentID string, id string) ([]*RemotePackages, error)
 	GetRemoteWorkers(ctx context.Context, environmentID string) ([]*RemoteWorkers, error)
+	GetSingleRemoteWorker(ctx context.Context, environmentID string, workerID string) (*RemoteWorkers, error)
 }
 
 type executableSchema struct {
@@ -3721,6 +3723,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetSingleRemoteProcessGroup(childComplexity, args["environmentID"].(string), args["ID"].(string)), true
+
+	case "Query.getSingleRemoteWorker":
+		if e.complexity.Query.GetSingleRemoteWorker == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getSingleRemoteWorker_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetSingleRemoteWorker(childComplexity, args["environmentID"].(string), args["workerID"].(string)), true
 
 	case "Query.getSinglepipelineRun":
 		if e.complexity.Query.GetSinglepipelineRun == nil {
@@ -7777,6 +7791,30 @@ func (ec *executionContext) field_Query_getSingleRemoteProcessGroup_args(ctx con
 		}
 	}
 	args["ID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getSingleRemoteWorker_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["workerID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workerID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workerID"] = arg1
 	return args, nil
 }
 
@@ -26705,6 +26743,70 @@ func (ec *executionContext) fieldContext_Query_getRemoteWorkers(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getSingleRemoteWorker(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getSingleRemoteWorker(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetSingleRemoteWorker(rctx, fc.Args["environmentID"].(string), fc.Args["workerID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*RemoteWorkers)
+	fc.Result = res
+	return ec.marshalORemoteWorkers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐRemoteWorkers(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getSingleRemoteWorker(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "WorkerID":
+				return ec.fieldContext_RemoteWorkers_WorkerID(ctx, field)
+			case "RemoteProcessGroupID":
+				return ec.fieldContext_RemoteWorkers_RemoteProcessGroupID(ctx, field)
+			case "WorkerName":
+				return ec.fieldContext_RemoteWorkers_WorkerName(ctx, field)
+			case "Status":
+				return ec.fieldContext_RemoteWorkers_Status(ctx, field)
+			case "LastPing":
+				return ec.fieldContext_RemoteWorkers_LastPing(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RemoteWorkers", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getSingleRemoteWorker_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -36694,6 +36796,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getRemoteWorkers(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getSingleRemoteWorker":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getSingleRemoteWorker(ctx, field)
 				return res
 			}
 

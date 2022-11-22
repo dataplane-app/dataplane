@@ -117,6 +117,14 @@ extend type Query {
 	+ **Security**: Based on environment selected
 	"""
   getRemoteWorkers(environmentID: String!): [RemoteWorkers]
+
+    """
+	Get a single worker.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+	+ **Security**: Based on environment selected
+	"""
+  getSingleRemoteWorker(environmentID: String!, workerID: String!): RemoteWorkers
 }
 
 extend type Mutation {
