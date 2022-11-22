@@ -1,5 +1,5 @@
 import { Box, Button, Drawer, Grid, Tooltip, Typography } from '@mui/material';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../../../components/CustomChip';
 import Search from '../../../components/Search';
@@ -8,42 +8,65 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AddRPAWorkerDrawer from '../../../components/DrawerContent/AddRPAWorker';
 import EditRPAWorkerDrawer from '../../../components/DrawerContent/EditRPAWorker';
 import { useHistory } from 'react-router-dom';
+import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
+import { useGetRemoteWorkers } from '../../../graphql/getRemoteWorkers';
+import { useSnackbar } from 'notistack';
+import ConnectRemoteWorkerDrawer from '../../../components/DrawerContent/ConnectRemoteWorkerDrawer';
 
 const tableWidth = '850px';
 
 export default function RPAWorkers() {
     const [showAddWorkerDrawer, setShowAddWorkerDrawer] = useState(false);
     const [showEditWorkerDrawer, setShowEditWorkerDrawer] = useState(false);
+    const [showConnectDrawer, setShowConnectDrawer] = useState(false);
     const [name, setName] = useState('');
+    const [remoteWorkers, setRemoteWorkers] = useState([]);
+    console.log('🚀 ~ file: RPAWorkers.jsx ~ line 22 ~ RPAWorkers ~ remoteWorkers', remoteWorkers);
 
     const history = useHistory();
+
+    // Global environment state with hookstate
+    const Environment = useGlobalEnvironmentState();
+
+    // Graphql hook
+    const getRemoteProcessGroups = useGetRemoteProcessGroupsHook(Environment.id.get(), setRemoteWorkers);
+
+    useEffect(() => {
+        getRemoteProcessGroups();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [Environment.id.get()]);
 
     const columns = useMemo(
         () => [
             {
                 Header: 'Worker',
-                accessor: (row) => [row.name, row.status, row.id],
+                accessor: (row) => [row.WorkerName, row.Status, row.WorkerID],
                 Cell: (row) => (
-                    <Box display="flex" flexDirection="column" position="relative">
-                        <Tooltip title={row.value[2]} placement="top">
-                            <Typography variant="caption" lineHeight={1.2} mr={0.5}>
-                                {row.value[0]}
-                            </Typography>
-                        </Tooltip>
-                        <Box
-                            onClick={() => {
-                                setName(row.value[0]);
-                                setShowEditWorkerDrawer(true);
-                            }}
-                            component={FontAwesomeIcon}
-                            fontSize={12}
-                            color="#7D7D7D"
-                            icon={faEdit}
-                            cursor="pointer"
-                            position="absolute"
-                            left="93px"
-                            top="2px"
-                        />
+                    <Box display="flex" flexDirection="column">
+                        <Box display="flex">
+                            <Tooltip title={row.value[2]} placement="top">
+                                <Typography variant="caption" lineHeight={1.2} mr={0.5}>
+                                    {row.value[0]}
+                                </Typography>
+                            </Tooltip>
+                            <Box position="relative">
+                                <Box
+                                    onClick={() => {
+                                        setName(row.value[0]);
+                                        setShowEditWorkerDrawer(true);
+                                    }}
+                                    component={FontAwesomeIcon}
+                                    fontSize={12}
+                                    color="#7D7D7D"
+                                    icon={faEdit}
+                                    cursor="pointer"
+                                    position="absolute"
+                                    left="5px"
+                                    top="1px"
+                                />
+                            </Box>
+                        </Box>
 
                         <Typography variant="caption" lineHeight={1.2} fontWeight={700} color={row.value[1] === 'Online' ? 'success.main' : 'red'}>
                             {row.value[1]}
@@ -56,7 +79,7 @@ export default function RPAWorkers() {
                 accessor: 'groupCount',
                 Cell: (row) => (
                     <Typography mt={-2} variant="caption" color="cyan.main" sx={{ cursor: 'pointer' }}>
-                        Manage({row.value})
+                        Manage(1)
                     </Typography>
                 ),
             },
@@ -65,23 +88,23 @@ export default function RPAWorkers() {
                 accessor: 'lastPing',
                 Cell: (row) => (
                     <Typography mt={-2} variant="caption">
-                        {row.value}
+                        {row.LastPing}
                     </Typography>
                 ),
             },
             {
                 Header: 'Manage',
-                accessor: (row) => [row.id, row.status],
+                accessor: (row) => [row.WorkerID, row.Status],
                 Cell: (row) => (
                     <>
-                        <Typography variant="caption" mr={1} mt={-2} color="red" sx={{ cursor: 'pointer' }}>
-                            Remove
+                        <Typography variant="caption" mr={1} mt={-2} color="cyan.main" sx={{ cursor: 'pointer' }} onClick={() => history.push(`/remote/workers/${row.value[0]}`)}>
+                            Configure
                         </Typography>
                         <Typography variant="caption" mt={-2}>
                             |
                         </Typography>
-                        <Typography variant="caption" ml={1} mt={-2} color={row.value[1] === 'Online' ? 'red' : 'success.main'} sx={{ cursor: 'pointer' }}>
-                            {row.value[1] === 'Online' ? 'Deactivate' : 'Activate'}
+                        <Typography variant="caption" ml={1} mt={-2} color="cyan.main" sx={{ cursor: 'pointer' }} onClick={() => setShowConnectDrawer(true)}>
+                            Connect
                         </Typography>
                     </>
                 ),
@@ -95,7 +118,7 @@ export default function RPAWorkers() {
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, setGlobalFilter } = useTable(
         {
             columns,
-            data,
+            data: remoteWorkers,
         },
 
         useGlobalFilter
@@ -108,7 +131,7 @@ export default function RPAWorkers() {
                     RPA Workers
                 </Typography>
 
-                <Button onClick={() => history.push('/remoteprocessgroups')} variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
+                <Button onClick={() => history.push('/remote/processgroups')} variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
                     Manage process groups
                 </Button>
 
@@ -120,7 +143,7 @@ export default function RPAWorkers() {
             <Box mt={'45px'} sx={{ width: tableWidth }}>
                 <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
-                        <CustomChip amount={data.length} label="RPA Workers" margin={2} customColor="orange" />
+                        <CustomChip amount={remoteWorkers.length} label="RPA Workers" margin={2} customColor="orange" />
                     </Grid>
 
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
@@ -189,6 +212,7 @@ export default function RPAWorkers() {
                                                 border: '1px solid',
                                                 borderColor: 'editorPage.borderColor',
                                                 height: '50px',
+                                                // If first cell
                                                 borderLeft: idx === 0 ? '1px solid editorPage.borderColor' : 0,
                                                 // If last cell of last row
                                                 borderBottomRightRadius: idx === row.cells.length - 1 && i === rows.length - 1 ? '5px' : 0,
@@ -197,7 +221,11 @@ export default function RPAWorkers() {
                                                 borderTop: 0,
                                                 pl: 1,
                                                 textAlign: 'left',
-                                                justifyContent: idx === row.cells.length - 1 ? 'center' : 'unset',
+                                                // If last cell
+                                                ...(idx === row.cells.length - 1 && {
+                                                    justifyContent: 'center',
+                                                    paddingLeft: '0',
+                                                }),
                                             }}>
                                             {cell.render('Cell')}
                                         </Box>
@@ -227,23 +255,45 @@ export default function RPAWorkers() {
                     name={name}
                 />
             </Drawer>
+
+            {/* Connect drawer */}
+            <Drawer
+                //
+                hideBackdrop
+                sx={{ width: 'calc(100% - 203px)', zIndex: 1099, [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
+                anchor="right"
+                open={showConnectDrawer}
+                onClose={() => setShowConnectDrawer(!false)}>
+                <ConnectRemoteWorkerDrawer
+                    handleClose={() => {
+                        setShowConnectDrawer(false);
+                    }}
+                    name={name}
+                />
+            </Drawer>
         </Box>
     );
 }
 
-const data = [
-    {
-        name: "Judy's computer",
-        status: 'Online',
-        groupCount: 1,
-        lastPing: '13 Nov 2022 19:28:31',
-        id: '12345',
-    },
-    {
-        name: "Sam's computer",
-        status: 'Offline',
-        groupCount: 2,
-        lastPing: '1 Nov 2022 8:00:01',
-        id: '12345',
-    },
-];
+// ** Custom Hooks
+const useGetRemoteProcessGroupsHook = (environmentID, setRemoteWorkers) => {
+    // GraphQL hook
+    const getRemoteWorkers = useGetRemoteWorkers();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get worker groups
+    return async () => {
+        const response = await getRemoteWorkers({ environmentID });
+
+        if (response === null) {
+            setRemoteWorkers([]);
+        } else if (response.r || response.error) {
+            enqueueSnackbar("Can't get remote process groups: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setRemoteWorkers(response);
+        }
+    };
+};

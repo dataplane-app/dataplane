@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -249,7 +249,7 @@ func (r *mutationResolver) DeleteRemoteProcessGroup(ctx context.Context, id stri
 }
 
 // AddUpdateRemotePackages is the resolver for the addUpdateRemotePackages field.
-func (r *mutationResolver) AddUpdateRemotePackages(ctx context.Context, environmentID string, removeProcessGroupID string, packages string, language string) (*string, error) {
+func (r *mutationResolver) AddUpdateRemotePackages(ctx context.Context, environmentID string, remoteProcessGroupID string, packages string, language string) (*string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -267,7 +267,7 @@ func (r *mutationResolver) AddUpdateRemotePackages(ctx context.Context, environm
 	}
 
 	envPackages := models.RemotePackages{
-		RemoteProcessGroupID: removeProcessGroupID,
+		RemoteProcessGroupID: remoteProcessGroupID,
 		EnvironmentID:        environmentID,
 		Packages:             packages,
 		Language:             language,
@@ -325,7 +325,51 @@ func (r *mutationResolver) DeleteRemotePackage(ctx context.Context, id string, e
 	response := "Success"
 
 	return &response, nil
+}
 
+// AddRemoteWorker is the resolver for the addRemoteWorker field.
+func (r *mutationResolver) AddRemoteWorker(ctx context.Context, environmentID string, remoteProcessGroupID string, name string) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	// Add process group
+	id := uuid2.New().String()
+	remoteWorker := models.RemoteWorkers{
+		WorkerID:             id,
+		RemoteProcessGroupID: remoteProcessGroupID,
+		WorkerName:           name,
+		Status:               "Online",
+		LB:                   "",
+		WorkerType:           "",
+		LastPing:             nil,
+	}
+
+	err := database.DBConn.Create(&remoteWorker).Error
+
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return nil, errors.New("Add remote worker database error.")
+	}
+
+	response := "Success"
+
+	return &response, nil
 }
 
 // GetWorkers is the resolver for the getWorkers field.
@@ -534,8 +578,6 @@ func (r *queryResolver) GetRemoteProcessGroups(ctx context.Context, environmentI
 		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
 		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
 		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
-		{Resource: "environment_create_pipelines", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
-		{Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -594,4 +636,33 @@ func (r *queryResolver) GetRemotePackages(ctx context.Context, environmentID str
 	}
 
 	return remotePackages, nil
+}
+
+// GetRemoteWorkers is the resolver for the getRemoteWorkers field.
+func (r *queryResolver) GetRemoteWorkers(ctx context.Context, environmentID string) ([]*privategraphql.RemoteWorkers, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	var resp []*privategraphql.RemoteWorkers
+
+	err := database.DBConn.Find(&resp).Error
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Remote workers database error.")
+	}
+
+	return resp, nil
 }

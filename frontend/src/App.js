@@ -40,7 +40,6 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import DeploymentPermissions from './pages/Deployments/DeploymentPermissions';
 import RPAWorkers from './pages/Workers/RPAWorkers/RPAWorkers';
-import RPASettings from './pages/Workers/RPAWorkers/RPASettings';
 import RPAManage from './pages/Workers/RPAWorkers/RPAManage';
 import RemoteProcessGroupManage from './pages/Workers/RPAWorkers/ProcessGroupManage';
 
@@ -133,9 +132,10 @@ function App() {
                                             '/',
                                             '/workers',
                                             '/workers/:workerId',
-                                            '/remoteprocessgroups',
-                                            '/remoteprocessgroups/workers',
-                                            '/remoteprocessgroups/:groupId',
+                                            '/remote/processgroups',
+                                            '/remote/workers',
+                                            '/remote/workers/:workerId',
+                                            '/remote/processgroups/:groupId',
                                             '/teams',
                                             '/teams/:teamId',
                                             '/access/:accessId',
@@ -157,17 +157,9 @@ function App() {
                                             '/support',
                                             '/feedback',
                                             '/learn',
-                                            '/temp/settings',
-                                            '/temp/manage',
                                         ]}>
                                         <Switch>
                                             <Layout>
-                                                <Route exact path="/temp/settings">
-                                                    <RPASettings />
-                                                </Route>
-                                                <Route exact path="/temp/manage">
-                                                    <RPAManage />
-                                                </Route>
                                                 <Route exact path="/">
                                                     <Pipelines />
                                                 </Route>
@@ -183,13 +175,16 @@ function App() {
                                                 <Route exact path="/workers">
                                                     <Workers tab={0} />
                                                 </Route>
-                                                <Route exact path="/remoteprocessgroups">
+                                                <Route exact path="/remote/processgroups">
                                                     <Workers tab={1} />
                                                 </Route>
-                                                <Route exact path="/remoteprocessgroups/workers/">
+                                                <Route exact path="/remote/workers/">
                                                     <RPAWorkers />
                                                 </Route>
-                                                <Route exact path="/remoteprocessgroups/:groupId">
+                                                <Route exact path="/remote/workers/:workerId">
+                                                    <RPAManage />
+                                                </Route>
+                                                <Route exact path="/remote/processgroups/:groupId">
                                                     <RemoteProcessGroupManage />
                                                 </Route>
                                                 <Route exact path="/workers/:workerId">

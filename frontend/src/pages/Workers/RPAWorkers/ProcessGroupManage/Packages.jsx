@@ -171,7 +171,7 @@ export const useAddUpdateRemotePackagesHook = (getRemotePackages) => {
     return async (data, pkgText) => {
         const dataFinal = {
             environmentID: data.EnvironmentID,
-            removeProcessGroupID: data.RemoteProcessGroupID,
+            remoteProcessGroupID: data.RemoteProcessGroupID,
             packages: pkgText,
             language: data.Language,
         };

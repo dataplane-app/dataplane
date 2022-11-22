@@ -73,7 +73,7 @@ export default function RemoteProcessGroups() {
                 <Typography id="test" component="h2" variant="h2" color="text.primary">
                     Process groups
                 </Typography>
-                <Button onClick={() => history.push('/remoteprocessgroups/workers')} variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
+                <Button onClick={() => history.push('/remote/workers')} variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
                     Manage workers
                 </Button>
                 <Button onClick={() => setShowAddProcessGroupDrawer(true)} variant="contained" size="small">
@@ -163,7 +163,7 @@ const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup
                     component="h5"
                     sx={{ color: 'cyan.main', fontSize: ' 0.875rem', display: 'inline', cursor: 'pointer' }}
                     onClick={() => {
-                        history.push(`/remoteprocessgroups/${id}`);
+                        history.push(`/remote/processgroups/${id}`);
                     }}>
                     Configure
                 </Typography>

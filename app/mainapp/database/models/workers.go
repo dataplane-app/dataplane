@@ -110,3 +110,20 @@ type RemotePackages struct {
 	UpdatedAt            *time.Time `json:"updated_at"`
 	DeletedAt            *time.Time `json:"deleted_at,omitempty"`
 }
+
+func (RemoteWorkers) IsEntity() {}
+
+func (RemoteWorkers) TableName() string {
+	return "remote_workers"
+}
+
+type RemoteWorkers struct {
+	WorkerID             string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"worker_id"`
+	RemoteProcessGroupID string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"remote_process_group_id"`
+	WorkerName           string     `json:"worker_name"`
+	Status               string     `json:"status"` //online || offline || failed || starting
+	LB                   string     `json:"lb"`
+	WorkerType           string     `json:"worker_type"`
+	LastPing             *time.Time `json:"last_ping"`
+	UpdatedAt            *time.Time `json:"updated_at"`
+}

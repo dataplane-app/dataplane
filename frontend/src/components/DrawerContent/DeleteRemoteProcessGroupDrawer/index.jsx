@@ -76,7 +76,7 @@ const useDeleteRemoteProcessGroupHook = (environmentID, id) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
-            history.push('/remoteprocessgroups');
+            history.push('/remote/processgroups');
         }
     };
 };

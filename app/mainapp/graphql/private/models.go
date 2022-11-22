@@ -264,6 +264,14 @@ type RemoteProcessGroups struct {
 	Active      bool   `json:"Active"`
 }
 
+type RemoteWorkers struct {
+	WorkerID             string     `json:"WorkerID"`
+	RemoteProcessGroupID string     `json:"RemoteProcessGroupID"`
+	WorkerName           string     `json:"WorkerName"`
+	Status               string     `json:"Status"`
+	LastPing             *time.Time `json:"LastPing"`
+}
+
 type UpdateEnvironment struct {
 	ID          string  `json:"id"`
 	Name        string  `json:"name"`

@@ -37,7 +37,7 @@ export default function RemoteProcessGroupManage() {
                     Process group {'> ' + remoteProcessGroup?.Name}
                 </Typography>
                 <Button
-                    onClick={() => history.push('/remoteprocessgroups')}
+                    onClick={() => history.push('/remote/processgroups')}
                     style={{ paddingLeft: '16px', paddingRight: '16px', marginLeft: 'auto' }}
                     variant="text"
                     startIcon={<FontAwesomeIcon icon={faTimes} />}>

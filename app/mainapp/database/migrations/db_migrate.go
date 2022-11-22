@@ -106,6 +106,7 @@ func Migrate() {
 			&models.SchedulerLock{},
 			&models.RemoteProcessGroups{},
 			&models.RemotePackages{},
+			&models.RemoteWorkers{},
 
 			// ---- Files and folders ---
 			&models.CodeFilesStore{},

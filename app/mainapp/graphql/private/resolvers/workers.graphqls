@@ -47,6 +47,14 @@ type RemotePackages {
     Language:               String!
 }
 
+type RemoteWorkers {
+	WorkerID: 				String!
+	RemoteProcessGroupID: 	String!
+	WorkerName: 			String!
+    Status:               	String!
+	LastPing:				Time
+}
+
 extend type Query {
   """
 	Get workers.
@@ -101,6 +109,14 @@ extend type Query {
 	+ **Security**: Based on environment selected
 	"""
   getRemotePackages(environmentID: String!, ID: String!): [RemotePackages]
+
+    """
+	Get remote workers.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+	+ **Security**: Based on environment selected
+	"""
+  getRemoteWorkers(environmentID: String!): [RemoteWorkers]
 }
 
 extend type Mutation {
@@ -150,7 +166,7 @@ extend type Mutation {
 	+ **Permission**: admin_platform, admin_environment, environment_secrets
 	+ **Security**: Based on environment selected
 	"""
-  addUpdateRemotePackages(environmentID: String!, removeProcessGroupID: String!, packages: String!, language: String!): String
+  addUpdateRemotePackages(environmentID: String!, remoteProcessGroupID: String!, packages: String!, language: String!): String
 
     """
 	Delete remote package environment.
@@ -159,4 +175,12 @@ extend type Mutation {
 	+ **Security**: Based on environment selected
 	"""
   deleteRemotePackage(id: String!, environmentID: String!): String
+
+    """
+	Add remote worker.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_secrets
+	+ **Security**: Based on environment selected
+	"""
+  addRemoteWorker(environmentID: String!, remoteProcessGroupID: String!, name: String!): String
 }

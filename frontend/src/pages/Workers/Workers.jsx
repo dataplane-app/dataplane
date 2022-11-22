@@ -13,7 +13,7 @@ export default function Workers({ tab }) {
 
     const handleChange = (event) => {
         event.target.id === 'tab-0' && history.push('/workers');
-        event.target.id === 'tab-1' && history.push('/remoteprocessgroups');
+        event.target.id === 'tab-1' && history.push('/remote/processgroups');
     };
 
     return (

@@ -185,7 +185,7 @@ export const useAddUpdateRemotePackagesHook = (getRemotePackages, availableEnvir
 
         const dataFinal = {
             environmentID,
-            removeProcessGroupID: groupId,
+            remoteProcessGroupID: groupId,
             packages: '',
             language: 'python',
         };
