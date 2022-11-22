@@ -584,7 +584,7 @@ func (r *queryResolver) GetRemotePackages(ctx context.Context, environmentID str
 
 	var remotePackages []*privategraphql.RemotePackages
 
-	err := database.DBConn.Where("remote_process_group_id = ?", id).Find(&remotePackages).Error
+	err := database.DBConn.Order("created_at asc").Where("remote_process_group_id = ?", id).Find(&remotePackages).Error
 
 	if err != nil {
 		if dpconfig.Debug == "true" {

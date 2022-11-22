@@ -106,6 +106,7 @@ type RemotePackages struct {
 	RemoteProcessGroupID string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"remote_process_group_id"`
 	Packages             string     `json:"packages"`
 	Language             string     `gorm:"type:varchar(64);" json:"language"`
+	CreatedAt            time.Time  `json:"created_at"`
 	UpdatedAt            *time.Time `json:"updated_at"`
 	DeletedAt            *time.Time `json:"deleted_at,omitempty"`
 }

@@ -156,7 +156,7 @@ const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup
                 {name}
             </Typography>
             <Typography component="h5" variant="subtitle1" onClick={onClick}>
-                {description || 'Python workers for generic work loads.'}
+                {description}
             </Typography>
             <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: '8px' }}>
                 <Typography

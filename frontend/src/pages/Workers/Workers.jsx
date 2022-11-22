@@ -3,7 +3,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import ServerWorkers from './ServerWorkers/ServerWorkers';
-import RemoteProcessGroups from './RPAWorkers/ProcessGroups';
+import RemoteProcessGroups from './RPAWorkers';
 import { useHistory } from 'react-router-dom';
 
 export default function Workers({ tab }) {

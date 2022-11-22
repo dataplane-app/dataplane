@@ -10,10 +10,9 @@ import { useDeleteRemotePackage } from '../../../../graphql/deleteRemotePackage'
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 
-export default function Environments({ environmentId }) {
+export default function Environments({ environmentId, remotePackages, setRemotePackages }) {
     // User states
     const [availableEnvironments, setAvailableEnvironments] = useState([]);
-    const [remotePackages, setRemotePackages] = useState([]);
 
     // Control states
     const [clear, setClear] = useState(1);
