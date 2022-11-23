@@ -60,6 +60,12 @@ export function MarkdownContent({ bottomPadding = false, sx }) {
             opacity: 1,
             background: 'transparent',
         },
+        '&:hover > span > svg:nth-of-type(2)': {
+            opacity: props.active ? 1 : 0,
+        },
+        '&:hover > span > svg:first-of-type': {
+            opacity: props.active ? 0 : 1,
+        },
     }));
 
     return (
@@ -90,10 +96,11 @@ export function MarkdownContent({ bottomPadding = false, sx }) {
                                     }}>
                                     <SyntaxHighlighter
                                         copyToClipboard={true}
+                                        id="hii"
                                         showLineNumbers={true}
                                         children={String(children).replace(/\n$/, '')}
                                         language={match[1]}
-                                        {...props}
+                                        // {...props}
                                     />
                                     <div
                                         style={{
@@ -106,19 +113,17 @@ export function MarkdownContent({ bottomPadding = false, sx }) {
                                         <Button
                                             onClick={() => copy(String(children).replace(/\n$/, ''))}
                                             hover={hover}
+                                            active={copyActive}
                                             type="button"
                                             aria-label="Copy code to clipboard"
                                             title="Copy">
                                             <ButtonSVGs aria-hidden="true">
-                                                {copyActive ? (
-                                                    <SVGClass2 viewBox="0 0 24 24">
-                                                        <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path>
-                                                    </SVGClass2>
-                                                ) : (
-                                                    <SVGClass1 viewBox="0 0 24 24">
-                                                        <path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path>
-                                                    </SVGClass1>
-                                                )}
+                                                <SVGClass1 viewBox="0 0 24 24">
+                                                    <path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path>
+                                                </SVGClass1>
+                                                <SVGClass2 active={copyActive} viewBox="0 0 24 24">
+                                                    <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path>
+                                                </SVGClass2>
                                             </ButtonSVGs>
                                         </Button>
                                     </div>
@@ -158,7 +163,7 @@ const SVGClass1 = styled.svg({
 const SVGClass2 = styled.svg({
     fill: 'green',
     left: ' 50%',
-    opacity: 1,
+    opacity: 0,
     top: '50%',
     transform: 'scale(1)',
     transitionDelay: '75ms',
