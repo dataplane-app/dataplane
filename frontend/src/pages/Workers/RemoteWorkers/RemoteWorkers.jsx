@@ -21,7 +21,6 @@ export default function RPAWorkers() {
     const [showConnectDrawer, setShowConnectDrawer] = useState(false);
     const [name, setName] = useState('');
     const [remoteWorkers, setRemoteWorkers] = useState([]);
-    console.log('🚀 ~ file: RPAWorkers.jsx ~ line 22 ~ RPAWorkers ~ remoteWorkers', remoteWorkers);
 
     const history = useHistory();
 
@@ -160,82 +159,84 @@ export default function RPAWorkers() {
                 </Grid>
             </Box>
 
-            <Box component="table" mt={6} sx={{ width: tableWidth }} {...getTableProps()}>
-                <Box component="thead" display="flex" sx={{ flexDirection: 'column' }}>
-                    {headerGroups.map((headerGroup) => (
-                        <Box //
-                            component="tr"
-                            {...headerGroup.getHeaderGroupProps()}
-                            display="grid"
-                            gridTemplateColumns="2fr repeat(3, 1fr)"
-                            textAlign="left">
-                            {headerGroup.headers.map((column, idx) => (
-                                <Box
-                                    component="th"
-                                    {...column.getHeaderProps()}
-                                    sx={{
-                                        borderTopLeftRadius: idx === 0 ? 5 : 0,
-                                        borderTopRightRadius: idx === headerGroup.headers.length - 1 ? 5 : 0,
-                                        border: '1px solid',
-                                        borderLeft: idx === 0 ? '1px solid' : 0,
-                                        borderColor: 'editorPage.borderColor',
-                                        backgroundColor: 'background.worker',
-                                        pl: 1,
-                                        fontSize: '0.875rem',
-                                        py: '6px',
-                                    }}>
-                                    {column.render('Header')}
-                                </Box>
-                            ))}
-                        </Box>
-                    ))}
-                </Box>
-                <Box component="tbody" display="flex" sx={{ flexDirection: 'column' }} {...getTableBodyProps()}>
-                    {rows.map((row, i) => {
-                        prepareRow(row);
-                        return (
-                            <Box
+            {remoteWorkers.length > 0 ? (
+                <Box component="table" mt={6} sx={{ width: tableWidth }} {...getTableProps()}>
+                    <Box component="thead" display="flex" sx={{ flexDirection: 'column' }}>
+                        {headerGroups.map((headerGroup) => (
+                            <Box //
                                 component="tr"
-                                {...row.getRowProps()}
+                                {...headerGroup.getHeaderGroupProps()}
                                 display="grid"
                                 gridTemplateColumns="2fr repeat(3, 1fr)"
-                                alignItems="start"
-                                backgroundColor="background.secondary">
-                                {row.cells.map((cell, idx) => {
-                                    return (
-                                        <Box
-                                            component="td"
-                                            {...cell.getCellProps()}
-                                            sx={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                border: '1px solid',
-                                                borderColor: 'editorPage.borderColor',
-                                                height: '50px',
-                                                // If first cell
-                                                borderLeft: idx === 0 ? '1px solid editorPage.borderColor' : 0,
-                                                // If last cell of last row
-                                                borderBottomRightRadius: idx === row.cells.length - 1 && i === rows.length - 1 ? '5px' : 0,
-                                                // If first cell of last row
-                                                borderBottomLeftRadius: idx === 0 && i === rows.length - 1 ? '5px' : 0,
-                                                borderTop: 0,
-                                                pl: 1,
-                                                textAlign: 'left',
-                                                // If last cell
-                                                ...(idx === row.cells.length - 1 && {
-                                                    justifyContent: 'center',
-                                                    paddingLeft: '0',
-                                                }),
-                                            }}>
-                                            {cell.render('Cell')}
-                                        </Box>
-                                    );
-                                })}
+                                textAlign="left">
+                                {headerGroup.headers.map((column, idx) => (
+                                    <Box
+                                        component="th"
+                                        {...column.getHeaderProps()}
+                                        sx={{
+                                            borderTopLeftRadius: idx === 0 ? 5 : 0,
+                                            borderTopRightRadius: idx === headerGroup.headers.length - 1 ? 5 : 0,
+                                            border: '1px solid',
+                                            borderLeft: idx === 0 ? '1px solid' : 0,
+                                            borderColor: 'editorPage.borderColor',
+                                            backgroundColor: 'background.worker',
+                                            pl: 1,
+                                            fontSize: '0.875rem',
+                                            py: '6px',
+                                        }}>
+                                        {column.render('Header')}
+                                    </Box>
+                                ))}
                             </Box>
-                        );
-                    })}
+                        ))}
+                    </Box>
+                    <Box component="tbody" display="flex" sx={{ flexDirection: 'column' }} {...getTableBodyProps()}>
+                        {rows.map((row, i) => {
+                            prepareRow(row);
+                            return (
+                                <Box
+                                    component="tr"
+                                    {...row.getRowProps()}
+                                    display="grid"
+                                    gridTemplateColumns="2fr repeat(3, 1fr)"
+                                    alignItems="start"
+                                    backgroundColor="background.secondary">
+                                    {row.cells.map((cell, idx) => {
+                                        return (
+                                            <Box
+                                                component="td"
+                                                {...cell.getCellProps()}
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    border: '1px solid',
+                                                    borderColor: 'editorPage.borderColor',
+                                                    height: '50px',
+                                                    // If first cell
+                                                    borderLeft: idx === 0 ? '1px solid editorPage.borderColor' : 0,
+                                                    // If last cell of last row
+                                                    borderBottomRightRadius: idx === row.cells.length - 1 && i === rows.length - 1 ? '5px' : 0,
+                                                    // If first cell of last row
+                                                    borderBottomLeftRadius: idx === 0 && i === rows.length - 1 ? '5px' : 0,
+                                                    borderTop: 0,
+                                                    pl: 1,
+                                                    textAlign: 'left',
+                                                    // If last cell
+                                                    ...(idx === row.cells.length - 1 && {
+                                                        justifyContent: 'center',
+                                                        paddingLeft: '0',
+                                                    }),
+                                                }}>
+                                                {cell.render('Cell')}
+                                            </Box>
+                                        );
+                                    })}
+                                </Box>
+                            );
+                        })}
+                    </Box>
                 </Box>
-            </Box>
+            ) : null}
 
             {/* Add worker drawer */}
             <Drawer anchor="right" open={showAddWorkerDrawer} onClose={() => setShowAddWorkerDrawer(!showAddWorkerDrawer)}>
