@@ -269,6 +269,7 @@ type RemoteWorkers struct {
 	RemoteProcessGroupID string     `json:"RemoteProcessGroupID"`
 	WorkerName           string     `json:"WorkerName"`
 	Status               string     `json:"Status"`
+	Active               bool       `json:"Active"`
 	LastPing             *time.Time `json:"LastPing"`
 }
 

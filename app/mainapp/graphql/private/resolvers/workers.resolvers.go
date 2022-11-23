@@ -372,6 +372,49 @@ func (r *mutationResolver) AddRemoteWorker(ctx context.Context, environmentID st
 	return &response, nil
 }
 
+// UpdateRemoteWorker is the resolver for the updateRemoteWorker field.
+func (r *mutationResolver) UpdateRemoteWorker(ctx context.Context, workerID string, environmentID string, workerName string, status string, active bool) (*string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	err := database.DBConn.Where("worker_id = ?", workerID).
+		Select("worker_name", "status", "active").
+		Updates(models.RemoteWorkers{
+			WorkerName: workerName,
+			Status:     status,
+			Active:     active,
+		})
+
+	if err.RowsAffected == 0 {
+		return nil, errors.New("remote worker relationship not found.")
+	}
+
+	if err.Error != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return nil, errors.New("Update remote worker database error.")
+	}
+
+	response := "Success"
+
+	return &response, nil
+}
+
 // GetWorkers is the resolver for the getWorkers field.
 func (r *queryResolver) GetWorkers(ctx context.Context, environmentID string) ([]*privategraphql.Workers, error) {
 	var resp []*privategraphql.Workers
@@ -693,5 +736,4 @@ func (r *queryResolver) GetSingleRemoteWorker(ctx context.Context, environmentID
 	}
 
 	return remoteWorker, nil
-
 }

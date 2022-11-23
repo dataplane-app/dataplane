@@ -301,6 +301,7 @@ type ComplexityRoot struct {
 		UpdatePlatform                     func(childComplexity int, input *UpdatePlatformInput) int
 		UpdatePreferences                  func(childComplexity int, input *AddPreferencesInput) int
 		UpdateRemoteProcessGroup           func(childComplexity int, id string, environmentID string, name string, description string, active bool) int
+		UpdateRemoteWorker                 func(childComplexity int, workerID string, environmentID string, workerName string, status string, active bool) int
 		UpdateSecret                       func(childComplexity int, input *UpdateSecretsInput) int
 		UpdateSecretValue                  func(childComplexity int, secret string, value string, environmentID string) int
 		UpdateUser                         func(childComplexity int, input *UpdateUsersInput) int
@@ -539,6 +540,7 @@ type ComplexityRoot struct {
 	}
 
 	RemoteWorkers struct {
+		Active               func(childComplexity int) int
 		LastPing             func(childComplexity int) int
 		RemoteProcessGroupID func(childComplexity int) int
 		Status               func(childComplexity int) int
@@ -698,6 +700,7 @@ type MutationResolver interface {
 	AddUpdateRemotePackages(ctx context.Context, environmentID string, remoteProcessGroupID string, packages string, language string) (*string, error)
 	DeleteRemotePackage(ctx context.Context, id string, environmentID string) (*string, error)
 	AddRemoteWorker(ctx context.Context, environmentID string, remoteProcessGroupID string, name string) (*string, error)
+	UpdateRemoteWorker(ctx context.Context, workerID string, environmentID string, workerName string, status string, active bool) (*string, error)
 }
 type PipelineEdgesResolver interface {
 	Meta(ctx context.Context, obj *models.PipelineEdges) (interface{}, error)
@@ -2489,6 +2492,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateRemoteProcessGroup(childComplexity, args["id"].(string), args["environmentID"].(string), args["name"].(string), args["description"].(string), args["active"].(bool)), true
 
+	case "Mutation.updateRemoteWorker":
+		if e.complexity.Mutation.UpdateRemoteWorker == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateRemoteWorker_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateRemoteWorker(childComplexity, args["workerID"].(string), args["environmentID"].(string), args["workerName"].(string), args["status"].(string), args["active"].(bool)), true
+
 	case "Mutation.updateSecret":
 		if e.complexity.Mutation.UpdateSecret == nil {
 			break
@@ -4041,6 +4056,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RemoteProcessGroups.WorkerType(childComplexity), true
+
+	case "RemoteWorkers.Active":
+		if e.complexity.RemoteWorkers.Active == nil {
+			break
+		}
+
+		return e.complexity.RemoteWorkers.Active(childComplexity), true
 
 	case "RemoteWorkers.LastPing":
 		if e.complexity.RemoteWorkers.LastPing == nil {
@@ -6834,6 +6856,57 @@ func (ec *executionContext) field_Mutation_updateRemoteProcessGroup_args(ctx con
 		}
 	}
 	args["description"] = arg3
+	var arg4 bool
+	if tmp, ok := rawArgs["active"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("active"))
+		arg4, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["active"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateRemoteWorker_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["workerID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workerID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workerID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["workerName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workerName"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workerName"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["status"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["status"] = arg3
 	var arg4 bool
 	if tmp, ok := rawArgs["active"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("active"))
@@ -17901,6 +17974,58 @@ func (ec *executionContext) fieldContext_Mutation_addRemoteWorker(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_updateRemoteWorker(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateRemoteWorker(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateRemoteWorker(rctx, fc.Args["workerID"].(string), fc.Args["environmentID"].(string), fc.Args["workerName"].(string), fc.Args["status"].(string), fc.Args["active"].(bool))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateRemoteWorker(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateRemoteWorker_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _NonDefaultNodes_nodeID(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_NonDefaultNodes_nodeID(ctx, field)
 	if err != nil {
@@ -26723,6 +26848,8 @@ func (ec *executionContext) fieldContext_Query_getRemoteWorkers(ctx context.Cont
 				return ec.fieldContext_RemoteWorkers_WorkerName(ctx, field)
 			case "Status":
 				return ec.fieldContext_RemoteWorkers_Status(ctx, field)
+			case "Active":
+				return ec.fieldContext_RemoteWorkers_Active(ctx, field)
 			case "LastPing":
 				return ec.fieldContext_RemoteWorkers_LastPing(ctx, field)
 			}
@@ -26787,6 +26914,8 @@ func (ec *executionContext) fieldContext_Query_getSingleRemoteWorker(ctx context
 				return ec.fieldContext_RemoteWorkers_WorkerName(ctx, field)
 			case "Status":
 				return ec.fieldContext_RemoteWorkers_Status(ctx, field)
+			case "Active":
+				return ec.fieldContext_RemoteWorkers_Active(ctx, field)
 			case "LastPing":
 				return ec.fieldContext_RemoteWorkers_LastPing(ctx, field)
 			}
@@ -27591,6 +27720,50 @@ func (ec *executionContext) fieldContext_RemoteWorkers_Status(ctx context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteWorkers_Active(ctx context.Context, field graphql.CollectedField, obj *RemoteWorkers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemoteWorkers_Active(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemoteWorkers_Active(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteWorkers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -34488,6 +34661,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_addRemoteWorker(ctx, field)
 			})
 
+		case "updateRemoteWorker":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateRemoteWorker(ctx, field)
+			})
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -37002,6 +37181,13 @@ func (ec *executionContext) _RemoteWorkers(ctx context.Context, sel ast.Selectio
 		case "Status":
 
 			out.Values[i] = ec._RemoteWorkers_Status(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Active":
+
+			out.Values[i] = ec._RemoteWorkers_Active(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

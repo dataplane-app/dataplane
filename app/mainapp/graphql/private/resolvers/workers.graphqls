@@ -52,6 +52,7 @@ type RemoteWorkers {
 	RemoteProcessGroupID: 	String!
 	WorkerName: 			String!
     Status:               	String!
+	Active:					Boolean!
 	LastPing:				Time
 }
 
@@ -191,4 +192,12 @@ extend type Mutation {
 	+ **Security**: Based on environment selected
 	"""
   addRemoteWorker(environmentID: String!, remoteProcessGroupID: String!, name: String!): String
+
+    """
+	Update remote process group.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+	+ **Security**: Based on environment selected
+	"""
+  updateRemoteWorker(workerID: String!, environmentID: String!, workerName: String!, status: String!, active: Boolean!): String
 }

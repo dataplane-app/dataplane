@@ -122,6 +122,7 @@ type RemoteWorkers struct {
 	RemoteProcessGroupID string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"remote_process_group_id"`
 	WorkerName           string     `json:"worker_name"`
 	Status               string     `json:"status"` //online || offline || failed || starting
+	Active               bool       `json:"active"`
 	LB                   string     `json:"lb"`
 	WorkerType           string     `json:"worker_type"`
 	LastPing             *time.Time `json:"last_ping"`
