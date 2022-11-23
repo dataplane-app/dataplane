@@ -90,13 +90,13 @@ export function MarkdownContent({ bottomPadding = false, sx }) {
                                 <Box
                                     position="relative"
                                     onMouseOver={() => setHover(true)}
+                                    fontSize="1rem"
                                     onMouseLeave={() => {
                                         setCopyActive(false);
                                         setHover(false);
                                     }}>
                                     <SyntaxHighlighter
                                         copyToClipboard={true}
-                                        id="hii"
                                         showLineNumbers={true}
                                         children={String(children).replace(/\n$/, '')}
                                         language={match[1]}
