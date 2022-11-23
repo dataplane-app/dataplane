@@ -6,7 +6,10 @@ package privateresolvers
 import (
 	"context"
 	"errors"
+	"strings"
+	"time"
 
+	"github.com/dataplane-app/dataplane/app/mainapp/auth"
 	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
@@ -451,6 +454,88 @@ func (r *mutationResolver) DeleteRemoteWorker(ctx context.Context, workerID stri
 	return &response, nil
 }
 
+// AddRemoteWorkerActivationKey is the resolver for the addRemoteWorkerActivationKey field.
+func (r *mutationResolver) AddRemoteWorkerActivationKey(ctx context.Context, workerID string, activationKey string, environmentID string, expiresAt *time.Time) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	// Hash Activation key
+	hashedActivationKey, err := auth.Encrypt(activationKey)
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("unable to hash activation key")
+	}
+
+	// Add process group
+	remoteActivationKey := models.RemoteWorkerActivationKeys{
+		ActivationKey:     hashedActivationKey,
+		ActivationKeyTail: strings.Split(activationKey, "-")[3],
+		RemoteWorkerID:    workerID,
+		ExpiresAt:         expiresAt,
+	}
+
+	err = database.DBConn.Create(&remoteActivationKey).Error
+
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("Add activation key database error.")
+	}
+
+	return "Success", nil
+}
+
+// DeleteRemoteWorkerActivationKey is the resolver for the deleteRemoteWorkerActivationKey field.
+func (r *mutationResolver) DeleteRemoteWorkerActivationKey(ctx context.Context, activationKey string, environmentID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	key := models.RemoteWorkerActivationKeys{}
+
+	query := database.DBConn.Where("activation_key = ?", activationKey).Delete(&key)
+	if query.Error != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(query.Error)
+		}
+		return "", errors.New("Delete activation key database error.")
+	}
+	if query.RowsAffected == 0 {
+		return "", errors.New("Delete pipeline key database error.")
+	}
+
+	return "Success", nil
+}
+
 // GetWorkers is the resolver for the getWorkers field.
 func (r *queryResolver) GetWorkers(ctx context.Context, environmentID string) ([]*privategraphql.Workers, error) {
 	var resp []*privategraphql.Workers
@@ -772,4 +857,34 @@ func (r *queryResolver) GetSingleRemoteWorker(ctx context.Context, environmentID
 	}
 
 	return remoteWorker, nil
+}
+
+// GetRemoteWorkerActivationKeys is the resolver for the getRemoteWorkerActivationKeys field.
+func (r *queryResolver) GetRemoteWorkerActivationKeys(ctx context.Context, remoteWorkerID string, environmentID string) ([]*models.RemoteWorkerActivationKeys, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	keys := []*models.RemoteWorkerActivationKeys{}
+
+	err := database.DBConn.Where("remote_worker_id = ?", remoteWorkerID).Find(&keys).Error
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return nil, errors.New("Retrive activation keys database error.")
+	}
+	return keys, nil
 }

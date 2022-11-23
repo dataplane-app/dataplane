@@ -1,12 +1,18 @@
 import { Box, Typography, Button, FormControl, InputLabel, Select, MenuItem, List, ListItem } from '@mui/material';
-import { useReducer } from 'react';
+import { useEffect, useReducer } from 'react';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useTheme } from '@emotion/react';
 import { DateTime } from 'luxon';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
+import { useGetRemoteWorkerActivationKeys } from '../../../graphql/getRemoteWorkerActivationKeys';
+import { useAddRemoteWorkerActivationKey } from '../../../graphql/addRemoteWorkerActivationKey';
+import { useDeleteRemoteWorkerActivationKey } from '../../../graphql/deleteRemoteWorkerActivationKey';
+import AlertDialog from './AlertDialog';
+import { useSnackbar } from 'notistack';
+import { customAlphabet } from 'nanoid';
 
-const ConnectURL = 'https://demo.dataplane.app/rworker/connect/f176d9dd-830c-4570-bf93-7fa890262796';
+const ConnectURL = 'https://demo.dataplane.app/rworker/connect/';
 
 const initialState = {
     storedKeys: [],
@@ -22,27 +28,38 @@ function reducer(state, action) {
         case 'addKey':
             return { ...state, storedKeys: [action.value, ...state.storedKeys] };
         case 'deleteKey':
-            return { ...state, storedKeys: state.storedKeys.filter((a) => a.apiKey !== action.value) };
+            return { ...state, storedKeys: state.storedKeys.filter((a) => a.activationKey !== action.value) };
         default:
             throw new Error(`Unhandled action type: ${action.type}`);
     }
 }
 
-export default function ConnectRemoteWorkerDrawer({ handleClose, remoteProcessGroup, environmentID }) {
+export default function ConnectRemoteWorkerDrawer({ handleClose, worker, environmentID }) {
     const theme = useTheme();
 
     const [state, dispatch] = useReducer(reducer, initialState);
 
+    // Graphql Hooks
+    const getRemoteWorkerActivationKeys = useGetRemoteWorkerActivationKeysHook(environmentID, dispatch, worker[0]);
+    const addRemoteWorkerActivationKey = useAddRemoteWorkerActivationKeyHook(environmentID, dispatch, worker[0]);
+    const deleteRemoteWorkerActivationKey = useDeleteRemoteWorkerActivationKeyHook(environmentID, dispatch);
+
     function onGenerateKey() {
         const expiresAt = state.expiration === 0 ? null : DateTime.now().plus({ months: state.expiration }).toISO();
-        // addDeploymentApiKey(expiresAt);
+        addRemoteWorkerActivationKey(expiresAt);
     }
+
+    useEffect(() => {
+        getRemoteWorkerActivationKeys();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [environmentID]);
 
     return (
         <Box pt={4} pl={4} pr={4}>
             <Box display="flex" alignItems="center" width="820px">
                 <Typography variant="h2" fontSize="1.25rem">
-                    Connect RPA Worker {'>'} Jack's computer
+                    Connect RPA Worker {'> ' + worker[1]}
                 </Typography>
 
                 <Button
@@ -71,9 +88,9 @@ export default function ConnectRemoteWorkerDrawer({ handleClose, remoteProcessGr
                 Dataplane Connect URL
             </Typography>
             <Box display="flex" alignItems="center">
-                <Typography lineHeight={1.875}>{ConnectURL}</Typography>
+                <Typography lineHeight={1.875}>{ConnectURL + worker[0]}</Typography>
                 <Button
-                    onClick={() => navigator.clipboard.writeText(ConnectURL)}
+                    onClick={() => navigator.clipboard.writeText(ConnectURL + worker[0])}
                     type="submit"
                     variant="contained"
                     size="small"
@@ -120,25 +137,25 @@ export default function ConnectRemoteWorkerDrawer({ handleClose, remoteProcessGr
             </Box>
 
             <List sx={{ width: '800px', marginTop: '8px' }}>
-                {keys.map((apiKey, idx) => (
+                {state.storedKeys.map((activationKey, idx) => (
                     <ListItem
-                        key={apiKey.apiKey}
+                        key={activationKey.activationKey}
                         sx={{
                             borderTop: '1px solid #BABABA',
                             paddingLeft: 0,
-                            borderBottom: idx === keys.length - 1 ? '1px solid #BABABA' : null,
+                            borderBottom: idx === state.storedKeys.length - 1 ? '1px solid #BABABA' : null,
                         }}>
-                        <Typography sx={{ background: apiKey.apiKeyTail ? 'null' : theme.palette.apiKey.background, borderRadius: '6px', padding: '5px 15px' }}>
-                            {formatAPIKey(apiKey)}
+                        <Typography sx={{ background: activationKey.activationKeyTail ? 'null' : theme.palette.apiKey.background, borderRadius: '6px', padding: '5px 15px' }}>
+                            {formatActivationKey(activationKey)}
                         </Typography>
                         <Typography ml={0} position="absolute" left="245px">
-                            {formatDate(apiKey.expiresAt)}
+                            {formatDate(activationKey.expiresAt)}
                         </Typography>
-                        {apiKey.apiKeyTail ? (
+                        {activationKey.activationKeyTail ? (
                             <Box
                                 onClick={() => {
                                     dispatch({ type: 'set', key: 'openDialog', value: true });
-                                    dispatch({ type: 'set', key: 'keyToBeDeleted', value: { key: apiKey.apiKey, tail: apiKey.apiKeyTail } });
+                                    dispatch({ type: 'set', key: 'keyToBeDeleted', value: { key: activationKey.activationKey, tail: activationKey.activationKeyTail } });
                                 }}
                                 component={FontAwesomeIcon}
                                 ml="auto"
@@ -147,7 +164,7 @@ export default function ConnectRemoteWorkerDrawer({ handleClose, remoteProcessGr
                             />
                         ) : (
                             <Button
-                                onClick={() => navigator.clipboard.writeText(apiKey.apiKey)}
+                                onClick={() => navigator.clipboard.writeText(activationKey.activationKey)}
                                 type="submit"
                                 variant="contained"
                                 color="primary"
@@ -159,34 +176,23 @@ export default function ConnectRemoteWorkerDrawer({ handleClose, remoteProcessGr
                     </ListItem>
                 ))}
             </List>
+            {state.keyToBeDeleted ? (
+                <AlertDialog
+                    openDialog={state.openDialog}
+                    handleClose={() => dispatch({ type: 'set', key: 'openDialog', value: false })}
+                    deleteKey={deleteRemoteWorkerActivationKey}
+                    keyToBeDeleted={state.keyToBeDeleted}
+                />
+            ) : null}
         </Box>
     );
 }
 
-const keys = [
-    {
-        triggerID: '6ee9bfba-87b4-4845-91b3-34b227065ea7',
-        apiKey: '$2a$10$Q6mmYUovbhuzkVT0Q.sYVO61ObGGOoUtq6IV5urhVbLXfadp15Sv2',
-        apiKeyTail: 'RQquh',
-        pipelineID: '2cc07758-fe7c-4a73-aea0-cd44a80a08c0',
-        environmentID: '52e7433c-b550-42a6-b435-81a7c3323fb9',
-        expiresAt: null,
-    },
-    {
-        triggerID: '6ee9bfba-87b4-4845-91b3-34b227065ea7',
-        apiKey: '$2a$10$EZ5sLbPEYimr8gfNQXQTv..Pev0jjAFYkhbu4iogSj0f3cyPPrkOG',
-        apiKeyTail: '1T5bt',
-        pipelineID: '2cc07758-fe7c-4a73-aea0-cd44a80a08c0',
-        environmentID: '52e7433c-b550-42a6-b435-81a7c3323fb9',
-        expiresAt: null,
-    },
-];
-
-function formatAPIKey(apiKey) {
-    if (apiKey.apiKeyTail) {
-        return `*****-*****-*****-${apiKey.apiKeyTail}`;
+function formatActivationKey(activationKey) {
+    if (activationKey.activationKeyTail) {
+        return `*****-*****-*****-${activationKey.activationKeyTail}`;
     }
-    return apiKey.apiKey;
+    return activationKey.activationKey;
 }
 
 function formatDate(date) {
@@ -199,4 +205,81 @@ function formatDate(date) {
     const diffString = `(${monthString + dayString})`;
 
     return `Expires on the ${DateTime.fromISO(date).toFormat('dd LLLL yyyy')} ${diffString}`;
+}
+
+// ------ Custom Hooks
+const useGetRemoteWorkerActivationKeysHook = (environmentID, dispatch, remoteWorkerID) => {
+    // GraphQL hook
+    const getRemoteWorkerActivationKeys = useGetRemoteWorkerActivationKeys();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get access groups
+    return async () => {
+        const response = await getRemoteWorkerActivationKeys({ remoteWorkerID, environmentID });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get activation keys: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            dispatch({ type: 'set', key: 'storedKeys', value: response });
+        }
+    };
+};
+
+const useAddRemoteWorkerActivationKeyHook = (environmentID, dispatch, workerID) => {
+    // GraphQL hook
+    const addRemoteWorkerActivationKey = useAddRemoteWorkerActivationKey();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get access groups
+    return async (expiresAt) => {
+        const newKey = {
+            workerID,
+            environmentID,
+            activationKey: generateKey(),
+            expiresAt,
+        };
+        const response = await addRemoteWorkerActivationKey(newKey);
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't add activation key: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            dispatch({ type: 'addKey', value: newKey });
+        }
+    };
+};
+
+const useDeleteRemoteWorkerActivationKeyHook = (environmentID, dispatch) => {
+    // GraphQL hook
+    const deleteRemoteWorkerActivationKey = useDeleteRemoteWorkerActivationKey();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get access groups
+    return async (activationKey) => {
+        const newKey = { environmentID, activationKey };
+        const response = await deleteRemoteWorkerActivationKey(newKey);
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't delete activation key: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            dispatch({ type: 'deleteKey', value: activationKey });
+        }
+    };
+};
+
+// Helper functions
+/**
+ * returns an id like pTBXM-mo3xz-1evAl-O30Pd
+ */
+function generateKey() {
+    const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 5);
+    return `${nanoid()}-${nanoid()}-${nanoid()}-${nanoid()}`;
 }

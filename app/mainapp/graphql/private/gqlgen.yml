@@ -61,6 +61,8 @@ models:
    model: github.com/dataplane-app/dataplane/app/mainapp/database/models.CodeFolders
  CodeFiles:
    model: github.com/dataplane-app/dataplane/app/mainapp/database/models.CodeFiles
+ ActivationKeys:
+   model: github.com/dataplane-app/dataplane/app/mainapp/database/models.RemoteWorkerActivationKeys
 
 resolver:
   layout: follow-schema

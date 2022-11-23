@@ -128,3 +128,18 @@ type RemoteWorkers struct {
 	LastPing             *time.Time `json:"last_ping"`
 	UpdatedAt            *time.Time `json:"updated_at"`
 }
+
+func (RemoteWorkerActivationKeys) IsEntity() {}
+
+func (RemoteWorkerActivationKeys) TableName() string {
+	return "remote_worker_activation_keys"
+}
+
+type RemoteWorkerActivationKeys struct {
+	ActivationKey     string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"activation_key"`
+	ActivationKeyTail string     `json:"activation_key_tail"`
+	RemoteWorkerID    string     `json:"remote_worker_id"`
+	ExpiresAt         *time.Time `json:"expires_at"`
+	CreatedAt         time.Time  `json:"created_at"`
+	DeletedAt         *time.Time `json:"deleted_at,omitempty"`
+}

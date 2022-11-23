@@ -60,6 +60,13 @@ type ComplexityRoot struct {
 		Name          func(childComplexity int) int
 	}
 
+	ActivationKeys struct {
+		ActivationKey     func(childComplexity int) int
+		ActivationKeyTail func(childComplexity int) int
+		ExpiresAt         func(childComplexity int) int
+		RemoteWorkerID    func(childComplexity int) int
+	}
+
 	AvailablePermissions struct {
 		Access     func(childComplexity int) int
 		Code       func(childComplexity int) int
@@ -240,6 +247,7 @@ type ComplexityRoot struct {
 		AddPipelineAPIKey                  func(childComplexity int, triggerID string, apiKey string, pipelineID string, environmentID string, expiresAt *time.Time) int
 		AddRemoteProcessGroup              func(childComplexity int, environmentID string, name string, description string) int
 		AddRemoteWorker                    func(childComplexity int, environmentID string, remoteProcessGroupID string, name string) int
+		AddRemoteWorkerActivationKey       func(childComplexity int, workerID string, activationKey string, environmentID string, expiresAt *time.Time) int
 		AddSecretToWorkerGroup             func(childComplexity int, environmentID string, workerGroup string, secret string) int
 		AddUpdatePipelineFlow              func(childComplexity int, input *PipelineFlowInput, environmentID string, pipelineID string) int
 		AddUpdateRemotePackages            func(childComplexity int, environmentID string, remoteProcessGroupID string, packages string, language string) int
@@ -262,6 +270,7 @@ type ComplexityRoot struct {
 		DeleteRemotePackage                func(childComplexity int, id string, environmentID string) int
 		DeleteRemoteProcessGroup           func(childComplexity int, id string, environmentID string) int
 		DeleteRemoteWorker                 func(childComplexity int, workerID string, environmentID string) int
+		DeleteRemoteWorkerActivationKey    func(childComplexity int, activationKey string, environmentID string) int
 		DeleteSecretFromWorkerGroup        func(childComplexity int, environmentID string, workerGroup string, secret string) int
 		DeleteSpecificPermission           func(childComplexity int, subject string, subjectID string, resourceID string, environmentID string) int
 		DeploymentPermissionsToAccessGroup func(childComplexity int, environmentID string, resourceID string, access []string, accessGroupID string) int
@@ -493,6 +502,7 @@ type ComplexityRoot struct {
 		GetPlatform                     func(childComplexity int) int
 		GetRemotePackages               func(childComplexity int, environmentID string, id string) int
 		GetRemoteProcessGroups          func(childComplexity int, environmentID string) int
+		GetRemoteWorkerActivationKeys   func(childComplexity int, remoteWorkerID string, environmentID string) int
 		GetRemoteWorkers                func(childComplexity int, environmentID string) int
 		GetSecret                       func(childComplexity int, secret string, environmentID string) int
 		GetSecretGroups                 func(childComplexity int, environmentID string, secret string) int
@@ -703,6 +713,8 @@ type MutationResolver interface {
 	AddRemoteWorker(ctx context.Context, environmentID string, remoteProcessGroupID string, name string) (*string, error)
 	UpdateRemoteWorker(ctx context.Context, workerID string, environmentID string, workerName string, status string, active bool) (*string, error)
 	DeleteRemoteWorker(ctx context.Context, workerID string, environmentID string) (*string, error)
+	AddRemoteWorkerActivationKey(ctx context.Context, workerID string, activationKey string, environmentID string, expiresAt *time.Time) (string, error)
+	DeleteRemoteWorkerActivationKey(ctx context.Context, activationKey string, environmentID string) (string, error)
 }
 type PipelineEdgesResolver interface {
 	Meta(ctx context.Context, obj *models.PipelineEdges) (interface{}, error)
@@ -774,6 +786,7 @@ type QueryResolver interface {
 	GetRemotePackages(ctx context.Context, environmentID string, id string) ([]*RemotePackages, error)
 	GetRemoteWorkers(ctx context.Context, environmentID string) ([]*RemoteWorkers, error)
 	GetSingleRemoteWorker(ctx context.Context, environmentID string, workerID string) (*RemoteWorkers, error)
+	GetRemoteWorkerActivationKeys(ctx context.Context, remoteWorkerID string, environmentID string) ([]*models.RemoteWorkerActivationKeys, error)
 }
 
 type executableSchema struct {
@@ -825,6 +838,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AccessGroups.Name(childComplexity), true
+
+	case "ActivationKeys.activationKey":
+		if e.complexity.ActivationKeys.ActivationKey == nil {
+			break
+		}
+
+		return e.complexity.ActivationKeys.ActivationKey(childComplexity), true
+
+	case "ActivationKeys.activationKeyTail":
+		if e.complexity.ActivationKeys.ActivationKeyTail == nil {
+			break
+		}
+
+		return e.complexity.ActivationKeys.ActivationKeyTail(childComplexity), true
+
+	case "ActivationKeys.expiresAt":
+		if e.complexity.ActivationKeys.ExpiresAt == nil {
+			break
+		}
+
+		return e.complexity.ActivationKeys.ExpiresAt(childComplexity), true
+
+	case "ActivationKeys.remoteWorkerID":
+		if e.complexity.ActivationKeys.RemoteWorkerID == nil {
+			break
+		}
+
+		return e.complexity.ActivationKeys.RemoteWorkerID(childComplexity), true
 
 	case "AvailablePermissions.Access":
 		if e.complexity.AvailablePermissions.Access == nil {
@@ -1762,6 +1803,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddRemoteWorker(childComplexity, args["environmentID"].(string), args["remoteProcessGroupID"].(string), args["name"].(string)), true
 
+	case "Mutation.addRemoteWorkerActivationKey":
+		if e.complexity.Mutation.AddRemoteWorkerActivationKey == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addRemoteWorkerActivationKey_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddRemoteWorkerActivationKey(childComplexity, args["workerID"].(string), args["activationKey"].(string), args["environmentID"].(string), args["expiresAt"].(*time.Time)), true
+
 	case "Mutation.addSecretToWorkerGroup":
 		if e.complexity.Mutation.AddSecretToWorkerGroup == nil {
 			break
@@ -2025,6 +2078,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteRemoteWorker(childComplexity, args["workerID"].(string), args["environmentID"].(string)), true
+
+	case "Mutation.deleteRemoteWorkerActivationKey":
+		if e.complexity.Mutation.DeleteRemoteWorkerActivationKey == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteRemoteWorkerActivationKey_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteRemoteWorkerActivationKey(childComplexity, args["activationKey"].(string), args["environmentID"].(string)), true
 
 	case "Mutation.deleteSecretFromWorkerGroup":
 		if e.complexity.Mutation.DeleteSecretFromWorkerGroup == nil {
@@ -3693,6 +3758,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetRemoteProcessGroups(childComplexity, args["environmentID"].(string)), true
 
+	case "Query.getRemoteWorkerActivationKeys":
+		if e.complexity.Query.GetRemoteWorkerActivationKeys == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getRemoteWorkerActivationKeys_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetRemoteWorkerActivationKeys(childComplexity, args["remoteWorkerID"].(string), args["environmentID"].(string)), true
+
 	case "Query.getRemoteWorkers":
 		if e.complexity.Query.GetRemoteWorkers == nil {
 			break
@@ -4863,6 +4940,48 @@ func (ec *executionContext) field_Mutation_addRemoteProcessGroup_args(ctx contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_addRemoteWorkerActivationKey_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["workerID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workerID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workerID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["activationKey"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("activationKey"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["activationKey"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg2
+	var arg3 *time.Time
+	if tmp, ok := rawArgs["expiresAt"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAt"))
+		arg3, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["expiresAt"] = arg3
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_addRemoteWorker_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -5487,6 +5606,30 @@ func (ec *executionContext) field_Mutation_deleteRemoteProcessGroup_args(ctx con
 		}
 	}
 	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteRemoteWorkerActivationKey_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["activationKey"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("activationKey"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["activationKey"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["environmentID"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
@@ -7803,6 +7946,30 @@ func (ec *executionContext) field_Query_getRemoteProcessGroups_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_getRemoteWorkerActivationKeys_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["remoteWorkerID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteWorkerID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["remoteWorkerID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["environmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("environmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["environmentID"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_getRemoteWorkers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -8584,6 +8751,179 @@ func (ec *executionContext) fieldContext_AccessGroups_EnvironmentID(ctx context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActivationKeys_activationKey(ctx context.Context, field graphql.CollectedField, obj *models.RemoteWorkerActivationKeys) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ActivationKeys_activationKey(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ActivationKey, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ActivationKeys_activationKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActivationKeys",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActivationKeys_activationKeyTail(ctx context.Context, field graphql.CollectedField, obj *models.RemoteWorkerActivationKeys) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ActivationKeys_activationKeyTail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ActivationKeyTail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ActivationKeys_activationKeyTail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActivationKeys",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActivationKeys_remoteWorkerID(ctx context.Context, field graphql.CollectedField, obj *models.RemoteWorkerActivationKeys) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ActivationKeys_remoteWorkerID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RemoteWorkerID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ActivationKeys_remoteWorkerID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActivationKeys",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActivationKeys_expiresAt(ctx context.Context, field graphql.CollectedField, obj *models.RemoteWorkerActivationKeys) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ActivationKeys_expiresAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExpiresAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ActivationKeys_expiresAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActivationKeys",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -18116,6 +18456,116 @@ func (ec *executionContext) fieldContext_Mutation_deleteRemoteWorker(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_addRemoteWorkerActivationKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addRemoteWorkerActivationKey(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddRemoteWorkerActivationKey(rctx, fc.Args["workerID"].(string), fc.Args["activationKey"].(string), fc.Args["environmentID"].(string), fc.Args["expiresAt"].(*time.Time))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_addRemoteWorkerActivationKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addRemoteWorkerActivationKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteRemoteWorkerActivationKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteRemoteWorkerActivationKey(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteRemoteWorkerActivationKey(rctx, fc.Args["activationKey"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteRemoteWorkerActivationKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteRemoteWorkerActivationKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _NonDefaultNodes_nodeID(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_NonDefaultNodes_nodeID(ctx, field)
 	if err != nil {
@@ -27026,6 +27476,71 @@ func (ec *executionContext) fieldContext_Query_getSingleRemoteWorker(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getRemoteWorkerActivationKeys(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getRemoteWorkerActivationKeys(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetRemoteWorkerActivationKeys(rctx, fc.Args["remoteWorkerID"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.RemoteWorkerActivationKeys)
+	fc.Result = res
+	return ec.marshalNActivationKeys2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐRemoteWorkerActivationKeys(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getRemoteWorkerActivationKeys(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "activationKey":
+				return ec.fieldContext_ActivationKeys_activationKey(ctx, field)
+			case "activationKeyTail":
+				return ec.fieldContext_ActivationKeys_activationKeyTail(ctx, field)
+			case "remoteWorkerID":
+				return ec.fieldContext_ActivationKeys_remoteWorkerID(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_ActivationKeys_expiresAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActivationKeys", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getRemoteWorkerActivationKeys_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -32934,6 +33449,52 @@ func (ec *executionContext) _AccessGroups(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var activationKeysImplementors = []string{"ActivationKeys"}
+
+func (ec *executionContext) _ActivationKeys(ctx context.Context, sel ast.SelectionSet, obj *models.RemoteWorkerActivationKeys) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, activationKeysImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ActivationKeys")
+		case "activationKey":
+
+			out.Values[i] = ec._ActivationKeys_activationKey(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "activationKeyTail":
+
+			out.Values[i] = ec._ActivationKeys_activationKeyTail(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "remoteWorkerID":
+
+			out.Values[i] = ec._ActivationKeys_remoteWorkerID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "expiresAt":
+
+			out.Values[i] = ec._ActivationKeys_expiresAt(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var availablePermissionsImplementors = []string{"AvailablePermissions"}
 
 func (ec *executionContext) _AvailablePermissions(ctx context.Context, sel ast.SelectionSet, obj *models.ResourceTypeStruct) graphql.Marshaler {
@@ -34763,6 +35324,24 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_deleteRemoteWorker(ctx, field)
 			})
 
+		case "addRemoteWorkerActivationKey":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addRemoteWorkerActivationKey(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteRemoteWorkerActivationKey":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteRemoteWorkerActivationKey(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -37101,6 +37680,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "getRemoteWorkerActivationKeys":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getRemoteWorkerActivationKeys(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "__type":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -38077,6 +38679,44 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNActivationKeys2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐRemoteWorkerActivationKeys(ctx context.Context, sel ast.SelectionSet, v []*models.RemoteWorkerActivationKeys) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOActivationKeys2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐRemoteWorkerActivationKeys(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
 
 func (ec *executionContext) unmarshalNAny2interface(ctx context.Context, v interface{}) (interface{}, error) {
 	res, err := graphql.UnmarshalAny(v)
@@ -39257,6 +39897,13 @@ func (ec *executionContext) unmarshalOAccessGroupsInput2ᚖgithubᚗcomᚋdatapl
 	}
 	res, err := ec.unmarshalInputAccessGroupsInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOActivationKeys2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐRemoteWorkerActivationKeys(ctx context.Context, sel ast.SelectionSet, v *models.RemoteWorkerActivationKeys) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ActivationKeys(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOAddEnvironmentInput2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐAddEnvironmentInput(ctx context.Context, v interface{}) (*AddEnvironmentInput, error) {

@@ -19,7 +19,7 @@ export default function RPAWorkers() {
     const [showAddWorkerDrawer, setShowAddWorkerDrawer] = useState(false);
     const [showEditWorkerDrawer, setShowEditWorkerDrawer] = useState(false);
     const [showConnectDrawer, setShowConnectDrawer] = useState(false);
-    const [name, setName] = useState('');
+    const [selectedWorker, setSelectedWorker] = useState(null);
     const [remoteWorkers, setRemoteWorkers] = useState([]);
 
     const history = useHistory();
@@ -52,8 +52,8 @@ export default function RPAWorkers() {
                             <Box position="relative">
                                 <Box
                                     onClick={() => {
-                                        setName(row.value[0]);
                                         setShowEditWorkerDrawer(true);
+                                        setSelectedWorker(row.value);
                                     }}
                                     component={FontAwesomeIcon}
                                     fontSize={12}
@@ -93,20 +93,37 @@ export default function RPAWorkers() {
             },
             {
                 Header: 'Manage',
-                accessor: (row) => [row.WorkerID, row.Status],
-                Cell: (row) => (
-                    <>
-                        <Typography variant="caption" mr={1} mt={-2} color="cyan.main" sx={{ cursor: 'pointer' }} onClick={() => history.push(`/remote/workers/${row.value[0]}`)}>
-                            Configure
-                        </Typography>
-                        <Typography variant="caption" mt={-2}>
-                            |
-                        </Typography>
-                        <Typography variant="caption" ml={1} mt={-2} color="cyan.main" sx={{ cursor: 'pointer' }} onClick={() => setShowConnectDrawer(true)}>
-                            Connect
-                        </Typography>
-                    </>
-                ),
+                accessor: (row) => [row.WorkerID, row.WorkerName],
+                Cell: (row) => {
+                    return (
+                        <>
+                            <Typography
+                                variant="caption"
+                                mr={1}
+                                mt={-2}
+                                color="cyan.main"
+                                sx={{ cursor: 'pointer' }}
+                                onClick={() => history.push(`/remote/workers/${row.value[0]}`)}>
+                                Configure
+                            </Typography>
+                            <Typography variant="caption" mt={-2}>
+                                |
+                            </Typography>
+                            <Typography
+                                variant="caption"
+                                ml={1}
+                                mt={-2}
+                                color="cyan.main"
+                                sx={{ cursor: 'pointer' }}
+                                onClick={() => {
+                                    setSelectedWorker(row.value);
+                                    setShowConnectDrawer(true);
+                                }}>
+                                Connect
+                            </Typography>
+                        </>
+                    );
+                },
             },
         ],
 
@@ -253,7 +270,6 @@ export default function RPAWorkers() {
                     handleClose={() => {
                         setShowEditWorkerDrawer(false);
                     }}
-                    name={name}
                 />
             </Drawer>
 
@@ -269,7 +285,8 @@ export default function RPAWorkers() {
                     handleClose={() => {
                         setShowConnectDrawer(false);
                     }}
-                    name={name}
+                    worker={selectedWorker}
+                    environmentID={Environment.id.get()}
                 />
             </Drawer>
         </Box>

@@ -107,6 +107,7 @@ func Migrate() {
 			&models.RemoteProcessGroups{},
 			&models.RemotePackages{},
 			&models.RemoteWorkers{},
+			&models.RemoteWorkerActivationKeys{},
 
 			// ---- Files and folders ---
 			&models.CodeFilesStore{},

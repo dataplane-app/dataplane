@@ -56,6 +56,13 @@ type RemoteWorkers {
 	LastPing:				Time
 }
 
+type ActivationKeys {
+    activationKey: String!
+    activationKeyTail: String!
+    remoteWorkerID: String!
+    expiresAt: Time
+}
+
 extend type Query {
   """
 	Get workers.
@@ -126,6 +133,13 @@ extend type Query {
 	+ **Security**: Based on environment selected
 	"""
   getSingleRemoteWorker(environmentID: String!, workerID: String!): RemoteWorkers
+
+    """
+    Get activation keys for a specific remote worker.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_view_workers
+    """
+  getRemoteWorkerActivationKeys(remoteWorkerID: String!, environmentID: String!): [ActivationKeys]!
 }
 
 extend type Mutation {
@@ -208,4 +222,18 @@ extend type Mutation {
 	+ **Security**: Based on environment selected
 	"""
   deleteRemoteWorker(workerID: String!, environmentID: String!): String
+
+    """
+    Add remote worker activation key.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_view_workers
+    """
+  addRemoteWorkerActivationKey(workerID: String!, activationKey: String!, environmentID: String!, expiresAt: Time): String!
+
+    """
+    Delete remote worker activation key.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_view_workers
+    """
+  deleteRemoteWorkerActivationKey(activationKey: String!, environmentID: String!): String!
 }
