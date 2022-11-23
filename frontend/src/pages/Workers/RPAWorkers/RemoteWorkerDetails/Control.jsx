@@ -1,9 +1,9 @@
 import { Box, Typography, Button, Drawer } from '@mui/material';
 import { useState } from 'react';
-// import DeleteAccessGroupDrawer from './../../components/DrawerContent/DeleteAccessGroupDrawer';
-// import DeactivateAccessGroupDrawer from './../../components/DrawerContent/DeactivateAccessGroupDrawer';
+import DeactivateRemoteWorkerDrawer from '../../../../components/DrawerContent/DeactivateRemoteWorkerDrawer';
+import DeleteRemoteWorkerDrawer from '../../../../components/DrawerContent/DeleteRemoteWorkerDrawer';
 
-export default function Control({ environmentId, accessGroup, getAccessGroup }) {
+export default function Control({ environmentId, remoteWorker, getSingleRemoteWorker }) {
     // Sidebar state
     const [isOpenDelete, setIsOpenDelete] = useState(false);
     const [isOpenDeactivate, setIsOpenDeactivate] = useState(false);
@@ -18,11 +18,10 @@ export default function Control({ environmentId, accessGroup, getAccessGroup }) 
                 <Button
                     size="small"
                     variant="outlined"
-                    // color="error"
-                    color={false ? 'error' : 'success'}
+                    color={remoteWorker.Active ? 'error' : 'success'}
                     onClick={() => setIsOpenDeactivate(true)}
                     sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                    {false ? 'Deactivate' : 'Activate'} worker
+                    {remoteWorker.Active ? 'Deactivate' : 'Activate'} worker
                 </Button>
 
                 <Button
@@ -39,22 +38,22 @@ export default function Control({ environmentId, accessGroup, getAccessGroup }) 
                 </Typography>
             </Box>
 
-            {/* <Drawer anchor="right" open={isOpenDeactivate} onClose={() => setIsOpenDeactivate(false)}>
-                <DeactivateAccessGroupDrawer
-                    handleClose={() => setIsOpenDeactivate(false)}
-                    accessGroup={accessGroup}
+            <Drawer anchor="right" open={isOpenDeactivate} onClose={() => setIsOpenDeactivate(false)}>
+                <DeactivateRemoteWorkerDrawer
+                    handleClose={() => setIsOpenDeactivate(false)} //
+                    remoteWorker={remoteWorker}
                     environmentID={environmentId}
-                    getAccessGroup={getAccessGroup}
+                    getSingleRemoteWorker={getSingleRemoteWorker}
                 />
-            </Drawer> */}
+            </Drawer>
 
-            {/* <Drawer anchor="right" open={isOpenDelete} onClose={() => setIsOpenDelete(false)}>
-                <DeleteAccessGroupDrawer
+            <Drawer anchor="right" open={isOpenDelete} onClose={() => setIsOpenDelete(false)}>
+                <DeleteRemoteWorkerDrawer
                     handleClose={() => setIsOpenDelete(false)} //
-                    accessGroup={accessGroup}
+                    remoteWorker={remoteWorker}
                     environmentID={environmentId}
                 />
-            </Drawer> */}
+            </Drawer>
         </>
     );
 }

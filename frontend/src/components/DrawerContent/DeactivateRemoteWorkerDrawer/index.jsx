@@ -3,13 +3,13 @@ import { useEffect } from 'react';
 import { useSnackbar } from 'notistack';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useUpdateRemoteProcessGroup } from '../../../graphql/updateRemoteProcessGroup';
+import { useUpdateRemoteWorker } from '../../../graphql/updateRemoteWorker';
 
-export default function DeactivateRemoteProcessGroup({ handleClose, remoteProcessGroup, environmentID, getSingleRemoteProcessGroup }) {
-    const { Active, Name } = remoteProcessGroup;
+export default function DeactivateRemoteWorkerDrawer({ handleClose, remoteWorker, environmentID, getSingleRemoteWorker }) {
+    const { Active, WorkerName } = remoteWorker;
 
     // GraphQL hooks
-    const updateRemoteProcessGroup = useUpdateRemoteProcessGroupHook(environmentID, getSingleRemoteProcessGroup, handleClose);
+    const updateRemoteWorker = useUpdateRemoteWorkerHook(environmentID, getSingleRemoteWorker, handleClose);
 
     const { closeSnackbar } = useSnackbar();
 
@@ -19,8 +19,8 @@ export default function DeactivateRemoteProcessGroup({ handleClose, remoteProces
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const deactivateAccessGroup = () => updateRemoteProcessGroup(remoteProcessGroup, false);
-    const activateAccessGroup = () => updateRemoteProcessGroup(remoteProcessGroup, true);
+    const deactivateAccessGroup = () => updateRemoteWorker(remoteWorker, false);
+    const activateAccessGroup = () => updateRemoteWorker(remoteWorker, true);
 
     return (
         <Box position="relative">
@@ -32,11 +32,11 @@ export default function DeactivateRemoteProcessGroup({ handleClose, remoteProces
                 </Box>
 
                 <Typography component="h2" variant="h2">
-                    {Active ? 'Deactivate' : 'Activate'} remote process group - {Name}
+                    {Active ? 'Deactivate' : 'Activate'} remote worker - {WorkerName}
                 </Typography>
 
                 <Typography variant="body2" sx={{ mt: 2 }}>
-                    You are about to {Active ? 'deactivate' : 'activate'} a remote process group, would you like to continue?
+                    You are about to {Active ? 'deactivate' : 'activate'} a remote worker, would you like to continue?
                 </Typography>
 
                 <Grid mt={4} display="flex" alignItems="center">
@@ -53,25 +53,24 @@ export default function DeactivateRemoteProcessGroup({ handleClose, remoteProces
 }
 
 // -------------------- Custom Hook --------------------------
-export const useUpdateRemoteProcessGroupHook = (environmentID, getSingleRemoteProcessGroup, handleClose) => {
+export const useUpdateRemoteWorkerHook = (environmentID, getSingleRemoteWorker, handleClose) => {
     // GraphQL hook
-    const updateRemoteProcessGroup = useUpdateRemoteProcessGroup();
+    const updateRemoteWorker = useUpdateRemoteWorker();
 
     const { enqueueSnackbar } = useSnackbar();
 
     // Update pipeline
     return async (prevData, isActive) => {
         const data = {
-            description: prevData.Description,
+            description: '',
             environmentID,
-            id: prevData.ID,
-            lb: prevData.LB,
-            name: prevData.Name,
-            workerType: prevData.WorkerType,
+            status: prevData.Status,
+            workerID: prevData.WorkerID,
+            workerName: prevData.WorkerName,
             active: isActive,
         };
 
-        const response = await updateRemoteProcessGroup(data);
+        const response = await updateRemoteWorker(data);
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't update remote process group: " + (response.msg || response.r || response.error), { variant: 'error' });
@@ -79,7 +78,7 @@ export const useUpdateRemoteProcessGroupHook = (environmentID, getSingleRemotePr
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
-            getSingleRemoteProcessGroup();
+            getSingleRemoteWorker();
             handleClose();
         }
     };

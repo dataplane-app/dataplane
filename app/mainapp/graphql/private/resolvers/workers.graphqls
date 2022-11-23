@@ -200,4 +200,12 @@ extend type Mutation {
 	+ **Security**: Based on environment selected
 	"""
   updateRemoteWorker(workerID: String!, environmentID: String!, workerName: String!, status: String!, active: Boolean!): String
+
+    """
+	Delete remote worker.
+	+ **Route**: Private
+	+ **Permission**: admin_platform, admin_environment, environment_secrets
+	+ **Security**: Based on environment selected
+	"""
+  deleteRemoteWorker(workerID: String!, environmentID: String!): String
 }
