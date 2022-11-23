@@ -100,7 +100,7 @@ export function MarkdownContent({ bottomPadding = false, sx }) {
                                         showLineNumbers={true}
                                         children={String(children).replace(/\n$/, '')}
                                         language={match[1]}
-                                        // {...props}
+                                        {...props}
                                     />
                                     <div
                                         style={{
