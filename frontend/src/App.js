@@ -39,9 +39,9 @@ import Deploy from './pages/Deploy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import DeploymentPermissions from './pages/Deployments/DeploymentPermissions';
-import RPAWorkers from './pages/Workers/RPAWorkers/RemoteWorkers';
-import RPAManage from './pages/Workers/RPAWorkers/RemoteWorkerDetails';
-import RemoteProcessGroupManage from './pages/Workers/RPAWorkers/ProcessGroupDetails';
+import RPAWorkers from './pages/Workers/RemoteWorkers/RemoteWorkers';
+import RPAManage from './pages/Workers/RemoteWorkers/RemoteWorkerDetails';
+import RemoteProcessGroupManage from './pages/Workers/RemoteWorkers/ProcessGroupDetails';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
