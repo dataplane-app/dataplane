@@ -444,6 +444,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                 options={{
                                     minimap: { enabled: false },
                                     hideCursorInOverviewRuler: { enabled: true },
+                                    automaticLayout: { enabled: true },
                                 }}
                             />
                         ) : null}
