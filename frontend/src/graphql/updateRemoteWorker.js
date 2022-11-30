@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation updateRemoteWorker($workerID: String!, $environmentID: String!, $workerName: String!, $status: String!, $active: Boolean!) {
-        updateRemoteWorker(workerID: $workerID, environmentID: $environmentID, workerName: $workerName, status: $status, active: $active)
+    mutation updateRemoteWorker($workerID: String!, $environmentID: String!, $workerName: String!, $description: String!, $status: String!, $active: Boolean!) {
+        updateRemoteWorker(workerID: $workerID, environmentID: $environmentID, workerName: $workerName, description: $description, status: $status, active: $active)
     }
 `;
 

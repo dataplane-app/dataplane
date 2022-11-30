@@ -9,6 +9,7 @@ const query = gql`
             ID
             Name
             Description
+            Packages
             LB
             WorkerType
             Language

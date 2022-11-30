@@ -1,19 +1,23 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { useGlobalFlowState } from '../../../pages/PipelineEdit';
-import { Downgraded } from '@hookstate/core';
-import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useSnackbar } from 'notistack';
+import { useAddRemoteWorker } from '../../../graphql/addRemoteWorker';
+import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 
-const AddRPAWorkerDrawer = ({ handleClose }) => {
+const AddRPAWorkerDrawer = ({ handleClose, getRemoteWorkers }) => {
     // React hook form
     const { register, handleSubmit, reset } = useForm();
 
+    // Global environment state with hookstate
+    const Environment = useGlobalEnvironmentState();
+
+    // Custom GraphQL hooks
+    const addRemoteWorker = useAddRemoteWorkerHook(Environment.id.get(), getRemoteWorkers, handleClose);
+
     async function onSubmit(data) {
-        console.log(data);
+        addRemoteWorker(data);
     }
 
     return (
@@ -33,10 +37,10 @@ const AddRPAWorkerDrawer = ({ handleClose }) => {
 
                         <TextField
                             label="Worker name"
-                            id="workername"
+                            id="name"
                             size="small"
                             sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }}
-                            {...register('workername', { required: true })}
+                            {...register('name', { required: true })}
                         />
 
                         <Grid mt={4} display="flex" alignItems="center">
@@ -52,3 +56,28 @@ const AddRPAWorkerDrawer = ({ handleClose }) => {
 };
 
 export default AddRPAWorkerDrawer;
+
+// ** Custom Hooks
+export const useAddRemoteWorkerHook = (environmentID, getRemoteWorkers, handleClose) => {
+    // GraphQL hook
+    const addRemoteWorker = useAddRemoteWorker();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Add remote worker pipeline
+    return async (data) => {
+        const { name } = data;
+
+        const response = await addRemoteWorker({ name, environmentID });
+
+        if (response.r === 'error') {
+            enqueueSnackbar("Can't add remote worker: " + response.msg, { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getRemoteWorkers();
+            handleClose();
+        }
+    };
+};

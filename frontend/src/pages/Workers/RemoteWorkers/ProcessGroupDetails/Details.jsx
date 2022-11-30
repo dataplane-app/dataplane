@@ -14,7 +14,7 @@ export default function Details({ environmentId, remoteProcessGroup, getSingleRe
     });
 
     // Custom Hook
-    const updateRemoteProcessGroup = useUpdateRemoteProcessGroupHook(environmentId, remoteProcessGroup.Active, getSingleRemoteProcessGroup);
+    const updateRemoteProcessGroup = useUpdateRemoteProcessGroupHook(environmentId, remoteProcessGroup, getSingleRemoteProcessGroup);
 
     return (
         <form onSubmit={handleSubmit(updateRemoteProcessGroup)}>
@@ -31,7 +31,7 @@ export default function Details({ environmentId, remoteProcessGroup, getSingleRe
 }
 
 // -------------------- Custom Hook --------------------------
-export const useUpdateRemoteProcessGroupHook = (environmentID, isActive, getSingleRemoteProcessGroup) => {
+export const useUpdateRemoteProcessGroupHook = (environmentID, remoteProcessGroup, getSingleRemoteProcessGroup) => {
     // GraphQL hook
     const updateRemoteProcessGroup = useUpdateRemoteProcessGroup();
 
@@ -43,7 +43,9 @@ export const useUpdateRemoteProcessGroupHook = (environmentID, isActive, getSing
     return async (data) => {
         data.id = groupId;
         data.environmentID = environmentID;
-        data.active = isActive;
+        data.active = remoteProcessGroup.Active;
+        data.packages = remoteProcessGroup.Packages;
+        data.language = remoteProcessGroup.Language;
 
         const response = await updateRemoteProcessGroup(data);
 

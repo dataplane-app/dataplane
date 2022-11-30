@@ -4,17 +4,12 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    query getRemotePackages($environmentID: String!, $ID: String!) {
-        getRemotePackages(environmentID: $environmentID, ID: $ID) {
-            EnvironmentID
-            RemoteProcessGroupID
-            Packages
-            Language
-        }
+    mutation addRemoteWorkerEnvironment($environmentID: String!, $workerID: String!, $remoteProcessGroupID: String!) {
+        addRemoteWorkerEnvironment(environmentID: $environmentID, workerID: $workerID, remoteProcessGroupID: $remoteProcessGroupID)
     }
 `;
 
-export const useGetRemotePackages = () => {
+export const useAddRemoteWorkerEnvironment = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -29,7 +24,7 @@ export const useGetRemotePackages = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.getRemotePackages;
+            return res?.addRemoteWorkerEnvironment;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

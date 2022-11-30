@@ -4,13 +4,13 @@ import { useSnackbar } from 'notistack';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import { useGetEnvironments } from '../../../../graphql/getEnvironments';
-import { useAddUpdateRemotePackages } from '../../../../graphql/addUpdateRemotePackages';
-import { useGetRemotePackages } from '../../../../graphql/getRemotePackages';
-import { useDeleteRemotePackage } from '../../../../graphql/deleteRemotePackage';
+import { useDeleteRemoteWorkerEnvironment } from '../../../../graphql/deleteRemoteWorkerEnvironment';
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useAddRemoteWorkerEnvironment } from '../../../../graphql/addRemoteWorkerEnvironment';
+import { useGetRemoteWorkerEnvironments } from '../../../../graphql/getRemoteWorkerEnvironments';
 
-export default function Environments({ environmentId, remotePackages, setRemotePackages }) {
+export default function Environments({ environmentId, remoteEnvironments, setRemoteEnvironments }) {
     // User states
     const [availableEnvironments, setAvailableEnvironments] = useState([]);
 
@@ -20,14 +20,13 @@ export default function Environments({ environmentId, remotePackages, setRemoteP
     const { register, handleSubmit } = useForm();
 
     // Custom GraphQL hooks
-    const getEnvironmentsAndPackages = useGetEnvironmentPackagesData(setAvailableEnvironments, environmentId, setRemotePackages);
-    const getRemotePackages = useGetRemotePackagesHook(environmentId, setRemotePackages, availableEnvironments);
-    const addUpdateRemotePackages = useAddUpdateRemotePackagesHook(getRemotePackages, availableEnvironments);
-    const deleteRemotePackageHook = useDeleteRemotePackageHook(getRemotePackages);
+    const getEnvironmentsAndPackages = useGetEnvironmentPackagesData(setAvailableEnvironments, environmentId, setRemoteEnvironments);
+    const getRemoteEnvironments = useGetRemoteWorkerEnvironmentsHook(environmentId, setRemoteEnvironments, availableEnvironments);
+    const addRemoteWorkerEnvironment = useAddRemoteWorkerEnvironmentHook(availableEnvironments, getRemoteEnvironments);
+    const deleteRemoteWorkerEnvironment = useDeleteRemoteWorkerEnvironmentHook(getRemoteEnvironments);
 
     useEffect(() => {
         getEnvironmentsAndPackages();
-
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [environmentId]);
 
@@ -37,14 +36,14 @@ export default function Environments({ environmentId, remotePackages, setRemoteP
                 Environments
             </Typography>
 
-            <form style={{ marginTop: '16px', display: 'flex', alignItems: 'center' }} onSubmit={handleSubmit(addUpdateRemotePackages)}>
+            <form style={{ marginTop: '16px', display: 'flex', alignItems: 'center' }} onSubmit={handleSubmit(addRemoteWorkerEnvironment)}>
                 <Autocomplete
                     disablePortal
                     id="available_environments_autocomplete"
                     key={clear} //Changing this value on submit clears the input field
                     sx={{ minWidth: '280px' }}
                     // Filter out user's permissions from available permissions
-                    options={availableEnvironments.filter((row) => !remotePackages.map((a) => a.EnvironmentID).includes(row.id)) || ''}
+                    options={availableEnvironments.filter((row) => !remoteEnvironments.map((a) => a.EnvironmentID).includes(row.id)) || ''}
                     getOptionLabel={(option) => option.name}
                     renderInput={(params) => (
                         <TextField
@@ -59,10 +58,7 @@ export default function Environments({ environmentId, remotePackages, setRemoteP
                 />
 
                 <Button
-                    onClick={() => {
-                        addUpdateRemotePackages();
-                        setClear(clear * -1); // Clears autocomplete input field
-                    }}
+                    onClick={() => setClear(clear * -1)} // Clears autocomplete input field
                     variant="contained"
                     color="primary"
                     type="submit"
@@ -75,10 +71,10 @@ export default function Environments({ environmentId, remotePackages, setRemoteP
             {/* Environments */}
             <Box mt="2.31rem">
                 <Box mt={2}>
-                    {remotePackages.map((pkg) => (
-                        <Grid display="flex" alignItems="center" key={pkg.Name} mt={1.5} mb={1.5}>
+                    {remoteEnvironments.map((env) => (
+                        <Grid display="flex" alignItems="center" key={env.Name} mt={1.5} mb={1.5}>
                             <Box
-                                onClick={() => deleteRemotePackageHook(pkg.EnvironmentID)}
+                                onClick={() => deleteRemoteWorkerEnvironment(env.EnvironmentID)}
                                 component={FontAwesomeIcon}
                                 sx={{ fontSize: '17px', mt: -3, mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
                                 icon={faTrashAlt}
@@ -86,7 +82,7 @@ export default function Environments({ environmentId, remotePackages, setRemoteP
 
                             <Box display="flex" flexDirection="column">
                                 <Typography variant="subtitle2" lineHeight="15.23px">
-                                    {pkg.Name}
+                                    {env.Name}
                                 </Typography>
 
                                 <Typography variant="subtitle1">Python workers for generic work loads.</Typography>
@@ -104,7 +100,7 @@ const useGetEnvironmentPackagesData = (setAvailableEnvironments, environmentID, 
     // ** GET Environments
     // GraphQL hook
     const getEnvironments = useGetEnvironments();
-    const getRemotePackages = useGetRemotePackages();
+    const getRemoteWorkerEnvironments = useGetRemoteWorkerEnvironments();
 
     const { groupId } = useParams();
 
@@ -125,10 +121,10 @@ const useGetEnvironmentPackagesData = (setAvailableEnvironments, environmentID, 
             setAvailableEnvironments(response);
         }
 
-        const response2 = await getRemotePackages({ environmentID, ID: groupId });
+        const response2 = await getRemoteWorkerEnvironments({ environmentID, remoteProcessGroupID: groupId });
         if (response2.r || response2.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't get remote packages: " + (response2.msg || response2.r || response2.error), { variant: 'error' });
+            enqueueSnackbar("Can't get remote environments: " + (response2.msg || response2.r || response2.error), { variant: 'error' });
         } else if (response2.errors) {
             response2.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
@@ -141,9 +137,9 @@ const useGetEnvironmentPackagesData = (setAvailableEnvironments, environmentID, 
     };
 };
 
-const useGetRemotePackagesHook = (environmentID, setRemotePackages, globalEnvironments) => {
+const useGetRemoteWorkerEnvironmentsHook = (environmentID, setRemotePackages, globalEnvironments) => {
     // GraphQL hook
-    const getRemotePackages = useGetRemotePackages();
+    const getRemoteWorkerEnvironments = useGetRemoteWorkerEnvironments();
 
     const { groupId } = useParams();
 
@@ -151,32 +147,32 @@ const useGetRemotePackagesHook = (environmentID, setRemotePackages, globalEnviro
 
     // Get environments on load
     return async () => {
-        const response = await getRemotePackages({ environmentID, ID: groupId });
+        const response = await getRemoteWorkerEnvironments({ environmentID, remoteProcessGroupID: groupId });
 
         if (response.r || response.error) {
             closeSnackbar();
-            enqueueSnackbar("Can't get remote packages: " + (response.msg || response.r || response.error), { variant: 'error' });
+            enqueueSnackbar("Can't get environments: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             let namedResponse = response.map((packages) => ({
                 ...packages,
-                Name: globalEnvironments.find((env) => env.id === packages.EnvironmentID).name,
+                Name: globalEnvironments.find((env) => env.id === packages.EnvironmentID)?.name,
             }));
             setRemotePackages(namedResponse);
         }
     };
 };
 
-export const useAddUpdateRemotePackagesHook = (getRemotePackages, availableEnvironments) => {
+const useAddRemoteWorkerEnvironmentHook = (availableEnvironments, getRemoteEnvironments) => {
     // GraphQL hook
-    const addUpdateRemotePackages = useAddUpdateRemotePackages();
+    const addRemoteWorkerEnvironment = useAddRemoteWorkerEnvironment();
 
     const { enqueueSnackbar } = useSnackbar();
 
     const { groupId } = useParams();
 
-    // Add remote package
+    // Add remote worker environment
     return async (data) => {
         if (!data?.environment) return;
 
@@ -186,11 +182,10 @@ export const useAddUpdateRemotePackagesHook = (getRemotePackages, availableEnvir
         const dataFinal = {
             environmentID,
             remoteProcessGroupID: groupId,
-            packages: '',
-            language: 'python',
+            workerID: '',
         };
 
-        const response = await addUpdateRemotePackages(dataFinal);
+        const response = await addRemoteWorkerEnvironment(dataFinal);
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get remote packages: " + (response.msg || response.r || response.error), { variant: 'error' });
@@ -198,30 +193,30 @@ export const useAddUpdateRemotePackagesHook = (getRemotePackages, availableEnvir
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
-            getRemotePackages();
+            getRemoteEnvironments();
         }
     };
 };
 
-const useDeleteRemotePackageHook = (getRemotePackages) => {
+const useDeleteRemoteWorkerEnvironmentHook = (getRemoteEnvironments) => {
     // GraphQL hook
-    const deleteRemotePackage = useDeleteRemotePackage();
+    const deleteRemoteWorkerEnvironment = useDeleteRemoteWorkerEnvironment();
 
     const { enqueueSnackbar } = useSnackbar();
 
     const { groupId } = useParams();
 
-    // Delete a remote package
+    // Delete a remote environment
     return async (environmentID) => {
-        const response = await deleteRemotePackage({ environmentID, id: groupId });
+        const response = await deleteRemoteWorkerEnvironment({ environmentID, remoteProcessGroupID: groupId });
 
         if (response.r || response.error) {
-            enqueueSnackbar("Can't delete remote package: " + (response.msg || response.r || response.error), { variant: 'error' });
+            enqueueSnackbar("Can't delete remote environment: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
-            getRemotePackages();
+            getRemoteEnvironments();
         }
     };
 };

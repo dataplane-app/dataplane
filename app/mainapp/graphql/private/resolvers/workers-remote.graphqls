@@ -1,0 +1,162 @@
+type RemoteProcessGroups {
+    ID: String!
+    Name: String!
+    Description: String!
+    Packages: String!
+    LB: String!
+    WorkerType: String!
+    Language: String!
+    Active: Boolean!
+}
+
+type RemotePackages {
+    EnvironmentID: String!
+    RemoteProcessGroupID: String!
+    Packages: String!
+    Language: String!
+}
+
+type RemoteWorkers {
+    WorkerID: String!
+    RemoteProcessGroupID: String!
+    WorkerName: String!
+    Status: String!
+    Active: Boolean!
+    LastPing: Time
+}
+
+type ActivationKeys {
+    activationKey: String!
+    activationKeyTail: String!
+    remoteWorkerID: String!
+    expiresAt: Time
+}
+
+extend type Query {
+    """
+    Get a single process group.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+    + **Security**: Based on environment selected
+    """
+    getSingleRemoteProcessGroup(environmentID: String!, ID: String!): RemoteProcessGroups
+
+    """
+    Get remote process groups.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+    + **Security**: Based on environment selected
+    """
+    getRemoteProcessGroups(environmentID: String!): [RemoteProcessGroups]
+
+    """
+    Get remote packages.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+    + **Security**: Based on environment selected
+    """
+    getRemotePackages(environmentID: String!, ID: String!): [RemotePackages]
+
+    """
+    Get remote workers.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+    + **Security**: Based on environment selected
+    """
+    getRemoteWorkers(environmentID: String!): [RemoteWorkers]
+
+    """
+    Get a single worker.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+    + **Security**: Based on environment selected
+    """
+    getSingleRemoteWorker(environmentID: String!, workerID: String!): RemoteWorkers
+
+    """
+    Get activation keys for a specific remote worker.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_view_workers
+    """
+    getRemoteWorkerActivationKeys(remoteWorkerID: String!, environmentID: String!): [ActivationKeys]!
+}
+
+extend type Mutation {
+    """
+    Add remote process group.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_secrets
+    + **Security**: Based on environment selected
+    """
+    addRemoteProcessGroup(environmentID: String!, name: String!, description: String!): String
+
+    """
+    Update remote process group.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_secrets
+    + **Security**: Based on environment selected
+    """
+    updateRemoteProcessGroup(id: String!, environmentID: String!, name: String!, language: String!, packages: String!, description: String!, active: Boolean!): String
+
+    """
+    Delete remote process group.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_secrets
+    + **Security**: Based on environment selected
+    """
+    deleteRemoteProcessGroup(id: String!, environmentID: String!): String
+
+    """
+    Add remote packages.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_secrets
+    + **Security**: Based on environment selected
+    """
+    addUpdateRemotePackages(environmentID: String!, remoteProcessGroupID: String!, packages: String!, language: String!): String
+
+    """
+    Delete remote package environment.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_secrets
+    + **Security**: Based on environment selected
+    """
+    deleteRemotePackage(id: String!, environmentID: String!): String
+
+    """
+    Add remote worker.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_secrets
+    + **Security**: Based on environment selected
+    """
+    addRemoteWorker(environmentID: String!, remoteProcessGroupID: String!, name: String!): String
+
+    """
+    Update remote process group.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+    + **Security**: Based on environment selected
+    """
+    updateRemoteWorker(workerID: String!, environmentID: String!, workerName: String!, description: String!, status: String!, active: Boolean!): String
+
+    """
+    Delete remote worker.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_secrets
+    + **Security**: Based on environment selected
+    """
+    deleteRemoteWorker(workerID: String!, environmentID: String!): String
+
+    """
+    Add remote worker activation key.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_view_workers
+    """
+    addRemoteWorkerActivationKey(workerID: String!, activationKey: String!, environmentID: String!, expiresAt: Time): String!
+
+    """
+    Delete remote worker activation key.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_view_workers
+    """
+    deleteRemoteWorkerActivationKey(activationKey: String!, environmentID: String!): String!
+}

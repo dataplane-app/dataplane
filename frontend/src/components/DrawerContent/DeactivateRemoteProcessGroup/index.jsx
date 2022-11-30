@@ -68,6 +68,8 @@ export const useUpdateRemoteProcessGroupHook = (environmentID, getSingleRemotePr
             lb: prevData.LB,
             name: prevData.Name,
             workerType: prevData.WorkerType,
+            packages: prevData.Packages,
+            language: prevData.Language,
             active: isActive,
         };
 

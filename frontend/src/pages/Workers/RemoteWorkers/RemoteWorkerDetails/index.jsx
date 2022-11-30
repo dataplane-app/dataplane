@@ -55,7 +55,7 @@ export default function RPAManage() {
                 ) : null}
 
                 <Grid item sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column' }} mb={2}>
-                    <ProcessGroups environmentId={'accessGroup.EnvironmentID'} />
+                    <ProcessGroups environmentId={Environment.id.get()} />
                 </Grid>
             </Grid>
         </Box>

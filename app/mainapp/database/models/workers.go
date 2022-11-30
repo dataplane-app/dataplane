@@ -89,23 +89,24 @@ type RemoteProcessGroups struct {
 	ID          string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"id"`
 	Name        string     `gorm:"type:varchar(255);" json:"name"`
 	Description string     `json:"description"`
+	Packages    string     `json:"packages"`
+	Language    string     `gorm:"type:varchar(64);" json:"language"`
 	LB          string     `json:"lb"`
 	WorkerType  string     `json:"remote_process_type"`
 	Active      bool       `json:"active"`
 	UpdatedAt   *time.Time `json:"updated_at"`
 }
 
-func (RemotePackages) IsEntity() {}
+func (RemoteWorkerEnvironments) IsEntity() {}
 
-func (RemotePackages) TableName() string {
-	return "remote_packages"
+func (RemoteWorkerEnvironments) TableName() string {
+	return "remote_worker_environments"
 }
 
-type RemotePackages struct {
-	EnvironmentID        string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"environment_id"`
+type RemoteWorkerEnvironments struct {
+	WorkerID             string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"worker_id"`
 	RemoteProcessGroupID string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"remote_process_group_id"`
-	Packages             string     `json:"packages"`
-	Language             string     `gorm:"type:varchar(64);" json:"language"`
+	EnvironmentID        string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"environment_id"`
 	CreatedAt            time.Time  `json:"created_at"`
 	UpdatedAt            *time.Time `json:"updated_at"`
 	DeletedAt            *time.Time `json:"deleted_at,omitempty"`
@@ -118,15 +119,15 @@ func (RemoteWorkers) TableName() string {
 }
 
 type RemoteWorkers struct {
-	WorkerID             string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"worker_id"`
-	RemoteProcessGroupID string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"remote_process_group_id"`
-	WorkerName           string     `json:"worker_name"`
-	Status               string     `json:"status"` //online || offline || failed || starting
-	Active               bool       `json:"active"`
-	LB                   string     `json:"lb"`
-	WorkerType           string     `json:"worker_type"`
-	LastPing             *time.Time `json:"last_ping"`
-	UpdatedAt            *time.Time `json:"updated_at"`
+	WorkerID    string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"worker_id"`
+	WorkerName  string     `json:"worker_name"`
+	Description string     `json:"description"`
+	Status      string     `json:"status"` //online || offline || failed || starting
+	Active      bool       `json:"active"`
+	LB          string     `json:"lb"`
+	WorkerType  string     `json:"worker_type"`
+	LastPing    *time.Time `json:"last_ping"`
+	UpdatedAt   *time.Time `json:"updated_at"`
 }
 
 func (RemoteWorkerActivationKeys) IsEntity() {}

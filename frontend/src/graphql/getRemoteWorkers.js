@@ -7,7 +7,6 @@ const query = gql`
     query getRemoteWorkers($environmentID: String!) {
         getRemoteWorkers(environmentID: $environmentID) {
             WorkerID
-            RemoteProcessGroupID
             WorkerName
             Status
             LastPing

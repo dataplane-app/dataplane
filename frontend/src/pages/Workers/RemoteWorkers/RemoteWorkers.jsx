@@ -28,10 +28,10 @@ export default function RPAWorkers() {
     const Environment = useGlobalEnvironmentState();
 
     // Graphql hook
-    const getRemoteProcessGroups = useGetRemoteProcessGroupsHook(Environment.id.get(), setRemoteWorkers);
+    const getRemoteWorkers = useGetRemoteWorkersHook(Environment.id.get(), setRemoteWorkers);
 
     useEffect(() => {
-        getRemoteProcessGroups();
+        getRemoteWorkers();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
@@ -67,7 +67,7 @@ export default function RPAWorkers() {
                             </Box>
                         </Box>
 
-                        <Typography variant="caption" lineHeight={1.2} fontWeight={700} color={row.value[1] === 'Online' ? 'success.main' : 'red'}>
+                        <Typography variant="caption" lineHeight={1.2} fontWeight={700} color={row.value[1] === 'online' ? 'success.main' : 'red'}>
                             {row.value[1]}
                         </Typography>
                     </Box>
@@ -261,6 +261,7 @@ export default function RPAWorkers() {
                     handleClose={() => {
                         setShowAddWorkerDrawer(false);
                     }}
+                    getRemoteWorkers={getRemoteWorkers}
                 />
             </Drawer>
 
@@ -294,7 +295,7 @@ export default function RPAWorkers() {
 }
 
 // ** Custom Hooks
-const useGetRemoteProcessGroupsHook = (environmentID, setRemoteWorkers) => {
+const useGetRemoteWorkersHook = (environmentID, setRemoteWorkers) => {
     // GraphQL hook
     const getRemoteWorkers = useGetRemoteWorkers();
 

@@ -17,14 +17,13 @@ export default function RemoteProcessGroupManage() {
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
 
-    const [remotePackages, setRemotePackages] = useState([]);
+    const [remoteEnvironments, setRemoteEnvironments] = useState([]);
 
     // Graphql Hook
     const getSingleRemoteProcessGroup = useGetSingleRemoteProcessGroupHook(Environment.id.get(), setRemoteProcessGroup);
 
     useEffect(() => {
         getSingleRemoteProcessGroup();
-
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
 
@@ -59,14 +58,16 @@ export default function RemoteProcessGroupManage() {
 
                 {/* Environments */}
                 {Environment.id.get() ? (
-                    <Grid item xs={3} sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column' }} mb={2}>
-                        <Environments environmentId={Environment.id.get()} remotePackages={remotePackages} setRemotePackages={setRemotePackages} />
+                    <Grid item xs={3} minWidth="fit-content" sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column' }} mb={2}>
+                        <Environments environmentId={Environment.id.get()} remoteEnvironments={remoteEnvironments} setRemoteEnvironments={setRemoteEnvironments} />
                     </Grid>
                 ) : null}
 
                 {/* Packages */}
                 <Grid item xs={4} sx={{ flex: 1 }}>
-                    <Packages remotePackages={remotePackages} setRemotePackages={setRemotePackages} />
+                    {remoteProcessGroup && Environment.id.get() ? (
+                        <Packages remoteProcessGroup={remoteProcessGroup} getSingleRemoteProcessGroup={getSingleRemoteProcessGroup} />
+                    ) : null}
                 </Grid>
             </Grid>
         </Box>

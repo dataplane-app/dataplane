@@ -9,7 +9,7 @@ export default function Details({ environmentId, remoteWorker, getSingleRemoteWo
     const { register, handleSubmit } = useForm({
         defaultValues: {
             workerName: remoteWorker?.WorkerName,
-            // description: remoteProcessGroup.Description,
+            description: remoteWorker?.Description,
         },
     });
 

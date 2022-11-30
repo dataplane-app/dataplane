@@ -258,6 +258,7 @@ type RemoteProcessGroups struct {
 	ID          string `json:"ID"`
 	Name        string `json:"Name"`
 	Description string `json:"Description"`
+	Packages    string `json:"Packages"`
 	Lb          string `json:"LB"`
 	WorkerType  string `json:"WorkerType"`
 	Language    string `json:"Language"`

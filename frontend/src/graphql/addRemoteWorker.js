@@ -4,12 +4,12 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation updateRemoteProcessGroup($id: String!, $environmentID: String!, $name: String!, $description: String!, $packages: String!, $language: String!, $active: Boolean!) {
-        updateRemoteProcessGroup(id: $id, environmentID: $environmentID, name: $name, description: $description, packages: $packages, language: $language, active: $active)
+    mutation addRemoteWorker($environmentID: String!, $name: String!) {
+        addRemoteWorker(environmentID: $environmentID, name: $name)
     }
 `;
 
-export const useUpdateRemoteProcessGroup = () => {
+export const useAddRemoteWorker = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -24,7 +24,7 @@ export const useUpdateRemoteProcessGroup = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.updateRemoteProcessGroup;
+            return res?.addRemoteWorker;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

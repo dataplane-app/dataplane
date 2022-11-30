@@ -28,11 +28,11 @@ export default function DeleteRemoteWorkerDrawer({ handleClose, remoteWorker, en
                 </Box>
 
                 <Typography component="h2" variant="h2">
-                    Delete remote process group - {remoteWorker.WorkerName}
+                    Delete remote worker - {remoteWorker.WorkerName}
                 </Typography>
 
                 <Typography variant="body2" sx={{ mt: 2 }}>
-                    You are about to delete a remote process group, would you like to continue?
+                    You are about to delete a remote worker, would you like to continue?
                 </Typography>
 
                 <Grid mt={4} display="flex" alignItems="center">
