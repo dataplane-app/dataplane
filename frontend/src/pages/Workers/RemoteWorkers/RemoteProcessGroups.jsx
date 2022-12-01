@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../../../components/CustomChip';
 import Search from '../../../components/Search';
-import EditRPAWorkerDrawer from '../../../components/DrawerContent/EditRPAWorker';
 import { useHistory } from 'react-router-dom';
 import pythonLogo from '../../../assets/images/pythonLogo.png';
 import AddProcessGroupDrawer from '../../../components/DrawerContent/AddProcessGroup';
@@ -17,8 +16,6 @@ const tableWidth = '850px';
 
 export default function RemoteProcessGroups() {
     const [showAddProcessGroupDrawer, setShowAddProcessGroupDrawer] = useState(false);
-    const [showEditWorkerDrawer, setShowEditWorkerDrawer] = useState(false);
-    const [name, setName] = useState('');
     const [remoteProcessGroups, setRemoteProcessGroups] = useState([]);
 
     // Global environment state with hookstate
@@ -121,21 +118,11 @@ export default function RemoteProcessGroups() {
             <Drawer anchor="right" open={showAddProcessGroupDrawer} onClose={() => setShowAddProcessGroupDrawer(false)}>
                 <AddProcessGroupDrawer handleClose={() => setShowAddProcessGroupDrawer(false)} getRemoteProcessGroups={getRemoteProcessGroups} />
             </Drawer>
-
-            {/* Edit worker drawer */}
-            <Drawer anchor="right" open={showEditWorkerDrawer} onClose={() => setShowEditWorkerDrawer(!showEditWorkerDrawer)}>
-                <EditRPAWorkerDrawer
-                    handleClose={() => {
-                        setShowEditWorkerDrawer(false);
-                    }}
-                    name={name}
-                />
-            </Drawer>
         </Box>
     );
 }
 
-const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup }) => {
+const CustomWorker = ({ row }) => {
     const [name, description, type, id] = row.value;
 
     const history = useHistory();
@@ -143,11 +130,11 @@ const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
             <Tooltip title={id} placement="top-start">
-                <Typography component="h4" variant="h3" mb={1} sx={{ color: 'cyan.main' }} onClick={onClick}>
+                <Typography component="h4" variant="h3" mb={1} sx={{ color: 'cyan.main' }}>
                     {name}
                 </Typography>
             </Tooltip>
-            <Typography component="h5" variant="subtitle1" onClick={onClick}>
+            <Typography component="h5" variant="subtitle1">
                 {description}
             </Typography>
             <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: '8px' }}>
@@ -164,7 +151,6 @@ const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup
                     ml={4}
                     sx={{ color: 'cyan.main', fontSize: ' 0.875rem', display: 'inline', cursor: 'pointer' }}
                     onClick={() => {
-                        setIsOpenSecrets(true);
                         // setSecretDrawerWorkGroup(workerGroup);
                     }}>
                     Workers

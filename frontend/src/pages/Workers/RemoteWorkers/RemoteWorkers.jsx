@@ -268,9 +268,10 @@ export default function RPAWorkers() {
             {/* Edit worker drawer */}
             <Drawer anchor="right" open={showEditWorkerDrawer} onClose={() => setShowEditWorkerDrawer(!showEditWorkerDrawer)}>
                 <EditRPAWorkerDrawer
-                    handleClose={() => {
-                        setShowEditWorkerDrawer(false);
-                    }}
+                    handleClose={() => setShowEditWorkerDrawer(false)}
+                    getRemoteWorkers={getRemoteWorkers}
+                    remoteWorker={selectedWorker && remoteWorkers.find((worker) => worker.workerName === selectedWorker[0])}
+                    environmentID={Environment.id.get()}
                 />
             </Drawer>
 

@@ -1,19 +1,23 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useGlobalFlowState } from '../../../pages/PipelineEdit';
-import { Downgraded } from '@hookstate/core';
-import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
+import { Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
+import { useForm } from 'react-hook-form';
+import { useUpdateRemoteWorker } from '../../../graphql/updateRemoteWorker';
 
-const EditRPAWorkerDrawer = ({ handleClose, name }) => {
+const EditRPAWorkerDrawer = ({ handleClose, remoteWorker, getRemoteWorkers, environmentID }) => {
     // React hook form
-    const { register, handleSubmit, reset } = useForm();
+    const { register, handleSubmit } = useForm({
+        defaultValues: {
+            workerName: remoteWorker?.workerName,
+        },
+    });
+
+    // GraphQL Hook
+    const updateRemoteWorker = useUpdateRemoteWorkerHook(environmentID, remoteWorker, getRemoteWorkers, handleClose);
 
     async function onSubmit(data) {
-        console.log(data);
+        updateRemoteWorker(data);
     }
 
     return (
@@ -33,11 +37,10 @@ const EditRPAWorkerDrawer = ({ handleClose, name }) => {
 
                         <TextField
                             label="Worker name"
-                            id="workername"
+                            id="workerName"
                             size="small"
-                            defaultValue={name}
                             sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }}
-                            {...register('workername', { required: true })}
+                            {...register('workerName', { required: true })}
                         />
 
                         <Grid mt={4} display="flex" alignItems="center">
@@ -53,3 +56,29 @@ const EditRPAWorkerDrawer = ({ handleClose, name }) => {
 };
 
 export default EditRPAWorkerDrawer;
+
+// -------------------- Custom Hook --------------------------
+const useUpdateRemoteWorkerHook = (environmentID, remoteWorker, getSingleRemoteProcessGroup, handleClose) => {
+    // GraphQL hook
+    const updateRemoteWorker = useUpdateRemoteWorker();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Update remote worker
+    return async ({ workerName }) => {
+        remoteWorker.workerName = workerName;
+        remoteWorker.environmentID = environmentID;
+
+        const response = await updateRemoteWorker(remoteWorker);
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't update remote worker: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getSingleRemoteProcessGroup();
+            handleClose();
+        }
+    };
+};
