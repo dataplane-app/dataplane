@@ -50,7 +50,7 @@
         "react-lazylog": "^4.5.3",
         "react-lottie": "^1.2.3",
         "react-markdown": "^8.0.3",
-        "react-monaco-editor": "^0.50.1",
+        "react-monaco-editor": "^0.51.0",
         "react-router-dom": "5.2.0",
         "react-scripts": "5.0.1",
         "react-syntax-highlighter": "^15.5.0",
