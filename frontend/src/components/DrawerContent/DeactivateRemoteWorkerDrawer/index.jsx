@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useUpdateRemoteWorker } from '../../../graphql/updateRemoteWorker';
 
 export default function DeactivateRemoteWorkerDrawer({ handleClose, remoteWorker, environmentID, getSingleRemoteWorker }) {
-    const { Active, WorkerName } = remoteWorker;
+    const { active, workerName } = remoteWorker;
 
     // GraphQL hooks
     const updateRemoteWorker = useUpdateRemoteWorkerHook(environmentID, getSingleRemoteWorker, handleClose);
@@ -32,15 +32,15 @@ export default function DeactivateRemoteWorkerDrawer({ handleClose, remoteWorker
                 </Box>
 
                 <Typography component="h2" variant="h2">
-                    {Active ? 'Deactivate' : 'Activate'} remote worker - {WorkerName}
+                    {active ? 'Deactivate' : 'Activate'} remote worker - {workerName}
                 </Typography>
 
                 <Typography variant="body2" sx={{ mt: 2 }}>
-                    You are about to {Active ? 'deactivate' : 'activate'} a remote worker, would you like to continue?
+                    You are about to {active ? 'deactivate' : 'activate'} a remote worker, would you like to continue?
                 </Typography>
 
                 <Grid mt={4} display="flex" alignItems="center">
-                    <Button onClick={Active ? deactivateAccessGroup : activateAccessGroup} variant="contained" color="primary" sx={{ mr: 2 }}>
+                    <Button onClick={active ? deactivateAccessGroup : activateAccessGroup} variant="contained" color="primary" sx={{ mr: 2 }}>
                         Yes
                     </Button>
                     <Button onClick={handleClose} variant="contained" color="primary">
@@ -64,9 +64,9 @@ export const useUpdateRemoteWorkerHook = (environmentID, getSingleRemoteWorker, 
         const data = {
             description: '',
             environmentID,
-            status: prevData.Status,
-            workerID: prevData.WorkerID,
-            workerName: prevData.WorkerName,
+            status: prevData.status,
+            workerID: prevData.workerID,
+            workerName: prevData.workerName,
             active: isActive,
         };
 

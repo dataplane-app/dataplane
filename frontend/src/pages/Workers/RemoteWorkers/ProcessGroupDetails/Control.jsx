@@ -19,10 +19,10 @@ export default function Control({ environmentId, remoteProcessGroup, getSingleRe
                     size="small"
                     variant="outlined"
                     // color="error"
-                    color={remoteProcessGroup.Active ? 'error' : 'success'}
+                    color={remoteProcessGroup.active ? 'error' : 'success'}
                     onClick={() => setIsOpenDeactivate(true)}
                     sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                    {remoteProcessGroup.Active ? 'Deactivate' : 'Activate'} worker
+                    {remoteProcessGroup.active ? 'Deactivate' : 'Activate'} worker
                 </Button>
 
                 <Button

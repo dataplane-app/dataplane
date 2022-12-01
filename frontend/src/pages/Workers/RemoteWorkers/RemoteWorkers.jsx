@@ -40,7 +40,7 @@ export default function RPAWorkers() {
         () => [
             {
                 Header: 'Worker',
-                accessor: (row) => [row.WorkerName, row.Status, row.WorkerID],
+                accessor: (row) => [row.workerName, row.status, row.workerID],
                 Cell: (row) => (
                     <Box display="flex" flexDirection="column">
                         <Box display="flex">
@@ -87,13 +87,13 @@ export default function RPAWorkers() {
                 accessor: 'lastPing',
                 Cell: (row) => (
                     <Typography mt={-2} variant="caption">
-                        {row.LastPing}
+                        {row.lastPing}
                     </Typography>
                 ),
             },
             {
                 Header: 'Manage',
-                accessor: (row) => [row.WorkerID, row.WorkerName],
+                accessor: (row) => [row.workerID, row.workerName],
                 Cell: (row) => {
                     return (
                         <>

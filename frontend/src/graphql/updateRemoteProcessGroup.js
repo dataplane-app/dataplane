@@ -4,8 +4,24 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation updateRemoteProcessGroup($id: String!, $environmentID: String!, $name: String!, $description: String!, $packages: String!, $language: String!, $active: Boolean!) {
-        updateRemoteProcessGroup(id: $id, environmentID: $environmentID, name: $name, description: $description, packages: $packages, language: $language, active: $active)
+    mutation updateRemoteProcessGroup(
+        $remoteProcessGroupID: String!
+        $environmentID: String!
+        $name: String!
+        $language: String!
+        $packages: String!
+        $description: String!
+        $active: Boolean!
+    ) {
+        updateRemoteProcessGroup(
+            remoteProcessGroupID: $remoteProcessGroupID
+            environmentID: $environmentID
+            name: $name
+            language: $language
+            packages: $packages
+            description: $description
+            active: $active
+        )
     }
 `;
 

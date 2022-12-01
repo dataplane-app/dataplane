@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useUpdateRemoteProcessGroup } from '../../../graphql/updateRemoteProcessGroup';
 
 export default function DeactivateRemoteProcessGroup({ handleClose, remoteProcessGroup, environmentID, getSingleRemoteProcessGroup }) {
-    const { Active, Name } = remoteProcessGroup;
+    const { active, name } = remoteProcessGroup;
 
     // GraphQL hooks
     const updateRemoteProcessGroup = useUpdateRemoteProcessGroupHook(environmentID, getSingleRemoteProcessGroup, handleClose);
@@ -32,15 +32,15 @@ export default function DeactivateRemoteProcessGroup({ handleClose, remoteProces
                 </Box>
 
                 <Typography component="h2" variant="h2">
-                    {Active ? 'Deactivate' : 'Activate'} remote process group - {Name}
+                    {active ? 'Deactivate' : 'Activate'} remote process group - {name}
                 </Typography>
 
                 <Typography variant="body2" sx={{ mt: 2 }}>
-                    You are about to {Active ? 'deactivate' : 'activate'} a remote process group, would you like to continue?
+                    You are about to {active ? 'deactivate' : 'activate'} a remote process group, would you like to continue?
                 </Typography>
 
                 <Grid mt={4} display="flex" alignItems="center">
-                    <Button onClick={Active ? deactivateAccessGroup : activateAccessGroup} variant="contained" color="primary" sx={{ mr: 2 }}>
+                    <Button onClick={active ? deactivateAccessGroup : activateAccessGroup} variant="contained" color="primary" sx={{ mr: 2 }}>
                         Yes
                     </Button>
                     <Button onClick={handleClose} variant="contained" color="primary">
@@ -60,18 +60,9 @@ export const useUpdateRemoteProcessGroupHook = (environmentID, getSingleRemotePr
     const { enqueueSnackbar } = useSnackbar();
 
     // Update pipeline
-    return async (prevData, isActive) => {
-        const data = {
-            description: prevData.Description,
-            environmentID,
-            id: prevData.ID,
-            lb: prevData.LB,
-            name: prevData.Name,
-            workerType: prevData.WorkerType,
-            packages: prevData.Packages,
-            language: prevData.Language,
-            active: isActive,
-        };
+    return async (data, isActive) => {
+        data.active = isActive;
+        data.environmentID = environmentID;
 
         const response = await updateRemoteProcessGroup(data);
 

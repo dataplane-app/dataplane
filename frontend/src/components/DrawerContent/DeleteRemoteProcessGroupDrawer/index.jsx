@@ -8,7 +8,7 @@ import { useDeleteRemoteProcessGroup } from '../../../graphql/deleteRemoteProces
 
 export default function DeleteRemoteProcessGroupDrawer({ handleClose, remoteProcessGroup, environmentID }) {
     // GraphQL hook
-    const deleteRemoteProcessGroup = useDeleteRemoteProcessGroupHook(environmentID, remoteProcessGroup.ID);
+    const deleteRemoteProcessGroup = useDeleteRemoteProcessGroupHook(environmentID, remoteProcessGroup.remoteProcessGroupID);
 
     const { closeSnackbar } = useSnackbar();
 
@@ -54,7 +54,7 @@ export default function DeleteRemoteProcessGroupDrawer({ handleClose, remoteProc
 
 // ------------- Custom Hook
 
-const useDeleteRemoteProcessGroupHook = (environmentID, id) => {
+const useDeleteRemoteProcessGroupHook = (environmentID, remoteProcessGroupID) => {
     // React router
     const history = useHistory();
 
@@ -65,7 +65,7 @@ const useDeleteRemoteProcessGroupHook = (environmentID, id) => {
 
     // Delete a remote process group
     return async () => {
-        const response = await deleteRemoteProcessGroup({ environmentID, id });
+        const response = await deleteRemoteProcessGroup({ environmentID, remoteProcessGroupID });
 
         if (response.r === 'error') {
             closeSnackbar();

@@ -8,8 +8,8 @@ export default function Details({ environmentId, remoteProcessGroup, getSingleRe
     // React hook form
     const { register, handleSubmit } = useForm({
         defaultValues: {
-            name: remoteProcessGroup.Name,
-            description: remoteProcessGroup.Description,
+            name: remoteProcessGroup.name,
+            description: remoteProcessGroup.description,
         },
     });
 
@@ -41,11 +41,11 @@ export const useUpdateRemoteProcessGroupHook = (environmentID, remoteProcessGrou
 
     // Update pipeline
     return async (data) => {
-        data.id = groupId;
+        data.remoteProcessGroupID = groupId;
         data.environmentID = environmentID;
-        data.active = remoteProcessGroup.Active;
-        data.packages = remoteProcessGroup.Packages;
-        data.language = remoteProcessGroup.Language;
+        data.active = remoteProcessGroup.active;
+        data.packages = remoteProcessGroup.packages;
+        data.language = remoteProcessGroup.language;
 
         const response = await updateRemoteProcessGroup(data);
 

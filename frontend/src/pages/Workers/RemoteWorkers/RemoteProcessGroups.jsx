@@ -37,19 +37,12 @@ export default function RemoteProcessGroups() {
         () => [
             {
                 Header: 'Member',
-                accessor: (row) => [row.Name, row.Description, row.Language, row.ID],
-                Cell: (row) => (
-                    <CustomWorker
-                        row={row}
-                        // onClick={() => history.push(`/workers/${row.row.original.WorkerGroup}`)}
-                        // setIsOpenSecrets={setIsOpenSecrets}
-                        // setSecretDrawerWorkGroup={setSecretDrawerWorkGroup}
-                    />
-                ),
+                accessor: (row) => [row.name, row.description, row.language, row.remoteProcessGroupID],
+                Cell: (row) => <CustomWorker row={row} />,
             },
         ],
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        ['history', 'jwt']
+
+        []
     );
 
     // Use the state and functions returned from useTable to build your UI
@@ -149,9 +142,11 @@ const CustomWorker = ({ row, onClick, setIsOpenSecrets, setSecretDrawerWorkGroup
 
     return (
         <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
-            <Typography component="h4" variant="h3" mb={1} sx={{ color: 'cyan.main' }} onClick={onClick}>
-                {name}
-            </Typography>
+            <Tooltip title={id} placement="top-start">
+                <Typography component="h4" variant="h3" mb={1} sx={{ color: 'cyan.main' }} onClick={onClick}>
+                    {name}
+                </Typography>
+            </Tooltip>
             <Typography component="h5" variant="subtitle1" onClick={onClick}>
                 {description}
             </Typography>

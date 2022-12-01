@@ -4,12 +4,16 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation deleteRemoteWorkerEnvironment($remoteProcessGroupID: String!, $environmentID: String!) {
-        deleteRemoteWorkerEnvironment(remoteProcessGroupID: $remoteProcessGroupID, environmentID: $environmentID)
+    query getRemoteProcessGroupsEnvironments($environmentID: String!, $remoteProcessGroupID: String!) {
+        getRemoteProcessGroupsEnvironments(environmentID: $environmentID, remoteProcessGroupID: $remoteProcessGroupID) {
+            remoteProcessGroupID
+            workerID
+            environmentID
+        }
     }
 `;
 
-export const useDeleteRemoteWorkerEnvironment = () => {
+export const useGetRemoteProcessGroupsEnvironments = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -24,7 +28,7 @@ export const useDeleteRemoteWorkerEnvironment = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.deleteRemoteWorkerEnvironment;
+            return res?.getRemoteProcessGroupsEnvironments;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

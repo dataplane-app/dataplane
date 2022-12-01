@@ -8,9 +8,10 @@ import { useParams } from 'react-router-dom';
 import { useGetRemoteProcessGroups } from '../../../../graphql/getRemoteProcessGroups';
 import { useForm } from 'react-hook-form';
 import { useGetRemoteWorkersProcessGroups } from '../../../../graphql/getRemoteWorkersProcessGroups';
-import { useAddRemoteWorkerEnvironment } from '../../../../graphql/addRemoteWorkerEnvironment';
+import { useAddRemoteProcessGroupToEnvironment } from '../../../../graphql/addRemoteProcessGroupToEnvironment';
 import { useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown';
 import { useRemoveRemoteWorkerFromProcessGroup } from '../../../../graphql/removeRemoteWorkerFromProcessGroup';
+import { useAddRemoteWorkerToProcessGroup } from '../../../../graphql/addRemoteWorkerToProcessGroup';
 
 export default function ProcessGroups({ environmentId }) {
     // User states
@@ -31,7 +32,7 @@ export default function ProcessGroups({ environmentId }) {
     // Custom hook
     const getRemoteProcessGroups = useGetRemoteProcessGroupsHook(environmentId, setAvailableRemoteProcessGroups);
     const getRemoteWorkersProcessGroups = useGetRemoteWorkersProcessGroupsHook(environmentId, setWorkersProcessGroups);
-    const addRemoteWorkerEnvironment = useAddRemoteWorkerEnvironmentHook(availableRemoteProcessGroups, getRemoteWorkersProcessGroups);
+    const addRemoteWorkerToProcessGroup = useAddRemoteWorkerToProcessGroupHook(availableRemoteProcessGroups, getRemoteWorkersProcessGroups);
     const removeRemoteWorkerFromProcessGroup = useRemoveRemoteWorkerFromProcessGroupHook(getRemoteWorkersProcessGroups);
 
     // Get members on load
@@ -50,15 +51,15 @@ export default function ProcessGroups({ environmentId }) {
             </Typography>
 
             <Grid mt={2} display="flex" alignItems="center">
-                <form style={{ marginTop: '16px', display: 'flex', alignItems: 'center' }} onSubmit={handleSubmit(addRemoteWorkerEnvironment)}>
+                <form style={{ marginTop: '16px', display: 'flex', alignItems: 'center' }} onSubmit={handleSubmit(addRemoteWorkerToProcessGroup)}>
                     <Autocomplete
                         disablePortal
                         id="autocomplete_process_groups"
                         key={clear} //Changing this value on submit clears the input field
                         sx={{ minWidth: '280px' }}
                         // Filter out worker's remote process groups from all remote process groups
-                        options={availableRemoteProcessGroups.filter((group) => !workersProcessGroups.map((a) => a.ID).includes(group.ID))}
-                        getOptionLabel={(option) => option.Name}
+                        options={availableRemoteProcessGroups.filter((group) => !workersProcessGroups.map((a) => a.remoteProcessGroupID).includes(group.remoteProcessGroupID))}
+                        getOptionLabel={(option) => option.name}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -86,7 +87,7 @@ export default function ProcessGroups({ environmentId }) {
 
             <Box mt="1.31rem">
                 {workersProcessGroups.map((row) => (
-                    <Grid display="flex" alignItems="flex-start" key={row.ID} mt={1.5} mb={1.5}>
+                    <Grid display="flex" alignItems="flex-start" key={row.remoteProcessGroupID} mt={1.5} mb={1.5}>
                         <Box
                             onClick={() => {
                                 removeRemoteWorkerFromProcessGroup(row);
@@ -97,16 +98,16 @@ export default function ProcessGroups({ environmentId }) {
                         />
                         <Box>
                             <Typography
-                                onClick={() => history.push(`/remote/processgroups/${row.ID}`)}
+                                onClick={() => history.push(`/remote/processgroups/${row.remoteProcessGroupID}`)}
                                 variant="subtitle2"
                                 lineHeight="15.23px"
                                 color="primary"
                                 fontWeight="900"
                                 sx={{ cursor: 'pointer' }}>
-                                {row.Name}
+                                {row.name}
                             </Typography>
                             <Typography variant="subtitle2" mt={1} lineHeight={1.1}>
-                                {row.Description}
+                                {row.description}
                             </Typography>
                             <Typography variant="subtitle2" lineHeight={1.1} fontWeight="bold">
                                 Environment: {Environment.name.get()}
@@ -165,9 +166,9 @@ const useGetRemoteWorkersProcessGroupsHook = (environmentID, setWorkersProcessGr
     };
 };
 
-const useAddRemoteWorkerEnvironmentHook = (availableRemoteProcessGroups, getRemoteWorkersProcessGroups) => {
+const useAddRemoteWorkerToProcessGroupHook = (availableRemoteProcessGroups, getRemoteWorkersProcessGroups) => {
     // GraphQL hook
-    const addRemoteWorkerEnvironment = useAddRemoteWorkerEnvironment();
+    const addRemoteWorkerToProcessGroup = useAddRemoteWorkerToProcessGroup();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -179,7 +180,7 @@ const useAddRemoteWorkerEnvironmentHook = (availableRemoteProcessGroups, getRemo
     // Add remote worker environment
     return async (data) => {
         // Get process group's ID by its name
-        const remoteProcessGroupID = availableRemoteProcessGroups.find((a) => a.Name === data.remoteProcessGroupName).ID;
+        const remoteProcessGroupID = availableRemoteProcessGroups.find((a) => a.name === data.remoteProcessGroupName).remoteProcessGroupID;
 
         const dataFinal = {
             environmentID: Environment.id.get(),
@@ -187,7 +188,7 @@ const useAddRemoteWorkerEnvironmentHook = (availableRemoteProcessGroups, getRemo
             workerID: workerId,
         };
 
-        const response = await addRemoteWorkerEnvironment(dataFinal);
+        const response = await addRemoteWorkerToProcessGroup(dataFinal);
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't add remote environment: " + (response.msg || response.r || response.error), { variant: 'error' });
@@ -214,7 +215,7 @@ const useRemoveRemoteWorkerFromProcessGroupHook = (getRemoteWorkersProcessGroups
     // Delete a remote environment
     return async (data) => {
         const environmentID = Environment.id.get();
-        const remoteProcessGroupID = data.ID;
+        const remoteProcessGroupID = data.remoteProcessGroupID;
         const response = await removeRemoteWorkerFromProcessGroup({ environmentID, remoteProcessGroupID, workerID: workerId });
 
         if (response.r || response.error) {

@@ -23,7 +23,7 @@ import (
 
 func Migrate() {
 
-	migrateVersion := "0.0.58"
+	migrateVersion := "0.0.59"
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",

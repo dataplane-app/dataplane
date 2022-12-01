@@ -8,8 +8,8 @@ export default function Details({ environmentId, remoteWorker, getSingleRemoteWo
     // React hook form
     const { register, handleSubmit } = useForm({
         defaultValues: {
-            workerName: remoteWorker?.WorkerName,
-            description: remoteWorker?.Description,
+            workerName: remoteWorker?.workerName,
+            description: remoteWorker?.description,
         },
     });
 
@@ -43,8 +43,8 @@ const useUpdateRemoteWorkerHook = (environmentID, remoteWorker, getSingleRemoteP
     return async (data) => {
         data.workerID = workerId;
         data.environmentID = environmentID;
-        data.active = remoteWorker.Active;
-        data.status = remoteWorker.Status;
+        data.active = remoteWorker.active;
+        data.status = remoteWorker.status;
 
         const response = await updateRemoteWorker(data);
 

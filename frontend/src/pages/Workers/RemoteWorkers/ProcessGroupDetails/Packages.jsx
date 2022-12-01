@@ -12,7 +12,7 @@ import { useUpdateRemoteProcessGroup } from '../../../../graphql/updateRemotePro
 
 export default function Packages({ remoteProcessGroup, getSingleRemoteProcessGroup }) {
     const [isEditMode, setIsEditMode] = React.useState(false);
-    const [pkgText, setPkgText] = React.useState(remoteProcessGroup?.Packages);
+    const [pkgText, setPkgText] = React.useState(remoteProcessGroup?.packages);
 
     const inputRef = React.useRef(null);
 
@@ -101,12 +101,12 @@ export const useUpdateRemoteProcessGroupHook = (environmentID, remoteProcessGrou
     return async (pkgText) => {
         const dataFinal = {
             environmentID,
-            id: groupId,
-            name: remoteProcessGroup.Name,
-            description: remoteProcessGroup.Description,
-            active: remoteProcessGroup.Active,
+            remoteProcessGroupID: groupId,
+            name: remoteProcessGroup.name,
+            description: remoteProcessGroup.description,
+            active: remoteProcessGroup.active,
             packages: pkgText,
-            language: remoteProcessGroup.Language,
+            language: remoteProcessGroup.language,
         };
 
         const response = await updateRemoteProcessGroup(dataFinal);

@@ -18,10 +18,10 @@ export default function Control({ environmentId, remoteWorker, getSingleRemoteWo
                 <Button
                     size="small"
                     variant="outlined"
-                    color={remoteWorker.Active ? 'error' : 'success'}
+                    color={remoteWorker.active ? 'error' : 'success'}
                     onClick={() => setIsOpenDeactivate(true)}
                     sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                    {remoteWorker.Active ? 'Deactivate' : 'Activate'} worker
+                    {remoteWorker.active ? 'Deactivate' : 'Activate'} worker
                 </Button>
 
                 <Button

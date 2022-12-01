@@ -1,21 +1,27 @@
 type RemoteProcessGroups {
-    ID: String!
-    Name: String!
-    Description: String!
-    Packages: String!
-    LB: String!
-    WorkerType: String!
-    Language: String!
-    Active: Boolean!
+    remoteProcessGroupID: String!
+    name: String!
+    description: String!
+    packages: String!
+    lb: String!
+    workerType: String!
+    language: String!
+    active: Boolean!
 }
 
 type RemoteWorkers {
-    WorkerID: String!
-    RemoteProcessGroupID: String!
-    WorkerName: String!
-    Status: String!
-    Active: Boolean!
-    LastPing: Time
+    workerID: String!
+    workerName: String!
+    description: String!
+    status: String!
+    active: Boolean!
+    lastPing: Time
+}
+
+type RemoteWorkerEnvironments {
+    workerID: String!
+    remoteProcessGroupID: String!
+    environmentID: String!
 }
 
 type ActivationKeys {
@@ -32,7 +38,7 @@ extend type Query {
     + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
     + **Security**: Based on environment selected
     """
-    getSingleRemoteProcessGroup(environmentID: String!, ID: String!): RemoteProcessGroups
+    getSingleRemoteProcessGroup(environmentID: String!, remoteProcessGroupID: String!): RemoteProcessGroups
 
     """
     Get remote process groups.
@@ -59,11 +65,27 @@ extend type Query {
     getSingleRemoteWorker(environmentID: String!, workerID: String!): RemoteWorkers
 
     """
+    Get remote worker environments.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+    + **Security**: Based on environment selected
+    """
+    getRemoteProcessGroupsEnvironments(environmentID: String!, remoteProcessGroupID: String!): [RemoteWorkerEnvironments]
+
+    """
     Get activation keys for a specific remote worker.
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_view_workers
     """
     getRemoteWorkerActivationKeys(remoteWorkerID: String!, environmentID: String!): [ActivationKeys]!
+
+    """
+    Get remote worker's process groups.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+    + **Security**: Based on environment selected
+    """
+    getRemoteWorkersProcessGroups(environmentID: String!, workerID: String!): [RemoteProcessGroups]
 }
 
 extend type Mutation {
@@ -73,7 +95,7 @@ extend type Mutation {
     + **Permission**: admin_platform, admin_environment, environment_secrets
     + **Security**: Based on environment selected
     """
-    addRemoteProcessGroup(environmentID: String!, name: String!, description: String!): String
+    addRemoteProcessGroup(environmentID: String!, name: String!, description: String!): String!
 
     """
     Update remote process group.
@@ -81,7 +103,15 @@ extend type Mutation {
     + **Permission**: admin_platform, admin_environment, environment_secrets
     + **Security**: Based on environment selected
     """
-    updateRemoteProcessGroup(id: String!, environmentID: String!, name: String!, language: String!, packages: String!, description: String!, active: Boolean!): String
+    updateRemoteProcessGroup(
+        remoteProcessGroupID: String!
+        environmentID: String!
+        name: String!
+        language: String!
+        packages: String!
+        description: String!
+        active: Boolean!
+    ): String!
 
     """
     Delete remote process group.
@@ -89,7 +119,23 @@ extend type Mutation {
     + **Permission**: admin_platform, admin_environment, environment_secrets
     + **Security**: Based on environment selected
     """
-    deleteRemoteProcessGroup(id: String!, environmentID: String!): String
+    deleteRemoteProcessGroup(remoteProcessGroupID: String!, environmentID: String!): String!
+
+    """
+    Add remote worker environments.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+    + **Security**: Based on environment selected
+    """
+    addRemoteProcessGroupToEnvironment(environmentID: String!, remoteProcessGroupID: String!, workerID: String!): String!
+
+    """
+    Add remote worker environments.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+    + **Security**: Based on environment selected
+    """
+    removeRemoteProcessGroupFromEnvironment(environmentID: String!, remoteProcessGroupID: String!): String!
 
     """
     Add remote worker.
@@ -97,7 +143,7 @@ extend type Mutation {
     + **Permission**: admin_platform, admin_environment, environment_secrets
     + **Security**: Based on environment selected
     """
-    addRemoteWorker(environmentID: String!, remoteProcessGroupID: String!, name: String!): String
+    addRemoteWorker(environmentID: String!, name: String!): String!
 
     """
     Update remote process group.
@@ -105,7 +151,7 @@ extend type Mutation {
     + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
     + **Security**: Based on environment selected
     """
-    updateRemoteWorker(workerID: String!, environmentID: String!, workerName: String!, description: String!, status: String!, active: Boolean!): String
+    updateRemoteWorker(workerID: String!, environmentID: String!, workerName: String!, description: String!, status: String!, active: Boolean!): String!
 
     """
     Delete remote worker.
@@ -113,7 +159,23 @@ extend type Mutation {
     + **Permission**: admin_platform, admin_environment, environment_secrets
     + **Security**: Based on environment selected
     """
-    deleteRemoteWorker(workerID: String!, environmentID: String!): String
+    deleteRemoteWorker(workerID: String!, environmentID: String!): String!
+
+    """
+    Remove remote worker from process group.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+    + **Security**: Based on environment selected
+    """
+    removeRemoteWorkerFromProcessGroup(environmentID: String!, remoteProcessGroupID: String!, workerID: String!): String!
+
+    """
+    Add remote worker to process group.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_permissions, environment_view_workers
+    + **Security**: Based on environment selected
+    """
+    addRemoteWorkerToProcessGroup(environmentID: String!, remoteProcessGroupID: String!, workerID: String!): String!
 
     """
     Add remote worker activation key.

@@ -21,7 +21,7 @@ import (
 )
 
 // AddRemoteProcessGroup is the resolver for the addRemoteProcessGroup field.
-func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmentID string, name string, description string) (*string, error) {
+func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmentID string, name string, description string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -35,20 +35,20 @@ func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmen
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("Requires permissions.")
+		return "", errors.New("Requires permissions.")
 	}
 
 	// Add process group
 	id := uuid2.New().String()
 	remoteProcessGroups := models.RemoteProcessGroups{
-		ID:          id,
-		Name:        name,
-		Description: description,
-		Language:    "python",
-		Packages:    "",
-		LB:          "",
-		WorkerType:  "",
-		Active:      false,
+		RemoteProcessGroupID: id,
+		Name:                 name,
+		Description:          description,
+		Language:             "python",
+		Packages:             "",
+		LB:                   "",
+		WorkerType:           "",
+		Active:               false,
 	}
 
 	err := database.DBConn.Create(&remoteProcessGroups).Error
@@ -58,16 +58,14 @@ func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmen
 			logging.PrintSecretsRedact(err)
 		}
 
-		return nil, errors.New("Add remote process group database error.")
+		return "", errors.New("Add remote process group database error.")
 	}
 
-	response := "Success"
-
-	return &response, nil
+	return "Success", nil
 }
 
 // UpdateRemoteProcessGroup is the resolver for the updateRemoteProcessGroup field.
-func (r *mutationResolver) UpdateRemoteProcessGroup(ctx context.Context, id string, environmentID string, name string, language string, packages string, description string, active bool) (*string, error) {
+func (r *mutationResolver) UpdateRemoteProcessGroup(ctx context.Context, remoteProcessGroupID string, environmentID string, name string, language string, packages string, description string, active bool) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -81,10 +79,10 @@ func (r *mutationResolver) UpdateRemoteProcessGroup(ctx context.Context, id stri
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("Requires permissions.")
+		return "", errors.New("Requires permissions.")
 	}
 
-	err := database.DBConn.Where("id = ?", id).
+	err := database.DBConn.Where("remote_process_group_id = ?", remoteProcessGroupID).
 		Select("active", "name", "description", "language", "packages").
 		Updates(models.RemoteProcessGroups{
 			Name:        name,
@@ -99,16 +97,14 @@ func (r *mutationResolver) UpdateRemoteProcessGroup(ctx context.Context, id stri
 			logging.PrintSecretsRedact(err)
 		}
 
-		return nil, errors.New("Add remote process group database error.")
+		return "", errors.New("Add remote process group database error.")
 	}
 
-	response := "Success"
-
-	return &response, nil
+	return "Success", nil
 }
 
 // DeleteRemoteProcessGroup is the resolver for the deleteRemoteProcessGroup field.
-func (r *mutationResolver) DeleteRemoteProcessGroup(ctx context.Context, id string, environmentID string) (*string, error) {
+func (r *mutationResolver) DeleteRemoteProcessGroup(ctx context.Context, remoteProcessGroupID string, environmentID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -122,29 +118,27 @@ func (r *mutationResolver) DeleteRemoteProcessGroup(ctx context.Context, id stri
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("Requires permissions.")
+		return "", errors.New("Requires permissions.")
 	}
 
-	err := database.DBConn.Where("id = ?", id).Delete(&models.RemoteProcessGroups{})
+	err := database.DBConn.Where("remote_process_group_id = ?", remoteProcessGroupID).Delete(&models.RemoteProcessGroups{})
 
 	if err.RowsAffected == 0 {
-		return nil, errors.New("Remote process group relationship not found.")
+		return "", errors.New("Remote process group relationship not found.")
 	}
 
 	if err.Error != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return nil, errors.New("Remote process group database error.")
+		return "", errors.New("Remote process group database error.")
 	}
 
-	response := "Success"
-
-	return &response, nil
+	return "Success", nil
 }
 
-// AddRemoteWorker is the resolver for the addRemoteWorker field.
-func (r *mutationResolver) AddRemoteWorker(ctx context.Context, environmentID string, remoteProcessGroupID string, name string) (*string, error) {
+// AddRemoteProcessGroupToEnvironment is the resolver for the addRemoteProcessGroupToEnvironment field.
+func (r *mutationResolver) AddRemoteProcessGroupToEnvironment(ctx context.Context, environmentID string, remoteProcessGroupID string, workerID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -158,7 +152,80 @@ func (r *mutationResolver) AddRemoteWorker(ctx context.Context, environmentID st
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("Requires permissions.")
+		return "", errors.New("Requires permissions.")
+	}
+
+	remoteWorkerEnvironment := models.RemoteWorkerEnvironments{
+		EnvironmentID:        environmentID,
+		WorkerID:             workerID,
+		RemoteProcessGroupID: remoteProcessGroupID,
+	}
+
+	err := database.DBConn.Create(&remoteWorkerEnvironment).Error
+
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("Add remote worker environment database error.")
+	}
+
+	return "Success", nil
+}
+
+// RemoveRemoteProcessGroupFromEnvironment is the resolver for the removeRemoteProcessGroupFromEnvironment field.
+func (r *mutationResolver) RemoveRemoteProcessGroupFromEnvironment(ctx context.Context, environmentID string, remoteProcessGroupID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	err := database.DBConn.
+		Where("remote_process_group_id = ? and environment_id = ?", remoteProcessGroupID, environmentID).
+		Delete(&models.RemoteWorkerEnvironments{})
+
+	if err.RowsAffected == 0 {
+		return "", errors.New("Remote worker environment relationship not found.")
+	}
+
+	if err.Error != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Remote worker environment database error.")
+	}
+
+	return "Success", nil
+}
+
+// AddRemoteWorker is the resolver for the addRemoteWorker field.
+func (r *mutationResolver) AddRemoteWorker(ctx context.Context, environmentID string, name string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
 	}
 
 	// Add process group
@@ -179,16 +246,14 @@ func (r *mutationResolver) AddRemoteWorker(ctx context.Context, environmentID st
 			logging.PrintSecretsRedact(err)
 		}
 
-		return nil, errors.New("Add remote worker database error.")
+		return "", errors.New("Add remote worker database error.")
 	}
 
-	response := "Success"
-
-	return &response, nil
+	return "Success", nil
 }
 
 // UpdateRemoteWorker is the resolver for the updateRemoteWorker field.
-func (r *mutationResolver) UpdateRemoteWorker(ctx context.Context, workerID string, environmentID string, workerName string, description string, status string, active bool) (*string, error) {
+func (r *mutationResolver) UpdateRemoteWorker(ctx context.Context, workerID string, environmentID string, workerName string, description string, status string, active bool) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -202,7 +267,7 @@ func (r *mutationResolver) UpdateRemoteWorker(ctx context.Context, workerID stri
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("Requires permissions.")
+		return "", errors.New("Requires permissions.")
 	}
 
 	err := database.DBConn.Where("worker_id = ?", workerID).
@@ -215,7 +280,7 @@ func (r *mutationResolver) UpdateRemoteWorker(ctx context.Context, workerID stri
 		})
 
 	if err.RowsAffected == 0 {
-		return nil, errors.New("remote worker relationship not found.")
+		return "", errors.New("remote worker relationship not found.")
 	}
 
 	if err.Error != nil {
@@ -223,16 +288,14 @@ func (r *mutationResolver) UpdateRemoteWorker(ctx context.Context, workerID stri
 			logging.PrintSecretsRedact(err)
 		}
 
-		return nil, errors.New("Update remote worker database error.")
+		return "", errors.New("Update remote worker database error.")
 	}
 
-	response := "Success"
-
-	return &response, nil
+	return "Success", nil
 }
 
 // DeleteRemoteWorker is the resolver for the deleteRemoteWorker field.
-func (r *mutationResolver) DeleteRemoteWorker(ctx context.Context, workerID string, environmentID string) (*string, error) {
+func (r *mutationResolver) DeleteRemoteWorker(ctx context.Context, workerID string, environmentID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -246,25 +309,96 @@ func (r *mutationResolver) DeleteRemoteWorker(ctx context.Context, workerID stri
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("Requires permissions.")
+		return "", errors.New("Requires permissions.")
 	}
 
 	err := database.DBConn.Where("worker_id = ?", workerID).Delete(&models.RemoteWorkers{})
 
 	if err.RowsAffected == 0 {
-		return nil, errors.New("Remote worker relationship not found.")
+		return "", errors.New("Remote worker relationship not found.")
 	}
 
 	if err.Error != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return nil, errors.New("Remote worker database error.")
+		return "", errors.New("Remote worker database error.")
 	}
 
-	response := "Success"
+	return "Success", nil
+}
 
-	return &response, nil
+// RemoveRemoteWorkerFromProcessGroup is the resolver for the removeRemoteWorkerFromProcessGroup field.
+func (r *mutationResolver) RemoveRemoteWorkerFromProcessGroup(ctx context.Context, environmentID string, remoteProcessGroupID string, workerID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	err := database.DBConn.
+		Where("remote_process_group_id = ? and environment_id = ? and worker_id = ?", remoteProcessGroupID, environmentID, workerID).
+		Delete(&models.RemoteWorkerEnvironments{})
+
+	if err.RowsAffected == 0 {
+		return "", errors.New("Remote worker environment relationship not found.")
+	}
+
+	if err.Error != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+		return "", errors.New("Remote worker environment database error.")
+	}
+
+	return "Success", nil
+}
+
+// AddRemoteWorkerToProcessGroup is the resolver for the addRemoteWorkerToProcessGroup field.
+func (r *mutationResolver) AddRemoteWorkerToProcessGroup(ctx context.Context, environmentID string, remoteProcessGroupID string, workerID string) (string, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return "", errors.New("Requires permissions.")
+	}
+
+	remoteWorkerEnvironment := models.RemoteWorkerEnvironments{
+		EnvironmentID:        environmentID,
+		WorkerID:             workerID,
+		RemoteProcessGroupID: remoteProcessGroupID,
+	}
+
+	err := database.DBConn.Create(&remoteWorkerEnvironment).Error
+
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("Add remote worker environment database error.")
+	}
+
+	return "Success", nil
 }
 
 // AddRemoteWorkerActivationKey is the resolver for the addRemoteWorkerActivationKey field.
@@ -350,7 +484,7 @@ func (r *mutationResolver) DeleteRemoteWorkerActivationKey(ctx context.Context, 
 }
 
 // GetSingleRemoteProcessGroup is the resolver for the getSingleRemoteProcessGroup field.
-func (r *queryResolver) GetSingleRemoteProcessGroup(ctx context.Context, environmentID string, id string) (*privategraphql.RemoteProcessGroups, error) {
+func (r *queryResolver) GetSingleRemoteProcessGroup(ctx context.Context, environmentID string, remoteProcessGroupID string) (*privategraphql.RemoteProcessGroups, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -371,7 +505,7 @@ func (r *queryResolver) GetSingleRemoteProcessGroup(ctx context.Context, environ
 
 	var remoteProcessGroup *privategraphql.RemoteProcessGroups
 
-	err := database.DBConn.Where("id = ?", id).Find(&remoteProcessGroup).Error
+	err := database.DBConn.Where("remote_process_group_id = ?", remoteProcessGroupID).Find(&remoteProcessGroup).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errors.New("Remote process groups database error.")
 	}
@@ -465,6 +599,37 @@ func (r *queryResolver) GetSingleRemoteWorker(ctx context.Context, environmentID
 	return remoteWorker, nil
 }
 
+// GetRemoteProcessGroupsEnvironments is the resolver for the getRemoteProcessGroupsEnvironments field.
+func (r *queryResolver) GetRemoteProcessGroupsEnvironments(ctx context.Context, environmentID string, remoteProcessGroupID string) ([]*privategraphql.RemoteWorkerEnvironments, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	var resp []*privategraphql.RemoteWorkerEnvironments
+
+	err := database.DBConn.
+		Where("remote_process_group_id = ?", remoteProcessGroupID).
+		Find(&resp).Error
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Remote worker environments database error.")
+	}
+
+	return resp, nil
+}
+
 // GetRemoteWorkerActivationKeys is the resolver for the getRemoteWorkerActivationKeys field.
 func (r *queryResolver) GetRemoteWorkerActivationKeys(ctx context.Context, remoteWorkerID string, environmentID string) ([]*models.RemoteWorkerActivationKeys, error) {
 	currentUser := ctx.Value("currentUser").(string)
@@ -493,4 +658,40 @@ func (r *queryResolver) GetRemoteWorkerActivationKeys(ctx context.Context, remot
 		return nil, errors.New("Retrive activation keys database error.")
 	}
 	return keys, nil
+}
+
+// GetRemoteWorkersProcessGroups is the resolver for the getRemoteWorkersProcessGroups field.
+func (r *queryResolver) GetRemoteWorkersProcessGroups(ctx context.Context, environmentID string, workerID string) ([]*privategraphql.RemoteProcessGroups, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_secrets", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	var resp []*privategraphql.RemoteProcessGroups
+
+	err := database.DBConn.Raw(
+		`
+		select 
+		rpg.*
+		from remote_process_groups rpg 
+		left join remote_worker_environments rwe on rpg.remote_process_group_id = rwe.remote_process_group_id 
+		where rwe.environment_id = ? and  rwe.worker_id = ?
+		`, environmentID, workerID).Find(&resp).Error
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Remote process groups database error.")
+	}
+
+	return resp, nil
 }

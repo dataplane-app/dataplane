@@ -6,12 +6,12 @@ const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 const query = gql`
     query getSingleRemoteWorker($environmentID: String!, $workerID: String!) {
         getSingleRemoteWorker(environmentID: $environmentID, workerID: $workerID) {
-            WorkerID
-            WorkerName
-            Description
-            Status
-            Active
-            LastPing
+            workerID
+            workerName
+            description
+            status
+            active
+            lastPing
         }
     }
 `;

@@ -6,13 +6,14 @@ const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 const query = gql`
     query getRemoteWorkersProcessGroups($environmentID: String!, $workerID: String!) {
         getRemoteWorkersProcessGroups(environmentID: $environmentID, workerID: $workerID) {
-            ID
-            Name
-            Description
-            LB
-            WorkerType
-            Language
-            Active
+            remoteProcessGroupID
+            name
+            description
+            lb
+            workerType
+            language
+            packages
+            active
         }
     }
 `;

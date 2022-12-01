@@ -248,23 +248,29 @@ type Preferences struct {
 }
 
 type RemoteProcessGroups struct {
-	ID          string `json:"ID"`
-	Name        string `json:"Name"`
-	Description string `json:"Description"`
-	Packages    string `json:"Packages"`
-	Lb          string `json:"LB"`
-	WorkerType  string `json:"WorkerType"`
-	Language    string `json:"Language"`
-	Active      bool   `json:"Active"`
+	RemoteProcessGroupID string `json:"remoteProcessGroupID"`
+	Name                 string `json:"name"`
+	Description          string `json:"description"`
+	Packages             string `json:"packages"`
+	Lb                   string `json:"lb"`
+	WorkerType           string `json:"workerType"`
+	Language             string `json:"language"`
+	Active               bool   `json:"active"`
+}
+
+type RemoteWorkerEnvironments struct {
+	WorkerID             string `json:"workerID"`
+	RemoteProcessGroupID string `json:"remoteProcessGroupID"`
+	EnvironmentID        string `json:"environmentID"`
 }
 
 type RemoteWorkers struct {
-	WorkerID             string     `json:"WorkerID"`
-	RemoteProcessGroupID string     `json:"RemoteProcessGroupID"`
-	WorkerName           string     `json:"WorkerName"`
-	Status               string     `json:"Status"`
-	Active               bool       `json:"Active"`
-	LastPing             *time.Time `json:"LastPing"`
+	WorkerID    string     `json:"workerID"`
+	WorkerName  string     `json:"workerName"`
+	Description string     `json:"description"`
+	Status      string     `json:"status"`
+	Active      bool       `json:"active"`
+	LastPing    *time.Time `json:"lastPing"`
 }
 
 type UpdateEnvironment struct {

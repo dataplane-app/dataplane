@@ -8,7 +8,7 @@ import { useDeleteRemoteWorker } from '../../../graphql/deleteRemoteWorker';
 
 export default function DeleteRemoteWorkerDrawer({ handleClose, remoteWorker, environmentID }) {
     // GraphQL hook
-    const deleteRemoteWorker = useDeleteRemoteWorkerHook(environmentID, remoteWorker.WorkerID);
+    const deleteRemoteWorker = useDeleteRemoteWorkerHook(environmentID, remoteWorker.workerID);
 
     const { closeSnackbar } = useSnackbar();
 
@@ -28,7 +28,7 @@ export default function DeleteRemoteWorkerDrawer({ handleClose, remoteWorker, en
                 </Box>
 
                 <Typography component="h2" variant="h2">
-                    Delete remote worker - {remoteWorker.WorkerName}
+                    Delete remote worker - {remoteWorker.workerName}
                 </Typography>
 
                 <Typography variant="body2" sx={{ mt: 2 }}>

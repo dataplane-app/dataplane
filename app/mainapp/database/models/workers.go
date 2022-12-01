@@ -86,15 +86,15 @@ func (RemoteProcessGroups) TableName() string {
 }
 
 type RemoteProcessGroups struct {
-	ID          string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"id"`
-	Name        string     `gorm:"type:varchar(255);" json:"name"`
-	Description string     `json:"description"`
-	Packages    string     `json:"packages"`
-	Language    string     `gorm:"type:varchar(64);" json:"language"`
-	LB          string     `json:"lb"`
-	WorkerType  string     `json:"remote_process_type"`
-	Active      bool       `json:"active"`
-	UpdatedAt   *time.Time `json:"updated_at"`
+	RemoteProcessGroupID string     `gorm:"PRIMARY_KEY;type:varchar(255);" json:"remote_process_group_id"`
+	Name                 string     `gorm:"type:varchar(255);" json:"name"`
+	Description          string     `json:"description"`
+	Packages             string     `json:"packages"`
+	Language             string     `gorm:"type:varchar(64);" json:"language"`
+	LB                   string     `json:"lb"`
+	WorkerType           string     `json:"remote_process_type"`
+	Active               bool       `json:"active"`
+	UpdatedAt            *time.Time `json:"updated_at"`
 }
 
 func (RemoteWorkerEnvironments) IsEntity() {}

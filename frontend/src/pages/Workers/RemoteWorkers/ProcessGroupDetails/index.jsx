@@ -33,7 +33,7 @@ export default function RemoteProcessGroupManage() {
         <Box className="page" width="100%">
             <Grid container alignItems="center">
                 <Typography component="h2" variant="h2" color="text.primary">
-                    Process group {'> ' + remoteProcessGroup?.Name}
+                    Process group {'> ' + remoteProcessGroup?.name}
                 </Typography>
                 <Button
                     onClick={() => history.push('/remote/processgroups')}
@@ -85,7 +85,7 @@ const useGetSingleRemoteProcessGroupHook = (environmentID, setRemoteProcessGroup
 
     // Get worker groups
     return async () => {
-        const response = await getSingleRemoteProcessGroup({ environmentID, ID: groupId });
+        const response = await getSingleRemoteProcessGroup({ environmentID, remoteProcessGroupID: groupId });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get remote process group: " + (response.msg || response.r || response.error), { variant: 'error' });

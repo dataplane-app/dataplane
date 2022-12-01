@@ -31,7 +31,7 @@ export default function RPAManage() {
         <Box className="page" width="83%">
             <Grid container alignItems="center">
                 <Typography component="h2" variant="h2" color="text.primary">
-                    RPA Workers {'> ' + remoteWorker?.WorkerName}
+                    RPA Workers {'> ' + remoteWorker?.workerName}
                 </Typography>
 
                 <Button

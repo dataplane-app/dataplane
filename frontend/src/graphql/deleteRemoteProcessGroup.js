@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation deleteRemoteProcessGroup($id: String!, $environmentID: String!) {
-        deleteRemoteProcessGroup(id: $id, environmentID: $environmentID)
+    mutation deleteRemoteProcessGroup($remoteProcessGroupID: String!, $environmentID: String!) {
+        deleteRemoteProcessGroup(remoteProcessGroupID: $remoteProcessGroupID, environmentID: $environmentID)
     }
 `;
 
