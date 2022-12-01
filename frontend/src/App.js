@@ -42,6 +42,7 @@ import DeploymentPermissions from './pages/Deployments/DeploymentPermissions';
 import RPAWorkers from './pages/Workers/RemoteWorkers/RemoteWorkers';
 import RPAManage from './pages/Workers/RemoteWorkers/RemoteWorkerDetails';
 import RemoteProcessGroupManage from './pages/Workers/RemoteWorkers/ProcessGroupDetails';
+import RemoteProcessGroups from './pages/Workers/RemoteWorkers/RemoteProcessGroups';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
@@ -175,14 +176,14 @@ function App() {
                                                 <Route exact path="/workers">
                                                     <Workers tab={0} />
                                                 </Route>
-                                                <Route exact path="/remote/processgroups">
+                                                <Route exact path="/remote/workers">
                                                     <Workers tab={1} />
-                                                </Route>
-                                                <Route exact path="/remote/workers/">
-                                                    <RPAWorkers />
                                                 </Route>
                                                 <Route exact path="/remote/workers/:workerId">
                                                     <RPAManage />
+                                                </Route>
+                                                <Route exact path="/remote/processgroups/">
+                                                    <RemoteProcessGroups />
                                                 </Route>
                                                 <Route exact path="/remote/processgroups/:groupId">
                                                     <RemoteProcessGroupManage />

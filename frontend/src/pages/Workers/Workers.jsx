@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import ServerWorkers from './ServerWorkers/ServerWorkers';
 import RemoteProcessGroups from './RemoteWorkers/RemoteProcessGroups';
 import { useHistory } from 'react-router-dom';
+import RPAWorkers from './RemoteWorkers/RemoteWorkers';
 
 export default function Workers({ tab }) {
     const [value] = React.useState(tab);
@@ -13,7 +14,7 @@ export default function Workers({ tab }) {
 
     const handleChange = (event) => {
         event.target.id === 'tab-0' && history.push('/workers');
-        event.target.id === 'tab-1' && history.push('/remote/processgroups');
+        event.target.id === 'tab-1' && history.push('/remote/workers');
     };
 
     return (
@@ -28,7 +29,8 @@ export default function Workers({ tab }) {
                 <ServerWorkers />
             </TabPanel>
             <TabPanel value={value} index={1}>
-                <RemoteProcessGroups />
+                {/* <RemoteProcessGroups /> */}
+                <RPAWorkers />
             </TabPanel>
         </Box>
     );
