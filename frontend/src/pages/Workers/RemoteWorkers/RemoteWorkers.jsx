@@ -1,6 +1,6 @@
 import { Box, Button, Drawer, Grid, Tooltip, Typography } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useGlobalFilter, useTable } from 'react-table';
+import { useGlobalFilter, useTable, usePagination } from 'react-table';
 import CustomChip from '../../../components/CustomChip';
 import Search from '../../../components/Search';
 import { faEdit, faFilter } from '@fortawesome/free-solid-svg-icons';
@@ -12,6 +12,8 @@ import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdow
 import { useGetRemoteWorkers } from '../../../graphql/getRemoteWorkers';
 import { useSnackbar } from 'notistack';
 import ConnectRemoteWorkerDrawer from '../../../components/DrawerContent/ConnectRemoteWorkerDrawer';
+import { formatDateNoZone } from '../../../utils/formatDate';
+import { useGlobalMeState } from '../../../components/Navbar';
 
 const tableWidth = '850px';
 
@@ -26,6 +28,9 @@ export default function RPAWorkers() {
 
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
+
+    const MeData = useGlobalMeState();
+    const timezone = MeData.timezone.get();
 
     // Graphql hook
     const getRemoteWorkers = useGetRemoteWorkersHook(Environment.id.get(), setRemoteWorkers);
@@ -73,21 +78,21 @@ export default function RPAWorkers() {
                     </Box>
                 ),
             },
-            {
-                Header: 'Process groups',
-                accessor: 'groupCount',
-                Cell: (row) => (
-                    <Typography mt={-2} variant="caption" color="cyan.main" sx={{ cursor: 'pointer' }}>
-                        Manage(1)
-                    </Typography>
-                ),
-            },
+            // {
+            //     Header: 'Process groups',
+            //     accessor: 'groupCount',
+            //     Cell: (row) => (
+            //         <Typography mt={-2} variant="caption" color="cyan.main" sx={{ cursor: 'pointer' }}>
+            //             Manage(1)
+            //         </Typography>
+            //     ),
+            // },
             {
                 Header: 'Last ping',
                 accessor: 'lastPing',
                 Cell: (row) => (
                     <Typography mt={-2} variant="caption">
-                        {row.lastPing}
+                        {formatDateNoZone(row.value, timezone)}
                     </Typography>
                 ),
             },
@@ -127,17 +132,33 @@ export default function RPAWorkers() {
             },
         ],
 
-        []
+        [timezone, history]
     );
 
     // Use the state and functions returned from useTable to build your UI
-    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, setGlobalFilter } = useTable(
+    const {
+        getTableProps,
+        getTableBodyProps,
+        headerGroups,
+        page,
+        prepareRow,
+        setGlobalFilter,
+        canPreviousPage,
+        canNextPage,
+        pageOptions,
+        pageCount,
+        gotoPage,
+        nextPage,
+        previousPage,
+        setPageSize,
+        state: { pageIndex, pageSize },
+    } = useTable(
         {
             columns,
             data: remoteWorkers,
         },
-
-        useGlobalFilter
+        useGlobalFilter,
+        usePagination
     );
 
     return (
@@ -208,7 +229,7 @@ export default function RPAWorkers() {
                         ))}
                     </Box>
                     <Box component="tbody" display="flex" sx={{ flexDirection: 'column' }} {...getTableBodyProps()}>
-                        {rows.map((row, i) => {
+                        {page.map((row, i) => {
                             prepareRow(row);
                             return (
                                 <Box
@@ -232,9 +253,9 @@ export default function RPAWorkers() {
                                                     // If first cell
                                                     borderLeft: idx === 0 ? '1px solid editorPage.borderColor' : 0,
                                                     // If last cell of last row
-                                                    borderBottomRightRadius: idx === row.cells.length - 1 && i === rows.length - 1 ? '5px' : 0,
+                                                    borderBottomRightRadius: idx === row.cells.length - 1 && i === page.length - 1 ? '5px' : 0,
                                                     // If first cell of last row
-                                                    borderBottomLeftRadius: idx === 0 && i === rows.length - 1 ? '5px' : 0,
+                                                    borderBottomLeftRadius: idx === 0 && i === page.length - 1 ? '5px' : 0,
                                                     borderTop: 0,
                                                     pl: 1,
                                                     textAlign: 'left',
@@ -254,6 +275,51 @@ export default function RPAWorkers() {
                     </Box>
                 </Box>
             ) : null}
+
+            {/* Pagination */}
+            <div style={{ marginTop: '10px' }}>
+                <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+                    {'<<'}
+                </button>{' '}
+                <button onClick={() => previousPage()} disabled={!canPreviousPage}>
+                    {'<'}
+                </button>{' '}
+                <button onClick={() => nextPage()} disabled={!canNextPage}>
+                    {'>'}
+                </button>{' '}
+                <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
+                    {'>>'}
+                </button>{' '}
+                <span>
+                    Page{' '}
+                    <strong>
+                        {pageIndex + 1} of {pageOptions.length}
+                    </strong>{' '}
+                </span>
+                <span>
+                    | Go to page:{' '}
+                    <input
+                        type="number"
+                        defaultValue={pageIndex + 1}
+                        onChange={(e) => {
+                            const page = e.target.value ? Number(e.target.value) - 1 : 0;
+                            gotoPage(page);
+                        }}
+                        style={{ width: '100px' }}
+                    />
+                </span>{' '}
+                <select
+                    value={pageSize}
+                    onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                    }}>
+                    {[10, 20, 30, 40, 50].map((pageSize) => (
+                        <option key={pageSize} value={pageSize}>
+                            Show {pageSize}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
             {/* Add worker drawer */}
             <Drawer anchor="right" open={showAddWorkerDrawer} onClose={() => setShowAddWorkerDrawer(!showAddWorkerDrawer)}>

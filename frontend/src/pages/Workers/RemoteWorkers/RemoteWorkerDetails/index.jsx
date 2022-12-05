@@ -9,18 +9,22 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown';
 import { useSnackbar } from 'notistack';
 import { useGetSingleRemoteWorker } from '../../../../graphql/getSingleRemoteWorker';
+import Environments from './Environments';
 
 export default function RPAManage() {
-    const [remoteWorker, setRemoteWorker] = useState(null);
-
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
+
+    // Local state
+    const [remoteWorker, setRemoteWorker] = useState(null);
+    const [workerEnvironment, setWorkerEnvironment] = useState(null);
 
     // Graphql Hook
     const getSingleRemoteWorker = useGetSingleRemoteWorkerHook(Environment.id.get(), setRemoteWorker);
 
     useEffect(() => {
         getSingleRemoteWorker();
+        setWorkerEnvironment(Environment.get());
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
@@ -55,7 +59,8 @@ export default function RPAManage() {
                 ) : null}
 
                 <Grid item sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column' }} mb={2}>
-                    <ProcessGroups environmentId={Environment.id.get()} />
+                    <Environments environmentId={Environment.id.get()} workerEnvironment={workerEnvironment} setWorkerEnvironment={setWorkerEnvironment} />
+                    <ProcessGroups environmentId={workerEnvironment?.id} />
                 </Grid>
             </Grid>
         </Box>

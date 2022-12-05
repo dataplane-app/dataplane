@@ -47,7 +47,10 @@ export default function ProcessGroups({ environmentId }) {
     return (
         <>
             <Typography component="h3" variant="h3" color="text.primary">
-                Process groups
+                Process groups -{' '}
+                <Typography component="span" fontWeight={500}>
+                    Environment: {Environment.name.get()}
+                </Typography>
             </Typography>
 
             <Grid mt={2} display="flex" alignItems="center">
@@ -179,6 +182,8 @@ const useAddRemoteWorkerToProcessGroupHook = (availableRemoteProcessGroups, getR
 
     // Add remote worker environment
     return async (data) => {
+        if (data?.remoteProcessGroupName === '') return;
+
         // Get process group's ID by its name
         const remoteProcessGroupID = availableRemoteProcessGroups.find((a) => a.name === data.remoteProcessGroupName).remoteProcessGroupID;
 
