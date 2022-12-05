@@ -53,6 +53,7 @@ services:
       replicas: 2
 
   mainapp-cypresstest:
+    container_name: mainapp-cypresstest
     build:
       context: ./
       dockerfile: cypress/Dockerfile.main.alpine
@@ -84,6 +85,15 @@ services:
       DP_REDIS_PORT: "6379"
       DP_REDIS_PASSWORD: ""
       DP_REDIS_DB: "0"
+    healthcheck:
+      test: "curl -f localhost:9001/healthz"
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    depends_on:
+      - redis-service
+      - postgres-test
+      - nats
       
 
   mainapp2-cypresstest:
@@ -91,7 +101,7 @@ services:
       context: ./
       dockerfile: cypress/Dockerfile.main.alpine
     deploy:
-      replicas: 2
+      replicas: 1
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       DP_DB_HOST: postgres-test
@@ -118,6 +128,15 @@ services:
       DP_REDIS_PORT: "6379"
       DP_REDIS_PASSWORD: ""
       DP_REDIS_DB: "0"
+    healthcheck:
+      test: "curl -f localhost:9001/healthz"
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    depends_on:
+      - redis-service
+      - postgres-test
+      - nats
 
   dataplane-worker-cypresstest:
     build:
@@ -159,6 +178,11 @@ services:
       DP_REDIS_PORT: "6379"
       DP_REDIS_PASSWORD: ""
       DP_REDIS_DB: "0"
+    depends_on:
+      - redis-service
+      - postgres-test
+      - nats
+      - mainapp-cypresstest
 
   dataplane-worker-cypresstest-prod:
     build:
@@ -200,4 +224,9 @@ services:
       DP_REDIS_PORT: "6379"
       DP_REDIS_PASSWORD: ""
       DP_REDIS_DB: "0"
+    depends_on:
+      - redis-service
+      - postgres-test
+      - nats
+      - mainapp-cypresstest
 

@@ -22,7 +22,7 @@ jobs:
         uses: jtalk/url-health-check-action@v2
         with:
           url: http://localhost:9002/healthz
-          max-attempts: 7
+          max-attempts: 20
           retry-delay: 5s
           retry-all: true
       
