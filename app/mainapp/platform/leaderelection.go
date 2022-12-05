@@ -79,16 +79,16 @@ func PlatformLeaderElectionScheduler(s *gocron.Scheduler, mainAppID string) {
 
 		/* Testing Leader election logs */
 
-		tm := time.Unix(redisModel.Timestamp, 0)
-		log.Println("Leader: ", redisModel.NodeID, tm, leaderID == mainAppID)
-		for i, v := range dpconfig.PipelineScheduler.Keys() {
+		// tm := time.Unix(redisModel.Timestamp, 0)
+		// log.Println("Leader: ", redisModel.NodeID, tm, leaderID == mainAppID)
+		// for i, v := range dpconfig.PipelineScheduler.Keys() {
 
-			if tmp, ok := dpconfig.PipelineScheduler.Get(v); ok {
+		// if tmp, ok := dpconfig.PipelineScheduler.Get(v); ok {
 
-				PipelineScheduler := tmp.(*gocron.Scheduler)
-				log.Println("Scheduler:", i, v, PipelineScheduler.IsRunning(), PipelineScheduler.Len())
-			}
-		}
+		// PipelineScheduler := tmp.(*gocron.Scheduler)
+		// log.Println("Scheduler:", i, v, PipelineScheduler.IsRunning(), PipelineScheduler.Len())
+		// }
+		// }
 
 		/*
 			Record the change in elected leader
