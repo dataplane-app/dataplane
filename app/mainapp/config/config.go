@@ -39,9 +39,24 @@ var FSCodeFileStorage string
 var FSCodeFileBatches int
 var FSCodeDirectory string
 
+// Redis
+var DPRedisHost string
+var DPRedisPort string
+var DPRedisDB int
+var DPRedisPassword string
+
 // Available storage methods: Database, LocalFile, S3
 
 func LoadConfig() {
+
+	// Redis connection
+	DPRedisHost = os.Getenv("DP_REDIS_HOST")
+	DPRedisPort = os.Getenv("DP_REDIS_PORT")
+	DPRedisDB, _ = strconv.Atoi(os.Getenv("DP_REDIS_DB"))
+	if DPRedisDB == 0 {
+		DPRedisDB = 1
+	}
+	DPRedisPassword = os.Getenv("DP_REDIS_PASSWORD")
 
 	// Clean tasks set
 

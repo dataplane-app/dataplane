@@ -58,7 +58,7 @@ func DB() (*gorm.DB, error) {
 		dbConn, err = gorm.Open(postgres.New(postgres.Config{
 			DSN: connectURL,
 		}), &gorm.Config{
-			SkipDefaultTransaction: true,
+			// SkipDefaultTransaction: true,
 			NamingStrategy: schema.NamingStrategy{
 				SingularTable: true, // use singular table name, table for `User` would be `user` with this option enabled
 			},

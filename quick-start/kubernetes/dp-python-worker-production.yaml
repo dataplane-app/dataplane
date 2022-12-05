@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: dataplane-worker-prod
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: dataplane-worker-prod
@@ -88,3 +88,11 @@ spec:
               value: "Database"
             - name: DP_DFS_CODE_FOLDER
               value: "/dataplane/dfs-code-files/"
+            - name: DP_REDIS_HOST
+              value: "redis-service"
+            - name: DP_REDIS_PORT 
+              value: "6379"
+            - name: DP_REDIS_PASSWORD
+              value: ""
+            - name: DP_REDIS_DB
+              value: "0"

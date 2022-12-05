@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: redis
   labels:
@@ -8,6 +8,7 @@ spec:
   selector:
     matchLabels:
       app: redis
+  serviceName: "redis"
   template:
     metadata:
       # annotations:

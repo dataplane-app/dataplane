@@ -6,6 +6,11 @@ services:
     image: redis:7.0.5-bullseye
     ports:
       - 6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
 
   postgres:
     image: timescale/timescaledb:2.5.1-pg14
@@ -19,7 +24,6 @@ services:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 30s
       retries: 5
-    # restart: always
 
   nats:
     image: nats:2.7.4-scratch
@@ -30,20 +34,6 @@ services:
       - "8222"
       - "--port"
       - "4222"
-
-  nats-r:
-    image: nats:2.7.4-scratch
-    command:
-      - "--cluster"
-      - "nats://0.0.0.0:6222"
-      - "--http_port"
-      - "8222"
-      - "--port"
-      - "4222"
-      - "--routes"
-      - "nats://nats:6222"
-    deploy:
-      replicas: 2
 
   mainapp:
     image: dataplane/dataplane:latest
@@ -59,7 +49,7 @@ services:
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
       DP_PORT: "9001"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
@@ -70,11 +60,16 @@ services:
       DP_REMOVELOGS_DAYS: "60"
       DP_CODE_FILE_STORAGE: "Database"
       DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
+      DP_DISTRIBUTED_MODE: "NO"
+      DP_REDIS_HOST: "redis-service"
+      DP_REDIS_PORT: "6379"
+      DP_REDIS_PASSWORD: ""
+      DP_REDIS_DB: "0"
 
   dataplane-worker:
     image: dataplane/dataplane-worker-python:latest
     deploy:
-      replicas: 2
+      replicas: 1
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       DP_DB_HOST: postgres
@@ -84,7 +79,7 @@ services:
       DP_DB_DATABASE: "dataplane"
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
@@ -102,11 +97,16 @@ services:
       DP_WORKER_LOAD_PACKAGES: "Python"
       DP_CODE_FILE_STORAGE: "Database"
       DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
+      DP_DISTRIBUTED_MODE: "NO"
+      DP_REDIS_HOST: "redis-service"
+      DP_REDIS_PORT: "6379"
+      DP_REDIS_PASSWORD: ""
+      DP_REDIS_DB: "0"
 
   dataplane-worker-prod:
     image: dataplane/dataplane-worker-python:latest
     deploy:
-      replicas: 3
+      replicas: 1
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       DP_DB_HOST: postgres
@@ -116,7 +116,7 @@ services:
       DP_DB_DATABASE: "dataplane"
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
@@ -134,6 +134,11 @@ services:
       DP_WORKER_LOAD_PACKAGES: "Python"
       DP_CODE_FILE_STORAGE: "Database"
       DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
+      DP_DISTRIBUTED_MODE: "NO"
+      DP_REDIS_HOST: "redis-service"
+      DP_REDIS_PORT: "6379"
+      DP_REDIS_PASSWORD: ""
+      DP_REDIS_DB: "0"
 
 volumes:
   dataplane-postgres:
