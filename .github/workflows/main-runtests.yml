@@ -99,7 +99,7 @@ jobs:
           DP_CODE_FOLDER: "${{ github.workspace }}/appdev/code-files/"
           DP_CODE_FILE_STORAGE: "Database"
           DP_DFS_CODE_FOLDER: "${{ github.workspace }}/appdev/dfs-code-files/"
-          DP_REDIS_HOST: "redis-service"
+          DP_REDIS_HOST: "localhost"
           DP_REDIS_PORT: "6379"
           DP_REDIS_PASSWORD: ""
           DP_REDIS_DB: "0"
