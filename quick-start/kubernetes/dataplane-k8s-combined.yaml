@@ -108,7 +108,7 @@ kind: Deployment
 metadata:
   name: dataplane-main
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: dataplane-main
@@ -162,6 +162,14 @@ spec:
           value: Database
         - name: DP_DFS_CODE_FOLDER
           value: /dataplane/dfs-code-files/
+        - name: DP_REDIS_HOST
+          value: redis-service
+        - name: DP_REDIS_PORT
+          value: "6379"
+        - name: DP_REDIS_PASSWORD
+          value: ""
+        - name: DP_REDIS_DB
+          value: "0"
         image: dataplane/dataplane:latest
         imagePullPolicy: Always
         name: container
@@ -176,7 +184,7 @@ kind: Deployment
 metadata:
   name: dataplane-worker-dev
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: dataplane-worker-dev
@@ -244,6 +252,14 @@ spec:
           value: Database
         - name: DP_DFS_CODE_FOLDER
           value: /dataplane/dfs-code-files/
+        - name: DP_REDIS_HOST
+          value: redis-service
+        - name: DP_REDIS_PORT
+          value: "6379"
+        - name: DP_REDIS_PASSWORD
+          value: ""
+        - name: DP_REDIS_DB
+          value: "0"
         image: dataplane/dataplane-worker-python:latest
         imagePullPolicy: Always
         name: container
@@ -267,7 +283,7 @@ kind: Deployment
 metadata:
   name: dataplane-worker-prod
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: dataplane-worker-prod
@@ -335,6 +351,14 @@ spec:
           value: Database
         - name: DP_DFS_CODE_FOLDER
           value: /dataplane/dfs-code-files/
+        - name: DP_REDIS_HOST
+          value: redis-service
+        - name: DP_REDIS_PORT
+          value: "6379"
+        - name: DP_REDIS_PASSWORD
+          value: ""
+        - name: DP_REDIS_DB
+          value: "0"
         image: dataplane/dataplane-worker-python:latest
         imagePullPolicy: Always
         name: container
@@ -352,73 +376,6 @@ spec:
           medium: Memory
           sizeLimit: 250Mi
         name: dp-code-cache-volume
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: redis
-  name: redis
-spec:
-  selector:
-    matchLabels:
-      app: redis
-  template:
-    metadata:
-      labels:
-        app: redis
-    spec:
-      containers:
-      - image: redis:7.0.5-bullseye
-        name: container
-        ports:
-        - containerPort: 6379
-      securityContext:
-        fsGroup: 999
-        runAsGroup: 999
-        runAsUser: 999
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: timescaledb
-  name: timescaledb
-spec:
-  selector:
-    matchLabels:
-      app: timescaledb
-  template:
-    metadata:
-      labels:
-        app: timescaledb
-    spec:
-      containers:
-      - env:
-        - name: POSTGRES_USER
-          value: postgres
-        - name: POSTGRES_PASSWORD
-          value: Hello123!
-        - name: POSTGRES_DB
-          value: dataplane
-        - name: PGDATA
-          value: /var/lib/postgresql/data/tdbdata
-        image: timescale/timescaledb:2.5.1-pg14
-        name: container
-        ports:
-        - containerPort: 5432
-        volumeMounts:
-        - mountPath: /var/lib/postgresql/data
-          name: timescaledb-persistent-storage
-          subPath: data
-      securityContext:
-        fsGroup: 70
-        runAsGroup: 70
-        runAsUser: 70
-      volumes:
-      - name: timescaledb-persistent-storage
-        persistentVolumeClaim:
-          claimName: timescaledb
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -486,6 +443,75 @@ spec:
         name: config-volume
       - emptyDir: {}
         name: pid
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: redis
+  name: redis
+spec:
+  selector:
+    matchLabels:
+      app: redis
+  serviceName: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - image: redis:7.0.5-bullseye
+        name: container
+        ports:
+        - containerPort: 6379
+      securityContext:
+        fsGroup: 999
+        runAsGroup: 999
+        runAsUser: 999
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: timescaledb
+  name: timescaledb
+spec:
+  selector:
+    matchLabels:
+      app: timescaledb
+  serviceName: timescaledb
+  template:
+    metadata:
+      labels:
+        app: timescaledb
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: Hello123!
+        - name: POSTGRES_DB
+          value: dataplane
+        - name: PGDATA
+          value: /var/lib/postgresql/data/tdbdata
+        image: timescale/timescaledb:2.5.1-pg14
+        name: container
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: timescaledb-persistent-storage
+          subPath: data
+      securityContext:
+        fsGroup: 70
+        runAsGroup: 70
+        runAsUser: 70
+      volumes:
+      - name: timescaledb-persistent-storage
+        persistentVolumeClaim:
+          claimName: timescaledb
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

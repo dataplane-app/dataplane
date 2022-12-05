@@ -58,7 +58,7 @@ func DB() (*gorm.DB, error) {
 		dbConn, err = gorm.Open(postgres.New(postgres.Config{
 			DSN: connectURL,
 		}), &gorm.Config{
-			SkipDefaultTransaction: true,
+			// SkipDefaultTransaction: true,
 			NamingStrategy: schema.NamingStrategy{
 				SingularTable: true, // use singular table name, table for `User` would be `user` with this option enabled
 			},
@@ -80,15 +80,15 @@ func DB() (*gorm.DB, error) {
 	}
 
 	//--- Connection pooling
-	sqlDB, _ := dbConn.DB()
-	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
-	sqlDB.SetMaxIdleConns(18)
+	// sqlDB, _ := dbConn.DB()
+	// // SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
+	// sqlDB.SetMaxIdleConns(18)
 
-	// SetMaxOpenConns sets the maximum number of open connections to the database.
-	sqlDB.SetMaxOpenConns(18)
+	// // SetMaxOpenConns sets the maximum number of open connections to the database.
+	// sqlDB.SetMaxOpenConns(18)
 
-	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
-	sqlDB.SetConnMaxLifetime(time.Minute * 5)
+	// // SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
+	// sqlDB.SetConnMaxLifetime(time.Minute * 5)
 
 	log.Println("🌟 Database connected")
 
