@@ -1,4 +1,4 @@
-import { Box, Button, Drawer, Grid, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Drawer, Grid, Pagination, Tooltip, Typography } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGlobalFilter, useTable, usePagination } from 'react-table';
 import CustomChip from '../../../components/CustomChip';
@@ -206,7 +206,7 @@ export default function RPAWorkers() {
             </Box>
 
             {remoteWorkers.length > 0 ? (
-                <Box component="table" mt={6} sx={{ width: tableWidth }} {...getTableProps()}>
+                <Box component="table" mt={6} mb={2} sx={{ width: tableWidth }} {...getTableProps()}>
                     <Box component="thead" display="flex" sx={{ flexDirection: 'column' }}>
                         {headerGroups.map((headerGroup) => (
                             <Box //
@@ -286,49 +286,14 @@ export default function RPAWorkers() {
 
             {/* Pagination */}
             {remoteWorkers.length > 0 ? (
-                <div style={{ marginTop: '10px' }}>
-                    <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
-                        {'<<'}
-                    </button>{' '}
-                    <button onClick={() => previousPage()} disabled={!canPreviousPage}>
-                        {'<'}
-                    </button>{' '}
-                    <button onClick={() => nextPage()} disabled={!canNextPage}>
-                        {'>'}
-                    </button>{' '}
-                    <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
-                        {'>>'}
-                    </button>{' '}
-                    <span>
-                        Page{' '}
-                        <strong>
-                            {pageIndex + 1} of {pageOptions.length}
-                        </strong>{' '}
-                    </span>
-                    <span>
-                        | Go to page:{' '}
-                        <input
-                            type="number"
-                            defaultValue={pageIndex + 1}
-                            onChange={(e) => {
-                                const page = e.target.value ? Number(e.target.value) - 1 : 0;
-                                gotoPage(page);
-                            }}
-                            style={{ width: '100px' }}
-                        />
-                    </span>{' '}
-                    <select
-                        value={pageSize}
-                        onChange={(e) => {
-                            setPageSize(Number(e.target.value));
-                        }}>
-                        {[10, 20, 30, 40, 50].map((pageSize) => (
-                            <option key={pageSize} value={pageSize}>
-                                Show {pageSize}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                <Pagination //
+                    sx={{ width: '680px', '& ul': { justifyContent: 'end' } }}
+                    onChange={(_, value) => gotoPage(value - 1)}
+                    page={pageIndex + 1}
+                    count={pageCount}
+                    variant="outlined"
+                    color="primary"
+                />
             ) : null}
 
             {/* Add worker drawer */}
