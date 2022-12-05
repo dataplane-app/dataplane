@@ -565,7 +565,7 @@ func (r *queryResolver) GetRemoteProcessGroups(ctx context.Context, environmentI
 }
 
 // GetRemoteWorkers is the resolver for the getRemoteWorkers field.
-func (r *queryResolver) GetRemoteWorkers(ctx context.Context, environmentID string) ([]*privategraphql.RemoteWorkers, error) {
+func (r *queryResolver) GetRemoteWorkers(ctx context.Context, environmentID string, remoteProcessGroupID *string) ([]*privategraphql.RemoteWorkers, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -584,10 +584,29 @@ func (r *queryResolver) GetRemoteWorkers(ctx context.Context, environmentID stri
 
 	var resp []*privategraphql.RemoteWorkers
 
-	err := database.DBConn.Find(&resp).Error
+	// If no remote process group id provided, return all remote workers
+	if remoteProcessGroupID == nil {
+		err := database.DBConn.Find(&resp).Error
+
+		if err != nil && err != gorm.ErrRecordNotFound {
+			return nil, errors.New("Remote workers database error.")
+		}
+		return resp, nil
+
+	}
+
+	// If remote process group id provided, return workers belong to that process group
+	err := database.DBConn.Raw(
+		`
+		select 
+		rw.*
+		from remote_workers rw 
+		left join remote_worker_environments rwe on rw.worker_id = rwe.worker_id 
+			where rwe.remote_process_group_id = ?
+		`, remoteProcessGroupID).Find(&resp).Error
 
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, errors.New("Remote workers database error.")
+		return nil, errors.New("Remote process groups database error.")
 	}
 
 	return resp, nil

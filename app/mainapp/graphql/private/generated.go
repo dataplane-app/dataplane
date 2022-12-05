@@ -505,7 +505,7 @@ type ComplexityRoot struct {
 		GetRemoteProcessGroups             func(childComplexity int, environmentID string) int
 		GetRemoteProcessGroupsEnvironments func(childComplexity int, environmentID string, remoteProcessGroupID string) int
 		GetRemoteWorkerActivationKeys      func(childComplexity int, remoteWorkerID string, environmentID string) int
-		GetRemoteWorkers                   func(childComplexity int, environmentID string) int
+		GetRemoteWorkers                   func(childComplexity int, environmentID string, remoteProcessGroupID *string) int
 		GetRemoteWorkersProcessGroups      func(childComplexity int, environmentID string, workerID string) int
 		GetSecret                          func(childComplexity int, secret string, environmentID string) int
 		GetSecretGroups                    func(childComplexity int, environmentID string, secret string) int
@@ -784,7 +784,7 @@ type QueryResolver interface {
 	GetUsersFromEnvironment(ctx context.Context, environmentID string) ([]*models.Users, error)
 	GetSingleRemoteProcessGroup(ctx context.Context, environmentID string, remoteProcessGroupID string) (*RemoteProcessGroups, error)
 	GetRemoteProcessGroups(ctx context.Context, environmentID string) ([]*RemoteProcessGroups, error)
-	GetRemoteWorkers(ctx context.Context, environmentID string) ([]*RemoteWorkers, error)
+	GetRemoteWorkers(ctx context.Context, environmentID string, remoteProcessGroupID *string) ([]*RemoteWorkers, error)
 	GetSingleRemoteWorker(ctx context.Context, environmentID string, workerID string) (*RemoteWorkers, error)
 	GetRemoteProcessGroupsEnvironments(ctx context.Context, environmentID string, remoteProcessGroupID string) ([]*RemoteWorkerEnvironments, error)
 	GetRemoteWorkerActivationKeys(ctx context.Context, remoteWorkerID string, environmentID string) ([]*models.RemoteWorkerActivationKeys, error)
@@ -3810,7 +3810,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetRemoteWorkers(childComplexity, args["environmentID"].(string)), true
+		return e.complexity.Query.GetRemoteWorkers(childComplexity, args["environmentID"].(string), args["remoteProcessGroupID"].(*string)), true
 
 	case "Query.getRemoteWorkersProcessGroups":
 		if e.complexity.Query.GetRemoteWorkersProcessGroups == nil {
@@ -8124,6 +8124,15 @@ func (ec *executionContext) field_Query_getRemoteWorkers_args(ctx context.Contex
 		}
 	}
 	args["environmentID"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["remoteProcessGroupID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteProcessGroupID"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["remoteProcessGroupID"] = arg1
 	return args, nil
 }
 
@@ -27300,7 +27309,7 @@ func (ec *executionContext) _Query_getRemoteWorkers(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetRemoteWorkers(rctx, fc.Args["environmentID"].(string))
+		return ec.resolvers.Query().GetRemoteWorkers(rctx, fc.Args["environmentID"].(string), fc.Args["remoteProcessGroupID"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

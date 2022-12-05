@@ -35,8 +35,14 @@ export default function RPAWorkers() {
     // Graphql hook
     const getRemoteWorkers = useGetRemoteWorkersHook(Environment.id.get(), setRemoteWorkers);
 
+    const searchParams = new URLSearchParams(document.location.search);
+    const filter = searchParams.get('filter');
+    const name = searchParams.get('name');
+
     useEffect(() => {
-        getRemoteWorkers();
+        if (!Environment.id.get()) return;
+
+        getRemoteWorkers(filter);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
@@ -183,13 +189,15 @@ export default function RPAWorkers() {
                         <CustomChip amount={remoteWorkers.length} label="RPA Workers" margin={2} customColor="orange" />
                     </Grid>
 
-                    <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
-                        <Box component={FontAwesomeIcon} icon={faFilter} sx={{ fontSize: 12, color: '#b9b9b9' }} />
+                    {name ? (
+                        <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
+                            <Box component={FontAwesomeIcon} icon={faFilter} sx={{ fontSize: 12, color: '#b9b9b9' }} />
 
-                        <Typography variant="subtitle1" color="#737373" ml={1}>
-                            Process group = Python 1
-                        </Typography>
-                    </Grid>
+                            <Typography variant="subtitle1" color="#737373" ml={1}>
+                                Process group = {name}
+                            </Typography>
+                        </Grid>
+                    ) : null}
 
                     <Grid item display="flex" alignItems="center" sx={{ marginLeft: 'auto', marginRight: '2px' }}>
                         <Search placeholder="Find workers" onChange={setGlobalFilter} width="290px" />
@@ -277,49 +285,51 @@ export default function RPAWorkers() {
             ) : null}
 
             {/* Pagination */}
-            <div style={{ marginTop: '10px' }}>
-                <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
-                    {'<<'}
-                </button>{' '}
-                <button onClick={() => previousPage()} disabled={!canPreviousPage}>
-                    {'<'}
-                </button>{' '}
-                <button onClick={() => nextPage()} disabled={!canNextPage}>
-                    {'>'}
-                </button>{' '}
-                <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
-                    {'>>'}
-                </button>{' '}
-                <span>
-                    Page{' '}
-                    <strong>
-                        {pageIndex + 1} of {pageOptions.length}
-                    </strong>{' '}
-                </span>
-                <span>
-                    | Go to page:{' '}
-                    <input
-                        type="number"
-                        defaultValue={pageIndex + 1}
+            {remoteWorkers.length > 0 ? (
+                <div style={{ marginTop: '10px' }}>
+                    <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+                        {'<<'}
+                    </button>{' '}
+                    <button onClick={() => previousPage()} disabled={!canPreviousPage}>
+                        {'<'}
+                    </button>{' '}
+                    <button onClick={() => nextPage()} disabled={!canNextPage}>
+                        {'>'}
+                    </button>{' '}
+                    <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
+                        {'>>'}
+                    </button>{' '}
+                    <span>
+                        Page{' '}
+                        <strong>
+                            {pageIndex + 1} of {pageOptions.length}
+                        </strong>{' '}
+                    </span>
+                    <span>
+                        | Go to page:{' '}
+                        <input
+                            type="number"
+                            defaultValue={pageIndex + 1}
+                            onChange={(e) => {
+                                const page = e.target.value ? Number(e.target.value) - 1 : 0;
+                                gotoPage(page);
+                            }}
+                            style={{ width: '100px' }}
+                        />
+                    </span>{' '}
+                    <select
+                        value={pageSize}
                         onChange={(e) => {
-                            const page = e.target.value ? Number(e.target.value) - 1 : 0;
-                            gotoPage(page);
-                        }}
-                        style={{ width: '100px' }}
-                    />
-                </span>{' '}
-                <select
-                    value={pageSize}
-                    onChange={(e) => {
-                        setPageSize(Number(e.target.value));
-                    }}>
-                    {[10, 20, 30, 40, 50].map((pageSize) => (
-                        <option key={pageSize} value={pageSize}>
-                            Show {pageSize}
-                        </option>
-                    ))}
-                </select>
-            </div>
+                            setPageSize(Number(e.target.value));
+                        }}>
+                        {[10, 20, 30, 40, 50].map((pageSize) => (
+                            <option key={pageSize} value={pageSize}>
+                                Show {pageSize}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            ) : null}
 
             {/* Add worker drawer */}
             <Drawer anchor="right" open={showAddWorkerDrawer} onClose={() => setShowAddWorkerDrawer(!showAddWorkerDrawer)}>
@@ -369,8 +379,13 @@ const useGetRemoteWorkersHook = (environmentID, setRemoteWorkers) => {
     const { enqueueSnackbar } = useSnackbar();
 
     // Get worker groups
-    return async () => {
-        const response = await getRemoteWorkers({ environmentID });
+    return async (filter) => {
+        const input = { environmentID };
+        if (filter) {
+            input.remoteProcessGroupID = filter;
+        }
+
+        const response = await getRemoteWorkers(input);
 
         if (response === null) {
             setRemoteWorkers([]);

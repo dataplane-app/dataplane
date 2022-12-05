@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    query getRemoteWorkers($environmentID: String!) {
-        getRemoteWorkers(environmentID: $environmentID) {
+    query getRemoteWorkers($environmentID: String!, $remoteProcessGroupID: String) {
+        getRemoteWorkers(environmentID: $environmentID, remoteProcessGroupID: $remoteProcessGroupID) {
             workerID
             workerName
             description

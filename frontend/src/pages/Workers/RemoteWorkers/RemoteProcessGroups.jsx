@@ -150,9 +150,7 @@ const CustomWorker = ({ row }) => {
                     component="h5"
                     ml={4}
                     sx={{ color: 'cyan.main', fontSize: ' 0.875rem', display: 'inline', cursor: 'pointer' }}
-                    onClick={() => {
-                        // setSecretDrawerWorkGroup(workerGroup);
-                    }}>
+                    onClick={() => history.push(`/remote/workers?filter=${id}&name=${name}`)}>
                     Workers
                 </Typography>
                 {type === 'python' ? (

@@ -54,7 +54,7 @@ extend type Query {
     + **Permission**: admin_platform, admin_environment, environment_view_remote_workers
     + **Security**: Based on environment selected
     """
-    getRemoteWorkers(environmentID: String!): [RemoteWorkers]
+    getRemoteWorkers(environmentID: String!, remoteProcessGroupID: String): [RemoteWorkers]
 
     """
     Get a single worker.
