@@ -14,7 +14,7 @@ ARG SKAFFOLD_GO_GCFLAGS
 RUN CGO_ENABLED=0 go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane-worker app/workers/worker.go
 
 
-FROM python:3.9.12-slim-bullseye
+FROM python:3.11.0-slim-bullseye
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
