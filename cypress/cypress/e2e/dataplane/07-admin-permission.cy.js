@@ -91,6 +91,7 @@ describe('Give admin permission to a user', function () {
             .trigger('mouseup', { force: true });
 
         cy.contains('Save').should('exist', { timeout: 6000 }).click();
+        cy.wait(1000);
     });
 
     it('Give admin permission to Jimmy', function () {

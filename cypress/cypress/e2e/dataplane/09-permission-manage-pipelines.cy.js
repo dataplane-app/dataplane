@@ -72,7 +72,7 @@ describe('Give pipeline permission to a user', function () {
     });
 
     it('Verify Permission', function () {
-        cy.wait(150);
+        cy.wait(1000);
 
         cy.contains('Pipeline permissions >').parent().parent().parent().parent().scrollTo('left');
 
