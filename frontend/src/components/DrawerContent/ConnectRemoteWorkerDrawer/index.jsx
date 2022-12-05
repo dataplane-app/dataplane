@@ -40,8 +40,8 @@ export default function ConnectRemoteWorkerDrawer({ handleClose, worker, environ
     const [state, dispatch] = useReducer(reducer, initialState);
 
     // Graphql Hooks
-    const getRemoteWorkerActivationKeys = useGetRemoteWorkerActivationKeysHook(environmentID, dispatch, worker[0]);
     const addRemoteWorkerActivationKey = useAddRemoteWorkerActivationKeyHook(environmentID, dispatch, worker[0]);
+    const getRemoteWorkerActivationKeys = useGetRemoteWorkerActivationKeysHook(environmentID, dispatch, worker[0], addRemoteWorkerActivationKey);
     const deleteRemoteWorkerActivationKey = useDeleteRemoteWorkerActivationKeyHook(environmentID, dispatch);
 
     function onGenerateKey() {
@@ -208,7 +208,7 @@ function formatDate(date) {
 }
 
 // ------ Custom Hooks
-const useGetRemoteWorkerActivationKeysHook = (environmentID, dispatch, remoteWorkerID) => {
+const useGetRemoteWorkerActivationKeysHook = (environmentID, dispatch, remoteWorkerID, addRemoteWorkerActivationKey) => {
     // GraphQL hook
     const getRemoteWorkerActivationKeys = useGetRemoteWorkerActivationKeys();
 
@@ -223,6 +223,9 @@ const useGetRemoteWorkerActivationKeysHook = (environmentID, dispatch, remoteWor
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
+            if (response?.length === 0) {
+                addRemoteWorkerActivationKey(DateTime.now().plus({ months: 12 }).toISO());
+            }
             dispatch({ type: 'set', key: 'storedKeys', value: response });
         }
     };
