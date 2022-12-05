@@ -1,9 +1,12 @@
 package scheduler
 
 import (
+	"context"
 	"log"
+	"time"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	"github.com/go-redis/redis/v8"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -12,25 +15,45 @@ import (
 
 	"github.com/go-co-op/gocron"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 func mytask(nodeID string, pipelineID string, environmentID string, timezone string, runType string) {
+
+	ctx := context.Background()
 
 	if dpconfig.SchedulerDebug == "true" {
 		log.Println("Schedule run:", nodeID, timezone)
 	}
 
-	err2 := database.DBConn.Model(&models.SchedulerLock{}).Create(map[string]interface{}{
-		"node_id":        nodeID,
-		"environment_id": environmentID,
-		"lock_lease":     gorm.Expr("now() at time zone 'utc'"),
-	})
-
-	if err2.Error != nil {
-		log.Println("Lock could not be obtained", nodeID, err2.Error.Error())
+	// Is there a lock on this run?
+	val, errlock := database.RedisConn.Get(ctx, environmentID+"-"+nodeID+"-sch-lock").Result()
+	if errlock != nil && errlock != redis.Nil {
+		log.Println("Scheduled lock error:", nodeID, errlock)
 		return
 	}
+
+	// If there is a lock then stop the run else create a lock for 1 second
+	if val == "l" {
+		log.Println("Lock already exists, scheduled lock could not be obtained", nodeID)
+		return
+	} else {
+		_, err := database.RedisConn.SetNX(ctx, environmentID+"-"+nodeID+"-sch-lock", "l", 1*time.Second).Result()
+		if err != nil {
+			log.Println("Scheduled create lock error:", nodeID, err)
+			return
+		}
+	}
+
+	// err2 := database.DBConn.Model(&models.SchedulerLock{}).Create(map[string]interface{}{
+	// 	"node_id":        nodeID,
+	// 	"environment_id": environmentID,
+	// 	"lock_lease":     gorm.Expr("now() at time zone 'utc'"),
+	// })
+
+	// if err2.Error != nil {
+	// 	log.Println("Lock could not be obtained", nodeID, err2.Error.Error())
+	// 	return
+	// }
 	runID := uuid.NewString()
 	var err error
 	switch runType {

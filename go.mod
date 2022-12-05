@@ -10,6 +10,7 @@ require (
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-playground/validator/v10 v10.11.0
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gofiber/adaptor/v2 v2.1.24
 	github.com/gofiber/fiber/v2 v2.38.1
 	github.com/gofiber/websocket/v2 v2.0.22
@@ -39,9 +40,11 @@ require (
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fasthttp/websocket v1.5.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect

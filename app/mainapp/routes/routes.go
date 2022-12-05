@@ -64,7 +64,7 @@ func Setup(port string) *fiber.App {
 	logging.MapSecrets()
 
 	// ------- DATABASE CONNECT ------
-
+	database.RedisConnect()
 	database.DBConnect()
 	log.Println("🏃 Running")
 
@@ -504,14 +504,13 @@ func Setup(port string) *fiber.App {
 	scheduler.PipelineSchedulerListen()
 
 	// Electing a leader by listening for running nodes
-	platform.PlatformNodeListen()
 	log.Println("👷 Queue and worker subscriptions")
 
 	/* Scheduled tasks */
 	routinetasks.CleanTaskLocks(dpconfig.Scheduler, database.DBConn)
 	routinetasks.CleanTasks(dpconfig.Scheduler, database.DBConn)
 	routinetasks.CleanWorkerLogs(dpconfig.Scheduler, database.DBConn)
-	platform.PlatformNodePublish(dpconfig.Scheduler, database.DBConn, MainAppID)
+	platform.PlatformLeaderElectionScheduler(dpconfig.Scheduler, MainAppID)
 
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {
