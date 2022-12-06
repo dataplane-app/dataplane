@@ -86,7 +86,7 @@ describe("Access group 'Edit all pipelines' test", function () {
 
     // #4 Verify user belongs to an access group with 'Edit all pipelines' can edit pipelines
     it('Edit pipeline', function () {
-        cy.contains('Pipelines').click({ force: true });
+        cy.contains('Pipelines').should('exist', { timeout: 6000 }).click({ force: true });
         cy.contains('button', 'Manage').should('exist', { timeout: 6000 }).click({ force: true });
         cy.contains('Edit').should('exist', { timeout: 6000 }).click({ force: true });
 
