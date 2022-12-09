@@ -97,21 +97,6 @@ const View = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
 
-    // Trigger the scale button on keyboard 's' key click
-    useEffect(() => {
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const handleKeyDown = (e) => {
-        if (e.keyCode === 83) {
-            onZoomActive();
-        }
-    };
-
     //Flow methods
     const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
 
