@@ -5,8 +5,6 @@ import { useGlobalEditorState } from '../../../pages/Editor';
 import styled from '@emotion/styled';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
-import rehypeSanitize from 'rehype-sanitize';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 
 const Markdown = forwardRef(({ children, ...rest }, ref) => {
