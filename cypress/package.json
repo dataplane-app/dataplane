@@ -28,6 +28,6 @@
         "autoprefixer": "^9",
         "cypress": "^10.11.0",
         "eslint-plugin-cypress": "^2.12.1",
-        "prettier": "2.7.1"
+        "prettier": "2.8.1"
     }
 }
