@@ -1,6 +1,6 @@
-import { Box, Typography, Grid, Button, Drawer } from '@mui/material';
+import { Box, Typography, Grid, Button, Drawer, Pagination } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
-import { useTable, useGlobalFilter } from 'react-table';
+import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlayCircle, faClock } from '@fortawesome/free-regular-svg-icons';
 import { faPlug } from '@fortawesome/free-solid-svg-icons';
@@ -118,25 +118,36 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipel
     );
 
     // Use the state and functions returned from useTable to build your UI
-    const { getTableProps, getTableBodyProps, rows, prepareRow, setGlobalFilter } = useTable(
+    const {
+        getTableProps,
+        getTableBodyProps,
+        headerGroups,
+        page,
+        prepareRow,
+        setGlobalFilter,
+        pageCount,
+        gotoPage,
+        state: { pageIndex },
+    } = useTable(
         {
             columns,
             data,
         },
-        useGlobalFilter
+        useGlobalFilter,
+        usePagination
     );
 
     useEffect(() => {
-        setPipelineCount(rows.length);
+        setPipelineCount(page.length);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [rows]);
+    }, [page]);
 
     return (
         <>
             <Box component="table" mt={4} width="100%" {...getTableProps()}>
-                <Box component="tbody" display="flex" sx={{ flexDirection: 'column' }} {...getTableBodyProps()}>
-                    {rows.map((row, i) => {
+                <Box mb={2} component="tbody" display="flex" sx={{ flexDirection: 'column' }} {...getTableBodyProps()}>
+                    {page.map((row, i) => {
                         prepareRow(row);
                         return (
                             <Box
@@ -180,6 +191,19 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipel
                         );
                     })}
                 </Box>
+
+                {/* Pagination */}
+                {pageCount > 1 ? (
+                    <Pagination //
+                        sx={{ '& ul': { justifyContent: 'end' } }}
+                        onChange={(_, value) => gotoPage(value - 1)}
+                        page={pageIndex + 1}
+                        count={pageCount}
+                        variant="outlined"
+                        color="primary"
+                    />
+                ) : null}
+
                 <Drawer anchor="right" open={isOpenDeletePipeline} onClose={() => setIsOpenDeletePipeline(!isOpenDeletePipeline)}>
                     <DeletePipelineDrawer
                         pipelineName={pipelineName}
