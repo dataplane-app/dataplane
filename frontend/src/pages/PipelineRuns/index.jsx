@@ -113,7 +113,10 @@ const View = () => {
     };
 
     //Flow methods
-    const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
+    const onLoad = (_reactFlowInstance) => {
+        _reactFlowInstance.fitView();
+        return setReactFlowInstance(_reactFlowInstance);
+    };
 
     const onConnectStart = () => {
         FlowState.isDragging.set(true);
@@ -181,7 +184,7 @@ const View = () => {
                             <ReactFlow
                                 zoomOnScroll={false}
                                 zoomOnPinch={false}
-                                paneMoveable={panOnDrag || false}
+                                // paneMoveable={panOnDrag || false}
                                 onMoveStart={onMoveStart}
                                 onMoveEnd={onMoveEnd}
                                 nodeTypes={nodeTypes}
