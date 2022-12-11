@@ -169,8 +169,7 @@ func TestAccessGroups(t *testing.T) {
 			 }
 		}`
 
-	log.Println("!!!!!!!!!!!!!!!!!!!!!!!", accessgroup)
-
+	
 	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
 
 	log.Println(string(response))
