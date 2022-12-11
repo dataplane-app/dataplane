@@ -99,7 +99,7 @@ const View = () => {
 
     //Flow methods
     const onLoad = (_reactFlowInstance) => {
-        _reactFlowInstance.fitView();
+        _reactFlowInstance.fitView({ maxZoom: 1 });
         return setReactFlowInstance(_reactFlowInstance);
     };
 
