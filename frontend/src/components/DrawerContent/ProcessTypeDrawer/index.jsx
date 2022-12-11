@@ -8,14 +8,9 @@ import { Downgraded } from '@hookstate/core';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useSnackbar } from 'notistack';
 
-const ProcessTypeDrawer = ({ handleClose, elements, setElements, environmentID, workerGroup }) => {
+const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGroup }) => {
     // React hook form
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        reset,
-    } = useForm({ mode: 'onBlur' });
+    const { register, handleSubmit, reset } = useForm();
 
     // Flow state
     const FlowState = useGlobalFlowState();
@@ -67,16 +62,6 @@ const ProcessTypeDrawer = ({ handleClose, elements, setElements, environmentID, 
         handleClose();
     }
 
-    /**
-     * Returns false if the name is taken
-     */
-    function checkNameTaken(name) {
-        if (name === selectedElement.data.name) return true;
-
-        // Name is taken
-        if (elements.some((a) => a.data.name === name)) return false;
-    }
-
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <Box position="relative" width="100%">
@@ -97,15 +82,10 @@ const ProcessTypeDrawer = ({ handleClose, elements, setElements, environmentID, 
                             id="title"
                             size="small"
                             required
-                            sx={{ mt: 2, fontSize: '.75rem', display: 'flex' }}
-                            {...register('name', { required: true, validate: (name) => checkNameTaken(name) })}
+                            sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }}
+                            {...register('name', { required: true })}
                         />
-                        {errors.name?.type === 'validate' && (
-                            <Typography variant="subtitle1" color="error">
-                                A node with that name already exists.
-                            </Typography>
-                        )}
-                        <TextField label="Description" id="description" size="small" sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
+                        <TextField label="Description" id="description" size="small" sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
 
                         <Autocomplete
                             options={workerGroups}
