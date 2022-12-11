@@ -58,75 +58,95 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 
 	pipelineID := uuid.New().String()
 
-	e := models.Pipelines{
-		PipelineID:    pipelineID,
-		Name:          name,
-		Description:   description,
-		EnvironmentID: environmentID,
-		WorkerGroup:   workerGroup,
-		Active:        true,
-		UpdateLock:    true,
-	}
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
-	err := database.DBConn.Create(&e).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+		e := models.Pipelines{
+			PipelineID:    pipelineID,
+			Name:          name,
+			Description:   description,
+			EnvironmentID: environmentID,
+			WorkerGroup:   workerGroup,
+			Active:        true,
+			UpdateLock:    true,
 		}
-		if strings.Contains(err.Error(), "duplicate key") {
-			return "", errors.New("Pipeline already exists.")
-		}
-		return "", errors.New("Add pipeline database error.")
-	}
 
-	// Give access permissions for the user who added the pipeline
-	AccessTypes := models.PipelineAccessTypes
-
-	for _, access := range AccessTypes {
-		_, err := permissions.CreatePermission(
-			"user",
-			currentUser,
-			"specific_pipeline",
-			pipelineID,
-			access,
-			environmentID,
-			false,
-		)
+		err := tx.Create(&e).Error
 
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
-			return "", errors.New("Add permission to user database error.")
+			if strings.Contains(err.Error(), "duplicate key") {
+				return errors.New("Pipeline already exists.")
+			}
+			return errors.New("Add pipeline database error.")
 		}
 
-	}
+		// Give access permissions for the user who added the pipeline
+		AccessTypes := models.PipelineAccessTypes
 
-	var parentfolder models.CodeFolders
-	database.DBConn.Where("environment_id = ? and level = ?", environmentID, "environment").First(&parentfolder)
+		for _, access := range AccessTypes {
+			_, err := permissions.CreatePermission(
+				"user",
+				currentUser,
+				"specific_pipeline",
+				pipelineID,
+				access,
+				environmentID,
+				false,
+			)
 
-	// Create folder structure for pipeline
-	pipelinedir := models.CodeFolders{
-		EnvironmentID: environmentID,
-		PipelineID:    pipelineID,
-		ParentID:      parentfolder.FolderID,
-		FolderName:    e.Name,
-		Level:         "pipeline",
-		FType:         "folder",
-		Active:        true,
-	}
+			if err != nil {
+				if dpconfig.Debug == "true" {
+					logging.PrintSecretsRedact(err)
+				}
+				return errors.New("Add permission to user database error.")
+			}
 
-	// Should create a directory as follows code_directory/
+		}
 
-	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
+		var parentfolder models.CodeFolders
+		err = tx.Where("environment_id = ? and level = ?", environmentID, "environment").First(&parentfolder).Error
+		if err != nil {
+			return errors.New("Couldn't locate parent folder.")
+		}
 
-	foldercreate, _, _ := filesystem.CreateFolder(pipelinedir, pfolder+"pipelines/")
+		// Create folder structure for pipeline
+		pipelinedir := models.CodeFolders{
+			EnvironmentID: environmentID,
+			PipelineID:    pipelineID,
+			ParentID:      parentfolder.FolderID,
+			FolderName:    e.Name,
+			Level:         "pipeline",
+			FType:         "folder",
+			Active:        true,
+		}
 
-	thisfolder, _ := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID, "pipelines")
+		// Should create a directory as follows code_directory/
+		pfolder, errf := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
+		if errf != nil {
+			return errors.New("Couldn't get parent folder construct." + errf.Error())
+		}
 
-	if dpconfig.FSCodeFileStorage == "LocalFile" {
-		git.PlainInit(dpconfig.CodeDirectory+thisfolder, false)
+		foldercreate, _, errf3 := filesystem.CreateFolder(pipelinedir, pfolder+"pipelines/")
+		if errf3 != nil {
+			return errors.New("Couldn't create folder." + errf3.Error())
+		}
+
+		thisfolder, errf2 := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID, "pipelines")
+		if errf2 != nil {
+			return errors.New("Couldn't get folder construct." + errf2.Error())
+		}
+
+		if dpconfig.FSCodeFileStorage == "LocalFile" {
+			git.PlainInit(dpconfig.CodeDirectory+thisfolder, false)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return "", errors.New("Create pipeline" + err.Error())
 	}
 
 	return pipelineID, nil

@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/99designs/gqlgen v0.17.20
+	github.com/Masterminds/semver v1.5.0
 	github.com/bxcodec/faker/v3 v3.8.0
 	github.com/bxcodec/faker/v4 v4.0.0-beta.2
 	github.com/go-co-op/gocron v1.13.0

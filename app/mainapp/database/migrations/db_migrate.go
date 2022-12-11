@@ -11,6 +11,7 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
 	// "gorm.io/gorm/clause"
+	"github.com/Masterminds/semver"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 
 	"gorm.io/gorm/clause"
@@ -23,7 +24,7 @@ import (
 
 func Migrate() {
 
-	migrateVersion := "0.0.55"
+	migrateVersion := "0.0.66"
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -129,9 +130,38 @@ func Migrate() {
 			&models.DeploymentApiTriggers{},
 			&models.DeploymentApiTriggerRuns{},
 			&models.DeploymentApiKeys{},
+
+			// &models.Test{},
 		)
 		if err1 != nil {
 			panic(err1)
+		}
+
+		constraint := ">= 0.0.1, <= 0.0.65"
+		c, cerr := semver.NewConstraint(constraint)
+		if cerr != nil {
+			log.Println("Semver constaint check DB migration failed")
+		}
+
+		v, cerr2 := semver.NewVersion(migrateVersion)
+		if cerr2 != nil {
+			log.Println("Semver check DB migration failed")
+		}
+
+		a := c.Check(v)
+
+		// --- specific version upgrade in semver range---
+		if a {
+
+			log.Println("Specific DB migration based on: ", constraint)
+			e1 := dbConn.Model(&models.CodeFolders{}).Exec("ALTER TABLE code_folders ALTER COLUMN folder_id TYPE varchar(55);").Error
+			if e1 != nil {
+				panic("Failed to migrate code folders" + migrateVersion + e1.Error())
+			}
+			e2 := dbConn.Model(&models.DeployCodeFolders{}).Exec("ALTER TABLE deploy_code_folders ALTER COLUMN folder_id TYPE varchar(55);").Error
+			if e2 != nil {
+				panic("Failed to migrate code folders" + migrateVersion + e2.Error())
+			}
 		}
 
 		if err := dbConn.Model(&models.Platform{}).Select("migration_version").Where("1 = 1").Update("migration_version", migrateVersion).Error; err != nil {
