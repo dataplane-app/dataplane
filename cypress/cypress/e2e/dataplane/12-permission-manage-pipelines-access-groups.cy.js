@@ -74,7 +74,7 @@ describe('Give pipeline permission to a user', function () {
     });
 
     it('Verify Permission', function () {
-        cy.wait(50);
+        cy.wait(1000);
         cy.get('td h4').contains('Jimmy').parent().parent().next().next().contains('View').prev().should('have.css', 'color', 'rgb(114, 184, 66)');
     });
 

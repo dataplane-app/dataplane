@@ -3,9 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-
         "cypress": "cypress open"
-
     },
     "eslintConfig": {
         "extends": [
@@ -28,7 +26,7 @@
     },
     "devDependencies": {
         "autoprefixer": "^9",
-        "cypress": "^10.9.0",
+        "cypress": "^10.11.0",
         "eslint-plugin-cypress": "^2.12.1",
         "prettier": "2.7.1"
     }
