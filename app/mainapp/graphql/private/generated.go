@@ -283,7 +283,7 @@ type ComplexityRoot struct {
 		PipelinePermissionsToAccessGroup        func(childComplexity int, environmentID string, resourceID string, access []string, accessGroupID string) int
 		PipelinePermissionsToUser               func(childComplexity int, environmentID string, resourceID string, access []string, userID string) int
 		RemoveRemoteProcessGroupFromEnvironment func(childComplexity int, environmentID string, remoteProcessGroupID string) int
-		RemoveRemoteWorkerFromProcessGroup      func(childComplexity int, environmentID string, remoteProcessGroupID string, workerID string) int
+		RemoveRemoteWorkerFromProcessGroup      func(childComplexity int, environmentID string, processGroupsEnvironmentID string, remoteProcessGroupID string, workerID string) int
 		RemoveUserFromAccessGroup               func(childComplexity int, userID string, accessGroupID string, environmentID string) int
 		RemoveUserFromEnvironment               func(childComplexity int, userID string, environmentID string) int
 		RenameFile                              func(childComplexity int, environmentID string, fileID string, nodeID string, pipelineID string, newName string) int
@@ -502,7 +502,7 @@ type ComplexityRoot struct {
 		GetPipelineTrigger                 func(childComplexity int, pipelineID string, environmentID string) int
 		GetPipelines                       func(childComplexity int, environmentID string) int
 		GetPlatform                        func(childComplexity int) int
-		GetRemoteProcessGroups             func(childComplexity int, environmentID string) int
+		GetRemoteProcessGroups             func(childComplexity int, environmentID string, processGroupsEnvironmentID string) int
 		GetRemoteProcessGroupsEnvironments func(childComplexity int, environmentID string, remoteProcessGroupID string) int
 		GetRemoteWorkerActivationKeys      func(childComplexity int, remoteWorkerID string, environmentID string) int
 		GetRemoteWorkers                   func(childComplexity int, environmentID string, remoteProcessGroupID *string) int
@@ -560,6 +560,18 @@ type ComplexityRoot struct {
 		Status      func(childComplexity int) int
 		WorkerID    func(childComplexity int) int
 		WorkerName  func(childComplexity int) int
+	}
+
+	RemoteWorkersProcessGroups struct {
+		Active               func(childComplexity int) int
+		Description          func(childComplexity int) int
+		EnvironmentID        func(childComplexity int) int
+		Language             func(childComplexity int) int
+		Lb                   func(childComplexity int) int
+		Name                 func(childComplexity int) int
+		Packages             func(childComplexity int) int
+		RemoteProcessGroupID func(childComplexity int) int
+		WorkerType           func(childComplexity int) int
 	}
 
 	SecretWorkerGroups struct {
@@ -714,7 +726,7 @@ type MutationResolver interface {
 	AddRemoteWorker(ctx context.Context, environmentID string, name string) (string, error)
 	UpdateRemoteWorker(ctx context.Context, workerID string, environmentID string, workerName string, description string, status string, active bool) (string, error)
 	DeleteRemoteWorker(ctx context.Context, workerID string, environmentID string) (string, error)
-	RemoveRemoteWorkerFromProcessGroup(ctx context.Context, environmentID string, remoteProcessGroupID string, workerID string) (string, error)
+	RemoveRemoteWorkerFromProcessGroup(ctx context.Context, environmentID string, processGroupsEnvironmentID string, remoteProcessGroupID string, workerID string) (string, error)
 	AddRemoteWorkerToProcessGroup(ctx context.Context, environmentID string, remoteProcessGroupID string, workerID string) (string, error)
 	AddRemoteWorkerActivationKey(ctx context.Context, workerID string, activationKey string, environmentID string, expiresAt *time.Time) (string, error)
 	DeleteRemoteWorkerActivationKey(ctx context.Context, activationKey string, environmentID string) (string, error)
@@ -783,12 +795,12 @@ type QueryResolver interface {
 	GetUsers(ctx context.Context) ([]*models.Users, error)
 	GetUsersFromEnvironment(ctx context.Context, environmentID string) ([]*models.Users, error)
 	GetSingleRemoteProcessGroup(ctx context.Context, environmentID string, remoteProcessGroupID string) (*RemoteProcessGroups, error)
-	GetRemoteProcessGroups(ctx context.Context, environmentID string) ([]*RemoteProcessGroups, error)
+	GetRemoteProcessGroups(ctx context.Context, environmentID string, processGroupsEnvironmentID string) ([]*RemoteProcessGroups, error)
 	GetRemoteWorkers(ctx context.Context, environmentID string, remoteProcessGroupID *string) ([]*RemoteWorkers, error)
 	GetSingleRemoteWorker(ctx context.Context, environmentID string, workerID string) (*RemoteWorkers, error)
 	GetRemoteProcessGroupsEnvironments(ctx context.Context, environmentID string, remoteProcessGroupID string) ([]*RemoteWorkerEnvironments, error)
 	GetRemoteWorkerActivationKeys(ctx context.Context, remoteWorkerID string, environmentID string) ([]*models.RemoteWorkerActivationKeys, error)
-	GetRemoteWorkersProcessGroups(ctx context.Context, environmentID string, workerID string) ([]*RemoteProcessGroups, error)
+	GetRemoteWorkersProcessGroups(ctx context.Context, environmentID string, workerID string) ([]*RemoteWorkersProcessGroups, error)
 	GetWorkers(ctx context.Context, environmentID string) ([]*Workers, error)
 	GetWorkerGroups(ctx context.Context, environmentID string) ([]*WorkerGroup, error)
 	GetSecretGroups(ctx context.Context, environmentID string, secret string) ([]*models.WorkerSecrets, error)
@@ -2251,7 +2263,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RemoveRemoteWorkerFromProcessGroup(childComplexity, args["environmentID"].(string), args["remoteProcessGroupID"].(string), args["workerID"].(string)), true
+		return e.complexity.Mutation.RemoveRemoteWorkerFromProcessGroup(childComplexity, args["environmentID"].(string), args["processGroupsEnvironmentID"].(string), args["remoteProcessGroupID"].(string), args["workerID"].(string)), true
 
 	case "Mutation.removeUserFromAccessGroup":
 		if e.complexity.Mutation.RemoveUserFromAccessGroup == nil {
@@ -3774,7 +3786,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetRemoteProcessGroups(childComplexity, args["environmentID"].(string)), true
+		return e.complexity.Query.GetRemoteProcessGroups(childComplexity, args["environmentID"].(string), args["processGroupsEnvironmentID"].(string)), true
 
 	case "Query.getRemoteProcessGroupsEnvironments":
 		if e.complexity.Query.GetRemoteProcessGroupsEnvironments == nil {
@@ -4231,6 +4243,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RemoteWorkers.WorkerName(childComplexity), true
+
+	case "RemoteWorkersProcessGroups.active":
+		if e.complexity.RemoteWorkersProcessGroups.Active == nil {
+			break
+		}
+
+		return e.complexity.RemoteWorkersProcessGroups.Active(childComplexity), true
+
+	case "RemoteWorkersProcessGroups.description":
+		if e.complexity.RemoteWorkersProcessGroups.Description == nil {
+			break
+		}
+
+		return e.complexity.RemoteWorkersProcessGroups.Description(childComplexity), true
+
+	case "RemoteWorkersProcessGroups.environmentID":
+		if e.complexity.RemoteWorkersProcessGroups.EnvironmentID == nil {
+			break
+		}
+
+		return e.complexity.RemoteWorkersProcessGroups.EnvironmentID(childComplexity), true
+
+	case "RemoteWorkersProcessGroups.language":
+		if e.complexity.RemoteWorkersProcessGroups.Language == nil {
+			break
+		}
+
+		return e.complexity.RemoteWorkersProcessGroups.Language(childComplexity), true
+
+	case "RemoteWorkersProcessGroups.lb":
+		if e.complexity.RemoteWorkersProcessGroups.Lb == nil {
+			break
+		}
+
+		return e.complexity.RemoteWorkersProcessGroups.Lb(childComplexity), true
+
+	case "RemoteWorkersProcessGroups.name":
+		if e.complexity.RemoteWorkersProcessGroups.Name == nil {
+			break
+		}
+
+		return e.complexity.RemoteWorkersProcessGroups.Name(childComplexity), true
+
+	case "RemoteWorkersProcessGroups.packages":
+		if e.complexity.RemoteWorkersProcessGroups.Packages == nil {
+			break
+		}
+
+		return e.complexity.RemoteWorkersProcessGroups.Packages(childComplexity), true
+
+	case "RemoteWorkersProcessGroups.remoteProcessGroupID":
+		if e.complexity.RemoteWorkersProcessGroups.RemoteProcessGroupID == nil {
+			break
+		}
+
+		return e.complexity.RemoteWorkersProcessGroups.RemoteProcessGroupID(childComplexity), true
+
+	case "RemoteWorkersProcessGroups.workerType":
+		if e.complexity.RemoteWorkersProcessGroups.WorkerType == nil {
+			break
+		}
+
+		return e.complexity.RemoteWorkersProcessGroups.WorkerType(childComplexity), true
 
 	case "SecretWorkerGroups.Active":
 		if e.complexity.SecretWorkerGroups.Active == nil {
@@ -6235,23 +6310,32 @@ func (ec *executionContext) field_Mutation_removeRemoteWorkerFromProcessGroup_ar
 	}
 	args["environmentID"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["remoteProcessGroupID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteProcessGroupID"))
+	if tmp, ok := rawArgs["processGroupsEnvironmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("processGroupsEnvironmentID"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["remoteProcessGroupID"] = arg1
+	args["processGroupsEnvironmentID"] = arg1
 	var arg2 string
-	if tmp, ok := rawArgs["workerID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workerID"))
+	if tmp, ok := rawArgs["remoteProcessGroupID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteProcessGroupID"))
 		arg2, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["workerID"] = arg2
+	args["remoteProcessGroupID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["workerID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workerID"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workerID"] = arg3
 	return args, nil
 }
 
@@ -8061,6 +8145,15 @@ func (ec *executionContext) field_Query_getRemoteProcessGroups_args(ctx context.
 		}
 	}
 	args["environmentID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["processGroupsEnvironmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("processGroupsEnvironmentID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["processGroupsEnvironmentID"] = arg1
 	return args, nil
 }
 
@@ -18541,7 +18634,7 @@ func (ec *executionContext) _Mutation_removeRemoteWorkerFromProcessGroup(ctx con
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RemoveRemoteWorkerFromProcessGroup(rctx, fc.Args["environmentID"].(string), fc.Args["remoteProcessGroupID"].(string), fc.Args["workerID"].(string))
+		return ec.resolvers.Mutation().RemoveRemoteWorkerFromProcessGroup(rctx, fc.Args["environmentID"].(string), fc.Args["processGroupsEnvironmentID"].(string), fc.Args["remoteProcessGroupID"].(string), fc.Args["workerID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -27239,7 +27332,7 @@ func (ec *executionContext) _Query_getRemoteProcessGroups(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetRemoteProcessGroups(rctx, fc.Args["environmentID"].(string))
+		return ec.resolvers.Query().GetRemoteProcessGroups(rctx, fc.Args["environmentID"].(string), fc.Args["processGroupsEnvironmentID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -27575,9 +27668,9 @@ func (ec *executionContext) _Query_getRemoteWorkersProcessGroups(ctx context.Con
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*RemoteProcessGroups)
+	res := resTmp.([]*RemoteWorkersProcessGroups)
 	fc.Result = res
-	return ec.marshalORemoteProcessGroups2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐRemoteProcessGroups(ctx, field.Selections, res)
+	return ec.marshalORemoteWorkersProcessGroups2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐRemoteWorkersProcessGroups(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getRemoteWorkersProcessGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -27589,23 +27682,25 @@ func (ec *executionContext) fieldContext_Query_getRemoteWorkersProcessGroups(ctx
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "remoteProcessGroupID":
-				return ec.fieldContext_RemoteProcessGroups_remoteProcessGroupID(ctx, field)
+				return ec.fieldContext_RemoteWorkersProcessGroups_remoteProcessGroupID(ctx, field)
+			case "environmentID":
+				return ec.fieldContext_RemoteWorkersProcessGroups_environmentID(ctx, field)
 			case "name":
-				return ec.fieldContext_RemoteProcessGroups_name(ctx, field)
+				return ec.fieldContext_RemoteWorkersProcessGroups_name(ctx, field)
 			case "description":
-				return ec.fieldContext_RemoteProcessGroups_description(ctx, field)
+				return ec.fieldContext_RemoteWorkersProcessGroups_description(ctx, field)
 			case "packages":
-				return ec.fieldContext_RemoteProcessGroups_packages(ctx, field)
+				return ec.fieldContext_RemoteWorkersProcessGroups_packages(ctx, field)
 			case "lb":
-				return ec.fieldContext_RemoteProcessGroups_lb(ctx, field)
+				return ec.fieldContext_RemoteWorkersProcessGroups_lb(ctx, field)
 			case "workerType":
-				return ec.fieldContext_RemoteProcessGroups_workerType(ctx, field)
+				return ec.fieldContext_RemoteWorkersProcessGroups_workerType(ctx, field)
 			case "language":
-				return ec.fieldContext_RemoteProcessGroups_language(ctx, field)
+				return ec.fieldContext_RemoteWorkersProcessGroups_language(ctx, field)
 			case "active":
-				return ec.fieldContext_RemoteProcessGroups_active(ctx, field)
+				return ec.fieldContext_RemoteWorkersProcessGroups_active(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type RemoteProcessGroups", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type RemoteWorkersProcessGroups", field.Name)
 		},
 	}
 	defer func() {
@@ -28767,6 +28862,402 @@ func (ec *executionContext) fieldContext_RemoteWorkers_lastPing(ctx context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteWorkersProcessGroups_remoteProcessGroupID(ctx context.Context, field graphql.CollectedField, obj *RemoteWorkersProcessGroups) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemoteWorkersProcessGroups_remoteProcessGroupID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RemoteProcessGroupID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemoteWorkersProcessGroups_remoteProcessGroupID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteWorkersProcessGroups",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteWorkersProcessGroups_environmentID(ctx context.Context, field graphql.CollectedField, obj *RemoteWorkersProcessGroups) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemoteWorkersProcessGroups_environmentID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnvironmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemoteWorkersProcessGroups_environmentID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteWorkersProcessGroups",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteWorkersProcessGroups_name(ctx context.Context, field graphql.CollectedField, obj *RemoteWorkersProcessGroups) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemoteWorkersProcessGroups_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemoteWorkersProcessGroups_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteWorkersProcessGroups",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteWorkersProcessGroups_description(ctx context.Context, field graphql.CollectedField, obj *RemoteWorkersProcessGroups) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemoteWorkersProcessGroups_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemoteWorkersProcessGroups_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteWorkersProcessGroups",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteWorkersProcessGroups_packages(ctx context.Context, field graphql.CollectedField, obj *RemoteWorkersProcessGroups) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemoteWorkersProcessGroups_packages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Packages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemoteWorkersProcessGroups_packages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteWorkersProcessGroups",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteWorkersProcessGroups_lb(ctx context.Context, field graphql.CollectedField, obj *RemoteWorkersProcessGroups) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemoteWorkersProcessGroups_lb(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Lb, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemoteWorkersProcessGroups_lb(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteWorkersProcessGroups",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteWorkersProcessGroups_workerType(ctx context.Context, field graphql.CollectedField, obj *RemoteWorkersProcessGroups) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemoteWorkersProcessGroups_workerType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkerType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemoteWorkersProcessGroups_workerType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteWorkersProcessGroups",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteWorkersProcessGroups_language(ctx context.Context, field graphql.CollectedField, obj *RemoteWorkersProcessGroups) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemoteWorkersProcessGroups_language(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Language, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemoteWorkersProcessGroups_language(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteWorkersProcessGroups",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteWorkersProcessGroups_active(ctx context.Context, field graphql.CollectedField, obj *RemoteWorkersProcessGroups) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RemoteWorkersProcessGroups_active(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RemoteWorkersProcessGroups_active(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteWorkersProcessGroups",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -38324,6 +38815,90 @@ func (ec *executionContext) _RemoteWorkers(ctx context.Context, sel ast.Selectio
 	return out
 }
 
+var remoteWorkersProcessGroupsImplementors = []string{"RemoteWorkersProcessGroups"}
+
+func (ec *executionContext) _RemoteWorkersProcessGroups(ctx context.Context, sel ast.SelectionSet, obj *RemoteWorkersProcessGroups) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, remoteWorkersProcessGroupsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RemoteWorkersProcessGroups")
+		case "remoteProcessGroupID":
+
+			out.Values[i] = ec._RemoteWorkersProcessGroups_remoteProcessGroupID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "environmentID":
+
+			out.Values[i] = ec._RemoteWorkersProcessGroups_environmentID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+
+			out.Values[i] = ec._RemoteWorkersProcessGroups_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "description":
+
+			out.Values[i] = ec._RemoteWorkersProcessGroups_description(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "packages":
+
+			out.Values[i] = ec._RemoteWorkersProcessGroups_packages(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "lb":
+
+			out.Values[i] = ec._RemoteWorkersProcessGroups_lb(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "workerType":
+
+			out.Values[i] = ec._RemoteWorkersProcessGroups_workerType(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "language":
+
+			out.Values[i] = ec._RemoteWorkersProcessGroups_language(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "active":
+
+			out.Values[i] = ec._RemoteWorkersProcessGroups_active(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var secretWorkerGroupsImplementors = []string{"SecretWorkerGroups"}
 
 func (ec *executionContext) _SecretWorkerGroups(ctx context.Context, sel ast.SelectionSet, obj *models.WorkerSecrets) graphql.Marshaler {
@@ -41204,6 +41779,54 @@ func (ec *executionContext) marshalORemoteWorkers2ᚖgithubᚗcomᚋdataplaneᚑ
 		return graphql.Null
 	}
 	return ec._RemoteWorkers(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalORemoteWorkersProcessGroups2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐRemoteWorkersProcessGroups(ctx context.Context, sel ast.SelectionSet, v []*RemoteWorkersProcessGroups) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalORemoteWorkersProcessGroups2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐRemoteWorkersProcessGroups(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalORemoteWorkersProcessGroups2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋgraphqlᚋprivateᚐRemoteWorkersProcessGroups(ctx context.Context, sel ast.SelectionSet, v *RemoteWorkersProcessGroups) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._RemoteWorkersProcessGroups(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOSecretWorkerGroups2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐWorkerSecrets(ctx context.Context, sel ast.SelectionSet, v []*models.WorkerSecrets) graphql.Marshaler {

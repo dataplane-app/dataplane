@@ -1,38 +1,91 @@
-import { Box, Typography, Autocomplete, TextField } from '@mui/material';
-import { useGlobalEnvironmentsState } from '../../../../components/EnviromentDropdown';
+import { Box, Grid, Typography } from '@mui/material';
+import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
+import { useRemoveRemoteWorkerFromProcessGroup } from '../../../../graphql/removeRemoteWorkerFromProcessGroup';
+import { useSnackbar } from 'notistack';
+import { useParams, useHistory } from 'react-router-dom';
 
-export default function Environments({ environmentId, workerEnvironment, setWorkerEnvironment }) {
+export default function Environments({ workersProcessGroups, getRemoteWorkersProcessGroups }) {
     // Environments global state
     const globalEnvironments = useGlobalEnvironmentsState();
 
-    return globalEnvironments.get().length > 0 && environmentId ? (
-        <Box mb={5}>
-            <Typography component="h3" variant="h3" color="text.primary">
-                Environments
-            </Typography>
+    const history = useHistory();
 
-            <Box style={{ marginTop: '16px', display: 'flex', alignItems: 'center' }}>
-                <Autocomplete
-                    disablePortal
-                    id="available_environments_autocomplete"
-                    sx={{ minWidth: '280px' }}
-                    options={globalEnvironments.get()}
-                    disableClearable
-                    getOptionLabel={(option) => option.name}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    value={workerEnvironment}
-                    onChange={(_, value) => setWorkerEnvironment(value)}
-                    renderInput={(params) => (
-                        <TextField
-                            {...params} //
-                            label="Environments"
-                            id="environment"
-                            size="small"
-                            sx={{ fontSize: '.75rem', display: 'flex' }}
-                        />
-                    )}
-                />
-            </Box>
+    // Graphql Hooks
+    const removeRemoteWorkerFromProcessGroup = useRemoveRemoteWorkerFromProcessGroupHook(getRemoteWorkersProcessGroups);
+
+    return (
+        <Box mb={5}>
+            {workersProcessGroups
+                // Filters by unique environment id so each environment header is displayed once
+                .filter((item, index, arr) => arr.indexOf(arr.find((a) => a.environmentID === item.environmentID)) === index)
+                .map((env, idx) => (
+                    <div key={env.environmentID}>
+                        <Typography variant="h3" mt={idx === 1 && 3}>
+                            Environment: {globalEnvironments.get().find((env) => env.id === env.environmentID).name}
+                        </Typography>
+                        {workersProcessGroups
+                            .filter((group) => group.environmentID === env.environmentID)
+                            .map((row) => (
+                                <Grid display="flex" alignItems="flex-start" key={row.name} mt={1.5} mb={1.5}>
+                                    <Box
+                                        onClick={() => {
+                                            removeRemoteWorkerFromProcessGroup(row);
+                                        }}
+                                        component={FontAwesomeIcon}
+                                        sx={{ fontSize: '17px', mr: '7px', color: 'rgba(248, 0, 0, 1)', cursor: 'pointer' }}
+                                        icon={faTrashAlt}
+                                    />
+                                    <Box>
+                                        <Typography
+                                            onClick={() => history.push(`/remote/processgroups/${row.remoteProcessGroupID}`)}
+                                            variant="subtitle2"
+                                            lineHeight="15.23px"
+                                            color="primary"
+                                            fontWeight="900"
+                                            sx={{ cursor: 'pointer' }}>
+                                            {row.name}
+                                        </Typography>
+                                        <Typography variant="subtitle2" mt={1} lineHeight={1.1}>
+                                            {row.description}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                            ))}
+                    </div>
+                ))}
+
+            <Box style={{ marginTop: '16px', display: 'flex', alignItems: 'center' }}></Box>
         </Box>
-    ) : null;
+    );
 }
+
+// ** Custom Hooks
+const useRemoveRemoteWorkerFromProcessGroupHook = (getRemoteWorkersProcessGroups) => {
+    // GraphQL hook
+    const removeRemoteWorkerFromProcessGroup = useRemoveRemoteWorkerFromProcessGroup();
+
+    const Environment = useGlobalEnvironmentState();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    const { workerId } = useParams();
+
+    // Delete a remote environment
+    return async (data) => {
+        const remoteProcessGroupID = data.remoteProcessGroupID;
+        const environmentID = Environment.id.get();
+        const processGroupsEnvironmentID = data.environmentID;
+        const response = await removeRemoteWorkerFromProcessGroup({ environmentID, processGroupsEnvironmentID, remoteProcessGroupID, workerID: workerId });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't delete remote environment: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            enqueueSnackbar('Success', { variant: 'success' });
+            getRemoteWorkersProcessGroups();
+        }
+    };
+};

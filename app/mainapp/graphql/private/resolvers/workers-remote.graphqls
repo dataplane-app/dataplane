@@ -9,6 +9,18 @@ type RemoteProcessGroups {
     active: Boolean!
 }
 
+type RemoteWorkersProcessGroups {
+    remoteProcessGroupID: String!
+    environmentID: String!
+    name: String!
+    description: String!
+    packages: String!
+    lb: String!
+    workerType: String!
+    language: String!
+    active: Boolean!
+}
+
 type RemoteWorkers {
     workerID: String!
     workerName: String!
@@ -46,7 +58,7 @@ extend type Query {
     + **Permission**: admin_platform, admin_environment, environment_view_remote_process_groups
     + **Security**: Based on environment selected
     """
-    getRemoteProcessGroups(environmentID: String!): [RemoteProcessGroups]
+    getRemoteProcessGroups(environmentID: String!, processGroupsEnvironmentID: String!): [RemoteProcessGroups]
 
     """
     Get remote workers.
@@ -85,7 +97,7 @@ extend type Query {
     + **Permission**: admin_platform, admin_environment, environment_view_remote_workers
     + **Security**: Based on environment selected
     """
-    getRemoteWorkersProcessGroups(environmentID: String!, workerID: String!): [RemoteProcessGroups]
+    getRemoteWorkersProcessGroups(environmentID: String!, workerID: String!): [RemoteWorkersProcessGroups]
 }
 
 extend type Mutation {
@@ -167,7 +179,7 @@ extend type Mutation {
     + **Permission**: admin_platform, admin_environment, environment_edit_remote_workers
     + **Security**: Based on environment selected
     """
-    removeRemoteWorkerFromProcessGroup(environmentID: String!, remoteProcessGroupID: String!, workerID: String!): String!
+    removeRemoteWorkerFromProcessGroup(environmentID: String!, processGroupsEnvironmentID: String!, remoteProcessGroupID: String!, workerID: String!): String!
 
     """
     Add remote worker to process group.

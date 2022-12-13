@@ -184,7 +184,7 @@ const useGetRemoteProcessGroupsHook = (environmentID, setRemoteProcessGroups) =>
             return;
         }
 
-        const response = await getRemoteProcessGroups({ environmentID });
+        const response = await getRemoteProcessGroups({ environmentID, processGroupsEnvironmentID: environmentID });
 
         if (response === null) {
             setRemoteProcessGroups([]);

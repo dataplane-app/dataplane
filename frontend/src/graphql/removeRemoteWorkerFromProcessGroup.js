@@ -4,8 +4,13 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation removeRemoteWorkerFromProcessGroup($environmentID: String!, $workerID: String!, $remoteProcessGroupID: String!) {
-        removeRemoteWorkerFromProcessGroup(environmentID: $environmentID, workerID: $workerID, remoteProcessGroupID: $remoteProcessGroupID)
+    mutation removeRemoteWorkerFromProcessGroup($environmentID: String!, $processGroupsEnvironmentID: String!, $workerID: String!, $remoteProcessGroupID: String!) {
+        removeRemoteWorkerFromProcessGroup(
+            environmentID: $environmentID
+            processGroupsEnvironmentID: $processGroupsEnvironmentID
+            workerID: $workerID
+            remoteProcessGroupID: $remoteProcessGroupID
+        )
     }
 `;
 
