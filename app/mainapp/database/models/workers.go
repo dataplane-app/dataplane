@@ -94,7 +94,9 @@ type RemoteProcessGroups struct {
 	LB                   string     `json:"lb"`
 	WorkerType           string     `json:"remote_process_type"`
 	Active               bool       `json:"active"`
+	CreatedAt            time.Time  `json:"created_at"`
 	UpdatedAt            *time.Time `json:"updated_at"`
+	DeletedAt            *time.Time `json:"deleted_at,omitempty"`
 }
 
 func (RemoteWorkerEnvironments) IsEntity() {}
@@ -127,7 +129,9 @@ type RemoteWorkers struct {
 	LB          string     `json:"lb"`
 	WorkerType  string     `json:"worker_type"`
 	LastPing    *time.Time `json:"last_ping"`
+	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   *time.Time `json:"updated_at"`
+	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
 }
 
 func (RemoteWorkerActivationKeys) IsEntity() {}

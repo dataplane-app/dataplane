@@ -602,7 +602,7 @@ func (r *queryResolver) GetRemoteWorkers(ctx context.Context, environmentID stri
 		rw.*
 		from remote_workers rw 
 		left join remote_worker_environments rwe on rw.worker_id = rwe.worker_id 
-			where rwe.remote_process_group_id = ?
+		where rwe.remote_process_group_id = ?
 		`, remoteProcessGroupID).Find(&resp).Error
 
 	if err != nil && err != gorm.ErrRecordNotFound {

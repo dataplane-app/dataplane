@@ -283,7 +283,7 @@ export default function RPAWorkers() {
             {/* Pagination */}
             {remoteWorkers.length > 0 ? (
                 <Pagination //
-                    sx={{ width: '680px', '& ul': { justifyContent: 'end' } }}
+                    sx={{ width: '850px', '& ul': { justifyContent: 'end' } }}
                     onChange={(_, value) => gotoPage(value - 1)}
                     page={pageIndex + 1}
                     count={pageCount}
