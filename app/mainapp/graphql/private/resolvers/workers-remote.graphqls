@@ -107,7 +107,7 @@ extend type Mutation {
     + **Permission**: admin_platform, admin_environment, environment_add_process_group
     + **Security**: Based on environment selected
     """
-    addRemoteProcessGroup(environmentID: String!, name: String!, description: String!): String!
+    addRemoteProcessGroup(environmentID: String!, processGroupsEnvironmentID: String!, name: String!, description: String!): String!
 
     """
     Update remote process group.

@@ -21,7 +21,7 @@ import (
 )
 
 // AddRemoteProcessGroup is the resolver for the addRemoteProcessGroup field.
-func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmentID string, name string, description string) (string, error) {
+func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmentID string, processGroupsEnvironmentID string, name string, description string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -63,7 +63,7 @@ func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmen
 
 	// Add remote process group to an environment
 	remoteWorkerEnvironment := models.RemoteWorkerEnvironments{
-		EnvironmentID:        environmentID,
+		EnvironmentID:        processGroupsEnvironmentID,
 		WorkerID:             "",
 		RemoteProcessGroupID: id,
 	}

@@ -245,7 +245,7 @@ type ComplexityRoot struct {
 		AddEnvironment                          func(childComplexity int, input *AddEnvironmentInput) int
 		AddPipeline                             func(childComplexity int, name string, environmentID string, description string, workerGroup string) int
 		AddPipelineAPIKey                       func(childComplexity int, triggerID string, apiKey string, pipelineID string, environmentID string, expiresAt *time.Time) int
-		AddRemoteProcessGroup                   func(childComplexity int, environmentID string, name string, description string) int
+		AddRemoteProcessGroup                   func(childComplexity int, environmentID string, processGroupsEnvironmentID string, name string, description string) int
 		AddRemoteProcessGroupToEnvironment      func(childComplexity int, environmentID string, remoteProcessGroupID string, workerID string) int
 		AddRemoteWorker                         func(childComplexity int, environmentID string, name string) int
 		AddRemoteWorkerActivationKey            func(childComplexity int, workerID string, activationKey string, environmentID string, expiresAt *time.Time) int
@@ -718,7 +718,7 @@ type MutationResolver interface {
 	UpdateDeactivateUser(ctx context.Context, userid string) (*string, error)
 	UpdateActivateUser(ctx context.Context, userid string) (*string, error)
 	UpdateDeleteUser(ctx context.Context, userid string) (*string, error)
-	AddRemoteProcessGroup(ctx context.Context, environmentID string, name string, description string) (string, error)
+	AddRemoteProcessGroup(ctx context.Context, environmentID string, processGroupsEnvironmentID string, name string, description string) (string, error)
 	UpdateRemoteProcessGroup(ctx context.Context, remoteProcessGroupID string, environmentID string, name string, language string, packages string, description string, active bool) (string, error)
 	DeleteRemoteProcessGroup(ctx context.Context, remoteProcessGroupID string, environmentID string) (string, error)
 	AddRemoteProcessGroupToEnvironment(ctx context.Context, environmentID string, remoteProcessGroupID string, workerID string) (string, error)
@@ -1807,7 +1807,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddRemoteProcessGroup(childComplexity, args["environmentID"].(string), args["name"].(string), args["description"].(string)), true
+		return e.complexity.Mutation.AddRemoteProcessGroup(childComplexity, args["environmentID"].(string), args["processGroupsEnvironmentID"].(string), args["name"].(string), args["description"].(string)), true
 
 	case "Mutation.addRemoteProcessGroupToEnvironment":
 		if e.complexity.Mutation.AddRemoteProcessGroupToEnvironment == nil {
@@ -5071,23 +5071,32 @@ func (ec *executionContext) field_Mutation_addRemoteProcessGroup_args(ctx contex
 	}
 	args["environmentID"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["name"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+	if tmp, ok := rawArgs["processGroupsEnvironmentID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("processGroupsEnvironmentID"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["name"] = arg1
+	args["processGroupsEnvironmentID"] = arg1
 	var arg2 string
-	if tmp, ok := rawArgs["description"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 		arg2, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["description"] = arg2
+	args["name"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["description"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["description"] = arg3
 	return args, nil
 }
 
@@ -18194,7 +18203,7 @@ func (ec *executionContext) _Mutation_addRemoteProcessGroup(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddRemoteProcessGroup(rctx, fc.Args["environmentID"].(string), fc.Args["name"].(string), fc.Args["description"].(string))
+		return ec.resolvers.Mutation().AddRemoteProcessGroup(rctx, fc.Args["environmentID"].(string), fc.Args["processGroupsEnvironmentID"].(string), fc.Args["name"].(string), fc.Args["description"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

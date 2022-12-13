@@ -3,16 +3,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useGlobalFlowState } from '../../../pages/PipelineEdit';
-import { Downgraded } from '@hookstate/core';
-import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useSnackbar } from 'notistack';
 import { useGetEnvironments } from '../../../graphql/getEnvironments';
 import { useAddRemoteProcessGroup } from '../../../graphql/addRemoteProcessGroup';
+import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 
 const AddProcessGroupDrawer = ({ handleClose, getRemoteProcessGroups }) => {
     // React hook form
-    const { register, handleSubmit, reset } = useForm();
+    const { register, handleSubmit } = useForm();
 
     // Local State
     const [environments, setEnvironments] = useState([]);
@@ -26,15 +24,6 @@ const AddProcessGroupDrawer = ({ handleClose, getRemoteProcessGroups }) => {
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    async function onSubmit(data) {
-        const payload = {
-            name: data.name,
-            description: data.description,
-            environmentId: environments.find((a) => a.name === data.environment).id,
-        };
-        console.log(payload);
-    }
 
     return (
         <form onSubmit={handleSubmit(addRemoteProcessGroupHook)}>
@@ -120,11 +109,14 @@ export const useAddRemoteProcessGroupHook = (environments, getRemoteProcessGroup
 
     const { enqueueSnackbar } = useSnackbar();
 
+    const Environment = useGlobalEnvironmentState();
+
     // Create pipeline
     return async (data) => {
         const { name, description } = data;
-        const environmentID = environments.find((a) => a.name === data.environment).id;
-        const response = await addRemoteProcessGroup({ name, description, environmentID });
+        const environmentID = Environment.id.get();
+        const processGroupsEnvironmentID = environments.find((a) => a.name === data.environment).id;
+        const response = await addRemoteProcessGroup({ name, description, environmentID, processGroupsEnvironmentID });
 
         if (response.r === 'error') {
             enqueueSnackbar("Can't add remote process group: " + response.msg, { variant: 'error' });

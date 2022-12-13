@@ -22,7 +22,7 @@ export default function Control({ environmentId, remoteProcessGroup, getSingleRe
                     color={remoteProcessGroup.active ? 'error' : 'success'}
                     onClick={() => setIsOpenDeactivate(true)}
                     sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                    {remoteProcessGroup.active ? 'Deactivate' : 'Activate'} worker
+                    {remoteProcessGroup.active ? 'Deactivate' : 'Activate'} process group
                 </Button>
 
                 <Button
@@ -31,7 +31,7 @@ export default function Control({ environmentId, remoteProcessGroup, getSingleRe
                     color="error"
                     onClick={() => setIsOpenDelete(true)}
                     sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
-                    Delete worker
+                    Delete process group
                 </Button>
 
                 <Typography color="rgba(248, 0, 0, 1)" lineHeight="15.23px" sx={{ mt: '.56rem' }} variant="subtitle2">

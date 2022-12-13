@@ -23,7 +23,7 @@ export default function Environments({ workersProcessGroups, getRemoteWorkersPro
                 .map((env, idx) => (
                     <div key={env.environmentID}>
                         <Typography variant="h3" mt={idx === 1 && 3}>
-                            Environment: {globalEnvironments.get().find((env) => env.id === env.environmentID).name}
+                            Environment: {globalEnvironments.get().find((e) => e.id === env.environmentID).name}
                         </Typography>
                         {workersProcessGroups
                             .filter((group) => group.environmentID === env.environmentID)
