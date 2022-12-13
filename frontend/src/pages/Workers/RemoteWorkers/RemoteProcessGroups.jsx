@@ -25,6 +25,8 @@ export default function RemoteProcessGroups() {
     const getRemoteProcessGroups = useGetRemoteProcessGroupsHook(Environment.id.get(), setRemoteProcessGroups);
 
     useEffect(() => {
+        if (!Environment.id.get()) return;
+
         getRemoteProcessGroups();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps

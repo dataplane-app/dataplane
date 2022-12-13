@@ -19,8 +19,8 @@ export default function DeactivateRemoteProcessGroup({ handleClose, remoteProces
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const deactivateAccessGroup = () => updateRemoteProcessGroup(remoteProcessGroup, false);
-    const activateAccessGroup = () => updateRemoteProcessGroup(remoteProcessGroup, true);
+    const deactivateAccessGroup = () => updateRemoteProcessGroup({ ...remoteProcessGroup }, false);
+    const activateAccessGroup = () => updateRemoteProcessGroup({ ...remoteProcessGroup }, true);
 
     return (
         <Box position="relative">
