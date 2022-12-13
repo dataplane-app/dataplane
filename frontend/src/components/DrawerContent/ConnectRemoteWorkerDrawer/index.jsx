@@ -12,7 +12,11 @@ import AlertDialog from './AlertDialog';
 import { useSnackbar } from 'notistack';
 import { customAlphabet } from 'nanoid';
 
-const ConnectURL = 'https://demo.dataplane.app/rworker/connect/';
+let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
+if (host === '') {
+    host = window.location.origin;
+}
+const ConnectURL = `${host}/rworker/connect/`;
 
 const initialState = {
     storedKeys: [],

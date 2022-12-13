@@ -54,7 +54,7 @@ export default function RPAWorkers() {
                 accessor: (row) => [row.workerName, row.status, row.workerID],
                 Cell: (row) => (
                     <Box display="flex" flexDirection="column">
-                        <Box display="flex">
+                        <Box mt={-2} display="flex">
                             <Tooltip title={row.value[2]} placement="top">
                                 <Typography variant="caption" lineHeight={1.2} mr={0.5}>
                                     {row.value[0]}
@@ -77,22 +77,18 @@ export default function RPAWorkers() {
                                 />
                             </Box>
                         </Box>
-
-                        <Typography variant="caption" lineHeight={1.2} fontWeight={700} color={row.value[1] === 'online' ? 'success.main' : 'red'}>
-                            {row.value[1]}
-                        </Typography>
                     </Box>
                 ),
             },
-            // {
-            //     Header: 'Process groups',
-            //     accessor: 'groupCount',
-            //     Cell: (row) => (
-            //         <Typography mt={-2} variant="caption" color="cyan.main" sx={{ cursor: 'pointer' }}>
-            //             Manage(1)
-            //         </Typography>
-            //     ),
-            // },
+            {
+                Header: 'Status',
+                accessor: 'status',
+                Cell: (row) => (
+                    <Typography mt={-2} variant="caption" fontWeight={700} color={row.value === 'online' ? 'success.main' : 'red'}>
+                        {row.value}
+                    </Typography>
+                ),
+            },
             {
                 Header: 'Last ping',
                 accessor: 'lastPing',

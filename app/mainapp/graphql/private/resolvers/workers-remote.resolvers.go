@@ -250,7 +250,7 @@ func (r *mutationResolver) AddRemoteWorker(ctx context.Context, environmentID st
 	remoteWorker := models.RemoteWorkers{
 		WorkerID:   id,
 		WorkerName: name,
-		Status:     "online",
+		Status:     "offline",
 		LB:         "",
 		WorkerType: "",
 		LastPing:   nil,
