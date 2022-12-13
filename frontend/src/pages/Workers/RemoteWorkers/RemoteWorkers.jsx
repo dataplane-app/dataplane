@@ -145,15 +145,9 @@ export default function RPAWorkers() {
         page,
         prepareRow,
         setGlobalFilter,
-        canPreviousPage,
-        canNextPage,
-        pageOptions,
         pageCount,
         gotoPage,
-        nextPage,
-        previousPage,
-        setPageSize,
-        state: { pageIndex, pageSize },
+        state: { pageIndex },
     } = useTable(
         {
             columns,
