@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
+import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 
 var loc = window.location,
     new_uri;
@@ -12,9 +13,9 @@ if (loc.protocol === 'https:') {
 new_uri += '//' + loc.host;
 
 if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
-    new_uri += process.env.REACT_APP_WEBSOCKET_ENDPOINT;
+    new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
 } else {
-    new_uri = process.env.REACT_APP_WEBSOCKET_ENDPOINT;
+    new_uri = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
 }
 
 const websocketEndpoint = new_uri;
@@ -27,6 +28,8 @@ export default function useWebSocket(workerId) {
     const response = useRef(null);
 
     const { authToken } = useGlobalAuthState();
+
+    const Environment = useGlobalEnvironmentState();
 
     // Trigger a render every second.
     useEffect(() => {
@@ -48,7 +51,7 @@ export default function useWebSocket(workerId) {
 
     useEffect(() => {
         function connect() {
-            ws.current = new WebSocket(`${websocketEndpoint}/${workerId}?token=${authToken.get()}`);
+            ws.current = new WebSocket(`${websocketEndpoint}/workergroupstats.${Environment.id.get()}.${workerId}?token=${authToken.get()}`);
 
             ws.current.onopen = () => ConsoleLogHelper('ws opened');
             ws.current.onclose = () => {

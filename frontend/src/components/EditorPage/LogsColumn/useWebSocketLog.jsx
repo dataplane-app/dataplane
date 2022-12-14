@@ -48,7 +48,7 @@ export default function useWebSocketLog(environmentId, run_id, setKeys, setGraph
 
         function connect() {
             // 1. Connect to websockets
-            ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=coderunfilelogs.${run_id}&id=${run_id}&token=${authToken.get()}`);
+            ws.current = new WebSocket(`${websocketEndpoint}/coderunfilelogs.${environmentId}.${run_id}?token=${authToken.get()}`);
 
             ws.current.onopen = async () => {
                 EditorGlobal.runState.set('Running');

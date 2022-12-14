@@ -245,7 +245,8 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 					LogType:   "info",
 				}
 
-				messageq.MsgSend("coderunfilelogs."+msg.RunID, sendmsg)
+				messageq.MsgSend("coderunfilelogs."+msg.EnvironmentID+"."+msg.RunID, sendmsg)
+				// log.Println("coderunfilelogs." + msg.RunID)
 				database.DBConn.Create(&logmsg)
 				if wrkerconfig.Debug == "true" {
 					clog.Info(line)
@@ -296,7 +297,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 					LogType:   "error",
 				}
 
-				messageq.MsgSend("coderunfilelogs."+msg.RunID, sendmsg)
+				messageq.MsgSend("coderunfilelogs."+msg.EnvironmentID+"."+msg.RunID, sendmsg)
 				database.DBConn.Create(&logmsg)
 				if wrkerconfig.Debug == "true" {
 					clog.Error(line)
@@ -357,7 +358,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 				LogType:   "error",
 			}
 
-			messageq.MsgSend("coderunfilelogs."+msg.RunID, sendmsg)
+			messageq.MsgSend("coderunfilelogs."+msg.EnvironmentID+"."+msg.RunID, sendmsg)
 			database.DBConn.Create(&logmsg)
 			if wrkerconfig.Debug == "true" {
 				clog.Error(line)
