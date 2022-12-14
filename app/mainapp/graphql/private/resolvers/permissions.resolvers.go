@@ -7,17 +7,15 @@ import (
 	"context"
 	"errors"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
-
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
-
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
-
 	"gorm.io/gorm"
 )
 
+// UpdatePermissionToUser is the resolver for the updatePermissionToUser field.
 func (r *mutationResolver) UpdatePermissionToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -65,6 +63,7 @@ func (r *mutationResolver) UpdatePermissionToUser(ctx context.Context, environme
 	return perm.ID, nil
 }
 
+// DeletePermissionToUser is the resolver for the deletePermissionToUser field.
 func (r *mutationResolver) DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -103,6 +102,7 @@ func (r *mutationResolver) DeletePermissionToUser(ctx context.Context, userID st
 	return e.ID, nil
 }
 
+// DeleteSpecificPermission is the resolver for the deleteSpecificPermission field.
 func (r *mutationResolver) DeleteSpecificPermission(ctx context.Context, subject string, subjectID string, resourceID string, environmentID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -146,6 +146,7 @@ func (r *mutationResolver) DeleteSpecificPermission(ctx context.Context, subject
 	return "Permission deleted", nil
 }
 
+// AvailablePermissions is the resolver for the availablePermissions field.
 func (r *queryResolver) AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error) {
 	platformID := ctx.Value("platformID").(string)
 
@@ -183,6 +184,7 @@ func (r *queryResolver) AvailablePermissions(ctx context.Context, environmentID 
 	return Permissions, nil
 }
 
+// MyPermissions is the resolver for the myPermissions field.
 func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.PermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 
@@ -247,6 +249,7 @@ func (r *queryResolver) MyPermissions(ctx context.Context) ([]*models.Permission
 	return PermissionsOutput, nil
 }
 
+// UserPermissions is the resolver for the userPermissions field.
 func (r *queryResolver) UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

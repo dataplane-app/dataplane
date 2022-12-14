@@ -48,7 +48,9 @@ describe('Give pipeline permission to a user', function () {
         cy.get('#password').type('environment123!').should('have.value', 'environment123!');
         cy.contains('button', 'Login').should('exist', { timeout: 6000 }).click();
 
-        cy.get('td h3').first().should('have.text', 'Cypress Pipeline');
+        cy.contains('Cypress Pipeline').should('exist', { timeout: 6000 });
+
+        // cy.get('td h3').eq(1).should('have.text', 'Cypress Pipeline');
     });
 
     // it('Verify pipeline isn\'t visible under production environment', function () {
@@ -70,8 +72,20 @@ describe('Give pipeline permission to a user', function () {
     });
 
     it('Verify Permission', function () {
-        cy.wait(50);
-        cy.get('td h4').contains('Jimmy').parent().parent().next().next().contains('View').prev().should('have.css', 'color', 'rgb(114, 184, 66)');
+        cy.wait(1000);
+
+        cy.contains('Pipeline permissions >').parent().parent().parent().parent().scrollTo('left');
+
+        cy.get('td h4')
+            .contains('Jimmy User')
+            .should('exist', { timeout: 6000 })
+            .parent()
+            .parent()
+            .next()
+            .next()
+            .contains('View')
+            .prev()
+            .should('have.css', 'color', 'rgb(114, 184, 66)');
     });
 
     // #3 Verify user without 'View all pipelines' permission can't view pipelines
@@ -105,7 +119,7 @@ describe('Give pipeline permission to a user', function () {
         cy.get('#notistack-snackbar').should('contain', 'Success');
         cy.get('#environment-permissions').children().contains('Manage pipeline permissions').prev().click();
         cy.get('#notistack-snackbar').should('contain', 'Success');
-        cy.get('#specific-permissions').children().contains('Pipeline Cypress Pipeline [read]').prev().click();
+        cy.get('#specific-permissions').children().contains('Pipeline Cypress API Pipeline [read]').prev().click();
         cy.get('#notistack-snackbar').should('contain', 'Success');
     });
 });

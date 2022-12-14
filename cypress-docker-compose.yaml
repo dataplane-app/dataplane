@@ -6,6 +6,11 @@ services:
     image: redis:7.0.5-bullseye
     ports:
       - 6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
 
   postgres-test:
     image: timescale/timescaledb:2.5.1-pg14
@@ -48,6 +53,7 @@ services:
       replicas: 2
 
   mainapp-cypresstest:
+    container_name: mainapp-cypresstest
     build:
       context: ./
       dockerfile: cypress/Dockerfile.main.alpine
@@ -74,6 +80,20 @@ services:
       DP_REMOVELOGS_DAYS: "60"
       DP_CODE_FILE_STORAGE: "Database"
       DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
+      DP_DISTRIBUTED_MODE: "NO"
+      DP_REDIS_HOST: "redis-service"
+      DP_REDIS_PORT: "6379"
+      DP_REDIS_PASSWORD: ""
+      DP_REDIS_DB: "0"
+    healthcheck:
+      test: "curl -f localhost:9001/healthz"
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    depends_on:
+      - redis-service
+      - postgres-test
+      - nats
       
 
   mainapp2-cypresstest:
@@ -81,7 +101,7 @@ services:
       context: ./
       dockerfile: cypress/Dockerfile.main.alpine
     deploy:
-      replicas: 2
+      replicas: 1
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       DP_DB_HOST: postgres-test
@@ -103,6 +123,20 @@ services:
       DP_REMOVELOGS_DAYS: "60"
       DP_CODE_FILE_STORAGE: "Database"
       DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
+      DP_DISTRIBUTED_MODE: "NO"
+      DP_REDIS_HOST: "redis-service"
+      DP_REDIS_PORT: "6379"
+      DP_REDIS_PASSWORD: ""
+      DP_REDIS_DB: "0"
+    healthcheck:
+      test: "curl -f localhost:9001/healthz"
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    depends_on:
+      - redis-service
+      - postgres-test
+      - nats
 
   dataplane-worker-cypresstest:
     build:
@@ -139,6 +173,16 @@ services:
       DP_WORKER_LOAD_PACKAGES: "Python"
       DP_CODE_FILE_STORAGE: "Database"
       DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
+      DP_DISTRIBUTED_MODE: "NO"
+      DP_REDIS_HOST: "redis-service"
+      DP_REDIS_PORT: "6379"
+      DP_REDIS_PASSWORD: ""
+      DP_REDIS_DB: "0"
+    depends_on:
+      - redis-service
+      - postgres-test
+      - nats
+      - mainapp-cypresstest
 
   dataplane-worker-cypresstest-prod:
     build:
@@ -175,3 +219,14 @@ services:
       DP_WORKER_LOAD_PACKAGES: "Python"
       DP_CODE_FILE_STORAGE: "Database"
       DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
+      DP_DISTRIBUTED_MODE: "NO"
+      DP_REDIS_HOST: "redis-service"
+      DP_REDIS_PORT: "6379"
+      DP_REDIS_PASSWORD: ""
+      DP_REDIS_DB: "0"
+    depends_on:
+      - redis-service
+      - postgres-test
+      - nats
+      - mainapp-cypresstest
+

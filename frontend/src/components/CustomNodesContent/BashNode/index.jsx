@@ -62,7 +62,7 @@ const BashNode = (props) => {
     };
 
     return (
-        <Box sx={{ padding: '10px 15px', width: 160, borderRadius: '10px', border: `3px solid ${borderColor}` }} onClick={onClick}>
+        <Box sx={{ padding: '10px 15px', width: 150, height: 110, borderRadius: '10px', border: `3px solid ${borderColor}` }} onClick={onClick}>
             <Handle type="target" position={Position.Left} isConnectable id="clear" className="handlePulseAnimation" style={customTargetHandle(theme.palette.mode)} />
             <Handle type="source" position={Position.Right} id="3" style={FlowState.isDragging.get() ? customSourceHandleDragging : customSourceHandle(theme.palette.mode)} />
             <Tooltip title={'Node ID: ' + props.id} placement="top">
@@ -73,9 +73,11 @@ const BashNode = (props) => {
                             {props.data.name}
                         </Typography>
 
-                        <Typography fontSize={9} mt={0.4}>
-                            {props.data.description}
-                        </Typography>
+                        <Tooltip title={props.data.description}>
+                            <Typography fontSize={9} mt={0.4} height="54px" width="80px" overflow="hidden">
+                                {props.data.description}
+                            </Typography>
+                        </Tooltip>
                     </Grid>
                 </Grid>
             </Tooltip>

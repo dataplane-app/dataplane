@@ -65,7 +65,7 @@ func Setup(port string) *fiber.App {
 	logging.MapSecrets()
 
 	// ------- DATABASE CONNECT ------
-
+	database.RedisConnect()
 	database.DBConnect()
 	log.Println("🏃 Running")
 
@@ -441,6 +441,40 @@ func Setup(port string) *fiber.App {
 		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
 	})
 
+	// Deployment API Trigger public
+	app.Post("/publicapi/deployment/api-trigger/:version/:id", auth.ApiAuthMiddleDeployment("public"), func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
+		pipelineID := c.Locals("deploymentID").(string)
+		environmentID := c.Locals("environmentID").(string)
+		version := string(c.Params("version"))
+
+		var jsonPayload datatypes.JSON = c.Body()
+		var jsonVersion datatypes.JSON = []byte(fmt.Sprintf(`{"version":"%s"}`, strings.Trim(version, "v")))
+
+		// Run deployment
+		runID := uuid.NewString()
+		pipelines.RunDeployment(pipelineID, environmentID, runID, jsonPayload, jsonVersion)
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
+	})
+
+	// Deployment API Trigger private
+	app.Post("/publicapi/deployment/api-trigger/:version/:id", auth.ApiAuthMiddleDeployment("private"), func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
+		pipelineID := c.Locals("deploymentID").(string)
+		environmentID := c.Locals("environmentID").(string)
+		version := string(c.Params("version"))
+
+		var jsonPayload datatypes.JSON = c.Body()
+		var jsonVersion datatypes.JSON = []byte(fmt.Sprintf(`{"version":"%s"}`, strings.Trim(version, "v")))
+
+		// Run deployment
+		runID := uuid.NewString()
+		pipelines.RunDeployment(pipelineID, environmentID, runID, jsonPayload, jsonVersion)
+
+		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
+	})
+
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {
 		return c.SendString("Hello 👋! Healthy 🍏")
@@ -461,14 +495,13 @@ func Setup(port string) *fiber.App {
 	scheduler.PipelineSchedulerListen()
 
 	// Electing a leader by listening for running nodes
-	platform.PlatformNodeListen()
 	log.Println("👷 Queue and worker subscriptions")
 
 	/* Scheduled tasks */
 	routinetasks.CleanTaskLocks(dpconfig.Scheduler, database.DBConn)
 	routinetasks.CleanTasks(dpconfig.Scheduler, database.DBConn)
 	routinetasks.CleanWorkerLogs(dpconfig.Scheduler, database.DBConn)
-	platform.PlatformNodePublish(dpconfig.Scheduler, database.DBConn, MainAppID)
+	platform.PlatformLeaderElectionScheduler(dpconfig.Scheduler, MainAppID)
 
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {

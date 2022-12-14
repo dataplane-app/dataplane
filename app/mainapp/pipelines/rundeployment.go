@@ -7,6 +7,8 @@ import (
 	"time"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	jsoniter "github.com/json-iterator/go"
+	"gorm.io/datatypes"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
@@ -18,7 +20,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func RunDeployment(pipelineID string, environmentID string, runID string) (models.PipelineRuns, error) {
+func RunDeployment(pipelineID string, environmentID string, runID string, runJson ...datatypes.JSON) (models.PipelineRuns, error) {
 
 	// start := time.Now().UTC()
 
@@ -43,6 +45,38 @@ func RunDeployment(pipelineID string, environmentID string, runID string) (model
 	}
 
 	// Retrieve folders
+
+	// Check if version is submitted
+	if runJson != nil && len(runJson[1]) != 0 {
+		version := jsoniter.Get(runJson[1], "version").ToString()
+
+		if version != "latest" {
+			pipelinedata.Version = version
+		}
+
+	}
+
+	// Check if a runJson is submitted
+	if runJson != nil && len(runJson[0]) != 0 {
+		run := models.DeploymentApiTriggerRuns{
+			RunID:         runID,
+			Version:       pipelinedata.Version,
+			DeploymentID:  pipelineID,
+			EnvironmentID: environmentID,
+			RunType:       "deploy",
+			RunJSON:       runJson[0],
+			CreatedAt:     time.Now().UTC(),
+		}
+
+		err = database.DBConn.Create(&run).Error
+		if err != nil {
+
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return models.PipelineRuns{}, err
+		}
+	}
 
 	// Create a run
 	run := models.PipelineRuns{

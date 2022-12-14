@@ -7,18 +7,16 @@ import (
 	"context"
 	"errors"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
-
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
-
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
-
 	"gorm.io/gorm"
 )
 
+// DeploymentPermissionsToUser is the resolver for the deploymentPermissionsToUser field.
 func (r *mutationResolver) DeploymentPermissionsToUser(ctx context.Context, environmentID string, resourceID string, access []string, userID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -72,6 +70,7 @@ func (r *mutationResolver) DeploymentPermissionsToUser(ctx context.Context, envi
 	return "Access permissions updated.", nil
 }
 
+// DeploymentPermissionsToAccessGroup is the resolver for the deploymentPermissionsToAccessGroup field.
 func (r *mutationResolver) DeploymentPermissionsToAccessGroup(ctx context.Context, environmentID string, resourceID string, access []string, accessGroupID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -125,6 +124,7 @@ func (r *mutationResolver) DeploymentPermissionsToAccessGroup(ctx context.Contex
 	return "Access permissions updated.", nil
 }
 
+// MyDeploymentPermissions is the resolver for the myDeploymentPermissions field.
 func (r *queryResolver) MyDeploymentPermissions(ctx context.Context) ([]*privategraphql.DeploymentPermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 
@@ -242,6 +242,7 @@ func (r *queryResolver) MyDeploymentPermissions(ctx context.Context) ([]*private
 	return PermissionsOutput, nil
 }
 
+// UserSingleDeploymentPermissions is the resolver for the userSingleDeploymentPermissions field.
 func (r *queryResolver) UserSingleDeploymentPermissions(ctx context.Context, userID string, environmentID string, deploymentID string, subjectType string) (*privategraphql.DeploymentPermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -373,6 +374,7 @@ func (r *queryResolver) UserSingleDeploymentPermissions(ctx context.Context, use
 	return PermissionsOutput, nil
 }
 
+// UserDeploymentPermissions is the resolver for the userDeploymentPermissions field.
 func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID string, environmentID string, subjectType string) ([]*privategraphql.DeploymentPermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
@@ -502,6 +504,7 @@ func (r *queryResolver) UserDeploymentPermissions(ctx context.Context, userID st
 	return PermissionsOutput, nil
 }
 
+// DeploymentPermissions is the resolver for the deploymentPermissions field.
 func (r *queryResolver) DeploymentPermissions(ctx context.Context, userID string, environmentID string, deploymentID string) ([]*privategraphql.DeploymentPermissionsOutput, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)

@@ -52,6 +52,7 @@ export default function useWebSocketLog(environmentId, run_id, setKeys, setGraph
 
             ws.current.onopen = async () => {
                 EditorGlobal.runState.set('Running');
+                EditorGlobal.showLogs.set(true);
                 ConsoleLogHelper('ws opened');
 
                 // 2. Start the run

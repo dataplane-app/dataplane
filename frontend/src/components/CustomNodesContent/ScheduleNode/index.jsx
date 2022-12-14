@@ -13,6 +13,7 @@ import { getColor } from '../utils';
 import { useGlobalRunState } from '../../../pages/PipelineRuns/GlobalRunState';
 import cronZone from '../../../utils/cronZone';
 import { getTimeZone } from '../../../utils/formatDate';
+import { useParams } from 'react-router-dom';
 
 const ScheduleNode = (props) => {
     // Theme hook
@@ -22,10 +23,12 @@ const ScheduleNode = (props) => {
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
 
-    const [isEditorPage, setIsEditorPage] = useState(false);
+    const [, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
     const [borderColor, setBorderColor] = useState('#c4c4c4');
     const [schedule, setSchedule] = useState(null);
+
+    const { pipelineId } = useParams();
 
     useEffect(() => {
         setIsEditorPage(FlowState.isEditorPage.get());
@@ -71,18 +74,27 @@ const ScheduleNode = (props) => {
                             Schedule trigger
                         </Typography>
 
-                        <Typography fontSize={10} mt={1}>
-                            {schedule}
-                        </Typography>
+                        <Tooltip
+                            title={
+                                <>
+                                    {schedule} <br /> {getTimeZone(props.data.genericdata.timezone)}
+                                </>
+                            }>
+                            <Box height="80px" width="80px" overflow="hidden">
+                                <Typography fontSize={10} mt={1}>
+                                    {schedule}
+                                </Typography>
 
-                        <Typography fontSize={10} mt={1}>
-                            {getTimeZone(props.data.genericdata.timezone)}
-                        </Typography>
+                                <Typography fontSize={10} mt={1}>
+                                    {getTimeZone(props.data.genericdata.timezone)}
+                                </Typography>
+                            </Box>
+                        </Tooltip>
                     </Grid>
                 </Tooltip>
             </Grid>
 
-            {isEditorPage && (
+            {pipelineId ? (
                 <Grid position="absolute" bottom={2} right={9} container wrap="nowrap" width="auto" alignItems="center" justifyContent="space-between">
                     <Box mt={2}>
                         <MoreInfoMenu iconHorizontal iconColor="#0073C6" iconColorDark="#0073C6" iconSize={19} noPadding>
@@ -90,7 +102,7 @@ const ScheduleNode = (props) => {
                         </MoreInfoMenu>
                     </Box>
                 </Grid>
-            )}
+            ) : null}
         </Box>
     );
 };

@@ -31,7 +31,7 @@
         "dagre": "^0.8.5",
         "env-cmd": "^10.1.0",
         "graphql": "^16.1.0",
-        "graphql-request": "^3.7.0",
+        "graphql-request": "^5.0.0",
         "jwt-decode": "^3.1.2",
         "luxon": "^2.3.1",
         "monaco-editor": "^0.33.0",
@@ -53,6 +53,7 @@
         "react-monaco-editor": "^0.50.1",
         "react-router-dom": "5.2.0",
         "react-scripts": "5.0.1",
+        "react-syntax-highlighter": "^15.5.0",
         "react-table": "^7.7.0",
         "regex-parser": "^2.2.11",
         "rehype-highlight": "^5.0.2",
@@ -92,7 +93,9 @@
         ]
     },
     "devDependencies": {
+        "@swc/helpers": "^0.4.14",
         "autoprefixer": "^9",
-        "prettier": "2.7.1"
+        "craco-swc": "^0.5.1",
+        "prettier": "2.8.1"
     }
 }

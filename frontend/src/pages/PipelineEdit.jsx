@@ -69,7 +69,7 @@ export const edgeTypes = {
     custom: CustomEdge,
 };
 
-const useAddUpdatePipelineFlowfunc = () => {
+const useAddUpdatePipelineFlowHook = () => {
     // GraphQL hook
     const addUpdatePipelineFlow = useAddUpdatePipelineFlow();
 
@@ -133,7 +133,7 @@ const Flow = () => {
     // Graphql Hooks
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
     const getPipelineFlow = useGetPipelineFlowHook(Environment.id.get(), pipeline);
-    const updatePipelineFlow = useAddUpdatePipelineFlowfunc();
+    const updatePipelineFlow = useAddUpdatePipelineFlowHook();
 
     //Offset states and refs
     const [offsetHeight, setOffsetHeight] = useState(0);
@@ -354,7 +354,7 @@ const Flow = () => {
                 id: `${type.id}`,
                 type: type.nodeType,
                 position,
-                data: type.nodeData,
+                data: { ...type.nodeData, name: nameGenerator(elements, type.nodeData.language) },
             };
 
             setElements((es) => es.concat(newNode));
@@ -473,6 +473,7 @@ const Flow = () => {
             <Drawer anchor="right" open={FlowState.isOpenConfigureDrawer.get()} onClose={() => FlowState.isOpenConfigureDrawer.set(false)}>
                 <ProcessTypeDrawer
                     setElements={setElements}
+                    elements={elements}
                     environmentID={Environment.id.get()}
                     handleClose={() => FlowState.isOpenConfigureDrawer.set(false)}
                     workerGroup={pipeline?.workerGroup}
@@ -513,7 +514,7 @@ const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
 const nodeWidth = 172;
-const nodeHeight = 36;
+const nodeHeight = 72;
 
 const setAutoLayout = (elements) => {
     dagreGraph.setGraph({ rankdir: 'LR' });
@@ -614,7 +615,7 @@ const useGetPipelineHook = (environmentID, setPipeline) => {
 };
 
 // ----- Utility function
-function prepareInputForBackend(input) {
+export function prepareInputForBackend(input) {
     const nodesInput = [];
     const edgesInput = [];
 
@@ -748,3 +749,30 @@ const sortObj = (obj) =>
         }
         return 0;
     });
+
+/**
+ * Takes flow nodes on display, and returns a suitable
+ * name for a new node (language name) + (next number)
+ */
+function nameGenerator(elements, language) {
+    if (elements.length === 0) return;
+
+    // If only element, return language name
+    if (elements.length === 1) {
+        return elements[0].data.name;
+    }
+
+    // Check if language name used if not return language name
+    if (!elements.some((a) => a.data.name === language)) {
+        return language;
+    }
+
+    // Language name already used, find correct enumurator and append
+    for (const key in elements) {
+        const proposedName = language + ` ${Number(key) + 1}`; //?
+
+        if (elements.some((a) => a.data.name === proposedName) === false) {
+            return proposedName;
+        }
+    }
+}

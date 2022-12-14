@@ -3,7 +3,7 @@ import { faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Drawer, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactFlow, { ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
 import { useParams } from 'react-router-dom';
 import CustomLine from '../../components/CustomNodesContent/CustomLine';
@@ -13,7 +13,6 @@ import ViewPageItem from '../../components/MoreInfoContent/ViewPageItem';
 import MoreInfoMenu from '../../components/MoreInfoMenu';
 import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
 import LogsDrawer from '../../components/DrawerContent/LogsDrawer';
-import TurnOffPipelineDrawer from '../../components/DrawerContent/TurnOffPipelineDrawer';
 import CustomChip from '../../components/CustomChip';
 import { useGetPipeline } from '../../graphql/getPipeline';
 import { Analytics } from './Analytics';
@@ -23,6 +22,9 @@ import { useGlobalRunState } from './GlobalRunState';
 
 import { edgeTypes, nodeTypes } from './NodeTypes';
 import TurnOffPipelineDrawerRunPipeline from '../../components/DrawerContent/TurnOffPipelineDrawerRunPipeline';
+import ScheduleDrawer from '../../components/DrawerContent/SchedulerDrawerRunPage';
+import { useGlobalFlowState } from '../PipelineEdit';
+import ProcessTypeDrawer from '../../components/DrawerContent/ProcessTypeDrawerRunPage';
 
 const View = () => {
     // Retrieve global environments from drop down - selected environment ID
@@ -43,6 +45,7 @@ const View = () => {
     // Runstate = run updates on graph structure
     const FlowState = useGlobalPipelineRun();
     const RunState = useGlobalRunState();
+    const DrawerState = useGlobalFlowState();
 
     // On page load, clear the global run state
     useEffect(() => {
@@ -50,6 +53,13 @@ const View = () => {
             selectedRunID: null,
             runObject: null,
         });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            FlowState.elements.set([]);
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -87,23 +97,11 @@ const View = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
 
-    // Trigger the scale button on keyboard 's' key click
-    useEffect(() => {
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const handleKeyDown = (e) => {
-        if (e.keyCode === 83) {
-            onZoomActive();
-        }
-    };
-
     //Flow methods
-    const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
+    const onLoad = (_reactFlowInstance) => {
+        _reactFlowInstance.fitView({ maxZoom: 1 });
+        return setReactFlowInstance(_reactFlowInstance);
+    };
 
     const onConnectStart = () => {
         FlowState.isDragging.set(true);
@@ -128,6 +126,11 @@ const View = () => {
             document.body.style.cursor = 'move';
         }
     };
+
+    const onClickElement = useCallback((event, element) => {
+        FlowState.selectedElement.set(element);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <Box className="page" height="calc(100vh - 136px)" minHeight="min-content">
@@ -166,7 +169,7 @@ const View = () => {
                             <ReactFlow
                                 zoomOnScroll={false}
                                 zoomOnPinch={false}
-                                paneMoveable={panOnDrag || false}
+                                // paneMoveable={panOnDrag || false}
                                 onMoveStart={onMoveStart}
                                 onMoveEnd={onMoveEnd}
                                 nodeTypes={nodeTypes}
@@ -176,6 +179,7 @@ const View = () => {
                                 nodesConnectable={false}
                                 preventScrolling={false}
                                 onLoad={onLoad}
+                                onElementClick={onClickElement}
                                 onConnectStart={onConnectStart}
                                 onConnectEnd={onConnectEnd}
                                 connectionLineComponent={CustomLine}
@@ -220,6 +224,26 @@ const View = () => {
                     environmentID={pipeline?.environmentID}
                     name={pipeline?.name}
                     getPipelines={getPipeline}
+                />
+            </Drawer>
+            <Drawer
+                hideBackdrop
+                sx={{ width: 'calc(100% - 203px)', zIndex: 1099, [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
+                anchor="right"
+                open={FlowState.isOpenSchedulerDrawer.get()}
+                onClose={() => FlowState.isOpenSchedulerDrawer.set(false)}>
+                <ScheduleDrawer
+                    handleClose={() => FlowState.isOpenSchedulerDrawer.set(false)} //
+                    environmentId={Environment.id.get()}
+                    getPipeline={getPipeline}
+                />
+            </Drawer>
+
+            <Drawer anchor="right" open={DrawerState.isOpenConfigureDrawer.get()} onClose={() => DrawerState.isOpenConfigureDrawer.set(false)}>
+                <ProcessTypeDrawer //
+                    environmentID={Environment.id.get()}
+                    handleClose={() => DrawerState.isOpenConfigureDrawer.set(false)}
+                    workerGroup={pipeline?.workerGroup}
                 />
             </Drawer>
         </Box>

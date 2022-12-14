@@ -24,35 +24,38 @@ ENV TZ=UTC
 RUN apt update
 RUN apt install -y software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt install -y python3.9 htop wget curl python3-pip
+RUN apt install -y python3.9 htop wget curl python3-pip moreutils
 RUN apt clean
+RUN mkdir -p /dataplane
 
 # Create appuser
-ENV USER=appuser
-ENV UID=10001
+# ENV USER=appuser
+# ENV UID=10001
 
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/dataplane" \
-    --shell "/sbin/nologin" \
-#    --no-create-home \
-    --uid "${UID}" \
-    "${USER}"
+# RUN adduser \
+#     --disabled-password \
+#     --gecos "" \
+#     --home "/dataplane" \
+#     --shell "/sbin/nologin" \
+# #    --no-create-home \
+#     --uid "${UID}" \
+#     "${USER}"
 
 
 COPY --from=builder go/src/build/dataplane-worker /dataplane/dataplane-worker
 
 RUN chmod +x /dataplane/dataplane-worker
 
-RUN mkdir /dataplane/code-files/ && chown -R appuser:appuser /dataplane
+RUN mkdir /dataplane/code-files/ 
 RUN chmod +w /dataplane/code-files/
 
-RUN mkdir /dataplane/dfs-code-files/ && chown -R appuser:appuser /dataplane
+RUN mkdir /dataplane/dfs-code-files/
 RUN chmod +w /dataplane/dfs-code-files/
+
+# && chown -R appuser:appuser /dataplane
 
 WORKDIR /dataplane
 
-USER appuser:appuser
+# USER appuser:appuser
 
 CMD ["./dataplane-worker"]

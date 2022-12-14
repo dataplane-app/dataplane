@@ -98,7 +98,7 @@ function pythonExample(host, triggerID) {
     apikey = "{{api key}}"
     
     # Publish Url
-    url = "${host}/app/public/api-trigger/${triggerID}"
+    url = "${host + triggerID}"
     
     # optional pay load
     payload = {“key”: “value”} 
@@ -117,7 +117,7 @@ function pythonExample(host, triggerID) {
 }
 
 function curlExample(host, triggerID) {
-    return `curl --location --request POST '${host}/app/public/api-trigger/${triggerID}' \
+    return `curl --location --request POST '${host + triggerID}' \
     --header 'Content-Transfer-Encoding: application/json' \
     --header 'Accept: text/plain' \
     --header 'apikey: {{api key}}' \

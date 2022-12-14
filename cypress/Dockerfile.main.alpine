@@ -35,7 +35,7 @@ FROM alpine:3.15
 
 ENV TZ=UTC
 
-RUN apk update && apk add --no-cache tzdata htop
+RUN apk update && apk add --no-cache tzdata htop curl
 RUN rm -rf /var/cache/apk/*
 
 # Create appuser

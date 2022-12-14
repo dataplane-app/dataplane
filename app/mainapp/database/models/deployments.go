@@ -162,3 +162,54 @@ type DeployFolderDeleted struct {
 	UpdatedAt     *time.Time `json:"updated_at"`
 	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
 }
+
+func (DeploymentApiTriggers) IsEntity() {}
+
+func (DeploymentApiTriggers) TableName() string {
+	return "deployment_api_triggers"
+}
+
+type DeploymentApiTriggers struct {
+	TriggerID     string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"trigger_id"`
+	DeploymentID  string     `gorm:"index:idx_deploymentid_api_trigger;unique;" json:"deployment_id"`
+	EnvironmentID string     `json:"environment_id"`
+	APIKeyActive  bool       `json:"api_key_active"`
+	PublicLive    bool       `json:"public_live"`
+	PrivateLive   bool       `json:"private_live"`
+	CreatedAt     time.Time  `json:"created_at"`
+	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
+}
+
+func (DeploymentApiKeys) IsEntity() {}
+
+func (DeploymentApiKeys) TableName() string {
+	return "deployment_api_keys"
+}
+
+type DeploymentApiKeys struct {
+	APIKey        string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"api_key"`
+	APIKeyTail    string     `json:"api_key_tail"`
+	TriggerID     string     `json:"trigger_id"`
+	DeploymentID  string     `gorm:"index:idx_deploymentid_api_keys;" json:"deployment_id"`
+	EnvironmentID string     `json:"environment_id"`
+	ExpiresAt     *time.Time `json:"expires_at"`
+	CreatedAt     time.Time  `json:"created_at"`
+	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
+}
+
+func (DeploymentApiTriggerRuns) IsEntity() {}
+
+func (DeploymentApiTriggerRuns) TableName() string {
+	return "deployment_api_trigger_runs"
+}
+
+type DeploymentApiTriggerRuns struct {
+	RunID         string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"run_id"`
+	Version       string         `gorm:"index:idx_deploy_version_api_trigger_runs;" json:"version"`
+	DeploymentID  string         `gorm:"index:idx_deploymentid_api_trigger_runs;" json:"deployment_id"`
+	EnvironmentID string         `json:"environment_id"`
+	RunType       string         `json:"run_type"` //deploy or pipeline
+	RunJSON       datatypes.JSON `json:"run_json"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     *time.Time     `json:"updated_at"`
+}

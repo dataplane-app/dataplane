@@ -8,9 +8,14 @@ import { Downgraded } from '@hookstate/core';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useSnackbar } from 'notistack';
 
-const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGroup }) => {
+const ProcessTypeDrawer = ({ handleClose, elements, setElements, environmentID, workerGroup }) => {
     // React hook form
-    const { register, handleSubmit, reset } = useForm();
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset,
+    } = useForm({ mode: 'onBlur' });
 
     // Flow state
     const FlowState = useGlobalFlowState();
@@ -62,6 +67,16 @@ const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGrou
         handleClose();
     }
 
+    /**
+     * Returns false if the name is taken
+     */
+    function checkNameTaken(name) {
+        if (name === selectedElement.data.name) return true;
+
+        // Name is taken
+        if (elements.some((a) => a.data.name === name)) return false;
+    }
+
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <Box position="relative" width="100%">
@@ -82,10 +97,15 @@ const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGrou
                             id="title"
                             size="small"
                             required
-                            sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }}
-                            {...register('name', { required: true })}
+                            sx={{ mt: 2, fontSize: '.75rem', display: 'flex' }}
+                            {...register('name', { required: true, validate: (name) => checkNameTaken(name) })}
                         />
-                        <TextField label="Description" id="description" size="small" sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
+                        {errors.name?.type === 'validate' && (
+                            <Typography variant="subtitle1" color="error">
+                                A node with that name already exists.
+                            </Typography>
+                        )}
+                        <TextField label="Description" id="description" size="small" sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
 
                         <Autocomplete
                             options={workerGroups}
@@ -95,6 +115,7 @@ const ProcessTypeDrawer = ({ handleClose, setElements, environmentID, workerGrou
                             onChange={(event, newValue) => {
                                 setSelectedWorkerGroup(newValue);
                             }}
+                            isOptionEqualToValue={(option, value) => option.WorkerGroup === value.WorkerGroup}
                             renderInput={(params) => (
                                 <TextField
                                     {...params} //

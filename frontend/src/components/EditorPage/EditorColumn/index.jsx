@@ -45,6 +45,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     const codeEditorRun = useRunCEFileHook(rest.pipeline, setIsRunning);
     const codeEditorStop = useStopCEFileHook(rest.pipeline, EditorGlobal.runID.get(), setIsRunning);
 
+    // Set tabValue
     useEffect(() => {
         const fileIndex = EditorGlobal.tabs
             .get()
@@ -118,6 +119,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
         EditorGlobal.installState.set(null);
 
         EditorGlobal.runState.set(null);
+        EditorGlobal.showLogs.set(false);
         // If no selection, return
         if (!EditorGlobal.selectedFile.value || EditorGlobal.selectedFile.fType.value === 'folder') return;
 
@@ -188,6 +190,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             // Make sure a change is made to allow ctrl+s
             if (EditorGlobal.selectedFile.fType.value === 'package' && EditorGlobal.selectedFile.diffValue.get()) {
                 EditorGlobal.installState.set('Running');
+                EditorGlobal.selectedFile.content.set(EditorGlobal.selectedFile.diffValue.value);
             }
         }
     };
@@ -408,7 +411,10 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                     </Button>
                                 ) : (
                                     <Button
-                                        onClick={() => EditorGlobal.markdown.set('edit')}
+                                        onClick={() => {
+                                            EditorGlobal.showLogs.set(true);
+                                            EditorGlobal.markdown.set('edit');
+                                        }}
                                         variant="text"
                                         sx={{
                                             height: '32px',
@@ -438,6 +444,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                                 options={{
                                     minimap: { enabled: false },
                                     hideCursorInOverviewRuler: { enabled: true },
+                                    automaticLayout: { enabled: true },
                                 }}
                             />
                         ) : null}
