@@ -28,7 +28,7 @@ describe('Deployment and deployment turn off', function () {
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
 
         cy.contains('button', 'Deploy').should('exist', { timeout: 6000 }).click();
-        cy.wait(100);
+        cy.wait(1000);
     });
 
     it('Turn off schedule deployment', function () {

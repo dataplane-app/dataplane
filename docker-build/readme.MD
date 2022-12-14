@@ -2,6 +2,7 @@
 ```
 # Specify the location to pip.conf
 export PIP_CONFIG_FILE=/dataplane/pip.conf
+export PYTHONPATH=/dataplane/pip-packages/
 ```
 
 Specify location for pip modules to be installed in pip.conf

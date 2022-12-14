@@ -14,6 +14,7 @@ describe('Add/remove python file', function () {
 
         cy.contains('Code').should('exist', { timeout: 6000 }).click();
         cy.contains('Edit').should('exist', { timeout: 6000 }).click();
+        cy.wait(1000);
     });
 
     it('Make file', function () {

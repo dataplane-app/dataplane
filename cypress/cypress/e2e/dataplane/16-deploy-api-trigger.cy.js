@@ -11,6 +11,7 @@ describe('Deploy API trigger', function () {
     });
 
     it('Deploy API pipeline', function () {
+        cy.wait(1000);
         cy.contains('Cypress API Pipeline')
             .first()
             .parent()

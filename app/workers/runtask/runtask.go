@@ -208,7 +208,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 				LogType:   "error",
 			}
 
-			messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
+			messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
 			database.DBConn.Create(&logmsg)
 
 			break
@@ -314,7 +314,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 					LogType:   "info",
 				}
 
-				messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
+				messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
 				database.DBConn.Create(&logmsg)
 				if wrkerconfig.Debug == "true" {
 					clog.Info(line)
@@ -367,7 +367,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 					LogType:   "error",
 				}
 
-				messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
+				messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
 				database.DBConn.Create(&logmsg)
 				if wrkerconfig.Debug == "true" {
 					clog.Error(line)
@@ -430,7 +430,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 				LogType:   "error",
 			}
 
-			messageq.MsgSend("workerlogs."+msg.RunID+"."+msg.NodeID, sendmsg)
+			messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
 			database.DBConn.Create(&logmsg)
 			if wrkerconfig.Debug == "true" {
 				clog.Error(line)
