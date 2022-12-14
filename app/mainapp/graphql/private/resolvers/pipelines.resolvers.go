@@ -138,6 +138,8 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 			return errors.New("Couldn't get folder construct." + errf2.Error())
 		}
 
+		//---- save the configuration file down -----
+
 		if dpconfig.FSCodeFileStorage == "LocalFile" {
 			git.PlainInit(dpconfig.CodeDirectory+thisfolder, false)
 		}
@@ -172,55 +174,64 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 
 	p := models.Pipelines{}
 
-	err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Select("description", "name", "worker_group").
-		Updates(models.Pipelines{
-			Name:        name,
-			Description: description,
-			WorkerGroup: workerGroup,
-		}).First(&p).Error
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
+
+		err := tx.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Select("description", "name", "worker_group").
+			Updates(models.Pipelines{
+				Name:        name,
+				Description: description,
+				WorkerGroup: workerGroup,
+			}).First(&p).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			errors.New("Update pipeline database error.")
+		}
+
+		// Update folder structure for environment
+		var parentfolder models.CodeFolders
+		tx.Where("level = ? and environment_id = ?", "environment", environmentID).First(&parentfolder)
+
+		pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
+
+		// log.Println("Parent folder:", pfolder)
+
+		var oldfolder models.CodeFolders
+		tx.Where("environment_id = ? and level = ? and pipeline_id =?", environmentID, "pipeline", pipelineID).First(&oldfolder)
+
+		// log.Println("Old folder:", oldfolder.FolderID, oldfolder.FolderName)
+		if oldfolder.FolderID == "" {
+			return errors.New("Update pipeline folder error.")
+		}
+
+		if dpconfig.FSCodeFileStorage == "LocalFile" {
+			OLDinput := models.CodeFolders{
+				EnvironmentID: oldfolder.EnvironmentID,
+				ParentID:      parentfolder.FolderID,
+				FolderName:    oldfolder.FolderName,
+				Level:         "pipeline",
+				FType:         "folder",
+				Active:        true,
+			}
+
+			Newinput := models.CodeFolders{
+				EnvironmentID: oldfolder.EnvironmentID,
+				ParentID:      parentfolder.FolderID,
+				FolderName:    name,
+				Level:         "pipeline",
+				FType:         "folder",
+				Active:        true,
+			}
+			filesystem.UpdateFolder(oldfolder.FolderID, OLDinput, Newinput, pfolder+"pipelines/")
+		}
+
+		return nil
+	})
 
 	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Update pipeline database error.")
-	}
-
-	// Update folder structure for environment
-	var parentfolder models.CodeFolders
-	database.DBConn.Where("level = ? and environment_id = ?", "environment", environmentID).First(&parentfolder)
-
-	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
-
-	// log.Println("Parent folder:", pfolder)
-
-	var oldfolder models.CodeFolders
-	database.DBConn.Where("environment_id = ? and level = ? and pipeline_id =?", environmentID, "pipeline", pipelineID).First(&oldfolder)
-
-	// log.Println("Old folder:", oldfolder.FolderID, oldfolder.FolderName)
-	if oldfolder.FolderID == "" {
-		return "", errors.New("Update pipeline folder error.")
-	}
-
-	if dpconfig.FSCodeFileStorage == "LocalFile" {
-		OLDinput := models.CodeFolders{
-			EnvironmentID: oldfolder.EnvironmentID,
-			ParentID:      parentfolder.FolderID,
-			FolderName:    oldfolder.FolderName,
-			Level:         "pipeline",
-			FType:         "folder",
-			Active:        true,
-		}
-
-		Newinput := models.CodeFolders{
-			EnvironmentID: oldfolder.EnvironmentID,
-			ParentID:      parentfolder.FolderID,
-			FolderName:    name,
-			Level:         "pipeline",
-			FType:         "folder",
-			Active:        true,
-		}
-		filesystem.UpdateFolder(oldfolder.FolderID, OLDinput, Newinput, pfolder+"pipelines/")
+		return "", errors.New("Update pipeline" + err.Error())
 	}
 
 	return "Success", nil
