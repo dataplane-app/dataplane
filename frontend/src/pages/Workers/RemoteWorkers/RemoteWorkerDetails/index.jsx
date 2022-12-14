@@ -83,7 +83,6 @@ export default function RPAManage() {
                 <Grid item sx={{ flex: 1, display: 'flex', justifyContent: 'center', flexDirection: 'column', minWidth: '400px' }} mb={2}>
                     {workerEnvironment?.id ? (
                         <ProcessGroups
-                            workersProcessGroups={workersProcessGroups}
                             workerEnvironment={workerEnvironment}
                             setWorkerEnvironment={setWorkerEnvironment}
                             allRemoteProcessGroups={allRemoteProcessGroups}
@@ -140,6 +139,8 @@ const useGetRemoteProcessGroupsHook = (environmentID, processGroupsEnvironmentID
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
+            // Convert string of environments to an array
+            response.forEach((a) => (a.environments = a.environments.replace('{', '').replace('}', '').split(',')));
             setRemoteProcessGroups(response);
         }
     };

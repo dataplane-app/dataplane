@@ -228,7 +228,7 @@ func (r *mutationResolver) RemoveRemoteProcessGroupFromEnvironment(ctx context.C
 }
 
 // AddRemoteWorker is the resolver for the addRemoteWorker field.
-func (r *mutationResolver) AddRemoteWorker(ctx context.Context, environmentID string, name string) (string, error) {
+func (r *mutationResolver) AddRemoteWorker(ctx context.Context, environmentID string, name string, remoteProcessGroupID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -264,6 +264,23 @@ func (r *mutationResolver) AddRemoteWorker(ctx context.Context, environmentID st
 		}
 
 		return "", errors.New("Add remote worker database error.")
+	}
+
+	// Attach worker to remote process group
+	remoteWorkerEnvironment := models.RemoteWorkerEnvironments{
+		EnvironmentID:        environmentID,
+		WorkerID:             id,
+		RemoteProcessGroupID: remoteProcessGroupID,
+	}
+
+	err = database.DBConn.Create(&remoteWorkerEnvironment).Error
+
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
+
+		return "", errors.New("Add remote worker environment database error.")
 	}
 
 	return "Success", nil
@@ -548,14 +565,20 @@ func (r *queryResolver) GetRemoteProcessGroups(ctx context.Context, environmentI
 
 	var resp []*privategraphql.RemoteProcessGroups
 
+	// Returns all process groups for the environments user has access to.
+	// Each row includes all the environments the process group belongs.
 	err := database.DBConn.Raw(
 		`
 		select 
-		distinct rpg.*
-		from remote_process_groups rpg 
-		left join remote_worker_environments rwe on rpg.remote_process_group_id = rwe.remote_process_group_id 
-		where rwe.environment_id = ?
-		`, processGroupsEnvironmentID).Find(&resp).Error
+		rpg.*,
+		array_agg(distinct environment.name) as environments
+		from remote_process_groups rpg
+		left join remote_worker_environments rwe on rpg.remote_process_group_id = rwe.remote_process_group_id
+		left join environment_user on rwe.environment_id = environment_user.environment_id
+		left join environment on rwe.environment_id = environment.id
+		where (environment_user.environment_id = rwe.environment_id and environment_user.user_id = ?)
+		GROUP BY rpg.remote_process_group_id, rpg.name
+		`, currentUser).Find(&resp).Error
 
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errors.New("Remote process groups database error.")
@@ -584,12 +607,19 @@ func (r *queryResolver) GetRemoteWorkers(ctx context.Context, environmentID stri
 
 	var resp []*privategraphql.RemoteWorkers
 
-	// If no remote process group id provided, return all remote workers
+	// If no remote process group id provided, return all remote workers for that environment
 	if remoteProcessGroupID == nil {
-		err := database.DBConn.Find(&resp).Error
+		err := database.DBConn.Raw(
+			`
+			select 
+			distinct rw.*
+			from remote_workers rw 
+			left join remote_worker_environments rwe on rw.worker_id = rwe.worker_id
+			where rwe.environment_id = ?
+			`, environmentID).Find(&resp).Error
 
 		if err != nil && err != gorm.ErrRecordNotFound {
-			return nil, errors.New("Remote workers database error.")
+			return nil, errors.New("Remote process groups database error.")
 		}
 		return resp, nil
 
@@ -667,6 +697,42 @@ func (r *queryResolver) GetRemoteProcessGroupsEnvironments(ctx context.Context, 
 
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errors.New("Remote worker environments database error.")
+	}
+
+	return resp, nil
+}
+
+// GetRemoteProcessGroupsForAnEnvironment is the resolver for the getRemoteProcessGroupsForAnEnvironment field.
+func (r *queryResolver) GetRemoteProcessGroupsForAnEnvironment(ctx context.Context, environmentID string) ([]*privategraphql.RemoteProcessGroupsInAnEnvironment, error) {
+	currentUser := ctx.Value("currentUser").(string)
+	platformID := ctx.Value("platformID").(string)
+
+	// ----- Permissions
+	perms := []models.Permissions{
+		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
+		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+		{Resource: "environment_view_remote_process_groups", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
+	}
+
+	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return nil, errors.New("Requires permissions.")
+	}
+
+	var resp []*privategraphql.RemoteProcessGroupsInAnEnvironment
+
+	err := database.DBConn.Raw(
+		`
+		select
+		distinct rpg.*
+		from remote_process_groups rpg
+		left join remote_worker_environments rwe on rpg.remote_process_group_id = rwe.remote_process_group_id
+		where rwe.environment_id = ?
+		`, environmentID).Find(&resp).Error
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, errors.New("Remote process groups database error.")
 	}
 
 	return resp, nil

@@ -2,6 +2,7 @@ import { Box, Button, Drawer, Grid, Tooltip, Typography } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../../../components/CustomChip';
+import Chip from '@mui/material/Chip';
 import Search from '../../../components/Search';
 import { useHistory } from 'react-router-dom';
 import pythonLogo from '../../../assets/images/pythonLogo.png';
@@ -36,7 +37,7 @@ export default function RemoteProcessGroups() {
         () => [
             {
                 Header: 'Member',
-                accessor: (row) => [row.name, row.description, row.language, row.remoteProcessGroupID],
+                accessor: (row) => [row.name, row.description, row.language, row.remoteProcessGroupID, row.environments],
                 Cell: (row) => <CustomWorker row={row} />,
             },
         ],
@@ -125,29 +126,29 @@ export default function RemoteProcessGroups() {
 }
 
 const CustomWorker = ({ row }) => {
-    const [name, description, type, id] = row.value;
+    const [name, description, type, id, environments] = row.value;
 
     const history = useHistory();
 
     return (
-        <Grid container direction="column" mx="22px" alignItems="left" justifyContent="flex-start">
-            <Tooltip title={id} placement="top-start">
-                <Typography component="h4" variant="h3" mb={1} sx={{ color: 'cyan.main' }}>
-                    {name}
+        <Grid container flexDirection="column" mx="22px" alignItems="left" justifyContent="flex-start">
+            <Box display="flex">
+                <Tooltip title={id} placement="top-start">
+                    <Typography component="h4" variant="h3" mb={1} sx={{ color: 'cyan.main' }}>
+                        {name}
+                    </Typography>
+                </Tooltip>
+                <Typography component="h5" variant="subtitle1">
+                    {description}
                 </Typography>
-            </Tooltip>
-            <Typography component="h5" variant="subtitle1">
-                {description}
-            </Typography>
-            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: '8px' }}>
+
                 <Typography
                     component="h5"
-                    sx={{ color: 'cyan.main', fontSize: ' 0.875rem', display: 'inline', cursor: 'pointer' }}
-                    onClick={() => {
-                        history.push(`/remote/processgroups/${id}`);
-                    }}>
+                    sx={{ color: 'cyan.main', fontSize: ' 0.875rem', display: 'inline', cursor: 'pointer', ml: 'auto' }}
+                    onClick={() => history.push(`/remote/processgroups/${id}`)}>
                     Configure
                 </Typography>
+
                 <Typography
                     component="h5"
                     ml={4}
@@ -155,16 +156,19 @@ const CustomWorker = ({ row }) => {
                     onClick={() => history.push(`/remote/workers?filter=${id}&name=${name}`)}>
                     Workers
                 </Typography>
+
                 {type === 'python' ? (
-                    <Box position="relative" ml="auto">
-                        <img
-                            src={pythonLogo}
-                            alt="python logo"
-                            style={{ marginLeft: 'auto', height: '32px', alignSelf: 'end', position: 'absolute', right: '-15px', top: '-15px' }}
-                        />
+                    <Box position="relative">
+                        <img src={pythonLogo} alt="python logo" style={{ height: '32px', alignSelf: 'end', right: '-15px', position: 'relative' }} />
                     </Box>
                 ) : null}
-            </div>
+            </Box>
+
+            <Box display="flex">
+                {environments.map((a) => (
+                    <Chip label={a} size="small" variant="outlined" sx={{ width: 'fit-content', mr: 1 }} />
+                ))}
+            </Box>
         </Grid>
     );
 };
@@ -195,6 +199,8 @@ const useGetRemoteProcessGroupsHook = (environmentID, setRemoteProcessGroups) =>
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
+            // Convert string of environments to an array
+            response.forEach((a) => (a.environments = a.environments.replace('{', '').replace('}', '').split(',')));
             setRemoteProcessGroups(response);
         }
     };

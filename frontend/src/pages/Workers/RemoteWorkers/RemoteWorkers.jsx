@@ -160,9 +160,15 @@ export default function RPAWorkers() {
     return (
         <Box className="page">
             <Box display="flex" alignItems="center" width={tableWidth}>
-                <Typography id="test" component="h2" variant="h2" color="text.primary">
-                    RPA Workers
-                </Typography>
+                <Box>
+                    <Typography id="test" component="h2" variant="h2" color="text.primary">
+                        RPA Workers
+                    </Typography>
+
+                    <Typography variant="subtitle2" mt=".20rem">
+                        Environment: {Environment.name.get()}
+                    </Typography>
+                </Box>
 
                 <Button onClick={() => history.push('/remote/processgroups')} variant="text" sx={{ marginLeft: 'auto', marginRight: 2 }}>
                     Manage process groups

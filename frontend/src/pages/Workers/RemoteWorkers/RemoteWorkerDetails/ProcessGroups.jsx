@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { useGlobalEnvironmentsState } from '../../../../components/EnviromentDropdown';
 import { useAddRemoteWorkerToProcessGroup } from '../../../../graphql/addRemoteWorkerToProcessGroup';
 
-export default function ProcessGroups({ allRemoteProcessGroups, workerEnvironment, setWorkerEnvironment, workersProcessGroups, getRemoteWorkersProcessGroups }) {
+export default function ProcessGroups({ allRemoteProcessGroups, workerEnvironment, setWorkerEnvironment, getRemoteWorkersProcessGroups }) {
     // Local State
     const [selectedProcessGroup, setSelectedProcessGroup] = useState(null);
 
@@ -23,11 +23,9 @@ export default function ProcessGroups({ allRemoteProcessGroups, workerEnvironmen
     return (
         <>
             <Typography component="h3" variant="h3" color="text.primary">
-                Process groups -{' '}
-                <Typography component="span" fontWeight={500}>
-                    Environment: {workerEnvironment.name}
-                </Typography>
+                Process groups
             </Typography>
+            <Typography variant="subtitle1">Attach a process group and related environment to worker.</Typography>
 
             <Grid mt={2} display="flex" alignItems="center">
                 <form style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }} onSubmit={handleSubmit(addRemoteWorkerToProcessGroup)}>
@@ -62,9 +60,9 @@ export default function ProcessGroups({ allRemoteProcessGroups, workerEnvironmen
                         sx={{ minWidth: '280px' }}
                         openOnFocus={true}
                         ref={autocomplete}
-                        // Filter out worker's remote process groups from all remote process groups
-                        options={allRemoteProcessGroups.filter((group) => !workersProcessGroups.map((a) => a.remoteProcessGroupID).includes(group.remoteProcessGroupID))}
-                        getOptionLabel={(option) => option.name}
+                        // Filter out remote process groups per environment
+                        options={allRemoteProcessGroups.filter((group) => group.environments.includes(workerEnvironment.name))}
+                        getOptionLabel={(option) => option?.name}
                         value={selectedProcessGroup}
                         onChange={(_, value) => setSelectedProcessGroup(value)}
                         renderInput={(params) => (

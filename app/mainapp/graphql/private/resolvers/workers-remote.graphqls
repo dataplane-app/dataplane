@@ -1,5 +1,6 @@
 type RemoteProcessGroups {
     remoteProcessGroupID: String!
+    environments: String!
     name: String!
     description: String!
     packages: String!
@@ -7,6 +8,11 @@ type RemoteProcessGroups {
     workerType: String!
     language: String!
     active: Boolean!
+}
+
+type RemoteProcessGroupsInAnEnvironment {
+    remoteProcessGroupID: String!
+    name: String!
 }
 
 type RemoteWorkersProcessGroups {
@@ -77,12 +83,20 @@ extend type Query {
     getSingleRemoteWorker(environmentID: String!, workerID: String!): RemoteWorkers
 
     """
-    Get remote worker environments.
+    Get remote process group's environments.
     + **Route**: Private
     + **Permission**: admin_platform, admin_environment, environment_view_remote_process_groups
     + **Security**: Based on environment selected
     """
     getRemoteProcessGroupsEnvironments(environmentID: String!, remoteProcessGroupID: String!): [RemoteWorkerEnvironments]
+
+    """
+    Get remote process groups available in an environment.
+    + **Route**: Private
+    + **Permission**: admin_platform, admin_environment, environment_view_remote_process_groups
+    + **Security**: Based on environment selected
+    """
+    getRemoteProcessGroupsForAnEnvironment(environmentID: String!): [RemoteProcessGroupsInAnEnvironment]
 
     """
     Get activation keys for a specific remote worker.
@@ -155,7 +169,7 @@ extend type Mutation {
     + **Permission**: admin_platform, admin_environment, environment_add_remote_workers
     + **Security**: Based on environment selected
     """
-    addRemoteWorker(environmentID: String!, name: String!): String!
+    addRemoteWorker(environmentID: String!, name: String!, remoteProcessGroupID: String!): String!
 
     """
     Update remote process group.

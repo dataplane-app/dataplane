@@ -7,6 +7,7 @@ const query = gql`
     query getRemoteProcessGroups($environmentID: String!, $processGroupsEnvironmentID: String!) {
         getRemoteProcessGroups(environmentID: $environmentID, processGroupsEnvironmentID: $processGroupsEnvironmentID) {
             remoteProcessGroupID
+            environments
             name
             description
             lb

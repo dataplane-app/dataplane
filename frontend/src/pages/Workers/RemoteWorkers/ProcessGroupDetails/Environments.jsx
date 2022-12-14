@@ -11,9 +11,6 @@ import { useRemoveRemoteProcessGroupFromEnvironment } from '../../../../graphql/
 import { useGlobalEnvironmentsState } from '../../../../components/EnviromentDropdown';
 
 export default function Environments({ environmentId, remoteEnvironments, setRemoteEnvironments }) {
-    // User states
-    // const [availableEnvironments, setAvailableEnvironments] = useState([]);
-
     // Environments global state
     const globalEnvironments = useGlobalEnvironmentsState();
 
