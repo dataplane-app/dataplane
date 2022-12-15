@@ -565,12 +565,19 @@ func (r *queryResolver) GetRemoteProcessGroups(ctx context.Context, environmentI
 
 	var resp []*privategraphql.RemoteProcessGroups
 
-	// Returns all process groups for the environments user has access to.
-	// Each row includes all the environments the process group belongs.
+	// Returns all process groups for the environments the user has access to.
+	// Each row includes a cell with an array of the names of all the environments the process group belongs.
 	err := database.DBConn.Raw(
 		`
 		select 
-		rpg.*,
+		rpg.remote_process_group_id,
+		rpg.name,
+		rpg.description,
+		rpg.packages,
+		rpg.language,
+		rpg.lb,
+		rpg.worker_type,
+		rpg.active,
 		array_agg(distinct environment.name) as environments
 		from remote_process_groups rpg
 		left join remote_worker_environments rwe on rpg.remote_process_group_id = rwe.remote_process_group_id
@@ -608,13 +615,21 @@ func (r *queryResolver) GetRemoteWorkers(ctx context.Context, environmentID stri
 	var resp []*privategraphql.RemoteWorkers
 
 	// If no remote process group id provided, return all remote workers for that environment
+	// Raw query returns all remote workers that belong to process groups attached to the given environment
 	if remoteProcessGroupID == nil {
 		err := database.DBConn.Raw(
 			`
 			select 
-			distinct rw.*
+			distinct rw.worker_id,
+			rw.worker_name,
+			rw.description,
+			rw.status,
+			rw.active,
+			rw.lb,
+			rw.worker_type,
+			rw.last_ping
 			from remote_workers rw 
-			left join remote_worker_environments rwe on rw.worker_id = rwe.worker_id
+			inner join remote_worker_environments rwe on rw.worker_id = rwe.worker_id
 			where rwe.environment_id = ?
 			`, environmentID).Find(&resp).Error
 
@@ -626,12 +641,20 @@ func (r *queryResolver) GetRemoteWorkers(ctx context.Context, environmentID stri
 	}
 
 	// If remote process group id provided, return workers belong to that process group
+	// Raw query returns remote workers that belong to the given process group
 	err := database.DBConn.Raw(
 		`
 		select 
-		rw.*
+		rw.worker_id,
+		rw.worker_name,
+		rw.description,
+		rw.status,
+		rw.active,
+		rw.lb,
+		rw.worker_type,
+		rw.last_ping
 		from remote_workers rw 
-		left join remote_worker_environments rwe on rw.worker_id = rwe.worker_id 
+		inner join remote_worker_environments rwe on rw.worker_id = rwe.worker_id 
 		where rwe.remote_process_group_id = ?
 		`, remoteProcessGroupID).Find(&resp).Error
 
@@ -722,12 +745,20 @@ func (r *queryResolver) GetRemoteProcessGroupsForAnEnvironment(ctx context.Conte
 
 	var resp []*privategraphql.RemoteProcessGroupsInAnEnvironment
 
+	// Raw query returns process groups that are attached to the given environment
 	err := database.DBConn.Raw(
 		`
 		select
-		distinct rpg.*
+		distinct rpg.remote_process_group_id,
+		rpg.name,
+		rpg.description,
+		rpg.packages,
+		rpg.language,
+		rpg.lb,
+		rpg.worker_type,
+		rpg.active
 		from remote_process_groups rpg
-		left join remote_worker_environments rwe on rpg.remote_process_group_id = rwe.remote_process_group_id
+		inner join remote_worker_environments rwe on rpg.remote_process_group_id = rwe.remote_process_group_id
 		where rwe.environment_id = ?
 		`, environmentID).Find(&resp).Error
 
@@ -788,10 +819,19 @@ func (r *queryResolver) GetRemoteWorkersProcessGroups(ctx context.Context, envir
 
 	var resp []*privategraphql.RemoteWorkersProcessGroups
 
+	// Raw query returns process groups that are attached to the environment
+	// the user has access to for the given worker group
 	err := database.DBConn.Raw(
 		`
 		select 
-		rpg.*,
+		rpg.remote_process_group_id,
+		rpg.name,
+		rpg.description,
+		rpg.packages,
+		rpg.language,
+		rpg.lb,
+		rpg.worker_type,
+		rpg.active,
 		rwe.environment_id
 		from remote_process_groups rpg 
 		inner join remote_worker_environments rwe on rpg.remote_process_group_id = rwe.remote_process_group_id 
