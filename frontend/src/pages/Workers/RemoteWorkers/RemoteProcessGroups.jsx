@@ -138,7 +138,7 @@ const CustomWorker = ({ row }) => {
                         {name}
                     </Typography>
                 </Tooltip>
-                <Typography component="h5" variant="subtitle1">
+                <Typography ml={2} component="h5" variant="subtitle1">
                     {description}
                 </Typography>
 
@@ -166,7 +166,7 @@ const CustomWorker = ({ row }) => {
 
             <Box display="flex">
                 {environments.map((a) => (
-                    <Chip label={a} size="small" variant="outlined" sx={{ width: 'fit-content', mr: 1 }} />
+                    <Chip key={a} label={a} size="small" variant="outlined" sx={{ width: 'fit-content', mr: 1 }} />
                 ))}
             </Box>
         </Grid>

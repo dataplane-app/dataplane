@@ -645,7 +645,7 @@ func (r *queryResolver) GetRemoteWorkers(ctx context.Context, environmentID stri
 	err := database.DBConn.Raw(
 		`
 		select 
-		rw.worker_id,
+		distinct rw.worker_id,
 		rw.worker_name,
 		rw.description,
 		rw.status,
