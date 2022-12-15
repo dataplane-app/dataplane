@@ -794,9 +794,10 @@ func (r *queryResolver) GetRemoteWorkersProcessGroups(ctx context.Context, envir
 		rpg.*,
 		rwe.environment_id
 		from remote_process_groups rpg 
-		left join remote_worker_environments rwe on rpg.remote_process_group_id = rwe.remote_process_group_id 
-		where rwe.worker_id = ?
-		`, workerID).Find(&resp).Error
+		inner join remote_worker_environments rwe on rpg.remote_process_group_id = rwe.remote_process_group_id 
+		inner join environment_user on rwe.environment_id = environment_user.environment_id
+		where (rwe.worker_id = ? and environment_user.user_id = ?)
+		`, workerID, currentUser).Find(&resp).Error
 
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errors.New("Remote process groups database error.")

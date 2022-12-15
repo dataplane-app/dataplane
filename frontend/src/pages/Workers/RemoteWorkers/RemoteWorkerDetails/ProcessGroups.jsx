@@ -1,24 +1,29 @@
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Typography, Button, Grid, Autocomplete, TextField } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useGlobalEnvironmentsState } from '../../../../components/EnviromentDropdown';
 import { useAddRemoteWorkerToProcessGroup } from '../../../../graphql/addRemoteWorkerToProcessGroup';
+import { useGetUserEnvironments } from '../../../../graphql/getUserEnvironments';
+import { useGlobalMeState } from '../../../../components/Navbar';
+import { useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown';
 
-export default function ProcessGroups({ allRemoteProcessGroups, workerEnvironment, setWorkerEnvironment, getRemoteWorkersProcessGroups }) {
+export default function ProcessGroups({ allRemoteProcessGroups, workerEnvironment, setWorkerEnvironment, getRemoteWorkersProcessGroups, workersProcessGroups }) {
     // Local State
-    const [selectedProcessGroup, setSelectedProcessGroup] = useState(null);
-
-    // Environments global state
-    const globalEnvironments = useGlobalEnvironmentsState();
+    const [userEnvironments, setUserEnvironments] = useState(null);
+    const [key, setKey] = useState(1);
 
     const { register, handleSubmit } = useForm();
 
     // Custom hook
-    const addRemoteWorkerToProcessGroup = useAddRemoteWorkerToProcessGroupHook(allRemoteProcessGroups, getRemoteWorkersProcessGroups, workerEnvironment);
+    const addRemoteWorkerToProcessGroup = useAddRemoteWorkerToProcessGroupHook(allRemoteProcessGroups, getRemoteWorkersProcessGroups, workerEnvironment, workersProcessGroups);
+    const getUserEnvironments = useGetUserEnvironmentsHook(setUserEnvironments);
 
-    const autocomplete = useRef();
+    useEffect(() => {
+        getUserEnvironments();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <>
@@ -29,19 +34,20 @@ export default function ProcessGroups({ allRemoteProcessGroups, workerEnvironmen
 
             <Grid mt={2} display="flex" alignItems="center">
                 <form style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }} onSubmit={handleSubmit(addRemoteWorkerToProcessGroup)}>
-                    {workerEnvironment ? (
+                    {workerEnvironment && userEnvironments ? (
                         <Autocomplete
                             disablePortal
                             id="available_environments_autocomplete"
                             sx={{ minWidth: '280px' }}
-                            options={globalEnvironments.get()}
+                            options={userEnvironments}
                             disableClearable
                             getOptionLabel={(option) => option.name}
                             isOptionEqualToValue={(option, value) => option.id === value.id}
                             value={workerEnvironment}
-                            onClose={() => autocomplete.current.click()}
-                            onChange={(_, value) => setWorkerEnvironment(value)}
-                            onOpen={() => setSelectedProcessGroup(null)}
+                            onChange={(_, value) => {
+                                setKey((v) => v * -1);
+                                return setWorkerEnvironment(value);
+                            }}
                             renderInput={(params) => (
                                 <TextField
                                     {...params} //
@@ -58,13 +64,11 @@ export default function ProcessGroups({ allRemoteProcessGroups, workerEnvironmen
                         disablePortal
                         id="autocomplete_process_groups"
                         sx={{ minWidth: '280px' }}
+                        key={key}
                         openOnFocus={true}
-                        ref={autocomplete}
                         // Filter out remote process groups per environment
                         options={allRemoteProcessGroups.filter((group) => group.environments.includes(workerEnvironment.name))}
                         getOptionLabel={(option) => option?.name}
-                        value={selectedProcessGroup}
-                        onChange={(_, value) => setSelectedProcessGroup(value)}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -76,7 +80,7 @@ export default function ProcessGroups({ allRemoteProcessGroups, workerEnvironmen
                             />
                         )}
                     />
-                    <Button onClick={() => setSelectedProcessGroup(null)} variant="contained" type="submit" color="primary" height="100%" sx={{ ml: 1 }}>
+                    <Button variant="contained" type="submit" color="primary" height="100%" sx={{ ml: 1 }}>
                         Add
                     </Button>
                 </form>
@@ -86,7 +90,7 @@ export default function ProcessGroups({ allRemoteProcessGroups, workerEnvironmen
 }
 
 // ** Custom Hooks
-const useAddRemoteWorkerToProcessGroupHook = (availableRemoteProcessGroups, getRemoteWorkersProcessGroups, workerEnvironment) => {
+const useAddRemoteWorkerToProcessGroupHook = (availableRemoteProcessGroups, getRemoteWorkersProcessGroups, workerEnvironment, workersProcessGroups) => {
     // GraphQL hook
     const addRemoteWorkerToProcessGroup = useAddRemoteWorkerToProcessGroup();
 
@@ -100,6 +104,11 @@ const useAddRemoteWorkerToProcessGroupHook = (availableRemoteProcessGroups, getR
 
         // Get process group's ID by its name
         const remoteProcessGroupID = availableRemoteProcessGroups.find((a) => a.name === data.remoteProcessGroupName).remoteProcessGroupID;
+
+        // If the process group is already attached return error
+        if (workersProcessGroups.find((a) => a.remoteProcessGroupID === remoteProcessGroupID && a.environmentID === workerEnvironment.id)) {
+            return enqueueSnackbar('Process group is already attached', { variant: 'error' });
+        }
 
         const dataFinal = {
             environmentID: workerEnvironment.id,
@@ -116,6 +125,33 @@ const useAddRemoteWorkerToProcessGroupHook = (availableRemoteProcessGroups, getR
         } else {
             enqueueSnackbar('Success', { variant: 'success' });
             getRemoteWorkersProcessGroups();
+        }
+    };
+};
+
+const useGetUserEnvironmentsHook = (setUserEnvironments) => {
+    // GraphQL hook
+    const getUserEnvironments = useGetUserEnvironments();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    const Environment = useGlobalEnvironmentState();
+    const MeData = useGlobalMeState();
+
+    const user_id = MeData.user_id.get();
+    const environment_id = Environment.id.get();
+
+    // Get user environments
+    return async () => {
+        const response = await getUserEnvironments({ user_id, environment_id });
+
+        if (response.r || response.error) {
+            closeSnackbar();
+            enqueueSnackbar("Can't get user environments: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setUserEnvironments(response);
         }
     };
 };

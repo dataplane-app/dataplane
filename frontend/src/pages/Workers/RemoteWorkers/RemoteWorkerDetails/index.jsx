@@ -86,6 +86,7 @@ export default function RPAManage() {
                             workerEnvironment={workerEnvironment}
                             setWorkerEnvironment={setWorkerEnvironment}
                             allRemoteProcessGroups={allRemoteProcessGroups}
+                            workersProcessGroups={workersProcessGroups}
                             getRemoteWorkersProcessGroups={getRemoteWorkersProcessGroups}
                         />
                     ) : null}
