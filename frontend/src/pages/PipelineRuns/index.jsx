@@ -97,23 +97,11 @@ const View = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
 
-    // Trigger the scale button on keyboard 's' key click
-    useEffect(() => {
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const handleKeyDown = (e) => {
-        if (e.keyCode === 83) {
-            onZoomActive();
-        }
-    };
-
     //Flow methods
-    const onLoad = (_reactFlowInstance) => setReactFlowInstance(_reactFlowInstance);
+    const onLoad = (_reactFlowInstance) => {
+        _reactFlowInstance.fitView({ maxZoom: 1 });
+        return setReactFlowInstance(_reactFlowInstance);
+    };
 
     const onConnectStart = () => {
         FlowState.isDragging.set(true);
@@ -181,7 +169,7 @@ const View = () => {
                             <ReactFlow
                                 zoomOnScroll={false}
                                 zoomOnPinch={false}
-                                paneMoveable={panOnDrag || false}
+                                // paneMoveable={panOnDrag || false}
                                 onMoveStart={onMoveStart}
                                 onMoveEnd={onMoveEnd}
                                 nodeTypes={nodeTypes}

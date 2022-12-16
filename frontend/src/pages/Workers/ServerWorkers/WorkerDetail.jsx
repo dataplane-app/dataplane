@@ -21,12 +21,12 @@ export default function WorkerDetail() {
     const { workerId } = useParams();
     const history = useHistory();
 
-    // Instantiate websocket connection
-    const socketResponse = useWebSocket(workerId);
-
     // Global environment state with hookstate
     const Environment = useGlobalEnvironmentState();
     const MeData = useGlobalMeState();
+
+    // Instantiate websocket connection
+    const socketResponse = useWebSocket(workerId);
 
     // Users state
     const [data, setData] = useState([]);

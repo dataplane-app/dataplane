@@ -36,7 +36,7 @@ export default function useWebSocketLog(environmentId, run_id, node_id, setKeys,
         if (RunState.runObject.nodes[node_id]?.status?.get() !== 'Run') return;
 
         function connect() {
-            ws.current = new WebSocket(`${websocketEndpoint}/${environmentId}?subject=workerlogs.${run_id}.${node_id}&id=${run_id}.${node_id}&token=${authToken.get()}`);
+            ws.current = new WebSocket(`${websocketEndpoint}/workerlogs.${environmentId}.${run_id}.${node_id}?token=${authToken.get()}`);
 
             ws.current.onopen = () => ConsoleLogHelper('ws opened');
             ws.current.onclose = () => {

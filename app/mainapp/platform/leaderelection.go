@@ -31,7 +31,7 @@ func PlatformLeaderElectionScheduler(s *gocron.Scheduler, mainAppID string) {
 		}
 
 		/*
-			If leader is nil set the leader with a 5 second lease.
+			If leader is nil set the leader with a 10 second lease.
 		*/
 		if redisModel.NodeID == "" {
 
@@ -42,7 +42,7 @@ func PlatformLeaderElectionScheduler(s *gocron.Scheduler, mainAppID string) {
 			if _, err := database.RedisConn.Pipelined(ctx, func(rdb redis.Pipeliner) error {
 				rdb.HSet(ctx, "leader", "nodeid", mainAppID)
 				rdb.HSet(ctx, "leader", "timestamp", time.Now().UTC().Unix())
-				rdb.Expire(ctx, "leader", 5*time.Second)
+				rdb.Expire(ctx, "leader", 10*time.Second)
 				leaderID = mainAppID
 				return nil
 			}); err != nil {
@@ -67,7 +67,7 @@ func PlatformLeaderElectionScheduler(s *gocron.Scheduler, mainAppID string) {
 			if leaderID == mainAppID {
 
 				if _, err := database.RedisConn.Pipelined(ctx, func(rdb redis.Pipeliner) error {
-					rdb.Expire(ctx, "leader", 5*time.Second)
+					rdb.Expire(ctx, "leader", 10*time.Second)
 					rdb.HSet(ctx, "leader", "timestamp", time.Now().UTC().Unix())
 					return nil
 				}); err != nil {

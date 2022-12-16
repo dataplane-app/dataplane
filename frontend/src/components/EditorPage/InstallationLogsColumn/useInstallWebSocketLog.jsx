@@ -50,7 +50,7 @@ export default function useInstallWebSocketLog(environmentID, workerGroup, pipel
         setWebsocketResp('');
 
         function connect() {
-            ws.current = new WebSocket(`${websocketEndpoint}/${environmentID}?subject=codepackage.${environmentID}.${workerGroup}&id=${workerGroup}&token=${authToken.get()}`);
+            ws.current = new WebSocket(`${websocketEndpoint}/codepackage.${environmentID}.${workerGroup}?token=${authToken.get()}`);
 
             ws.current.onopen = async () => {
                 ConsoleLogHelper('ws opened');

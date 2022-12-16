@@ -21,9 +21,11 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	"github.com/dataplane-app/dataplane/app/mainapp/pipelines"
 	"github.com/dataplane-app/dataplane/app/mainapp/platform"
+	"github.com/dataplane-app/dataplane/app/mainapp/remoteworker"
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler"
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler/routinetasks"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
+	wsockets "github.com/dataplane-app/dataplane/app/mainapp/websockets"
 	"github.com/dataplane-app/dataplane/app/mainapp/worker"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 
@@ -220,8 +222,8 @@ func Setup(port string) *fiber.App {
 	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expires < ?", time.Now())
 
 	// Start websocket hubs
-	go worker.RunHub()
-	go worker.RunHubRooms()
+	go wsockets.RunHub()
+	go remoteworker.RemoteWorkerRunHub()
 
 	//recover from panic
 	app.Use(recover.New())
@@ -295,20 +297,40 @@ func Setup(port string) *fiber.App {
 		return fiber.ErrUpgradeRequired
 	})
 
-	app.Get("/app/ws/workerstats/:workergroup", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
+	app.Get("/app/ws/rooms/:room", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
 
-		// log.Println(c.Query("token"))
-		worker.WorkerStatsWs(c, "workerstats."+c.Params("workergroup"))
+		room := string(c.Params("room"))
+
+		wsockets.RoomUpdates(c, room)
 	}))
 
-	app.Get("/app/ws/rooms/:environment", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
+	/* Authenticate remote worker */
+	app.Post("/app/remoteworker/connect/:workerID", func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
+		remoteWorkerID := string(c.Params("workerID"))
 
-		// log.Println(c.Query("token"))
-		// room := string(c.Params("room"))
-		environment := string(c.Params("environment"))
-		subject := string(c.Query("subject"))
-		id := string(c.Query("id"))
-		worker.RoomUpdates(c, environment, subject, id)
+		// body := c.Body()
+		authHeader := strings.Split(string(c.Request().Header.Peek("Authorization")), "Bearer ")
+		if len(authHeader) != 2 {
+			errstring := "Malformed token"
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"r": "error", "msg": errstring, "active": false})
+		}
+		secretToken := authHeader[1]
+		newRefreshToken, err := auth.AuthRemoteWorker(remoteWorkerID, secretToken)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err.Error())
+			}
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
+		}
+		return c.Status(http.StatusOK).JSON(fiber.Map{"access_token": newRefreshToken})
+	})
+
+	/* Using sessionID authenticate */
+	app.Get("/app/ws/remoteworker/:request/:workerID/:sessionID", auth.AuthRemoteWorkerWebsockets(), websocket.New(func(c *websocket.Conn) {
+
+		/* params are set in auth middleware with locals */
+		remoteworker.WebsocketRoutes(c)
 	}))
 
 	// Download code files

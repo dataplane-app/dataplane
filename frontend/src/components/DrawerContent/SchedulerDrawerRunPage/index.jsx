@@ -139,7 +139,7 @@ const ScheduleDrawer = ({ handleClose, environmentId, getPipeline }) => {
                                     </Typography>
 
                                     <Typography color="purple.main" fontSize={13} mt={1}>
-                                        Due to distributed locking leases, it is not advised to use schedules less then 3 seconds.
+                                        Due to 1 second leases on distributed locking, it is not advised to use schedules less than 3 seconds.
                                     </Typography>
                                 </Box>
                             ) : null}

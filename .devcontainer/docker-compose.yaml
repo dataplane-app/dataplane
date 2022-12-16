@@ -8,7 +8,7 @@ services:
   redis-service:
     image: redis:7.0.5-bullseye
     ports:
-      - 6379
+      - 6380:6379
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 1s

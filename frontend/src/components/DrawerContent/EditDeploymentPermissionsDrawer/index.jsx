@@ -1,16 +1,13 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Autocomplete, Box, Button, Checkbox, FormControlLabel, FormGroup, TextField, Typography } from '@mui/material';
+import { Box, Button, Checkbox, FormControlLabel, FormGroup, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGetAccessGroups } from '../../../graphql/getAccessGroups';
-import { useGetUsers } from '../../../graphql/getUsers';
 import { useDeploymentPermissionsToUser } from '../../../graphql/deploymentPermissionsToUser';
 import { useDeploymentPermissionsToAccessGroup } from '../../../graphql/deploymentPermissionsToAccessGroup';
 import { useGetUserSingleDeploymentPermissions } from '../../../graphql/getUserSingleDeploymentPermissions';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
-import { useGlobalMeState } from '../../Navbar';
 
 export const DEFAULT_OPTIONS = {
     view: false,
