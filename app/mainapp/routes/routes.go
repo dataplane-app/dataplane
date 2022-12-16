@@ -21,6 +21,7 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	"github.com/dataplane-app/dataplane/app/mainapp/pipelines"
 	"github.com/dataplane-app/dataplane/app/mainapp/platform"
+	"github.com/dataplane-app/dataplane/app/mainapp/remoteworker"
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler"
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler/routinetasks"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
@@ -222,6 +223,7 @@ func Setup(port string) *fiber.App {
 
 	// Start websocket hubs
 	go wsockets.RunHub()
+	go remoteworker.RemoteWorkerRunHub()
 
 	//recover from panic
 	app.Use(recover.New())
@@ -300,6 +302,35 @@ func Setup(port string) *fiber.App {
 		room := string(c.Params("room"))
 
 		wsockets.RoomUpdates(c, room)
+	}))
+
+	/* Authenticate remote worker */
+	app.Post("/app/remoteworkerauth/:workerID", func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
+		remoteWorkerID := string(c.Params("workerID"))
+
+		// body := c.Body()
+		authHeader := strings.Split(string(c.Request().Header.Peek("Authorization")), "Bearer ")
+		if len(authHeader) != 2 {
+			errstring := "Malformed token"
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"r": "error", "msg": errstring, "active": false})
+		}
+		secretToken := authHeader[1]
+		newRefreshToken, err := auth.AuthRemoteWorker(remoteWorkerID, secretToken)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err.Error())
+			}
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
+		}
+		return c.Status(http.StatusOK).JSON(fiber.Map{"access_token": newRefreshToken})
+	})
+
+	/* Using sessionID authenticate */
+	app.Get("/app/ws/remoteworker/:request/:workerID/:sessionID", auth.AuthRemoteWorkerWebsockets(), websocket.New(func(c *websocket.Conn) {
+
+		/* params are set in auth middleware with locals */
+		remoteworker.WebsocketRoutes(c)
 	}))
 
 	// Download code files

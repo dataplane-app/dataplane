@@ -45,6 +45,9 @@ var DPRedisPort string
 var DPRedisDB int
 var DPRedisPassword string
 
+//Remote workers
+var RemoteWorkerDebug string
+
 // Available storage methods: Database, LocalFile, S3
 
 func LoadConfig() {
@@ -83,6 +86,11 @@ func LoadConfig() {
 	MQDebug = os.Getenv("DP_MQ_DEBUG")
 	if MQDebug == "" {
 		MQDebug = "false"
+	}
+
+	RemoteWorkerDebug = os.Getenv("DP_REMOTEWORKER_DEBUG")
+	if RemoteWorkerDebug == "" {
+		RemoteWorkerDebug = "false"
 	}
 
 	CodeDirectory = os.Getenv("DP_CODE_FOLDER")
