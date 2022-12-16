@@ -24,7 +24,7 @@ func AuthRemoteWorker(remoteWorkerID string, secretToken string) (string, error)
 
 	// 2. Store redis session for the worker - keep alive for 1 week
 	sessionID = uuid.NewString()
-	log.Println(sessionID)
+	// log.Println(sessionID)
 	_, err := database.RedisConn.Set(ctx, "sess-"+remoteWorkerID, sessionID, 7*24*time.Hour).Result()
 	if err != nil {
 		log.Println("Remote worker redis set connect error:", err)

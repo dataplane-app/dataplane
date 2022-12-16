@@ -305,7 +305,7 @@ func Setup(port string) *fiber.App {
 	}))
 
 	/* Authenticate remote worker */
-	app.Post("/app/remoteworkerauth/:workerID", func(c *fiber.Ctx) error {
+	app.Post("/app/remoteworker/connect/:workerID", func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
 		remoteWorkerID := string(c.Params("workerID"))
 
