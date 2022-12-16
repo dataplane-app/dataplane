@@ -16,7 +16,7 @@ let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
 if (host === '') {
     host = window.location.origin;
 }
-const ConnectURL = `${host}/rworker/connect/`;
+const ConnectURL = `${host}/app/remoteworker/connect/`;
 
 const initialState = {
     storedKeys: [],
