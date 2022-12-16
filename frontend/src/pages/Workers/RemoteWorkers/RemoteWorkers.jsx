@@ -54,7 +54,7 @@ export default function RPAWorkers() {
                 accessor: (row) => [row.workerName, row.status, row.workerID],
                 Cell: (row) => (
                     <Box display="flex" flexDirection="column">
-                        <Box mt={-2} display="flex">
+                        <Box display="flex">
                             <Tooltip title={row.value[2]} placement="top">
                                 <Typography variant="caption" lineHeight={1.2} mr={0.5}>
                                     {row.value[0]}
@@ -76,6 +76,11 @@ export default function RPAWorkers() {
                                     top="1px"
                                 />
                             </Box>
+                        </Box>
+                        <Box>
+                            <Typography variant="caption" lineHeight={1.2}>
+                                {row.value[2]}
+                            </Typography>
                         </Box>
                     </Box>
                 ),
