@@ -51,31 +51,41 @@ func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmen
 		Active:               false,
 	}
 
-	err := database.DBConn.Create(&remoteProcessGroups).Error
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+		err := tx.Create(&remoteProcessGroups).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+
+			return errors.New("Add remote process group database error.")
 		}
 
-		return "", errors.New("Add remote process group database error.")
-	}
-
-	// Add remote process group to an environment
-	remoteWorkerEnvironment := models.RemoteWorkerEnvironments{
-		EnvironmentID:        processGroupsEnvironmentID,
-		WorkerID:             "",
-		RemoteProcessGroupID: id,
-	}
-
-	err = database.DBConn.Create(&remoteWorkerEnvironment).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+		// Add remote process group to an environment
+		remoteWorkerEnvironment := models.RemoteWorkerEnvironments{
+			EnvironmentID:        processGroupsEnvironmentID,
+			WorkerID:             "",
+			RemoteProcessGroupID: id,
 		}
 
-		return "", errors.New("Add remote worker environment database error.")
+		err = tx.Create(&remoteWorkerEnvironment).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+
+			return errors.New("Add remote worker environment database error.")
+		}
+
+		// return nil will commit the whole transaction
+		return nil
+	})
+
+	if err != nil {
+		return "", errors.New("Add remote process group: " + err.Error())
 	}
 
 	return "Success", nil
@@ -253,34 +263,44 @@ func (r *mutationResolver) AddRemoteWorker(ctx context.Context, environmentID st
 		Status:     "offline",
 		LB:         "",
 		WorkerType: "",
+		Active:     true,
 		LastPing:   nil,
 	}
 
-	err := database.DBConn.Create(&remoteWorker).Error
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+		err := tx.Create(&remoteWorker).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+
+			return errors.New("Add remote worker database error.")
 		}
 
-		return "", errors.New("Add remote worker database error.")
-	}
-
-	// Attach worker to remote process group
-	remoteWorkerEnvironment := models.RemoteWorkerEnvironments{
-		EnvironmentID:        environmentID,
-		WorkerID:             id,
-		RemoteProcessGroupID: remoteProcessGroupID,
-	}
-
-	err = database.DBConn.Create(&remoteWorkerEnvironment).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+		// Attach worker to remote process group
+		remoteWorkerEnvironment := models.RemoteWorkerEnvironments{
+			EnvironmentID:        environmentID,
+			WorkerID:             id,
+			RemoteProcessGroupID: remoteProcessGroupID,
 		}
 
-		return "", errors.New("Add remote worker environment database error.")
+		err = tx.Create(&remoteWorkerEnvironment).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+
+			return errors.New("Add remote worker environment database error.")
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return "", errors.New("Add remote worker: " + err.Error())
 	}
 
 	return "Success", nil
@@ -580,9 +600,9 @@ func (r *queryResolver) GetRemoteProcessGroups(ctx context.Context, environmentI
 		rpg.active,
 		array_agg(distinct environment.name) as environments
 		from remote_process_groups rpg
-		left join remote_worker_environments rwe on rpg.remote_process_group_id = rwe.remote_process_group_id
-		left join environment_user on rwe.environment_id = environment_user.environment_id
-		left join environment on rwe.environment_id = environment.id
+		inner join remote_worker_environments rwe on rpg.remote_process_group_id = rwe.remote_process_group_id
+		inner join environment_user on rwe.environment_id = environment_user.environment_id
+		inner join environment on rwe.environment_id = environment.id
 		where (environment_user.environment_id = rwe.environment_id and environment_user.user_id = ?)
 		GROUP BY rpg.remote_process_group_id, rpg.name
 		`, currentUser).Find(&resp).Error
