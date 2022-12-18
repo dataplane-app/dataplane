@@ -323,7 +323,7 @@ func Setup(port string) *fiber.App {
 			}
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
 		}
-		return c.Status(http.StatusOK).JSON(fiber.Map{"access_token": newRefreshToken})
+		return c.Status(http.StatusOK).JSON(fiber.Map{"access_token": newRefreshToken, "remote_worker_id": remoteWorkerID})
 	})
 
 	/* Using sessionID authenticate */

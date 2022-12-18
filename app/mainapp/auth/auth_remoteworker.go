@@ -24,7 +24,7 @@ func AuthRemoteWorker(remoteWorkerID string, secretToken string) (string, error)
 
 	// 0. Authenticate the worker
 	keys := []models.RemoteWorkerActivationKeys{}
-	errdb := database.DBConn.Debug().Select("remote_worker_activation_keys.activation_key").
+	errdb := database.DBConn.Select("remote_worker_activation_keys.activation_key").
 		Where("remote_worker_activation_keys.remote_worker_id=? and (remote_worker_activation_keys.expires_at > now() or remote_worker_activation_keys.expires_at is NULL)", remoteWorkerID).
 		Joins("inner join remote_workers rw on rw.worker_id = remote_worker_activation_keys.remote_worker_id and rw.active=true").
 		Find(&keys).Error

@@ -27,6 +27,9 @@ type Subscription struct {
 
 func secureTimeoutq(room string, connection *websocket.Conn, RoomswithClients cmap.ConcurrentMap) {
 	time.Sleep(2 * 24 * time.Hour)
+	// time.Sleep(10 * time.Second)
+
+	// log.Println("retry")
 
 	if tmp, ok := RoomswithClients.Get(room); ok {
 
@@ -76,6 +79,7 @@ func RemoteWorkerRunHub() {
 				RoomswithClients.Set(connection.Room, clients)
 			}
 
+			/* The connect retry will be handled by the heartbeat in the client */
 			go secureTimeoutq(connection.Room, connection.Conn, RoomswithClients)
 
 			// Show clients belonging to which room
