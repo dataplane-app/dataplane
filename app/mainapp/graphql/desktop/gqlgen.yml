@@ -1,0 +1,48 @@
+# Where are all the schema files located? globs are supported eg  src/**/*.graphqls
+schema:
+    - resolvers/*.graphqls
+
+# Where should the generated server code go?
+exec:
+    filename: generated.go
+    package: desktopgraphql
+
+# Where should any generated models go?
+model:
+    filename: models.go
+    package: desktopgraphql
+
+models:
+    # User:
+    #     model: github.com/dataplane-app/dataplane/app/mainapp/database/models.Users
+
+    # Platform:
+    #     model: github.com/dataplane-app/dataplane/app/mainapp/database/models.Platform
+
+resolver:
+    layout: follow-schema
+    dir: ./resolvers
+    package: desktopresolvers
+    filename_template: "{name}.resolvers.go"
+
+autobind: []
+# Where should the resolver implementations go?
+#resolver:
+#  layout: follow-schema
+#  dir: graph
+#  package: graph
+
+# Optional: turn on use ` + "`" + `gqlgen:"fieldName"` + "`" + ` tags in your models
+# struct_tag: json
+
+# Optional: turn on to use []Thing instead of []*Thing
+# omit_slice_element_pointers: false
+
+# Optional: set to speed up generation time by not performing a final validation pass.
+# skip_validation: true
+
+# gqlgen will search for any type names in the schema in these go packages
+# if they match it will use them, otherwise it will generate them.
+#autobind:
+#  - "github.com/your/app/graph/model"
+
