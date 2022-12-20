@@ -259,6 +259,7 @@ func Setup(port string) *fiber.App {
 	// ------- GRAPHQL------
 	app.Post("/app/public/graphql", PublicGraphqlHandler())
 	app.Post("/app/private/graphql", auth.TokenAuthMiddle(), PrivateGraphqlHandler())
+	app.Post("/app/desktop/graphql", auth.DesktopAuthMiddle(), DesktopGraphqlHandler())
 
 	// WARNING: This is insecure and only for documentation, do not enable in production
 	if os.Getenv("DP_GRAPHQLDOCS") == "true" {
