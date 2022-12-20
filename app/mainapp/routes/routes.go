@@ -327,6 +327,15 @@ func Setup(port string) *fiber.App {
 	})
 
 	/* Using sessionID authenticate */
+	// server := rpc.NewServer()
+	// rpc.Register(new(Arith))
+	// app.Get("/app/ws/wsremoteworker", websocket.New(func(c *websocket.Conn) {
+
+	// 	jsonrpc.ServeConn(c.UnderlyingConn())
+	// }))
+
+	// auth.AuthRemoteWorkerWebsockets(),
+
 	app.Get("/app/ws/remoteworker/:request/:workerID/:sessionID", auth.AuthRemoteWorkerWebsockets(), websocket.New(func(c *websocket.Conn) {
 
 		/* params are set in auth middleware with locals */
@@ -555,6 +564,19 @@ func Setup(port string) *fiber.App {
 
 	return app
 
+}
+
+type Args struct {
+	A int
+	B int
+}
+
+type Arith int
+
+func (t *Arith) Multiply(args *Args, reply *int) error {
+	log.Println(args)
+	*reply = args.A * args.B
+	return nil
 }
 
 //Defining the Playground handler

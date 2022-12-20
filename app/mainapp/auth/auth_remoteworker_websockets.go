@@ -20,6 +20,12 @@ func AuthRemoteWorkerWebsockets() func(*fiber.Ctx) error {
 		remoteWorkerID := string(c.Params("workerID"))
 		sessionID = string(c.Params("sessionID"))
 
+		c.Locals("remoteWorkerID", remoteWorkerID)
+		c.Locals("sessionID", sessionID)
+		c.Locals("request", request)
+
+		return c.Next()
+
 		// 2. Check session against redis
 		val, err := database.RedisConn.Get(ctx, "sess-"+remoteWorkerID).Result()
 		if err != nil {

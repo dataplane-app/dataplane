@@ -3,6 +3,7 @@ package remoteworker
 import (
 	"encoding/json"
 	"log"
+	"net/rpc/jsonrpc"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -12,11 +13,43 @@ import (
 
 var quit = make(chan bool)
 
+type WebsocketConn struct {
+	*websocket.Conn
+}
+
+func (c *WebsocketConn) Read(p []byte) (int, error) {
+	_, data, err := c.Conn.ReadMessage()
+	if err != nil {
+		return 0, err
+	}
+	return copy(p, data), nil
+}
+
+func (c *WebsocketConn) Write(p []byte) (int, error) {
+	err := c.Conn.WriteMessage(websocket.BinaryMessage, p)
+	if err != nil {
+		return 0, err
+	}
+	return len(p), nil
+}
+
+func (c *WebsocketConn) Close() error {
+	return c.Conn.Close()
+}
+
 // https://github.com/gorilla/websocket/blob/master/examples/chat/client.go
 
 // https://github.com/marcelo-tm/testws/blob/master/main.go
 
 func WebsocketRoutes(conn *websocket.Conn) {
+
+	c := jsonrpc.NewClient(&WebsocketConn{conn})
+	args := []string{}
+	var reply string
+	errme := c.Call("meme", args, &reply)
+	if errme != nil {
+		log.Println(errme)
+	}
 
 	request := conn.Locals("request").(string)
 	remoteWorkerID := conn.Locals("remoteWorkerID").(string)
@@ -39,6 +72,8 @@ func WebsocketRoutes(conn *websocket.Conn) {
 
 	/* Connect: authenticate the worker */
 	case "heartbeat":
+
+	case "jsonrpc":
 
 	case "test":
 
@@ -82,6 +117,65 @@ func WebsocketRoutes(conn *websocket.Conn) {
 
 		/* ----- Route the incoming requests ----- */
 		switch request {
+
+		case "jsonrpc":
+
+			/* Read the JSON RPC incoming message */
+			var request models.RPCRequest
+			if err := json.Unmarshal(message, &request); err != nil {
+
+				log.Println("jsonrpc request unmarshal:", err)
+				rpcerror := models.RPCError{
+					Code:    -32700,
+					Message: "Request parse error",
+					Data:    err.Error(),
+				}
+				responseBytes, _ := json.Marshal(rpcerror)
+				Broadcast <- Message{Room: remoteWorkerID + "=" + sessionID, Data: responseBytes}
+
+				break
+			}
+
+			log.Println("jsonrpc:", string(message), request)
+
+			switch request.Method {
+
+			/* ------- Heart beat of the worker every second ------- */
+			case "heartbeat":
+
+				err := RWHeartBeat(remoteWorkerID, sessionID)
+				if err != nil {
+
+					log.Println("jsonrpc heartbeat error:", err)
+					rpcerror := models.RPCError{
+						Code:    -32603,
+						Message: "Heartbeat error",
+						Data:    err.Error(),
+					}
+					responseBytes, _ := json.Marshal(rpcerror)
+					Broadcast <- Message{Room: remoteWorkerID + "=" + sessionID, Data: responseBytes}
+
+					break
+				}
+
+				response := models.RPCResponse{
+					Version: "2.0",
+					Result:  "OK",
+					ID:      request.ID,
+				}
+				responseBytes, _ := json.Marshal(response)
+				Broadcast <- Message{Room: remoteWorkerID + "=" + sessionID, Data: responseBytes}
+
+			case "add":
+			case "subtract":
+			default:
+				rpcerror := models.RPCError{
+					Code:    -32601,
+					Message: "Method not found",
+				}
+				responseBytes, _ := json.Marshal(rpcerror)
+				Broadcast <- Message{Room: remoteWorkerID + "=" + sessionID, Data: responseBytes}
+			}
 
 		/* Connect: authenticate the worker */
 		case "heartbeat":
