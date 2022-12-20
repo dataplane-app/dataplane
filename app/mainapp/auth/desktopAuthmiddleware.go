@@ -18,7 +18,7 @@ func DesktopAuthMiddle() func(*fiber.Ctx) error {
 		}
 
 		// TODO: Add authentication
-		log.Printf("authHeader[1]: %v\n", authHeader[1])
+		log.Printf("Session key: %v\n", authHeader[1])
 
 		// access, claims := ValidateAccessToken(authHeader[1])
 
