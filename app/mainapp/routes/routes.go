@@ -223,7 +223,6 @@ func Setup(port string) *fiber.App {
 
 	// Start websocket hubs
 	go wsockets.RunHub()
-	go remoteworker.RemoteWorkerRunHub()
 
 	//recover from panic
 	app.Use(recover.New())
@@ -327,21 +326,20 @@ func Setup(port string) *fiber.App {
 		return c.Status(http.StatusOK).JSON(fiber.Map{"access_token": newRefreshToken, "remote_worker_id": remoteWorkerID})
 	})
 
-	/* Using sessionID authenticate */
-	// server := rpc.NewServer()
-	// rpc.Register(new(Arith))
-	// app.Get("/app/ws/wsremoteworker", websocket.New(func(c *websocket.Conn) {
-
-	// 	jsonrpc.ServeConn(c.UnderlyingConn())
-	// }))
-
+	/* ------ REMOTE WORKERS ----- */
 	// auth.AuthRemoteWorkerWebsockets(),
-
+	go remoteworker.RPCHub()
 	app.Get("/app/ws/remoteworker/:request/:workerID/:sessionID", auth.AuthRemoteWorkerWebsockets(), websocket.New(func(c *websocket.Conn) {
 
+		remoteworker.RPCServer(c)
 		/* params are set in auth middleware with locals */
-		remoteworker.WebsocketRoutes(c)
+		// jsonrpc.ServeConn(&remoteworker.WebsocketConn{c})
 	}))
+
+	app.Get("/trigger/remote/task", func(c *fiber.Ctx) error {
+		remoteworker.Broadcast <- remoteworker.Message{WorkerID: "fedf703e-82ca-4fab-b401-b7c774285c11", Data: []byte("hello")}
+		return c.JSON(fiber.Map{"Response": "OK"})
+	})
 
 	// Download code files
 	app.Get("/app/private/code-files/:fileid", auth.TokenAuthMiddle(), func(c *fiber.Ctx) error {
@@ -565,19 +563,6 @@ func Setup(port string) *fiber.App {
 
 	return app
 
-}
-
-type Args struct {
-	A int
-	B int
-}
-
-type Arith int
-
-func (t *Arith) Multiply(args *Args, reply *int) error {
-	log.Println(args)
-	*reply = args.A * args.B
-	return nil
 }
 
 //Defining the Playground handler

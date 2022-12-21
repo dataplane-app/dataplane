@@ -8,16 +8,10 @@ import (
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/go-redis/redis/v8"
+	"github.com/gofiber/websocket/v2"
 )
 
-type RemoteWorker string
-
-type SessionInputs struct {
-	RemoteWorkerID string
-	SessionID      string
-}
-
-func (t *RemoteWorker) HeartBeat(args *SessionInputs, reply string) error {
+func RWHeartBeat(conn *websocket.Conn, requestID int64, RemoteWorkerID string, SessionID string) (string, error) {
 
 	ctx := context.Background()
 
@@ -25,16 +19,15 @@ func (t *RemoteWorker) HeartBeat(args *SessionInputs, reply string) error {
 	// Store and struct in Redis - https://github.com/go-redis/redis/blob/f8cbf483f4a193d441fac2cf14be3d84783848c6/example_test.go#L281
 
 	if _, err := database.RedisConn.Pipelined(ctx, func(rdb redis.Pipeliner) error {
-		rdb.HSet(ctx, "rw-"+args.RemoteWorkerID, "time", time.Now().UTC().Unix())
-		rdb.HSet(ctx, "rw-"+args.RemoteWorkerID, "sessionID", args.SessionID)
-		rdb.Expire(ctx, "rw-"+args.RemoteWorkerID, 15*time.Second)
+		rdb.HSet(ctx, "rw-"+RemoteWorkerID, "time", time.Now().UTC().Unix())
+		rdb.HSet(ctx, "rw-"+RemoteWorkerID, "sessionID", SessionID)
+		rdb.Expire(ctx, "rw-"+RemoteWorkerID, 15*time.Second)
 		return nil
 	}); err != nil {
 		log.Println("Failed to set remote worker heartbeat:", err)
-		// panic("")
-		return errors.New("Failed to set remote worker heartbeat")
+		return "", errors.New("Failed to set remote worker heartbeat")
 	}
 
-	return nil
+	return RemoteWorkerID, nil
 
 }

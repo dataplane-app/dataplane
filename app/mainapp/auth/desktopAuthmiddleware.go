@@ -20,6 +20,29 @@ func DesktopAuthMiddle() func(*fiber.Ctx) error {
 		// TODO: Add authentication
 		log.Printf("Session key: %v\n", authHeader[1])
 
+		// // 2. Check session against redis
+		// val, err := database.RedisConn.Get(ctx, "sess-"+remoteWorkerID).Result()
+		// if err != nil {
+		// 	log.Println("Remote worker redis get connect error:", err)
+		// 	return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+		// 		"r": "Unauthorized - error getting session",
+		// 	})
+		// }
+
+		// // log.Println(val, sessionID)
+
+		// if val != sessionID {
+		// 	log.Println("Remote worker session mismatch:")
+		// 	return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+		// 		"r": "Unauthorized - session doesn't exist or expired",
+		// 	})
+		// }
+
+		// // --- Pass through context
+		// c.Locals("remoteWorkerID", remoteWorkerID)
+		// c.Locals("sessionID", sessionID)
+		// c.Locals("request", request)
+
 		// access, claims := ValidateAccessToken(authHeader[1])
 
 		// if access == false {
