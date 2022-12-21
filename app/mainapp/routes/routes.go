@@ -337,7 +337,7 @@ func Setup(port string) *fiber.App {
 	}))
 
 	app.Get("/trigger/remote/task", func(c *fiber.Ctx) error {
-		remoteworker.Broadcast <- remoteworker.Message{WorkerID: "fedf703e-82ca-4fab-b401-b7c774285c11", Data: []byte("hello")}
+		remoteworker.Broadcast <- remoteworker.Message{WorkerID: "fedf703e-82ca-4fab-b401-b7c774285c11", Data: []byte(`{"hello":"hello"}`)}
 		return c.JSON(fiber.Map{"Response": "OK"})
 	})
 
