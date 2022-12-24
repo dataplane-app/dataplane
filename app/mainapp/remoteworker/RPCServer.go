@@ -8,12 +8,12 @@ import (
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/gofiber/websocket/v2"
+	jsoniter "github.com/json-iterator/go"
 )
 
-func RPCServer(conn *websocket.Conn) {
+func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 
-	remoteWorkerID := conn.Locals("remoteWorkerID").(string)
-	sessionID := conn.Locals("sessionID").(string)
+	/* ----- Check if remote worker aleady using this ID is checked on http auth ---- */
 
 	/* ------- Register the Hub ------*/
 	defer func() {
@@ -39,8 +39,12 @@ func RPCServer(conn *websocket.Conn) {
 			return
 		}
 
+		// ----- Authenticate all incoming messages --------
+		sessionID := jsoniter.Get(message, "params", "Auth").ToString()
+		log.Println("session token:", sessionID)
+
 		if dpconfig.RemoteWorkerDebug == "true" {
-			log.Println("message received from client:", mt, remoteWorkerID+"="+sessionID, string(message))
+			log.Println("message received from client:", mt, remoteWorkerID, string(message))
 		}
 
 		/* ----- Route the incoming requests ----- */
@@ -49,7 +53,7 @@ func RPCServer(conn *websocket.Conn) {
 		var request models.RPCRequest
 		if err := json.Unmarshal(message, &request); err != nil {
 
-			RPCError(conn, request.ID, -32700, "Request parse error", err)
+			RPCError(remoteWorkerID, request.ID, -32700, "Request parse error", err)
 
 			break
 		}
@@ -67,25 +71,25 @@ func RPCServer(conn *websocket.Conn) {
 
 			response, err := RWHeartBeat(conn, request.ID, remoteWorkerID, sessionID)
 			if err != nil {
-				RPCError(conn, request.ID, -32603, "Heartbeat error", err)
+				RPCError(remoteWorkerID, request.ID, -32603, "Heartbeat error", err)
 				break
 			}
-			RPCResponse(conn, request.ID, response)
+			RPCResponse(remoteWorkerID, request.ID, response)
 
 		case "Arith.Multiply":
 
 			log.Println("Params:", string(request.Params))
 			response, err := Multiply(conn, request.ID, request.Params)
 			if err != nil {
-				RPCError(conn, request.ID, -32603, "Multiply error", err)
+				RPCError(remoteWorkerID, request.ID, -32603, "Multiply error", err)
 				break
 			}
-			RPCResponse(conn, request.ID, response)
+			RPCResponse(remoteWorkerID, request.ID, response)
 
 		default:
 
 			/* for bi directional activity: empty case above prevents infinite loop */
-			RPCError(conn, request.ID, -32601, "Method not found", errors.New("Method not found"))
+			RPCError(remoteWorkerID, request.ID, -32601, "Method not found", errors.New("Method not found"))
 
 		}
 

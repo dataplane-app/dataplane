@@ -38,7 +38,11 @@ func RPCHub() {
 		select {
 		case connection := <-Register:
 
+			/* Does this connection already exist? */
+
 			WorkerIDClients.Set(connection.WorkerID, connection.Conn)
+
+			log.Println(connection.Conn)
 
 			// Show clients belonging to which room
 			// if dpconfig.MQDebug == "true" {
@@ -49,6 +53,7 @@ func RPCHub() {
 
 			// log.Println("message received:", string(message.Data), message.Room)
 			var client *websocket.Conn
+			log.Println("Hub count:", WorkerIDClients.Count())
 
 			// Send the message to all clients in the room provided
 			if tmp, ok := WorkerIDClients.Get(message.WorkerID); ok {

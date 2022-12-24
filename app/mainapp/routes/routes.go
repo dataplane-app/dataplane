@@ -329,9 +329,13 @@ func Setup(port string) *fiber.App {
 	/* ------ REMOTE WORKERS ----- */
 	// auth.AuthRemoteWorkerWebsockets(),
 	go remoteworker.RPCHub()
-	app.Get("/app/ws/remoteworker/:request/:workerID/:sessionID", auth.AuthRemoteWorkerWebsockets(), websocket.New(func(c *websocket.Conn) {
+	// auth.AuthRemoteWorkerWebsockets(),
+	app.Get("/app/ws/remoteworker/jsonrpc/:workerID", websocket.New(func(c *websocket.Conn) {
 
-		remoteworker.RPCServer(c)
+		remoteWorkerID := string(c.Params("workerID"))
+		// c.Locals("remoteWorkerID", remoteWorkerID)
+
+		remoteworker.RPCServer(c, remoteWorkerID)
 		/* params are set in auth middleware with locals */
 		// jsonrpc.ServeConn(&remoteworker.WebsocketConn{c})
 	}))
