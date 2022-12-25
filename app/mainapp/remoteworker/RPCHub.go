@@ -42,7 +42,7 @@ func RPCHub() {
 
 			WorkerIDClients.Set(connection.WorkerID, connection.Conn)
 
-			log.Println(connection.Conn)
+			// log.Println(connection.Conn)
 
 			// Show clients belonging to which room
 			// if dpconfig.MQDebug == "true" {

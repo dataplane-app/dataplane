@@ -1,11 +1,13 @@
 package remoteworker
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/gofiber/websocket/v2"
 	jsoniter "github.com/json-iterator/go"
@@ -14,6 +16,7 @@ import (
 func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 
 	/* ----- Check if remote worker aleady using this ID is checked on http auth ---- */
+	ctx := context.Background()
 
 	/* ------- Register the Hub ------*/
 	defer func() {
@@ -42,6 +45,24 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 		// ----- Authenticate all incoming messages --------
 		sessionID := jsoniter.Get(message, "params", "Auth").ToString()
 		log.Println("session token:", sessionID)
+
+		// 2. Check session against redis
+		val, err := database.RedisConn.Get(ctx, "sess-"+remoteWorkerID).Result()
+		if err != nil {
+			log.Println("Remote worker redis get connect error:", err)
+			Unregister <- Subscription{Conn: conn, WorkerID: remoteWorkerID}
+			conn.WriteMessage(websocket.CloseMessage, []byte{})
+			conn.Close()
+		}
+
+		// log.Println(val, sessionID)
+
+		if val != sessionID {
+			log.Println("Remote worker session mismatch:")
+			Unregister <- Subscription{Conn: conn, WorkerID: remoteWorkerID}
+			conn.WriteMessage(websocket.CloseMessage, []byte{})
+			conn.Close()
+		}
 
 		if dpconfig.RemoteWorkerDebug == "true" {
 			log.Println("message received from client:", mt, remoteWorkerID, string(message))
