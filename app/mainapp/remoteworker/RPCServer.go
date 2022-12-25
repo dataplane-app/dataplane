@@ -44,7 +44,7 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 
 		// ----- Authenticate all incoming messages --------
 		sessionID := jsoniter.Get(message, "params", "Auth").ToString()
-		log.Println("session token:", sessionID)
+		// log.Println("session token:", sessionID)
 
 		// 2. Check session against redis
 		val, err := database.RedisConn.Get(ctx, "sess-"+remoteWorkerID).Result()
