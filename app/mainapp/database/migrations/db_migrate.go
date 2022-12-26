@@ -6,12 +6,15 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 
 	// "gorm.io/gorm/clause"
-	"github.com/Masterminds/semver"
+
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 
 	"gorm.io/gorm/clause"
@@ -66,7 +69,7 @@ func Migrate() {
 
 	// ----- Test for migration version mismatch ----
 	var currentVersion models.Platform
-	if err := dbConn.Select("migration_version").First(&currentVersion).Error; err != nil {
+	if err := dbConn.Select("migration_version", "specific_migrations").First(&currentVersion).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			panic("Could not retrieve migration version")
 		}
@@ -137,32 +140,25 @@ func Migrate() {
 			panic(err1)
 		}
 
-		constraint := ">= 0.0.1, <= 0.0.65"
-		c, cerr := semver.NewConstraint(constraint)
-		if cerr != nil {
-			log.Println("Semver constaint check DB migration failed")
-		}
+		// constraint := ">= 0.0.1, <= 0.0.75"
+		// c, cerr := semver.NewConstraint(constraint)
+		// if cerr != nil {
+		// 	log.Println("Semver constaint check DB migration failed")
+		// }
 
-		v, cerr2 := semver.NewVersion(migrateVersion)
-		if cerr2 != nil {
-			log.Println("Semver check DB migration failed")
-		}
+		// v, cerr2 := semver.NewVersion(migrateVersion)
+		// if cerr2 != nil {
+		// 	log.Println("Semver check DB migration failed")
+		// }
 
-		a := c.Check(v)
+		// a := c.Check(v)
 
-		// --- specific version upgrade in semver range---
-		if a {
+		// // --- specific version upgrade in semver range---
+		// if a {
 
-			log.Println("Specific DB migration based on: ", constraint)
-			e1 := dbConn.Model(&models.CodeFolders{}).Exec("ALTER TABLE code_folders ALTER COLUMN folder_id TYPE varchar(55);").Error
-			if e1 != nil {
-				panic("Failed to migrate code folders" + migrateVersion + e1.Error())
-			}
-			e2 := dbConn.Model(&models.DeployCodeFolders{}).Exec("ALTER TABLE deploy_code_folders ALTER COLUMN folder_id TYPE varchar(55);").Error
-			if e2 != nil {
-				panic("Failed to migrate code folders" + migrateVersion + e2.Error())
-			}
-		}
+		// 	log.Println("Specific DB migration based on: ", constraint)
+
+		// }
 
 		if err := dbConn.Model(&models.Platform{}).Select("migration_version").Where("1 = 1").Update("migration_version", migrateVersion).Error; err != nil {
 			panic("Could not retrieve migration version")
@@ -199,6 +195,32 @@ func Migrate() {
 		dbConn.Find(&environs)
 		for _, env := range environs {
 			filesystem.CreateFolderSubs(dbConn, env.ID)
+		}
+
+	}
+
+	// ----- Specific migrations -----
+	checkval := gjson.Get(currentVersion.SpecificMigrations.String(), "code_folders.complete")
+
+	// If specific migration does not exist, run below.
+	if !checkval.Exists() {
+		log.Println("Running specific migration for code folders.")
+
+		e1 := dbConn.Model(&models.CodeFolders{}).Exec("ALTER TABLE code_folders ALTER COLUMN folder_id TYPE varchar(55);").Error
+		if e1 != nil {
+			panic("Failed to migrate code folders" + migrateVersion + e1.Error())
+		}
+		e2 := dbConn.Model(&models.DeployCodeFolders{}).Exec("ALTER TABLE deploy_code_folders ALTER COLUMN folder_id TYPE varchar(55);").Error
+		if e2 != nil {
+			panic("Failed to migrate code folders" + migrateVersion + e2.Error())
+		}
+
+		value, _ := sjson.Set(currentVersion.SpecificMigrations.String(), "code_folders.datetime", time.Now().UTC())
+		value, _ = sjson.Set(value, "code_folders.complete", true)
+		log.Println("Specific migrations:", value)
+
+		if err := dbConn.Model(&models.Platform{}).Select("specific_migrations").Where("1 = 1").Update("specific_migrations", value).Error; err != nil {
+			panic("Could register specific migration for code folders.")
 		}
 
 	}
