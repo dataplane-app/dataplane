@@ -12,6 +12,7 @@ func DesktopAuthMiddle() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
 		authHeader := strings.Split(string(c.Request().Header.Peek("Authorization")), "Bearer ")
+		workerID := string(c.Request().Header.Peek("workerID"))
 		if len(authHeader) != 2 {
 			errstring := "Malformed token"
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"r": "error", "msg": errstring, "active": false})
@@ -19,6 +20,7 @@ func DesktopAuthMiddle() func(*fiber.Ctx) error {
 
 		// TODO: Add authentication
 		log.Printf("Session key: %v\n", authHeader[1])
+		log.Printf("workerID: %v\n", workerID)
 
 		// // 2. Check session against redis
 		// val, err := database.RedisConn.Get(ctx, "sess-"+remoteWorkerID).Result()
