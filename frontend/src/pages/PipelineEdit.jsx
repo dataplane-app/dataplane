@@ -354,7 +354,7 @@ const Flow = () => {
                 id: `${type.id}`,
                 type: type.nodeType,
                 position,
-                data: type.nodeData,
+                data: { ...type.nodeData, name: nameGenerator(elements, type.nodeData.language) },
             };
 
             setElements((es) => es.concat(newNode));
@@ -473,6 +473,7 @@ const Flow = () => {
             <Drawer anchor="right" open={FlowState.isOpenConfigureDrawer.get()} onClose={() => FlowState.isOpenConfigureDrawer.set(false)}>
                 <ProcessTypeDrawer
                     setElements={setElements}
+                    elements={elements}
                     environmentID={Environment.id.get()}
                     handleClose={() => FlowState.isOpenConfigureDrawer.set(false)}
                     workerGroup={pipeline?.workerGroup}
@@ -748,3 +749,27 @@ const sortObj = (obj) =>
         }
         return 0;
     });
+
+/**
+ * Takes flow nodes on display, and returns a suitable
+ * name for a new node (language name) + (next number)
+ */
+function nameGenerator(elements, language) {
+    if (elements.length === 0) {
+        return language;
+    }
+
+    // Check if language name used if not return language name
+    if (!elements.some((a) => a.data?.name === language)) {
+        return language;
+    }
+
+    // Language name already used, find correct enumurator and append
+    for (const key in elements) {
+        const proposedName = language + ` ${Number(key) + 1}`; //?
+
+        if (elements.some((a) => a.data?.name === proposedName) === false) {
+            return proposedName;
+        }
+    }
+}

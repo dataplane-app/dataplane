@@ -24,6 +24,7 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler"
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler/routinetasks"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
+	wsockets "github.com/dataplane-app/dataplane/app/mainapp/websockets"
 	"github.com/dataplane-app/dataplane/app/mainapp/worker"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 
@@ -220,8 +221,7 @@ func Setup(port string) *fiber.App {
 	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expires < ?", time.Now())
 
 	// Start websocket hubs
-	go worker.RunHub()
-	go worker.RunHubRooms()
+	go wsockets.RunHub()
 
 	//recover from panic
 	app.Use(recover.New())
@@ -295,20 +295,11 @@ func Setup(port string) *fiber.App {
 		return fiber.ErrUpgradeRequired
 	})
 
-	app.Get("/app/ws/workerstats/:workergroup", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
+	app.Get("/app/ws/rooms/:room", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
 
-		// log.Println(c.Query("token"))
-		worker.WorkerStatsWs(c, "workerstats."+c.Params("workergroup"))
-	}))
+		room := string(c.Params("room"))
 
-	app.Get("/app/ws/rooms/:environment", auth.TokenAuthMiddleWebsockets(), websocket.New(func(c *websocket.Conn) {
-
-		// log.Println(c.Query("token"))
-		// room := string(c.Params("room"))
-		environment := string(c.Params("environment"))
-		subject := string(c.Query("subject"))
-		id := string(c.Query("id"))
-		worker.RoomUpdates(c, environment, subject, id)
+		wsockets.RoomUpdates(c, room)
 	}))
 
 	// Download code files
