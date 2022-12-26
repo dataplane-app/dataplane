@@ -71,7 +71,7 @@ const Pipelines = () => {
                     </Box>
                 </Grid>
 
-                <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
+                <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-end">
                     <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center', width: '100%' }}>
                         <CustomChip amount={pipelineCount || '0'} label="Pipelines" margin={1} customColor="orange" style={{ marginRight: 25 }} />
 
