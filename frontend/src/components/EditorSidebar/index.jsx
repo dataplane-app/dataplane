@@ -1,5 +1,5 @@
 import { faClock } from '@fortawesome/free-regular-svg-icons';
-import { faMapMarkedAlt, faPlayCircle, faRunning, faPlug } from '@fortawesome/free-solid-svg-icons';
+import { faMapMarkedAlt, faPlayCircle, faRunning, faPlug, faRobot } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Typography } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
@@ -98,6 +98,27 @@ const EditorSidebar = () => {
         },
         {
             id: 3,
+            parent: 'RPA',
+            content: [
+                {
+                    id: uuidv4(),
+                    icon: faRobot,
+                    text: 'Python',
+                    eventType: 'rpaNode',
+                    data: {
+                        language: 'Python',
+                        name: 'RPA Python',
+                        description: '',
+                        triggerOnline: false,
+                        workerGroup: '',
+                        // eslint-disable-next-line no-template-curly-in-string
+                        commands: [{ command: 'python3 -u ${{nodedirectory}}dp-entrypoint.py' }],
+                    },
+                },
+            ],
+        },
+        {
+            id: 4,
             parent: 'Checkpoints',
             content: [
                 {

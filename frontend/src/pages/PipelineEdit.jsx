@@ -5,6 +5,7 @@ import ReactFlow, { addEdge, ControlButton, Controls, getConnectedEdges, isEdge,
 import { useHistory, useParams } from 'react-router-dom';
 import ApiNode from '../components/CustomNodesContent/ApiNode';
 import PythonNode from '../components/CustomNodesContent/PythonNode';
+import RpaNode from '../components/CustomNodesContent/RpaNode';
 import BashNode from '../components/CustomNodesContent/BashNode';
 import CustomEdge from '../components/CustomNodesContent/CustomEdge';
 import CustomLine from '../components/CustomNodesContent/CustomLine';
@@ -30,11 +31,13 @@ import { useGetPipeline } from '../graphql/getPipeline';
 import { useGlobalRunState } from './PipelineRuns/GlobalRunState';
 import { prepareInputForFrontend } from '../utils/PipelinePrepareGraphInput';
 import dagre from 'dagre';
+import RpaDrawer from '../components/DrawerContent/RpaDrawer';
 
 export const globalFlowState = createState({
     isRunning: false,
     isOpenSchedulerDrawer: false,
     isOpenConfigureDrawer: false,
+    isOpenRpaDrawer: false,
     isOpenCommandDrawer: false,
     isOpenLogDrawer: false,
     isOpenDepLogDrawer: false,
@@ -62,6 +65,7 @@ export const nodeTypes = {
     playNode: PlayNode,
     apiNode: ApiNode,
     pythonNode: PythonNode,
+    rpaNode: RpaNode,
     bashNode: BashNode,
     checkpointNode: CheckpointNode,
 };
@@ -196,21 +200,6 @@ const Flow = () => {
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pipeline]);
-
-    // Trigger the scale button on keyboard 's' key click
-    useEffect(() => {
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const handleKeyDown = (e) => {
-        if (e.keyCode === 83) {
-            onPanActive();
-        }
-    };
 
     // Flow states
     const reactFlowWrapper = useRef(null);
@@ -354,7 +343,7 @@ const Flow = () => {
                 id: `${type.id}`,
                 type: type.nodeType,
                 position,
-                data: { ...type.nodeData, name: nameGenerator(elements, type.nodeData.language) },
+                data: { ...type.nodeData, name: nameGenerator(elements, type.nodeData.name) },
             };
 
             setElements((es) => es.concat(newNode));
@@ -363,6 +352,12 @@ const Flow = () => {
                 FlowState.selectedElement.set(newNode);
                 setSelectedElement(newNode);
                 FlowState.isOpenConfigureDrawer.set(true);
+            }
+
+            if (type.nodeType === 'rpaNode') {
+                FlowState.selectedElement.set(newNode);
+                setSelectedElement(newNode);
+                FlowState.isOpenRpaDrawer.set(true);
             }
 
             if (type.nodeType === 'scheduleNode') {
@@ -477,6 +472,20 @@ const Flow = () => {
                     environmentID={Environment.id.get()}
                     handleClose={() => FlowState.isOpenConfigureDrawer.set(false)}
                     workerGroup={pipeline?.workerGroup}
+                />
+            </Drawer>
+
+            <Drawer
+                hideBackdrop
+                sx={{ width: 'calc(100% - 203px)', zIndex: 1099, [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
+                anchor="right"
+                open={FlowState.isOpenRpaDrawer.get()}
+                onClose={() => FlowState.isOpenRpaDrawer.set(false)}>
+                <RpaDrawer
+                    handleClose={() => FlowState.isOpenRpaDrawer.set(false)} //
+                    setElements={setElements}
+                    elements={elements}
+                    environmentID={Environment.id.get()}
                 />
             </Drawer>
 
@@ -624,18 +633,19 @@ export function prepareInputForBackend(input) {
         scheduleNode: 'trigger',
         apiNode: 'trigger',
         pythonNode: 'process',
+        rpaNode: 'process',
         bashNode: 'process',
         checkpointNode: 'checkpoint',
     };
 
     for (const iterator of input) {
-        if (iterator.type === 'pythonNode' || iterator.type === 'bashNode') {
+        if (iterator.type === 'pythonNode' || iterator.type === 'bashNode' || iterator.type === 'rpaNode') {
             const { name, description, triggerOnline, workerGroup, commands, ...data } = iterator.data;
             nodesInput.push({
                 nodeID: iterator.id,
                 name,
                 nodeType: nodeDictionary[iterator.type],
-                nodeTypeDesc: iterator.type.replace('Node', ''),
+                nodeTypeDesc: iterator.type.includes('rpa') ? 'rpa-python' : iterator.type.replace('Node', ''),
                 triggerOnline,
                 description,
                 workerGroup,
