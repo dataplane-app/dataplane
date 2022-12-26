@@ -760,7 +760,7 @@ function nameGenerator(elements, language) {
     }
 
     // Check if language name used if not return language name
-    if (!elements.some((a) => a.data?.name === language)) {
+    if (!elements.some((a) => a?.data?.name === language)) {
         return language;
     }
 
@@ -768,7 +768,7 @@ function nameGenerator(elements, language) {
     for (const key in elements) {
         const proposedName = language + ` ${Number(key) + 1}`; //?
 
-        if (elements.some((a) => a.data?.name === proposedName) === false) {
+        if (elements.some((a) => a?.data?.name === proposedName) === false) {
             return proposedName;
         }
     }
