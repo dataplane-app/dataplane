@@ -140,7 +140,7 @@ export default function ConnectRemoteWorkerDrawer({ handleClose, worker, environ
                 </Button>
             </Box>
 
-            <List sx={{ width: '800px', marginTop: '8px' }}>
+            <List sx={{ width: '800px', marginTop: '8px', mb: 16 }}>
                 {state.storedKeys.map((activationKey, idx) => (
                     <ListItem
                         key={activationKey.activationKey}
