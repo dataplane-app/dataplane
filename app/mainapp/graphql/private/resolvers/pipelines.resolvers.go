@@ -224,7 +224,10 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 				FType:         "folder",
 				Active:        true,
 			}
-			filesystem.UpdateFolder(oldfolder.FolderID, OLDinput, Newinput, pfolder+"pipelines/")
+			_, _, _, errfs := filesystem.UpdateFolder(tx, oldfolder.FolderID, OLDinput, Newinput, pfolder+"pipelines/")
+			if errfs != nil {
+				return errfs
+			}
 		}
 
 		return nil

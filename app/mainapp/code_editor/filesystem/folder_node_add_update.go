@@ -119,7 +119,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, subfolder stri
 					FType:         "folder",
 					Active:        true,
 				}
-				UpdateFolder(n.FolderID, OLDinput, Newinput, pfolder)
+				UpdateFolder(database.DBConn, n.FolderID, OLDinput, Newinput, pfolder)
 
 			} else {
 				n.Action = "nochange"
