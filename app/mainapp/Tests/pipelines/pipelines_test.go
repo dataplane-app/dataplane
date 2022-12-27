@@ -63,17 +63,21 @@ func TestPipelines(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpLoginResponse.StatusCode, "Login user 200 status code")
 
-	envID := testutils.TestEnvironmentID
-	if testutils.TestEnvironmentID == "" {
-		envID = "test-environment-id"
-	}
+	devEnv := models.Environment{}
+	database.DBConn.Where("name = ?", "Development").First(&devEnv)
+	envID := devEnv.ID
+
+	log.Println("Environment ID pipeline test: ", envID)
+	// if testutils.TestEnvironmentID == "" {
+	// 	envID = "test-environment-id"
+	// }
 
 	pipelineName := testutils.TextEscape(faker.UUIDHyphenated())
 
 	// -------- clean data -------
-	database.DBConn.Where("environment_id =?", envID).Delete(&models.PipelineNodes{})
-	database.DBConn.Where("environment_id =?", envID).Delete(&models.PipelineEdges{})
-	database.DBConn.Where("environment_id =?", envID).Delete(&models.Pipelines{})
+	database.DBConn.Debug().Where("environment_id =?", envID).Delete(&models.PipelineNodes{})
+	database.DBConn.Debug().Where("environment_id =?", envID).Delete(&models.PipelineEdges{})
+	database.DBConn.Debug().Where("environment_id =?", envID).Delete(&models.Pipelines{})
 	// -------- Create pipeline -------------
 
 	mutation := `mutation {

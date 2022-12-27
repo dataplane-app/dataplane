@@ -8,6 +8,7 @@ import (
 
 	"github.com/dataplane-app/dataplane/app/mainapp/Tests/testutils"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/assert"
@@ -57,10 +58,9 @@ func TestSecrets(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpLoginResponse.StatusCode, "Login user 200 status code")
 
-	envID := testutils.TestEnvironmentID
-	if testutils.TestEnvironmentID == "" {
-		envID = "test-environment-id"
-	}
+	devEnv := models.Environment{}
+	database.DBConn.Where("name = ?", "Development").First(&devEnv)
+	envID := devEnv.ID
 
 	// -------- Create Secret -------------
 	mutation := `mutation {
