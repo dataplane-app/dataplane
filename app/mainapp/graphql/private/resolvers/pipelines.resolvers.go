@@ -123,7 +123,7 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 		}
 
 		// Should create a directory as follows code_directory/
-		pfolder, errf := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
+		pfolder, errf := filesystem.FolderConstructByID(tx, parentfolder.FolderID, environmentID, "pipelines")
 		if errf != nil {
 			return errors.New("Couldn't get parent folder construct." + errf.Error())
 		}
@@ -133,7 +133,7 @@ func (r *mutationResolver) AddPipeline(ctx context.Context, name string, environ
 			return errors.New("Couldn't create folder." + errf3.Error())
 		}
 
-		thisfolder, errf2 := filesystem.FolderConstructByID(database.DBConn, foldercreate.FolderID, environmentID, "pipelines")
+		thisfolder, errf2 := filesystem.FolderConstructByID(tx, foldercreate.FolderID, environmentID, "pipelines")
 		if errf2 != nil {
 			return errors.New("Couldn't get folder construct." + errf2.Error())
 		}
@@ -194,7 +194,7 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 		var parentfolder models.CodeFolders
 		tx.Where("level = ? and environment_id = ?", "environment", environmentID).First(&parentfolder)
 
-		pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
+		pfolder, _ := filesystem.FolderConstructByID(tx, parentfolder.FolderID, environmentID, "pipelines")
 
 		// log.Println("Parent folder:", pfolder)
 

@@ -11,7 +11,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dfscache "github.com/dataplane-app/dataplane/app/mainapp/code_editor/dfs_cache"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -78,346 +78,354 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	}
 
 	// Does version already exists?
-	deploypipeline := models.DeployPipelines{}
-	err := database.DBConn.Where("pipeline_id = ? and version = ? and environment_id = ?", "d-"+pipelineID, version, toEnvironmentID).First(&deploypipeline).Error
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
-	if err != nil && err != gorm.ErrRecordNotFound {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+		deploypipeline := models.DeployPipelines{}
+		err := tx.Where("pipeline_id = ? and version = ? and environment_id = ?", "d-"+pipelineID, version, toEnvironmentID).First(&deploypipeline).Error
+
+		if err != nil && err != gorm.ErrRecordNotFound {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Retrieve pipeline database error")
 		}
-		return "", errors.New("Retrieve pipeline database error")
-	}
 
-	if deploypipeline.PipelineID != "" {
-		return "", errors.New("Deployment version already found.")
-	}
-
-	// Obtain pipeline details
-	// ----- Get pipeline
-	pipeline := models.Pipelines{}
-	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).First(&pipeline).Error
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+		if deploypipeline.PipelineID != "" {
+			return errors.New("Deployment version already found.")
 		}
-		return "", errors.New("Retrieve pipeline database error")
-	}
 
-	pipelineNodes := []*models.PipelineNodes{}
-	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&pipelineNodes).Error
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Retrieve pipeline database error")
-	}
-
-	pipelineEdges := []*models.PipelineEdges{}
-	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&pipelineEdges).Error
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Retrieve pipeline database error")
-	}
-
-	folders := []*models.CodeFolders{}
-	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&folders).Error
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Retrieve pipeline folders database error")
-	}
-
-	files := []*models.CodeFiles{}
-	err = database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&files).Error
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Retrieve pipeline folders database error")
-	}
-
-	filesData := []*models.CodeFilesStore{}
-	err = database.DBConn.Model(models.CodeFilesStore{}).Where("code_files.pipeline_id = ? and code_files.environment_id = ?", pipelineID, fromEnvironmentID).Joins("inner join code_files on code_files_store.file_id = code_files.file_id and code_files_store.environment_id = code_files.environment_id").Scan(&filesData).Error
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Retrieve pipeline file contents database error")
-	}
-
-	// Obtain folder structure for pipeline
-	pipelineFolder := models.CodeFolders{}
-	err = database.DBConn.Where("pipeline_id = ? and environment_id = ? and level = ?", pipelineID, fromEnvironmentID, "pipeline").First(&pipelineFolder).Error
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Retrieve pipeline folders database error")
-	}
-
-	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, pipelineFolder.ParentID, fromEnvironmentID, "")
-	foldertocopy, _ := filesystem.FolderConstructByID(database.DBConn, pipelineFolder.FolderID, fromEnvironmentID, "pipelines")
-
-	foldertocopy = dpconfig.CodeDirectory + foldertocopy
-	destinationfolder := dpconfig.CodeDirectory + pfolder + "deployments/" + pipelineFolder.FolderID + "_" + pipelineFolder.FolderName + "/" + version + "/"
-	// log.Println("Folder to copy:", foldertocopy)
-	// log.Println("Destination folder:", destinationfolder)
-
-	// Create a folder for the version and copy files across
-	if dpconfig.FSCodeFileStorage == "LocalFile" {
-		err = utilities.CopyDirectory(foldertocopy, destinationfolder)
+		// Obtain pipeline details
+		// ----- Get pipeline
+		pipeline := models.Pipelines{}
+		err = tx.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).First(&pipeline).Error
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
-			return "", errors.New("Failed to copy deployment files.")
+			return errors.New("Retrieve pipeline database error")
 		}
-	}
 
-	// Copy pipeline, nodes and edges
-	var jsonstring string
-	// json.Unmarshal([]byte(pipeline.Json), &jsonstring)
-
-	jsonstring = string(pipeline.Json)
-
-	jsonstring = strings.ReplaceAll(jsonstring, pipelineID, "d-"+pipeline.PipelineID)
-
-	// Pipeline
-	createPipeline := models.DeployPipelines{
-		PipelineID:        "d-" + pipeline.PipelineID,
-		Version:           version,
-		DeployActive:      false,
-		Name:              pipeline.Name,
-		EnvironmentID:     toEnvironmentID,
-		FromEnvironmentID: fromEnvironmentID,
-		FromPipelineID:    pipeline.PipelineID,
-		Description:       pipeline.Description,
-		Active:            pipeline.Active,
-		WorkerGroup:       workerGroup,
-		Meta:              pipeline.Meta,
-		// Json:              pipeline.Json,
-		UpdateLock: true,
-	}
-
-	// Recalculate edge dependencies and destinations with new d- ID
-	var destinations = make(map[string][]string)
-	var dependencies = make(map[string][]string)
-
-	// Edges
-	deployEdges := []*models.DeployPipelineEdges{}
-	for _, edge := range pipelineEdges {
-		deployEdges = append(deployEdges, &models.DeployPipelineEdges{
-			EdgeID:        "d-" + edge.EdgeID,
-			PipelineID:    createPipeline.PipelineID,
-			Version:       createPipeline.Version,
-			From:          "d-" + edge.From,
-			To:            "d-" + edge.To,
-			EnvironmentID: createPipeline.EnvironmentID,
-			Meta:          edge.Meta,
-			Active:        edge.Active,
-		})
-
-		// map out dependencies and destinations
-		destinations["d-"+edge.From] = append(destinations["d-"+edge.From], "d-"+edge.To)
-		dependencies["d-"+edge.To] = append(dependencies["d-"+edge.To], "d-"+edge.From)
-
-		// replace in json pipeline run
-		jsonstring = strings.ReplaceAll(jsonstring, edge.EdgeID, "d-"+edge.EdgeID)
-	}
-
-	// Map
-	var nodeworkergroupmap = make(map[string]string)
-	for _, nwg := range nodeWorkerGroup {
-		nodeworkergroupmap[nwg.NodeID] = nwg.WorkerGroup
-	}
-	// Nodes
-	var online bool
-	deployNodes := []*models.DeployPipelineNodes{}
-	for _, node := range pipelineNodes {
-
-		dependJSON, err := json.Marshal(dependencies["d-"+node.NodeID])
+		pipelineNodes := []*models.PipelineNodes{}
+		err = tx.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&pipelineNodes).Error
 		if err != nil {
-			logging.PrintSecretsRedact(err)
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Retrieve pipeline database error")
 		}
 
-		destinationJSON, err := json.Marshal(destinations["d-"+node.NodeID])
+		pipelineEdges := []*models.PipelineEdges{}
+		err = tx.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&pipelineEdges).Error
 		if err != nil {
-			logging.PrintSecretsRedact(err)
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Retrieve pipeline database error")
 		}
 
-		var workergroupassign string
-		if _, ok := nodeworkergroupmap[node.NodeID]; ok {
-			workergroupassign = nodeworkergroupmap[node.NodeID]
-		} else {
-			workergroupassign = workerGroup
+		folders := []*models.CodeFolders{}
+		err = tx.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&folders).Error
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Retrieve pipeline folders database error")
 		}
 
-		//Assign an online value
-		if node.NodeTypeDesc == "play" {
-			online = true
-		} else {
-			if node.NodeType == "trigger" {
-				online = liveactive
+		files := []*models.CodeFiles{}
+		err = tx.Where("pipeline_id = ? and environment_id = ?", pipelineID, fromEnvironmentID).Find(&files).Error
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Retrieve pipeline folders database error")
+		}
+
+		filesData := []*models.CodeFilesStore{}
+		err = tx.Model(models.CodeFilesStore{}).Where("code_files.pipeline_id = ? and code_files.environment_id = ?", pipelineID, fromEnvironmentID).Joins("inner join code_files on code_files_store.file_id = code_files.file_id and code_files_store.environment_id = code_files.environment_id").Scan(&filesData).Error
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Retrieve pipeline file contents database error")
+		}
+
+		// Obtain folder structure for pipeline
+		pipelineFolder := models.CodeFolders{}
+		err = tx.Where("pipeline_id = ? and environment_id = ? and level = ?", pipelineID, fromEnvironmentID, "pipeline").First(&pipelineFolder).Error
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Retrieve pipeline folders database error")
+		}
+
+		pfolder, errfs := filesystem.FolderConstructByID(tx, pipelineFolder.ParentID, fromEnvironmentID, "")
+		if errfs != nil {
+			return errfs
+		}
+		foldertocopy, errfs2 := filesystem.FolderConstructByID(tx, pipelineFolder.FolderID, fromEnvironmentID, "pipelines")
+		if errfs2 != nil {
+			return errfs2
+		}
+
+		foldertocopy = dpconfig.CodeDirectory + foldertocopy
+		destinationfolder := dpconfig.CodeDirectory + pfolder + "deployments/" + pipelineFolder.FolderID + "_" + pipelineFolder.FolderName + "/" + version + "/"
+		// log.Println("Folder to copy:", foldertocopy)
+		// log.Println("Destination folder:", destinationfolder)
+
+		// Create a folder for the version and copy files across
+		if dpconfig.FSCodeFileStorage == "LocalFile" {
+			err = utilities.CopyDirectory(foldertocopy, destinationfolder)
+			if err != nil {
+				if dpconfig.Debug == "true" {
+					logging.PrintSecretsRedact(err)
+				}
+				return errors.New("Failed to copy deployment files.")
+			}
+		}
+
+		// Copy pipeline, nodes and edges
+		var jsonstring string
+		// json.Unmarshal([]byte(pipeline.Json), &jsonstring)
+
+		jsonstring = string(pipeline.Json)
+
+		jsonstring = strings.ReplaceAll(jsonstring, pipelineID, "d-"+pipeline.PipelineID)
+
+		// Pipeline
+		createPipeline := models.DeployPipelines{
+			PipelineID:        "d-" + pipeline.PipelineID,
+			Version:           version,
+			DeployActive:      false,
+			Name:              pipeline.Name,
+			EnvironmentID:     toEnvironmentID,
+			FromEnvironmentID: fromEnvironmentID,
+			FromPipelineID:    pipeline.PipelineID,
+			Description:       pipeline.Description,
+			Active:            pipeline.Active,
+			WorkerGroup:       workerGroup,
+			Meta:              pipeline.Meta,
+			// Json:              pipeline.Json,
+			UpdateLock: true,
+		}
+
+		// Recalculate edge dependencies and destinations with new d- ID
+		var destinations = make(map[string][]string)
+		var dependencies = make(map[string][]string)
+
+		// Edges
+		deployEdges := []*models.DeployPipelineEdges{}
+		for _, edge := range pipelineEdges {
+			deployEdges = append(deployEdges, &models.DeployPipelineEdges{
+				EdgeID:        "d-" + edge.EdgeID,
+				PipelineID:    createPipeline.PipelineID,
+				Version:       createPipeline.Version,
+				From:          "d-" + edge.From,
+				To:            "d-" + edge.To,
+				EnvironmentID: createPipeline.EnvironmentID,
+				Meta:          edge.Meta,
+				Active:        edge.Active,
+			})
+
+			// map out dependencies and destinations
+			destinations["d-"+edge.From] = append(destinations["d-"+edge.From], "d-"+edge.To)
+			dependencies["d-"+edge.To] = append(dependencies["d-"+edge.To], "d-"+edge.From)
+
+			// replace in json pipeline run
+			jsonstring = strings.ReplaceAll(jsonstring, edge.EdgeID, "d-"+edge.EdgeID)
+		}
+
+		// Map
+		var nodeworkergroupmap = make(map[string]string)
+		for _, nwg := range nodeWorkerGroup {
+			nodeworkergroupmap[nwg.NodeID] = nwg.WorkerGroup
+		}
+		// Nodes
+		var online bool
+		deployNodes := []*models.DeployPipelineNodes{}
+		for _, node := range pipelineNodes {
+
+			dependJSON, err := json.Marshal(dependencies["d-"+node.NodeID])
+			if err != nil {
+				logging.PrintSecretsRedact(err)
+			}
+
+			destinationJSON, err := json.Marshal(destinations["d-"+node.NodeID])
+			if err != nil {
+				logging.PrintSecretsRedact(err)
+			}
+
+			var workergroupassign string
+			if _, ok := nodeworkergroupmap[node.NodeID]; ok {
+				workergroupassign = nodeworkergroupmap[node.NodeID]
 			} else {
-				online = node.TriggerOnline
+				workergroupassign = workerGroup
 			}
 
+			//Assign an online value
+			if node.NodeTypeDesc == "play" {
+				online = true
+			} else {
+				if node.NodeType == "trigger" {
+					online = liveactive
+				} else {
+					online = node.TriggerOnline
+				}
+
+			}
+
+			if node.NodeType == "trigger" && node.NodeTypeDesc == "schedule" {
+				triggerType = "schedule"
+			}
+
+			deployNodes = append(deployNodes, &models.DeployPipelineNodes{
+				NodeID:        "d-" + node.NodeID,
+				PipelineID:    createPipeline.PipelineID,
+				Version:       createPipeline.Version,
+				Name:          node.Name,
+				EnvironmentID: createPipeline.EnvironmentID,
+				NodeType:      node.NodeType,
+				NodeTypeDesc:  node.NodeTypeDesc,
+				TriggerOnline: online,
+				Description:   node.Description,
+				Commands:      node.Commands,
+				Meta:          node.Meta,
+
+				// Needs to be recalculated
+				Dependency:  dependJSON,
+				Destination: destinationJSON,
+
+				// Needs to updated via front end sub nodes
+				WorkerGroup: workergroupassign,
+				Active:      node.Active,
+			})
+
+			// Replace all nodes
+			jsonstring = strings.ReplaceAll(jsonstring, node.NodeID, "d-"+node.NodeID)
 		}
 
-		if node.NodeType == "trigger" && node.NodeTypeDesc == "schedule" {
-			triggerType = "schedule"
+		// folders
+		deployFolders := []*models.DeployCodeFolders{}
+		for _, n := range folders {
+			deployFolders = append(deployFolders, &models.DeployCodeFolders{
+				FolderID:      n.FolderID,
+				ParentID:      n.ParentID,
+				EnvironmentID: createPipeline.EnvironmentID,
+				PipelineID:    createPipeline.PipelineID,
+				Version:       createPipeline.Version,
+				NodeID:        "d-" + n.NodeID,
+				FolderName:    n.FolderName,
+				Level:         n.Level,
+				FType:         n.FType,
+				Active:        n.Active,
+			})
 		}
 
-		deployNodes = append(deployNodes, &models.DeployPipelineNodes{
-			NodeID:        "d-" + node.NodeID,
-			PipelineID:    createPipeline.PipelineID,
-			Version:       createPipeline.Version,
-			Name:          node.Name,
-			EnvironmentID: createPipeline.EnvironmentID,
-			NodeType:      node.NodeType,
-			NodeTypeDesc:  node.NodeTypeDesc,
-			TriggerOnline: online,
-			Description:   node.Description,
-			Commands:      node.Commands,
-			Meta:          node.Meta,
+		// files
+		deployFiles := []*models.DeployCodeFiles{}
+		for _, n := range files {
+			deployFiles = append(deployFiles, &models.DeployCodeFiles{
+				FileID:        n.FileID,
+				FolderID:      n.FolderID,
+				EnvironmentID: createPipeline.EnvironmentID,
+				PipelineID:    createPipeline.PipelineID,
+				Version:       createPipeline.Version,
+				NodeID:        "d-" + n.NodeID,
+				FileName:      n.FileName,
+				Level:         n.Level,
+				FType:         n.FType,
+				Active:        n.Active,
+			})
+		}
 
-			// Needs to be recalculated
-			Dependency:  dependJSON,
-			Destination: destinationJSON,
+		// deploy Files Data
+		deployFilesData := []*models.DeployFilesStore{}
+		for _, n := range filesData {
+			deployFilesData = append(deployFilesData, &models.DeployFilesStore{
+				FileID:        n.FileID,
+				Version:       createPipeline.Version,
+				FileStore:     n.FileStore,
+				EnvironmentID: createPipeline.EnvironmentID,
+				ChecksumMD5:   n.ChecksumMD5,
+				External:      n.External,
+				RunInclude:    n.RunInclude,
+			})
+		}
 
-			// Needs to updated via front end sub nodes
-			WorkerGroup: workergroupassign,
-			Active:      node.Active,
-		})
-
-		// Replace all nodes
-		jsonstring = strings.ReplaceAll(jsonstring, node.NodeID, "d-"+node.NodeID)
-	}
-
-	// folders
-	deployFolders := []*models.DeployCodeFolders{}
-	for _, n := range folders {
-		deployFolders = append(deployFolders, &models.DeployCodeFolders{
-			FolderID:      n.FolderID,
-			ParentID:      n.ParentID,
-			EnvironmentID: createPipeline.EnvironmentID,
-			PipelineID:    createPipeline.PipelineID,
-			Version:       createPipeline.Version,
-			NodeID:        "d-" + n.NodeID,
-			FolderName:    n.FolderName,
-			Level:         n.Level,
-			FType:         n.FType,
-			Active:        n.Active,
-		})
-	}
-
-	// files
-	deployFiles := []*models.DeployCodeFiles{}
-	for _, n := range files {
-		deployFiles = append(deployFiles, &models.DeployCodeFiles{
-			FileID:        n.FileID,
-			FolderID:      n.FolderID,
-			EnvironmentID: createPipeline.EnvironmentID,
-			PipelineID:    createPipeline.PipelineID,
-			Version:       createPipeline.Version,
-			NodeID:        "d-" + n.NodeID,
-			FileName:      n.FileName,
-			Level:         n.Level,
-			FType:         n.FType,
-			Active:        n.Active,
-		})
-	}
-
-	// deploy Files Data
-	deployFilesData := []*models.DeployFilesStore{}
-	for _, n := range filesData {
-		deployFilesData = append(deployFilesData, &models.DeployFilesStore{
-			FileID:        n.FileID,
-			Version:       createPipeline.Version,
-			FileStore:     n.FileStore,
-			EnvironmentID: createPipeline.EnvironmentID,
-			ChecksumMD5:   n.ChecksumMD5,
-			External:      n.External,
-			RunInclude:    n.RunInclude,
-		})
-	}
-
-	// Replace references to old pipeline
-	var res interface{}
-	json.Unmarshal([]byte(jsonstring), &res)
-	pipelineJSON, err := json.Marshal(res)
-	if err != nil {
-		logging.PrintSecretsRedact(err)
-	}
-	createPipeline.Json = pipelineJSON
-
-	// Pipeline create
-	err = database.DBConn.Create(&createPipeline).Error
-	if err != nil {
-		if dpconfig.Debug == "true" {
+		// Replace references to old pipeline
+		var res interface{}
+		json.Unmarshal([]byte(jsonstring), &res)
+		pipelineJSON, err := json.Marshal(res)
+		if err != nil {
 			logging.PrintSecretsRedact(err)
 		}
-		return "", errors.New("Failed to create deployment pipeline.")
-	}
+		createPipeline.Json = pipelineJSON
 
-	// Nodes create
-	err = database.DBConn.Create(&deployNodes).Error
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Failed to create deployment pipeline.")
-	}
-
-	// Edges create
-	if len(deployEdges) > 0 {
-		err = database.DBConn.Create(&deployEdges).Error
+		// Pipeline create
+		err = tx.Create(&createPipeline).Error
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
-			return "", errors.New("Failed to create deployment pipeline.")
+			return errors.New("Failed to create deployment pipeline.")
 		}
-	}
 
-	// Folders create
-	if len(deployFolders) > 0 {
-		err = database.DBConn.Create(&deployFolders).Error
+		// Nodes create
+		err = tx.Create(&deployNodes).Error
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
-			return "", errors.New("Failed to create deployment pipeline.")
+			return errors.New("Failed to create deployment pipeline.")
 		}
-	}
 
-	// Files create
-	if len(deployFiles) > 0 {
-		err = database.DBConn.Create(&deployFiles).Error
-		if err != nil {
-			if dpconfig.Debug == "true" {
-				logging.PrintSecretsRedact(err)
+		// Edges create
+		if len(deployEdges) > 0 {
+			err = tx.Create(&deployEdges).Error
+			if err != nil {
+				if dpconfig.Debug == "true" {
+					logging.PrintSecretsRedact(err)
+				}
+				return errors.New("Failed to create deployment pipeline.")
 			}
-			return "", errors.New("Failed to create deployment pipeline.")
 		}
-	}
 
-	// Files data create
-	if len(deployFilesData) > 0 {
-		err = database.DBConn.Create(&deployFilesData).Error
-		if err != nil {
-			if dpconfig.Debug == "true" {
-				logging.PrintSecretsRedact(err)
+		// Folders create
+		if len(deployFolders) > 0 {
+			err = tx.Create(&deployFolders).Error
+			if err != nil {
+				if dpconfig.Debug == "true" {
+					logging.PrintSecretsRedact(err)
+				}
+				return errors.New("Failed to create deployment pipeline.")
 			}
-			return "", errors.New("Failed to create deployment pipeline.")
 		}
-	}
 
-	// Switch to active and take off update lock
-	err = database.DBConn.Exec(`
+		// Files create
+		if len(deployFiles) > 0 {
+			err = tx.Create(&deployFiles).Error
+			if err != nil {
+				if dpconfig.Debug == "true" {
+					logging.PrintSecretsRedact(err)
+				}
+				return errors.New("Failed to create deployment pipeline.")
+			}
+		}
+
+		// Files data create
+		if len(deployFilesData) > 0 {
+			err = tx.Create(&deployFilesData).Error
+			if err != nil {
+				if dpconfig.Debug == "true" {
+					logging.PrintSecretsRedact(err)
+				}
+				return errors.New("Failed to create deployment pipeline.")
+			}
+		}
+
+		// Switch to active and take off update lock
+		err = tx.Exec(`
 	update deploy_pipelines set 
 	deploy_active = CASE 
       WHEN version = ?  THEN true
@@ -426,79 +434,87 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	update_lock = false
 	where pipeline_id = ? and environment_id = ?
 	`, version, "d-"+pipelineID, toEnvironmentID).Error
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Failed to create deployment pipeline.")
 		}
-		return "", errors.New("Failed to create deployment pipeline.")
-	}
 
-	// Turn off all previous deployments
-	err = database.DBConn.Model(&models.DeployPipelineNodes{}).Where("pipeline_id = ? and environment_id = ? and version <> ? and trigger_online = true", "d-"+pipelineID, toEnvironmentID, version).Update("trigger_online", false).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-	}
-
-	// Give current user full permissions
-	// Give access permissions for the user who added the pipeline
-	AccessTypes := models.DeploymentAccessTypes
-
-	for _, access := range AccessTypes {
-		_, err := permissions.CreatePermission(
-			"user",
-			currentUser,
-			"specific_deployment",
-			"d-"+pipelineID,
-			access,
-			toEnvironmentID,
-			false,
-		)
+		// Turn off all previous deployments
+		err = tx.Model(&models.DeployPipelineNodes{}).Where("pipeline_id = ? and environment_id = ? and version <> ? and trigger_online = true", "d-"+pipelineID, toEnvironmentID, version).Update("trigger_online", false).Error
 
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
 			}
-			return "", errors.New("Add permission to user database error.")
 		}
 
-	}
+		// Give current user full permissions
+		// Give access permissions for the user who added the pipeline
+		AccessTypes := models.DeploymentAccessTypes
 
-	// Add back to schedule
-	// ======= Update the schedule trigger ==========
-	if triggerType == "schedule" {
-		// Add back to schedule
-		var plSchedules []*models.Scheduler
+		for _, access := range AccessTypes {
+			_, err := permissions.CreatePermission(
+				"user",
+				currentUser,
+				"specific_deployment",
+				"d-"+pipelineID,
+				access,
+				toEnvironmentID,
+				false,
+			)
 
-		// Adding an existing schedule from pipeline into deployment - needs to select pipeline
-		err := database.DBConn.Where("pipeline_id = ? and environment_id =? and run_type=?", pipelineID, fromEnvironmentID, "pipeline").Find(&plSchedules).Error
-		if err != nil && err != gorm.ErrRecordNotFound {
-			log.Println("Removal of changed trigger schedules:", err)
-		}
-
-		if len(plSchedules) > 0 {
-			for _, psc := range plSchedules {
-
-				pipelineSchedules := models.Scheduler{
-					NodeID:        "d-" + psc.NodeID,
-					PipelineID:    "d-" + psc.PipelineID,
-					EnvironmentID: toEnvironmentID,
-					ScheduleType:  psc.ScheduleType,
-					Schedule:      psc.Schedule,
-					Timezone:      psc.Timezone,
-					Online:        liveactive,
-					RunType:       "deployment",
+			if err != nil {
+				if dpconfig.Debug == "true" {
+					logging.PrintSecretsRedact(err)
 				}
-				// Add back to schedule
-				err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
-				if err != nil {
-					logging.PrintSecretsRedact("NATS error:", err)
+				return errors.New("Add permission to user database error.")
+			}
+
+		}
+
+		// Add back to schedule
+		// ======= Update the schedule trigger ==========
+		if triggerType == "schedule" {
+			// Add back to schedule
+			var plSchedules []*models.Scheduler
+
+			// Adding an existing schedule from pipeline into deployment - needs to select pipeline
+			err := tx.Where("pipeline_id = ? and environment_id =? and run_type=?", pipelineID, fromEnvironmentID, "pipeline").Find(&plSchedules).Error
+			if err != nil && err != gorm.ErrRecordNotFound {
+				log.Println("Removal of changed trigger schedules:", err)
+				return err
+			}
+
+			if len(plSchedules) > 0 {
+				for _, psc := range plSchedules {
+
+					pipelineSchedules := models.Scheduler{
+						NodeID:        "d-" + psc.NodeID,
+						PipelineID:    "d-" + psc.PipelineID,
+						EnvironmentID: toEnvironmentID,
+						ScheduleType:  psc.ScheduleType,
+						Schedule:      psc.Schedule,
+						Timezone:      psc.Timezone,
+						Online:        liveactive,
+						RunType:       "deployment",
+					}
+					// Add back to schedule
+					err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
+					if err != nil {
+						logging.PrintSecretsRedact("NATS error:", err)
+					}
 				}
 			}
+
 		}
 
+		return nil
+	})
+
+	if err != nil {
+		return "", errors.New("Add deployment: " + err.Error())
 	}
 
 	return "OK", nil
@@ -522,20 +538,25 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 		return "", errors.New("requires permissions")
 	}
 
-	// ----- remove cache from workers --------
-	var parentfolder models.DeployCodeFolders
-	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ? and version =?", environmentID, pipelineID, "pipeline", version).First(&parentfolder)
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
+		// ----- remove cache from workers --------
+		var parentfolder models.DeployCodeFolders
+		tx.Where("environment_id = ? and pipeline_id = ? and level = ? and version =?", environmentID, pipelineID, "pipeline", version).First(&parentfolder)
 
-	folderpath2, _ := filesystem.DeployFolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "deployments", version)
-	errcache := dfscache.InvalidateCacheDeployment(environmentID, folderpath2, pipelineID, version)
-	if errcache != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(errcache)
+		folderpath2, errfsc := filesystem.DeployFolderConstructByID(tx, parentfolder.FolderID, environmentID, "deployments", version)
+		if errfsc != nil {
+			return errfsc
 		}
-	}
 
-	// ---- delete files and folders
-	deleteQuery := `
+		errcache := dfscache.InvalidateCacheDeployment(environmentID, folderpath2, pipelineID, version)
+		if errcache != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(errcache)
+			}
+		}
+
+		// ---- delete files and folders
+		deleteQuery := `
 		DELETE FROM deploy_files_store
 		USING deploy_code_files
 		WHERE 
@@ -548,136 +569,148 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 		deploy_code_files.version = deploy_files_store.version
 		;
 		`
-	errdb := database.DBConn.Exec(deleteQuery, environmentID, pipelineID, version).Error
+		errdb := tx.Exec(deleteQuery, environmentID, pipelineID, version).Error
 
-	if errdb != nil {
-		logging.PrintSecretsRedact("Delete pipeline: ", errdb)
-	}
-
-	// Obtain deployment details
-	d := models.DeployPipelines{}
-	err := database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).First(&d).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Delete deployment database error.")
-	}
-
-	// Delete the deployment
-	p := models.DeployPipelines{}
-
-	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&p).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Delete deployment database error.")
-	}
-
-	// Delete pipeline's nodes
-	n := models.DeployPipelineNodes{}
-
-	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&n).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Delete deployment nodes database error.")
-	}
-
-	// Delete pipeline's edges
-	e := models.DeployPipelineEdges{}
-
-	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&e).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Delete deployment edges database error.")
-	}
-
-	// Scheduler - remove from leader and from database
-	// ----- Delete schedules
-	if d.DeployActive == true {
-		var plSchedules []*models.Scheduler
-		err = database.DBConn.Where("pipeline_id = ? and environment_id =? and run_type = ?", pipelineID, environmentID, "deployment").Find(&plSchedules).Error
-		if err != nil && err != gorm.ErrRecordNotFound {
-			log.Println("Removal schedules in database - delete pipeline:", err)
+		if errdb != nil {
+			logging.PrintSecretsRedact("Delete pipeline: ", errdb)
+			return errdb
 		}
 
-		if len(plSchedules) > 0 {
-			for _, psc := range plSchedules {
-				err := messageq.MsgSend("pipeline-scheduler-delete", psc)
-				if err != nil {
-					logging.PrintSecretsRedact("NATS error:", err)
+		// Obtain deployment details
+		d := models.DeployPipelines{}
+		err := tx.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).First(&d).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Delete deployment database error.")
+		}
+
+		// Delete the deployment
+		p := models.DeployPipelines{}
+
+		err = tx.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&p).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Delete deployment database error.")
+		}
+
+		// Delete pipeline's nodes
+		n := models.DeployPipelineNodes{}
+
+		err = tx.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&n).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Delete deployment nodes database error.")
+		}
+
+		// Delete pipeline's edges
+		e := models.DeployPipelineEdges{}
+
+		err = tx.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&e).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Delete deployment edges database error.")
+		}
+
+		// Scheduler - remove from leader and from database
+		// ----- Delete schedules
+		if d.DeployActive == true {
+			var plSchedules []*models.Scheduler
+			err = tx.Where("pipeline_id = ? and environment_id =? and run_type = ?", pipelineID, environmentID, "deployment").Find(&plSchedules).Error
+			if err != nil && err != gorm.ErrRecordNotFound {
+				log.Println("Removal schedules in database - delete pipeline:", err)
+				return err
+			}
+
+			if len(plSchedules) > 0 {
+				for _, psc := range plSchedules {
+					err := messageq.MsgSend("pipeline-scheduler-delete", psc)
+					if err != nil {
+						logging.PrintSecretsRedact("NATS error:", err)
+					}
 				}
 			}
 		}
-	}
 
-	// Remove directory
-	// 2. ----- Delete folder and all its contents from directory
-	// Also checks that folder belongs to environment ID
-	folders := models.DeployCodeFolders{}
-	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ? and level=?", pipelineID, environmentID, version, "pipeline").First(&folders).Error
+		// Remove directory
+		// 2. ----- Delete folder and all its contents from directory
+		// Also checks that folder belongs to environment ID
+		folders := models.DeployCodeFolders{}
+		err = tx.Where("pipeline_id = ? and environment_id =? and version = ? and level=?", pipelineID, environmentID, version, "pipeline").First(&folders).Error
 
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Delete deployment edges database error.")
 		}
-		return "", errors.New("Delete deployment edges database error.")
-	}
-	folderpath, _ := filesystem.DeployFolderConstructByID(database.DBConn, folders.FolderID, environmentID, "deployments", version)
-	deleteFolder := dpconfig.CodeDirectory + folderpath
+		folderpath, errfs := filesystem.DeployFolderConstructByID(tx, folders.FolderID, environmentID, "deployments", version)
+		if errfs != nil {
+			return errfs
+		}
+		deleteFolder := dpconfig.CodeDirectory + folderpath
 
-	if dpconfig.FSCodeFileStorage == "LocalFile" {
-		if _, err := os.Stat(deleteFolder); os.IsNotExist(err) {
+		if dpconfig.FSCodeFileStorage == "LocalFile" {
+			if _, err := os.Stat(deleteFolder); os.IsNotExist(err) {
 
-			if dpconfig.Debug == "true" {
-				log.Println("Directory doesnt exists, skipping delete folder: ", deleteFolder)
-			}
-
-		} else {
-			if dpconfig.Debug == "true" {
-				logging.PrintSecretsRedact("Deleting folder: ", deleteFolder)
-			}
-			err = os.RemoveAll(deleteFolder)
-			if err != nil {
 				if dpconfig.Debug == "true" {
-					logging.PrintSecretsRedact(err)
+					log.Println("Directory doesnt exists, skipping delete folder: ", deleteFolder)
 				}
-				return "", errors.New("Failed to remove folder and contents.")
+
+			} else {
+				if dpconfig.Debug == "true" {
+					logging.PrintSecretsRedact("Deleting folder: ", deleteFolder)
+				}
+				err = os.RemoveAll(deleteFolder)
+				if err != nil {
+					if dpconfig.Debug == "true" {
+						logging.PrintSecretsRedact(err)
+					}
+					return errors.New("Failed to remove folder and contents.")
+				}
 			}
 		}
-	}
 
-	// Remove folders
-	f := models.DeployCodeFolders{}
+		// Remove folders
+		f := models.DeployCodeFolders{}
 
-	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&f).Error
+		err = tx.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&f).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Delete deployment edges database error.")
+		}
+
+		// Remove files
+		fi := models.DeployCodeFiles{}
+
+		err = tx.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&fi).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Delete deployment edges database error.")
+		}
+
+		return nil
+	})
 
 	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Delete deployment edges database error.")
-	}
-
-	// Remove files
-	fi := models.DeployCodeFiles{}
-
-	err = database.DBConn.Where("pipeline_id = ? and environment_id =? and version = ?", pipelineID, environmentID, version).Delete(&fi).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Delete deployment edges database error.")
+		return "", errors.New("Delete deployment: " + err.Error())
 	}
 
 	// Remove directory
@@ -704,73 +737,83 @@ func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentI
 		return "", errors.New("requires permissions")
 	}
 
-	// Get the latest deployment
-	d := models.DeployPipelines{}
-	err := database.DBConn.Where("pipeline_id = ? AND environment_id = ? and deploy_active = true", pipelineID, environmentID).First(&d).Error
-	if err != nil {
-		return "", errors.New("Deployment record not found")
-	}
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
-	// Get the trigger type
-	p := models.DeployPipelineNodes{}
-	err = database.DBConn.Where("pipeline_id = ? AND node_type = ? and version = ? and environment_id = ?", pipelineID, "trigger", d.Version, environmentID).First(&p).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Failed to retrieve trigger node.")
-	}
-
-	if p.NodeTypeDesc == "play" {
-		online = true
-	}
-
-	// Update deployment node
-	n := models.DeployPipelineNodes{
-		TriggerOnline: online,
-	}
-
-	err = database.DBConn.Where("pipeline_id = ? and environment_id = ? AND node_type = ? and version = ?", pipelineID, environmentID, "trigger", d.Version).
-		Select("trigger_online").Updates(&n).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Failed to update trigger node.")
-	}
-
-	// ---- if the trigger is a scheduler, add or remove from the schedule
-	// ======= Update the schedule trigger ==========
-	if p.NodeTypeDesc == "schedule" {
-
-		var plSchedules []*models.Scheduler
-		err := database.DBConn.Where("pipeline_id = ? and environment_id =? and run_type=?", pipelineID, environmentID, "deployment").Find(&plSchedules).Error
-		if err != nil && err != gorm.ErrRecordNotFound {
-			log.Println("Removal of changed trigger schedules:", err)
+		// Get the latest deployment
+		d := models.DeployPipelines{}
+		err := tx.Where("pipeline_id = ? AND environment_id = ? and deploy_active = true", pipelineID, environmentID).First(&d).Error
+		if err != nil {
+			return errors.New("Deployment record not found")
 		}
 
-		if len(plSchedules) > 0 {
-			for _, psc := range plSchedules {
+		// Get the trigger type
+		p := models.DeployPipelineNodes{}
+		err = tx.Where("pipeline_id = ? AND node_type = ? and version = ? and environment_id = ?", pipelineID, "trigger", d.Version, environmentID).First(&p).Error
 
-				pipelineSchedules := models.Scheduler{
-					NodeID:        psc.NodeID,
-					PipelineID:    psc.PipelineID,
-					EnvironmentID: psc.EnvironmentID,
-					ScheduleType:  psc.ScheduleType,
-					Schedule:      psc.Schedule,
-					Timezone:      psc.Timezone,
-					Online:        online,
-					RunType:       "deployment",
-				}
-				// Add back to schedule
-				err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
-				if err != nil {
-					logging.PrintSecretsRedact("NATS error:", err)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Failed to retrieve trigger node.")
+		}
+
+		if p.NodeTypeDesc == "play" {
+			online = true
+		}
+
+		// Update deployment node
+		n := models.DeployPipelineNodes{
+			TriggerOnline: online,
+		}
+
+		err = tx.Where("pipeline_id = ? and environment_id = ? AND node_type = ? and version = ?", pipelineID, environmentID, "trigger", d.Version).
+			Select("trigger_online").Updates(&n).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Failed to update trigger node.")
+		}
+
+		// ---- if the trigger is a scheduler, add or remove from the schedule
+		// ======= Update the schedule trigger ==========
+		if p.NodeTypeDesc == "schedule" {
+
+			var plSchedules []*models.Scheduler
+			err := tx.Where("pipeline_id = ? and environment_id =? and run_type=?", pipelineID, environmentID, "deployment").Find(&plSchedules).Error
+			if err != nil && err != gorm.ErrRecordNotFound {
+				log.Println("Removal of changed trigger schedules:", err)
+			}
+
+			if len(plSchedules) > 0 {
+				for _, psc := range plSchedules {
+
+					pipelineSchedules := models.Scheduler{
+						NodeID:        psc.NodeID,
+						PipelineID:    psc.PipelineID,
+						EnvironmentID: psc.EnvironmentID,
+						ScheduleType:  psc.ScheduleType,
+						Schedule:      psc.Schedule,
+						Timezone:      psc.Timezone,
+						Online:        online,
+						RunType:       "deployment",
+					}
+					// Add back to schedule
+					err := messageq.MsgSend("pipeline-scheduler", pipelineSchedules)
+					if err != nil {
+						logging.PrintSecretsRedact("NATS error:", err)
+						return err
+					}
 				}
 			}
 		}
+
+		return nil
+	})
+
+	if err != nil {
+		return "", errors.New("Pipeline trigger error: " + err.Error())
 	}
 
 	return "Pipeline trigger updated", nil
