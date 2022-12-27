@@ -1,14 +1,15 @@
 package filesystem
 
 import (
+	"errors"
 	"log"
 	"os"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
-
-	gonanoid "github.com/matoous/go-nanoid/v2"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFolders, string, error) {
@@ -16,19 +17,12 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 	var createDirectory string
 	var foldername string
 
-	// loops to avoid collision in nanoid
-	for i := 1; i < 5; i++ {
+	createDirectory = ""
+	foldername = ""
 
-		createDirectory = ""
-		foldername = ""
+	id := uuid.New().String()
 
-		id, err := gonanoid.Generate("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 7)
-		if err != nil {
-			if dpconfig.Debug == "true" {
-				log.Println("Directory id error:", err)
-			}
-			continue
-		}
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
 		input.FolderID = id
 
@@ -43,19 +37,18 @@ func CreateFolder(input models.CodeFolders, parentFolder string) (models.CodeFol
 
 		// createDirectory = parentFolder + foldername
 
-		errdb := database.DBConn.Create(&input).Error
+		errdb := tx.Create(&input).Error
 		if errdb != nil {
 			if dpconfig.Debug == "true" {
 				log.Println("Directory create error:", errdb)
 			}
-			if i == 4 {
-				return input, "", errdb
-			}
-			continue
-		} else {
-			break
 		}
+		return nil
 
+	})
+
+	if err != nil {
+		return input, "", errors.New("Folder create error: " + err.Error())
 	}
 
 	returnpath := parentFolder + foldername

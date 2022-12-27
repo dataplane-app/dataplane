@@ -30,115 +30,128 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 	}
 
 	platform := models.Platform{}
-	if res := database.DBConn.First(&platform); res.Error == gorm.ErrRecordNotFound {
-		return nil, errors.New("Platform ID not found, restart the server.")
-	}
+	userData := &models.Users{}
+	platformData := &models.Platform{}
 
-	if platform.Complete == true {
-		return nil, errors.New("Platform already setup.")
-	}
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
-	password, err := auth.Encrypt(input.AddUsersInput.Password)
+		if res := tx.First(&platform); res.Error == gorm.ErrRecordNotFound {
+			return errors.New("Platform ID not found, restart the server.")
+		}
 
-	if err != nil {
-		return nil, errors.New("Password hash failed.")
-	}
+		if platform.Complete == true {
+			return errors.New("Platform already setup.")
+		}
 
-	platformData := &models.Platform{
-		ID:              platform.ID,
-		BusinessName:    input.PlatformInput.BusinessName,
-		Timezone:        input.PlatformInput.Timezone,
-		Complete:        true,
-		JwtToken:        platform.JwtToken,
-		EncryptKey:      platform.EncryptKey,
-		CodeFileStorage: platform.CodeFileStorage,
-		One:             platform.One,
-	}
+		password, err := auth.Encrypt(input.AddUsersInput.Password)
 
-	userData := &models.Users{
-		UserID:    uuid.New().String(),
-		UserType:  "admin",
-		FirstName: input.AddUsersInput.FirstName,
-		LastName:  input.AddUsersInput.LastName,
-		Password:  password,
-		Status:    "active",
-		Active:    true,
-		Email:     input.AddUsersInput.Email,
-		JobTitle:  input.AddUsersInput.JobTitle,
-		Timezone:  input.AddUsersInput.Timezone,
-		Username:  input.AddUsersInput.Email,
-	}
+		if err != nil {
+			return errors.New("Password hash failed.")
+		}
 
-	/* Input validation */
-	validate := validator.New()
-	err = validate.Struct(userData)
-	if err != nil {
-		return nil, err
-	}
+		platformData = &models.Platform{
+			ID:              platform.ID,
+			BusinessName:    input.PlatformInput.BusinessName,
+			Timezone:        input.PlatformInput.Timezone,
+			Complete:        true,
+			JwtToken:        platform.JwtToken,
+			EncryptKey:      platform.EncryptKey,
+			CodeFileStorage: platform.CodeFileStorage,
+			One:             platform.One,
+		}
 
-	// Platform information gets sent to DB
-	err = database.DBConn.Updates(&platformData).Error
+		userData = &models.Users{
+			UserID:    uuid.New().String(),
+			UserType:  "admin",
+			FirstName: input.AddUsersInput.FirstName,
+			LastName:  input.AddUsersInput.LastName,
+			Password:  password,
+			Status:    "active",
+			Active:    true,
+			Email:     input.AddUsersInput.Email,
+			JobTitle:  input.AddUsersInput.JobTitle,
+			Timezone:  input.AddUsersInput.Timezone,
+			Username:  input.AddUsersInput.Email,
+		}
 
-	if err != nil {
-		if dpconfig.Debug == "true" {
+		/* Input validation */
+		validate := validator.New()
+		err = validate.Struct(userData)
+		if err != nil {
+			return err
+		}
+
+		// Platform information gets sent to DB
+		err = tx.Updates(&platformData).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			if strings.Contains(err.Error(), "duplicate key") {
+				return errors.New("Platform already exists.")
+			}
+			return errors.New("Register database error.")
+		}
+
+		// Admin information gets sent to DB
+		err = tx.Create(&userData).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			if strings.Contains(err.Error(), "duplicate key") {
+				return errors.New("User already exists.")
+			}
+			return errors.New("Register database error.")
+		}
+
+		// Add permissions for admin
+		_, err = permissions.CreatePermission(
+			"user",
+			userData.UserID,
+			"admin_platform",
+			platformData.ID,
+			"write",
+			"d_platform",
+			true,
+		)
+		if err != nil {
 			logging.PrintSecretsRedact(err)
+			return errors.New("Failed to create admin permissions.")
 		}
-		if strings.Contains(err.Error(), "duplicate key") {
-			return nil, errors.New("Platform already exists.")
-		}
-		return nil, errors.New("Register database error.")
-	}
 
-	// Admin information gets sent to DB
-	err = database.DBConn.Create(&userData).Error
+		// Preferences get added
+		preferences := &models.Preferences{
+			UserID:     userData.UserID,
+			Preference: "theme",
+			Value:      "light_mode",
+		}
+
+		err = tx.Create(&preferences).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Register database error.")
+		}
+
+		// log.Println("setup jwt token ::: ", platformData.JwtToken, "encrypt key: ", platform.EncryptKey, platform)
+
+		if os.Getenv("secret_encryption_key") == "" {
+			utilities.Encryptphrase = platform.EncryptKey
+		} else {
+			utilities.Encryptphrase = os.Getenv("secret_encryption_key")
+		}
+
+		return nil
+
+	})
 
 	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		if strings.Contains(err.Error(), "duplicate key") {
-			return nil, errors.New("User already exists.")
-		}
-		return nil, errors.New("Register database error.")
-	}
-
-	// Add permissions for admin
-	_, err = permissions.CreatePermission(
-		"user",
-		userData.UserID,
-		"admin_platform",
-		platformData.ID,
-		"write",
-		"d_platform",
-		true,
-	)
-	if err != nil {
-		logging.PrintSecretsRedact(err)
-		errors.New("Failed to create admin permissions.")
-	}
-
-	// Preferences get added
-	preferences := &models.Preferences{
-		UserID:     userData.UserID,
-		Preference: "theme",
-		Value:      "light_mode",
-	}
-
-	err = database.DBConn.Create(&preferences).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return nil, errors.New("Register database error.")
-	}
-
-	// log.Println("setup jwt token ::: ", platformData.JwtToken, "encrypt key: ", platform.EncryptKey, platform)
-
-	if os.Getenv("secret_encryption_key") == "" {
-		utilities.Encryptphrase = platform.EncryptKey
-	} else {
-		utilities.Encryptphrase = os.Getenv("secret_encryption_key")
+		return nil, errors.New("Admin setup: " + err.Error())
 	}
 
 	auth.JwtKey = []byte(platformData.JwtToken)

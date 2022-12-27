@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/datatypes"
+)
 
 func (Platform) IsEntity() {}
 
@@ -9,18 +13,19 @@ func (Platform) TableName() string {
 }
 
 type Platform struct {
-	ID               string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"id"`
-	BusinessName     string     `json:"business_name"`
-	Timezone         string     `json:"timezone"`
-	Complete         bool       `json:"complete"`
-	MigrationVersion string     `json:"migration_version"`
-	One              bool       `gorm:"index:idx_one_platform,unique;" json:"one"`
-	CodeFileStorage  string     `json:"code_file_storage"`
-	JwtToken         string     `json:"jwt_token"`
-	EncryptKey       string     `json:"encrypt_key"`
-	CreatedAt        time.Time  `json:"created_at"`
-	UpdatedAt        *time.Time `json:"updated_at"`
-	DeletedAt        *time.Time `json:"deleted_at,omitempty"`
+	ID                 string         `gorm:"PRIMARY_KEY;type:varchar(48);" json:"id"`
+	BusinessName       string         `json:"business_name"`
+	Timezone           string         `json:"timezone"`
+	Complete           bool           `json:"complete"`
+	MigrationVersion   string         `json:"migration_version"`
+	One                bool           `gorm:"index:idx_one_platform,unique;" json:"one"`
+	CodeFileStorage    string         `json:"code_file_storage"`
+	JwtToken           string         `json:"jwt_token"`
+	EncryptKey         string         `json:"encrypt_key"`
+	SpecificMigrations datatypes.JSON `json:specific_migrations`
+	CreatedAt          time.Time      `json:"created_at"`
+	UpdatedAt          *time.Time     `json:"updated_at"`
+	DeletedAt          *time.Time     `json:"deleted_at,omitempty"`
 }
 
 func (PlatformLeader) IsEntity() {}

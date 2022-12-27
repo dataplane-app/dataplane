@@ -5,11 +5,11 @@ import (
 	"os"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
-	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"gorm.io/gorm"
 )
 
-func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFolders, parentFolder string) (Newoutput models.CodeFolders, updateOLDDirectory string, updateNewDirectory string) {
+func UpdateFolder(db *gorm.DB, id string, OLDinput models.CodeFolders, Newinput models.CodeFolders, parentFolder string) (Newoutput models.CodeFolders, updateOLDDirectory string, updateNewDirectory string, errfs error) {
 
 	var OLDDirectory string
 	var OLDfoldername string
@@ -39,10 +39,10 @@ func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFo
 	NewDirectory = parentFolder + Newfoldername
 
 	// ----- Update the database with new values
-	errdb := database.DBConn.Where("folder_id = ?", id).Updates(&Newinput).Error
+	errdb := db.Where("folder_id = ?", id).Updates(&Newinput).Error
 	if errdb != nil {
 		log.Println("Directory create error:", errdb)
-		return models.CodeFolders{}, "", ""
+		return models.CodeFolders{}, "", "", errdb
 	}
 
 	// Updare the directory
@@ -55,12 +55,13 @@ func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFo
 		if dpconfig.Debug == "true" {
 			log.Println("Update directory doesn't exist: ", updateOLDDirectory)
 		}
-		return models.CodeFolders{}, "", ""
+		return models.CodeFolders{}, "", "", err
 
 	} else {
 		err = os.Rename(updateOLDDirectory, updateNewDirectory)
 		if err != nil {
 			log.Println("Rename pipeline dir err:", err)
+			return models.CodeFolders{}, "", "", err
 		}
 		if dpconfig.Debug == "true" {
 			log.Println("Directory change: ", updateOLDDirectory, "->", updateNewDirectory)
@@ -68,6 +69,6 @@ func UpdateFolder(id string, OLDinput models.CodeFolders, Newinput models.CodeFo
 	}
 	// }
 
-	return Newinput, updateOLDDirectory, updateNewDirectory
+	return Newinput, updateOLDDirectory, updateNewDirectory, nil
 
 }
