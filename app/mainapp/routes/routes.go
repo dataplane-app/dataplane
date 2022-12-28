@@ -273,7 +273,7 @@ func Setup(port string) *fiber.App {
 		AllowOrigins:     "*",
 		AllowCredentials: true,
 		// AllowHeaders: "*",
-		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization, workerID",
 	}))
 
 	// --------FRONTEND ----
@@ -366,7 +366,7 @@ func Setup(port string) *fiber.App {
 	}))
 
 	app.Get("/trigger/remote/task", func(c *fiber.Ctx) error {
-		remoteworker.Broadcast <- remoteworker.Message{WorkerID: "fedf703e-82ca-4fab-b401-b7c774285c11", Data: []byte(`{"hello":"hello"}`)}
+		remoteworker.Broadcast <- remoteworker.Message{WorkerID: "4061e7e1-5ec9-44ae-ad8c-976957592e8f", Data: []byte(`{"hello":"hello"}`)}
 		return c.JSON(fiber.Map{"Response": "OK"})
 	})
 

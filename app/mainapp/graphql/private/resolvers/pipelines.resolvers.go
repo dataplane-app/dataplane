@@ -1155,6 +1155,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 		// pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
 
+		/* ----- This adds the default entrypoint files for python ------- */
 		errfoldernode := filesystem.FolderNodeAddUpdate(tx, pipelineID, environmentID, "pipelines")
 		if errfoldernode != nil {
 			return errors.New("Folder node error: " + errfoldernode.Error())

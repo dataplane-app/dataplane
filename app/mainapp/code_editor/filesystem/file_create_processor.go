@@ -58,6 +58,50 @@ Add notes here to document this pipeline step.`
 			return "", err
 		}
 
+	case "rpa-python":
+
+		content := `print("Pipeline id: ` + node.PipelineID + `")
+print("Node id: ` + node.NodeID + `")`
+
+		input := models.CodeFiles{
+			EnvironmentID: node.EnvironmentID,
+			NodeID:        node.NodeID,
+			PipelineID:    node.PipelineID,
+			FileName:      "dp-entrypoint.py",
+			Active:        true,
+			Level:         "node_file",
+			FType:         "file",
+			FolderID:      FolderID,
+		}
+
+		// Folder excludes code directory
+
+		_, filepath, err = CreateFile(input, Folder, []byte(content))
+		if err != nil {
+			return "", err
+		}
+
+		content = `### Document my pipeline
+Add notes here to document this RPA pipeline step.`
+
+		input = models.CodeFiles{
+			EnvironmentID: node.EnvironmentID,
+			NodeID:        node.NodeID,
+			PipelineID:    node.PipelineID,
+			FileName:      "document.md",
+			Active:        true,
+			Level:         "node_file",
+			FType:         "file",
+			FolderID:      FolderID,
+		}
+
+		// Folder excludes code directory
+
+		_, filepath, err = CreateFile(input, Folder, []byte(content))
+		if err != nil {
+			return "", err
+		}
+
 	default:
 		return "", errors.New("Node type not found")
 	}
