@@ -72,12 +72,12 @@ func TestPipelines(t *testing.T) {
 	// 	envID = "test-environment-id"
 	// }
 
-	pipelineName := testutils.TextEscape(faker.UUIDHyphenated())
+	pipelineName := testutils.TextEscape(faker.FirstName())
 
 	// -------- clean data -------
-	database.DBConn.Debug().Where("environment_id =?", envID).Delete(&models.PipelineNodes{})
-	database.DBConn.Debug().Where("environment_id =?", envID).Delete(&models.PipelineEdges{})
-	database.DBConn.Debug().Where("environment_id =?", envID).Delete(&models.Pipelines{})
+	database.DBConn.Where("environment_id =?", envID).Delete(&models.PipelineNodes{})
+	database.DBConn.Where("environment_id =?", envID).Delete(&models.PipelineEdges{})
+	database.DBConn.Where("environment_id =?", envID).Delete(&models.Pipelines{})
 	// -------- Create pipeline -------------
 
 	mutation := `mutation {
@@ -99,7 +99,7 @@ func TestPipelines(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Create pipeline 200 status code")
 
-	// -------- Update pipeline -------------
+	// -------- Update pipeline with new description -------------
 	pipelineId := jsoniter.Get(response, "data", "addPipeline").ToString()
 
 	mutation = `mutation {
@@ -204,7 +204,7 @@ func TestPipelines(t *testing.T) {
 				  },
 				  {
 					nodeID: "nodeID2",
-					name: "Name",
+					name: "Name2",
 					nodeType: "type",
 					nodeTypeDesc: "nodeTypeDesc",
 					triggerOnline: true,
@@ -268,7 +268,7 @@ func TestPipelines(t *testing.T) {
 			input:{
 				nodesInput: [{
 					nodeID: "nodeID",
-					name: "Name2",
+					name: "Name",
 					nodeType: "trigger",
 					description: "desc",
 					commands: [""],
@@ -293,7 +293,7 @@ func TestPipelines(t *testing.T) {
 				  },
 				  {
 					nodeID: "nodeID2",
-					name: "Name2",
+					name: "Name3",
 					nodeType: "process",
 					description: "desc",
 					commands: [""],
