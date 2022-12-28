@@ -82,10 +82,9 @@ func TestSpecificPipelines(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpLoginResponse.StatusCode, "Login user 200 status code")
 
-	envID := testutils.TestEnvironmentID
-	if testutils.TestEnvironmentID == "" {
-		envID = "test-environment-id"
-	}
+	devEnv := models.Environment{}
+	database.DBConn.Where("name = ?", "Development").First(&devEnv)
+	envID := devEnv.ID
 
 	pipelineId := testutils.TextEscape(faker.UUIDHyphenated())
 

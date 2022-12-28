@@ -11,8 +11,8 @@ func (CodeFolders) TableName() string {
 }
 
 type CodeFolders struct {
-	FolderID      string     `gorm:"PRIMARY_KEY;type:varchar(24);" json:"folder_id"`
-	ParentID      string     `gorm:"type:varchar(24);" json:"parent_id"`
+	FolderID      string     `gorm:"PRIMARY_KEY;size:55;" json:"folder_id"`
+	ParentID      string     `gorm:"type:varchar(55);" json:"parent_id"`
 	EnvironmentID string     `gorm:"type:varchar(55); index:idx_pipelinesmodel; index:idx_folderunique,unique;" json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55); index:idx_pipelinesmodel; index:idx_folderunique,unique;" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); index:idx_pipelinesmodel; index:idx_folderunique,unique;" json:"node_id"`
@@ -32,8 +32,8 @@ func (CodeFiles) TableName() string {
 }
 
 type CodeFiles struct {
-	FileID        string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
-	FolderID      string     `gorm:"type:varchar(24); index:idx_fileunique,unique;" json:"folder_id"`
+	FileID        string     `gorm:"PRIMARY_KEY;size:55;" json:"file_id"`
+	FolderID      string     `gorm:"size:55;index:idx_fileunique,unique;" json:"folder_id"`
 	EnvironmentID string     `gorm:"type:varchar(55); index:idx_fileunique,unique;" json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55);" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); index:idx_fileunique,unique;" json:"node_id"`
@@ -69,7 +69,7 @@ func (CodeGitCommits) TableName() string {
 }
 
 type CodeGitCommits struct {
-	GitID      string     `gorm:"PRIMARY_KEY;type:varchar(24);" json:"git_id"`
+	GitID      string     `gorm:"PRIMARY_KEY;type:varchar(55);" json:"git_id"`
 	PipelineID string     `gorm:"PRIMARY_KEY;" json:"pipeline_id"`
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  *time.Time `json:"updated_at"`
@@ -85,7 +85,7 @@ func (FolderDeleted) TableName() string {
 type FolderDeleted struct {
 	ID            string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"id"`
 	FileID        string     `gorm:"type:varchar(48);" json:"file_id"`
-	FolderID      string     `gorm:"type:varchar(24);" json:"folder_id"`
+	FolderID      string     `gorm:"size:55;" json:"folder_id"`
 	EnvironmentID string     `gorm:"type:varchar(55); " json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55);" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); " json:"node_id"`
@@ -185,3 +185,14 @@ type DeployCodeNodeCache struct {
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     *time.Time `json:"updated_at"`
 }
+
+// func (Test) IsEntity() {}
+
+// func (Test) TableName() string {
+// 	return "test"
+// }
+
+// type Test struct {
+// 	Size string `gorm:"primaryKey;size:55;" json:"size"`
+// 	Me   string `gorm:"size:65;" json:"me"`
+// }

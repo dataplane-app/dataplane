@@ -38,6 +38,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -83,96 +84,120 @@ func Setup(port string) *fiber.App {
 	/* --- First time setup, workers will wait for this to be available ---- */
 	if u.ID == "" {
 
-		// #Code File Storage: Database, LocalFile, S3
-		platformData := &models.Platform{
-			ID:              uuid.New().String(),
-			CodeFileStorage: dpconfig.FSCodeFileStorage,
-			Complete:        false,
-			One:             true,
-		}
+		err := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
-		log.Println("🍽  Platform not found - setup first time.")
-
-		err := database.DBConn.Create(&platformData).Error
-
-		if err != nil {
-			if dpconfig.Debug == "true" {
-				panic(err)
+			// #Code File Storage: Database, LocalFile, S3
+			platformData := &models.Platform{
+				ID:              uuid.New().String(),
+				CodeFileStorage: dpconfig.FSCodeFileStorage,
+				Complete:        false,
+				One:             true,
 			}
-		}
-		dpconfig.PlatformID = platformData.ID
 
-		// Environments get added
-		environment := []models.Environment{
-			{ID: uuid.New().String(),
-				Name:       "Development",
-				PlatformID: dpconfig.PlatformID,
-				Active:     true}, {
-				ID:         uuid.New().String(),
-				Name:       "Production",
-				PlatformID: dpconfig.PlatformID,
-				Active:     true,
-			},
-		}
+			log.Println("🍽  Platform not found - setup first time.")
 
-		err = database.DBConn.Clauses(clause.OnConflict{DoNothing: true}).Create(&environment).Error
+			err := tx.Create(&platformData).Error
 
-		if err != nil {
-			if dpconfig.Debug == "true" {
-				logging.PrintSecretsRedact(err)
-			}
-			panic("Add initial environments database error.")
-		}
-
-		// --------- Setup coding directory structure --------
-
-		// directories := &[]models.CodeFolders{}
-		if _, err := os.Stat(dpconfig.CodeDirectory); os.IsNotExist(err) {
-			// path/to/whatever does not exist
-			err := os.MkdirAll(dpconfig.CodeDirectory, os.ModePerm)
 			if err != nil {
-				log.Println("Create directory error:", err)
+				return err
 			}
-			log.Println("Created platform directory: ", dpconfig.CodeDirectory)
+			dpconfig.PlatformID = platformData.ID
 
-		} else {
-			log.Println("Directory already exists: ", dpconfig.CodeDirectory)
-		}
+			// Environments get added
+			environment := []models.Environment{
+				{ID: uuid.New().String(),
+					Name:       "Development",
+					PlatformID: dpconfig.PlatformID,
+					Active:     true}, {
+					ID:         uuid.New().String(),
+					Name:       "Production",
+					PlatformID: dpconfig.PlatformID,
+					Active:     true,
+				},
+			}
 
-		// Platform
-		platformdir := models.CodeFolders{
-			EnvironmentID: "d_platform",
-			FolderName:    "Platform",
-			Level:         "platform",
-			FType:         "folder",
-			Active:        true,
-		}
+			err = tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&environment).Error
 
-		// Should create a directory as follows code_directory/
-		platformFolder, _, _ := filesystem.CreateFolder(platformdir, "")
+			if err != nil {
+				return err
+			}
 
-		var parentfolder string
-		for _, x := range environment {
+			// --------- Setup coding directory structure --------
 
-			parentfolder = ""
+			// directories := &[]models.CodeFolders{}
+			if _, err := os.Stat(dpconfig.CodeDirectory); os.IsNotExist(err) {
+				// path/to/whatever does not exist
+				err := os.MkdirAll(dpconfig.CodeDirectory, os.ModePerm)
+				if err != nil {
+					log.Println("Create directory error:", err)
+					return err
+				}
+				log.Println("Created platform directory: ", dpconfig.CodeDirectory)
 
-			envdir := models.CodeFolders{
-				ParentID:      platformFolder.FolderID,
-				EnvironmentID: x.ID,
-				FolderName:    x.Name,
-				Level:         "environment",
+			} else {
+				log.Println("Directory already exists: ", dpconfig.CodeDirectory)
+			}
+
+			// Platform
+			platformdir := models.CodeFolders{
+				EnvironmentID: "d_platform",
+				FolderName:    "Platform",
+				Level:         "platform",
 				FType:         "folder",
 				Active:        true,
 			}
 
 			// Should create a directory as follows code_directory/
-			parentfolder, _ = filesystem.FolderConstructByID(database.DBConn, platformFolder.FolderID, x.ID, "")
-			log.Println("Parent folder environment:", parentfolder)
-			filesystem.CreateFolder(envdir, parentfolder)
+			platformFolder, _, errdir := filesystem.CreateFolder(platformdir, "")
+			if errdir != nil {
+				return errdir
+			}
 
-			// Setup sub directories
-			filesystem.CreateFolderSubs(database.DBConn, x.ID)
+			var parentfolder string
+			var errfs error
+			for _, x := range environment {
 
+				parentfolder = ""
+
+				envdir := models.CodeFolders{
+					ParentID:      platformFolder.FolderID,
+					EnvironmentID: x.ID,
+					FolderName:    x.Name,
+					Level:         "environment",
+					FType:         "folder",
+					Active:        true,
+				}
+
+				// Should create a directory as follows code_directory/
+				parentfolder, errfs = filesystem.FolderConstructByID(tx, platformFolder.FolderID, x.ID, "")
+				if errfs != nil {
+					return errfs
+				}
+				log.Println("Parent folder environment:", parentfolder)
+
+				errfs = nil
+
+				_, _, errfs = filesystem.CreateFolder(envdir, parentfolder)
+				if errfs != nil {
+					return errfs
+				}
+
+				errfs = nil
+
+				// Setup sub directories
+				_, errfs = filesystem.CreateFolderSubs(tx, x.ID)
+				if errfs != nil {
+					return errfs
+				}
+
+			}
+
+			return nil
+
+		})
+
+		if err != nil {
+			panic("First time setup failed: " + err.Error())
 		}
 
 	}
