@@ -36,10 +36,12 @@ func TestUpdateFolder(t *testing.T) {
 	fid := uuid.NewString()
 
 	id := "myfolderid--" + FolderFriendly(fid)
+	envID := "test-id"
 
 	OLDinput := models.CodeFolders{
-		FolderID:   id,
-		FolderName: "OLD" + FolderFriendly(fid),
+		FolderID:      id,
+		FolderName:    "OLD" + FolderFriendly(fid),
+		EnvironmentID: envID,
 	}
 
 	oldfolder := dpconfig.CodeDirectory + parentFolder + id + "_" + OLDinput.FolderName
@@ -59,7 +61,7 @@ func TestUpdateFolder(t *testing.T) {
 		FolderName: OLDinput.FolderName + "-New",
 	}
 
-	_, actual, _, _ := UpdateFolder(database.DBConn, id, OLDinput, Newinput, parentFolder)
+	_, actual, _, _ := UpdateFolder(database.DBConn, id, OLDinput, Newinput, parentFolder, envID)
 
 	log.Println(actual)
 

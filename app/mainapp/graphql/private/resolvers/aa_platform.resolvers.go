@@ -181,7 +181,7 @@ func (r *mutationResolver) UpdateEnvironment(ctx context.Context, input *private
 			FType:         "folder",
 			Active:        true,
 		}
-		_, _, _, errfs := filesystem.UpdateFolder(tx, oldfolder.FolderID, OLDinput, Newinput, pfolder)
+		_, _, _, errfs := filesystem.UpdateFolder(tx, oldfolder.FolderID, OLDinput, Newinput, pfolder, oldfolder.EnvironmentID)
 		if errfs != nil {
 			return errfs
 		}

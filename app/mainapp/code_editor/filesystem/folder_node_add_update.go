@@ -1,6 +1,7 @@
 package filesystem
 
 import (
+	"errors"
 	"log"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -35,7 +36,7 @@ func FolderNodeAddUpdate(db *gorm.DB, pipelineID string, environmentID string, s
 
 	pfolder, errfs := FolderConstructByID(db, parentfolder.FolderID, environmentID, subfolder)
 	if errfs != nil {
-		return errfs
+		return errors.New("Folder node folder construct error: " + errfs.Error())
 	}
 
 	var output []FolderNodeUpdate
@@ -79,7 +80,7 @@ func FolderNodeAddUpdate(db *gorm.DB, pipelineID string, environmentID string, s
 
 			cfolder, rfolder, errfsc := CreateFolder(pipelinedir, pfolder)
 			if errfsc != nil {
-				return errfsc
+				return errors.New("Folder node: Create folder error: " + errfsc.Error())
 			}
 
 			// If processor nodes need entrypoint files
@@ -101,7 +102,7 @@ func FolderNodeAddUpdate(db *gorm.DB, pipelineID string, environmentID string, s
 						if dpconfig.Debug == "true" {
 							log.Println("Failed to create python processor file: ", err, path)
 						}
-						return err
+						return errors.New("Folder node create processor error: " + err.Error())
 					}
 				}
 			}
@@ -133,9 +134,9 @@ func FolderNodeAddUpdate(db *gorm.DB, pipelineID string, environmentID string, s
 					FType:         "folder",
 					Active:        true,
 				}
-				_, _, _, erruf := UpdateFolder(database.DBConn, n.FolderID, OLDinput, Newinput, pfolder)
+				_, _, _, erruf := UpdateFolder(database.DBConn, n.FolderID, OLDinput, Newinput, pfolder, environmentID)
 				if erruf != nil {
-					return erruf
+					return errors.New("Folder node update folder error: " + erruf.Error())
 				}
 
 			} else {

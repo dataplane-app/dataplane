@@ -226,7 +226,7 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 				FType:         "folder",
 				Active:        true,
 			}
-			_, _, _, errfs := filesystem.UpdateFolder(tx, oldfolder.FolderID, OLDinput, Newinput, pfolder+"pipelines/")
+			_, _, _, errfs := filesystem.UpdateFolder(tx, oldfolder.FolderID, OLDinput, Newinput, pfolder+"pipelines/", environmentID)
 			if errfs != nil {
 				return errfs
 			}
@@ -1159,7 +1159,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 		errfoldernode := filesystem.FolderNodeAddUpdate(tx, pipelineID, environmentID, "pipelines")
 		if errfoldernode != nil {
-			return errfoldernode
+			return errors.New("Folder node error: " + errfoldernode.Error())
 		}
 
 		var parentfolder models.CodeFolders
@@ -1170,7 +1170,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 		folderpath, errfsfp := filesystem.FolderConstructByID(tx, parentfolder.FolderID, environmentID, "pipelines")
 		if errfsfp != nil {
-			return errfsfp
+			return errors.New("folderpath error: " + errfsfp.Error())
 		}
 		errcache := dfscache.InvalidateCachePipeline(environmentID, folderpath, pipelineID)
 		if errcache != nil {
