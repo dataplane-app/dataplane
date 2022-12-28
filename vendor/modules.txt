@@ -24,9 +24,6 @@ github.com/99designs/gqlgen/plugin/federation/fieldset
 github.com/99designs/gqlgen/plugin/modelgen
 github.com/99designs/gqlgen/plugin/resolvergen
 github.com/99designs/gqlgen/plugin/servergen
-# github.com/Masterminds/semver v1.5.0
-## explicit
-github.com/Masterminds/semver
 # github.com/Microsoft/go-winio v0.5.2
 ## explicit; go 1.13
 github.com/Microsoft/go-winio
@@ -505,7 +502,6 @@ golang.org/x/mod/semver
 golang.org/x/net/context
 golang.org/x/net/internal/socks
 golang.org/x/net/proxy
-golang.org/x/net/websocket
 # golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 ## explicit
 golang.org/x/sync/semaphore

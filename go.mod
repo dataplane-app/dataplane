@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/99designs/gqlgen v0.17.20
-	github.com/Masterminds/semver v1.5.0
 	github.com/bxcodec/faker/v3 v3.8.0
 	github.com/bxcodec/faker/v4 v4.0.0-beta.2
 	github.com/go-co-op/gocron v1.13.0
@@ -27,6 +26,7 @@ require (
 	github.com/pieterclaerhout/go-log v1.14.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/stretchr/testify v1.8.0
+	github.com/tidwall/gjson v1.14.4
 	github.com/tidwall/sjson v1.2.5
 	github.com/valyala/fasthttp v1.40.0
 	github.com/vektah/gqlparser/v2 v2.5.1
@@ -102,7 +102,6 @@ require (
 	github.com/sanity-io/litter v1.5.5 // indirect
 	github.com/savsgio/gotils v0.0.0-20220401102855-e56b59f40436 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
-	github.com/tidwall/gjson v1.14.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
