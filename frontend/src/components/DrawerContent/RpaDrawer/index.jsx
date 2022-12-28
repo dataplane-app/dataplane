@@ -81,7 +81,7 @@ const RpaDrawer = ({ handleClose, elements, setElements, environmentID }) => {
         if (name === selectedElement.data.name) return true;
 
         // Name is taken
-        if (elements.some((a) => a.data.name === name)) return false;
+        if (FlowState.elements.get().some((a) => a?.data?.name === name)) return false;
     }
 
     return (
@@ -185,7 +185,11 @@ const useGetRemoteProcessGroupsForAnEnvironmentHook = (environmentID, setRemoteP
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setRemoteProcessGroups(response);
-            setSelectedProcessGroup(response.find((a) => a.name === FlowState.selectedElement.data?.workerGroup.get()));
+            if (FlowState.selectedElement.data?.workerGroup.get()) {
+                setSelectedProcessGroup(response.find((a) => a.name === FlowState.selectedElement.data?.workerGroup.get()));
+            } else {
+                setSelectedProcessGroup(response[0]);
+            }
         }
     };
 };
