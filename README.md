@@ -1,4 +1,4 @@
-![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/dataplane-app/dataplane/CI-main-dataplane?label=Github%20Actions:%20Go%20Tests) 
+![Github Actions: Go Tests](https://github.com/dataplane-app/dataplane/actions/workflows/main-runtests.yml/badge.svg) 
 ![Docker Pulls](https://img.shields.io/docker/pulls/dataplane/dataplane-worker-python?label=Docker%20pulls)
 [![Discord](https://img.shields.io/discord/1000429753205014528?label=Discord%20chat)](https://discord.gg/Ztu4ASNky8)
 [![Documentation](https://img.shields.io/badge/documentation-orange)](https://learn.dataplane.app/create-a-data-pipeline)
