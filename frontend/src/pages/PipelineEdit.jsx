@@ -765,15 +765,12 @@ const sortObj = (obj) =>
  * name for a new node (language name) + (next number)
  */
 function nameGenerator(elements, language) {
-    if (elements.length === 0) return;
-
-    // If only element, return language name
-    if (elements.length === 1) {
-        return elements[0].data.name;
+    if (elements.length === 0) {
+        return language;
     }
 
     // Check if language name used if not return language name
-    if (!elements.some((a) => a.data.name === language)) {
+    if (!elements.some((a) => a?.data?.name === language)) {
         return language;
     }
 
@@ -781,7 +778,7 @@ function nameGenerator(elements, language) {
     for (const key in elements) {
         const proposedName = language + ` ${Number(key) + 1}`; //?
 
-        if (elements.some((a) => a.data.name === proposedName) === false) {
+        if (elements.some((a) => a?.data?.name === proposedName) === false) {
             return proposedName;
         }
     }

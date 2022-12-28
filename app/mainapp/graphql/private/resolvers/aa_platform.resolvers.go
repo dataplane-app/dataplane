@@ -9,7 +9,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
@@ -17,6 +17,7 @@ import (
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -41,51 +42,70 @@ func (r *mutationResolver) AddEnvironment(ctx context.Context, input *privategra
 		return nil, errors.New("Requires permissions.")
 	}
 
+	e := models.Environment{}
+
 	// ----- Create the code files directory
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
-	e := models.Environment{
-		ID:          uuid.New().String(),
-		Name:        input.Name,
-		Description: *input.Description,
-		PlatformID:  dpconfig.PlatformID,
-		Active:      true,
-	}
+		e = models.Environment{
+			ID:          uuid.New().String(),
+			Name:        input.Name,
+			Description: *input.Description,
+			PlatformID:  dpconfig.PlatformID,
+			Active:      true,
+		}
 
-	err := database.DBConn.Create(&e).Error
+		err := tx.Create(&e).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			if strings.Contains(err.Error(), "duplicate key") {
+				return errors.New("Environment already exists.")
+			}
+			return errors.New("AddEnvironment database error.")
+		}
+
+		var parentfolder models.CodeFolders
+		tx.Where("level = ?", "platform").First(&parentfolder)
+
+		// Create folder structure for environment
+		dir := models.CodeFolders{
+			EnvironmentID: e.ID,
+			ParentID:      parentfolder.FolderID,
+			FolderName:    e.Name,
+			Level:         "environment",
+			FType:         "folder",
+			Active:        true,
+		}
+
+		// Should create a directory as follows code_directory/
+		pfolder, errfs := filesystem.FolderConstructByID(tx, parentfolder.FolderID, e.ID, "")
+		if errfs != nil {
+			return errfs
+		}
+		_, _, errfs2 := filesystem.CreateFolder(dir, pfolder)
+		if errfs2 != nil {
+			return errfs2
+		}
+
+		if dpconfig.Debug == "true" {
+			log.Println("Environment dir created.")
+		}
+
+		// Create sub folders
+		_, errfs3 := filesystem.CreateFolderSubs(tx, e.ID)
+		if errfs3 != nil {
+			return errfs3
+		}
+
+		return nil
+	})
 
 	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		if strings.Contains(err.Error(), "duplicate key") {
-			return nil, errors.New("Environment already exists.")
-		}
-		return nil, errors.New("AddEnvironment database error.")
+		return &models.Environment{}, errors.New("Add environment: " + err.Error())
 	}
-
-	var parentfolder models.CodeFolders
-	database.DBConn.Where("level = ?", "platform").First(&parentfolder)
-
-	// Create folder structure for environment
-	dir := models.CodeFolders{
-		EnvironmentID: e.ID,
-		ParentID:      parentfolder.FolderID,
-		FolderName:    e.Name,
-		Level:         "environment",
-		FType:         "folder",
-		Active:        true,
-	}
-
-	// Should create a directory as follows code_directory/
-	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, e.ID, "")
-	filesystem.CreateFolder(dir, pfolder)
-
-	if dpconfig.Debug == "true" {
-		log.Println("Environment dir created.")
-	}
-
-	// Create sub folders
-	filesystem.CreateFolderSubs(database.DBConn, e.ID)
 
 	return &models.Environment{
 		ID:          e.ID,
@@ -119,47 +139,60 @@ func (r *mutationResolver) UpdateEnvironment(ctx context.Context, input *private
 
 	e := models.Environment{}
 
-	err := database.DBConn.Where("id = ?", input.ID).Updates(models.Environment{
-		ID:          input.ID,
-		Name:        input.Name,
-		Description: *input.Description,
-		PlatformID:  dpconfig.PlatformID,
-	}).First(&e).Error
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
+
+		err := tx.Where("id = ?", input.ID).Updates(models.Environment{
+			ID:          input.ID,
+			Name:        input.Name,
+			Description: *input.Description,
+			PlatformID:  dpconfig.PlatformID,
+		}).First(&e).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Rename environment database error.")
+		}
+
+		// Update folder structure for environment
+		var parentfolder models.CodeFolders
+		tx.Where("level = ?", "platform").First(&parentfolder)
+
+		pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, input.ID, "")
+
+		var oldfolder models.CodeFolders
+		tx.Where("environment_id = ? and level = ?", input.ID, "environment").First(&oldfolder)
+
+		OLDinput := models.CodeFolders{
+			EnvironmentID: oldfolder.EnvironmentID,
+			ParentID:      parentfolder.FolderID,
+			FolderName:    oldfolder.FolderName,
+			Level:         "environment",
+			FType:         "folder",
+			Active:        true,
+		}
+
+		Newinput := models.CodeFolders{
+			EnvironmentID: oldfolder.EnvironmentID,
+			ParentID:      parentfolder.FolderID,
+			FolderName:    input.Name,
+			Level:         "environment",
+			FType:         "folder",
+			Active:        true,
+		}
+		_, _, _, errfs := filesystem.UpdateFolder(tx, oldfolder.FolderID, OLDinput, Newinput, pfolder, oldfolder.EnvironmentID)
+		if errfs != nil {
+			return errfs
+		}
+
+		return nil
+
+	})
 
 	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return nil, errors.New("Rename environment database error.")
+		return &models.Environment{}, errors.New("Update environment: " + err.Error())
 	}
-
-	// Update folder structure for environment
-	var parentfolder models.CodeFolders
-	database.DBConn.Where("level = ?", "platform").First(&parentfolder)
-
-	pfolder, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, input.ID, "")
-
-	var oldfolder models.CodeFolders
-	database.DBConn.Where("environment_id = ? and level = ?", input.ID, "environment").First(&oldfolder)
-
-	OLDinput := models.CodeFolders{
-		EnvironmentID: oldfolder.EnvironmentID,
-		ParentID:      parentfolder.FolderID,
-		FolderName:    oldfolder.FolderName,
-		Level:         "environment",
-		FType:         "folder",
-		Active:        true,
-	}
-
-	Newinput := models.CodeFolders{
-		EnvironmentID: oldfolder.EnvironmentID,
-		ParentID:      parentfolder.FolderID,
-		FolderName:    input.Name,
-		Level:         "environment",
-		FType:         "folder",
-		Active:        true,
-	}
-	filesystem.UpdateFolder(oldfolder.FolderID, OLDinput, Newinput, pfolder)
 
 	return &models.Environment{
 		ID:          e.ID,

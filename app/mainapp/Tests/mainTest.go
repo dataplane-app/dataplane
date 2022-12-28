@@ -143,16 +143,17 @@ func main() {
 		EnvironmentsMap[a.Name] = a.ID
 	}
 
-	// overall environment
-	testutils.TestEnvironmentID = EnvironmentsMap["Development"]
-
 	log.Println("Remove test permissions:")
 	// Remove tests permissions
 	database.DBConn.Where("test = 't'").Delete(&models.Permissions{})
 
-	// --- Get production environment to add user to ----
+	// --- Get environment to add user to ----
 	devEnv := models.Environment{}
 	database.DBConn.Where("name = ?", "Development").First(&devEnv)
+
+	// overall environment
+	testutils.TestEnvironmentID = devEnv.ID
+	log.Println("Environment ID @ setting: ", testutils.TestEnvironmentID)
 
 	// Create users
 	for i, v := range testutils.UserData {

@@ -87,9 +87,9 @@ func (DeployCodeFolders) TableName() string {
 }
 
 type DeployCodeFolders struct {
-	FolderID      string     `gorm:"PRIMARY_KEY;type:varchar(24);" json:"folder_id"`
+	FolderID      string     `gorm:"PRIMARY_KEY;size:55;" json:"folder_id"`
 	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64); index:idx_deployfolderunique,unique;" json:"version"`
-	ParentID      string     `gorm:"type:varchar(24);" json:"parent_id"`
+	ParentID      string     `gorm:"size:55;" json:"parent_id"`
 	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(55); index:idx_deployfolderunique,unique;" json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55); index:idx_deployfolderunique,unique;" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); index:idx_deployfolderunique,unique;" json:"node_id"`
@@ -111,7 +111,7 @@ func (DeployCodeFiles) TableName() string {
 type DeployCodeFiles struct {
 	FileID        string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
 	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64); index:idx_deployfileunique,unique;" json:"version"`
-	FolderID      string     `gorm:"type:varchar(24); index:idx_deployfileunique,unique;" json:"folder_id"`
+	FolderID      string     `gorm:"size:55; index:idx_deployfileunique,unique;" json:"folder_id"`
 	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(55); index:idx_deployfileunique,unique;" json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55); index:idx_deployfileunique,unique;" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); index:idx_deployfileunique,unique;" json:"node_id"`
@@ -151,7 +151,7 @@ type DeployFolderDeleted struct {
 	ID            string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"id"`
 	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"version"`
 	FileID        string     `gorm:"type:varchar(48);" json:"file_id"`
-	FolderID      string     `gorm:"type:varchar(24);" json:"folder_id"`
+	FolderID      string     `gorm:"size:55;" json:"folder_id"`
 	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(55); " json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55);" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); " json:"node_id"`

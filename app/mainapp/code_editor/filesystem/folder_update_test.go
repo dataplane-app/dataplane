@@ -6,11 +6,10 @@ import (
 	"testing"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	"github.com/google/uuid"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
-
-	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
 /*
@@ -34,13 +33,15 @@ func TestUpdateFolder(t *testing.T) {
 		}
 	}
 
-	fid, _ := gonanoid.New(3)
+	fid := uuid.NewString()
 
 	id := "myfolderid--" + FolderFriendly(fid)
+	envID := "test-id"
 
 	OLDinput := models.CodeFolders{
-		FolderID:   id,
-		FolderName: "OLD" + FolderFriendly(fid),
+		FolderID:      id,
+		FolderName:    "OLD" + FolderFriendly(fid),
+		EnvironmentID: envID,
 	}
 
 	oldfolder := dpconfig.CodeDirectory + parentFolder + id + "_" + OLDinput.FolderName
@@ -60,7 +61,7 @@ func TestUpdateFolder(t *testing.T) {
 		FolderName: OLDinput.FolderName + "-New",
 	}
 
-	_, actual, _ := UpdateFolder(id, OLDinput, Newinput, parentFolder)
+	_, actual, _, _ := UpdateFolder(database.DBConn, id, OLDinput, Newinput, parentFolder, envID)
 
 	log.Println(actual)
 

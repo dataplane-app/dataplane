@@ -65,8 +65,52 @@ describe('Create pipelines', { retries: 5 }, function () {
 
         // Move
         cy.get('.react-flow__node-pythonNode').should('exist', { timeout: 6000 }).trigger('mousedown');
-        cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('mousemove', 300, 200);
+        cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('mousemove', 300, 100);
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('mouseup');
+
+        // 2nd Python node
+        // Add
+        cy.get('#drag_pythonNode') // Python node
+            .should('exist', { timeout: 6000 })
+            .trigger('dragstart', { dataTransfer, force: true })
+            .should('exist', { timeout: 6000 });
+        cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
+        cy.contains('Processor - Python 1').next().get('#title', { force: true }).clear({ force: true }).type('Python_2');
+        cy.get('[type=submit]').should('exist', { timeout: 6000 }).click(); // Save
+
+        // Move
+        cy.contains('Python_2').parent().parent().parent().parent().should('exist', { timeout: 6000 }).trigger('mousedown');
+        cy.get('.react-flow__renderer').should('exist', { timeout: 6000, force: true }).trigger('mousemove', 500, 100, { force: true });
+        cy.get('.react-flow__renderer').should('exist', { timeout: 6000, force: true }).trigger('mouseup');
+
+        // Bash node
+        // Add
+        cy.get('#drag_bashNode') // Bash1 node
+            .should('exist', { timeout: 6000 })
+            .trigger('dragstart', { dataTransfer, force: true })
+            .should('exist', { timeout: 6000 });
+        cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
+        cy.get('[type=submit]').should('exist', { timeout: 6000 }).click(); // Save
+
+        // Move
+        cy.get('.react-flow__node-bashNode').should('exist', { timeout: 6000 }).trigger('mousedown');
+        cy.get('.react-flow__renderer').should('exist', { timeout: 6000, force: true }).trigger('mousemove', 100, 250, { force: true });
+        cy.get('.react-flow__renderer').should('exist', { timeout: 6000, force: true }).trigger('mouseup');
+
+        // 2nd Bash node
+        // Add
+        cy.get('#drag_bashNode') // Bash2 node
+            .should('exist', { timeout: 6000 })
+            .trigger('dragstart', { dataTransfer, force: true })
+            .should('exist', { timeout: 6000 });
+        cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
+        cy.contains('Processor - Bash 1').next().get('#title', { force: true }).clear({ force: true }).type('Bash_2');
+        cy.get('[type=submit]').should('exist', { timeout: 6000 }).click(); // Save
+
+        // Move
+        cy.contains('Bash_2').parent().parent().parent().parent().should('exist', { timeout: 6000 }).trigger('mousedown');
+        cy.get('.react-flow__renderer').should('exist', { timeout: 6000, force: true }).trigger('mousemove', 300, 250, { force: true });
+        cy.get('.react-flow__renderer').should('exist', { timeout: 6000, force: true }).trigger('mouseup');
 
         // Checkpoint
         // Add
@@ -77,14 +121,15 @@ describe('Create pipelines', { retries: 5 }, function () {
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
         // Move
         cy.get('.react-flow__node-checkpointNode').should('exist', { timeout: 6000 }).trigger('mousedown');
-        cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('mousemove', 500, 100);
+        cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('mousemove', 500, 250);
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('mouseup');
 
         // Connect edges
+        // Schedule => Python
         cy.get('.react-flow__node').contains('Schedule trigger').parent().parent().parent().find('.source').should('exist', { timeout: 6000 }).trigger('mousedown', { button: 0 });
-
-        cy.get('.react-flow__node')
-            .contains('Python')
+        cy.get('[aria-label^="Node ID:"]')
+            .contains(/^Python$/)
+            .should('have.css', 'font-weight', '900')
             .parent()
             .parent()
             .parent()
@@ -93,8 +138,72 @@ describe('Create pipelines', { retries: 5 }, function () {
             .should('exist', { timeout: 6000 })
             .trigger('mouseup', { force: true });
 
-        cy.get('.react-flow__node').contains('Python').parent().parent().parent().find('.source').should('exist', { timeout: 6000 }).trigger('mousedown', { button: 0 });
+        // Python => Python 2
+        cy.get('[aria-label^="Node ID:"]')
+            .contains(/^Python$/)
+            .parent()
+            .parent()
+            .parent()
+            .find('.source')
+            .should('exist', { timeout: 6000 })
+            .trigger('mousedown', { button: 0 });
+        cy.get('[aria-label^="Node ID:"]')
+            .contains(/^Python_2$/)
+            .parent()
+            .parent()
+            .parent()
+            .find('.target')
+            .trigger('mousemove')
+            .should('exist', { timeout: 6000 })
+            .trigger('mouseup', { force: true });
 
+        // Python 2 => Bash
+        cy.get('[aria-label^="Node ID:"]')
+            .contains(/^Python_2$/)
+            .parent()
+            .parent()
+            .parent()
+            .find('.source')
+            .should('exist', { timeout: 6000 })
+            .trigger('mousedown', { button: 0 });
+        cy.get('[aria-label^="Node ID:"]')
+            .contains(/^Bash$/)
+            .parent()
+            .parent()
+            .parent()
+            .find('.target')
+            .trigger('mousemove')
+            .should('exist', { timeout: 6000 })
+            .trigger('mouseup', { force: true });
+
+        // Bash => Bash 2
+        cy.get('[aria-label^="Node ID:"]')
+            .contains(/^Bash$/)
+            .parent()
+            .parent()
+            .parent()
+            .find('.source')
+            .should('exist', { timeout: 6000 })
+            .trigger('mousedown', { button: 0 });
+        cy.get('[aria-label^="Node ID:"]')
+            .contains(/^Bash_2$/)
+            .parent()
+            .parent()
+            .parent()
+            .find('.target')
+            .trigger('mousemove')
+            .should('exist', { timeout: 6000 })
+            .trigger('mouseup', { force: true });
+
+        // Bash 2 => Checkpoint
+        cy.get('[aria-label^="Node ID:"]')
+            .contains(/^Bash_2$/)
+            .parent()
+            .parent()
+            .parent()
+            .find('.source')
+            .should('exist', { timeout: 6000 })
+            .trigger('mousedown', { button: 0 });
         cy.get('.react-flow__node')
             .contains('Checkpoint')
             .parent()

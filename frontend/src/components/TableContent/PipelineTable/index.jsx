@@ -191,19 +191,6 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipel
                         );
                     })}
                 </Box>
-
-                {/* Pagination */}
-                {pageCount > 1 ? (
-                    <Pagination //
-                        sx={{ '& ul': { justifyContent: 'end' } }}
-                        onChange={(_, value) => gotoPage(value - 1)}
-                        page={pageIndex + 1}
-                        count={pageCount}
-                        variant="outlined"
-                        color="primary"
-                    />
-                ) : null}
-
                 <Drawer anchor="right" open={isOpenDeletePipeline} onClose={() => setIsOpenDeletePipeline(!isOpenDeletePipeline)}>
                     <DeletePipelineDrawer
                         pipelineName={pipelineName}
@@ -238,6 +225,17 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipel
                     />
                 </Drawer>
             </Box>
+
+            {/* Pagination */}
+            {pageCount > 1 ? (
+                <Pagination //
+                    onChange={(_, value) => gotoPage(value - 1)}
+                    page={pageIndex + 1}
+                    count={pageCount}
+                    variant="outlined"
+                    color="primary"
+                />
+            ) : null}
         </>
     );
 };
