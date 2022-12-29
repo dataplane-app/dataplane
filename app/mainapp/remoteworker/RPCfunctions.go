@@ -84,6 +84,7 @@ func RPCRequest(remoteWorkerID string, requestID string, Method string, Params a
 		return errors.New("RPC request parse error 2: " + errmarshal2.Error())
 	}
 
+	// log.Println("RPC request data:", string(requestBytes))
 	Broadcast <- Message{WorkerID: remoteWorkerID, Data: requestBytes}
 
 	return nil

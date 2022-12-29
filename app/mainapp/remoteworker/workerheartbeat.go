@@ -21,7 +21,7 @@ func RWHeartBeat(conn *websocket.Conn, requestID string, RemoteWorkerID string, 
 	if _, err := database.RedisConn.Pipelined(ctx, func(rdb redis.Pipeliner) error {
 		rdb.HSet(ctx, "rw-"+RemoteWorkerID, "time", time.Now().UTC().Unix())
 		rdb.HSet(ctx, "rw-"+RemoteWorkerID, "sessionID", SessionID)
-		rdb.Expire(ctx, "rw-"+RemoteWorkerID, 15*time.Second)
+		rdb.Expire(ctx, "rw-"+RemoteWorkerID, 30*time.Second)
 		return nil
 	}); err != nil {
 		log.Println("Failed to set remote worker heartbeat:", err)

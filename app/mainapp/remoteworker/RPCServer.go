@@ -10,7 +10,7 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/gofiber/websocket/v2"
-	jsoniter "github.com/json-iterator/go"
+	"github.com/tidwall/gjson"
 )
 
 func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
@@ -43,7 +43,47 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 		}
 
 		// ----- Authenticate all incoming messages --------
-		sessionID := jsoniter.Get(message, "params", "Auth").ToString()
+		var messagetype string
+		var sessionID string
+
+		messagestring := string(message)
+		if gjson.Get(messagestring, "method").Exists() {
+			messagetype = "request"
+		}
+
+		if gjson.Get(messagestring, "result").Exists() {
+			messagetype = "response"
+		}
+
+		if gjson.Get(messagestring, "error").Exists() {
+			messagetype = "error"
+		}
+
+		log.Println("JSON RPC type: ", messagetype)
+
+		/* Get the session token based on the RPC message type */
+		switch messagetype {
+		case "request":
+			sessionID = gjson.Get(messagestring, "params.Auth").String()
+		case "response":
+			sessionID = gjson.Get(messagestring, "result.auth").String()
+		case "error":
+			sessionID = gjson.Get(messagestring, "error.data.auth").String()
+		default:
+			log.Println("RPC message type not found.")
+			Unregister <- Subscription{Conn: conn, WorkerID: remoteWorkerID}
+			conn.WriteMessage(websocket.CloseMessage, []byte{})
+			conn.Close()
+		}
+
+		/* If the token doesn't exist then close the session */
+		if sessionID == "" {
+			log.Println("RPC session token not found.")
+			Unregister <- Subscription{Conn: conn, WorkerID: remoteWorkerID}
+			conn.WriteMessage(websocket.CloseMessage, []byte{})
+			conn.Close()
+		}
+
 		// log.Println("session token:", sessionID)
 
 		// 2. Check session against redis

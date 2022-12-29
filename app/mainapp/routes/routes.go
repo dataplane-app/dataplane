@@ -365,10 +365,10 @@ func Setup(port string) *fiber.App {
 		// jsonrpc.ServeConn(&remoteworker.WebsocketConn{c})
 	}))
 
-	app.Get("/trigger/remote/task", func(c *fiber.Ctx) error {
-		remoteworker.Broadcast <- remoteworker.Message{WorkerID: "4061e7e1-5ec9-44ae-ad8c-976957592e8f", Data: []byte(`{"hello":"hello"}`)}
-		return c.JSON(fiber.Map{"Response": "OK"})
-	})
+	// app.Get("/trigger/remote/task", func(c *fiber.Ctx) error {
+	// 	remoteworker.Broadcast <- remoteworker.Message{WorkerID: "4061e7e1-5ec9-44ae-ad8c-976957592e8f", Data: []byte(`{"hello":"hello"}`)}
+	// 	return c.JSON(fiber.Map{"Response": "OK"})
+	// })
 
 	// Download code files
 	app.Get("/app/private/code-files/:fileid", auth.TokenAuthMiddle(), func(c *fiber.Ctx) error {

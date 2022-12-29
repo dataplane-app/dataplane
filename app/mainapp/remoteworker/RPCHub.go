@@ -53,7 +53,7 @@ func RPCHub() {
 
 			// log.Println("message received:", string(message.Data), message.Room)
 			var client *websocket.Conn
-			log.Println("Hub count:", WorkerIDClients.Count())
+			// log.Println("Hub count:", WorkerIDClients.Count())
 
 			// Send the message to all clients in the room provided
 			if tmp, ok := WorkerIDClients.Get(message.WorkerID); ok {
