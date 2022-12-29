@@ -113,7 +113,7 @@ const ProcessTypeDrawer = ({ handleClose, environmentID, workerGroup }) => {
                         />
                         {errors.name?.type === 'validate' && (
                             <Typography variant="subtitle1" color="error">
-                                Each node needs unique naming, {getValues('name')} has already been used.
+                                Each node needs unique naming, "{getValues('name')}" has already been used.
                             </Typography>
                         )}
 
