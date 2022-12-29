@@ -5,3 +5,8 @@ type RWMessage struct {
 	Status   string //error or OK
 	Response string
 }
+
+type RPAWorkersOnline struct {
+	Time      int64  `redis:"time"`
+	SessionID string `redis:"sessionID"`
+}

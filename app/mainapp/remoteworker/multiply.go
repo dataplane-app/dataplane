@@ -17,7 +17,7 @@ type Args struct {
 {"jsonrpc": "2.0", "method": "Arith.Multiply", "params": {"a":4, "b":2}, "id": 1}
 */
 
-func Multiply(conn *websocket.Conn, requestID int64, params json.RawMessage) (int, error) {
+func Multiply(conn *websocket.Conn, requestID string, params json.RawMessage) (int, error) {
 	log.Println("Ran multiply function")
 	var args Args
 	err := json.Unmarshal(params, &args)

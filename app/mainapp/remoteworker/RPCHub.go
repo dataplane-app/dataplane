@@ -62,10 +62,10 @@ func RPCHub() {
 				if err := client.WriteMessage(websocket.TextMessage, message.Data); err != nil {
 					log.Println("write error:", err)
 
-					client.WriteMessage(websocket.CloseMessage, []byte{})
-					client.Close()
-					// delete(clients, connection)
-					WorkerIDClients.Remove(message.WorkerID)
+					// client.WriteMessage(websocket.CloseMessage, []byte{})
+					// client.Close()
+					// // delete(clients, connection)
+					// WorkerIDClients.Remove(message.WorkerID)
 				}
 			}
 

@@ -10,7 +10,7 @@ type RPCRequest struct {
 	// Parameters for the method
 	Params json.RawMessage `json:"params"`
 	// Identifier for the request
-	ID int64 `json:"id"`
+	ID string `json:"id"`
 }
 
 // RPCResponse represents a JSON-RPC response
@@ -22,7 +22,7 @@ type RPCResponse struct {
 	// Error occurred during the method call
 	Error *RPCError `json:"error,omitempty"`
 	// Identifier for the request
-	ID int64 `json:"id"`
+	ID string `json:"id"`
 }
 
 // RPCError represents an error in a JSON-RPC response

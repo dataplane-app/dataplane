@@ -11,7 +11,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 )
 
-func RWHeartBeat(conn *websocket.Conn, requestID int64, RemoteWorkerID string, SessionID string) (string, error) {
+func RWHeartBeat(conn *websocket.Conn, requestID string, RemoteWorkerID string, SessionID string) (string, error) {
 
 	ctx := context.Background()
 

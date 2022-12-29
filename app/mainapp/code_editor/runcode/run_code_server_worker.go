@@ -1,4 +1,4 @@
-package remoteruncode
+package runcode
 
 import (
 	"encoding/json"
@@ -7,77 +7,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
-
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-type Command struct {
-	Command string `json:command`
-}
-
-/*
-Task status: Queue, Allocated, Started, Failed, Success
-*/
-func RunCodeFile(remoteProcessGroup string, fileID string, envID string, pipelineID string, nodeID string, nodeTypeDesc string, runid string) (models.CodeRun, error) {
-
-	// Important not to update status to avoid timing issue where it can overwrite a success a status
-	if runid == "" {
-		runid = uuid.NewString()
-	}
-
-	// ------- Obtaine process group --------
-
-	// ------ Obtain folder structure from file id
-
-	filesdata := models.CodeFiles{}
-	errdb := database.DBConn.Where("file_id = ? and environment_id =? and level = ?", fileID, envID, "node_file").Find(&filesdata).Error
-	if errdb != nil {
-		log.Println("Run code filestructure: ", errdb)
-		return models.CodeRun{}, errors.New("Run code filestructure error.")
-	}
-
-	parentfolderdata := ""
-	var err error
-	if filesdata.FolderID != "" {
-		parentfolderdata, err = filesystem.FolderConstructByID(database.DBConn, filesdata.FolderID, envID, "pipelines")
-		if err != nil {
-			log.Println("Run code parent folder error: ", err)
-			return models.CodeRun{}, errors.New("File record not found")
-		}
-	} else {
-		return models.CodeRun{}, errors.New("File record not found")
-	}
-
-	// Map folder structure:
-	var folderMap string
-	var folderIDMap string
-
-	/* Folder that is at node level */
-	folderMap = parentfolderdata
-	folderIDMap = filesdata.FolderID
-	// if dpconfig.Debug == "true" {
-	// 	if _, err := os.Stat(dpconfig.CodeDirectory + folderMap); os.IsExist(err) {
-	// 		log.Println("Dir exists:", dpconfig.CodeDirectory+folderMap)
-
-	// 	}
-	// }
-
-	// ------ Construct run command
-	var commands []string
-	switch nodeTypeDesc {
-	case "python":
-		commands = append(commands, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
-	default:
-		return models.CodeRun{}, errors.New("Code run type not found.")
-	}
+func RunCodeServerWorker(envID string, nodeID string, workerGroup string, runid string, commands []string, filesdata models.CodeFiles, folderMap string, folderIDMap string) (models.CodeRun, error) {
 
 	/* Look up chosen workers -
 	if none, keep trying for 10 x 2 seconds
@@ -89,7 +28,7 @@ func RunCodeFile(remoteProcessGroup string, fileID string, envID string, pipelin
 	var onlineWorkers []models.WorkerStats
 	for i := 0; i < maxRetiresAllowed; i++ {
 
-		/* --- Lookup online workers for this process group ----- */
+		// log.Println(i)
 
 		var workers []models.Workers
 		var worker models.WorkerStats
@@ -246,6 +185,8 @@ func RunCodeFile(remoteProcessGroup string, fileID string, envID string, pipelin
 		runSend.Status = TaskFinal.Status
 		runSend.Reason = TaskFinal.Reason
 
+		return runSend, errors.New("Run code marked as failed.")
+
 		// err3 := database.DBConn.Model(&models.WorkerTasks{}).Where("run_id = ? and status=?", runid, "Queue").Updates(map[string]interface{}{"status": "Fail", "reason": "Upstream no workers"}).Error
 		// if err3 != nil {
 		// 	logging.PrintSecretsRedact(err3.Error())
@@ -253,7 +194,6 @@ func RunCodeFile(remoteProcessGroup string, fileID string, envID string, pipelin
 
 	}
 
-	//
 	return runSend, nil
 
 }
