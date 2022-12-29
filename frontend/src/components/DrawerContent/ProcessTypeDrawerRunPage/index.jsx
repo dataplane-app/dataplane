@@ -14,7 +14,13 @@ import { useGetPipelineFlowHook } from '../SchedulerDrawerRunPage';
 
 const ProcessTypeDrawer = ({ handleClose, environmentID, workerGroup }) => {
     // React hook form
-    const { register, handleSubmit, reset } = useForm();
+    const {
+        register,
+        handleSubmit,
+        getValues,
+        formState: { errors },
+        reset,
+    } = useForm();
 
     // Flow state
     const FlowState = useGlobalPipelineRun();
@@ -72,6 +78,16 @@ const ProcessTypeDrawer = ({ handleClose, environmentID, workerGroup }) => {
         handleClose();
     }
 
+    /**
+     * Returns false if the name is taken
+     */
+    function checkNameTaken(name) {
+        if (name === FlowState.selectedElement.data.name.get()) return true;
+
+        // Name is taken
+        if (FlowState.elements.get().some((a) => a?.data?.name === name)) return false;
+    }
+
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <Box position="relative" width="100%">
@@ -92,10 +108,16 @@ const ProcessTypeDrawer = ({ handleClose, environmentID, workerGroup }) => {
                             id="title"
                             size="small"
                             required
-                            sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }}
-                            {...register('name', { required: true })}
+                            sx={{ mt: 2, fontSize: '.75rem', display: 'flex' }}
+                            {...register('name', { required: true, validate: (name) => checkNameTaken(name) })}
                         />
-                        <TextField label="Description" id="description" size="small" sx={{ mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
+                        {errors.name?.type === 'validate' && (
+                            <Typography variant="subtitle1" color="error">
+                                Each node needs unique naming, "{getValues('name')}" has already been used.
+                            </Typography>
+                        )}
+
+                        <TextField label="Description" id="description" size="small" sx={{ mb: 2, mt: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
 
                         <Autocomplete
                             options={workerGroups}
