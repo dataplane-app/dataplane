@@ -20,7 +20,7 @@ const ProcessTypeDrawer = ({ handleClose, environmentID, workerGroup }) => {
         getValues,
         formState: { errors },
         reset,
-    } = useForm({ mode: 'onBlur' });
+    } = useForm();
 
     // Flow state
     const FlowState = useGlobalPipelineRun();
@@ -113,7 +113,7 @@ const ProcessTypeDrawer = ({ handleClose, environmentID, workerGroup }) => {
                         />
                         {errors.name?.type === 'validate' && (
                             <Typography variant="subtitle1" color="error">
-                                Each node needs unique naming, {getValues('name')} has already been used.
+                                {getValues('name')} has already been used.
                             </Typography>
                         )}
 

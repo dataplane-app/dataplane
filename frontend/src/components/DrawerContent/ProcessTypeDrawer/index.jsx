@@ -16,7 +16,7 @@ const ProcessTypeDrawer = ({ handleClose, elements, setElements, environmentID, 
         getValues,
         formState: { errors },
         reset,
-    } = useForm({ mode: 'onBlur' });
+    } = useForm();
 
     // Flow state
     const FlowState = useGlobalFlowState();
@@ -103,7 +103,7 @@ const ProcessTypeDrawer = ({ handleClose, elements, setElements, environmentID, 
                         />
                         {errors.name?.type === 'validate' && (
                             <Typography variant="subtitle1" color="error">
-                                Each node needs unique naming, {getValues('name')} has already been used.
+                                {getValues('name')} has already been used.
                             </Typography>
                         )}
                         <TextField label="Description" id="description" size="small" sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
