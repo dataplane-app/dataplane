@@ -580,7 +580,15 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
                         setWorkerGroup(newValue);
                     }}
                     sx={{ '& fieldset': { borderRadius: 0, borderColor: 'editorPage.borderColor' }, '& .MuiAutocomplete-popupIndicator': { color: 'editorPage.fileManagerIcon' } }}
-                    renderInput={(params) => <TextField {...params} label="Worker" required size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label={rest.pipeline.nodeTypeDesc === 'rpa-python' ? 'RPA Worker' : 'Worker'}
+                            required
+                            size="small"
+                            sx={{ fontSize: '.75rem', display: 'flex' }}
+                        />
+                    )}
                 />
             </Box>
 
