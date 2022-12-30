@@ -23,8 +23,8 @@ func DesktopAuthMiddle() func(*fiber.Ctx) error {
 		}
 
 		// TODO: Add authentication
-		log.Printf("Session key: %v\n", authHeader[1])
-		log.Printf("workerID: %v\n", remoteWorkerID)
+		// log.Printf("Session key: %v\n", authHeader[1])
+		// log.Printf("workerID: %v\n", remoteWorkerID)
 
 		// 2. Check session against redis
 		val, err := database.RedisConn.Get(ctx, "sess-"+remoteWorkerID).Result()
@@ -35,7 +35,7 @@ func DesktopAuthMiddle() func(*fiber.Ctx) error {
 			})
 		}
 
-		log.Println("Match tokens: ", val, authHeader[1])
+		// log.Println("Match tokens: ", val, authHeader[1])
 
 		if val != authHeader[1] {
 			log.Println("Remote worker session mismatch:")

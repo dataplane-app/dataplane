@@ -9,8 +9,10 @@ import (
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	wsockets "github.com/dataplane-app/dataplane/app/mainapp/websockets"
 	"github.com/gofiber/websocket/v2"
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 )
 
 func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
@@ -30,7 +32,6 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 	for {
 
 		mt, message, err := conn.ReadMessage()
-		log.Println(string(message))
 
 		// log.Println("debug websocket:", string(message))
 		if err != nil {
@@ -59,14 +60,16 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 			messagetype = "error"
 		}
 
-		log.Println("JSON RPC type: ", messagetype)
+		// log.Println("JSON RPC type: ", messagetype)
 
 		/* Get the session token based on the RPC message type */
 		switch messagetype {
 		case "request":
-			sessionID = gjson.Get(messagestring, "params.Auth").String()
+			sessionID = gjson.Get(messagestring, "params.auth").String()
 		case "response":
 			sessionID = gjson.Get(messagestring, "result.auth").String()
+			/* remove auth token from message to prevent passing into front end websockets */
+			messagestring, _ = sjson.Delete(messagestring, "result.auth")
 		case "error":
 			sessionID = gjson.Get(messagestring, "error.data.auth").String()
 		default:
@@ -136,6 +139,33 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 				break
 			}
 			RPCResponse(remoteWorkerID, request.ID, response)
+
+		/* ----- Run code logs -------- */
+		case "coderunfilelogs":
+
+			envID := gjson.Get(messagestring, "params.environment_id").String()
+			runID := gjson.Get(messagestring, "params.run_id").String()
+
+			log.Println(string(message))
+
+			// log.Println("code run envID:", envID, messagestring)
+
+			if envID == "" {
+				RPCError(remoteWorkerID, request.ID, -32603, "Code run missing environment ID", errors.New("Code run missing environment ID"))
+				break
+			}
+
+			// var logrecv models.LogsSend
+			// if err := json.Unmarshal(request.Params, &logrecv); err != nil {
+			// 	RPCError(remoteWorkerID, request.ID, -32700, "Code run log parse error", err)
+			// 	break
+			// }
+
+			// logrcvsend =
+
+			room := "coderunfilelogs." + envID + "." + runID
+			log.Println("Room:", room)
+			wsockets.Broadcast <- wsockets.Message{Room: room, Data: request.Params}
 
 		case "Arith.Multiply":
 
