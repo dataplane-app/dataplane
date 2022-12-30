@@ -27,7 +27,7 @@ func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nod
 
 		/* look up process group */
 
-		workerGroup = "df5db56d-536a-403f-8ebc-ea819e2c4931"
+		// workerGroup = "df5db56d-536a-403f-8ebc-ea819e2c4931"
 		log.Println("rpa", workerGroup)
 	case "python":
 		log.Println("python")

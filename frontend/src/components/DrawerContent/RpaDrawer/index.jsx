@@ -125,7 +125,7 @@ const RpaDrawer = ({ handleClose, elements, setElements, environmentID }) => {
                             options={processGroups}
                             value={selectedProcessGroup}
                             disableClearable
-                            getOptionLabel={(option) => option.name || ''}
+                            getOptionLabel={(option) => option.remoteProcessGroupID || ''}
                             onChange={(event, newValue) => {
                                 setSelectedProcessGroup(newValue);
                             }}
@@ -181,9 +181,9 @@ const useGetRemoteProcessGroupsForAnEnvironmentHook = (environmentID, setRemoteP
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setRemoteProcessGroups(response);
-            if (FlowState.selectedElement.data?.workerGroup.get()) {
-                setSelectedProcessGroup(response.find((a) => a.name === FlowState.selectedElement.data?.workerGroup.get()));
-            }
+            // if (FlowState.selectedElement.data?.workerGroup.get()) {
+            //     setSelectedProcessGroup(response.find((a) => a.name === FlowState.selectedElement.data?.workerGroup.get()));
+            // }
         }
     };
 };
