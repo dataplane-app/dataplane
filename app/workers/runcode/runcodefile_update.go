@@ -70,6 +70,7 @@ func UpdateRunCodeFile(msg modelmain.CodeRun) {
 	*/
 	runtime := time.Now().UTC().Sub(msg.CreatedAt)
 
+	/* This is an additional message to show run time */
 	if msg.Status == "Fail" || msg.Status == "Success" {
 		sendmsg := modelmain.LogsSend{
 			CreatedAt: time.Now().UTC(),
