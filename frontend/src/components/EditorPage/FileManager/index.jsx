@@ -118,7 +118,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Get workers and files on load
     useEffect(() => {
         if (!Environment.id.get()) return;
-        getWorkerGroups();
+        if (rest.pipeline.nodeTypeDesc === 'rpa-python') {
+            setWorkerGroups([{ WorkerGroup: rest.pipeline.workerGroup }]);
+            setWorkerGroup({ WorkerGroup: rest.pipeline.workerGroup });
+        } else {
+            getWorkerGroups();
+        }
         getFilesNode();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);

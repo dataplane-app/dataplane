@@ -186,7 +186,12 @@ const useGetPipelineHook = (environmentID, setPipeline) => {
             responsePipeline.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             const nodeName = responseNode.name;
-            setPipeline({ ...responseNode, ...responsePipeline, nodeName });
+            setPipeline({
+                ...responsePipeline,
+                ...responseNode,
+                nodeName,
+                ...(responseNode.nodeTypeDesc === 'rpa-python' && { workerGroup: responseNode.workerGroup }),
+            });
         }
     };
 };
