@@ -117,44 +117,40 @@ const RpaDrawer = ({ handleClose, elements, setElements, environmentID }) => {
                         )}
                         <TextField label="Description" id="description" size="small" sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }} {...register('description')} />
 
-                        {selectedProcessGroup ? (
-                            <>
-                                <Typography variant="h3" sx={{ mt: 5, mb: 2, fontWeight: 700 }}>
-                                    RPA Worker
-                                </Typography>
+                        <Typography variant="h3" sx={{ mt: 5, mb: 2, fontWeight: 700 }}>
+                            RPA Worker
+                        </Typography>
 
-                                <Autocomplete
-                                    options={processGroups}
-                                    value={selectedProcessGroup}
-                                    disableClearable
-                                    getOptionLabel={(option) => option.name || ''}
-                                    onChange={(event, newValue) => {
-                                        setSelectedProcessGroup(newValue);
-                                    }}
-                                    renderInput={(params) => (
-                                        <TextField
-                                            {...params} //
-                                            label="Process Group"
-                                            size="small"
-                                            sx={{ fontSize: '.75rem', display: 'flex' }}
-                                            {...register('workerGroup')}
-                                        />
-                                    )}
+                        <Autocomplete
+                            options={processGroups}
+                            value={selectedProcessGroup}
+                            disableClearable
+                            getOptionLabel={(option) => option.name || ''}
+                            onChange={(event, newValue) => {
+                                setSelectedProcessGroup(newValue);
+                            }}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params} //
+                                    label="Process Group"
+                                    size="small"
+                                    sx={{ fontSize: '.75rem', display: 'flex' }}
+                                    {...register('workerGroup')}
                                 />
+                            )}
+                        />
 
-                                <Typography fontWeight={700} sx={{ mt: 2, fontSize: '0.8125rem' }}>
-                                    Workers found in environment Production:
-                                </Typography>
+                        <Typography fontWeight={700} sx={{ mt: 2, fontSize: '0.8125rem' }}>
+                            Workers found in environment Production:
+                        </Typography>
 
-                                <ul>
-                                    {remoteWorkers?.map((a) => (
-                                        <li key={a.workerName} style={{ fontSize: '0.8125rem' }}>
-                                            {a.workerName}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </>
-                        ) : null}
+                        <ul>
+                            {remoteWorkers?.map((a) => (
+                                <li key={a.workerName} style={{ fontSize: '0.8125rem' }}>
+                                    {a.workerName}
+                                </li>
+                            ))}
+                        </ul>
                     </Box>
                 </Box>
             </Box>
@@ -187,8 +183,6 @@ const useGetRemoteProcessGroupsForAnEnvironmentHook = (environmentID, setRemoteP
             setRemoteProcessGroups(response);
             if (FlowState.selectedElement.data?.workerGroup.get()) {
                 setSelectedProcessGroup(response.find((a) => a.name === FlowState.selectedElement.data?.workerGroup.get()));
-            } else {
-                setSelectedProcessGroup(response[0]);
             }
         }
     };
