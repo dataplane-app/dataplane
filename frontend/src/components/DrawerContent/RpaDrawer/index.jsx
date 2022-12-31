@@ -9,7 +9,7 @@ import { useSnackbar } from 'notistack';
 import { useGetRemoteProcessGroupsForAnEnvironment } from '../../../graphql/getRemoteProcessGroupsForAnEnvironment';
 import { useGetRemoteWorkers } from '../../../graphql/getRemoteWorkers';
 
-const RpaDrawer = ({ handleClose, elements, setElements, environmentID }) => {
+const RpaDrawer = ({ handleClose, setElements, environmentID }) => {
     // React hook form
     const {
         register,
@@ -65,7 +65,7 @@ const RpaDrawer = ({ handleClose, elements, setElements, environmentID }) => {
                         ...el.data,
                         name: data.name,
                         description: data.description,
-                        workerGroup: data.workerGroup === 'default' ? '' : data.workerGroup,
+                        workerGroup: selectedProcessGroup.remoteProcessGroupID,
                     };
                 }
                 return el;
@@ -125,7 +125,7 @@ const RpaDrawer = ({ handleClose, elements, setElements, environmentID }) => {
                             options={processGroups}
                             value={selectedProcessGroup}
                             disableClearable
-                            getOptionLabel={(option) => option.remoteProcessGroupID || ''}
+                            getOptionLabel={(option) => option.name || ''}
                             onChange={(event, newValue) => {
                                 setSelectedProcessGroup(newValue);
                             }}
@@ -181,9 +181,9 @@ const useGetRemoteProcessGroupsForAnEnvironmentHook = (environmentID, setRemoteP
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setRemoteProcessGroups(response);
-            // if (FlowState.selectedElement.data?.workerGroup.get()) {
-            //     setSelectedProcessGroup(response.find((a) => a.name === FlowState.selectedElement.data?.workerGroup.get()));
-            // }
+            if (FlowState.selectedElement.data?.workerGroup.get()) {
+                setSelectedProcessGroup(response.find((a) => a.remoteProcessGroupID === FlowState.selectedElement.data?.workerGroup.get()));
+            }
         }
     };
 };

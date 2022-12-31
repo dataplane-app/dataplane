@@ -13,7 +13,7 @@ import { prepareInputForBackend } from '../../../pages/PipelineEdit';
 import { useAddUpdatePipelineFlow } from '../../../graphql/addUpdatePipelineFlow';
 import { useParams } from 'react-router-dom/cjs/react-router-dom.min';
 
-const RpaDrawer = ({ handleClose, elements, setElements, environmentID }) => {
+const RpaDrawer = ({ handleClose, environmentID }) => {
     // React hook form
     const {
         register,
@@ -72,7 +72,7 @@ const RpaDrawer = ({ handleClose, elements, setElements, environmentID }) => {
                     ...el.data,
                     name: data.name,
                     description: data.description,
-                    workerGroup: data.workerGroup === 'default' ? '' : data.workerGroup,
+                    workerGroup: selectedProcessGroup.remoteProcessGroupID,
                 };
             }
             return el;
@@ -195,7 +195,7 @@ const useGetRemoteProcessGroupsForAnEnvironmentHook = (environmentID, setRemoteP
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             setRemoteProcessGroups(response);
-            setSelectedProcessGroup(response.find((a) => a.name === FlowState.selectedElement.data?.workerGroup.get()));
+            setSelectedProcessGroup(response.find((a) => a.remoteProcessGroupID === FlowState.selectedElement.data?.workerGroup.get()));
         }
     };
 };

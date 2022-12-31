@@ -484,7 +484,6 @@ const Flow = () => {
                 <RpaDrawer
                     handleClose={() => FlowState.isOpenRpaDrawer.set(false)} //
                     setElements={setElements}
-                    elements={elements}
                     environmentID={Environment.id.get()}
                 />
             </Drawer>
