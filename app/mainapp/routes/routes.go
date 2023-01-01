@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -349,6 +350,27 @@ func Setup(port string) *fiber.App {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
 		}
 		return c.Status(http.StatusOK).JSON(fiber.Map{"access_token": newRefreshToken, "remote_worker_id": remoteWorkerID})
+	})
+
+	app.Post("/app/remoteworker/codefiles/:workerID/:environmentID/:nodeID/:runtype", auth.DesktopAuthMiddle(), func(c *fiber.Ctx) error {
+
+		/* runtype is prefix to folder structure: coderun, pipeline, deployment */
+		c.Accepts("application/json")
+
+		// remoteWorkerID := string(c.Params("workerID"))
+		nodeID := string(c.Params("nodeID"))
+		environmentID := string(c.Params("environmentID"))
+		runtype := string(c.Params("runtype"))
+		output, filesize, err := remoteworker.CompressCodeFiles(database.DBConn, nodeID, environmentID, runtype)
+		if err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		}
+
+		FileContentType := http.DetectContentType(output)
+		c.Append("Content-Type", FileContentType)
+		c.Append("Content-Length", strconv.Itoa(filesize))
+
+		return c.Status(http.StatusOK).Send(output)
 	})
 
 	/* ------ REMOTE WORKERS ----- */

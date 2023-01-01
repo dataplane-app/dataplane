@@ -161,8 +161,6 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 			// 	break
 			// }
 
-			// logrcvsend =
-
 			room := "coderunfilelogs." + envID + "." + runID
 			log.Println("Room:", room)
 			wsockets.Broadcast <- wsockets.Message{Room: room, Data: request.Params}

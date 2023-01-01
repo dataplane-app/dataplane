@@ -289,10 +289,11 @@ github.com/json-iterator/go
 # github.com/kevinburke/ssh_config v1.2.0
 ## explicit
 github.com/kevinburke/ssh_config
-# github.com/klauspost/compress v1.15.5
-## explicit; go 1.16
+# github.com/klauspost/compress v1.15.13
+## explicit; go 1.17
 github.com/klauspost/compress/flate
 github.com/klauspost/compress/gzip
+github.com/klauspost/compress/s2
 github.com/klauspost/compress/zlib
 # github.com/leodido/go-urn v1.2.1
 ## explicit; go 1.13

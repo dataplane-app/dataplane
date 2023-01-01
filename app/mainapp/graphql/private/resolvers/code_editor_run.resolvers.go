@@ -6,7 +6,6 @@ package privateresolvers
 import (
 	"context"
 	"errors"
-	"log"
 
 	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/runcode"
@@ -28,9 +27,9 @@ func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nod
 		/* look up process group */
 
 		// workerGroup = "df5db56d-536a-403f-8ebc-ea819e2c4931"
-		log.Println("rpa", workerGroup)
+		// log.Println("rpa", workerGroup)
 	case "python":
-		log.Println("python")
+		// log.Println("python")
 	default:
 		return &privategraphql.CERun{}, errors.New("Language type not found.")
 	}

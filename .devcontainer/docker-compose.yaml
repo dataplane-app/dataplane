@@ -29,6 +29,21 @@ services:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 60s
       retries: 5
+
+  postgres-logs:
+    image: timescale/timescaledb:2.5.1-pg14
+    ports:
+      - 5436:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "Hello123!"
+      POSTGRES_DB: "dataplane"
+    volumes:
+      - ../pgdatalogs:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 60s
+      retries: 5
     # restart: always
 
   nats:

@@ -1,5 +1,6 @@
 # dataplane specific
 pgdata
+pgdatalogs
 
 # frontend
 node_modules
