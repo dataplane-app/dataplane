@@ -352,7 +352,7 @@ func Setup(port string) *fiber.App {
 		return c.Status(http.StatusOK).JSON(fiber.Map{"access_token": newRefreshToken, "remote_worker_id": remoteWorkerID})
 	})
 
-	app.Post("/app/remoteworker/codefiles/:workerID/:environmentID/:nodeID/:runtype", auth.DesktopAuthMiddle(), func(c *fiber.Ctx) error {
+	app.Post("/app/remoteworker/codefiles/:environmentID/:nodeID", auth.DesktopAuthMiddle(), func(c *fiber.Ctx) error {
 
 		/* runtype is prefix to folder structure: coderun, pipeline, deployment */
 		c.Accepts("application/json")
@@ -360,10 +360,9 @@ func Setup(port string) *fiber.App {
 		// remoteWorkerID := string(c.Params("workerID"))
 		nodeID := string(c.Params("nodeID"))
 		environmentID := string(c.Params("environmentID"))
-		runtype := string(c.Params("runtype"))
-		output, filesize, err := remoteworker.CompressCodeFiles(database.DBConn, nodeID, environmentID, runtype)
+		output, filesize, err := remoteworker.CodeRunCompressCodeFiles(database.DBConn, nodeID, environmentID)
 		if err != nil {
-			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"Remote worker code run download file error": err.Error()})
 		}
 
 		FileContentType := http.DetectContentType(output)

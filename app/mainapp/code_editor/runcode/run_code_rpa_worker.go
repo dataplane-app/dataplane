@@ -59,8 +59,8 @@ func RunCodeRPAWorker(envID string, nodeID string, workerGroup string, runid str
 		return runSend, errors.New("No RPA workers found online.")
 	}
 
-	log.Println(workerslist)
-	log.Println("RPA workerscan: ", workerscan)
+	// log.Println(workerslist)
+	// log.Println("RPA workerscan: ", workerscan)
 
 	/* ---- Get all online workers ----- */
 	//

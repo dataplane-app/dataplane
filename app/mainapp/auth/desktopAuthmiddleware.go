@@ -44,6 +44,8 @@ func DesktopAuthMiddle() func(*fiber.Ctx) error {
 			})
 		}
 
+		c.Locals("remoteWorkerID", remoteWorkerID)
+
 		return c.Next()
 	}
 }

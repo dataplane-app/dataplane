@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func CompressCodeFiles(db *gorm.DB, nodeID string, environmentID string, runtype string) ([]byte, int, error) {
+func CodeRunCompressCodeFiles(db *gorm.DB, nodeID string, environmentID string) ([]byte, int, error) {
 
 	/* Download the files for this node */
 	FilesOutput := []models.CodeFilesCompress{}
@@ -37,14 +37,14 @@ func CompressCodeFiles(db *gorm.DB, nodeID string, environmentID string, runtype
 	/* Add files to tar file */
 	for i, file := range FilesOutput {
 
-		newdir, err := filesystem.FolderConstructByID(db, file.FolderID, environmentID, "pipelines")
+		newdir, err := filesystem.NodeLevelFolderConstructByID(db, file.FolderID, environmentID)
 		if err != nil {
 			log.Println(err)
 			return nil, 0, err
 		}
 
 		/* prefix folder with run type */
-		FilesOutput[i].FolderPath = runtype + "/" + newdir
+		FilesOutput[i].FolderPath = newdir
 
 	}
 

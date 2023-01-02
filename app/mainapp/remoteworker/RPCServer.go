@@ -72,6 +72,7 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 			messagestring, _ = sjson.Delete(messagestring, "result.auth")
 		case "error":
 			sessionID = gjson.Get(messagestring, "error.data.auth").String()
+			log.Println("WS error: ", string(message))
 		default:
 			log.Println("RPC message type not found.")
 			Unregister <- Subscription{Conn: conn, WorkerID: remoteWorkerID}
