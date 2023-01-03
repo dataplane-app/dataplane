@@ -41,7 +41,8 @@ func RoomUpdates(conn *websocket.Conn, room string) {
 		"codepackage.",
 		"workerlogs.",
 		"coderunfilelogs.",
-		"workergroupstats."}
+		"workergroupstats.",
+		"remoteworkeronline."}
 
 	if utilities.InArrayContains(room, availableRooms) {
 		log.Println("subject not found")
