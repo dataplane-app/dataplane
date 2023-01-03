@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"time"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
@@ -142,18 +143,18 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 			RPCResponse(remoteWorkerID, request.ID, response)
 
 			/* Send to frontend the status and time of worker - one worker will have multiple environments */
-			// sendmsg := models.RPAWorkerOnlineWS{
-			// 	Time:     time.Now().UTC(),
-			// 	Status:   "Online",
-			// 	WorkerID: remoteWorkerID,
-			// }
+			sendmsg := models.RPAWorkerOnlineWS{
+				Time:     time.Now().UTC(),
+				Status:   "Online",
+				WorkerID: remoteWorkerID,
+			}
 
-			// sendme, _ := json.Marshal(sendmsg)
+			sendme, _ := json.Marshal(sendmsg)
 
 			// log.Println(string(sendme))
 
-			// room := "remoteworkeronline." + remoteWorkerID
-			// wsockets.Broadcast <- wsockets.Message{Room: room, Data: sendme}
+			room := "remoteworkeronline." + remoteWorkerID
+			wsockets.Broadcast <- wsockets.Message{Room: room, Data: sendme}
 
 		/* ----- Run code logs -------- */
 		case "coderunfilelogs":
