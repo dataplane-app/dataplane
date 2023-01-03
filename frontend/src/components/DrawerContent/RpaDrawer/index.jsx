@@ -40,6 +40,7 @@ const RpaDrawer = ({ handleClose, setElements, environmentID }) => {
 
     // Get remote workers once a process groups is selected
     useEffect(() => {
+        if (!selectedProcessGroup) return;
         getRemoteWorkers();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -135,22 +136,26 @@ const RpaDrawer = ({ handleClose, setElements, environmentID }) => {
                                     label="Process Group"
                                     size="small"
                                     sx={{ fontSize: '.75rem', display: 'flex' }}
-                                    {...register('workerGroup')}
+                                    {...register('workerGroup', { required: true })}
                                 />
                             )}
                         />
 
-                        <Typography fontWeight={700} sx={{ mt: 2, fontSize: '0.8125rem' }}>
-                            Workers found in environment Production:
-                        </Typography>
+                        {remoteWorkers ? (
+                            <>
+                                <Typography fontWeight={700} sx={{ mt: 2, fontSize: '0.8125rem' }}>
+                                    Workers found in environment Production:
+                                </Typography>
 
-                        <ul>
-                            {remoteWorkers?.map((a) => (
-                                <li key={a.workerName} style={{ fontSize: '0.8125rem' }}>
-                                    {a.workerName}
-                                </li>
-                            ))}
-                        </ul>
+                                <ul>
+                                    {remoteWorkers?.map((a) => (
+                                        <li key={a.workerName} style={{ fontSize: '0.8125rem' }}>
+                                            {a.workerName}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
+                        ) : null}
                     </Box>
                 </Box>
             </Box>
