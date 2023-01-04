@@ -75,7 +75,7 @@ const ProcessTypeDrawer = ({ handleClose, elements, setElements, environmentID, 
         if (name === selectedElement.data.name) return true;
 
         // Name is taken
-        if (FlowState.elements.get().some((a) => a?.data?.name === name)) return false;
+        if (elements.some((a) => a?.data?.name === name)) return false;
     }
 
     return (
