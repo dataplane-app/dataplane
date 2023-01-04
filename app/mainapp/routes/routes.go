@@ -526,7 +526,7 @@ func Setup(port string) *fiber.App {
 	routinetasks.CleanTaskLocks(dpconfig.Scheduler, database.DBConn)
 	routinetasks.CleanTasks(dpconfig.Scheduler, database.DBConn)
 	routinetasks.CleanWorkerLogs(dpconfig.Scheduler, database.DBConn)
-	platform.PlatformLeaderElectionScheduler(dpconfig.Scheduler, MainAppID)
+	platform.PlatformLeaderElectionScheduler(MainAppID)
 
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {
