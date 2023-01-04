@@ -4,8 +4,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/go-co-op/gocron"
 )
 
 var Secrets *strings.Replacer
@@ -21,7 +19,8 @@ var DPworkerCMD string
 var CodeDirectory string
 var CodeLanguages string
 var CodeLoadPackages string
-var Scheduler *gocron.Scheduler
+
+// var Scheduler *gocron.Scheduler
 
 // Debug
 var Debug string = "false"
