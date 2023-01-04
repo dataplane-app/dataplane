@@ -14,7 +14,6 @@ import (
 	"github.com/dataplane-app/dataplane/app/workers/logging"
 	"github.com/dataplane-app/dataplane/app/workers/messageq"
 
-	"github.com/go-co-op/gocron"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
@@ -36,7 +35,7 @@ import (
 // 	WorkerType  string `json:"WorkerType"` //container, kubernetes
 // }
 
-func WorkerHealthStart(s *gocron.Scheduler) {
+func WorkerHealthStart() {
 
 	// data, err := json.Marshal(worker)
 	// if err != nil {
@@ -62,88 +61,105 @@ func WorkerHealthStart(s *gocron.Scheduler) {
 
 	log.Println("⏱  Heartbeat interval: " + strconv.Itoa(i) + " second(s)")
 
-	s.Every(i).Seconds().Do(func() {
-		// s.NextRun()
+	ticker := time.NewTicker(time.Duration(i) * time.Second)
+	quit := make(chan struct{})
 
-		// record in the database and send status to mainapp
-		var percentCPUsend float64
-		var percentMemorysend float64
-		var memoryused float64
-		switch wrkerconfig.WorkerType {
+	go func() {
+		for {
+			select {
 
-		// TODO: Fix container usage
-		case "container":
-			percentCPU := cmetric.CurrentCpuPercentUsage()
-			percentCPUsend = percentCPU
-			// cpu := docker.GetDockerIDList()
-			// memory, _ := cmetric.GetContainerMemoryLimit()
-			memory := cmetric.CurrentMemoryUsage()
-			memoryperc := cmetric.CurrentMemoryPercentUsage()
+			case <-ticker.C:
+				// log.Println("send heartbeat worker")
 
-			percentMemorysend = float64(memoryperc)
-			memoryused = float64(memory)
+				// record in the database and send status to mainapp
+				var percentCPUsend float64
+				var percentMemorysend float64
+				var memoryused float64
+				switch wrkerconfig.WorkerType {
 
-			// // if math.IsNaN(cpu) {
-			// // 	cpu = 0
-			// // }
-			// log.Println("Docker cpu", cpu.Percent())
+				// TODO: Fix container usage
+				case "container":
+					percentCPU := cmetric.CurrentCpuPercentUsage()
+					percentCPUsend = percentCPU
+					// cpu := docker.GetDockerIDList()
+					// memory, _ := cmetric.GetContainerMemoryLimit()
+					memory := cmetric.CurrentMemoryUsage()
+					memoryperc := cmetric.CurrentMemoryPercentUsage()
 
-			// log.Println("Memory:", utils.HumanFileSize(float64(memory)))
-			// // log.Println("CPU:", cpu)
-			// log.Println("Memory:", memoryperc)
+					percentMemorysend = float64(memoryperc)
+					memoryused = float64(memory)
 
-			// // percentCPUsend = math.Round(cpu*100) / 100
-			// percentMemorysend = math.Round(float64(memoryperc)*100) / 100
-			// memoryused = math.Round((float64(memoryperc)*float64(memory))*100) / 100
-		default:
+					// // if math.IsNaN(cpu) {
+					// // 	cpu = 0
+					// // }
+					// log.Println("Docker cpu", cpu.Percent())
 
-			memory, _ := mem.VirtualMemory()
-			percentMemorysend = math.Round(memory.UsedPercent*100) / 100
-			memoryused = math.Round(float64(memory.Used)*100) / 100
-			percentCPU, _ := cpu.Percent(time.Second, false)
-			percentCPUsend = math.Round(percentCPU[0]*100) / 100
+					// log.Println("Memory:", utils.HumanFileSize(float64(memory)))
+					// // log.Println("CPU:", cpu)
+					// log.Println("Memory:", memoryperc)
 
+					// // percentCPUsend = math.Round(cpu*100) / 100
+					// percentMemorysend = math.Round(float64(memoryperc)*100) / 100
+					// memoryused = math.Round((float64(memoryperc)*float64(memory))*100) / 100
+				default:
+
+					memory, _ := mem.VirtualMemory()
+					percentMemorysend = math.Round(memory.UsedPercent*100) / 100
+					memoryused = math.Round(float64(memory.Used)*100) / 100
+					percentCPU, _ := cpu.Percent(time.Second, false)
+					percentCPUsend = math.Round(percentCPU[0]*100) / 100
+
+				}
+
+				// log.Println("CPU:", percentCPUsend)
+
+				load, _ := load.Avg()
+				loadsend := math.Round(load.Load1*100) / 100
+
+				// log.Printf("cpu perc:%v | mem percent:%v | mem used :%v | load:%v \n", percentCPUsend, percentMemorysend, memoryused, loadsend)
+
+				workerdata := &models.WorkerStats{
+					WorkerGroup: wrkerconfig.WorkerGroup,
+					WorkerID:    wrkerconfig.WorkerID,
+					Status:      "Online",
+					CPUPerc:     percentCPUsend,
+					MemoryPerc:  percentMemorysend,
+					MemoryUsed:  memoryused,
+					Load:        loadsend,
+					EnvID:       wrkerconfig.EnvID,
+					T:           time.Now().UTC(),
+					LB:          wrkerconfig.WorkerLB,
+					WorkerType:  wrkerconfig.WorkerType,
+				}
+
+				// Go type Publisher
+				err := messageq.MsgSend("workergroupstats."+wrkerconfig.EnvID+"."+wrkerconfig.WorkerGroup, workerdata)
+				if err != nil {
+					logging.PrintSecretsRedact("NATS error:", err)
+				}
+
+				if os.Getenv("DP_METRIC_DEBUG") == "true" {
+					// log.Println("Worker health: ", time.Now())
+					log.Printf("cpu perc:%v | mem percent:%v | mem used :%v | load:%v \n", percentCPUsend, percentMemorysend, memoryused, loadsend)
+					// log.Printf("Memory used:%v total:%v | Swap total: %v | Swap free: %v\n",
+					// 	utils.ByteCountIEC(int64(memory.Used)),
+					// 	utils.ByteCountIEC(int64(memory.Total)),
+					// 	utils.ByteCountIEC(int64(memory.SwapTotal)),
+					// 	utils.ByteCountIEC(int64(memory.SwapFree)))
+				}
+				// cp, _ := cpu.Info()
+				// log.Println("CPU info", cp)
+
+			case <-quit:
+				ticker.Stop()
+				return
+			}
 		}
+	}()
 
-		// log.Println("CPU:", percentCPUsend)
+	// s.Every(i).Seconds().Do(func() {
+	// 	// s.NextRun()
 
-		load, _ := load.Avg()
-		loadsend := math.Round(load.Load1*100) / 100
-
-		// log.Printf("cpu perc:%v | mem percent:%v | mem used :%v | load:%v \n", percentCPUsend, percentMemorysend, memoryused, loadsend)
-
-		workerdata := &models.WorkerStats{
-			WorkerGroup: wrkerconfig.WorkerGroup,
-			WorkerID:    wrkerconfig.WorkerID,
-			Status:      "Online",
-			CPUPerc:     percentCPUsend,
-			MemoryPerc:  percentMemorysend,
-			MemoryUsed:  memoryused,
-			Load:        loadsend,
-			EnvID:       wrkerconfig.EnvID,
-			T:           time.Now().UTC(),
-			LB:          wrkerconfig.WorkerLB,
-			WorkerType:  wrkerconfig.WorkerType,
-		}
-
-		// Go type Publisher
-		err := messageq.MsgSend("workergroupstats."+wrkerconfig.EnvID+"."+wrkerconfig.WorkerGroup, workerdata)
-		if err != nil {
-			logging.PrintSecretsRedact("NATS error:", err)
-		}
-
-		if os.Getenv("DP_METRIC_DEBUG") == "true" {
-			// log.Println("Worker health: ", time.Now())
-			log.Printf("cpu perc:%v | mem percent:%v | mem used :%v | load:%v \n", percentCPUsend, percentMemorysend, memoryused, loadsend)
-			// log.Printf("Memory used:%v total:%v | Swap total: %v | Swap free: %v\n",
-			// 	utils.ByteCountIEC(int64(memory.Used)),
-			// 	utils.ByteCountIEC(int64(memory.Total)),
-			// 	utils.ByteCountIEC(int64(memory.SwapTotal)),
-			// 	utils.ByteCountIEC(int64(memory.SwapFree)))
-		}
-		// cp, _ := cpu.Info()
-		// log.Println("CPU info", cp)
-
-	})
+	// })
 
 }
