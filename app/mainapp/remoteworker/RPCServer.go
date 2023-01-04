@@ -10,10 +10,12 @@ import (
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 	wsockets "github.com/dataplane-app/dataplane/app/mainapp/websockets"
 	"github.com/gofiber/websocket/v2"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+	"gorm.io/gorm/clause"
 )
 
 func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
@@ -161,6 +163,7 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 
 			envID := gjson.Get(messagestring, "params.environment_id").String()
 			runID := gjson.Get(messagestring, "params.run_id").String()
+			logType := gjson.Get(messagestring, "params.log_type").String()
 
 			log.Println(string(message))
 
@@ -171,15 +174,38 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 				break
 			}
 
-			// var logrecv models.LogsSend
-			// if err := json.Unmarshal(request.Params, &logrecv); err != nil {
-			// 	RPCError(remoteWorkerID, request.ID, -32700, "Code run log parse error", err)
-			// 	break
-			// }
-
 			room := "coderunfilelogs." + envID + "." + runID
 			log.Println("Room:", room)
 			wsockets.Broadcast <- wsockets.Message{Room: room, Data: request.Params}
+
+			if logType == "action" {
+				logmsg := gjson.Get(messagestring, "params.log").String()
+
+				msg := models.CodeRun{
+					RunID:         runID,
+					EnvironmentID: envID,
+					Reason:        "Complete",
+					EndedAt:       time.Now().UTC(),
+				}
+
+				switch logmsg {
+				case "Success":
+					msg.Status = logmsg
+				case "Fail":
+					msg.Status = logmsg
+				}
+
+				if msg.Status != "" {
+					err2 := database.DBConn.Clauses(clause.OnConflict{
+						Columns:   []clause.Column{{Name: "run_id"}},
+						DoUpdates: clause.AssignmentColumns([]string{"ended_at", "status", "reason"}),
+					}).Create(&msg)
+					if err2.Error != nil {
+						logging.PrintSecretsRedact(err2.Error.Error())
+					}
+				}
+
+			}
 
 		case "Arith.Multiply":
 
