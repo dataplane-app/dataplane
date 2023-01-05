@@ -17,12 +17,16 @@ export default function Environments({ workersProcessGroups, getRemoteWorkersPro
 
     return (
         <Box mb={5}>
+            <Typography variant="h3">Process groups</Typography>
+            <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                Process groups attached to environments
+            </Typography>
             {workersProcessGroups
                 // Filters by unique environment id so each environment header is displayed once
                 .filter((item, index, arr) => arr.indexOf(arr.find((a) => a.environmentID === item.environmentID)) === index)
                 .map((env, idx) => (
                     <div key={env.environmentID}>
-                        <Typography variant="h3" mt={idx === 1 && 3}>
+                        <Typography variant="h3" fontSize=".8125rem" mt={idx === 1 && 3}>
                             Environment: {globalEnvironments.get().find((e) => e.id === env.environmentID).name}
                         </Typography>
                         {workersProcessGroups
