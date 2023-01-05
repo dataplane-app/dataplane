@@ -14,6 +14,7 @@ import { useSnackbar } from 'notistack';
 import ConnectRemoteWorkerDrawer from '../../../components/DrawerContent/ConnectRemoteWorkerDrawer';
 import { formatDateNoZone } from '../../../utils/formatDate';
 import { useGlobalMeState } from '../../../components/Navbar';
+import useWebSocket from './useWebSocket';
 
 const tableWidth = '850px';
 
@@ -87,12 +88,15 @@ export default function RPAWorkers() {
             },
             {
                 Header: 'Status',
-                accessor: 'status',
-                Cell: (row) => (
-                    <Typography mt={-2} variant="caption" fontWeight={700} color={row.value === 'online' ? 'success.main' : 'red'}>
-                        {row.value}
-                    </Typography>
-                ),
+                accessor: (row) => row.workerID,
+                Cell: (row) => {
+                    let isOnline = useWebSocket(row.value);
+                    return (
+                        <Typography mt={-2} variant="caption" fontWeight={700} color={isOnline ? 'success.main' : 'red'}>
+                            {isOnline ? 'Online' : 'Offline'}
+                        </Typography>
+                    );
+                },
             },
             {
                 Header: 'Last ping',
