@@ -90,22 +90,23 @@ export default function RPAWorkers() {
                 Header: 'Status',
                 accessor: (row) => row.workerID,
                 Cell: (row) => {
-                    let isOnline = useWebSocket(row.value);
+                    let [isOnline, date] = useWebSocket(row.value);
+
                     return (
-                        <Typography mt={-2} variant="caption" fontWeight={700} color={isOnline ? 'success.main' : 'red'}>
-                            {isOnline ? 'Online' : 'Offline'}
-                        </Typography>
+                        <>
+                            <Typography mt={-2} variant="caption" fontWeight={700} color={isOnline ? 'success.main' : 'red'}>
+                                {isOnline ? 'Online' : 'Offline'}
+                            </Typography>
+                            <Typography position="absolute" left="520px" mt={-2} variant="caption">
+                                {formatDateNoZone(date, timezone)}
+                            </Typography>
+                        </>
                     );
                 },
             },
             {
                 Header: 'Last ping',
                 accessor: 'lastPing',
-                Cell: (row) => (
-                    <Typography mt={-2} variant="caption">
-                        {formatDateNoZone(row.value, timezone)}
-                    </Typography>
-                ),
             },
             {
                 Header: 'Manage',

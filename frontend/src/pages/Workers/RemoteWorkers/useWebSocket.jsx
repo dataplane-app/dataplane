@@ -26,12 +26,13 @@ export default function useWebSocket(workerId) {
     const { authToken } = useGlobalAuthState();
 
     const [online, setOnline] = useState(null);
+    const [time, setTime] = useState('');
 
     // Purge stale workers older than 5 seconds.
-    const time = useRef(new Date());
+    const internalTime = useRef(new Date());
     useEffect(() => {
         const timer = setInterval(() => {
-            if (new Date().valueOf() - time.current.valueOf() > 5000) {
+            if (new Date().valueOf() - internalTime.current.valueOf() > 5000) {
                 setOnline(false);
             }
         }, 1000);
@@ -59,7 +60,8 @@ export default function useWebSocket(workerId) {
             ws.current.onmessage = (e) => {
                 const resp = JSON.parse(e.data);
                 if (resp.Status === 'Online') {
-                    time.current = new Date();
+                    internalTime.current = new Date();
+                    setTime(new Date().toJSON());
                     setOnline(true);
                 }
             };
@@ -75,5 +77,5 @@ export default function useWebSocket(workerId) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workerId]);
 
-    return online;
+    return [online, time];
 }
