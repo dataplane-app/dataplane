@@ -92,6 +92,8 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
             // On page load select the latest response
             // console.log("Run ID:", runID)
 
+            const isNewFlow = pipeline.updated_at > lastRunTime;
+
             // If there is no runID then show the structure without RunID
             if (runID == null) {
                 // Get the flow of the latest run or if no flow then get structure
@@ -100,11 +102,10 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
             } else {
                 // If there is a run then get the run structure
                 setSelectedRun(response[0]);
-                await getPipelineRun(pipeline.pipelineID, runID, environmentID);
+                await getPipelineRun(pipeline.pipelineID, runID, environmentID, isNewFlow);
             }
 
             // If the pipeline has a new flow, get only the flow and return
-            const isNewFlow = pipeline.updated_at > lastRunTime;
             if (isNewFlow) {
                 getPipelineFlow({ pipelineId: pipeline.pipelineID, environmentID });
                 return;
