@@ -546,6 +546,7 @@ const useRunCEFileHook = (pipeline, setIsRunning) => {
 const useStopCEFileHook = (pipeline, runID, setIsRunning) => {
     const environmentID = pipeline.environmentID;
     const pipelineID = pipeline.pipelineID;
+    const nodeTypeDesc = pipeline.nodeTypeDesc;
 
     // GraphQL hook
     const stopCEFile = useStopCERun();
@@ -555,7 +556,7 @@ const useStopCEFileHook = (pipeline, runID, setIsRunning) => {
     // Run script
     return async () => {
         setIsRunning(false);
-        const response = await stopCEFile({ environmentID, pipelineID, runID });
+        const response = await stopCEFile({ environmentID, pipelineID, runID, nodeTypeDesc });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get files: " + (response.msg || response.r || response.error), { variant: 'error' });

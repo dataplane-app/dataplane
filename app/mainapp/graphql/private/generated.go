@@ -290,7 +290,7 @@ type ComplexityRoot struct {
 		RenameFolder                            func(childComplexity int, environmentID string, folderID string, nodeID string, pipelineID string, newName string) int
 		RunCEFile                               func(childComplexity int, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string, runID string) int
 		RunPipelines                            func(childComplexity int, pipelineID string, environmentID string, runType string, runID string) int
-		StopCERun                               func(childComplexity int, pipelineID string, runID string, environmentID string) int
+		StopCERun                               func(childComplexity int, pipelineID string, runID string, environmentID string, nodeTypeDesc string) int
 		StopPipelines                           func(childComplexity int, pipelineID string, runID string, environmentID string, runType string) int
 		TurnOnOffDeployment                     func(childComplexity int, environmentID string, pipelineID string, online bool) int
 		TurnOnOffPipeline                       func(childComplexity int, environmentID string, pipelineID string, online bool) int
@@ -685,7 +685,7 @@ type MutationResolver interface {
 	MoveFileNode(ctx context.Context, fileID string, toFolderID string, environmentID string, pipelineID string) (string, error)
 	UpdateCodePackages(ctx context.Context, workerGroup string, language string, packages string, environmentID string, pipelineID string) (string, error)
 	RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string, runID string) (*CERun, error)
-	StopCERun(ctx context.Context, pipelineID string, runID string, environmentID string) (string, error)
+	StopCERun(ctx context.Context, pipelineID string, runID string, environmentID string, nodeTypeDesc string) (string, error)
 	AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*WorkerGroupsNodes) (string, error)
 	DeleteDeployment(ctx context.Context, environmentID string, pipelineID string, version string) (string, error)
 	TurnOnOffDeployment(ctx context.Context, environmentID string, pipelineID string, online bool) (string, error)
@@ -2355,7 +2355,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.StopCERun(childComplexity, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string)), true
+		return e.complexity.Mutation.StopCERun(childComplexity, args["pipelineID"].(string), args["runID"].(string), args["environmentID"].(string), args["nodeTypeDesc"].(string)), true
 
 	case "Mutation.stopPipelines":
 		if e.complexity.Mutation.StopPipelines == nil {
@@ -6698,6 +6698,15 @@ func (ec *executionContext) field_Mutation_stopCERun_args(ctx context.Context, r
 		}
 	}
 	args["environmentID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["nodeTypeDesc"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeTypeDesc"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["nodeTypeDesc"] = arg3
 	return args, nil
 }
 
@@ -15999,7 +16008,7 @@ func (ec *executionContext) _Mutation_stopCERun(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().StopCERun(rctx, fc.Args["pipelineID"].(string), fc.Args["runID"].(string), fc.Args["environmentID"].(string))
+		return ec.resolvers.Mutation().StopCERun(rctx, fc.Args["pipelineID"].(string), fc.Args["runID"].(string), fc.Args["environmentID"].(string), fc.Args["nodeTypeDesc"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
