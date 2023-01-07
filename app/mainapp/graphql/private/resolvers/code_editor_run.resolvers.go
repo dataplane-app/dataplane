@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/runcode"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -88,7 +88,7 @@ func (r *mutationResolver) StopCERun(ctx context.Context, pipelineID string, run
 		return "", errors.New("Requires permissions.")
 	}
 
-	err := runcode.RunCodeFileCancel(runID, environmentID, "")
+	err := runcode.RunCodeFileCancel(runID, environmentID, nodeTypeDesc)
 	if err != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
