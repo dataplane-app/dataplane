@@ -17,6 +17,7 @@ import { useGetNode } from '../graphql/getNode';
 import InstallationLogsColumn from '../components/EditorPage/InstallationLogsColumn';
 import Markdown from '../components/EditorPage/Markdown';
 import isMarkdown from '../utils/isMarkdown';
+import useWindowSize from '../hooks/useWindowsSize';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -39,6 +40,8 @@ export const useGlobalEditorState = () => useHookState(globalEditorState);
 
 const PipelineEditor = () => {
     const Environment = useGlobalEnvironmentState();
+
+    const { height } = useWindowSize();
 
     // Hooks
     const history = useHistory();
@@ -128,6 +131,7 @@ const PipelineEditor = () => {
                             measureBeforeMount={true}
                             // onResizeStop={(e, _) => console.log('Resize', e, _)}
                             compactType="vertical"
+                            rowHeight={(height - 200) * 0.25}
                             layouts={getGridLayouts(pipeline.nodeTypeDesc, EditorGlobal.markdown.value, isMarkdown(EditorGlobal.selectedFile?.name?.value), showLogs)}
                             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                             cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}>
