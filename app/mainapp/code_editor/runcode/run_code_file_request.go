@@ -2,6 +2,7 @@ package runcode
 
 import (
 	"errors"
+	"log"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
@@ -23,26 +24,6 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 	if runid == "" {
 		runid = uuid.NewString()
 	}
-	// ------ Obtain folder structure from file id
-
-	filesdata := models.CodeFiles{}
-	dberror := database.DBConn.Where("file_id = ? and environment_id =? and level = ?", fileID, envID, "node_file").Find(&filesdata).Error
-	if dberror != nil {
-		rerror := "Code run obtain folder structure error:" + dberror.Error()
-		WSLogError(envID, runid, rerror, models.CodeRun{})
-		return models.CodeRun{}, errors.New(rerror)
-	}
-
-	parentfolderdata := ""
-	var err error
-	if filesdata.FolderID != "" {
-		parentfolderdata, err = filesystem.FolderConstructByID(database.DBConn, filesdata.FolderID, envID, "pipelines")
-		if err != nil {
-			return models.CodeRun{}, errors.New("File record not found")
-		}
-	} else {
-		return models.CodeRun{}, errors.New("File record not found")
-	}
 
 	// if dpconfig.Debug == "true" {
 	// 	if _, err := os.Stat(dpconfig.CodeDirectory + folderMap); os.IsExist(err) {
@@ -55,7 +36,30 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 	var commands []string
 	var runSend models.CodeRun
 	switch nodeTypeDesc {
+
+	/* ------------------------ Python node -------------------------- */
 	case "python":
+
+		// ------ Obtain folder structure from file id
+		filesdata := models.CodeFiles{}
+		dberror := database.DBConn.Where("file_id = ? and environment_id =? and level = ?", fileID, envID, "node_file").Find(&filesdata).Error
+		if dberror != nil {
+			rerror := "Code run obtain folder structure error:" + dberror.Error()
+			WSLogError(envID, runid, rerror, models.CodeRun{})
+			return models.CodeRun{}, errors.New(rerror)
+		}
+
+		parentfolderdata := ""
+		var err error
+		if filesdata.FolderID != "" {
+			parentfolderdata, err = filesystem.FolderConstructByID(database.DBConn, filesdata.FolderID, envID, "pipelines")
+			if err != nil {
+				return models.CodeRun{}, errors.New("File record not found")
+			}
+		} else {
+			return models.CodeRun{}, errors.New("File record not found")
+		}
+
 		commands = append(commands, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
 		runSend, err = RunCodeServerWorker(envID, nodeID, workerGroup, runid, commands, filesdata, parentfolderdata, filesdata.FolderID)
 		if err != nil {
@@ -63,7 +67,32 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 			WSLogError(envID, runid, err.Error(), models.CodeRun{})
 			return runSend, err
 		}
+
+		/* ------------------------- RPA Python node -------------------- */
 	case "rpa-python":
+
+		// ------ Obtain folder structure from file id
+		filesdata := models.CodeFiles{}
+		dberror := database.DBConn.Where("file_id = ? and environment_id =? and level = ?", fileID, envID, "node_file").Find(&filesdata).Error
+		if dberror != nil {
+			rerror := "Code run obtain folder structure error:" + dberror.Error()
+			WSLogError(envID, runid, rerror, models.CodeRun{})
+			return models.CodeRun{}, errors.New(rerror)
+		}
+
+		parentfolderdata := ""
+		var err error
+		if filesdata.FolderID != "" {
+			parentfolderdata, err = filesystem.NodeLevelFolderConstructByID(database.DBConn, filesdata.FolderID, envID)
+			if err != nil {
+				return models.CodeRun{}, errors.New("File record not found")
+			}
+		} else {
+			return models.CodeRun{}, errors.New("File record not found")
+		}
+
+		log.Println("RPA file:", parentfolderdata, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
+
 		commands = append(commands, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
 		runSend, err = RunCodeRPAWorker(envID, nodeID, workerGroup, runid, commands, filesdata, parentfolderdata, filesdata.FolderID)
 		if err != nil {
