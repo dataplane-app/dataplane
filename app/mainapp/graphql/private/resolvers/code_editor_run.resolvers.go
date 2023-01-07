@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/runcode"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -69,7 +69,7 @@ func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nod
 }
 
 // StopCERun is the resolver for the stopCERun field.
-func (r *mutationResolver) StopCERun(ctx context.Context, pipelineID string, runID string, environmentID string) (string, error) {
+func (r *mutationResolver) StopCERun(ctx context.Context, pipelineID string, runID string, environmentID string, nodeTypeDesc string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
