@@ -2,17 +2,12 @@ package runcode
 
 import (
 	"errors"
-	"log"
-	"strconv"
 	"time"
 
-	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
-	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
-
-	"gorm.io/gorm/clause"
+	"github.com/dataplane-app/dataplane/app/mainapp/remoteworker"
 )
 
 /*
@@ -22,73 +17,38 @@ func RunCodeRPAFileCancel(runid string, environmentID string) error {
 
 	/* look up task details */
 	var task models.CodeRun
-	err2 := database.DBConn.First(&task, "run_id = ? and environment_id = ?", runid, environmentID)
-	if err2.Error != nil {
-		logging.PrintSecretsRedact(err2.Error.Error())
+	err2 := database.DBConn.First(&task, "run_id = ? and environment_id = ?", runid, environmentID).Error
+	if err2 != nil {
+		rerror := "Cancelled run code failed: lookup run task - " + err2.Error()
+		/* return error to front end logs */
+		WSLogError(environmentID, runid, rerror, models.CodeRun{})
+		logging.PrintSecretsRedact(err2.Error())
 	}
 
 	if task.Status == "Success" || task.Status == "Fail" {
-		return errors.New("Task completed with fail or success")
+		rerror := "Cancelled run code failed: run already completed with fail or success"
+		/* return error to front end logs */
+		WSLogError(environmentID, runid, rerror, models.CodeRun{})
+		return errors.New(rerror)
 	}
 
-	// log.Println(task, taskid)
-	// return nil
-
-	/* Look up chosen workers -
-	if none, keep trying for 10 x 2 seconds
-	before failing */
-	// var err1 error
-	maxRetiresAllowed := 5
-
-	// if a worker group goes offline in between, choose the next in the load balancer and retry
-
-	complete := false
-	for i := 0; i < maxRetiresAllowed; i++ {
-
-		tasksend := models.CodeRun{
-			CreatedAt:     time.Now().UTC(),
-			EnvironmentID: task.EnvironmentID,
-			RunID:         task.RunID,
-			WorkerGroup:   task.WorkerGroup,
-			WorkerID:      task.WorkerID,
-		}
-
-		var response models.TaskResponse
-		_, errnats := messageq.MsgReply("runcodefilecancel."+task.WorkerGroup+"."+task.WorkerID, tasksend, &response)
-
-		if errnats != nil {
-			log.Println("Send to worker error nats:", errnats)
-		}
-
-		// successful send to worker
-		if response.R == "ok" {
-			complete = true
-			break
-		} else {
-			log.Println(task.WorkerID + " not online, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
-		}
-		if dpconfig.Debug == "true" {
-			log.Println("Send to worker", response.R)
-		}
-		time.Sleep(2 * time.Second)
+	/* Send cancel request to remote worker
+	Online remote worker already chosen: task.WorkerID
+	*/
+	runSend := models.CodeRun{
+		CreatedAt:     time.Now().UTC(),
+		EnvironmentID: task.EnvironmentID,
+		RunID:         task.RunID,
+		WorkerGroup:   task.WorkerGroup,
+		WorkerID:      task.WorkerID,
 	}
 
-	if complete == false {
-		// mark task as failed
-		taskUpdate := models.CodeRun{
-			RunID:   task.RunID,
-			EndedAt: time.Now().UTC(),
-			Status:  "Fail",
-			Reason:  "Cancelled worker offline",
-		}
-
-		err2 := database.DBConn.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "run_id"}},
-			DoUpdates: clause.AssignmentColumns([]string{"ended_at", "status", "reason"}),
-		}).Create(&taskUpdate)
-		if err2.Error != nil {
-			logging.PrintSecretsRedact(err2.Error.Error())
-		}
+	errrpc := remoteworker.RPCRequest(task.WorkerID, runid, "runcodefilecancel", runSend)
+	if errrpc != nil {
+		rerror := "Cancelled run code failed: RPC error" + errrpc.Error()
+		/* return error to front end logs */
+		WSLogError(environmentID, runid, rerror, models.CodeRun{})
+		return errors.New(rerror)
 	}
 
 	//

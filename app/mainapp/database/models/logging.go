@@ -56,10 +56,12 @@ type LogsWorkers struct {
 }
 
 type LogsSend struct {
-	CreatedAt time.Time `json:"created_at"`
-	UID       string    `json:"uid"`
-	Log       string    `json:"log"`
-	LogType   string    `json:"log_type"` //info, error, debug
+	CreatedAt     time.Time `json:"created_at"`
+	UID           string    `json:"uid"`
+	Log           string    `json:"log"`
+	LogType       string    `json:"log_type"` //info, error, debug
+	EnvironmentID string    `json:"environment_id"`
+	RunID         string    `json:"run_id"`
 }
 
 func (LogsCodeRun) IsEntity() {}

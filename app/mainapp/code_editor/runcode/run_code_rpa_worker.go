@@ -1,7 +1,6 @@
 package runcode
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"log"
@@ -15,52 +14,19 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	"github.com/dataplane-app/dataplane/app/mainapp/remoteworker"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
-	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
 func RunCodeRPAWorker(envID string, nodeID string, workerGroup string, runid string, commands []string, filesdata models.CodeFiles, folderMap string, folderIDMap string) (models.CodeRun, error) {
 
-	ctx := context.Background()
 	runSend := models.CodeRun{}
 
-	/* Look up chosen workers - for this worker group */
-	var workers []models.RemoteWorkerEnvironments
-	err := database.DBConn.Select("worker_id").Where("environment_id =? and remote_process_group_id = ?", envID, workerGroup).Find(&workers).Error
-	if err != nil {
-		log.Println("RunCodeRPAWorker Err: ", err)
-		return models.CodeRun{}, errors.New("Code run: Worker groups database error.")
-	}
-
-	// log.Println("I got here...")
-
-	var workerslist []string
-	var workerscan models.RPAWorkersOnline
+	/* Choose an online remote worker */
 	var remoteWorkerID string
-	for _, v := range workers {
-		workerslist = append(workerslist, "rw-"+v.WorkerID)
-
-		errRedis := database.RedisConn.HGetAll(ctx, "rw-"+v.WorkerID).Scan(&workerscan)
-		if errRedis != nil && errRedis != redis.Nil {
-			log.Println("Failed to find online workers:", nodeID, errRedis)
-			return models.CodeRun{}, errors.New("RPA worker error: failed to find online workers")
-		}
-
-		/* select the worker id */
-		remoteWorkerID = v.WorkerID
-
-		if workerscan.SessionID != "" {
-			break
-		}
-
+	remoteWorkerID, errrw := remoteworker.OnlineRemoteWorkers(envID, workerGroup)
+	if errrw != nil {
+		return models.CodeRun{}, errors.New("Code run choose remote worker: " + errrw.Error())
 	}
-
-	if workerscan.SessionID == "" {
-		return runSend, errors.New("No RPA workers found online.")
-	}
-
-	// log.Println(workerslist)
-	// log.Println("RPA workerscan: ", workerscan)
 
 	/* ---- Get all online workers ----- */
 	//

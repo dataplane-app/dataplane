@@ -26,7 +26,12 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 	// ------ Obtain folder structure from file id
 
 	filesdata := models.CodeFiles{}
-	database.DBConn.Where("file_id = ? and environment_id =? and level = ?", fileID, envID, "node_file").Find(&filesdata)
+	dberror := database.DBConn.Where("file_id = ? and environment_id =? and level = ?", fileID, envID, "node_file").Find(&filesdata).Error
+	if dberror != nil {
+		rerror := "Code run obtain folder structure error:" + dberror.Error()
+		WSLogError(envID, runid, rerror, models.CodeRun{})
+		return models.CodeRun{}, errors.New(rerror)
+	}
 
 	parentfolderdata := ""
 	var err error
@@ -54,12 +59,16 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 		commands = append(commands, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
 		runSend, err = RunCodeServerWorker(envID, nodeID, workerGroup, runid, commands, filesdata, parentfolderdata, filesdata.FolderID)
 		if err != nil {
+			/* Send back any local errors not happening on the remote worker */
+			WSLogError(envID, runid, err.Error(), models.CodeRun{})
 			return runSend, err
 		}
 	case "rpa-python":
 		commands = append(commands, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
 		runSend, err = RunCodeRPAWorker(envID, nodeID, workerGroup, runid, commands, filesdata, parentfolderdata, filesdata.FolderID)
 		if err != nil {
+			/* Send back any local errors not happening on the remote worker */
+			WSLogError(envID, runid, err.Error(), models.CodeRun{})
 			return runSend, err
 		}
 	default:

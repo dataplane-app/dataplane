@@ -88,7 +88,7 @@ func (r *mutationResolver) StopCERun(ctx context.Context, pipelineID string, run
 		return "", errors.New("Requires permissions.")
 	}
 
-	err := runcode.RunCodeFileCancel(runID, environmentID)
+	err := runcode.RunCodeFileCancel(runID, environmentID, "")
 	if err != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
