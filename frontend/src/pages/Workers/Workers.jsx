@@ -3,7 +3,6 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import ServerWorkers from './ServerWorkers/ServerWorkers';
-import RemoteProcessGroups from './RemoteWorkers/RemoteProcessGroups';
 import { useHistory } from 'react-router-dom';
 import RPAWorkers from './RemoteWorkers/RemoteWorkers';
 
@@ -29,7 +28,6 @@ export default function Workers({ tab }) {
                 <ServerWorkers />
             </TabPanel>
             <TabPanel value={value} index={1}>
-                {/* <RemoteProcessGroups /> */}
                 <RPAWorkers />
             </TabPanel>
         </Box>
