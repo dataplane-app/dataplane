@@ -15,6 +15,9 @@ func (CodeRun) TableName() string {
 type CodeRun struct {
 	RunID         string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"run_id"`
 	NodeID        string         `json:"node_id"`
+	NodeName      string         `json:"node_name"`
+	PipelineID    string         `json:"pipeline_id"`
+	PipelineName  string         `json:"pipeline_name"`
 	FileID        string         `json:"file_id"`
 	Status        string         `json:"status"`
 	Reason        string         `json:"reason"`

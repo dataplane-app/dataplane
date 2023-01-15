@@ -94,7 +94,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 		log.Println("RPA file:", parentfolderdata, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
 
 		commands = append(commands, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
-		runSend, err = RunCodeRPAWorker(envID, nodeID, workerGroup, runid, commands, filesdata, parentfolderdata, filesdata.FolderID)
+		runSend, err = RunCodeRPAWorker(pipelineID, envID, nodeID, workerGroup, runid, commands, filesdata, parentfolderdata, filesdata.FolderID)
 		if err != nil {
 			/* Send back any local errors not happening on the remote worker */
 			WSLogError(envID, runid, err.Error(), models.CodeRun{})
