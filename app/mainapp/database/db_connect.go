@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -80,15 +81,15 @@ func DB() (*gorm.DB, error) {
 	}
 
 	//--- Connection pooling
-	// sqlDB, _ := dbConn.DB()
-	// // SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
-	// sqlDB.SetMaxIdleConns(18)
+	sqlDB, _ := dbConn.DB()
+	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
+	sqlDB.SetMaxIdleConns(dpconfig.DPDBMaxIdleConns)
 
-	// // SetMaxOpenConns sets the maximum number of open connections to the database.
-	// sqlDB.SetMaxOpenConns(18)
+	// SetMaxOpenConns sets the maximum number of open connections to the database.
+	sqlDB.SetMaxOpenConns(dpconfig.DPDBMaxOpenConns)
 
-	// // SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
-	// sqlDB.SetConnMaxLifetime(time.Minute * 5)
+	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
+	sqlDB.SetConnMaxLifetime(time.Minute * time.Duration(dpconfig.ConnMaxLifetime))
 
 	log.Println("🌟 Database connected")
 
