@@ -372,6 +372,38 @@ func Setup(port string) *fiber.App {
 		return c.Status(http.StatusOK).Send(output)
 	})
 
+	app.Post("/app/remoteworker/allprocessgroups/:workerID", auth.DesktopAuthMiddle(), func(c *fiber.Ctx) error {
+
+		c.Accepts("application/json")
+		remoteWorkerID := string(c.Params("workerID"))
+		output, err := remoteworker.AllProcessGroups(remoteWorkerID)
+		if err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"Remote worker process groups error": err.Error()})
+		}
+
+		return c.Status(http.StatusOK).JSON(output)
+	})
+
+	// app.Post("/app/remoteworker/processgroup/:environmentID/:processgroupID", auth.DesktopAuthMiddle(), func(c *fiber.Ctx) error {
+
+	// 	/* runtype is prefix to folder structure: coderun, pipeline, deployment */
+	// 	c.Accepts("application/json")
+
+	// 	// remoteWorkerID := string(c.Params("workerID"))
+	// 	processgroupID := string(c.Params("processgroupID"))
+	// 	environmentID := string(c.Params("environmentID"))
+	// 	output, filesize, err := remoteworker.CodeRunCompressCodeFiles(database.DBConn, nodeID, environmentID)
+	// 	if err != nil {
+	// 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"Remote worker code run download file error": err.Error()})
+	// 	}
+
+	// 	FileContentType := http.DetectContentType(output)
+	// 	c.Append("Content-Type", FileContentType)
+	// 	c.Append("Content-Length", strconv.Itoa(filesize))
+
+	// 	return c.Status(http.StatusOK).Send(output)
+	// })
+
 	/* ------ REMOTE WORKERS ----- */
 	// auth.AuthRemoteWorkerWebsockets(),
 	go remoteworker.RPCHub()
