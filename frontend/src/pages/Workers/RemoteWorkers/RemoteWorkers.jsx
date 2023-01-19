@@ -1,5 +1,5 @@
 import { Box, Button, Drawer, Grid, Pagination, Tooltip, Typography } from '@mui/material';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useGlobalFilter, useTable, usePagination } from 'react-table';
 import CustomChip from '../../../components/CustomChip';
 import Search from '../../../components/Search';
@@ -32,6 +32,7 @@ export default function RPAWorkers() {
 
     const MeData = useGlobalMeState();
     const timezone = MeData.timezone.get();
+    const isInitialLoad = useRef(true);
 
     // Graphql hook
     const getRemoteWorkers = useGetRemoteWorkersHook(Environment.id.get(), setRemoteWorkers);
@@ -95,7 +96,7 @@ export default function RPAWorkers() {
                     return (
                         <>
                             <Typography mt={-2} variant="caption" fontWeight={700} color={isOnline ? 'success.main' : 'red'}>
-                                {isOnline ? 'Online' : 'Offline'}
+                                {isOnline ? 'Online' : <Offline isInitialLoad={isInitialLoad} />}
                             </Typography>
                             <Typography position="absolute" left="520px" mt={-2} variant="caption">
                                 {formatDateNoZone(date, timezone)}
@@ -369,3 +370,25 @@ const useGetRemoteWorkersHook = (environmentID, setRemoteWorkers) => {
         }
     };
 };
+
+// This components hides 'Offline' text for 10 seconds on page load
+function Offline({ isInitialLoad }) {
+    const [isGracePeriod, setIsGracePeriod] = useState(true);
+    const timeOnLoad = useRef(new Date().getTime());
+
+    useEffect(() => {
+        if (!isInitialLoad.current) return setIsGracePeriod(false);
+        let secTimer = setInterval(() => {
+            const diff = new Date().getTime() - timeOnLoad.current;
+            if (diff > 10000) {
+                setIsGracePeriod(false);
+                isInitialLoad.current = false;
+                clearInterval(secTimer);
+            }
+        }, 1000);
+
+        return () => clearInterval(secTimer);
+    }, [isInitialLoad]);
+
+    return isGracePeriod ? '' : <span>Offline</span>;
+}
