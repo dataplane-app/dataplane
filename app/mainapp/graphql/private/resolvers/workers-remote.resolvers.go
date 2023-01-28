@@ -10,12 +10,13 @@ import (
 	"time"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/auth"
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	privategraphql "github.com/dataplane-app/dataplane/app/mainapp/graphql/private"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
+	"github.com/dataplane-app/dataplane/app/mainapp/remoteworker_processgroup"
 	uuid2 "github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -48,7 +49,7 @@ func (r *mutationResolver) AddRemoteProcessGroup(ctx context.Context, environmen
 		Packages:             "",
 		LB:                   "",
 		WorkerType:           "",
-		Active:               false,
+		Active:               true,
 	}
 
 	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
@@ -198,6 +199,9 @@ func (r *mutationResolver) AddRemoteProcessGroupToEnvironment(ctx context.Contex
 		return "", errors.New("Add remote worker environment database error.")
 	}
 
+	/* Update all online remote workers */
+	remoteworker_processgroup.ProcessGroupUpdateWorkers(remoteProcessGroupID)
+
 	return "Success", nil
 }
 
@@ -302,6 +306,9 @@ func (r *mutationResolver) AddRemoteWorker(ctx context.Context, environmentID st
 	if err != nil {
 		return "", errors.New("Add remote worker: " + err.Error())
 	}
+
+	/* Update all online remote workers */
+	remoteworker_processgroup.ProcessGroupUpdateWorkers(remoteProcessGroupID)
 
 	return "Success", nil
 }
@@ -451,6 +458,9 @@ func (r *mutationResolver) AddRemoteWorkerToProcessGroup(ctx context.Context, en
 
 		return "", errors.New("Add remote worker environment database error.")
 	}
+
+	/* Update all online remote workers */
+	remoteworker_processgroup.ProcessGroupUpdateWorkers(remoteProcessGroupID)
 
 	return "Success", nil
 }
