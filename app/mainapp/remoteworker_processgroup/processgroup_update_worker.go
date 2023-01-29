@@ -15,7 +15,7 @@ func ProcessGroupUpdateWorkers(processgroup string) {
 	/* Look up the proces group */
 	var pgData models.RemoteProcessGroups
 
-	errpg := database.DBConn.Select("remote_process_group_id", "packages", "language").Where("remote_process_group_id = ?", processgroup).Find(&pgData).Error
+	errpg := database.DBConn.Select("remote_process_group_id", "packages", "language").Where("remote_process_group_id = ? and active = true", processgroup).Find(&pgData).Error
 	if errpg != nil {
 		log.Println("Remote worker retrieve process groups db error: ", errpg)
 		// return []models.RemoteWorkerEnvironments{}, err
