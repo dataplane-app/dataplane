@@ -31,9 +31,18 @@ func ProcessGroupUpdateWorkers(processgroup string) {
 	}
 
 	/* For each record send request to worker to update pip packages */
+	var PGDataSend models.RemotePGOutput
 	for _, v := range processGroups {
 		id := uuid.NewString()
-		errrpc := remoteworker.RPCRequest(v.WorkerID, id, "updateprocessgroup", pgData)
+		PGDataSend = models.RemotePGOutput{
+			WorkerID:             v.WorkerID,
+			RemoteProcessGroupID: v.RemoteProcessGroupID,
+			EnvironmentID:        v.EnvironmentID,
+			Name:                 pgData.Name,
+			Packages:             pgData.Packages,
+			Language:             pgData.Language,
+		}
+		errrpc := remoteworker.RPCRequest(v.WorkerID, id, "updateprocessgroup", PGDataSend)
 		if errrpc != nil {
 			// return runSend, errors.New("RPA run code RPC failed: " + errrpc.Error())
 		}

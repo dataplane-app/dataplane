@@ -23,6 +23,7 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/pipelines"
 	"github.com/dataplane-app/dataplane/app/mainapp/platform"
 	"github.com/dataplane-app/dataplane/app/mainapp/remoteworker"
+	"github.com/dataplane-app/dataplane/app/mainapp/remoteworker_processgroup"
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler"
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler/routinetasks"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
@@ -372,37 +373,18 @@ func Setup(port string) *fiber.App {
 		return c.Status(http.StatusOK).Send(output)
 	})
 
+	/* Request all process groups at start of remotw worker */
 	app.Post("/app/remoteworker/allprocessgroups/:workerID", auth.DesktopAuthMiddle(), func(c *fiber.Ctx) error {
 
 		c.Accepts("application/json")
 		remoteWorkerID := string(c.Params("workerID"))
-		output, err := remoteworker.AllProcessGroups(remoteWorkerID)
+		output, err := remoteworker_processgroup.AllProcessGroups(remoteWorkerID)
 		if err != nil {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"Remote worker process groups error": err.Error()})
 		}
 
 		return c.Status(http.StatusOK).JSON(output)
 	})
-
-	// app.Post("/app/remoteworker/processgroup/:environmentID/:processgroupID", auth.DesktopAuthMiddle(), func(c *fiber.Ctx) error {
-
-	// 	/* runtype is prefix to folder structure: coderun, pipeline, deployment */
-	// 	c.Accepts("application/json")
-
-	// 	// remoteWorkerID := string(c.Params("workerID"))
-	// 	processgroupID := string(c.Params("processgroupID"))
-	// 	environmentID := string(c.Params("environmentID"))
-	// 	output, filesize, err := remoteworker.CodeRunCompressCodeFiles(database.DBConn, nodeID, environmentID)
-	// 	if err != nil {
-	// 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"Remote worker code run download file error": err.Error()})
-	// 	}
-
-	// 	FileContentType := http.DetectContentType(output)
-	// 	c.Append("Content-Type", FileContentType)
-	// 	c.Append("Content-Length", strconv.Itoa(filesize))
-
-	// 	return c.Status(http.StatusOK).Send(output)
-	// })
 
 	/* ------ REMOTE WORKERS ----- */
 	// auth.AuthRemoteWorkerWebsockets(),
@@ -594,11 +576,6 @@ func Setup(port string) *fiber.App {
 		pipelines.RunDeployment(pipelineID, environmentID, runID, jsonPayload, jsonVersion)
 
 		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
-	})
-
-	// Check healthz
-	app.Get("/healthz", func(c *fiber.Ctx) error {
-		return c.SendString("Hello 👋! Healthy 🍏")
 	})
 
 	// Sync folders to Database

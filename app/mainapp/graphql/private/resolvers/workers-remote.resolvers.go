@@ -128,6 +128,9 @@ func (r *mutationResolver) UpdateRemoteProcessGroup(ctx context.Context, remoteP
 		return "", errors.New("Add remote process group database error.")
 	}
 
+	/* Update all online remote workers */
+	remoteworker_processgroup.ProcessGroupUpdateWorkers(remoteProcessGroupID)
+
 	return "Success", nil
 }
 
