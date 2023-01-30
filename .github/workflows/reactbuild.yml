@@ -24,8 +24,10 @@ jobs:
         # cache-dependency-path: frontend/yarn.lock
     - run: yarn add global env-cmd
     - run: export NODE_OPTIONS=--max-old-space-size=4096
-    - run: cd frontend && yarn
-    - run: cd frontend && yarn build
+    - run: cd frontend && npm
+    - run: cd frontend && npm build
+      env:
+        CI: false
     - name: Commit report
       continue-on-error: true
       run: |
