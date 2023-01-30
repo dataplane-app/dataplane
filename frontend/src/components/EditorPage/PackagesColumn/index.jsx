@@ -18,10 +18,9 @@ const PackageColumn = forwardRef(({ children, pipeline, packages, setPackages, .
             content: packages,
         };
 
-        const activeTabs = EditorGlobal.tabs.get();
+        const activeTabs = JSON.parse(JSON.stringify(EditorGlobal.tabs.get()));
         if (activeTabs.some((a) => a.id === 'requirements.txt')) {
-            EditorGlobal.selectedFile.diffValue.set(packages);
-            EditorGlobal.selectedFile.content.set(packages);
+            EditorGlobal.selectedFile.set(activeTabs.find((a) => a.id === 'requirements.txt'));
             return;
         }
 
