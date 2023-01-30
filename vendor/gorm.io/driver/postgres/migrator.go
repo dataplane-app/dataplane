@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/migrator"
@@ -33,6 +33,17 @@ where
     and t.relkind = 'r'
     and t.relname = ?
 `
+
+var typeAliasMap = map[string][]string{
+	"int2":     {"smallint"},
+	"int4":     {"integer"},
+	"int8":     {"bigint"},
+	"smallint": {"int2"},
+	"integer":  {"int4"},
+	"bigint":   {"int8"},
+	"decimal":  {"numeric"},
+	"numeric":  {"decimal"},
+}
 
 type Migrator struct {
 	migrator.Migrator
@@ -186,6 +197,8 @@ func (m Migrator) AddColumn(value interface{}, field string) error {
 	if err := m.Migrator.AddColumn(value, field); err != nil {
 		return err
 	}
+	m.resetPreparedStmts()
+
 	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if field := stmt.Schema.LookUpField(field); field != nil {
 			if field.Comment != "" {
@@ -238,10 +251,9 @@ func (m Migrator) MigrateColumn(value interface{}, field *schema.Field, columnTy
 		checkSQL += "AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = ? AND relnamespace = "
 		checkSQL += "(SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = ?))"
 		m.DB.Raw(checkSQL, values...).Scan(&description)
-		comment := field.Comment
-		if comment != "" {
-			comment = comment[1 : len(comment)-1]
-		}
+
+		comment := strings.Trim(field.Comment, "'")
+		comment = strings.Trim(comment, `"`)
 		if field.Comment != "" && comment != description {
 			if err := m.DB.Exec(
 				"COMMENT ON COLUMN ?.? IS ?",
@@ -256,7 +268,7 @@ func (m Migrator) MigrateColumn(value interface{}, field *schema.Field, columnTy
 
 // AlterColumn alter value's `field` column' type based on schema definition
 func (m Migrator) AlterColumn(value interface{}, field string) error {
-	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
+	err := m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if field := stmt.Schema.LookUpField(field); field != nil {
 			var (
 				columnTypes, _  = m.DB.Migrator().ColumnTypes(value)
@@ -269,7 +281,22 @@ func (m Migrator) AlterColumn(value interface{}, field string) error {
 			}
 
 			fileType := clause.Expr{SQL: m.DataTypeOf(field)}
+			// check for typeName and SQL name
+			isSameType := true
 			if fieldColumnType.DatabaseTypeName() != fileType.SQL {
+				isSameType = false
+				// if different, also check for aliases
+				aliases := m.GetTypeAliases(fieldColumnType.DatabaseTypeName())
+				for _, alias := range aliases {
+					if strings.HasPrefix(fileType.SQL, alias) {
+						isSameType = true
+						break
+					}
+				}
+			}
+
+			// not same, migrate
+			if !isSameType {
 				filedColumnAutoIncrement, _ := fieldColumnType.AutoIncrement()
 				if field.AutoIncrement && filedColumnAutoIncrement { // update
 					serialDatabaseType, _ := getSerialDatabaseType(fileType.SQL)
@@ -288,7 +315,8 @@ func (m Migrator) AlterColumn(value interface{}, field string) error {
 						return err
 					}
 				} else {
-					if err := m.DB.Exec("ALTER TABLE ? ALTER COLUMN ? TYPE ?", m.CurrentTable(stmt), clause.Column{Name: field.DBName}, fileType).Error; err != nil {
+					if err := m.DB.Exec("ALTER TABLE ? ALTER COLUMN ? TYPE ? USING ?::?",
+						m.CurrentTable(stmt), clause.Column{Name: field.DBName}, fileType, clause.Column{Name: field.DBName}, fileType).Error; err != nil {
 						return err
 					}
 				}
@@ -306,14 +334,14 @@ func (m Migrator) AlterColumn(value interface{}, field string) error {
 				}
 			}
 
-			if uniq, _ := fieldColumnType.Unique(); uniq != field.Unique {
+			if uniq, _ := fieldColumnType.Unique(); !uniq && field.Unique {
 				idxName := clause.Column{Name: m.DB.Config.NamingStrategy.IndexName(stmt.Table, field.DBName)}
 				if err := m.DB.Exec("ALTER TABLE ? ADD CONSTRAINT ? UNIQUE(?)", m.CurrentTable(stmt), idxName, clause.Column{Name: field.DBName}).Error; err != nil {
 					return err
 				}
 			}
 
-			if v, _ := fieldColumnType.DefaultValue(); v != field.DefaultValue {
+			if v, ok := fieldColumnType.DefaultValue(); (field.DefaultValueInterface == nil && ok) || v != field.DefaultValue {
 				if field.HasDefaultValue && (field.DefaultValueInterface != nil || field.DefaultValue != "") {
 					if field.DefaultValueInterface != nil {
 						defaultStmt := &gorm.Statement{Vars: []interface{}{field.DefaultValueInterface}}
@@ -336,6 +364,12 @@ func (m Migrator) AlterColumn(value interface{}, field string) error {
 		}
 		return fmt.Errorf("failed to look up field with name: %s", field)
 	})
+
+	if err != nil {
+		return err
+	}
+	m.resetPreparedStmts()
+	return nil
 }
 
 func (m Migrator) HasConstraint(value interface{}, name string) bool {
@@ -365,7 +399,7 @@ func (m Migrator) ColumnTypes(value interface{}) (columnTypes []gorm.ColumnType,
 			currentDatabase      = m.DB.Migrator().CurrentDatabase()
 			currentSchema, table = m.CurrentSchema(stmt, stmt.Table)
 			columns, err         = m.DB.Raw(
-				"SELECT c.column_name, c.is_nullable = 'YES', c.udt_name, c.character_maximum_length, c.numeric_precision, c.numeric_precision_radix, c.numeric_scale, c.datetime_precision, 8 * typlen, c.column_default, pd.description FROM information_schema.columns AS c JOIN pg_type AS pgt ON c.udt_name = pgt.typname LEFT JOIN pg_catalog.pg_description as pd ON pd.objsubid = c.ordinal_position AND pd.objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = c.table_name AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = c.table_schema)) where table_catalog = ? AND table_schema = ? AND table_name = ?",
+				"SELECT c.column_name, c.is_nullable = 'YES', c.udt_name, c.character_maximum_length, c.numeric_precision, c.numeric_precision_radix, c.numeric_scale, c.datetime_precision, 8 * typlen, c.column_default, pd.description, c.identity_increment FROM information_schema.columns AS c JOIN pg_type AS pgt ON c.udt_name = pgt.typname LEFT JOIN pg_catalog.pg_description as pd ON pd.objsubid = c.ordinal_position AND pd.objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = c.table_name AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = c.table_schema)) where table_catalog = ? AND table_schema = ? AND table_name = ?",
 				currentDatabase, currentSchema, table).Rows()
 		)
 
@@ -382,11 +416,12 @@ func (m Migrator) ColumnTypes(value interface{}) (columnTypes []gorm.ColumnType,
 				datetimePrecision sql.NullInt64
 				radixValue        sql.NullInt64
 				typeLenValue      sql.NullInt64
+				identityIncrement sql.NullString
 			)
 
 			err = columns.Scan(
 				&column.NameValue, &column.NullableValue, &column.DataTypeValue, &column.LengthValue, &column.DecimalSizeValue,
-				&radixValue, &column.ScaleValue, &datetimePrecision, &typeLenValue, &column.DefaultValueValue, &column.CommentValue,
+				&radixValue, &column.ScaleValue, &datetimePrecision, &typeLenValue, &column.DefaultValueValue, &column.CommentValue, &identityIncrement,
 			)
 			if err != nil {
 				return err
@@ -396,13 +431,14 @@ func (m Migrator) ColumnTypes(value interface{}) (columnTypes []gorm.ColumnType,
 				column.LengthValue = typeLenValue
 			}
 
-			if strings.HasPrefix(column.DefaultValueValue.String, "nextval('") && strings.HasSuffix(column.DefaultValueValue.String, "seq'::regclass)") {
+			if (strings.HasPrefix(column.DefaultValueValue.String, "nextval('") &&
+				strings.HasSuffix(column.DefaultValueValue.String, "seq'::regclass)")) || (identityIncrement.Valid && identityIncrement.String != "") {
 				column.AutoIncrementValue = sql.NullBool{Bool: true, Valid: true}
 				column.DefaultValueValue = sql.NullString{}
 			}
 
 			if column.DefaultValueValue.Valid {
-				column.DefaultValueValue.String = regexp.MustCompile(`'(.*)'::[\w]+$`).ReplaceAllString(column.DefaultValueValue.String, "$1")
+				column.DefaultValueValue.String = regexp.MustCompile(`'?(.*)\b'?:+[\w\s]+$`).ReplaceAllString(column.DefaultValueValue.String, "$1")
 			}
 
 			if datetimePrecision.Valid {
@@ -516,9 +552,10 @@ func (m Migrator) GetRows(currentSchema interface{}, table interface{}) (*sql.Ro
 	}
 
 	return m.DB.Session(&gorm.Session{}).Table(name).Limit(1).Scopes(func(d *gorm.DB) *gorm.DB {
+		dialector, _ := m.Dialector.(Dialector)
 		// use simple protocol
-		if !m.DB.PrepareStmt {
-			d.Statement.Vars = append(d.Statement.Vars, pgx.QuerySimpleProtocol(true))
+		if !m.DB.PrepareStmt && (dialector.Config != nil && (dialector.Config.DriverName == "" || dialector.Config.DriverName == "pgx")) {
+			d.Statement.Vars = append([]interface{}{pgx.QueryExecModeSimpleProtocol}, d.Statement.Vars...)
 		}
 		return d
 	}).Rows()
@@ -675,4 +712,35 @@ func groupByIndexName(indexList []*Index) map[string][]*Index {
 		columnIndexMap[idx.IndexName] = append(columnIndexMap[idx.IndexName], idx)
 	}
 	return columnIndexMap
+}
+
+func (m Migrator) GetTypeAliases(databaseTypeName string) []string {
+	return typeAliasMap[databaseTypeName]
+}
+
+// should reset prepared stmts when table changed
+func (m Migrator) resetPreparedStmts() {
+	if m.DB.PrepareStmt {
+		if pdb, ok := m.DB.ConnPool.(*gorm.PreparedStmtDB); ok {
+			pdb.Reset()
+		}
+	}
+}
+
+func (m Migrator) DropColumn(dst interface{}, field string) error {
+	if err := m.Migrator.DropColumn(dst, field); err != nil {
+		return err
+	}
+
+	m.resetPreparedStmts()
+	return nil
+}
+
+func (m Migrator) RenameColumn(dst interface{}, oldName, field string) error {
+	if err := m.Migrator.RenameColumn(dst, oldName, field); err != nil {
+		return err
+	}
+
+	m.resetPreparedStmts()
+	return nil
 }

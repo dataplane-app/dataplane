@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/stdlib"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
 	"gorm.io/gorm/clause"
@@ -45,11 +45,13 @@ var timeZoneMatcher = regexp.MustCompile("(time_zone|TimeZone)=(.*?)($|&| )")
 
 func (dialector Dialector) Initialize(db *gorm.DB) (err error) {
 	// register callbacks
-	callbacks.RegisterDefaultCallbacks(db, &callbacks.Config{
-		CreateClauses: []string{"INSERT", "VALUES", "ON CONFLICT", "RETURNING"},
-		UpdateClauses: []string{"UPDATE", "SET", "WHERE", "RETURNING"},
-		DeleteClauses: []string{"DELETE", "FROM", "WHERE", "RETURNING"},
-	})
+	if !dialector.WithoutReturning {
+		callbacks.RegisterDefaultCallbacks(db, &callbacks.Config{
+			CreateClauses: []string{"INSERT", "VALUES", "ON CONFLICT", "RETURNING"},
+			UpdateClauses: []string{"UPDATE", "SET", "WHERE", "RETURNING"},
+			DeleteClauses: []string{"DELETE", "FROM", "WHERE", "RETURNING"},
+		})
+	}
 
 	if dialector.Conn != nil {
 		db.ConnPool = dialector.Conn
@@ -63,7 +65,7 @@ func (dialector Dialector) Initialize(db *gorm.DB) (err error) {
 			return
 		}
 		if dialector.Config.PreferSimpleProtocol {
-			config.PreferSimpleProtocol = true
+			config.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 		}
 		result := timeZoneMatcher.FindStringSubmatch(dialector.Config.DSN)
 		if len(result) > 2 {
@@ -219,12 +221,12 @@ func (dialector Dialector) getSchemaCustomType(field *schema.Field) string {
 	return sqlType
 }
 
-func (dialectopr Dialector) SavePoint(tx *gorm.DB, name string) error {
+func (dialector Dialector) SavePoint(tx *gorm.DB, name string) error {
 	tx.Exec("SAVEPOINT " + name)
 	return nil
 }
 
-func (dialectopr Dialector) RollbackTo(tx *gorm.DB, name string) error {
+func (dialector Dialector) RollbackTo(tx *gorm.DB, name string) error {
 	tx.Exec("ROLLBACK TO SAVEPOINT " + name)
 	return nil
 }
