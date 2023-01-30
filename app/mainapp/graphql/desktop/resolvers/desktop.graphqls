@@ -11,6 +11,18 @@ type Environments {
     active: Boolean
 }
 
+type RemoteWorkersProcessGroups {
+    remoteProcessGroupID: String!
+    environmentID: String!
+    name: String!
+    description: String!
+    packages: String!
+    lb: String!
+    workerType: String!
+    language: String!
+    active: Boolean!
+}
+
 type Query {
     """
     Get remote process group's environments.
@@ -19,6 +31,14 @@ type Query {
     + **Security**: Based on environment selected
     """
     getWorkerEnvironments(workerID: String!): [Environments!]!
+
+    """
+    Get remote worker's process groups.
+    + **Route**: Private
+    + **Permission**: Bearer token
+    + **Security**: Based on environment selected
+    """
+    getRemoteWorkersProcessGroups(environmentID: String!, workerID: String!): [RemoteWorkersProcessGroups]
 }
 
 # extend type Mutation {
