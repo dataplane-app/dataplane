@@ -27,6 +27,7 @@ const (
 type executor struct {
 	jobFunctions   chan jobFunction
 	stopCh         chan struct{}
+	stoppedCh      chan struct{}
 	limitMode      limitMode
 	maxRunningJobs *semaphore.Weighted
 }
@@ -34,7 +35,8 @@ type executor struct {
 func newExecutor() executor {
 	return executor{
 		jobFunctions: make(chan jobFunction, 1),
-		stopCh:       make(chan struct{}, 1),
+		stopCh:       make(chan struct{}),
+		stoppedCh:    make(chan struct{}),
 	}
 }
 
@@ -49,6 +51,17 @@ func (e *executor) start() {
 			go func() {
 				defer runningJobsWg.Done()
 
+				panicHandlerMutex.RLock()
+				defer panicHandlerMutex.RUnlock()
+
+				if panicHandler != nil {
+					defer func() {
+						if r := recover(); r != interface{}(nil) {
+							panicHandler(f.name, r)
+						}
+					}()
+				}
+
 				if e.maxRunningJobs != nil {
 					if !e.maxRunningJobs.TryAcquire(1) {
 
@@ -56,18 +69,17 @@ func (e *executor) start() {
 						case RescheduleMode:
 							return
 						case WaitMode:
-							for {
-								select {
-								case <-stopCtx.Done():
-									return
-								case <-f.ctx.Done():
-									return
-								default:
-								}
+							select {
+							case <-stopCtx.Done():
+								return
+							case <-f.ctx.Done():
+								return
+							default:
+							}
 
-								if e.maxRunningJobs.TryAcquire(1) {
-									break
-								}
+							if err := e.maxRunningJobs.Acquire(f.ctx, 1); err != nil {
+								break
+
 							}
 						}
 					}
@@ -75,11 +87,17 @@ func (e *executor) start() {
 					defer e.maxRunningJobs.Release(1)
 				}
 
+				runJob := func() {
+					f.incrementRunState()
+					callJobFunc(f.eventListeners.onBeforeJobExecution)
+					callJobFuncWithParams(f.function, f.parameters)
+					callJobFunc(f.eventListeners.onAfterJobExecution)
+					f.decrementRunState()
+				}
+
 				switch f.runConfig.mode {
 				case defaultMode:
-					f.incrementRunState()
-					callJobFuncWithParams(f.function, f.parameters)
-					f.decrementRunState()
+					runJob()
 				case singletonMode:
 					_, _, _ = f.limiter.Do("main", func() (interface{}, error) {
 						select {
@@ -89,9 +107,7 @@ func (e *executor) start() {
 							return nil, nil
 						default:
 						}
-						f.incrementRunState()
-						callJobFuncWithParams(f.function, f.parameters)
-						f.decrementRunState()
+						runJob()
 						return nil, nil
 					})
 				}
@@ -99,13 +115,13 @@ func (e *executor) start() {
 		case <-e.stopCh:
 			cancel()
 			runningJobsWg.Wait()
-			e.stopCh <- struct{}{}
+			close(e.stoppedCh)
 			return
 		}
 	}
 }
 
 func (e *executor) stop() {
-	e.stopCh <- struct{}{}
-	<-e.stopCh
+	close(e.stopCh)
+	<-e.stoppedCh
 }

@@ -95,8 +95,8 @@ github.com/fasthttp/websocket
 # github.com/fatih/color v1.13.0
 ## explicit; go 1.13
 github.com/fatih/color
-# github.com/go-co-op/gocron v1.13.0
-## explicit; go 1.17
+# github.com/go-co-op/gocron v1.18.0
+## explicit; go 1.19
 github.com/go-co-op/gocron
 # github.com/go-git/gcfg v1.5.0
 ## explicit
@@ -410,7 +410,7 @@ github.com/shirou/gopsutil/load
 github.com/shirou/gopsutil/mem
 github.com/shirou/gopsutil/net
 github.com/shirou/gopsutil/process
-# github.com/stretchr/testify v1.8.0
+# github.com/stretchr/testify v1.8.1
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 # github.com/tidwall/gjson v1.14.4
