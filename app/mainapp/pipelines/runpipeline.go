@@ -219,6 +219,7 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 			EnvironmentID: environmentID,
 			RunID:         RunID,
 			WorkerGroup:   workergroup,
+			WorkerType:    s.NodeTypeDesc,
 			PipelineID:    s.PipelineID,
 			NodeID:        s.NodeID,
 			Status:        status,
@@ -267,7 +268,7 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 
 	// ---------- Run the first set of dependencies ----------
 
-	// send message that trigger node has run - for websockets
+	// send message that trigger node has run - for front end websockets
 	errnat := messageq.MsgSend("taskupdate."+environmentID+"."+RunID, startTask)
 	if errnat != nil {
 		if dpconfig.Debug == "true" {

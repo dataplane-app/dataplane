@@ -88,7 +88,7 @@ func RunNextPipeline() {
 					logging.PrintSecretsRedact(err2.Error.Error())
 				}
 
-				// send message that trigger node has run - for websockets
+				// send message that trigger node has run - for front end websockets
 				errnat := messageq.MsgSend("taskupdate."+msg.EnvironmentID+"."+msg.RunID, map[string]interface{}{
 					"MSG":        "pipeline_complete",
 					"run_id":     msg.RunID,
