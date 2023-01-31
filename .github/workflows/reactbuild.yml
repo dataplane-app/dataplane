@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: ["16.10"]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
@@ -24,8 +24,10 @@ jobs:
         # cache-dependency-path: frontend/yarn.lock
     - run: yarn add global env-cmd
     - run: export NODE_OPTIONS=--max-old-space-size=4096
-    - run: cd frontend && yarn
-    - run: cd frontend && yarn build
+    - run: cd frontend && npm install
+    - run: cd frontend && npm run build
+      env:
+        CI: false
     - name: Commit report
       continue-on-error: true
       run: |

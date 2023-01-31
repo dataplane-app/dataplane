@@ -95,7 +95,7 @@ const PipelineEditor = () => {
         history.push(`/pipelines/view/${pipeline.pipelineID}`);
     };
 
-    let showLogs = EditorGlobal.showLogs.get();
+    let showLogs = EditorGlobal.showLogs.get() || currentTab === 'install';
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
