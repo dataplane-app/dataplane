@@ -296,7 +296,7 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 		// 	ex = "exit 1;"
 		// }
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
-		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], "", "pipeline")
+		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], "", "pipeline", triggerData[s].WorkerType)
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)

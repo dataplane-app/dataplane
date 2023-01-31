@@ -11,11 +11,10 @@ type fastEncL3 struct {
 // Encode uses a similar algorithm to level 2, will check up to two candidates.
 func (e *fastEncL3) Encode(dst *tokens, src []byte) {
 	const (
-		inputMargin            = 12 - 1
+		inputMargin            = 8 - 1
 		minNonLiteralBlockSize = 1 + 1 + inputMargin
 		tableBits              = 16
 		tableSize              = 1 << tableBits
-		hashBytes              = 5
 	)
 
 	if debugDeflate && e.cur < 0 {
@@ -70,20 +69,20 @@ func (e *fastEncL3) Encode(dst *tokens, src []byte) {
 	sLimit := int32(len(src) - inputMargin)
 
 	// nextEmit is where in src the next emitLiteral should start from.
-	cv := load6432(src, s)
+	cv := load3232(src, s)
 	for {
-		const skipLog = 7
+		const skipLog = 6
 		nextS := s
 		var candidate tableEntry
 		for {
-			nextHash := hashLen(cv, tableBits, hashBytes)
+			nextHash := hash4u(cv, tableBits)
 			s = nextS
 			nextS = s + 1 + (s-nextEmit)>>skipLog
 			if nextS > sLimit {
 				goto emitRemainder
 			}
 			candidates := e.table[nextHash]
-			now := load6432(src, nextS)
+			now := load3232(src, nextS)
 
 			// Safe offset distance until s + 4...
 			minOffset := e.cur + s - (maxMatchOffset - 4)
@@ -97,8 +96,8 @@ func (e *fastEncL3) Encode(dst *tokens, src []byte) {
 				continue
 			}
 
-			if uint32(cv) == load3232(src, candidate.offset-e.cur) {
-				if candidates.Prev.offset < minOffset || uint32(cv) != load3232(src, candidates.Prev.offset-e.cur) {
+			if cv == load3232(src, candidate.offset-e.cur) {
+				if candidates.Prev.offset < minOffset || cv != load3232(src, candidates.Prev.offset-e.cur) {
 					break
 				}
 				// Both match and are valid, pick longest.
@@ -113,7 +112,7 @@ func (e *fastEncL3) Encode(dst *tokens, src []byte) {
 				// We only check if value mismatches.
 				// Offset will always be invalid in other cases.
 				candidate = candidates.Prev
-				if candidate.offset > minOffset && uint32(cv) == load3232(src, candidate.offset-e.cur) {
+				if candidate.offset > minOffset && cv == load3232(src, candidate.offset-e.cur) {
 					break
 				}
 			}
@@ -165,9 +164,9 @@ func (e *fastEncL3) Encode(dst *tokens, src []byte) {
 			if s >= sLimit {
 				t += l
 				// Index first pair after match end.
-				if int(t+8) < len(src) && t > 0 {
-					cv = load6432(src, t)
-					nextHash := hashLen(cv, tableBits, hashBytes)
+				if int(t+4) < len(src) && t > 0 {
+					cv := load3232(src, t)
+					nextHash := hash4u(cv, tableBits)
 					e.table[nextHash] = tableEntryPrev{
 						Prev: e.table[nextHash].Cur,
 						Cur:  tableEntry{offset: e.cur + t},
@@ -177,8 +176,8 @@ func (e *fastEncL3) Encode(dst *tokens, src []byte) {
 			}
 
 			// Store every 5th hash in-between.
-			for i := s - l + 2; i < s-5; i += 6 {
-				nextHash := hashLen(load6432(src, i), tableBits, hashBytes)
+			for i := s - l + 2; i < s-5; i += 5 {
+				nextHash := hash4u(load3232(src, i), tableBits)
 				e.table[nextHash] = tableEntryPrev{
 					Prev: e.table[nextHash].Cur,
 					Cur:  tableEntry{offset: e.cur + i}}
@@ -186,23 +185,23 @@ func (e *fastEncL3) Encode(dst *tokens, src []byte) {
 			// We could immediately start working at s now, but to improve
 			// compression we first update the hash table at s-2 to s.
 			x := load6432(src, s-2)
-			prevHash := hashLen(x, tableBits, hashBytes)
+			prevHash := hash4u(uint32(x), tableBits)
 
 			e.table[prevHash] = tableEntryPrev{
 				Prev: e.table[prevHash].Cur,
 				Cur:  tableEntry{offset: e.cur + s - 2},
 			}
 			x >>= 8
-			prevHash = hashLen(x, tableBits, hashBytes)
+			prevHash = hash4u(uint32(x), tableBits)
 
 			e.table[prevHash] = tableEntryPrev{
 				Prev: e.table[prevHash].Cur,
 				Cur:  tableEntry{offset: e.cur + s - 1},
 			}
 			x >>= 8
-			currHash := hashLen(x, tableBits, hashBytes)
+			currHash := hash4u(uint32(x), tableBits)
 			candidates := e.table[currHash]
-			cv = x
+			cv = uint32(x)
 			e.table[currHash] = tableEntryPrev{
 				Prev: candidates.Cur,
 				Cur:  tableEntry{offset: s + e.cur},
@@ -213,17 +212,17 @@ func (e *fastEncL3) Encode(dst *tokens, src []byte) {
 			minOffset := e.cur + s - (maxMatchOffset - 4)
 
 			if candidate.offset > minOffset {
-				if uint32(cv) == load3232(src, candidate.offset-e.cur) {
+				if cv == load3232(src, candidate.offset-e.cur) {
 					// Found a match...
 					continue
 				}
 				candidate = candidates.Prev
-				if candidate.offset > minOffset && uint32(cv) == load3232(src, candidate.offset-e.cur) {
+				if candidate.offset > minOffset && cv == load3232(src, candidate.offset-e.cur) {
 					// Match at prev...
 					continue
 				}
 			}
-			cv = x >> 8
+			cv = uint32(x >> 8)
 			s++
 			break
 		}
