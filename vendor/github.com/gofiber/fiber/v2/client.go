@@ -7,13 +7,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
-	"net"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -203,25 +200,13 @@ func (a *Agent) Parse() error {
 	}
 
 	a.HostClient = &fasthttp.HostClient{
-		Addr:                     addMissingPort(string(uri.Host()), isTLS),
+		Addr:                     fasthttp.AddMissingPort(string(uri.Host()), isTLS),
 		Name:                     name,
 		NoDefaultUserAgentHeader: a.NoDefaultUserAgentHeader,
 		IsTLS:                    isTLS,
 	}
 
 	return nil
-}
-
-func addMissingPort(addr string, isTLS bool) string {
-	n := strings.Index(addr, ":")
-	if n >= 0 {
-		return addr
-	}
-	port := 80
-	if isTLS {
-		port = 443
-	}
-	return net.JoinHostPort(addr, strconv.Itoa(port))
 }
 
 /************************** Header Setting **************************/
@@ -542,7 +527,7 @@ func (a *Agent) FileData(formFiles ...*FormFile) *Agent {
 
 // SendFile reads file and appends it to multipart form request.
 func (a *Agent) SendFile(filename string, fieldname ...string) *Agent {
-	content, err := ioutil.ReadFile(filepath.Clean(filename))
+	content, err := os.ReadFile(filepath.Clean(filename))
 	if err != nil {
 		a.errs = append(a.errs, err)
 		return a
@@ -824,6 +809,10 @@ func (a *Agent) Struct(v interface{}) (code int, body []byte, errs []error) {
 	defer a.release()
 	if code, body, errs = a.bytes(); len(errs) > 0 {
 		return
+	}
+
+	if a.jsonDecoder == nil {
+		a.jsonDecoder = json.Unmarshal
 	}
 
 	if err := a.jsonDecoder(body, v); err != nil {
