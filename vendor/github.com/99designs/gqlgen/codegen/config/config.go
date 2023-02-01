@@ -27,7 +27,9 @@ type Config struct {
 	Directives                    map[string]DirectiveConfig `yaml:"directives,omitempty"`
 	OmitSliceElementPointers      bool                       `yaml:"omit_slice_element_pointers,omitempty"`
 	OmitGetters                   bool                       `yaml:"omit_getters,omitempty"`
+	OmitComplexity                bool                       `yaml:"omit_complexity,omitempty"`
 	StructFieldsAlwaysPointers    bool                       `yaml:"struct_fields_always_pointers,omitempty"`
+	ReturnPointersInUmarshalInput bool                       `yaml:"return_pointers_in_unmarshalinput,omitempty"`
 	ResolversAlwaysReturnPointers bool                       `yaml:"resolvers_always_return_pointers,omitempty"`
 	SkipValidation                bool                       `yaml:"skip_validation,omitempty"`
 	SkipModTidy                   bool                       `yaml:"skip_mod_tidy,omitempty"`
@@ -50,6 +52,7 @@ func DefaultConfig() *Config {
 		Directives:                    map[string]DirectiveConfig{},
 		Models:                        TypeMap{},
 		StructFieldsAlwaysPointers:    true,
+		ReturnPointersInUmarshalInput: false,
 		ResolversAlwaysReturnPointers: true,
 	}
 }
