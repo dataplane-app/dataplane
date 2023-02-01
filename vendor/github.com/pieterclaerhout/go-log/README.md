@@ -21,7 +21,6 @@ import (
 func main() {
 
     log.DebugMode = true
-    log.DebugSQLMode = true
     log.PrintTimestamp = true
     log.PrintColors = true
     log.TimeFormat = "2006-01-02 15:04:05.000"
@@ -32,7 +31,6 @@ func main() {
     log.Debugf("arg1 %d", 1)
     log.DebugDump(myVar, "prefix")
     log.DebugSeparator("title")
-    log.DebugSQL("select * from mytable")
 
     log.Info("arg1", "arg2")
     log.Infof("arg1 %d", 1)
@@ -66,5 +64,4 @@ func main() {
 The defaults are taken from the environment variables:
 
 * `DEBUG`: `log.DebugMode`
-* `DEBUG_SQL`: `log.DebugSQLMode`
 * `PRINT_TIMESTAMP`: `log.PrintTimestamp`

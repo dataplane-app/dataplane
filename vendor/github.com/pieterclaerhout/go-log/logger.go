@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pieterclaerhout/go-formatter"
 	"github.com/pkg/errors"
 	"github.com/rotisserie/eris"
 	"github.com/sanity-io/litter"
@@ -24,9 +23,6 @@ var PrintColors = false
 // If the environment variable called DEBUG is set to 1, this will default to true.
 // In all other cases, debug mode is false by default.
 var DebugMode = false
-
-// DebugSQLMode indicates if the SQL statements should be logged as debug messages
-var DebugSQLMode = false
 
 // TimeZone indicates in which timezone the time should be formatted
 var TimeZone *time.Location
@@ -77,20 +73,6 @@ func DebugSeparator(args ...interface{}) {
 		message := formatMessage(args...)
 		message = formatSeparator(message, "=", 80)
 		printMessage("DEBUG", message)
-	}
-}
-
-// DebugSQL formats the SQL statement and prints it as a debug message
-//
-// Only shown if DebugMode and DebugSQLMode are set to true
-func DebugSQL(sql string) {
-	if DebugSQLMode {
-		message, err := formatter.SQL(sql)
-		if err != nil {
-			Error(err)
-		} else {
-			Debug(message)
-		}
 	}
 }
 

@@ -23,7 +23,7 @@ require (
 	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/nats-io/nats.go v1.23.0
 	github.com/orcaman/concurrent-map v1.0.0
-	github.com/pieterclaerhout/go-log v1.14.0
+	github.com/pieterclaerhout/go-log v1.15.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/stretchr/testify v1.8.1
 	github.com/tidwall/gjson v1.14.4
@@ -86,7 +86,6 @@ require (
 	github.com/nats-io/nats-server/v2 v2.8.4 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	github.com/pieterclaerhout/go-formatter v1.0.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
