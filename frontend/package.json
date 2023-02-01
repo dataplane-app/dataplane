@@ -5,7 +5,7 @@
     "private": true,
     "dependencies": {
         "@breejs/later": "^4.1.0",
-        "@craco/craco": "^6.4.3",
+        "@craco/craco": "^7.0.0",
         "@emotion/react": "^11.7.0",
         "@emotion/styled": "^11.6.0",
         "@fortawesome/fontawesome-svg-core": "^1.2.36",
@@ -34,7 +34,7 @@
         "graphql-request": "^5.0.0",
         "jwt-decode": "^3.1.2",
         "luxon": "^2.3.1",
-        "monaco-editor": "^0.33.0",
+        "monaco-editor": "^0.34.1",
         "monaco-editor-webpack-plugin": "^7.0.1",
         "nanoid": "^4.0.0",
         "notistack": "^2.0.3",
@@ -50,7 +50,7 @@
         "react-lazylog": "^4.5.3",
         "react-lottie": "^1.2.3",
         "react-markdown": "^8.0.3",
-        "react-monaco-editor": "^0.50.1",
+        "react-monaco-editor": "^0.51.0",
         "react-router-dom": "5.2.0",
         "react-scripts": "5.0.1",
         "react-syntax-highlighter": "^15.5.0",
@@ -95,7 +95,6 @@
         ]
     },
     "devDependencies": {
-        "autoprefixer": "^9",
         "prettier": "2.8.1"
     }
 }
