@@ -207,6 +207,56 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 
 			}
 
+			/* ----- Run code logs -------- */
+		case "pipelinerunlogs":
+
+			envID := gjson.Get(messagestring, "params.environment_id").String()
+			runID := gjson.Get(messagestring, "params.run_id").String()
+			nodeID := gjson.Get(messagestring, "params.node_id").String()
+			logType := gjson.Get(messagestring, "params.log_type").String()
+
+			log.Println(string(message))
+
+			// log.Println("code run envID:", envID, messagestring)
+
+			if envID == "" {
+				RPCError(remoteWorkerID, request.ID, -32603, "Code run missing environment ID", errors.New("Code run missing environment ID"))
+				break
+			}
+
+			room := "workerlogs." + envID + "." + runID + "." + nodeID
+			log.Println("Room:", room)
+			wsockets.Broadcast <- wsockets.Message{Room: room, Data: request.Params}
+
+			if logType == "action" {
+				logmsg := gjson.Get(messagestring, "params.log").String()
+
+				msg := models.WorkerTasks{
+					RunID:         runID,
+					EnvironmentID: envID,
+					Reason:        "Complete",
+					EndDT:         time.Now().UTC(),
+				}
+
+				switch logmsg {
+				case "Success":
+					msg.Status = logmsg
+				case "Fail":
+					msg.Status = logmsg
+				}
+
+				if msg.Status != "" {
+					err2 := database.DBConn.Clauses(clause.OnConflict{
+						Columns:   []clause.Column{{Name: "run_id"}},
+						DoUpdates: clause.AssignmentColumns([]string{"ended_at", "status", "reason"}),
+					}).Create(&msg)
+					if err2.Error != nil {
+						logging.PrintSecretsRedact(err2.Error.Error())
+					}
+				}
+
+			}
+
 		case "Arith.Multiply":
 
 			log.Println("Params:", string(request.Params))
@@ -220,7 +270,7 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 		default:
 
 			/* for bi directional activity: empty case above prevents infinite loop */
-			RPCError(remoteWorkerID, request.ID, -32601, "Method not found", errors.New("Method not found"))
+			RPCError(remoteWorkerID, request.ID, -32601, "Method not found", errors.New("Method not found: "+request.Method))
 
 		}
 

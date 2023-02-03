@@ -33,7 +33,7 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 
 	// Retrieve pipeline details
 	pipelinedata := models.Pipelines{}
-	err := database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).First(&pipelinedata).Error
+	err := database.DBConn.Select("pipeline_id", "name", "worker_group", "json").Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).First(&pipelinedata).Error
 	if err != nil {
 
 		if dpconfig.Debug == "true" {

@@ -35,8 +35,14 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 			WSTaskLogError(envID, runid, err.Error(), nodeID)
 			return err
 		}
+
+	/* Send the task to the RPA worker */
 	case "rpa-python":
-		log.Println("RPA python")
+		err := RPAWorker(envID, workerGroup, runid, taskid, pipelineID, nodeID, commands, Folder, FolderID, Version, RunType)
+		if err != nil {
+			WSTaskLogError(envID, runid, err.Error(), nodeID)
+			return err
+		}
 	default:
 		WSTaskLogError(envID, runid, "Worker type not found.", nodeID)
 		log.Println("Type not found")
