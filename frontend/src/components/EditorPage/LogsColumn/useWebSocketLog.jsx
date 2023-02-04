@@ -64,6 +64,9 @@ export default function useWebSocketLog(environmentId, run_id, setKeys, setGraph
                     NodeTypeDesc: pipeline.nodeTypeDesc,
                     workerGroup: pipeline.workerGroup,
                     runID: run_id,
+                    replayType: pipeline.replayType,
+                    replayRunID: pipeline.replayRunID,
+                    replayGroup: pipeline.replayGroup,
                 });
 
                 if (response.r || response.error) {

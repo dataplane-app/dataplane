@@ -4,8 +4,30 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation runCEFile($pipelineID: String!, $environmentID: String!, $nodeID: String!, $fileID: String!, $NodeTypeDesc: String!, $workerGroup: String!, $runID: String!) {
-        runCEFile(pipelineID: $pipelineID, environmentID: $environmentID, nodeID: $nodeID, fileID: $fileID, NodeTypeDesc: $NodeTypeDesc, workerGroup: $workerGroup, runID: $runID) {
+    mutation runCEFile(
+        $pipelineID: String!
+        $environmentID: String!
+        $nodeID: String!
+        $fileID: String!
+        $NodeTypeDesc: String!
+        $workerGroup: String!
+        $runID: String!
+        $replayType: String!
+        $replayRunID: String!
+        $replayGroup: String!
+    ) {
+        runCEFile(
+            pipelineID: $pipelineID
+            environmentID: $environmentID
+            nodeID: $nodeID
+            fileID: $fileID
+            NodeTypeDesc: $NodeTypeDesc
+            workerGroup: $workerGroup
+            runID: $runID
+            replayType: $replayType
+            replayRunID: $replayRunID
+            replayGroup: $replayGroup
+        ) {
             run_id
             node_id
             file_id
