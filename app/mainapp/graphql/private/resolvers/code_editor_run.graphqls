@@ -26,7 +26,6 @@ extend type Mutation {
         runID: String!
         replayType: String! #'Pipeline' or 'Code editor'
         replayRunID: String!
-        replayGroup: String!
     ): CERun!
 
     """

@@ -271,7 +271,7 @@ type ComplexityRoot struct {
 		RemoveUserFromEnvironment          func(childComplexity int, userID string, environmentID string) int
 		RenameFile                         func(childComplexity int, environmentID string, fileID string, nodeID string, pipelineID string, newName string) int
 		RenameFolder                       func(childComplexity int, environmentID string, folderID string, nodeID string, pipelineID string, newName string) int
-		RunCEFile                          func(childComplexity int, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string, runID string, replayType string, replayRunID string, replayGroup string) int
+		RunCEFile                          func(childComplexity int, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string, runID string, replayType string, replayRunID string) int
 		RunPipelines                       func(childComplexity int, pipelineID string, environmentID string, runType string, runID string) int
 		StopCERun                          func(childComplexity int, pipelineID string, runID string, environmentID string) int
 		StopPipelines                      func(childComplexity int, pipelineID string, runID string, environmentID string, runType string) int
@@ -613,7 +613,7 @@ type MutationResolver interface {
 	RenameFile(ctx context.Context, environmentID string, fileID string, nodeID string, pipelineID string, newName string) (string, error)
 	MoveFileNode(ctx context.Context, fileID string, toFolderID string, environmentID string, pipelineID string) (string, error)
 	UpdateCodePackages(ctx context.Context, workerGroup string, language string, packages string, environmentID string, pipelineID string) (string, error)
-	RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string, runID string, replayType string, replayRunID string, replayGroup string) (*CERun, error)
+	RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string, runID string, replayType string, replayRunID string) (*CERun, error)
 	StopCERun(ctx context.Context, pipelineID string, runID string, environmentID string) (string, error)
 	AddDeployment(ctx context.Context, pipelineID string, fromEnvironmentID string, toEnvironmentID string, version string, workerGroup string, liveactive bool, nodeWorkerGroup []*WorkerGroupsNodes) (string, error)
 	DeleteDeployment(ctx context.Context, environmentID string, pipelineID string, version string) (string, error)
@@ -2092,7 +2092,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RunCEFile(childComplexity, args["pipelineID"].(string), args["nodeID"].(string), args["fileID"].(string), args["environmentID"].(string), args["NodeTypeDesc"].(string), args["workerGroup"].(string), args["runID"].(string), args["replayType"].(string), args["replayRunID"].(string), args["replayGroup"].(string)), true
+		return e.complexity.Mutation.RunCEFile(childComplexity, args["pipelineID"].(string), args["nodeID"].(string), args["fileID"].(string), args["environmentID"].(string), args["NodeTypeDesc"].(string), args["workerGroup"].(string), args["runID"].(string), args["replayType"].(string), args["replayRunID"].(string)), true
 
 	case "Mutation.runPipelines":
 		if e.complexity.Mutation.RunPipelines == nil {
@@ -5757,15 +5757,6 @@ func (ec *executionContext) field_Mutation_runCEFile_args(ctx context.Context, r
 		}
 	}
 	args["replayRunID"] = arg8
-	var arg9 string
-	if tmp, ok := rawArgs["replayGroup"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("replayGroup"))
-		arg9, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["replayGroup"] = arg9
 	return args, nil
 }
 
@@ -14582,7 +14573,7 @@ func (ec *executionContext) _Mutation_runCEFile(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RunCEFile(rctx, fc.Args["pipelineID"].(string), fc.Args["nodeID"].(string), fc.Args["fileID"].(string), fc.Args["environmentID"].(string), fc.Args["NodeTypeDesc"].(string), fc.Args["workerGroup"].(string), fc.Args["runID"].(string), fc.Args["replayType"].(string), fc.Args["replayRunID"].(string), fc.Args["replayGroup"].(string))
+		return ec.resolvers.Mutation().RunCEFile(rctx, fc.Args["pipelineID"].(string), fc.Args["nodeID"].(string), fc.Args["fileID"].(string), fc.Args["environmentID"].(string), fc.Args["NodeTypeDesc"].(string), fc.Args["workerGroup"].(string), fc.Args["runID"].(string), fc.Args["replayType"].(string), fc.Args["replayRunID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

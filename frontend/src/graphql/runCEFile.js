@@ -14,7 +14,6 @@ const query = gql`
         $runID: String!
         $replayType: String!
         $replayRunID: String!
-        $replayGroup: String!
     ) {
         runCEFile(
             pipelineID: $pipelineID
@@ -26,7 +25,6 @@ const query = gql`
             runID: $runID
             replayType: $replayType
             replayRunID: $replayRunID
-            replayGroup: $replayGroup
         ) {
             run_id
             node_id

@@ -58,7 +58,7 @@ const PipelineEditor = () => {
         currentTab = 'markdown';
     }
 
-    const [pipeline, setPipeline] = useState({ replayGroup: 'A', replayType: 'Pipeline', replayRunID: '' });
+    const [pipeline, setPipeline] = useState({ replayType: 'Pipeline', replayRunID: '' });
 
     // Packages state for packages component
     const [packages, setPackages] = useState('');
@@ -128,7 +128,16 @@ const PipelineEditor = () => {
 
                 <Autocomplete
                     id="replay_select"
-                    onChange={(event, newValue) => setPipeline((p) => ({ ...p, replayType: newValue }))}
+                    onChange={(event, newValue) =>
+                        setPipeline((p) => {
+                            return {
+                                ...p,
+                                replayType: newValue,
+                                ...(newValue === 'Code editor' && { replayRunID: pipeline.pipelineID }),
+                                ...(newValue === 'Pipeline' && { replayRunID: selectedReplayRun.run_id }),
+                            };
+                        })
+                    }
                     value={pipeline.replayType}
                     sx={{ minWidth: '120px', mr: 2, '.MuiAutocomplete-inputRoot': { height: '40px' } }}
                     disableClearable
@@ -175,9 +184,9 @@ const PipelineEditor = () => {
                     <TextField
                         id="group"
                         size="small"
-                        sx={{ width: '300px' }}
-                        value={pipeline.replayGroup}
-                        onChange={(e) => setPipeline((p) => ({ ...p, replayGroup: e.target.value }))}
+                        sx={{ width: '300px', '.MuiInputBase-input': { height: '23px', fontSize: '0.75rem' } }}
+                        value={pipeline.replayRunID}
+                        onChange={(e) => setPipeline((p) => ({ ...p, replayRunID: e.target.value }))}
                     />
                 )}
 
