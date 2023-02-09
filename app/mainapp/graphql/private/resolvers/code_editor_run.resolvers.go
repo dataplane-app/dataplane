@@ -8,7 +8,7 @@ import (
 	"errors"
 	"log"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/runcode"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -39,7 +39,7 @@ func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nod
 	log.Printf("📢 replayRunID: %v\n", replayRunID)
 	log.Printf("📢 replayType: %v\n", replayType)
 
-	runData, err := runcode.RunCodeFile(workerGroup, fileID, environmentID, pipelineID, nodeID, nodeTypeDesc, runID)
+	runData, err := runcode.RunCodeFile(workerGroup, fileID, environmentID, pipelineID, nodeID, nodeTypeDesc, runID, replayRunID)
 	if err != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
