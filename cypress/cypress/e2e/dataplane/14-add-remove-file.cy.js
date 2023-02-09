@@ -22,9 +22,11 @@ describe('Add/remove python file', function () {
             .should('exist', { timeout: 6000 })
             .click({ force: true })
             .should('exist', { timeout: 6000 });
+
+        cy.intercept('POST', '/app/private/code-files/*').as('post');
         cy.get('#new_file_input').should('exist', { timeout: 6000 }).type('file.py{enter}');
 
-        cy.get('#notistack-snackbar').should('contain', 'File saved.');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 
     it('Type in code editor', function () {
@@ -37,8 +39,9 @@ describe('Add/remove python file', function () {
         // Click on delete button
         cy.get('.MuiTreeView-root ul > div > div > li:nth-child(3) button:nth-child(2)').click({ force: true });
 
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.contains('Yes').should('exist', { timeout: 6000 }).click({ force: true });
 
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.deleteFileNode').should('not.null');
     });
 });

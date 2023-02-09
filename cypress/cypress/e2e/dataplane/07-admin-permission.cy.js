@@ -102,8 +102,10 @@ describe('Give admin permission to a user', function () {
         // Give permission
         cy.get('#available_permissions_autocomplete').type('Admin', { force: true }).should('have.value', 'Admin');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.get('#permission-add').click({ force: true });
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
 
         // Verify
         cy.get('#platform-permissions').children().contains('Admin').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
@@ -143,9 +145,11 @@ describe('Give admin permission to a user', function () {
         cy.contains('Jimmy User').should('exist', { timeout: 6000 }).click({ force: true });
 
         // Remove admin permission
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.get('#platform-permissions').children().contains('Admin').prev().should('exist', { timeout: 6000 }).click();
 
         // Verify
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 });
