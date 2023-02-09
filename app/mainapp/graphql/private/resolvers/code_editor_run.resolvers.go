@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/runcode"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -16,7 +16,7 @@ import (
 )
 
 // RunCEFile is the resolver for the runCEFile field.
-func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string, runID string) (*privategraphql.CERun, error) {
+func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string, runID string, replayType string, replayRunID string) (*privategraphql.CERun, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -35,7 +35,10 @@ func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nod
 		return &privategraphql.CERun{}, errors.New("Requires permissions.")
 	}
 
-	runData, err := runcode.RunCodeFile(workerGroup, fileID, environmentID, pipelineID, nodeID, nodeTypeDesc, runID)
+	// log.Printf("📢 replayRunID: %v\n", replayRunID)
+	// log.Printf("📢 replayType: %v\n", replayType)
+
+	runData, err := runcode.RunCodeFile(workerGroup, fileID, environmentID, pipelineID, nodeID, nodeTypeDesc, runID, replayRunID)
 	if err != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
