@@ -5,13 +5,15 @@ import (
 	"log"
 	"time"
 
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 	wsockets "github.com/dataplane-app/dataplane/app/mainapp/websockets"
 	"github.com/google/uuid"
 )
 
 /* Return errors to the logging console */
-func WSTaskLogError(envID string, runID string, logline string, nodeID string) {
+func WSTaskLogError(envID string, runID string, logline string, nodeID string, taskID string) {
 
 	/* Send the error log */
 	uidstring := uuid.NewString()
@@ -33,6 +35,23 @@ func WSTaskLogError(envID string, runID string, logline string, nodeID string) {
 	wsockets.Broadcast <- wsockets.Message{Room: room, Data: jsonSend}
 
 	/* Below commented out for in future to show extra details to front end */
+
+	recordlog := models.LogsWorkers{
+		CreatedAt:     time.Now().UTC(),
+		EnvironmentID: envID,
+		Category:      "task",
+		UID:           uuid.NewString(),
+		RunID:         runID,
+		NodeID:        nodeID,
+		TaskID:        taskID,
+		Log:           logline,
+		LogType:       "error",
+	}
+
+	err2 := database.DBConn.Create(&recordlog)
+	if err2.Error != nil {
+		logging.PrintSecretsRedact(err2.Error.Error())
+	}
 
 	// msg.Status = "Fail"
 	// msg.RunID = runID

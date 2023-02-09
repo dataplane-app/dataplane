@@ -32,7 +32,7 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 	case "python", "bash", "checkpoint":
 		err := ServerWorker(envID, workerGroup, runid, taskid, pipelineID, nodeID, commands, Folder, FolderID, Version, RunType)
 		if err != nil {
-			WSTaskLogError(envID, runid, err.Error(), nodeID)
+			WSTaskLogError(envID, runid, err.Error(), nodeID, taskid)
 			return err
 		}
 
@@ -40,11 +40,11 @@ func WorkerRunTask(workerGroup string, taskid string, runid string, envID string
 	case "rpa-python":
 		err := RPAWorker(envID, workerGroup, runid, taskid, pipelineID, nodeID, commands, Folder, FolderID, Version, RunType)
 		if err != nil {
-			WSTaskLogError(envID, runid, err.Error(), nodeID)
+			WSTaskLogError(envID, runid, err.Error(), nodeID, taskid)
 			return err
 		}
 	default:
-		WSTaskLogError(envID, runid, "Worker type not found.", nodeID)
+		WSTaskLogError(envID, runid, "Worker type not found.", nodeID, taskid)
 		log.Println("Type not found")
 	}
 	return nil
