@@ -78,7 +78,7 @@ func UpdateRunCodeFile(msg modelmain.CodeRun) {
 			LogType:   "action",
 		}
 
-		messageq.MsgSend("coderunfilelogs."+msg.RunID, sendmsg)
+		messageq.MsgSend("coderunfilelogs."+msg.EnvironmentID+"."+msg.RunID, sendmsg)
 	}
 
 	sendmsg := modelmain.LogsSend{
@@ -88,7 +88,7 @@ func UpdateRunCodeFile(msg modelmain.CodeRun) {
 		LogType:   "action",
 	}
 
-	messageq.MsgSend("coderunfilelogs."+msg.RunID, sendmsg)
+	messageq.MsgSend("coderunfilelogs."+msg.EnvironmentID+"."+msg.RunID, sendmsg)
 
 	// }()
 

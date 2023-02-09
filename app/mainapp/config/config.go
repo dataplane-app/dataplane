@@ -45,9 +45,31 @@ var DPRedisPort string
 var DPRedisDB int
 var DPRedisPassword string
 
+//Database
+var DPDBMaxOpenConns int
+var DPDBMaxIdleConns int
+var ConnMaxLifetime int
+
 // Available storage methods: Database, LocalFile, S3
 
 func LoadConfig() {
+
+	// Database connection and defaults
+	DPDBMaxOpenConns, _ = strconv.Atoi(os.Getenv("DP_DB_MAXOPENCONNS"))
+	if DPDBMaxOpenConns == 0 {
+		DPDBMaxOpenConns = 25
+	}
+	DPDBMaxIdleConns, _ = strconv.Atoi(os.Getenv("DP_DB_MAXIDLECONNS"))
+
+	if DPDBMaxIdleConns == 0 {
+		DPDBMaxIdleConns = 25
+	}
+
+	ConnMaxLifetime, _ = strconv.Atoi(os.Getenv("DP_DB_MAXLIFETIME"))
+	/* default 5 minutes */
+	if ConnMaxLifetime == 0 {
+		ConnMaxLifetime = 5
+	}
 
 	// Redis connection
 	DPRedisHost = os.Getenv("DP_REDIS_HOST")

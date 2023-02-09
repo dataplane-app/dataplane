@@ -373,6 +373,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                             <Button
                                 onClick={() => {
                                     EditorGlobal.installState.set('Running');
+                                    EditorGlobal.showLogs.set(true);
+                                    EditorGlobal.selectedFile.content.set(EditorGlobal.selectedFile.diffValue.value);
                                 }}
                                 variant="text"
                                 disabled={!EditorGlobal.selectedFile.diffValue.get()}

@@ -17,7 +17,6 @@ import (
 	"github.com/dataplane-app/dataplane/app/workers/secrets"
 	"github.com/dataplane-app/dataplane/app/workers/workerhealth"
 
-	"github.com/go-co-op/gocron"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -128,8 +127,8 @@ func Setup(port string) *fiber.App {
 	// add timer field to response header
 	app.Use(Timer())
 
-	wrkerconfig.Scheduler = gocron.NewScheduler(time.UTC)
-	wrkerconfig.Scheduler.StartAsync()
+	// wrkerconfig.Scheduler = gocron.NewScheduler(time.UTC)
+	// wrkerconfig.Scheduler.StartAsync()
 
 	if wrkerconfig.Debug == "true" {
 		app.Use(logger.New(
@@ -169,9 +168,9 @@ func Setup(port string) *fiber.App {
 	/* Every 5 seconds tell mainapp about my status
 	Needs to be called after listen for tasks to avoid timing issues when accepting tasks
 	*/
-	workerhealth.WorkerHealthStart(wrkerconfig.Scheduler)
+	workerhealth.WorkerHealthStart()
 	log.Println("🚚 Submitting workers")
-	workerhealth.WorkerLoad(wrkerconfig.Scheduler)
+	workerhealth.WorkerLoad()
 
 	stop := time.Now()
 	// Do something with response

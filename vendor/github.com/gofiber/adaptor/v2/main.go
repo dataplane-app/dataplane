@@ -10,7 +10,7 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/utils"
+	"github.com/gofiber/fiber/v2/utils"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpadaptor"
 )

@@ -77,7 +77,7 @@ export default function RunNavBar({ environmentID, pipeline }) {
         setSelectedRun - set the run to the latest run on button press
         */
         const authtokenget = authToken.get();
-        const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${runId}&id=${runId}&token=${authtokenget}`;
+        const wsurl = `${websocketEndpoint}/taskupdate.${environmentID}.${runId}?token=${authtokenget}`;
         const ws = new WebSocket(wsurl);
         setWsConnect(ws);
         setRunId(runId);
@@ -134,7 +134,7 @@ export default function RunNavBar({ environmentID, pipeline }) {
                         onClick={StopButtonClick}
                         variant="outlined"
                         color="error"
-                        sx={{ width: 70, fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
+                        sx={{ width: 70, marginRight: '24px', fontWeight: '700', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                         Stop
                     </Button>
                 ) : FlowState.elements.get().length > 0 ? (

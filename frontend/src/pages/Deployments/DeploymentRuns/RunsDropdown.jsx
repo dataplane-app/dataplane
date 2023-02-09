@@ -120,7 +120,7 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
                     // console.log("Connect:", wsconnect)
 
                     const authtokenget = authToken.get();
-                    const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${response[0].run_id}&id=${response[0].run_id}&token=${authtokenget}`;
+                    const wsurl = `${websocketEndpoint}/taskupdate.${environmentID}.${response[0].run_id}?token=${authtokenget}`;
                     const ws = new WebSocket(wsurl);
                     setWsConnect(ws);
                     setRunId(response[0].run_id);
@@ -188,7 +188,7 @@ export default function RunsDropdown({ environmentID, deployment, runs, setRuns,
                 // console.log("I am the selected run:", selectedRun)
                 if (responseSingle.status === 'Running') {
                     const authtokenget = authToken.get();
-                    const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${selectedRun.run_id}&id=${selectedRun.run_id}&token=${authtokenget}`;
+                    const wsurl = `${websocketEndpoint}/taskupdate.${environmentID}.${selectedRun.run_id}?token=${authtokenget}`;
                     const ws = new WebSocket(wsurl);
                     setWsConnect(ws);
                     setRunId(selectedRun.run_id);

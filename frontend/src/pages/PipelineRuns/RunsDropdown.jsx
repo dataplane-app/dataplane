@@ -92,6 +92,8 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
             // On page load select the latest response
             // console.log("Run ID:", runID)
 
+            const isNewFlow = pipeline.updated_at > lastRunTime;
+
             // If there is no runID then show the structure without RunID
             if (runID == null) {
                 // Get the flow of the latest run or if no flow then get structure
@@ -100,11 +102,10 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
             } else {
                 // If there is a run then get the run structure
                 setSelectedRun(response[0]);
-                await getPipelineRun(pipeline.pipelineID, runID, environmentID);
+                await getPipelineRun(pipeline.pipelineID, runID, environmentID, isNewFlow);
             }
 
             // If the pipeline has a new flow, get only the flow and return
-            const isNewFlow = pipeline.updated_at > lastRunTime;
             if (isNewFlow) {
                 getPipelineFlow({ pipelineId: pipeline.pipelineID, environmentID });
                 return;
@@ -117,7 +118,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                     // console.log("Connect:", wsconnect)
 
                     const authtokenget = authToken.get();
-                    const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${response[0].run_id}&id=${response[0].run_id}&token=${authtokenget}`;
+                    const wsurl = `${websocketEndpoint}/taskupdate.${environmentID}.${response[0].run_id}?token=${authtokenget}`;
                     const ws = new WebSocket(wsurl);
                     setWsConnect(ws);
                     setRunId(response[0].run_id);
@@ -189,7 +190,7 @@ export default function RunsDropdown({ environmentID, pipeline, runs, setRuns, s
                 if (responseSingle.status === 'Running') {
                     console.log('open ws on drop down');
                     const authtokenget = authToken.get();
-                    const wsurl = `${websocketEndpoint}/${environmentID}?subject=taskupdate.${environmentID}.${selectedRun.run_id}&id=${selectedRun.run_id}&token=${authtokenget}`;
+                    const wsurl = `${websocketEndpoint}/taskupdate.${environmentID}.${selectedRun.run_id}?token=${authtokenget}`;
                     const ws = new WebSocket(wsurl);
                     setReconnectWS(true);
                     setWsConnect(ws);

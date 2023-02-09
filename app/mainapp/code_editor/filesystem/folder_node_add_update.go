@@ -1,9 +1,11 @@
 package filesystem
 
 import (
+	"errors"
 	"log"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	"gorm.io/gorm"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -19,7 +21,7 @@ type FolderNodeUpdate struct {
 	Action       string `json:"action"`
 }
 
-func FolderNodeAddUpdate(pipelineID string, environmentID string, subfolder string) {
+func FolderNodeAddUpdate(db *gorm.DB, pipelineID string, environmentID string, subfolder string) error {
 
 	/*
 		Pipeline nodes have been updated.
@@ -27,12 +29,18 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, subfolder stri
 		Compare the two for updates.
 	*/
 	var parentfolder models.CodeFolders
-	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ?", environmentID, pipelineID, "pipeline").First(&parentfolder)
+	errdb := db.Where("environment_id = ? and pipeline_id = ? and level = ?", environmentID, pipelineID, "pipeline").First(&parentfolder).Error
+	if errdb != nil {
+		return errdb
+	}
 
-	pfolder, _ := FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, subfolder)
+	pfolder, errfs := FolderConstructByID(db, parentfolder.FolderID, environmentID, subfolder)
+	if errfs != nil {
+		return errors.New("Folder node folder construct error: " + errfs.Error())
+	}
 
 	var output []FolderNodeUpdate
-	database.DBConn.Raw(`
+	errdb2 := db.Raw(`
 	select 
 	p.node_id,
 	p.name,
@@ -43,7 +51,10 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, subfolder stri
 	from pipeline_nodes p 
 	left join code_folders f on p.pipeline_id = f.pipeline_id and p.node_id = f.node_id and f.level='node'
 	where p.pipeline_id =? and p.environment_id = ?
-	`, pipelineID, environmentID).Scan(&output)
+	`, pipelineID, environmentID).Scan(&output).Error
+	if errdb2 != nil {
+		return errdb2
+	}
 
 	for _, n := range output {
 
@@ -67,7 +78,10 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, subfolder stri
 				Active:        true,
 			}
 
-			cfolder, rfolder, _ := CreateFolder(pipelinedir, pfolder)
+			cfolder, rfolder, errfsc := CreateFolder(pipelinedir, pfolder)
+			if errfsc != nil {
+				return errors.New("Folder node: Create folder error: " + errfsc.Error())
+			}
 
 			// If processor nodes need entrypoint files
 			// log.Println("Node types:", n.NodeType, n.NodeTypeDesc)
@@ -88,6 +102,7 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, subfolder stri
 						if dpconfig.Debug == "true" {
 							log.Println("Failed to create python processor file: ", err, path)
 						}
+						return errors.New("Folder node create processor error: " + err.Error())
 					}
 				}
 			}
@@ -119,7 +134,10 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, subfolder stri
 					FType:         "folder",
 					Active:        true,
 				}
-				UpdateFolder(n.FolderID, OLDinput, Newinput, pfolder)
+				_, _, _, erruf := UpdateFolder(database.DBConn, n.FolderID, OLDinput, Newinput, pfolder, environmentID)
+				if erruf != nil {
+					return errors.New("Folder node update folder error: " + erruf.Error())
+				}
 
 			} else {
 				n.Action = "nochange"
@@ -132,6 +150,6 @@ func FolderNodeAddUpdate(pipelineID string, environmentID string, subfolder stri
 		}
 
 		// output[i].Name = FolderFriendly(n.Name)
-
 	}
+	return nil
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/dataplane-app/dataplane/app/mainapp/Tests/testutils"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
@@ -64,10 +65,9 @@ func TestAccessGroups(t *testing.T) {
 
 	assert.Equalf(t, http.StatusOK, httpLoginResponse.StatusCode, "Login user 200 status code")
 
-	envID := testutils.TestEnvironmentID
-	if testutils.TestEnvironmentID == "" {
-		envID = "test-environment-id"
-	}
+	devEnv := models.Environment{}
+	database.DBConn.Where("name = ?", "Development").First(&devEnv)
+	envID := devEnv.ID
 
 	// -------- Create Access Group  -------------
 	mutation := `mutation {
@@ -168,8 +168,6 @@ func TestAccessGroups(t *testing.T) {
 				user_type
 			 }
 		}`
-
-	log.Println("!!!!!!!!!!!!!!!!!!!!!!!", accessgroup)
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(query, accessToken, "{}", graphQLUrlPrivate, t)
 

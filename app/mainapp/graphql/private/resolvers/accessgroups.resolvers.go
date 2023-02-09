@@ -6,9 +6,8 @@ package privateresolvers
 import (
 	"context"
 	"errors"
-	"log"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -36,7 +35,7 @@ func (r *mutationResolver) CreateAccessGroup(ctx context.Context, environmentID 
 		return "", errors.New("Requires permissions.")
 	}
 
-	log.Println(description)
+	// log.Println(description)
 	e := models.PermissionsAccessGroups{
 		AccessGroupID: uuid.New().String(),
 		Name:          name,
@@ -114,39 +113,48 @@ func (r *mutationResolver) ActivateAccessGroup(ctx context.Context, accessGroupI
 	// Check if access group alredy active
 	p := models.PermissionsAccessGroups{}
 
-	err := database.DBConn.Where("access_group_id = ?", accessGroupID).First(&p).Error
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
+
+		err := tx.Where("access_group_id = ?", accessGroupID).First(&p).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Retrive me database error.")
+		}
+
+		if p.Active == true {
+			return errors.New("User is already active.")
+		}
+
+		// Activate access group
+		err = tx.Where(&models.PermissionsAccessGroups{AccessGroupID: accessGroupID}).Select("active", false).
+			Updates(models.PermissionsAccessGroups{Active: true}).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Activate access group database error.")
+		}
+
+		// Activate access group user
+		err = tx.Where(&models.PermissionsAccessGUsers{AccessGroupID: accessGroupID}).Select("active", false).
+			Updates(models.PermissionsAccessGUsers{Active: true}).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Activate access group database error.")
+		}
+
+		return nil
+	})
 
 	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Retrive me database error.")
-	}
-
-	if p.Active == true {
-		return "", errors.New("User is already active.")
-	}
-
-	// Activate access group
-	err = database.DBConn.Where(&models.PermissionsAccessGroups{AccessGroupID: accessGroupID}).Select("active", false).
-		Updates(models.PermissionsAccessGroups{Active: true}).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Activate access group database error.")
-	}
-
-	// Activate access group user
-	err = database.DBConn.Where(&models.PermissionsAccessGUsers{AccessGroupID: accessGroupID}).Select("active", false).
-		Updates(models.PermissionsAccessGUsers{Active: true}).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Activate access group database error.")
+		return "", errors.New("Access group activated error: " + err.Error())
 	}
 
 	response := "Access group activated"
@@ -174,39 +182,48 @@ func (r *mutationResolver) DeactivateAccessGroup(ctx context.Context, accessGrou
 	// Check if access group alredy inactive
 	p := models.PermissionsAccessGroups{}
 
-	err := database.DBConn.Where("access_group_id = ?", accessGroupID).First(&p).Error
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
+
+		err := tx.Where("access_group_id = ?", accessGroupID).First(&p).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Retrive me database error.")
+		}
+
+		if p.Active == false {
+			return errors.New("User is already inactive.")
+		}
+
+		// Deactivate access group
+		err = tx.Where(&models.PermissionsAccessGroups{AccessGroupID: accessGroupID}).Select("active", true).
+			Updates(models.PermissionsAccessGroups{Active: false}).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Deactivate access group database error.")
+		}
+
+		// Deactivate access groups users
+		err = tx.Where(&models.PermissionsAccessGUsers{AccessGroupID: accessGroupID}).Select("active", true).
+			Updates(models.PermissionsAccessGUsers{Active: false}).Error
+
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return errors.New("Deactivate access group database error.")
+		}
+
+		return nil
+	})
 
 	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Retrive me database error.")
-	}
-
-	if p.Active == false {
-		return "", errors.New("User is already inactive.")
-	}
-
-	// Deactivate access group
-	err = database.DBConn.Where(&models.PermissionsAccessGroups{AccessGroupID: accessGroupID}).Select("active", true).
-		Updates(models.PermissionsAccessGroups{Active: false}).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Deactivate access group database error.")
-	}
-
-	// Deactivate access groups users
-	err = database.DBConn.Where(&models.PermissionsAccessGUsers{AccessGroupID: accessGroupID}).Select("active", true).
-		Updates(models.PermissionsAccessGUsers{Active: false}).Error
-
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
-		}
-		return "", errors.New("Deactivate access group database error.")
+		return "", errors.New("Access group deactivated error: " + err.Error())
 	}
 
 	response := "Access group deactivated"

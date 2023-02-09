@@ -23,7 +23,7 @@ const ScheduleNode = (props) => {
     const FlowState = useGlobalFlowState();
     const RunState = useGlobalRunState();
 
-    const [isEditorPage, setIsEditorPage] = useState(false);
+    const [, setIsEditorPage] = useState(false);
     const [, setIsSelected] = useState(false);
     const [borderColor, setBorderColor] = useState('#c4c4c4');
     const [schedule, setSchedule] = useState(null);

@@ -9,7 +9,9 @@ package fiber
 
 import (
 	"bufio"
-	"bytes"
+	"context"
+	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"net"
@@ -19,18 +21,14 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
-
-	"encoding/json"
-	"encoding/xml"
 
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/valyala/fasthttp"
 )
 
 // Version of current fiber package
-const Version = "2.38.1"
+const Version = "2.41.0"
 
 // Handler defines a function to serve HTTP requests.
 type Handler = func(*Ctx) error
@@ -107,15 +105,16 @@ type App struct {
 	getBytes func(s string) (b []byte)
 	// Converts byte slice to a string
 	getString func(b []byte) string
-	// Mounted and main apps
-	appList map[string]*App
 	// Hooks
 	hooks *Hooks
 	// Latest route & group
 	latestRoute *Route
-	latestGroup *Group
 	// TLS handler
 	tlsHandler *TLSHandler
+	// Mount fields
+	mountFields *mountFields
+	// Indicates if the value was explicitly configured
+	configured Config
 }
 
 // Config is a struct holding the server settings.
@@ -384,6 +383,11 @@ type Config struct {
 	//
 	// Optional. Default: DefaultColors
 	ColorScheme Colors `json:"color_scheme"`
+
+	// RequestMethods provides customizibility for HTTP methods. You can add/remove methods as you wish.
+	//
+	// Optional. Default: DefaultMethods
+	RequestMethods []string
 }
 
 // Static defines configuration options when defining static assets.
@@ -421,6 +425,11 @@ type Static struct {
 	// Optional. Default value 0.
 	MaxAge int `json:"max_age"`
 
+	// ModifyResponse defines a function that allows you to alter the response.
+	//
+	// Optional. Default: nil
+	ModifyResponse Handler
+
 	// Next defines a function to skip this middleware when returned true.
 	//
 	// Optional. Default: nil
@@ -443,6 +452,19 @@ const (
 	DefaultWriteBufferSize      = 4096
 	DefaultCompressedFileSuffix = ".fiber.gz"
 )
+
+// HTTP methods enabled by default
+var DefaultMethods = []string{
+	MethodGet,
+	MethodHead,
+	MethodPost,
+	MethodPut,
+	MethodDelete,
+	MethodConnect,
+	MethodOptions,
+	MethodTrace,
+	MethodPatch,
+}
 
 // DefaultErrorHandler that process return errors from handlers
 var DefaultErrorHandler = func(c *Ctx, err error) error {
@@ -468,9 +490,6 @@ var DefaultErrorHandler = func(c *Ctx, err error) error {
 func New(config ...Config) *App {
 	// Create a new app
 	app := &App{
-		// Create router stack
-		stack:     make([][]*Route, len(intMethod)),
-		treeStack: make([]map[string][]*Route, len(intMethod)),
 		// Create Ctx pool
 		pool: sync.Pool{
 			New: func() interface{} {
@@ -481,18 +500,22 @@ func New(config ...Config) *App {
 		config:      Config{},
 		getBytes:    utils.UnsafeBytes,
 		getString:   utils.UnsafeString,
-		appList:     make(map[string]*App),
 		latestRoute: &Route{},
-		latestGroup: &Group{},
 	}
 
 	// Define hooks
 	app.hooks = newHooks(app)
 
+	// Define mountFields
+	app.mountFields = newMountFields(app)
+
 	// Override config if provided
 	if len(config) > 0 {
 		app.config = config[0]
 	}
+
+	// Initialize configured before defaults are set
+	app.configured = app.config
 
 	if app.config.ETag {
 		if !IsChild() {
@@ -536,17 +559,21 @@ func New(config ...Config) *App {
 	if app.config.Network == "" {
 		app.config.Network = NetworkTCP4
 	}
+	if len(app.config.RequestMethods) == 0 {
+		app.config.RequestMethods = DefaultMethods
+	}
 
 	app.config.trustedProxiesMap = make(map[string]struct{}, len(app.config.TrustedProxies))
 	for _, ipAddress := range app.config.TrustedProxies {
 		app.handleTrustedProxy(ipAddress)
 	}
 
+	// Create router stack
+	app.stack = make([][]*Route, len(app.config.RequestMethods))
+	app.treeStack = make([]map[string][]*Route, len(app.config.RequestMethods))
+
 	// Override colors
 	app.config.ColorScheme = defaultColors(app.config.ColorScheme)
-
-	// Init appList
-	app.appList[""] = app
 
 	// Init app
 	app.init()
@@ -559,12 +586,11 @@ func New(config ...Config) *App {
 func (app *App) handleTrustedProxy(ipAddress string) {
 	if strings.Contains(ipAddress, "/") {
 		_, ipNet, err := net.ParseCIDR(ipAddress)
-
 		if err != nil {
-			fmt.Printf("[Warning] IP range `%s` could not be parsed. \n", ipAddress)
+			fmt.Printf("[Warning] IP range %q could not be parsed: %v\n", ipAddress, err)
+		} else {
+			app.config.trustedProxyRanges = append(app.config.trustedProxyRanges, ipNet)
 		}
-
-		app.config.trustedProxyRanges = append(app.config.trustedProxyRanges, ipNet)
 	} else {
 		app.config.trustedProxiesMap[ipAddress] = struct{}{}
 	}
@@ -578,41 +604,13 @@ func (app *App) SetTLSHandler(tlsHandler *TLSHandler) {
 	app.mutex.Unlock()
 }
 
-// Mount attaches another app instance as a sub-router along a routing path.
-// It's very useful to split up a large API as many independent routers and
-// compose them as a single service using Mount. The fiber's error handler and
-// any of the fiber's sub apps are added to the application's error handlers
-// to be invoked on errors that happen within the prefix route.
-func (app *App) Mount(prefix string, fiber *App) Router {
-	stack := fiber.Stack()
-	prefix = strings.TrimRight(prefix, "/")
-	if prefix == "" {
-		prefix = "/"
-	}
-
-	for m := range stack {
-		for r := range stack[m] {
-			route := app.copyRoute(stack[m][r])
-			app.addRoute(route.Method, app.addPrefixToRoute(prefix, route))
-		}
-	}
-
-	// Support for configs of mounted-apps and sub-mounted-apps
-	for mountedPrefixes, subApp := range fiber.appList {
-		app.appList[prefix+mountedPrefixes] = subApp
-		subApp.init()
-	}
-
-	atomic.AddUint32(&app.handlersCount, fiber.handlersCount)
-
-	return app
-}
-
 // Name Assign name to specific route.
 func (app *App) Name(name string) Router {
 	app.mutex.Lock()
-	if strings.HasPrefix(app.latestRoute.path, app.latestGroup.Prefix) {
-		app.latestRoute.Name = app.latestGroup.name + name
+
+	latestGroup := app.latestRoute.group
+	if latestGroup != nil {
+		app.latestRoute.Name = latestGroup.name + name
 	} else {
 		app.latestRoute.Name = name
 	}
@@ -638,6 +636,24 @@ func (app *App) GetRoute(name string) Route {
 	return Route{}
 }
 
+// GetRoutes Get all routes. When filterUseOption equal to true, it will filter the routes registered by the middleware.
+func (app *App) GetRoutes(filterUseOption ...bool) []Route {
+	var rs []Route
+	var filterUse bool
+	if len(filterUseOption) != 0 {
+		filterUse = filterUseOption[0]
+	}
+	for _, routes := range app.stack {
+		for _, route := range routes {
+			if filterUse && route.use {
+				continue
+			}
+			rs = append(rs, *route)
+		}
+	}
+	return rs
+}
+
 // Use registers a middleware route that will match requests
 // with the provided prefix (which is optional and defaults to "/").
 //
@@ -654,19 +670,30 @@ func (app *App) GetRoute(name string) Route {
 // This method will match all HTTP verbs: GET, POST, PUT, HEAD etc...
 func (app *App) Use(args ...interface{}) Router {
 	var prefix string
+	var prefixes []string
 	var handlers []Handler
 
 	for i := 0; i < len(args); i++ {
 		switch arg := args[i].(type) {
 		case string:
 			prefix = arg
+		case []string:
+			prefixes = arg
 		case Handler:
 			handlers = append(handlers, arg)
 		default:
 			panic(fmt.Sprintf("use: invalid handler %v\n", reflect.TypeOf(arg)))
 		}
 	}
-	app.register(methodUse, prefix, handlers...)
+
+	if len(prefixes) == 0 {
+		prefixes = append(prefixes, prefix)
+	}
+
+	for _, prefix := range prefixes {
+		app.register(methodUse, prefix, nil, handlers...)
+	}
+
 	return app
 }
 
@@ -725,7 +752,7 @@ func (app *App) Patch(path string, handlers ...Handler) Router {
 
 // Add allows you to specify a HTTP method to register a route
 func (app *App) Add(method, path string, handlers ...Handler) Router {
-	return app.register(method, path, handlers...)
+	return app.register(method, path, nil, handlers...)
 }
 
 // Static will create a file server serving static files
@@ -735,7 +762,7 @@ func (app *App) Static(prefix, root string, config ...Static) Router {
 
 // All will register the handler on all HTTP methods
 func (app *App) All(path string, handlers ...Handler) Router {
-	for _, method := range intMethod {
+	for _, method := range app.config.RequestMethods {
 		_ = app.Add(method, path, handlers...)
 	}
 	return app
@@ -746,10 +773,10 @@ func (app *App) All(path string, handlers ...Handler) Router {
 //	api := app.Group("/api")
 //	api.Get("/users", handler)
 func (app *App) Group(prefix string, handlers ...Handler) Router {
-	if len(handlers) > 0 {
-		app.register(methodUse, prefix, handlers...)
-	}
 	grp := &Group{Prefix: prefix, app: app}
+	if len(handlers) > 0 {
+		app.register(methodUse, prefix, grp, handlers...)
+	}
 	if err := app.hooks.executeOnGroupHooks(*grp); err != nil {
 		panic(err)
 	}
@@ -812,12 +839,30 @@ func (app *App) HandlersCount() uint32 {
 }
 
 // Shutdown gracefully shuts down the server without interrupting any active connections.
-// Shutdown works by first closing all open listeners and then waiting indefinitely for all connections to return to idle and then shut down.
+// Shutdown works by first closing all open listeners and then waiting indefinitely for all connections to return to idle before shutting down.
 //
 // Make sure the program doesn't exit and waits instead for Shutdown to return.
 //
 // Shutdown does not close keepalive connections so its recommended to set ReadTimeout to something else than 0.
 func (app *App) Shutdown() error {
+	return app.shutdownWithContext(context.Background())
+}
+
+// ShutdownWithTimeout gracefully shuts down the server without interrupting any active connections. However, if the timeout is exceeded,
+// ShutdownWithTimeout will forcefully close any active connections.
+// ShutdownWithTimeout works by first closing all open listeners and then waiting for all connections to return to idle before shutting down.
+//
+// Make sure the program doesn't exit and waits instead for ShutdownWithTimeout to return.
+//
+// ShutdownWithTimeout does not close keepalive connections so its recommended to set ReadTimeout to something else than 0.
+func (app *App) ShutdownWithTimeout(timeout time.Duration) error {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), timeout)
+	defer cancelFunc()
+	return app.shutdownWithContext(ctx)
+}
+
+// shutdownWithContext shuts down the server including by force if the context's deadline is exceeded.
+func (app *App) shutdownWithContext(ctx context.Context) error {
 	if app.hooks != nil {
 		defer app.hooks.executeOnShutdownHooks()
 	}
@@ -827,7 +872,7 @@ func (app *App) Shutdown() error {
 	if app.server == nil {
 		return fmt.Errorf("shutdown: server is not running")
 	}
-	return app.server.Shutdown()
+	return app.server.ShutdownWithContext(ctx)
 }
 
 // Server returns the underlying fasthttp server
@@ -859,11 +904,6 @@ func (app *App) Test(req *http.Request, msTimeout ...int) (resp *http.Response, 
 	if err != nil {
 		return nil, err
 	}
-
-	// adding back the query from URL, since dump cleans it
-	dumps := bytes.Split(dump, []byte(" "))
-	dumps[1] = []byte(req.URL.String())
-	dump = bytes.Join(dumps, []byte(" "))
 
 	// Create test connection
 	conn := new(testConn)
@@ -974,11 +1014,14 @@ func (app *App) ErrorHandler(ctx *Ctx, err error) error {
 		mountedPrefixParts int
 	)
 
-	for prefix, subApp := range app.appList {
+	for prefix, subApp := range app.mountFields.appList {
 		if prefix != "" && strings.HasPrefix(ctx.path, prefix) {
 			parts := len(strings.Split(prefix, "/"))
 			if mountedPrefixParts <= parts {
-				mountedErrHandler = subApp.config.ErrorHandler
+				if subApp.configured.ErrorHandler != nil {
+					mountedErrHandler = subApp.config.ErrorHandler
+				}
+
 				mountedPrefixParts = parts
 			}
 		}
@@ -1007,7 +1050,7 @@ func (app *App) serverErrorHandler(fctx *fasthttp.RequestCtx, err error) {
 	} else if strings.Contains(err.Error(), "timeout") {
 		err = ErrRequestTimeout
 	} else {
-		err = ErrBadRequest
+		err = NewError(StatusBadRequest, err.Error())
 	}
 
 	if catch := app.ErrorHandler(c, err); catch != nil {
@@ -1024,7 +1067,17 @@ func (app *App) startupProcess() *App {
 	}
 
 	app.mutex.Lock()
+	defer app.mutex.Unlock()
+
+	// add routes of sub-apps
+	app.mountFields.subAppsRoutesAdded.Do(func() {
+		app.appendSubAppLists(app.mountFields.appList)
+		app.addSubAppsRoutes(app.mountFields.appList)
+		app.generateAppListKeys()
+	})
+
+	// build route tree stack
 	app.buildTree()
-	app.mutex.Unlock()
+
 	return app
 }

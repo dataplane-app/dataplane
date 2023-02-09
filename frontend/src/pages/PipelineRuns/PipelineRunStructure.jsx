@@ -10,7 +10,7 @@ export const GetPipelineRun = () => {
     const FlowState = useGlobalPipelineRun();
     const getPipelineRun = useGetSinglepipelineRunAndTasks();
 
-    return async (pipelineID, runID, environmentID) => {
+    return async (pipelineID, runID, environmentID, isNewFlow) => {
         // Get single pipelines run and statuses
         let [singleRunResponse] = await getPipelineRun({
             pipelineID: pipelineID,
@@ -25,8 +25,8 @@ export const GetPipelineRun = () => {
         } else if (singleRunResponse.errors) {
             singleRunResponse.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            // setSelectedRun(singleRunResponse);
-            FlowState.elements.set(singleRunResponse.run_json);
+            // Only set the elements with the info from run if there isn't a new flow
+            !isNewFlow && FlowState.elements.set(singleRunResponse.run_json);
             return singleRunResponse;
         }
     };

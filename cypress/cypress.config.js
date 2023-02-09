@@ -24,6 +24,7 @@ module.exports = defineConfig({
             'cypress/e2e/dataplane/14-add-remove-file.cy.js',
             'cypress/e2e/dataplane/15-deployment.cy.js',
             'cypress/e2e/dataplane/16-deploy-api-trigger.cy.js',
+            'cypress/e2e/dataplane/17-rename-pipeline-nodes.cy.js',
         ],
     },
 });
