@@ -6,7 +6,6 @@ package privateresolvers
 import (
 	"context"
 	"errors"
-	"log"
 
 	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/runcode"
@@ -36,8 +35,8 @@ func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nod
 		return &privategraphql.CERun{}, errors.New("Requires permissions.")
 	}
 
-	log.Printf("📢 replayRunID: %v\n", replayRunID)
-	log.Printf("📢 replayType: %v\n", replayType)
+	// log.Printf("📢 replayRunID: %v\n", replayRunID)
+	// log.Printf("📢 replayType: %v\n", replayType)
 
 	runData, err := runcode.RunCodeFile(workerGroup, fileID, environmentID, pipelineID, nodeID, nodeTypeDesc, runID, replayRunID)
 	if err != nil {
