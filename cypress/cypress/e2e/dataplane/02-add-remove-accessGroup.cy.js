@@ -15,17 +15,21 @@ describe('Add Access group', function () {
         cy.get('#name').type('Cy Access Group').should('have.value', 'Cy Access Group');
         cy.get('#description').type('Description').should('have.value', 'Description');
 
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.contains('Save').should('exist', { timeout: 6000 }).click();
 
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 
     it('Delete Access group', function () {
         cy.contains('Cy Access Group').should('exist', { timeout: 6000 }).click();
 
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.contains('Delete access group').should('exist', { timeout: 6000 }).click();
         cy.contains('Yes').should('exist', { timeout: 6000 }).click();
 
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 });
