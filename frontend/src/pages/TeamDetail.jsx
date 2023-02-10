@@ -1,5 +1,5 @@
 import { Box, Grid, Typography, Button, TextField, Drawer, Autocomplete } from '@mui/material';
-import { useEffect, useState, useRef, useContext } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import CustomChip from '../components/CustomChip';
@@ -14,7 +14,7 @@ import ct from 'countries-and-timezones';
 import { useGetUser } from '../graphql/getUser';
 import { useAvailablePermissions } from '../graphql/availablePermissions';
 import { useUpdateUser } from '../graphql/updateUser';
-import { useMe } from '../graphql/me';
+import { useGlobalMeState } from '../components/Navbar';
 
 import { useGetUserPermissions } from '../graphql/getUserPermissions';
 import { useUpdatePermissionToUser } from '../graphql/updatePermissionToUser';
@@ -28,14 +28,15 @@ import { useUpdateUserToAccessGroup } from '../graphql/updateUserToAccessGroup';
 import { useGetUserAccessGroups } from '../graphql/getUserAccessGroups';
 import { useRemoveUserFromAccessGroup } from '../graphql/removeUserFromAccessGroup';
 import { useGetUserPipelinePermissions } from '../graphql/getUserPipelinePermissions';
-import { EnvironmentContext } from '../App';
 import { useDeleteSpecificPermission } from '../graphql/deleteSpecificPermission';
 import { useGetUserDeploymentPermissions } from '../graphql/getUserDeploymentPermissions';
 import { formatSpecialPermission } from '../utils/formatString';
+import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 export default function TeamDetail() {
-    // Context
-    const [globalEnvironment] = useContext(EnvironmentContext);
+    // Global state
+    const Environment = useGlobalEnvironmentState();
+    const MeData = useGlobalMeState();
 
     // Ref for scroll to top
     const scrollRef = useRef(null);
@@ -48,7 +49,6 @@ export default function TeamDetail() {
 
     // User states
     const [user, setUser] = useState({});
-    const [meData, setMeData] = useState({});
     const [availableEnvironments, setAvailableEnvironments] = useState([]);
     const [userEnvironments, setUserEnvironments] = useState([]);
     const [selectedUserEnvironment, setSelectedUserEnvironment] = useState(null);
@@ -69,21 +69,20 @@ export default function TeamDetail() {
     const [isOpenDeactivateUser, setIsOpenDeactivateUser] = useState(false);
 
     // Custom GraphQL hooks
-    const getMeData = useGetMeData(setMeData);
     const getUserData = useGetUserData(setUser, reset);
     const getEnvironments = useGetEnvironmentsData(setAvailableEnvironments);
-    const getUserEnvironments = useGetUserEnvironments_(setUserEnvironments, user.user_id, globalEnvironment?.id);
+    const getUserEnvironments = useGetUserEnvironments_(setUserEnvironments, user.user_id, Environment.id.get());
     const removeUserFromEnv = useRemoveUserFromEnv(getUserEnvironments);
     const addUserToEnv = useAddUserToEnv(getUserEnvironments);
-    const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, globalEnvironment?.id);
-    const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, globalEnvironment?.id);
-    const getUserPipelinePermissions = useGetUserPipelinePermissionsHook(setSpecificPermissions, user.user_id, globalEnvironment?.id);
-    const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, globalEnvironment?.id, user.user_id);
+    const getAvailablePermissions = useGetAvailablePermissions(setAvailablePermissions, Environment.id.get());
+    const getUserPermissions = useGetUserPermissions_(setUserPermissions, user.user_id, Environment.id.get());
+    const getUserPipelinePermissions = useGetUserPipelinePermissionsHook(setSpecificPermissions, user.user_id, Environment.id.get());
+    const updatePermission = useUpdatePermissions(getUserPermissions, selectedPermission, Environment.id.get(), user.user_id);
     const deletePermission = useDeletePermissionHook(getUserPermissions);
     const deleteSpecificPermission = useDeleteSpecificPermissionHook(getUserPipelinePermissions);
-    const getAccessGroups = useGetAccessGroups_(setAccessGroups, globalEnvironment?.id, user.user_id);
-    const getUserAccessGroups = useGetUserAccessGroups_(setUserAccessGroups, globalEnvironment?.id, user.user_id);
-    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(globalEnvironment?.id, user.user_id, getUserAccessGroups, accessGroup);
+    const getAccessGroups = useGetAccessGroups_(setAccessGroups, Environment.id.get(), user.user_id);
+    const getUserAccessGroups = useGetUserAccessGroups_(setUserAccessGroups, Environment.id.get(), user.user_id);
+    const updateUserToAccessGroup = useUpdateUserToAccessGroup_(Environment.id.get(), user.user_id, getUserAccessGroups, accessGroup);
     const removeUserFromAccessGroup = useRemoveUserFromAccessGroup_(getUserAccessGroups);
 
     // Get user data on load
@@ -91,53 +90,52 @@ export default function TeamDetail() {
         // Scroll to top on load
         scrollRef.current.parentElement.scrollIntoView();
 
-        getMeData();
         getUserData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
         // Get user permissions when user environment and id are available and if empty
-        if (globalEnvironment && user && userPermissions.length === 0) {
+        if (Environment.id.get() && user && userPermissions.length === 0) {
             getUserPermissions();
         }
 
         // Get all available permissions when user environment and id are available and if empty
-        if (globalEnvironment && user) {
+        if (Environment.id.get() && user) {
             getAvailablePermissions();
             getUserPipelinePermissions();
         }
 
         // Get all available environments when user environment and id are available and if empty
-        if (globalEnvironment && user.user_id && userEnvironments.length === 0) {
+        if (Environment.id.get() && user.user_id && userEnvironments.length === 0) {
             getUserEnvironments();
         }
 
         // Get environments the user belongs when user environment and id are available and if empty
-        if (globalEnvironment && user && availableEnvironments.length === 0) {
+        if (Environment.id.get() && user && availableEnvironments.length === 0) {
             getEnvironments();
         }
 
         // Get all access groups when environment and id are available and if empty
-        if (globalEnvironment && user.user_id && accessGroups.length === 0) {
+        if (Environment.id.get() && user.user_id && accessGroups.length === 0) {
             getAccessGroups();
         }
 
         // Get access groups the user belongs when user environment and id are available and if empty
-        if (globalEnvironment && user.user_id && userAccessGroups.length === 0) {
+        if (Environment.id.get() && user.user_id && userAccessGroups.length === 0) {
             getUserAccessGroups();
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [globalEnvironment?.id, user.user_id]);
+    }, [Environment.id.get(), user.user_id]);
 
     useEffect(() => {
         // Update available permissions' ResourceIDs on environment change
         setAvailablePermissions(
-            availablePermissions.map(({ a, ...permission }) => ({ ...permission, ResourceID: permission.Level === 'environment' ? globalEnvironment.id : permission.ResourceID }))
+            availablePermissions.map(({ a, ...permission }) => ({ ...permission, ResourceID: permission.Level === 'environment' ? Environment.id.get() : permission.ResourceID }))
         );
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [globalEnvironment?.id]);
+    }, [Environment.id.get()]);
 
     // Submit user details
     const onSubmit = useSubmitData(user.user_id);
@@ -202,7 +200,7 @@ export default function TeamDetail() {
 
                         <Box sx={{ margin: '2.45rem 0', borderTop: 1, borderColor: 'divider' }}></Box>
 
-                        {user.email && meData.email ? (
+                        {user.email && MeData.email.get() ? (
                             <Box>
                                 <Typography component="h3" variant="h3" color="text.primary">
                                     Control
@@ -217,7 +215,7 @@ export default function TeamDetail() {
                                 </Button>
                                 <Button
                                     onClick={() => setIsOpenDeactivateUser(true)}
-                                    disabled={user.user_id === meData.user_id ? true : false}
+                                    disabled={user.user_id === MeData.user_id.get() ? true : false}
                                     size="small"
                                     variant="outlined"
                                     color={user.status === 'active' ? 'error' : 'success'}
@@ -226,14 +224,14 @@ export default function TeamDetail() {
                                 </Button>
                                 <Button
                                     onClick={() => setIsOpenDeleteUser(true)}
-                                    disabled={user.user_id === meData.user_id ? true : false}
+                                    disabled={user.user_id === MeData.user_id.get() ? true : false}
                                     size="small"
                                     variant="outlined"
                                     color="error"
                                     sx={{ fontWeight: '700', width: '100%', mt: '.78rem', fontSize: '.81rem', border: 2, '&:hover': { border: 2 } }}>
                                     Delete user
                                 </Button>
-                                {user.user_id !== meData.user_id ? (
+                                {user.user_id !== MeData.user_id.get() ? (
                                     <Typography color="rgba(248, 0, 0, 1)" lineHeight="15.23px" sx={{ mt: '.56rem' }} variant="subtitle2">
                                         Warning: this action can't be undone. It is usually better to deactivate a user.
                                     </Typography>
@@ -319,7 +317,7 @@ export default function TeamDetail() {
                                     // Filter out available access groups from the ones user belongs
                                     options={
                                         accessGroups.filter(
-                                            (row) => !userAccessGroups.map((a) => a.AccessGroupID).includes(row.AccessGroupID) && row.EnvironmentID === globalEnvironment.id
+                                            (row) => !userAccessGroups.map((a) => a.AccessGroupID).includes(row.AccessGroupID) && row.EnvironmentID === Environment.id.get()
                                         ) || ''
                                     }
                                     getOptionLabel={(option) => option.Name}
@@ -343,7 +341,7 @@ export default function TeamDetail() {
 
                             <Box mt="1.31rem">
                                 {userAccessGroups
-                                    .filter((row) => row.EnvironmentID === globalEnvironment.id)
+                                    .filter((row) => row.EnvironmentID === Environment.id.get())
                                     .map((row) => (
                                         <Grid display="flex" alignItems="center" key={row.Name} mt={1.5} mb={1.5}>
                                             <Box
@@ -384,7 +382,7 @@ export default function TeamDetail() {
                                     }}
                                     sx={{ minWidth: '280px' }}
                                     // Filter out user's permissions from available permissions
-                                    options={filterPermissionsDropdown(availablePermissions, userPermissions, globalEnvironment?.id)}
+                                    options={filterPermissionsDropdown(availablePermissions, userPermissions, Environment.id.get())}
                                     getOptionLabel={(option) => option.Label}
                                     renderInput={(params) => (
                                         <TextField {...params} label="Available permissions" id="available_permissions" size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />
@@ -422,13 +420,16 @@ export default function TeamDetail() {
                                             .map((permission) => (
                                                 <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
                                                     <Box
-                                                        onClick={() => !(user.user_id === meData.user_id && permission.Label === 'Admin') && deletePermission(permission)}
+                                                        onClick={() => !(user.user_id === MeData.user_id.get() && permission.Label === 'Admin') && deletePermission(permission)}
                                                         component={FontAwesomeIcon}
                                                         sx={{
                                                             fontSize: '17px',
                                                             mr: '7px',
-                                                            color: user.user_id === meData.user_id && permission.Label === 'Admin' ? 'rgba(0, 0, 0, 0.26)' : 'rgba(248, 0, 0, 1)',
-                                                            cursor: !(user.user_id === meData.user_id && permission.Label === 'Admin') && 'pointer',
+                                                            color:
+                                                                user.user_id === MeData.user_id.get() && permission.Label === 'Admin'
+                                                                    ? 'rgba(0, 0, 0, 0.26)'
+                                                                    : 'rgba(248, 0, 0, 1)',
+                                                            cursor: !(user.user_id === MeData.user_id.get() && permission.Label === 'Admin') && 'pointer',
                                                         }}
                                                         icon={faTrashAlt}
                                                     />
@@ -443,18 +444,18 @@ export default function TeamDetail() {
 
                             {/* Environment permissions */}
                             {/* Check if there are any permissions. If not, hide the box */}
-                            {userPermissions.filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === globalEnvironment.id).length ? (
+                            {userPermissions.filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === Environment.id.get()).length ? (
                                 <Box mt="2.31rem">
                                     <Typography component="h3" variant="h3" color="text.primary">
                                         Environment permissions
                                     </Typography>
                                     <Typography variant="subtitle2" mt=".20rem">
-                                        Environment: {globalEnvironment?.name}
+                                        Environment: {Environment.name.get()}
                                     </Typography>
 
                                     <Box mt={2} id="environment-permissions">
                                         {userPermissions
-                                            .filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === globalEnvironment.id)
+                                            .filter((permission) => permission.Level === 'environment' && permission.EnvironmentID === Environment.id.get())
                                             .map((permission) => (
                                                 <Grid display="flex" alignItems="center" key={permission.Label} mt={1.5} mb={1.5}>
                                                     <Box
@@ -484,7 +485,7 @@ export default function TeamDetail() {
 
                                     <Box mt={2} id="specific-permissions">
                                         {specificPermissions
-                                            ?.filter((permission) => permission.EnvironmentID === globalEnvironment?.id)
+                                            ?.filter((permission) => permission.EnvironmentID === Environment.id.get())
                                             .map((permission) => (
                                                 <Grid display="flex" alignItems="center" width="200%" key={permission.ResourceID} mt={1.5} mb={1.5}>
                                                     <Box
@@ -551,27 +552,6 @@ const useSubmitData = (userId) => {
         } else {
             closeSnackbar();
             enqueueSnackbar(`Success`, { variant: 'success' });
-        }
-    };
-};
-
-const useGetMeData = (setMeData) => {
-    // GraphQL hook
-    const getMe = useMe();
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    // Get me data on load
-    return async () => {
-        const response = await getMe();
-
-        if (response.r === 'error') {
-            closeSnackbar();
-            enqueueSnackbar("Can't get me data: " + response.msg, { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            setMeData(response);
         }
     };
 };

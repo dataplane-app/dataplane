@@ -6,7 +6,6 @@ import { Box, Grid, Menu, MenuItem, Typography } from '@mui/material';
 import { useGetEnvironments } from '../../graphql/getEnvironments';
 import { useUpdatePreferences } from '../../graphql/updatePreferences';
 import { useGetOnePreference } from '../../graphql/getOnePreference';
-import { EnvironmentContext } from '../../App';
 import { createState, useState as useHookState } from '@hookstate/core';
 
 export const globalEnvironmentState = createState({ id: '', name: '' });
@@ -17,8 +16,6 @@ export const useGlobalEnvironmentState = () => useHookState(globalEnvironmentSta
 export const useGlobalEnvironmentsState = () => useHookState(globalEnvironmentsState);
 
 const EnviromentDropdown = () => {
-    // Context
-    const [, setEnvironmentId] = React.useContext(EnvironmentContext);
     // Global Environment state
     const GlobalEnvironmentID = useHookState(globalEnvironmentState);
 
@@ -65,12 +62,10 @@ const EnviromentDropdown = () => {
                 if (getOnePreferenceResponse.value) {
                     setSelectedEnviroment(getOnePreferenceResponse.value);
                     const environmentName = getEnvironmentsResponse.filter((a) => a.id === getOnePreferenceResponse.value)[0].name;
-                    setEnvironmentId({ name: environmentName, id: getOnePreferenceResponse.value });
                     GlobalEnvironmentID.set({ name: environmentName, id: getOnePreferenceResponse.value });
                 } else {
                     // Else, defaults to first environment in DB
                     setSelectedEnviroment(getEnvironmentsResponse[0].id);
-                    setEnvironmentId({ name: getEnvironmentsResponse[0].name, id: getEnvironmentsResponse[0].id });
                     GlobalEnvironmentID.set({ name: getEnvironmentsResponse[0].name, id: getEnvironmentsResponse[0].id });
                 }
             }
@@ -109,7 +104,6 @@ const EnviromentDropdown = () => {
     async function onSelectEnvironment(env) {
         const input = { input: { preference: 'environment', value: env.id } };
         const updateEnvironmentsResponse = await updatePreferences(input);
-        setEnvironmentId({ name: env.name, id: env.id });
         if (!updateEnvironmentsResponse.errors) {
             setSelectedEnviroment(env.id);
             GlobalEnvironmentID.set({ name: env.name, id: env.id });

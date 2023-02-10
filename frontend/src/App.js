@@ -44,8 +44,6 @@ export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
 });
 
-export const EnvironmentContext = React.createContext(null);
-
 function App() {
     // Theme
     const [mode, setMode] = React.useState('light');
@@ -57,10 +55,6 @@ function App() {
         }),
         []
     );
-
-    // Environment provider
-    const [environment, setEnvironment] = React.useState(null);
-    const environmentProvider = React.useMemo(() => [environment, setEnvironment], [environment, setEnvironment]);
 
     const theme = React.useMemo(() => createTheme(createCustomTheme(mode)), [mode]);
 
@@ -83,176 +77,174 @@ function App() {
 
     return (
         <ColorModeContext.Provider value={colorModeToggle}>
-            <EnvironmentContext.Provider value={environmentProvider}>
-                <ThemeProvider theme={theme}>
-                    <SnackbarProvider
-                        hideIconVariant={true}
-                        ref={notistackRef}
-                        anchorOrigin={{
-                            vertical: 'top',
-                            horizontal: 'right',
-                        }}
-                        action={(key) => (
-                            <Button onClick={onClickDismiss(key)} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                <Box component={FontAwesomeIcon} color="white" icon={faTimesCircle} />
-                            </Button>
-                        )}
-                        autoHideDuration={3000}>
-                        <Box className="app" backgroundColor="background.main">
-                            <UserAuth refreshTokenUrl="/app/refreshtoken" LogincallbackUrl="/loginCallback" loginUrl="/webapp/login" logoutUrl="/webapp/logout">
-                                <CssBaseline />
-                                <UseCheckTheme />
-                                <Switch>
-                                    <Route exact path="/congratulations">
-                                        <Congratulations />
-                                    </Route>
+            <ThemeProvider theme={theme}>
+                <SnackbarProvider
+                    hideIconVariant={true}
+                    ref={notistackRef}
+                    anchorOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                    }}
+                    action={(key) => (
+                        <Button onClick={onClickDismiss(key)} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <Box component={FontAwesomeIcon} color="white" icon={faTimesCircle} />
+                        </Button>
+                    )}
+                    autoHideDuration={3000}>
+                    <Box className="app" backgroundColor="background.main">
+                        <UserAuth refreshTokenUrl="/app/refreshtoken" LogincallbackUrl="/loginCallback" loginUrl="/webapp/login" logoutUrl="/webapp/logout">
+                            <CssBaseline />
+                            <UseCheckTheme />
+                            <Switch>
+                                <Route exact path="/congratulations">
+                                    <Congratulations />
+                                </Route>
 
-                                    <Route exact path="/get-started">
-                                        <GetStarted />
-                                    </Route>
+                                <Route exact path="/get-started">
+                                    <GetStarted />
+                                </Route>
 
-                                    <Route exact path="/login">
-                                        <LoginUser />
-                                    </Route>
+                                <Route exact path="/login">
+                                    <LoginUser />
+                                </Route>
 
-                                    <PrivateRoute exact path="/logout">
-                                        <LogoutUser />
-                                    </PrivateRoute>
+                                <PrivateRoute exact path="/logout">
+                                    <LogoutUser />
+                                </PrivateRoute>
 
-                                    <PrivateRoute exact path="/editor/:pipelineId/:nodeId">
-                                        <PipelineEditor />
-                                    </PrivateRoute>
+                                <PrivateRoute exact path="/editor/:pipelineId/:nodeId">
+                                    <PipelineEditor />
+                                </PrivateRoute>
 
-                                    <PrivateRoute
-                                        exact
-                                        path={[
-                                            '/',
-                                            '/workers',
-                                            '/workers/:workerId',
-                                            '/teams',
-                                            '/teams/:teamId',
-                                            '/access/:accessId',
-                                            '/myaccount/:memberId',
-                                            '/access_groups',
-                                            '/settings',
-                                            '/settings/environment/:environmentId',
-                                            '/secrets',
-                                            '/secrets/:secretId',
-                                            '/addsecret',
-                                            '/notfound',
-                                            '/pipelines/view/:pipelineId',
-                                            '/pipelines/permissions/:pipelineId',
-                                            '/pipelines/flow/:pipelineId',
-                                            '/pipelines/deploy/:pipelineId',
-                                            '/deployments',
-                                            '/deployments/permissions/:deploymentId',
-                                            '/deployments/view/:deploymentId/:version?',
-                                            '/support',
-                                            '/feedback',
-                                            '/learn',
-                                        ]}>
-                                        <Switch>
-                                            <Layout>
-                                                <Route exact path="/">
-                                                    <Pipelines />
-                                                </Route>
-                                                <Route exact path="/deployments">
-                                                    <Deployments />
-                                                </Route>
-                                                <Route path="/deployments/view/:deploymentId/:version?">
-                                                    <DeploymentView />
-                                                </Route>
-                                                <Route path="/deployments/permissions/:deploymentId">
-                                                    <DeploymentPermissions />
-                                                </Route>
-                                                <Route exact path="/workers">
-                                                    <Workers />
-                                                </Route>
-                                                <Route exact path="/workers/:workerId">
-                                                    <WorkerDetail />
-                                                </Route>
-                                                <Route exact path="/teams">
-                                                    <Teams />
-                                                </Route>
-                                                <Route exact path="/teams/:teamId">
-                                                    <TeamDetail />
-                                                </Route>
-                                                <Route exact path="/access/:accessId">
-                                                    <TeamGroup />
-                                                </Route>
-                                                <Route exact path="/access_groups">
-                                                    <AccessGroups />
-                                                </Route>
-                                                <Route exact path="/myaccount/:memberId">
-                                                    <MemberDetail />
-                                                </Route>
-                                                <Route exact path="/settings">
-                                                    <Settings />
-                                                </Route>
-                                                <Route exact path="/settings/environment/:environmentId">
-                                                    <EnvironmentDetail />
-                                                </Route>
-                                                <Route exact path="/secrets">
-                                                    <Secrets />
-                                                </Route>
-                                                <Route exact path="/secrets/:secretId">
-                                                    <SecretDetail />
-                                                </Route>
-                                                <Route exact path="/addsecret">
-                                                    <AddSecret />
-                                                </Route>
-                                                <Route exact path="/pipelines/view/:pipelineId">
-                                                    <View />
-                                                </Route>
-                                                <Route exact path="/pipelines/permissions/:pipelineId">
-                                                    <PipelinesPermission />
-                                                </Route>
-                                                <Route exact path="/pipelines/flow/:pipelineId">
-                                                    <Flow />
-                                                </Route>
-                                                <Route exact path="/pipelines/deploy/:pipelineId">
-                                                    <Deploy />
-                                                </Route>
-                                                <Route
-                                                    exact
-                                                    path="/support"
-                                                    component={() => {
-                                                        window.open('https://github.com/dataplane-app/dataplane/issues', '_blank');
-                                                        return null;
-                                                    }}
-                                                />
-                                                <Route
-                                                    exact
-                                                    path="/feedback"
-                                                    component={() => {
-                                                        window.open('https://github.com/dataplane-app/dataplane/discussions', '_blank');
-                                                        return null;
-                                                    }}
-                                                />
-                                                <Route
-                                                    exact
-                                                    path="/learn"
-                                                    component={() => {
-                                                        window.open('https://dataplane.app/docs/', '_blank');
-                                                        return null;
-                                                    }}
-                                                />
-                                                <Route exact path="/notfound">
-                                                    <NotFound />
-                                                </Route>
-                                            </Layout>
-                                        </Switch>
-                                    </PrivateRoute>
+                                <PrivateRoute
+                                    exact
+                                    path={[
+                                        '/',
+                                        '/workers',
+                                        '/workers/:workerId',
+                                        '/teams',
+                                        '/teams/:teamId',
+                                        '/access/:accessId',
+                                        '/myaccount/:memberId',
+                                        '/access_groups',
+                                        '/settings',
+                                        '/settings/environment/:environmentId',
+                                        '/secrets',
+                                        '/secrets/:secretId',
+                                        '/addsecret',
+                                        '/notfound',
+                                        '/pipelines/view/:pipelineId',
+                                        '/pipelines/permissions/:pipelineId',
+                                        '/pipelines/flow/:pipelineId',
+                                        '/pipelines/deploy/:pipelineId',
+                                        '/deployments',
+                                        '/deployments/permissions/:deploymentId',
+                                        '/deployments/view/:deploymentId/:version?',
+                                        '/support',
+                                        '/feedback',
+                                        '/learn',
+                                    ]}>
+                                    <Switch>
+                                        <Layout>
+                                            <Route exact path="/">
+                                                <Pipelines />
+                                            </Route>
+                                            <Route exact path="/deployments">
+                                                <Deployments />
+                                            </Route>
+                                            <Route path="/deployments/view/:deploymentId/:version?">
+                                                <DeploymentView />
+                                            </Route>
+                                            <Route path="/deployments/permissions/:deploymentId">
+                                                <DeploymentPermissions />
+                                            </Route>
+                                            <Route exact path="/workers">
+                                                <Workers />
+                                            </Route>
+                                            <Route exact path="/workers/:workerId">
+                                                <WorkerDetail />
+                                            </Route>
+                                            <Route exact path="/teams">
+                                                <Teams />
+                                            </Route>
+                                            <Route exact path="/teams/:teamId">
+                                                <TeamDetail />
+                                            </Route>
+                                            <Route exact path="/access/:accessId">
+                                                <TeamGroup />
+                                            </Route>
+                                            <Route exact path="/access_groups">
+                                                <AccessGroups />
+                                            </Route>
+                                            <Route exact path="/myaccount/:memberId">
+                                                <MemberDetail />
+                                            </Route>
+                                            <Route exact path="/settings">
+                                                <Settings />
+                                            </Route>
+                                            <Route exact path="/settings/environment/:environmentId">
+                                                <EnvironmentDetail />
+                                            </Route>
+                                            <Route exact path="/secrets">
+                                                <Secrets />
+                                            </Route>
+                                            <Route exact path="/secrets/:secretId">
+                                                <SecretDetail />
+                                            </Route>
+                                            <Route exact path="/addsecret">
+                                                <AddSecret />
+                                            </Route>
+                                            <Route exact path="/pipelines/view/:pipelineId">
+                                                <View />
+                                            </Route>
+                                            <Route exact path="/pipelines/permissions/:pipelineId">
+                                                <PipelinesPermission />
+                                            </Route>
+                                            <Route exact path="/pipelines/flow/:pipelineId">
+                                                <Flow />
+                                            </Route>
+                                            <Route exact path="/pipelines/deploy/:pipelineId">
+                                                <Deploy />
+                                            </Route>
+                                            <Route
+                                                exact
+                                                path="/support"
+                                                component={() => {
+                                                    window.open('https://github.com/dataplane-app/dataplane/issues', '_blank');
+                                                    return null;
+                                                }}
+                                            />
+                                            <Route
+                                                exact
+                                                path="/feedback"
+                                                component={() => {
+                                                    window.open('https://github.com/dataplane-app/dataplane/discussions', '_blank');
+                                                    return null;
+                                                }}
+                                            />
+                                            <Route
+                                                exact
+                                                path="/learn"
+                                                component={() => {
+                                                    window.open('https://dataplane.app/docs/', '_blank');
+                                                    return null;
+                                                }}
+                                            />
+                                            <Route exact path="/notfound">
+                                                <NotFound />
+                                            </Route>
+                                        </Layout>
+                                    </Switch>
+                                </PrivateRoute>
 
-                                    <Route exact path="*">
-                                        <Redirect to="/notfound" />
-                                    </Route>
-                                </Switch>
-                            </UserAuth>
-                        </Box>
-                    </SnackbarProvider>
-                </ThemeProvider>
-            </EnvironmentContext.Provider>
+                                <Route exact path="*">
+                                    <Redirect to="/notfound" />
+                                </Route>
+                            </Switch>
+                        </UserAuth>
+                    </Box>
+                </SnackbarProvider>
+            </ThemeProvider>
         </ColorModeContext.Provider>
     );
 }
