@@ -1,21 +1,21 @@
 import { Box, Grid, Typography, Button, TextField, Drawer, Autocomplete } from '@mui/material';
 import { useEffect, useState, useContext } from 'react';
-import CustomChip from '../components/CustomChip';
-import ChangeMyPasswordDrawer from '../components/DrawerContent/ChangeMyPasswordDrawer';
-import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
+import CustomChip from '../../components/CustomChip';
+import ChangeMyPasswordDrawer from '../../components/DrawerContent/ChangeMyPasswordDrawer';
+import DeleteUserDrawer from '../../components/DrawerContent/DeleteUserDrawer';
 import { useHistory } from 'react-router-dom';
-import { useMe } from '../graphql/me';
-import { useUpdateMe } from '../graphql/updateMe';
-import { useGetMyPipelinePermissions } from '../graphql/getMyPipelinePermissions';
-import { useGetMyDeploymentPermissions } from '../graphql/getMyDeploymentPermissions';
-import { EnvironmentContext } from '../App';
+import { useMe } from '../../graphql/me';
+import { useUpdateMe } from '../../graphql/updateMe';
+import { useGetMyPipelinePermissions } from '../../graphql/getMyPipelinePermissions';
+import { useGetMyDeploymentPermissions } from '../../graphql/getMyDeploymentPermissions';
+import { EnvironmentContext } from '../../App';
 import ct from 'countries-and-timezones';
 import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
-import { useMyPermissions } from '../graphql/getMyPermissions';
-import { useGlobalEnvironmentsState } from '../components/EnviromentDropdown';
-import { useGetMyAccessGroups } from '../graphql/getMyAccessGroups';
-import { formatSpecialPermission } from '../utils/formatString';
+import { useMyPermissions } from '../../graphql/getMyPermissions';
+import { useGlobalEnvironmentsState } from '../../components/EnviromentDropdown';
+import { useGetMyAccessGroups } from '../../graphql/getMyAccessGroups';
+import { formatSpecialPermission } from '../../utils/formatString';
 
 const MemberDetail = () => {
     // Context
