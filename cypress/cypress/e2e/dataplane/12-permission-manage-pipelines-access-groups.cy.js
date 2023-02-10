@@ -22,32 +22,40 @@ describe('Give pipeline permission to a user', function () {
         cy.get('#name').type('Pipeline Access Group').should('have.value', 'Pipeline Access Group');
         cy.get('#description').type('Description').should('have.value', 'Description');
 
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.contains('Save').should('exist', { timeout: 6000 }).click();
 
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
 
         cy.contains('Pipeline Access Group').click();
     });
 
     it('Add user Jimmy to Access group', function () {
         cy.get('#members_autocomplete_access_group').type('Jimmy User', { force: true }).should('have.value', 'Jimmy User');
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
         cy.get('#members_autocomplete_access_group').parent().parent().parent().next().should('exist', { timeout: 6000 }).click({ force: true });
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 
     it('Give "View all pipelines" permission to Access group', function () {
         cy.get('#available_permissions_autocomplete').type('View all pipelines', { force: true }).should('have.value', 'View all pipelines');
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
         cy.get('#available_permissions_autocomplete').parent().parent().parent().next().click({ force: true });
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 
     it('Give "Manage pipeline permissions" permission to Access group', function () {
         cy.get('#available_permissions_autocomplete').type('Manage pipeline permissions', { force: true }).should('have.value', 'Manage pipeline permissions');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.get('#available_permissions_autocomplete').parent().parent().parent().next().click({ force: true });
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 
     // #1 Verify user belongs to an access group with 'View all pipelines' permissions can view pipelines

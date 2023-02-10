@@ -21,9 +21,11 @@ describe('Add User', function () {
         cy.get('#timezone-box').type('Europe/London', { force: true }).should('have.value', 'Europe/London');
         cy.get('.MuiAutocomplete-popper').should('exist', { timeout: 6000 }).click();
 
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.contains('Save').should('exist', { timeout: 6000 }).click();
 
-        cy.get('#notistack-snackbar').should('contain', 'User created: Jimmy User (environment@email.com)');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
 
         cy.wait(500);
         cy.contains('Jimmy User').should('exist', { timeout: 6000 }).click({ force: true });
@@ -33,12 +35,8 @@ describe('Add User', function () {
         cy.wait(100);
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
         cy.get('#environment-add').should('exist', { timeout: 6000 }).click({ force: true });
-        cy.get('#notistack-snackbar').should('contain', 'Success');
-
-        // cy.get('#available_environments_autocomplete').type('Production', { force: true }).should('have.value', 'Production');
-        // cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').click();
-        // cy.get('#environment-add').click({force:true});
-        // cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
 
         // Verify
         cy.get('#belongs-to-environments').children().contains('Development').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
@@ -57,10 +55,12 @@ describe('Add User', function () {
         cy.get('#timezone-box').type('Europe/London', { force: true }).should('have.value', 'Europe/London');
         cy.get('.MuiAutocomplete-popper').should('exist', { timeout: 6000 }).click();
 
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.contains('Save').should('exist', { timeout: 6000 }).click();
         cy.wait(1500);
 
-        cy.get('#notistack-snackbar').should('contain', 'User created: Jane User (changeuser@email.com)');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
 
         cy.wait(500);
         cy.contains('Jane User').should('exist', { timeout: 6000 }).click({ force: true });
@@ -70,7 +70,8 @@ describe('Add User', function () {
         cy.wait(100);
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
         cy.get('#environment-add').should('exist', { timeout: 6000 }).click({ force: true });
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
 
         // Verify
         cy.get('#belongs-to-environments').children().contains('Development').prev().should('have.css', 'color', 'rgb(248, 0, 0)');
@@ -88,9 +89,11 @@ describe('Add User', function () {
         cy.get('#timezone-box').type('Europe/London', { force: true }).should('have.value', 'Europe/London');
         cy.get('.MuiAutocomplete-popper').should('exist', { timeout: 6000 }).click();
 
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.contains('Save').should('exist', { timeout: 6000 }).click();
 
-        cy.get('#notistack-snackbar').should('contain', 'User created: John User (johnd@email.com)');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 
     it('Remove user John', function () {
@@ -98,8 +101,10 @@ describe('Add User', function () {
         cy.contains('John User').click({ force: true });
 
         cy.contains('Delete user').click();
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.contains('Yes').should('exist', { timeout: 6000 }).click();
 
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 });

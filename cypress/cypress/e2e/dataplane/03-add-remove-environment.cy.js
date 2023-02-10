@@ -15,9 +15,11 @@ describe('Add Environment', function () {
         cy.get('#name').type('ProductionCy').should('have.value', 'ProductionCy');
         cy.get('#description').type('Description').should('have.value', 'Description');
 
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.get('#environment-save').should('exist', { timeout: 6000 }).click();
 
-        cy.get('#notistack-snackbar').should('contain', 'Environment added: ProductionCy');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 
     it('Delete Environment', function () {
@@ -25,8 +27,10 @@ describe('Add Environment', function () {
         cy.contains('ProductionCy').should('exist', { timeout: 6000 }).click();
 
         cy.contains('Delete environment').should('exist', { timeout: 6000 }).click();
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.contains('Yes').should('exist', { timeout: 6000 }).click();
 
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 });
