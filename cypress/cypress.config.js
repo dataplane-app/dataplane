@@ -7,6 +7,7 @@ module.exports = defineConfig({
             // implement node event listeners here
         },
         videoUploadOnPasses: false,
+        testIsolation: false,
         specPattern: [
             'cypress/e2e/dataplane/01-get-started.cy.js',
             'cypress/e2e/dataplane/02-add-remove-accessGroup.cy.js',

@@ -1,4 +1,14 @@
 describe('Add Access group', function () {
+
+    // cy.session("Login", () => {
+    //     cy.visit('http://localhost:9002/webapp/login');
+
+    //     cy.get('#email').type('admin@email.com').should('have.value', 'admin@email.com');
+    //     cy.get('#password').type('Hello123!').should('have.value', 'Hello123!');
+    //     cy.contains('button', 'Login').should('exist', { timeout: 6000 }).click();
+    //     cy.url().should('include', '/webapp');
+    // });
+
     it('Login', function () {
         cy.visit('http://localhost:9002/webapp/login');
 
