@@ -54,6 +54,8 @@ services:
     image: dataplane/dataplane:latest
     ports:
       - 9002:9001
+    depends_on:
+      - redis-service
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       DP_DB_HOST: postgres-test
@@ -85,6 +87,8 @@ services:
     image: dataplane/dataplane:latest
     deploy:
       replicas: 2
+    depends_on:
+      - redis-service
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       DP_DB_HOST: postgres-test
@@ -118,6 +122,8 @@ services:
     cpus: 1.5
     deploy:
       replicas: 3
+    depends_on:
+      - redis-service
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
       DP_DB_HOST: postgres-test
