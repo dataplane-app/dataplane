@@ -44,10 +44,12 @@ describe('Create pipelines', { retries: 5 }, function () {
                 cy.get('input').click();
             });
 
-        cy.get('.MuiDrawer-root').within(() => {
-            cy.contains('Every minute').should('exist', { timeout: 6000 }).click();
-            cy.contains('Save').should('exist', { timeout: 6000 }).click();
-        });
+        cy.get('.MuiDrawer-root')
+            .last()
+            .within(() => {
+                cy.contains('Every minute').should('exist', { timeout: 6000 }).click();
+                cy.contains('Save').should('exist', { timeout: 6000 }).click();
+            });
 
         // Move
         cy.get('.react-flow__node-scheduleNode').should('exist', { timeout: 6000 }).trigger('mousedown');
@@ -352,9 +354,11 @@ describe('Create pipelines', { retries: 5 }, function () {
         cy.get('#drag_apiNode').should('exist', { timeout: 6000 }).trigger('dragstart', { dataTransfer, force: true }).should('exist', { timeout: 6000 });
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
 
-        cy.get('.MuiDrawer-root').within(() => {
-            cy.contains('Save').should('exist', { timeout: 6000 }).click();
-        });
+        cy.get('.MuiDrawer-root')
+            .last()
+            .within(() => {
+                cy.contains('Save').should('exist', { timeout: 6000 }).click();
+            });
 
         // Move
         cy.get('.react-flow__node-apiNode').should('exist', { timeout: 6000 }).trigger('mousedown');
