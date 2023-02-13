@@ -42,6 +42,6 @@ describe('Add/remove python file', function () {
         cy.intercept('POST', '/app/private/graphql').as('post');
         cy.contains('Yes').should('exist', { timeout: 6000 }).click({ force: true });
 
-        cy.wait('@post').its('response.body.deleteFileNode').should('not.null');
+        cy.wait('@post').its('response.body.data.deleteFileNode').should('not.null');
     });
 });
