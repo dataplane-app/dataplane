@@ -293,7 +293,7 @@ const useGetPipelineRunsHook = (environmentID, setRuns, setSelectedReplayRun, se
         } else {
             setRuns(response);
             setSelectedReplayRun(response[0]);
-            setPipeline((p) => ({ ...p, replayRunID: response[0].run_id }));
+            setPipeline((p) => ({ ...p, replayRunID: response[0]?.run_id }));
         }
     };
 };
