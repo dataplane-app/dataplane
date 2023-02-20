@@ -58,7 +58,7 @@ const PipelineEditor = () => {
         currentTab = 'markdown';
     }
 
-    const [pipeline, setPipeline] = useState({ replayType: 'Pipeline', replayRunID: '' });
+    const [pipeline, setPipeline] = useState({ replayType: 'Code editor', replayRunID: '' });
 
     // Packages state for packages component
     const [packages, setPackages] = useState('');
