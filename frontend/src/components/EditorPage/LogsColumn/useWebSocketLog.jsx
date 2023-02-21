@@ -64,6 +64,8 @@ export default function useWebSocketLog(environmentId, run_id, setKeys, setGraph
                     NodeTypeDesc: pipeline.nodeTypeDesc,
                     workerGroup: pipeline.workerGroup,
                     runID: run_id,
+                    replayType: pipeline.replayType,
+                    replayRunID: pipeline.replayRunID,
                 });
 
                 if (response.r || response.error) {
@@ -103,7 +105,10 @@ export default function useWebSocketLog(environmentId, run_id, setKeys, setGraph
                 // Return if not a log message
                 if (resp.run_id) return;
                 setKeys((k) => [...k, resp.uid]);
-                let text = resp.log === 'Run' || resp.log === 'Success' || resp.log === 'Fail' ? `${formatDate(resp.created_at, MeData.timezone.get())} ${resp.log}` : resp.log;
+                let text =
+                    resp.log === 'Run' || resp.log === 'Success' || resp.log === 'Fail'
+                        ? [`${formatDate(resp.created_at, MeData.timezone.get())} ${resp.log}`, resp.created_at]
+                        : [resp.log, resp.created_at];
                 setSocketResponse(text);
                 if ((resp.log_type === 'action' && resp.log === 'Fail') || (resp.log_type === 'action' && resp.log === 'Success')) {
                     EditorGlobal.runState.set(resp.log);

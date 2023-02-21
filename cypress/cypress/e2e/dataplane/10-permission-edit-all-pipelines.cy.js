@@ -25,8 +25,10 @@ describe('Give pipeline permission to a user', function () {
         // Give permission
         cy.get('#available_permissions_autocomplete').type('Edit all pipelines', { force: true }).should('have.value', 'Edit all pipelines');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.get('#permission-add').should('exist', { timeout: 6000 }).click({ force: true });
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 
     it('Verify permission', { retries: 5 }, function () {
@@ -49,8 +51,12 @@ describe('Give pipeline permission to a user', function () {
     it('Add Permission', function () {
         cy.contains('Pipelines').should('exist', { timeout: 6000 }).click({ force: true });
         cy.contains('button', 'Manage').should('exist', { timeout: 6000 }).click({ force: true });
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.contains('Permissions').should('exist', { timeout: 6000 }).click({ force: true });
-        cy.get('#notistack-snackbar').should('contain', 'Requires permissions.');
+        cy.wait('@post')
+            .its('response.body.errors')
+            .then((a) => a[0].message)
+            .should('eq', 'Requires permissions.');
     });
 
     // #3 Verify user with 'Edit all pipelines' can run pipelines
@@ -72,10 +78,12 @@ describe('Give pipeline permission to a user', function () {
     it('Edit pipeline', function () {
         cy.contains('Pipelines').should('exist', { timeout: 6000 }).click({ force: true });
         cy.contains('button', 'Manage').should('exist', { timeout: 6000 }).click({ force: true });
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.contains('Edit').should('exist', { timeout: 6000 }).click({ force: true });
 
         cy.wait(500);
-        cy.get('#notistack-snackbar').should('not.contain', 'the requested element is null which the schema does not allow');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 
     // #5 Verify user without 'Edit all pipelines' permission can't view pipelines
@@ -107,7 +115,9 @@ describe('Give pipeline permission to a user', function () {
         cy.contains('Jimmy User').should('exist', { timeout: 6000 }).click({ force: true });
 
         // Remove permissions
+        cy.intercept('POST', '/app/private/graphql').as('post');
         cy.get('#environment-permissions').children().contains('Edit all pipelines').prev().click();
-        cy.get('#notistack-snackbar').should('contain', 'Success');
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
     });
 });

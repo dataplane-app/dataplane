@@ -44,10 +44,12 @@ describe('Create pipelines', { retries: 5 }, function () {
                 cy.get('input').click();
             });
 
-        cy.get('.MuiDrawer-root').within(() => {
-            cy.contains('Every minute').should('exist', { timeout: 6000 }).click();
-            cy.contains('Save').should('exist', { timeout: 6000 }).click();
-        });
+        cy.get('.MuiDrawer-root')
+            .last()
+            .within(() => {
+                cy.contains('Every minute').should('exist', { timeout: 6000 }).click();
+                cy.contains('Save').should('exist', { timeout: 6000 }).click();
+            });
 
         // Move
         cy.get('.react-flow__node-scheduleNode').should('exist', { timeout: 6000 }).trigger('mousedown');
@@ -317,6 +319,16 @@ describe('Create pipelines', { retries: 5 }, function () {
         cy.contains('Save').should('exist', { timeout: 6000 }).click();
     });
 
+//Will open the code editor before any code run to test that an empty run id will not cause an issue. 
+    it('Verify code editor', function () {
+        cy.get('.react-flow').within(() => {
+            cy.get('#long-button').should('be.visible', { timeout: 6000 }).click();
+        });
+
+        cy.contains('Code').should('be.visible', { timeout: 6000 }).click();
+        cy.contains('Close').should('be.visible', { force: true, timeout: 6000 }).click();
+    });
+
     it('Run Play Flow', function () {
         cy.contains('button', 'Run').should('exist', { timeout: 6000 }).click();
         cy.wait(50);
@@ -352,9 +364,11 @@ describe('Create pipelines', { retries: 5 }, function () {
         cy.get('#drag_apiNode').should('exist', { timeout: 6000 }).trigger('dragstart', { dataTransfer, force: true }).should('exist', { timeout: 6000 });
         cy.get('.react-flow__renderer').should('exist', { timeout: 6000 }).trigger('drop', { dataTransfer });
 
-        cy.get('.MuiDrawer-root').within(() => {
-            cy.contains('Save').should('exist', { timeout: 6000 }).click();
-        });
+        cy.get('.MuiDrawer-root')
+            .last()
+            .within(() => {
+                cy.contains('Save').should('exist', { timeout: 6000 }).click();
+            });
 
         // Move
         cy.get('.react-flow__node-apiNode').should('exist', { timeout: 6000 }).trigger('mousedown');

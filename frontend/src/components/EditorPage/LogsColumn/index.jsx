@@ -1,7 +1,7 @@
 import { faCheckCircle, faExclamationCircle, faRunning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Typography } from '@mui/material';
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
 import CustomDragHandle from '../../CustomDragHandle';
 import { RunningSpinner } from './RunningSpinner';
@@ -14,6 +14,7 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const pipeline = rest.pipeline;
 
     const [websocketResp, setWebsocketResp] = useState('');
+    const websocketRespPair = useRef([]);
     const [filteredGraphqlResp, setFilteredGraphqlResp] = useState('');
     const [graphQlResp, setGraphQlResp] = useState([]);
     const [keys, setKeys] = useState([]);
@@ -28,7 +29,25 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const webSocket = useWebSocketLog(pipeline.environmentID, EditorGlobal.runID.get(), setKeys, setGraphQlResp, keys, pipeline);
 
     useEffect(() => {
-        setWebsocketResp((t) => t + webSocket + '\n');
+        if (!webSocket) return;
+
+        const [incomingMessage, incomingTimestamp] = webSocket;
+
+        // Update the websocketResp for timestamp comparison
+        websocketRespPair.current.push(webSocket);
+
+        const mostRecentTimestamp = websocketRespPair?.current?.slice(-2)[0][1];
+        let isOlder = incomingTimestamp < mostRecentTimestamp;
+        if (isOlder) {
+            // Rearrange the order of logs by timestamp
+            let updatedLogs = websocketRespPair.current
+                .sort((a, b) => a[1].localeCompare(b[1]))
+                .map((a) => a[0])
+                .join('\n');
+            return setWebsocketResp(updatedLogs + '\n');
+        }
+
+        setWebsocketResp((t) => t + incomingMessage + '\n');
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [webSocket]);
@@ -56,10 +75,12 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [graphQlResp]);
 
+    // Clear logs before start of a run
     useEffect(() => {
         if (!EditorGlobal.runID.get()) return;
         setWebsocketResp('');
         setGraphQlResp([]);
+        websocketRespPair.current = [];
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [EditorGlobal.runID.get()]);
