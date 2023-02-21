@@ -1,4 +1,4 @@
-FROM golang:1.18-bullseye
+FROM golang:1.19-bullseye
 
 RUN go install golang.org/x/tools/gopls@latest
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
