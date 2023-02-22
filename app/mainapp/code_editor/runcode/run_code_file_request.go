@@ -18,7 +18,7 @@ type Command struct {
 /*
 Task status: Queue, Allocated, Started, Failed, Success
 */
-func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID string, nodeID string, nodeTypeDesc string, runid string) (models.CodeRun, error) {
+func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID string, nodeID string, nodeTypeDesc string, runid string, replayRunID string) (models.CodeRun, error) {
 
 	// Important not to update status to avoid timing issue where it can overwrite a success a status
 	if runid == "" {
