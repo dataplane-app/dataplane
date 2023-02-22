@@ -65,8 +65,13 @@ Add notes here to document this pipeline step.`
 
 	case "rpa-python":
 
-		content := `print("Pipeline id: ` + node.PipelineID + `")
-print("Node id: ` + node.NodeID + `")`
+		content := `import os
+
+if __name__ == "__main__":
+	print("Environment id: " + os.environ["DP_ENVID"])
+	print("Run id: " + os.environ["DP_RUNID"])
+	print("Pipeline id: ` + node.PipelineID + `")
+	print("Node id: ` + node.NodeID + `")`
 
 		input := models.CodeFiles{
 			EnvironmentID: node.EnvironmentID,
