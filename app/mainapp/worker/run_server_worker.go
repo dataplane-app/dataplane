@@ -173,7 +173,7 @@ func ServerWorker(envID string, workerGroup string, runid string, taskid string,
 
 		if len(currentTask) > 0 {
 			for _, t := range currentTask {
-				errt := WorkerCancelTask(t.TaskID)
+				errt := WorkerCancelTask(t.TaskID, envID, "server")
 				if errt != nil {
 					errmsg = "Could not cancel remaining tasks on fail: " + errt.Error()
 					logging.PrintSecretsRedact(errt.Error())

@@ -88,7 +88,7 @@ func RPAWorker(envID string, workerGroup string, runid string, taskid string, pi
 
 	}
 
-	log.Println("taskupdate." + envID + "." + runid)
+	// log.Println("taskupdate." + envID + "." + runid)
 
 	/* Choose an online remote worker */
 	for i := 0; i < maxRetiresAllowed; i++ {
@@ -129,7 +129,7 @@ func RPAWorker(envID string, workerGroup string, runid string, taskid string, pi
 		time.Sleep(2 * time.Second)
 
 	}
-	log.Println("RPA worker:", remoteWorkerID)
+	// log.Println("RPA worker:", remoteWorkerID)
 
 	/* ---- Attach the file name to the command that would be run ----- */
 	// commandsprep := []string{}
@@ -232,7 +232,7 @@ func RPAWorker(envID string, workerGroup string, runid string, taskid string, pi
 
 		if len(currentTask) > 0 {
 			for _, t := range currentTask {
-				errt := WorkerCancelTask(t.TaskID)
+				errt := WorkerCancelTask(t.TaskID, envID, "rpa")
 				if errt != nil {
 					errmsg = "Could not cancel remaining tasks on fail: " + errt.Error()
 					logging.PrintSecretsRedact(errt.Error())

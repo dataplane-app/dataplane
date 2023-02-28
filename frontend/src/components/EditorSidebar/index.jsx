@@ -112,7 +112,7 @@ const EditorSidebar = () => {
                         triggerOnline: false,
                         workerGroup: '',
                         // eslint-disable-next-line no-template-curly-in-string
-                        commands: [{ command: 'python3 -u ${{nodedirectory}}dp-entrypoint.py' }],
+                        commands: [{ command: '${{nodedirectory}}dp-entrypoint.py' }],
                     },
                 },
             ],

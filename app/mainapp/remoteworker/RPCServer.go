@@ -11,6 +11,7 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
+	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	wsockets "github.com/dataplane-app/dataplane/app/mainapp/websockets"
 	"github.com/gofiber/websocket/v2"
 	"github.com/tidwall/gjson"
@@ -165,8 +166,6 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 			runID := gjson.Get(messagestring, "params.run_id").String()
 			logType := gjson.Get(messagestring, "params.log_type").String()
 
-			log.Println(string(message))
-
 			// log.Println("code run envID:", envID, messagestring)
 
 			if envID == "" {
@@ -175,7 +174,7 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 			}
 
 			room := "coderunfilelogs." + envID + "." + runID
-			log.Println("Room:", room)
+			// log.Println("Room:", room)
 			wsockets.Broadcast <- wsockets.Message{Room: room, Data: request.Params}
 
 			if logType == "action" {
@@ -210,12 +209,22 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 			/* ----- Run code logs -------- */
 		case "pipelinerunlogs":
 
+			// log.Println("Pipeline params:", string(request.Params))
+
 			envID := gjson.Get(messagestring, "params.environment_id").String()
 			runID := gjson.Get(messagestring, "params.run_id").String()
 			nodeID := gjson.Get(messagestring, "params.node_id").String()
 			logType := gjson.Get(messagestring, "params.log_type").String()
+			taskID := gjson.Get(messagestring, "params.task_id").String()
+			pipelineID := gjson.Get(messagestring, "params.pipeline_id").String()
+			startDT := gjson.Get(messagestring, "params.start_dt").Time()
 
-			log.Println(string(message))
+			// log.Println(string(message))
+
+			var logmsg models.LogsWorkers
+			if err := json.Unmarshal(request.Params, &logmsg); err != nil {
+				log.Println("Remote worker failed to unmarshal log.", err)
+			}
 
 			// log.Println("code run envID:", envID, messagestring)
 
@@ -225,34 +234,98 @@ func RPCServer(conn *websocket.Conn, remoteWorkerID string) {
 			}
 
 			room := "workerlogs." + envID + "." + runID + "." + nodeID
-			log.Println("Room:", room)
+			// log.Println("Room:", room)
 			wsockets.Broadcast <- wsockets.Message{Room: room, Data: request.Params}
+
+			go database.DBConn.Create(&logmsg)
 
 			if logType == "action" {
 				logmsg := gjson.Get(messagestring, "params.log").String()
 
 				msg := models.WorkerTasks{
+					TaskID:        taskID,
 					RunID:         runID,
 					EnvironmentID: envID,
-					Reason:        "Complete",
+					Reason:        "run",
+					NodeID:        nodeID,
+					PipelineID:    pipelineID,
+					StartDT:       startDT,
 					EndDT:         time.Now().UTC(),
+					Status:        logmsg,
 				}
 
 				switch logmsg {
+
+				/* Successful run move to next */
 				case "Success":
 					msg.Status = logmsg
-				case "Fail":
-					msg.Status = logmsg
-				}
 
-				if msg.Status != "" {
+					/* Update the database with the task */
 					err2 := database.DBConn.Clauses(clause.OnConflict{
-						Columns:   []clause.Column{{Name: "run_id"}},
-						DoUpdates: clause.AssignmentColumns([]string{"ended_at", "status", "reason"}),
+						Columns:   []clause.Column{{Name: "task_id"}},
+						DoUpdates: clause.AssignmentColumns([]string{"end_dt", "status", "reason"}),
 					}).Create(&msg)
 					if err2.Error != nil {
 						logging.PrintSecretsRedact(err2.Error.Error())
 					}
+
+					// log.Println("action:", msg.Status)
+
+					RunNext := models.WorkerPipelineNext{
+						TaskID:        msg.TaskID,
+						CreatedAt:     time.Now().UTC(),
+						EnvironmentID: envID,
+						PipelineID:    pipelineID,
+						RunID:         runID,
+						NodeID:        nodeID,
+						Status:        msg.Status,
+					}
+
+					/* pipeline next reads the database to determine next step :: could save a db call here */
+					errnat := messageq.MsgSend("pipeline-run-next", RunNext)
+					if errnat != nil {
+						log.Println("Remote worker nats error send next step: ", errnat)
+					}
+
+					/* Failed run, mark all future as failed */
+				case "Fail":
+					msg.Status = logmsg
+
+					// Update pipeline as failed
+					run := models.PipelineRuns{
+						RunID:   runID,
+						Status:  "Fail",
+						EndedAt: time.Now().UTC(),
+					}
+
+					err2 := database.DBConn.Clauses(clause.OnConflict{
+						Columns:   []clause.Column{{Name: "run_id"}},
+						DoUpdates: clause.AssignmentColumns([]string{"ended_at", "status"}),
+					}).Create(&run)
+					if err2.Error != nil {
+						log.Println(err2.Error.Error())
+					}
+
+					// Update all the future tasks
+					err3 := database.DBConn.Model(&models.WorkerTasks{}).Where("run_id = ? and status=? and environment_id=?", msg.RunID, "Queue", envID).Updates(map[string]interface{}{"status": "Fail", "reason": "Upstream fail"}).Error
+					if err3 != nil {
+						log.Println(err3.Error())
+					}
+				}
+
+				if msg.Status == "Success" || msg.Status == "Fail" {
+
+					// /* Update the front end status to running */
+
+					errnat2 := messageq.MsgSend("taskupdate."+envID+"."+runID, msg)
+					if errnat2 != nil {
+						errmsg := "RPA RPC logs failed to send to front end nats: " + "taskupdate." + envID + "." + runID
+						if dpconfig.Debug == "true" {
+							logging.PrintSecretsRedact(errmsg, errnat2)
+						}
+
+					}
+
 				}
 
 			}

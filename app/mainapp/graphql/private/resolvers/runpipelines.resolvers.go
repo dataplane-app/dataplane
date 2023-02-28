@@ -6,11 +6,12 @@ package privateresolvers
 import (
 	"context"
 	"errors"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/auth"
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -123,9 +124,27 @@ func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string,
 		logging.PrintSecretsRedact(err3.Error())
 	}
 
+	var workerType string
+
 	if len(currentTask) > 0 {
 		for _, t := range currentTask {
-			errt := worker.WorkerCancelTask(t.TaskID)
+
+			/* Which type of worker */
+			switch t.WorkerType {
+
+			/* --- Server worker types ---- */
+			case "python", "bash", "checkpoint":
+
+				workerType = "server"
+			/* Send the task to the RPA worker */
+			case "rpa-python":
+				workerType = "rpa"
+
+			default:
+				log.Println("Cancel run, worker type not found for node: ", t.NodeID)
+			}
+
+			errt := worker.WorkerCancelTask(t.TaskID, environmentID, workerType)
 			if errt != nil {
 				logging.PrintSecretsRedact(errt.Error())
 			}

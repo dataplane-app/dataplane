@@ -18,11 +18,11 @@ import (
 /*
 Task status: Queue, Allocated, Started, Failed, Success
 */
-func WorkerCancelTask(taskid string) error {
+func WorkerCancelTask(taskid string, envID string, workerType string) error {
 
 	/* look up task details */
 	var task models.WorkerTasks
-	err2 := database.DBConn.First(&task, "task_id = ?", taskid)
+	err2 := database.DBConn.First(&task, "task_id = ? and environment_id = ?", taskid, envID)
 	if err2.Error != nil {
 		logging.PrintSecretsRedact(err2.Error.Error())
 	}
@@ -32,52 +32,53 @@ func WorkerCancelTask(taskid string) error {
 	}
 
 	// log.Println(task, taskid)
-	// return nil
-
-	/* Look up chosen workers -
-	if none, keep trying for 10 x 2 seconds
-	before failing */
-	// var err1 error
-	maxRetiresAllowed := 5
-
-	// if a worker group goes offline in between, choose the next in the load balancer and retry
-
 	complete := false
-	for i := 0; i < maxRetiresAllowed; i++ {
+	switch workerType {
+	case "server":
+		maxRetiresAllowed := 5
 
-		tasksend := models.WorkerTaskSend{
-			TaskID:        taskid,
-			CreatedAt:     time.Now().UTC(),
-			EnvironmentID: task.EnvironmentID,
-			RunID:         task.RunID,
-			WorkerGroup:   task.WorkerGroup,
-			WorkerID:      task.WorkerID,
-		}
+		// if a worker group goes offline in between, choose the next in the load balancer and retry
 
-		var response models.TaskResponse
-		_, errnats := messageq.MsgReply("taskcancel."+task.WorkerGroup+"."+task.WorkerID, tasksend, &response)
+		for i := 0; i < maxRetiresAllowed; i++ {
 
-		if errnats != nil {
-			log.Println("Send to worker error nats:", errnats)
-		}
+			tasksend := models.WorkerTaskSend{
+				TaskID:        task.TaskID,
+				CreatedAt:     time.Now().UTC(),
+				EnvironmentID: task.EnvironmentID,
+				RunID:         task.RunID,
+				WorkerGroup:   task.WorkerGroup,
+				WorkerID:      task.WorkerID,
+			}
 
-		// successful send to worker
-		if response.R == "ok" {
-			complete = true
-			break
-		} else {
-			log.Println(task.WorkerID + " not online, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
+			var response models.TaskResponse
+			_, errnats := messageq.MsgReply("taskcancel."+task.WorkerGroup+"."+task.WorkerID, tasksend, &response)
+
+			if errnats != nil {
+				log.Println("Send to worker for cancel error nats:", errnats)
+			}
+
+			// successful send to worker
+			if response.R == "ok" {
+				complete = true
+				break
+			} else {
+				log.Println(task.WorkerID + " not online for cancel, retrying in 2 seconds (" + strconv.Itoa(i) + " of " + strconv.Itoa(maxRetiresAllowed) + ")")
+			}
+			if dpconfig.Debug == "true" {
+				log.Println("Send to worker", response.R)
+			}
+			time.Sleep(2 * time.Second)
 		}
-		if dpconfig.Debug == "true" {
-			log.Println("Send to worker", response.R)
-		}
-		time.Sleep(2 * time.Second)
+	case "rpa":
+		complete = true
+	default:
+		return errors.New("Cancel task worker type missing.")
 	}
 
 	if complete == false {
 		// mark task as failed
 		taskUpdate := models.WorkerTasks{
-			TaskID: taskid,
+			TaskID: task.TaskID,
 			EndDT:  time.Now().UTC(),
 			Status: "Fail",
 			Reason: "Cancelled worker offline",
