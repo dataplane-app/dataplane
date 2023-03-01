@@ -40,4 +40,13 @@ type WSChannelMessage struct {
 	WorkerID string
 }
 
+type RPCNotify struct {
+	// JSON-RPC version
+	Version string `json:"jsonrpc"`
+	// Method to be called
+	Method string `json:"method"`
+	// Parameters for the method
+	Params json.RawMessage `json:"params"`
+}
+
 // {"jsonrpc": "2.0", "method": "Arith.Multiply", "params": [42, 23], "id": 1}

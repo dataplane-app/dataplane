@@ -61,33 +61,6 @@ func RPAWorker(envID string, workerGroup string, runid string, taskid string, pi
 		return errors.New("")
 	}
 
-	// Important not to update status to avoid timing issue where it can overwrite a success a status
-	TaskFinal := models.WorkerTasks{
-		TaskID:        taskid,
-		CreatedAt:     time.Now().UTC(),
-		EnvironmentID: envID,
-		RunID:         runid,
-		WorkerGroup:   workerGroup,
-		StartDT:       time.Now().UTC(),
-		WorkerType:    "rpa-python",
-		Status:        "Run",
-		NodeID:        nodeID,
-		PipelineID:    pipelineID,
-	}
-
-	UpdateWorkerTasks(TaskFinal)
-
-	/* Update the front end status to running */
-
-	errnat := messageq.MsgSend("taskupdate."+envID+"."+runid, TaskFinal)
-	if errnat != nil {
-		errmsg = "Failed to send to nats: " + "taskupdate." + envID + "." + runid
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(errnat)
-		}
-
-	}
-
 	// log.Println("taskupdate." + envID + "." + runid)
 
 	/* Choose an online remote worker */
@@ -143,7 +116,35 @@ func RPAWorker(envID string, workerGroup string, runid string, taskid string, pi
 
 	// ----- Successfully found RPA worker -------
 	if markFail == false {
-		log.Println("Selected RPA worker:", remoteWorkerID)
+		// log.Println("Selected RPA worker:", remoteWorkerID)
+
+		// Important not to update status to avoid timing issue where it can overwrite a success a status
+		TaskFinal := models.WorkerTasks{
+			TaskID:        taskid,
+			CreatedAt:     time.Now().UTC(),
+			EnvironmentID: envID,
+			RunID:         runid,
+			WorkerGroup:   workerGroup,
+			WorkerID:      remoteWorkerID,
+			StartDT:       time.Now().UTC(),
+			WorkerType:    "rpa-python",
+			Status:        "Run",
+			NodeID:        nodeID,
+			PipelineID:    pipelineID,
+		}
+
+		UpdateWorkerTasks(TaskFinal)
+
+		/* Update the front end status to running */
+
+		errnat := messageq.MsgSend("taskupdate."+envID+"."+runid, TaskFinal)
+		if errnat != nil {
+			errmsg = "Failed to send to nats: " + "taskupdate." + envID + "." + runid
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(errnat)
+			}
+
+		}
 
 		// Get pipeline info
 		pipeline := models.Pipelines{}
@@ -205,6 +206,7 @@ func RPAWorker(envID string, workerGroup string, runid string, taskid string, pi
 			EnvironmentID: envID,
 			RunID:         runid,
 			WorkerGroup:   workerGroup,
+			WorkerID:      remoteWorkerID,
 			StartDT:       time.Now().UTC(),
 			Status:        "Fail",
 			Reason:        "No workers",

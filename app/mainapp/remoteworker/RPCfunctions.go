@@ -89,3 +89,29 @@ func RPCRequest(remoteWorkerID string, requestID string, Method string, Params a
 
 	return nil
 }
+
+/* This function creates a valid request for JSON RPC 2.0 */
+func RPCNotify(remoteWorkerID string, Method string, Params any) error {
+
+	paramsBytes, errmarshal := json.Marshal(Params)
+	// Return an error if failed to marshal
+	if errmarshal != nil {
+		return errors.New("RPC request parse error: " + errmarshal.Error())
+	}
+
+	rpcRequest := models.RPCNotify{
+		Version: "2.0",
+		Method:  Method,
+		Params:  paramsBytes,
+	}
+
+	requestBytes, errmarshal2 := json.Marshal(rpcRequest)
+	// Return an error if failed to marshal
+	if errmarshal2 != nil {
+		return errors.New("RPC request parse error 2: " + errmarshal2.Error())
+	}
+
+	Broadcast <- Message{WorkerID: remoteWorkerID, Data: requestBytes}
+
+	return nil
+}

@@ -11,6 +11,7 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
+	"github.com/dataplane-app/dataplane/app/mainapp/remoteworker"
 
 	"gorm.io/gorm/clause"
 )
@@ -30,6 +31,8 @@ func WorkerCancelTask(taskid string, envID string, workerType string) error {
 	if task.Status == "Success" || task.Status == "Fail" {
 		return errors.New("Task completed with fail or success")
 	}
+
+	log.Println("Cancel worker")
 
 	// log.Println(task, taskid)
 	complete := false
@@ -70,7 +73,46 @@ func WorkerCancelTask(taskid string, envID string, workerType string) error {
 			time.Sleep(2 * time.Second)
 		}
 	case "rpa":
+
+		log.Println("RPA cancel: ", task.RunID, task.WorkerID)
+
+		tasksend := models.WorkerTaskSend{
+			TaskID:        task.TaskID,
+			CreatedAt:     time.Now().UTC(),
+			EnvironmentID: task.EnvironmentID,
+			RunID:         task.RunID,
+			WorkerGroup:   task.WorkerGroup,
+			WorkerID:      task.WorkerID,
+			NodeID:        task.NodeID,
+		}
+
+		errrpc := remoteworker.RPCNotify(task.WorkerID, "pipeline.canceltask", tasksend)
+		if errrpc != nil {
+			return errors.New("RPA run code RPC failed: " + errrpc.Error())
+		}
 		complete = true
+
+		/* Update the front end status to Failed */
+		TaskFinal := models.WorkerTasks{
+			TaskID:        task.TaskID,
+			EnvironmentID: task.EnvironmentID,
+			RunID:         task.RunID,
+			EndDT:         time.Now().UTC(),
+			Status:        "Fail",
+			Reason:        "Cancelled RPA worker.",
+		}
+
+		UpdateWorkerTasks(TaskFinal)
+
+		/* Update the front end status to running */
+
+		errnat := messageq.MsgSend("taskupdate."+task.EnvironmentID+"."+task.RunID, TaskFinal)
+		if errnat != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact("Failed to send to nats: "+"taskupdate."+task.EnvironmentID+"."+task.RunID, errnat)
+			}
+
+		}
 	default:
 		return errors.New("Cancel task worker type missing.")
 	}
