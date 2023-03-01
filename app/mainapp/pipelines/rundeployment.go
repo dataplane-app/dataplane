@@ -239,6 +239,7 @@ func RunDeployment(pipelineID string, environmentID string, runID string, runJso
 			WorkerGroup:   workergroup,
 			PipelineID:    s.PipelineID,
 			NodeID:        s.NodeID,
+			WorkerType:    s.NodeTypeDesc,
 			Status:        status,
 			Dependency:    dependJSON,
 			Commands:      s.Commands,

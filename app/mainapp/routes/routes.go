@@ -373,6 +373,27 @@ func Setup(port string) *fiber.App {
 		return c.Status(http.StatusOK).Send(output)
 	})
 
+	app.Post("/app/remoteworker/deployfiles/:environmentID/:nodeID/:version", auth.DesktopAuthMiddle(), func(c *fiber.Ctx) error {
+
+		/* runtype is prefix to folder structure: coderun, pipeline, deployment */
+		c.Accepts("application/json")
+
+		// remoteWorkerID := string(c.Params("workerID"))
+		nodeID := string(c.Params("nodeID"))
+		environmentID := string(c.Params("environmentID"))
+		version := string(c.Params("version"))
+		output, filesize, err := remoteworker.DeployCompressFiles(database.DBConn, nodeID, environmentID, version)
+		if err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"Remote worker code run download file error": err.Error()})
+		}
+
+		FileContentType := http.DetectContentType(output)
+		c.Append("Content-Type", FileContentType)
+		c.Append("Content-Length", strconv.Itoa(filesize))
+
+		return c.Status(http.StatusOK).Send(output)
+	})
+
 	/* Request all process groups at start of remotw worker */
 	app.Post("/app/remoteworker/allprocessgroups/:workerID", auth.DesktopAuthMiddle(), func(c *fiber.Ctx) error {
 
@@ -624,7 +645,7 @@ func Setup(port string) *fiber.App {
 
 }
 
-//Defining the Playground handler
+// Defining the Playground handler
 func playgroundHandler() func(w http.ResponseWriter, r *http.Request) {
 	query_url := "/private/graphqldocs"
 	h := playground.Handler("GraphQL", query_url)

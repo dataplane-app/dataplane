@@ -247,6 +247,7 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 
 		}
 
+		/* attach addTask to triggerData */
 		triggerData[s.NodeID] = addTask
 
 		course = append(course, addTask)
@@ -296,7 +297,7 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 		// 	ex = "exit 1;"
 		// }
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
-
+		// log.Println("Worker type:", triggerData[s].WorkerType)
 		/* Start the first task */
 		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], "", "pipeline", triggerData[s].WorkerType)
 		if err != nil {
