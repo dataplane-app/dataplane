@@ -192,7 +192,7 @@ const DeploymentView = () => {
                             <ReactFlow
                                 zoomOnScroll={false}
                                 zoomOnPinch={false}
-                                paneMoveable={panOnDrag || false}
+                                // paneMoveable={panOnDrag || false}
                                 onMoveStart={onMoveStart}
                                 onMoveEnd={onMoveEnd}
                                 nodeTypes={nodeTypes}
