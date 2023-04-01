@@ -17,16 +17,23 @@ import (
 //go:embed models.gotpl
 var modelTemplate string
 
-type BuildMutateHook = func(b *ModelBuild) *ModelBuild
+type (
+	BuildMutateHook = func(b *ModelBuild) *ModelBuild
+	FieldMutateHook = func(td *ast.Definition, fd *ast.FieldDefinition, f *Field) (*Field, error)
+)
 
-type FieldMutateHook = func(td *ast.Definition, fd *ast.FieldDefinition, f *Field) (*Field, error)
-
-// defaultFieldMutateHook is the default hook for the Plugin which applies the GoTagFieldHook.
-func defaultFieldMutateHook(td *ast.Definition, fd *ast.FieldDefinition, f *Field) (*Field, error) {
+// DefaultFieldMutateHook is the default hook for the Plugin which applies the GoFieldHook and GoTagFieldHook.
+func DefaultFieldMutateHook(td *ast.Definition, fd *ast.FieldDefinition, f *Field) (*Field, error) {
+	var err error
+	f, err = GoFieldHook(td, fd, f)
+	if err != nil {
+		return f, err
+	}
 	return GoTagFieldHook(td, fd, f)
 }
 
-func defaultBuildMutateHook(b *ModelBuild) *ModelBuild {
+// DefaultBuildMutateHook is the default hook for the Plugin which mutate ModelBuild.
+func DefaultBuildMutateHook(b *ModelBuild) *ModelBuild {
 	return b
 }
 
@@ -75,8 +82,8 @@ type EnumValue struct {
 
 func New() plugin.Plugin {
 	return &Plugin{
-		MutateHook: defaultBuildMutateHook,
-		FieldHook:  defaultFieldMutateHook,
+		MutateHook: DefaultBuildMutateHook,
+		FieldHook:  DefaultFieldMutateHook,
 	}
 }
 
@@ -92,7 +99,6 @@ func (m *Plugin) Name() string {
 }
 
 func (m *Plugin) MutateConfig(cfg *config.Config) error {
-
 	b := &ModelBuild{
 		PackageName: cfg.Model.Package,
 	}
@@ -365,7 +371,7 @@ func (m *Plugin) generateFields(cfg *config.Config, schemaType *ast.Definition) 
 			GoName:      name,
 			Type:        typ,
 			Description: field.Description,
-			Tag:         `json:"` + field.Name + `"`,
+			Tag:         getStructTagFromField(field),
 		}
 
 		if m.FieldHook != nil {
@@ -382,8 +388,16 @@ func (m *Plugin) generateFields(cfg *config.Config, schemaType *ast.Definition) 
 	return fields, nil
 }
 
-// GoTagFieldHook applies the goTag directive to the generated Field f. When applying the Tag to the field, the field
-// name is used when no value argument is present.
+func getStructTagFromField(field *ast.FieldDefinition) string {
+	if !field.Type.NonNull {
+		return `json:"` + field.Name + `,omitempty"`
+	}
+	return `json:"` + field.Name + `"`
+}
+
+// GoTagFieldHook prepends the goTag directive to the generated Field f.
+// When applying the Tag to the field, the field
+// name is used if no value argument is present.
 func GoTagFieldHook(td *ast.Definition, fd *ast.FieldDefinition, f *Field) (*Field, error) {
 	args := make([]string, 0)
 	for _, goTag := range fd.Directives.ForNames("goTag") {
@@ -406,9 +420,46 @@ func GoTagFieldHook(td *ast.Definition, fd *ast.FieldDefinition, f *Field) (*Fie
 	}
 
 	if len(args) > 0 {
-		f.Tag = f.Tag + " " + strings.Join(args, " ")
+		f.Tag = removeDuplicateTags(f.Tag + " " + strings.Join(args, " "))
 	}
 
+	return f, nil
+}
+
+func removeDuplicateTags(t string) string {
+	processed := make(map[string]bool)
+	tt := strings.Split(t, " ")
+	returnTags := ""
+
+	// iterate backwards through tags so appended goTag directives are prioritized
+	for i := len(tt) - 1; i >= 0; i-- {
+		ti := tt[i]
+		kv := strings.Split(ti, ":")
+		if len(kv) == 0 || processed[kv[0]] {
+			continue
+		}
+
+		processed[kv[0]] = true
+		if len(returnTags) > 0 {
+			returnTags = " " + returnTags
+		}
+		returnTags = kv[0] + ":" + kv[1] + returnTags
+	}
+
+	return returnTags
+}
+
+// GoFieldHook applies the goField directive to the generated Field f.
+func GoFieldHook(td *ast.Definition, fd *ast.FieldDefinition, f *Field) (*Field, error) {
+	args := make([]string, 0)
+	_ = args
+	for _, goField := range fd.Directives.ForNames("goField") {
+		if arg := goField.Arguments.ForName("name"); arg != nil {
+			if k, err := arg.Value.Value(nil); err == nil {
+				f.GoName = k.(string)
+			}
+		}
+	}
 	return f, nil
 }
 
