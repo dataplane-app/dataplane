@@ -7,9 +7,15 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime/debug"
+	"strings"
+	"sync"
 
 	"golang.org/x/tools/go/packages"
 )
+
+var once = sync.Once{}
+var modInfo *debug.BuildInfo
 
 var mode = packages.NeedName |
 	packages.NeedFiles |
@@ -31,20 +37,39 @@ type Packages struct {
 	numNameCalls int // stupid test steam. ignore.
 }
 
+func (p *Packages) CleanupUserPackages() {
+	once.Do(func() {
+		var ok bool
+		modInfo, ok = debug.ReadBuildInfo()
+		if !ok {
+			modInfo = nil
+		}
+	})
+
+	// Don't cleanup github.com/99designs/gqlgen prefixed packages, they haven't changed and do not need to be reloaded
+	if modInfo != nil {
+		var toRemove []string
+		for k := range p.packages {
+			if !strings.HasPrefix(k, modInfo.Main.Path) {
+				toRemove = append(toRemove, k)
+			}
+		}
+
+		for _, k := range toRemove {
+			delete(p.packages, k)
+		}
+	} else {
+		p.packages = nil // Cleanup all packages if we don't know for some reason which ones to keep
+	}
+}
+
 // ReloadAll will call LoadAll after clearing the package cache, so we can reload
 // packages in the case that the packages have changed
 func (p *Packages) ReloadAll(importPaths ...string) []*packages.Package {
-	p.packages = nil
-	return p.LoadAll(importPaths...)
-}
-
-func (p *Packages) checkModuleLoaded(pkgs []*packages.Package) bool {
-	for i := range pkgs {
-		if pkgs[i] == nil || pkgs[i].Module == nil {
-			return false
-		}
+	if p.packages != nil {
+		p.CleanupUserPackages()
 	}
-	return true
+	return p.LoadAll(importPaths...)
 }
 
 // LoadAll will call packages.Load and return the package data for the given packages,
@@ -65,13 +90,6 @@ func (p *Packages) LoadAll(importPaths ...string) []*packages.Package {
 	if len(missing) > 0 {
 		p.numLoadCalls++
 		pkgs, err := packages.Load(&packages.Config{Mode: mode}, missing...)
-
-		// Sometimes packages.Load not loaded the module info. Call it again to reload it.
-		if !p.checkModuleLoaded(pkgs) {
-			fmt.Println("reloading module info")
-			pkgs, err = packages.Load(&packages.Config{Mode: mode}, missing...)
-		}
-
 		if err != nil {
 			p.loadErrors = append(p.loadErrors, err)
 		}
@@ -151,7 +169,7 @@ func (p *Packages) NameForPackage(importPath string) string {
 	pkg := p.packages[importPath]
 
 	if pkg == nil {
-		// otherwise do a name only lookup for it but dont put it in the package cache.
+		// otherwise do a name only lookup for it but don't put it in the package cache.
 		p.numNameCalls++
 		pkgs, err := packages.Load(&packages.Config{Mode: packages.NeedName}, importPath)
 		if err != nil {

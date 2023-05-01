@@ -24,6 +24,7 @@ type (
 		InitFunc              WebsocketInitFunc
 		InitTimeout           time.Duration
 		ErrorFunc             WebsocketErrorFunc
+		CloseFunc             WebsocketCloseFunc
 		KeepAlivePingInterval time.Duration
 		PingPongInterval      time.Duration
 
@@ -45,6 +46,9 @@ type (
 
 	WebsocketInitFunc  func(ctx context.Context, initPayload InitPayload) (context.Context, error)
 	WebsocketErrorFunc func(ctx context.Context, err error)
+
+	// Callback called when websocket is closed.
+	WebsocketCloseFunc func(ctx context.Context, closeCode int)
 )
 
 var errReadTimeout = errors.New("read timeout")
@@ -350,6 +354,7 @@ func (c *wsConnection) subscribe(start time.Time, msg *message) {
 	c.mu.Unlock()
 
 	go func() {
+		ctx = withSubscriptionErrorContext(ctx)
 		defer func() {
 			if r := recover(); r != nil {
 				err := rc.Recover(ctx, r)
@@ -362,7 +367,11 @@ func (c *wsConnection) subscribe(start time.Time, msg *message) {
 				}
 				c.sendError(msg.id, gqlerr)
 			}
-			c.complete(msg.id)
+			if errs := getSubscriptionError(ctx); len(errs) != 0 {
+				c.sendError(msg.id, errs...)
+			} else {
+				c.complete(msg.id)
+			}
 			c.mu.Lock()
 			delete(c.active, msg.id)
 			c.mu.Unlock()
@@ -428,4 +437,8 @@ func (c *wsConnection) close(closeCode int, message string) {
 	}
 	c.mu.Unlock()
 	_ = c.conn.Close()
+
+	if c.CloseFunc != nil {
+		c.CloseFunc(c.ctx, closeCode)
+	}
 }

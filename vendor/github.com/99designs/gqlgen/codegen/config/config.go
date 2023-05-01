@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -27,7 +28,11 @@ type Config struct {
 	Directives                    map[string]DirectiveConfig `yaml:"directives,omitempty"`
 	OmitSliceElementPointers      bool                       `yaml:"omit_slice_element_pointers,omitempty"`
 	OmitGetters                   bool                       `yaml:"omit_getters,omitempty"`
+	OmitComplexity                bool                       `yaml:"omit_complexity,omitempty"`
+	OmitGQLGenFileNotice          bool                       `yaml:"omit_gqlgen_file_notice,omitempty"`
+	OmitGQLGenVersionInFileNotice bool                       `yaml:"omit_gqlgen_version_in_file_notice,omitempty"`
 	StructFieldsAlwaysPointers    bool                       `yaml:"struct_fields_always_pointers,omitempty"`
+	ReturnPointersInUmarshalInput bool                       `yaml:"return_pointers_in_unmarshalinput,omitempty"`
 	ResolversAlwaysReturnPointers bool                       `yaml:"resolvers_always_return_pointers,omitempty"`
 	SkipValidation                bool                       `yaml:"skip_validation,omitempty"`
 	SkipModTidy                   bool                       `yaml:"skip_mod_tidy,omitempty"`
@@ -50,6 +55,7 @@ func DefaultConfig() *Config {
 		Directives:                    map[string]DirectiveConfig{},
 		Models:                        TypeMap{},
 		StructFieldsAlwaysPointers:    true,
+		ReturnPointersInUmarshalInput: false,
 		ResolversAlwaysReturnPointers: true,
 	}
 }
@@ -97,14 +103,18 @@ var path2regex = strings.NewReplacer(
 
 // LoadConfig reads the gqlgen.yml config file
 func LoadConfig(filename string) (*Config, error) {
-	config := DefaultConfig()
-
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read config: %w", err)
 	}
 
-	dec := yaml.NewDecoder(bytes.NewReader(b))
+	return ReadConfig(bytes.NewReader(b))
+}
+
+func ReadConfig(cfgFile io.Reader) (*Config, error) {
+	config := DefaultConfig()
+
+	dec := yaml.NewDecoder(cfgFile)
 	dec.KnownFields(true)
 
 	if err := dec.Decode(config); err != nil {
