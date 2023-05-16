@@ -176,6 +176,7 @@ const Deploy = () => {
                             <Autocomplete
                                 onChange={(event, newValue) => {
                                     setSelectedEnvironment(newValue);
+                                    setApiDrawerOpen(true);
                                 }}
                                 sx={{ minWidth: '212px' }}
                                 options={availableEnvironments}
