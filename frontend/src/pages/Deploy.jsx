@@ -47,7 +47,7 @@ const Deploy = () => {
     const [live, setLive] = useState(true);
     const [workerGroup, setWorkerGroup] = useState(null);
     const nonDefaultWGNodes = useHookState([]);
-    console.log('🚀 ~ file: Deploy.jsx:50 ~ Deploy ~ nonDefaultWGNodes:', nonDefaultWGNodes.get());
+
     // Local state for trigger
     const [apiDrawerOpen, setApiDrawerOpen] = useState(false);
     const [triggerID, setTriggerID] = useState(() => uuidv4());
@@ -284,7 +284,7 @@ const Deploy = () => {
                     </Grid>
 
                     {/* Right side */}
-                    {nonDefaultWGNodes.get().length > 0 ? (
+                    {selectedEnvironment ? (
                         <Grid mb={5}>
                             {pipeline.node_type_desc === 'api' ? (
                                 <>
