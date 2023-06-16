@@ -151,6 +151,15 @@ type CodeFilesCacheOutput struct {
 	FileStore   []byte `gorm:"type:bytea;" json:"file_store"`
 }
 
+type CodeFilesCompress struct {
+	FileID      string `json:"file_id"`
+	FolderID    string `json:"folder_id"`
+	FileName    string `json:"file_name"`
+	FolderPath  string `json:"folder_path"`
+	ChecksumMD5 string `json:"checksum_md5"`
+	FileStore   []byte `gorm:"type:bytea;" json:"file_store"`
+}
+
 func (DeployCodeFilesCache) IsEntity() {}
 
 func (DeployCodeFilesCache) TableName() string {
