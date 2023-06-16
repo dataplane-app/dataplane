@@ -19,6 +19,7 @@ import DeployAPITRiggerDrawer from '../components/DrawerContent/DeployAPITrigger
 import { v4 as uuidv4 } from 'uuid';
 import { useGetDeploymentTrigger } from '../graphql/getDeploymentTrigger';
 import { useGenerateDeploymentTrigger } from '../graphql/generateDeploymentTrigger';
+import { useGetRemoteProcessGroupsForAnEnvironment } from '../graphql/getRemoteProcessGroupsForAnEnvironment';
 
 let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
 if (host === '') {
@@ -46,6 +47,7 @@ const Deploy = () => {
     const [live, setLive] = useState(true);
     const [workerGroup, setWorkerGroup] = useState(null);
     const nonDefaultWGNodes = useHookState([]);
+
     // Local state for trigger
     const [apiDrawerOpen, setApiDrawerOpen] = useState(false);
     const [triggerID, setTriggerID] = useState(() => uuidv4());
@@ -63,7 +65,7 @@ const Deploy = () => {
 
     // Graphql Hooks
     const getEnvironments = useGetEnvironmentsHook(setAvailableEnvironments);
-    const getWorkerGroups = useGetWorkerGroupsHook(setAvailableWorkerGroups, selectedEnvironment);
+    const getWorkerGroups = useGetWorkerGroupsHook(setAvailableWorkerGroups, nonDefaultWGNodes[0]?.nodeTypeDesc?.get());
     const getNonDefaultWGNodes = useGetNonDefaultWGNodesHook(nonDefaultWGNodes, selectedEnvironment);
     const addDeployment = useAddDeploymentHook();
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
@@ -85,10 +87,17 @@ const Deploy = () => {
         if (!selectedEnvironment) return;
         getNonDefaultWGNodes(Environment.id?.get(), selectedEnvironment.id);
         getActiveDeployment();
-        getWorkerGroups(selectedEnvironment.id);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedEnvironment]);
+
+    // Check for worker groups after nonDefaultWGNodes is fetched
+    useEffect(() => {
+        if (nonDefaultWGNodes.length === 0) return;
+        getWorkerGroups(selectedEnvironment.id);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [nonDefaultWGNodes.length]);
 
     // Populate values on load
     useEffect(() => {
@@ -168,6 +177,7 @@ const Deploy = () => {
                             <Autocomplete
                                 onChange={(event, newValue) => {
                                     setSelectedEnvironment(newValue);
+                                    setApiDrawerOpen(true);
                                 }}
                                 sx={{ minWidth: '212px' }}
                                 options={availableEnvironments}
@@ -245,11 +255,11 @@ const Deploy = () => {
                                     </Grid>
                                 ) : null}
 
-                                {deployment ? (
+                                {deployment && workerGroup && availableWorkerGroups.length !== 0 ? (
                                     <Autocomplete
                                         options={availableWorkerGroups}
                                         value={workerGroup}
-                                        getOptionLabel={(option) => option.WorkerGroup || option}
+                                        getOptionLabel={(option) => option.WorkerGroup || option.name || option}
                                         onChange={(event, newValue) => {
                                             setWorkerGroup(newValue);
                                         }}
@@ -274,7 +284,7 @@ const Deploy = () => {
                     </Grid>
 
                     {/* Right side */}
-                    {nonDefaultWGNodes.get().length > 0 ? (
+                    {selectedEnvironment ? (
                         <Grid mb={5}>
                             {pipeline.node_type_desc === 'api' ? (
                                 <>
@@ -324,10 +334,15 @@ const Deploy = () => {
                                     </Typography>
                                     <Autocomplete
                                         options={availableWorkerGroups}
-                                        getOptionLabel={(option) => option.WorkerGroup}
+                                        getOptionLabel={(option) => option.WorkerGroup || option.name}
                                         onInputChange={(event, newValue) => {
-                                            let idx = nonDefaultWGNodes.get().findIndex((b) => b.nodeID === a.nodeID);
-                                            nonDefaultWGNodes[idx].merge({ workerGroup: newValue });
+                                            let idx = nonDefaultWGNodes.get().findIndex((b) => b.name === a.name);
+                                            if (a.nodeTypeDesc === 'rpa-python') {
+                                                let workerGroup = availableWorkerGroups.find((a) => a.name === newValue).remoteProcessGroupID;
+                                                nonDefaultWGNodes[idx].merge({ workerGroup });
+                                            } else {
+                                                nonDefaultWGNodes[idx].merge({ workerGroup: newValue });
+                                            }
                                         }}
                                         renderInput={(params) => (
                                             <TextField {...params} label="Worker group" size="small" sx={{ fontSize: '.75rem', display: 'flex', width: '212px' }} />
@@ -453,26 +468,44 @@ const useGetDeploymentHook = (environmentID, pipelineID, setDeployment) => {
     };
 };
 
-const useGetWorkerGroupsHook = (setWorkerGroups, selectedEnvironment) => {
+const useGetWorkerGroupsHook = (setWorkerGroups, nodeTypeDesc) => {
     // GraphQL hook
     const getWorkerGroups = useGetWorkerGroups();
+    const getRemoteProcessGroupsForAnEnvironment = useGetRemoteProcessGroupsForAnEnvironment();
 
     const { enqueueSnackbar } = useSnackbar();
 
-    // Get worker groups
-    return async (environmentID) => {
-        const response = await getWorkerGroups({ environmentID });
+    if (nodeTypeDesc === 'rpa-python') {
+        // Get remote process groups
+        return async (environmentID) => {
+            const response = await getRemoteProcessGroupsForAnEnvironment({ environmentID });
 
-        if (response === null) {
-            setWorkerGroups([]);
-        } else if (response.r || response.error) {
-            enqueueSnackbar("Can't get worker groups: " + (response.msg || response.r || response.error), { variant: 'error' });
-        } else if (response.errors) {
-            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-        } else {
-            setWorkerGroups(response);
-        }
-    };
+            if (response === null) {
+                setWorkerGroups([]);
+            } else if (response.r || response.error) {
+                enqueueSnackbar("Can't get remote process groups: " + (response.msg || response.r || response.error), { variant: 'error' });
+            } else if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            } else {
+                setWorkerGroups(response);
+            }
+        };
+    } else {
+        // Get worker groups
+        return async (environmentID) => {
+            const response = await getWorkerGroups({ environmentID });
+
+            if (response === null) {
+                setWorkerGroups([]);
+            } else if (response.r || response.error) {
+                enqueueSnackbar("Can't get worker groups: " + (response.msg || response.r || response.error), { variant: 'error' });
+            } else if (response.errors) {
+                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+            } else {
+                setWorkerGroups(response);
+            }
+        };
+    }
 };
 
 // ----- Custom API Trigger hook

@@ -20,6 +20,7 @@ import { useUploadFileNodeHook } from '../EditorColumn';
 import DeleteFileFolderDrawer from '../../DrawerContent/DeleteFileFolderDrawer';
 import { useRenameFile } from '../../../graphql/renameFile';
 import { useRenameFolder } from '../../../graphql/renameFolder';
+import { useGetSingleRemoteProcessGroup } from '../../../graphql/getSingleRemoteProcessGroup';
 
 const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Global environment state with hookstate
@@ -30,8 +31,10 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Local state
     const [workerGroups, setWorkerGroups] = useState([]);
     const [workerGroup, setWorkerGroup] = useState(null);
+    const [processGroup, setProcessGroup] = useState(null);
     const [selected, setSelected] = useState(null);
     const [expanded, setExpanded] = useState([]);
+
     const data = useHookState({});
 
     // Drawer State
@@ -48,11 +51,12 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Local ref
     const newFileRef = useRef();
 
-    // Graphql hook
+    // Graphql hooks
     const uploadFileNode = useUploadFileNodeHook(rest.pipeline);
     const createFolderNode = useCreateFolderNodeHook(rest.pipeline, selected);
     const renameFile = useRenameFileHook(rest.pipeline, selected);
     const renameFolder = useRenameFolderHook(rest.pipeline, selected);
+    const getSingleRemoteProcessGroup = useGetSingleRemoteProcessGroupHook(Environment.id.get(), rest.pipeline.workerGroup, setProcessGroup);
 
     // Set worker group on load
     useEffect(() => {
@@ -118,7 +122,15 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Get workers and files on load
     useEffect(() => {
         if (!Environment.id.get()) return;
-        getWorkerGroups();
+
+        if (rest.pipeline.nodeTypeDesc === 'rpa-python') {
+            setWorkerGroups([{ WorkerGroup: rest.pipeline.workerGroup }]);
+            setWorkerGroup({ WorkerGroup: rest.pipeline.workerGroup });
+        } else {
+            getWorkerGroups();
+        }
+
+        getSingleRemoteProcessGroup();
         getFilesNode();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id.get()]);
@@ -574,13 +586,24 @@ const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
             <Box>
                 <Autocomplete
                     options={workerGroups}
-                    getOptionLabel={(option) => option.WorkerGroup}
+                    getOptionLabel={(option) => (rest.pipeline.nodeTypeDesc === 'rpa-python' ? processGroup?.name || '' : option.WorkerGroup)}
                     value={workerGroup}
                     onChange={(event, newValue) => {
                         setWorkerGroup(newValue);
                     }}
-                    sx={{ '& fieldset': { borderRadius: 0, borderColor: 'editorPage.borderColor' }, '& .MuiAutocomplete-popupIndicator': { color: 'editorPage.fileManagerIcon' } }}
-                    renderInput={(params) => <TextField {...params} label="Worker" required size="small" sx={{ fontSize: '.75rem', display: 'flex' }} />}
+                    sx={{
+                        '& fieldset': { borderRadius: 0, borderColor: 'editorPage.borderColor' },
+                        '& .MuiAutocomplete-popupIndicator': { color: 'editorPage.fileManagerIcon' },
+                    }}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label={rest.pipeline.nodeTypeDesc === 'rpa-python' ? 'RPA Worker' : 'Worker'}
+                            required
+                            size="small"
+                            sx={{ fontSize: '.75rem', display: 'flex' }}
+                        />
+                    )}
                 />
             </Box>
 
@@ -857,6 +880,27 @@ const useRenameFolderHook = (pipeline, data, setExpanded) => {
             enqueueSnackbar("Can't rename folder: " + (response.msg || response.r || response.error), { variant: 'error' });
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        }
+    };
+};
+
+// ** Custom Hooks
+const useGetSingleRemoteProcessGroupHook = (environmentID, remoteProcessGroupID, setProcessGroup) => {
+    // GraphQL hook
+    const getSingleRemoteProcessGroup = useGetSingleRemoteProcessGroup();
+
+    const { enqueueSnackbar } = useSnackbar();
+
+    // Get remote process group
+    return async () => {
+        const response = await getSingleRemoteProcessGroup({ environmentID, remoteProcessGroupID });
+
+        if (response.r || response.error) {
+            enqueueSnackbar("Can't get remote process group: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            setProcessGroup(response);
         }
     };
 };

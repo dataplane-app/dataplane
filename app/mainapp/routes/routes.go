@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,6 +22,8 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	"github.com/dataplane-app/dataplane/app/mainapp/pipelines"
 	"github.com/dataplane-app/dataplane/app/mainapp/platform"
+	"github.com/dataplane-app/dataplane/app/mainapp/remoteworker"
+	"github.com/dataplane-app/dataplane/app/mainapp/remoteworker_processgroup"
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler"
 	"github.com/dataplane-app/dataplane/app/mainapp/scheduler/routinetasks"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
@@ -272,7 +275,7 @@ func Setup(port string) *fiber.App {
 		AllowOrigins:     "*",
 		AllowCredentials: true,
 		// AllowHeaders: "*",
-		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization, workerID",
 	}))
 
 	// --------FRONTEND ----
@@ -282,6 +285,7 @@ func Setup(port string) *fiber.App {
 	// ------- GRAPHQL------
 	app.Post("/app/public/graphql", PublicGraphqlHandler())
 	app.Post("/app/private/graphql", auth.TokenAuthMiddle(), PrivateGraphqlHandler())
+	app.Post("/app/desktop/graphql", auth.DesktopAuthMiddle(), DesktopGraphqlHandler())
 
 	// WARNING: This is insecure and only for documentation, do not enable in production
 	if os.Getenv("DP_GRAPHQLDOCS") == "true" {
@@ -326,6 +330,101 @@ func Setup(port string) *fiber.App {
 
 		wsockets.RoomUpdates(c, room)
 	}))
+
+	/* Authenticate remote worker */
+	app.Post("/app/remoteworker/connect/:workerID", func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
+		remoteWorkerID := string(c.Params("workerID"))
+
+		// body := c.Body()
+		authHeader := strings.Split(string(c.Request().Header.Peek("Authorization")), "Bearer ")
+		if len(authHeader) != 2 {
+			errstring := "Malformed token"
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"r": "error", "msg": errstring, "active": false})
+		}
+		secretToken := authHeader[1]
+		newRefreshToken, err := auth.AuthRemoteWorker(remoteWorkerID, secretToken)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err.Error())
+			}
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
+		}
+		return c.Status(http.StatusOK).JSON(fiber.Map{"access_token": newRefreshToken, "remote_worker_id": remoteWorkerID})
+	})
+
+	app.Post("/app/remoteworker/codefiles/:environmentID/:nodeID", auth.DesktopAuthMiddle(), func(c *fiber.Ctx) error {
+
+		/* runtype is prefix to folder structure: coderun, pipeline, deployment */
+		c.Accepts("application/json")
+
+		// remoteWorkerID := string(c.Params("workerID"))
+		nodeID := string(c.Params("nodeID"))
+		environmentID := string(c.Params("environmentID"))
+		output, filesize, err := remoteworker.CodeRunCompressCodeFiles(database.DBConn, nodeID, environmentID)
+		if err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"Remote worker code run download file error": err.Error()})
+		}
+
+		FileContentType := http.DetectContentType(output)
+		c.Append("Content-Type", FileContentType)
+		c.Append("Content-Length", strconv.Itoa(filesize))
+
+		return c.Status(http.StatusOK).Send(output)
+	})
+
+	app.Post("/app/remoteworker/deployfiles/:environmentID/:nodeID/:version", auth.DesktopAuthMiddle(), func(c *fiber.Ctx) error {
+
+		/* runtype is prefix to folder structure: coderun, pipeline, deployment */
+		c.Accepts("application/json")
+
+		// remoteWorkerID := string(c.Params("workerID"))
+		nodeID := string(c.Params("nodeID"))
+		environmentID := string(c.Params("environmentID"))
+		version := string(c.Params("version"))
+		output, filesize, err := remoteworker.DeployCompressFiles(database.DBConn, nodeID, environmentID, version)
+		if err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"Remote worker code run download file error": err.Error()})
+		}
+
+		FileContentType := http.DetectContentType(output)
+		c.Append("Content-Type", FileContentType)
+		c.Append("Content-Length", strconv.Itoa(filesize))
+
+		return c.Status(http.StatusOK).Send(output)
+	})
+
+	/* Request all process groups at start of remotw worker */
+	app.Post("/app/remoteworker/allprocessgroups/:workerID", auth.DesktopAuthMiddle(), func(c *fiber.Ctx) error {
+
+		c.Accepts("application/json")
+		remoteWorkerID := string(c.Params("workerID"))
+		output, err := remoteworker_processgroup.AllProcessGroups(remoteWorkerID)
+		if err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"Remote worker process groups error": err.Error()})
+		}
+
+		return c.Status(http.StatusOK).JSON(output)
+	})
+
+	/* ------ REMOTE WORKERS ----- */
+	// auth.AuthRemoteWorkerWebsockets(),
+	go remoteworker.RPCHub()
+	// auth.AuthRemoteWorkerWebsockets(),
+	app.Get("/app/ws/remoteworker/jsonrpc/:workerID", websocket.New(func(c *websocket.Conn) {
+
+		remoteWorkerID := string(c.Params("workerID"))
+		// c.Locals("remoteWorkerID", remoteWorkerID)
+
+		remoteworker.RPCServer(c, remoteWorkerID)
+		/* params are set in auth middleware with locals */
+		// jsonrpc.ServeConn(&remoteworker.WebsocketConn{c})
+	}))
+
+	// app.Get("/trigger/remote/task", func(c *fiber.Ctx) error {
+	// 	remoteworker.Broadcast <- remoteworker.Message{WorkerID: "4061e7e1-5ec9-44ae-ad8c-976957592e8f", Data: []byte(`{"hello":"hello"}`)}
+	// 	return c.JSON(fiber.Map{"Response": "OK"})
+	// })
 
 	// Download code files
 	app.Get("/app/private/code-files/:fileid", auth.TokenAuthMiddle(), func(c *fiber.Ctx) error {
@@ -500,11 +599,6 @@ func Setup(port string) *fiber.App {
 		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
 	})
 
-	// Check healthz
-	app.Get("/healthz", func(c *fiber.Ctx) error {
-		return c.SendString("Hello 👋! Healthy 🍏")
-	})
-
 	// Sync folders to Database
 	app.Post("/sync-folder-database", func(c *fiber.Ctx) error {
 		distributefilesystem.MoveCodeFilesToDB(database.DBConn)
@@ -551,7 +645,7 @@ func Setup(port string) *fiber.App {
 
 }
 
-//Defining the Playground handler
+// Defining the Playground handler
 func playgroundHandler() func(w http.ResponseWriter, r *http.Request) {
 	query_url := "/private/graphqldocs"
 	h := playground.Handler("GraphQL", query_url)

@@ -84,7 +84,6 @@ func FolderNodeAddUpdate(db *gorm.DB, pipelineID string, environmentID string, s
 			}
 
 			// If processor nodes need entrypoint files
-			// log.Println("Node types:", n.NodeType, n.NodeTypeDesc)
 			if n.NodeType == "process" {
 
 				node := models.PipelineNodes{
@@ -104,7 +103,17 @@ func FolderNodeAddUpdate(db *gorm.DB, pipelineID string, environmentID string, s
 						}
 						return errors.New("Folder node create processor error: " + err.Error())
 					}
+				case "rpa-python":
+					// log.Println("Node types:", n.NodeType, n.NodeTypeDesc, dpconfig.CodeDirectory+rfolder)
+					path, err := FileCreateProcessor(n.NodeTypeDesc, rfolder+"/", cfolder.FolderID, node)
+					if err != nil {
+						if dpconfig.Debug == "true" {
+							log.Println("Failed to create python processor file: ", err, path)
+						}
+						return errors.New("Folder node create processor error: " + err.Error())
+					}
 				}
+
 			}
 
 		} else {

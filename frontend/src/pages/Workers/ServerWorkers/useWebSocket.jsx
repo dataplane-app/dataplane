@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import ConsoleLogHelper from '../../Helper/logger';
-import { useGlobalAuthState } from '../../Auth/UserAuth';
-import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
+import ConsoleLogHelper from '../../../Helper/logger';
+import { useGlobalAuthState } from '../../../Auth/UserAuth';
+import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
 
 var loc = window.location,
     new_uri;

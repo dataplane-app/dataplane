@@ -66,6 +66,7 @@ const AddCommandDrawer = ({ handleClose, setElements, refreshData }) => {
                             <TextField
                                 label={`Command ${idx + 1}`}
                                 id={`Command ${idx + 1}`}
+                                key={idx}
                                 size="small"
                                 required
                                 sx={{ mt: 2, mb: 2, fontSize: '.75rem', display: 'flex' }}

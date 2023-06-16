@@ -1,18 +1,18 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Box, Grid, Typography } from '@mui/material';
-import Search from '../../components/Search';
+import Search from '../../../components/Search';
 import { useTable, useGlobalFilter } from 'react-table';
-import CustomChip from '../../components/CustomChip';
-import { formatDate } from '../../utils/formatDate';
+import CustomChip from '../../../components/CustomChip';
+import { formatDate } from '../../../utils/formatDate';
 import { useSnackbar } from 'notistack';
-import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
-import { useGetWorkers } from '../../graphql/getWorkers';
+import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
+import { useGetWorkers } from '../../../graphql/getWorkers';
 import WorkerDetailCPU from './WorkerDetailCPU';
 import WorkerDetailMemory from './WorkerDetailMemory';
 import useWebSocket from './useWebSocket';
 import { useHistory, useParams } from 'react-router-dom';
-import { balancerDict } from './Workers';
-import { useGlobalMeState } from '../../components/Navbar';
+import { balancerDict } from './ServerWorkers';
+import { useGlobalMeState } from '../../../components/Navbar';
 
 const tableWidth = '1140px';
 

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dfscache "github.com/dataplane-app/dataplane/app/mainapp/code_editor/dfs_cache"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -24,8 +24,6 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
 	git "github.com/go-git/go-git/v5"
 	"github.com/google/uuid"
-	uuid2 "github.com/google/uuid"
-
 	jsoniter "github.com/json-iterator/go"
 	"gorm.io/gorm"
 )
@@ -822,7 +820,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 				return errors.New("Retrive pipeline trigger database error.")
 			}
 
-			triggerID := uuid2.New().String()
+			triggerID := uuid.NewString()
 			apiKeyActive := true
 			publicLive := existing.PublicLive
 			privateLive := existing.PrivateLive
@@ -1157,6 +1155,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 		// pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
 
+		/* ----- This adds the default entrypoint files for python ------- */
 		errfoldernode := filesystem.FolderNodeAddUpdate(tx, pipelineID, environmentID, "pipelines")
 		if errfoldernode != nil {
 			return errors.New("Folder node error: " + errfoldernode.Error())

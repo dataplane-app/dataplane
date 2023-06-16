@@ -4,8 +4,8 @@ import { useGlobalAuthState } from '../Auth/UserAuth';
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation stopCERun($pipelineID: String!, $environmentID: String!, $runID: String!) {
-        stopCERun(pipelineID: $pipelineID, environmentID: $environmentID, runID: $runID)
+    mutation stopCERun($pipelineID: String!, $environmentID: String!, $runID: String!, $nodeTypeDesc: String!) {
+        stopCERun(pipelineID: $pipelineID, environmentID: $environmentID, runID: $runID, nodeTypeDesc: $nodeTypeDesc)
     }
 `;
 
