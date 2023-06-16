@@ -58,7 +58,7 @@ const PipelineEditor = () => {
         currentTab = 'markdown';
     }
 
-    const [pipeline, setPipeline] = useState({ replayType: 'Pipeline', replayRunID: '' });
+    const [pipeline, setPipeline] = useState({ replayType: 'Code editor', replayRunID: '' });
 
     // Packages state for packages component
     const [packages, setPackages] = useState('');
@@ -66,9 +66,10 @@ const PipelineEditor = () => {
     // Replay state
     const [runs, setRuns] = useState([]);
     const [selectedReplayRun, setSelectedReplayRun] = useState('');
+    const [replaySelection, setReplaySelection] = useState(['Code editor']);
 
     // Custom hook
-    const getPipelineRuns = useGetPipelineRunsHook(Environment.id.get(), setRuns, setSelectedReplayRun, setPipeline);
+    const getPipelineRuns = useGetPipelineRunsHook(Environment.id.get(), setRuns, setSelectedReplayRun, setReplaySelection);
 
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
 
@@ -126,6 +127,7 @@ const PipelineEditor = () => {
 
                 <Typography sx={{ marginLeft: 'auto', mr: 1 }}>Replay</Typography>
 
+                {/* Replay dropdown */}
                 <Autocomplete
                     id="replay_select"
                     onChange={(event, newValue) =>
@@ -141,7 +143,7 @@ const PipelineEditor = () => {
                     value={pipeline.replayType}
                     sx={{ minWidth: '120px', mr: 2, '.MuiAutocomplete-inputRoot': { height: '40px' } }}
                     disableClearable
-                    options={['Pipeline', 'Code editor']}
+                    options={replaySelection}
                     renderInput={(params) => (
                         <TextField //
                             {...params}
@@ -266,13 +268,20 @@ const useGetPipelineHook = (environmentID, setPipeline) => {
             responsePipeline.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             const nodeName = responseNode.name;
-            setPipeline((p) => ({ ...p, ...responseNode, ...responsePipeline, nodeName }));
+            setPipeline((p) => ({
+                ...p,
+                ...responsePipeline,
+                ...responseNode,
+                nodeName,
+                replayRunID: pipelineId,
+                ...(responseNode.nodeTypeDesc === 'rpa-python' && { workerGroup: responseNode.workerGroup }),
+            }));
         }
     };
 };
 
 // ------- Custom Hooks
-const useGetPipelineRunsHook = (environmentID, setRuns, setSelectedReplayRun, setPipeline) => {
+const useGetPipelineRunsHook = (environmentID, setRuns, setSelectedReplayRun, setReplaySelection) => {
     // GraphQL hook
     const getPipelineRuns = useGetPipelineRuns();
 
@@ -284,7 +293,7 @@ const useGetPipelineRunsHook = (environmentID, setRuns, setSelectedReplayRun, se
     return async () => {
         const response = await getPipelineRuns({ pipelineID: pipelineId, environmentID });
 
-        if (response === null) {
+        if (response === null || response.length === 0) {
             setRuns([]);
         } else if (response.r || response.error) {
             enqueueSnackbar("Can't get pipeline runs: " + (response.msg || response.r || response.error), { variant: 'error' });
@@ -293,7 +302,7 @@ const useGetPipelineRunsHook = (environmentID, setRuns, setSelectedReplayRun, se
         } else {
             setRuns(response);
             setSelectedReplayRun(response[0]);
-            setPipeline((p) => ({ ...p, replayRunID: response[0]?.run_id }));
+            setReplaySelection(['Code editor', 'Pipeline']);
         }
     };
 };

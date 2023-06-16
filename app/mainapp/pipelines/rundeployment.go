@@ -239,6 +239,7 @@ func RunDeployment(pipelineID string, environmentID string, runID string, runJso
 			WorkerGroup:   workergroup,
 			PipelineID:    s.PipelineID,
 			NodeID:        s.NodeID,
+			WorkerType:    s.NodeTypeDesc,
 			Status:        status,
 			Dependency:    dependJSON,
 			Commands:      s.Commands,
@@ -314,7 +315,7 @@ func RunDeployment(pipelineID string, environmentID string, runID string, runJso
 		// }
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
 
-		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], triggerData[s].Version, "deployment")
+		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], triggerData[s].Version, "deployment", triggerData[s].WorkerType)
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)

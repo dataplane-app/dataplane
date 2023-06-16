@@ -21,7 +21,7 @@ import NotFound from './pages/NotFound';
 import Pipelines from './pages/PipelinesView';
 import Deployments from './pages/Deployments';
 import Workers from './pages/Workers/Workers';
-import WorkerDetail from './pages/Workers/WorkerDetail';
+import WorkerDetail from './pages/Workers/ServerWorkers/WorkerDetail';
 import SecretDetail from './pages/SecretDetail';
 import Secrets from './pages/Secrets';
 import Settings from './pages/Settings';
@@ -39,6 +39,10 @@ import Deploy from './pages/Deploy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import DeploymentPermissions from './pages/Deployments/DeploymentPermissions';
+import RPAWorkers from './pages/Workers/RemoteWorkers/RemoteWorkers';
+import RPAManage from './pages/Workers/RemoteWorkers/RemoteWorkerDetails';
+import RemoteProcessGroupManage from './pages/Workers/RemoteWorkers/ProcessGroupDetails';
+import RemoteProcessGroups from './pages/Workers/RemoteWorkers/RemoteProcessGroups';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
@@ -129,6 +133,10 @@ function App() {
                                             '/',
                                             '/workers',
                                             '/workers/:workerId',
+                                            '/remote/processgroups',
+                                            '/remote/workers',
+                                            '/remote/workers/:workerId',
+                                            '/remote/processgroups/:groupId',
                                             '/teams',
                                             '/teams/:teamId',
                                             '/access/:accessId',
@@ -166,7 +174,19 @@ function App() {
                                                     <DeploymentPermissions />
                                                 </Route>
                                                 <Route exact path="/workers">
-                                                    <Workers />
+                                                    <Workers tab={0} />
+                                                </Route>
+                                                <Route exact path="/remote/workers">
+                                                    <Workers tab={1} />
+                                                </Route>
+                                                <Route exact path="/remote/workers/:workerId">
+                                                    <RPAManage />
+                                                </Route>
+                                                <Route exact path="/remote/processgroups/">
+                                                    <RemoteProcessGroups />
+                                                </Route>
+                                                <Route exact path="/remote/processgroups/:groupId">
+                                                    <RemoteProcessGroupManage />
                                                 </Route>
                                                 <Route exact path="/workers/:workerId">
                                                     <WorkerDetail />

@@ -3,6 +3,7 @@ package runtask
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -69,6 +70,8 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			log.Println(errl.Error())
 		}
 
+		WSLogError("Lock for run and node exists:"+errl.Error(), msg)
+
 		return
 	}
 
@@ -77,11 +80,13 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	err2 := database.DBConn.Select("task_id", "status").Where("task_id = ?", msg.TaskID).First(&lockCheck).Error
 	if err2 != nil {
 		log.Println(err2.Error())
+		WSLogError("Task already running:"+err2.Error(), msg)
 		return
 	}
 
 	if lockCheck.Status != "Queue" {
 		log.Println("Skipping not in queue", msg.RunID, msg.NodeID)
+		WSLogError("Skipping not in queue - runid:"+msg.RunID+" - node:"+msg.NodeID, msg)
 		return
 	}
 
@@ -107,12 +112,15 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	err2 = database.DBConn.Select("run_id", "status").Where("run_id = ?", msg.RunID).First(&pipelineCheck).Error
 	if err2 != nil {
 		log.Println(err2.Error())
+		WSLogError("Skipping not in queue - runid:"+msg.RunID+" - node:"+msg.NodeID, msg)
 		return
 	}
 
 	if pipelineCheck.Status != "Running" {
 
 		log.Println("Skipping pipeline not in running state", msg.RunID, msg.NodeID)
+
+		WSLogError("Skipping pipeline not in running state - runid:"+msg.RunID+" - node:"+msg.NodeID, msg)
 
 		TaskFinal := modelmain.WorkerTasks{
 			TaskID:        msg.TaskID,
@@ -510,6 +518,30 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		// log.Println("tasks before del:", Tasks)
 	}
 
+	coderuntime := time.Now().UTC().Sub(TaskUpdate.CreatedAt)
+
+	logmsg := modelmain.LogsWorkers{
+		CreatedAt:     time.Now().UTC(),
+		UID:           uuid.NewString(),
+		EnvironmentID: msg.EnvironmentID,
+		RunID:         msg.RunID,
+		NodeID:        msg.NodeID,
+		TaskID:        msg.TaskID,
+		Category:      "task",
+		Log:           fmt.Sprintf("Run time: %v", coderuntime),
+		LogType:       "info",
+	}
+
+	sendmsg := modelmain.LogsSend{
+		CreatedAt: time.Now().UTC(),
+		UID:       uuid.NewString(),
+		Log:       fmt.Sprintf("Run time: %v", coderuntime),
+		LogType:   "info",
+	}
+
+	messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
+	database.DBConn.Create(&logmsg)
+
 	// Queue the next set of tasks
 	RunNext := modelmain.WorkerPipelineNext{
 		TaskID:        msg.TaskID,
@@ -523,6 +555,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 	errnat := messageq.MsgSend("pipeline-run-next", RunNext)
 	if errnat != nil {
+		WSLogError("Failed nats to send to next run runid: "+msg.RunID+" - node:"+msg.NodeID, msg)
 		if wrkerconfig.Debug == "true" {
 			log.Println(errnat)
 		}

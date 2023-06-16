@@ -52,6 +52,15 @@ var ResourceType = []*ResourceTypeStruct{
 	{Code: "environment_edit_workers", Level: "environment", Label: "Manage workers", Access: "write"},
 	{Code: "environment_view_workers", Level: "environment", Label: "View workers", Access: "read"},
 
+	// Remote
+	{Code: "environment_view_remote_workers", Level: "environment", Label: "View remote workers", Access: "read"},
+	{Code: "environment_edit_remote_workers", Level: "environment", Label: "Manage remote workers", Access: "write"},
+	{Code: "environment_add_remote_workers", Level: "environment", Label: "Add remote workers to environment", Access: "write"},
+
+	{Code: "environment_view_remote_process_groups", Level: "environment", Label: "View remote process groups", Access: "read"},
+	{Code: "environment_edit_remote_process_groups", Level: "environment", Label: "Manage remote process groups", Access: "write"},
+	{Code: "environment_add_process_group", Level: "environment", Label: "Add process groups to environment", Access: "write"},
+
 	// To Deployments
 	{Code: "environment_deploy_here", Level: "environment", Label: "Deploy pipelines to this environment", Access: "write"},
 

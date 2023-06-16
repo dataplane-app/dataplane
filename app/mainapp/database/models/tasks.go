@@ -25,6 +25,7 @@ type WorkerTasks struct {
 	RunType       string         `json:"run_type"`
 	WorkerGroup   string         `json:"worker_group"`
 	WorkerID      string         `json:"worker_id"`
+	WorkerType    string         `json:"worker_type"`
 	PipelineID    string         `json:"pipeline_id"`
 	NodeID        string         `gorm:"index:idx_task_nodeid;" json:"node_id"`
 	Folder        string         `json:"folder"`

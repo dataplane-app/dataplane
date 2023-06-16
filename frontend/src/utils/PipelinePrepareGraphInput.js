@@ -27,7 +27,7 @@ export function prepareInputForFrontend(input) {
             };
             nodesInput.push({
                 id: node.nodeID,
-                type: node.nodeTypeDesc + 'Node',
+                type: node.nodeTypeDesc === 'rpa-python' ? 'rpaNode' : node.nodeTypeDesc + 'Node',
                 position: {
                     x: node.meta?.position?.x || 0,
                     y: node.meta?.position?.y || 0,

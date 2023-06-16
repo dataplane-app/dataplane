@@ -16,8 +16,13 @@ func FileCreateProcessor(nodeTypeDesc string, Folder string, FolderID string, no
 	// Python processor
 	case "python":
 
-		content := `print("Pipeline id: ` + node.PipelineID + `")
-print("Node id: ` + node.NodeID + `")`
+		content := `import os
+
+if __name__ == "__main__":
+	print("Environment id: " + os.environ["DP_ENVID"])
+	print("Run id: " + os.environ["DP_RUNID"])
+	print("Pipeline id: ` + node.PipelineID + `")
+	print("Node id: ` + node.NodeID + `")`
 
 		input := models.CodeFiles{
 			EnvironmentID: node.EnvironmentID,
@@ -39,6 +44,55 @@ print("Node id: ` + node.NodeID + `")`
 
 		content = `### Document my pipeline
 Add notes here to document this pipeline step.`
+
+		input = models.CodeFiles{
+			EnvironmentID: node.EnvironmentID,
+			NodeID:        node.NodeID,
+			PipelineID:    node.PipelineID,
+			FileName:      "document.md",
+			Active:        true,
+			Level:         "node_file",
+			FType:         "file",
+			FolderID:      FolderID,
+		}
+
+		// Folder excludes code directory
+
+		_, filepath, err = CreateFile(input, Folder, []byte(content))
+		if err != nil {
+			return "", err
+		}
+
+	case "rpa-python":
+
+		content := `import os
+
+if __name__ == "__main__":
+	print("Environment id: " + os.environ["DP_ENVID"])
+	print("Run id: " + os.environ["DP_RUNID"])
+	print("Pipeline id: ` + node.PipelineID + `")
+	print("Node id: ` + node.NodeID + `")`
+
+		input := models.CodeFiles{
+			EnvironmentID: node.EnvironmentID,
+			NodeID:        node.NodeID,
+			PipelineID:    node.PipelineID,
+			FileName:      "dp-entrypoint.py",
+			Active:        true,
+			Level:         "node_file",
+			FType:         "file",
+			FolderID:      FolderID,
+		}
+
+		// Folder excludes code directory
+
+		_, filepath, err = CreateFile(input, Folder, []byte(content))
+		if err != nil {
+			return "", err
+		}
+
+		content = `### Document my pipeline
+Add notes here to document this RPA pipeline step.`
 
 		input = models.CodeFiles{
 			EnvironmentID: node.EnvironmentID,

@@ -25,6 +25,7 @@ import TurnOffPipelineDrawerRunPipeline from '../../components/DrawerContent/Tur
 import ScheduleDrawer from '../../components/DrawerContent/SchedulerDrawerRunPage';
 import { useGlobalFlowState } from '../PipelineEdit';
 import ProcessTypeDrawer from '../../components/DrawerContent/ProcessTypeDrawerRunPage';
+import RpaDrawer from '../../components/DrawerContent/RpaDrawerRunPage';
 
 const View = () => {
     // Retrieve global environments from drop down - selected environment ID
@@ -244,6 +245,18 @@ const View = () => {
                     environmentID={Environment.id.get()}
                     handleClose={() => DrawerState.isOpenConfigureDrawer.set(false)}
                     workerGroup={pipeline?.workerGroup}
+                />
+            </Drawer>
+
+            <Drawer
+                hideBackdrop
+                sx={{ width: 'calc(100% - 203px)', zIndex: 1099, [`& .MuiDrawer-paper`]: { width: 'calc(100% - 203px)', top: 82 } }}
+                anchor="right"
+                open={DrawerState.isOpenRpaDrawer.get()}
+                onClose={() => DrawerState.isOpenRpaDrawer.set(false)}>
+                <RpaDrawer
+                    handleClose={() => DrawerState.isOpenRpaDrawer.set(false)} //
+                    environmentID={Environment.id.get()}
                 />
             </Drawer>
         </Box>

@@ -45,7 +45,10 @@ var DPRedisPort string
 var DPRedisDB int
 var DPRedisPassword string
 
-//Database
+// Remote workers
+var RemoteWorkerDebug string
+
+// Database
 var DPDBMaxOpenConns int
 var DPDBMaxIdleConns int
 var ConnMaxLifetime int
@@ -105,6 +108,11 @@ func LoadConfig() {
 	MQDebug = os.Getenv("DP_MQ_DEBUG")
 	if MQDebug == "" {
 		MQDebug = "false"
+	}
+
+	RemoteWorkerDebug = os.Getenv("DP_REMOTEWORKER_DEBUG")
+	if RemoteWorkerDebug == "" {
+		RemoteWorkerDebug = "false"
 	}
 
 	CodeDirectory = os.Getenv("DP_CODE_FOLDER")

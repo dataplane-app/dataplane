@@ -33,5 +33,5 @@ extend type Mutation {
     + **Route**: Private
     + **Permissions**: admin_platform, admin_environment, environment_edit_all_pipelines, specific_pipeline[write]
     """
-    stopCERun(pipelineID: String!, runID: String!, environmentID: String!): String!
+    stopCERun(pipelineID: String!, runID: String!, environmentID: String!, nodeTypeDesc: String!): String!
 }

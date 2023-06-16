@@ -54,8 +54,6 @@ export default function useWebSocketLog(environmentId, run_id, node_id, setKeys,
 
             ws.current.onmessage = (e) => {
                 const resp = JSON.parse(e.data);
-                // Return if not a log message
-                if (resp.run_id) return;
                 setKeys((k) => [...k, resp.uid]);
                 let text = `${formatDateLog(resp.created_at, timezone)} ${resp.log}`;
                 setSocketResponse(text);

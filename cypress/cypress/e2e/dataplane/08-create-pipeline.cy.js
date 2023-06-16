@@ -319,13 +319,20 @@ describe('Create pipelines', { retries: 5 }, function () {
         cy.contains('Save').should('exist', { timeout: 6000 }).click();
     });
 
-//Will open the code editor before any code run to test that an empty run id will not cause an issue. 
+    //Will open the code editor before any code run to test that an empty run id will not cause an issue.
     it('Verify code editor', function () {
         cy.get('.react-flow').within(() => {
             cy.get('#long-button').should('be.visible', { timeout: 6000 }).click();
         });
 
         cy.contains('Code').should('be.visible', { timeout: 6000 }).click();
+
+        // Run the code to verify 200 response
+        cy.intercept('POST', '/app/private/graphql').as('post');
+        cy.contains('button', 'Run').should('be.visible', { timeout: 6000 }).click();
+        cy.wait('@post').its('response.body.errors').should('not.exist');
+        cy.wait('@post').its('response.statusCode').should('eq', 200);
+
         cy.contains('Close').should('be.visible', { force: true, timeout: 6000 }).click();
     });
 
