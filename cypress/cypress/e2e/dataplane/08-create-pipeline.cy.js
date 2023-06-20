@@ -322,7 +322,7 @@ describe('Create pipelines', { retries: 5 }, function () {
     //Will open the code editor before any code run to test that an empty run id will not cause an issue.
     it('Verify code editor', function () {
         cy.get('.react-flow').within(() => {
-            cy.get('#long-button').should('be.visible', { timeout: 6000 }).click();
+            cy.get('#long-button').as('btn').click();
         });
 
         cy.contains('Code').should('be.visible', { timeout: 6000 }).click();
