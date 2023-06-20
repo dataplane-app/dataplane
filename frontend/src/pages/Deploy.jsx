@@ -142,7 +142,7 @@ const Deploy = () => {
             fromEnvironmentID: Environment.id?.get(),
             toEnvironmentID: selectedEnvironment.id,
             version: `${data.major}.${data.minor}.${data.patch}`,
-            workerGroup: data.workerGroup,
+            workerGroup: data.workerGroup || data.workerGroupDefault,
             liveactive: live,
             nodeWorkerGroup,
         };
@@ -269,7 +269,7 @@ const Deploy = () => {
                                                 label="Default worker group"
                                                 size="small"
                                                 sx={{ fontSize: '.75rem', display: 'flex' }}
-                                                {...register('workerGroup', { required: true })}
+                                                {...register('workerGroupDefault', { required: true })}
                                             />
                                         )}
                                     />
@@ -345,7 +345,13 @@ const Deploy = () => {
                                             }
                                         }}
                                         renderInput={(params) => (
-                                            <TextField {...params} label="Worker group" size="small" sx={{ fontSize: '.75rem', display: 'flex', width: '212px' }} />
+                                            <TextField
+                                                {...params}
+                                                {...register('workerGroup', { required: true })}
+                                                label="Worker group"
+                                                size="small"
+                                                sx={{ fontSize: '.75rem', display: 'flex', width: '212px' }}
+                                            />
                                         )}
                                     />
                                 </Box>

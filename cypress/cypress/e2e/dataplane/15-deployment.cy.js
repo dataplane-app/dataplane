@@ -24,7 +24,9 @@ describe('Deployment and deployment turn off', function () {
         cy.contains('Environment').parent().type('Development');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
 
-        cy.contains('Default worker group').parent().should('exist', { timeout: 6000 }).click();
+        cy.contains('Save').should('exist', { timeout: 6000 }).click();
+
+        cy.contains('Bash').parent().type('python_1');
         cy.get('.MuiAutocomplete-popper li[data-option-index="0"]').should('exist', { timeout: 6000 }).click();
 
         cy.contains('button', 'Deploy').should('exist', { timeout: 6000 }).click();
