@@ -123,6 +123,23 @@ const Settings = () => {
                     ) : null}
                 </Box>
 
+                {/* Single sign on */}
+                <Box mt={5}>
+                    <Typography component="h2" variant="h2" color="text.primary">
+                        Connect Teams Single Sign On
+                    </Typography>
+
+                    <Typography color="text.primary" mt={2} width="80ch">
+                        Team members will be able to automatically sign up within your business domain. You will need to specifically add those team members to environments to
+                        provide access to pipelines.
+                    </Typography>
+                    <Box display="flex" flexDirection="column" width="200px" gap={2} pt={2}>
+                        <Button variant="outlined">Microsoft</Button>
+                        <Button variant="outlined">Github</Button>
+                        <Button variant="outlined">Google</Button>
+                    </Box>
+                </Box>
+
                 <Box mt={10} sx={{ width: { md: '570px' } }}>
                     <Grid container mt={4} direction="row" alignItems="center" justifyContent="flex-start">
                         <Grid item display="flex" alignItems="center" sx={{ alignSelf: 'center' }}>
