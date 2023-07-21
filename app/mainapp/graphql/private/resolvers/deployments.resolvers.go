@@ -11,7 +11,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dfscache "github.com/dataplane-app/dataplane/app/mainapp/code_editor/dfs_cache"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -54,7 +54,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: toEnvironmentID, Access: "write", EnvironmentID: toEnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_here", ResourceID: platformID, Access: "write", EnvironmentID: toEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_here", ResourceID: toEnvironmentID, Access: "write", EnvironmentID: toEnvironmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -67,7 +67,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	perms = []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: fromEnvironmentID, Access: "write", EnvironmentID: fromEnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: fromEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_all_pipelines", ResourceID: fromEnvironmentID, Access: "write", EnvironmentID: fromEnvironmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "deploy", EnvironmentID: fromEnvironmentID},
 	}
 
