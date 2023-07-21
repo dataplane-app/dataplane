@@ -9,10 +9,11 @@ import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../compon
 import { useGetEnvironments } from '../graphql/getEnvironments';
 import { useForm } from 'react-hook-form';
 import { useGetNonDefaultWGNodes } from '../graphql/getNonDefaultWGNodes';
+import { useGetPipeline } from '../graphql/getPipeline';
 import { useHistory, useParams } from 'react-router-dom';
 import { useAddDeployment } from '../graphql/addDeployment';
 import { useState as useHookState } from '@hookstate/core';
-import { useGetPipelineHook } from './PipelineRuns';
+// import { useGetPipelineHook } from './PipelineRuns';
 import { useGetActiveDeployment } from '../graphql/getActiveDeployment';
 import { useGetWorkerGroups } from '../graphql/getWorkerGroups';
 import DeployAPITRiggerDrawer from '../components/DrawerContent/DeployAPITriggerDrawer';
@@ -38,6 +39,8 @@ const Deploy = () => {
     // Environment global state
     const Environment = useGlobalEnvironmentState();
 
+    const onlineswitch = ['schedule']
+
     // Local state
     const [deployment, setDeployment] = useState(null);
     const [selectedEnvironment, setSelectedEnvironment] = useState(null);
@@ -47,6 +50,15 @@ const Deploy = () => {
     const [live, setLive] = useState(true);
     const [workerGroup, setWorkerGroup] = useState(null);
     const nonDefaultWGNodes = useHookState([]);
+    
+    // ------ clear values in drop down ----------
+    const [values, setValues] = useState("");
+    const onChange = (_, value) => {
+        setValues(value);
+      };
+      const clearSelected = () => {
+        setValues([]);
+      };
 
     // Local state for trigger
     const [apiDrawerOpen, setApiDrawerOpen] = useState(false);
@@ -63,38 +75,64 @@ const Deploy = () => {
     const { pipelineId } = useParams();
     const history = useHistory();
 
-    // Graphql Hooks
+    // Declare the Graphql Hooks, called below in useEffect
     const getEnvironments = useGetEnvironmentsHook(setAvailableEnvironments);
-    const getWorkerGroups = useGetWorkerGroupsHook(setAvailableWorkerGroups, nonDefaultWGNodes[0]?.nodeTypeDesc?.get());
+    const getWorkerGroups = useGetWorkerGroupsHook(setAvailableWorkerGroups); //nonDefaultWGNodes[0]?.nodeTypeDesc?.get()
     const getNonDefaultWGNodes = useGetNonDefaultWGNodesHook(nonDefaultWGNodes, selectedEnvironment);
     const addDeployment = useAddDeploymentHook();
     const getPipeline = useGetPipelineHook(Environment.id.get(), setPipeline);
+
+    // Get any existing deployments for this pipeline - called below when the drop down menu for environment is selected
     const getActiveDeployment = useGetDeploymentHook(selectedEnvironment?.id, 'd-' + pipelineId, setDeployment);
+    
+    
     // Graphql API Trigger Hooks
     const getDeploymentTriggerHook = useGetDeploymentTriggerHook(Environment.id.get(), setTriggerID, dispatch);
     const generateDeploymentTrigger = useGenerateDeploymentTriggerHook(Environment.id.get(), triggerID, switches, dispatch);
 
+    // ------ ON PAGE LOAD ---------
+    // ------ Get data for environments, pipeline and deployment on load ---------
     useEffect(() => {
         if (!Environment.id?.get()) return;
+
+        // We need a list of environments to deploy the pipeline to. 
         getEnvironments();
         getPipeline();
-        getDeploymentTriggerHook();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id?.get()]);
 
+    // ------ ON ENVIRONMENT DROP DOWN CHANGE ---------
+    /* The drop down menu that selects an environment will set selectedEnvironment and trigger this section */
     useEffect(() => {
         if (!selectedEnvironment) return;
+
+        // This is a list of workers that are specific to a pipeline step i.e. non-default 
+        // A bit legacy as all nodes now have a specific worker group i.e. this will return all nodes.
         getNonDefaultWGNodes(Environment.id?.get(), selectedEnvironment.id);
+
+        // Given environment, get any existing deployment for this pipeline and versioning
         getActiveDeployment();
+
+        // Get available worker groups for the selected environment
+        getWorkerGroups(selectedEnvironment.id);
+
+        // Retrieve data about the API trigger for an existing deployment
+        if(pipeline?.node_type_desc === 'api') {
+        getDeploymentTriggerHook();
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedEnvironment]);
 
     // Check for worker groups after nonDefaultWGNodes is fetched
     useEffect(() => {
+
+        // console.log('nonDefaultWGNodes', nonDefaultWGNodes.get())
         if (nonDefaultWGNodes.length === 0) return;
-        getWorkerGroups(selectedEnvironment.id);
+       
+
+        // console.log("Deployment:", deployment, workerGroup, availableWorkerGroups);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nonDefaultWGNodes.length]);
@@ -102,8 +140,11 @@ const Deploy = () => {
     // Populate values on load
     useEffect(() => {
         if (!deployment) return;
+        if (!pipeline) return;
 
-        if (deployment.environmentID === selectedEnvironment.id) {
+        console.log("active deployments:", deployment, pipeline)
+
+        if (deployment.environmentID !== "") {
             setWorkerGroup(deployment.workerGroup);
             reset({
                 major: deployment.version.split('.')[0],
@@ -113,7 +154,7 @@ const Deploy = () => {
             });
             setLive(deployment.online);
         } else {
-            setWorkerGroup(null);
+            // setWorkerGroup(pipeline.workerGroup);
             reset({ major: '0', minor: '0', patch: '0', workerGroup: null });
             setLive(true);
         }
@@ -177,7 +218,8 @@ const Deploy = () => {
                             <Autocomplete
                                 onChange={(event, newValue) => {
                                     setSelectedEnvironment(newValue);
-                                    setApiDrawerOpen(true);
+
+                                    // setApiDrawerOpen(true);
                                 }}
                                 sx={{ minWidth: '212px' }}
                                 options={availableEnvironments}
@@ -193,7 +235,7 @@ const Deploy = () => {
                                 <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
                                     Version control
                                 </Typography>
-                                <Grid container alignItems="center" flexWrap="nowrap" justifyContent="flex-start" mt={2} mb={deployment.node_type_desc !== 'play' ? 4 : 8}>
+                                <Grid container alignItems="center" flexWrap="nowrap" justifyContent="flex-start" mt={2} mb={onlineswitch.includes(pipeline.node_type_desc) ? 4 : 8}>
                                     <Grid item display="flex" alignItems="center" sx={{ flexDirection: 'column' }}>
                                         <Typography variant="subtitle1" fontWeight={500} mb={0.6}>
                                             Major
@@ -245,17 +287,18 @@ const Deploy = () => {
                                     </Grid>
                                 </Grid>
 
-                                {pipeline.node_type_desc !== 'play' ? (
+                                {/* In list of array trigger which has online - only scheduler at this point */}
+                                {onlineswitch.includes(pipeline.node_type_desc) ? (
                                     <Grid container alignItems="center" mb={4}>
                                         <IOSSwitch onClick={() => setLive(!live)} checked={live} inputProps={{ 'aria-label': 'controlled' }} />
                                         <Typography
-                                            sx={{ ml: deployment.node_type_desc !== 'play' ? 2 : 0, fontSize: 16, color: live ? 'status.pipelineOnlineText' : 'error.main' }}>
+                                            sx={{ ml: onlineswitch.includes(pipeline.node_type_desc) ? 2 : 0, fontSize: 16, color: live ? 'status.pipelineOnlineText' : 'error.main' }}>
                                             {live ? 'Online' : 'Offline'}
                                         </Typography>
                                     </Grid>
                                 ) : null}
 
-                                {deployment && workerGroup && availableWorkerGroups.length !== 0 ? (
+                                {availableWorkerGroups.length !== 0 ? (
                                     <Autocomplete
                                         options={availableWorkerGroups}
                                         value={workerGroup}
@@ -379,7 +422,8 @@ const Deploy = () => {
 
 export default Deploy;
 
-// ----- Custom Hooks
+// ----- Get a list of environments ----------
+// Input state: setAvailableEnvironments that needs to be set below.
 const useGetEnvironmentsHook = (setAvailableEnvironments) => {
     // GraphQL hook
     const getEnvironments = useGetEnvironments();
@@ -414,6 +458,8 @@ const useGetNonDefaultWGNodesHook = (nonDefaultWGNodes, selectedEnvironment) => 
     return async (fromEnvironmentID, toEnvironmentID) => {
         const response = await getNonDefaultWGNodes({ toEnvironmentID, fromEnvironmentID, pipelineID: pipelineId });
 
+        // console.log('worker groups set against nodes:', )
+
         if (response === null) {
             nonDefaultWGNodes.set([]);
         } else if (response.r || response.error) {
@@ -421,7 +467,7 @@ const useGetNonDefaultWGNodesHook = (nonDefaultWGNodes, selectedEnvironment) => 
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            nonDefaultWGNodes.set(response.filter((a) => a.environmentID === selectedEnvironment.id));
+            nonDefaultWGNodes.set(response);
         }
     };
 };
@@ -474,29 +520,29 @@ const useGetDeploymentHook = (environmentID, pipelineID, setDeployment) => {
     };
 };
 
-const useGetWorkerGroupsHook = (setWorkerGroups, nodeTypeDesc) => {
+const useGetWorkerGroupsHook = (setWorkerGroups) => {
     // GraphQL hook
     const getWorkerGroups = useGetWorkerGroups();
-    const getRemoteProcessGroupsForAnEnvironment = useGetRemoteProcessGroupsForAnEnvironment();
+    // const getRemoteProcessGroupsForAnEnvironment = useGetRemoteProcessGroupsForAnEnvironment();
 
     const { enqueueSnackbar } = useSnackbar();
 
-    if (nodeTypeDesc === 'rpa-python') {
-        // Get remote process groups
-        return async (environmentID) => {
-            const response = await getRemoteProcessGroupsForAnEnvironment({ environmentID });
+    // if (nodeTypeDesc === 'rpa-python') {
+    //     // Get remote process groups
+    //     return async (environmentID) => {
+    //         const response = await getRemoteProcessGroupsForAnEnvironment({ environmentID });
 
-            if (response === null) {
-                setWorkerGroups([]);
-            } else if (response.r || response.error) {
-                enqueueSnackbar("Can't get remote process groups: " + (response.msg || response.r || response.error), { variant: 'error' });
-            } else if (response.errors) {
-                response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
-            } else {
-                setWorkerGroups(response);
-            }
-        };
-    } else {
+    //         if (response === null) {
+    //             setWorkerGroups([]);
+    //         } else if (response.r || response.error) {
+    //             enqueueSnackbar("Can't get remote process groups: " + (response.msg || response.r || response.error), { variant: 'error' });
+    //         } else if (response.errors) {
+    //             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+    //         } else {
+    //             setWorkerGroups(response);
+    //         }
+    //     };
+    // } else {
         // Get worker groups
         return async (environmentID) => {
             const response = await getWorkerGroups({ environmentID });
@@ -511,7 +557,7 @@ const useGetWorkerGroupsHook = (setWorkerGroups, nodeTypeDesc) => {
                 setWorkerGroups(response);
             }
         };
-    }
+    // }
 };
 
 // ----- Custom API Trigger hook
@@ -573,6 +619,38 @@ const useGenerateDeploymentTriggerHook = (environmentID, triggerID, switches, di
         } else {
             // enqueueSnackbar('Success', { variant: 'success' });
             dispatch(update);
+        }
+    };
+};
+
+// ------ Get the pipeline details --------
+export const useGetPipelineHook = (environmentID, setPipeline) => {
+    // GraphQL hook
+    // Calls getPipeline graphql to get this specific pipeline
+    const getPipeline = useGetPipeline();
+
+    // URI parameter
+    const { pipelineId } = useParams();
+
+    // const FlowState = useGlobalPipelineRun();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    // Get pipeline data
+    return async () => {
+        const response = await getPipeline({ pipelineID: pipelineId, environmentID });
+
+        if (response.r || response.error) {
+            closeSnackbar();
+            enqueueSnackbar("Can't get pipeline: " + (response.msg || response.r || response.error), { variant: 'error' });
+        } else if (response.errors) {
+            response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        } else {
+            // Set local pipeline state
+            setPipeline(response);
+
+            // Set global pipeline state
+            // FlowState.pipelineInfo.set(response);
         }
     };
 };

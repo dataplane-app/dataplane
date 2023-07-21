@@ -59,21 +59,6 @@ services:
     ports:
       - "14222:4222"
       - "18222:8222"
-
-  nats-r:
-    image: nats:2.7.4-scratch
-    command:
-      - "--debug"
-      - "--cluster"
-      - "nats://0.0.0.0:6222"
-      - "--http_port"
-      - "8222"
-      - "--port"
-      - "4222"
-      - "--routes"
-      - "nats://nats:6222"
-    deploy:
-      replicas: 2
       
   mainapp:
     build:
@@ -98,7 +83,7 @@ services:
       secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
       DP_DATABASE: "timescaledb"
       DP_PORT: "9000"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"

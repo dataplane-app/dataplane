@@ -39,7 +39,7 @@ import Deploy from './pages/Deploy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import DeploymentPermissions from './pages/Deployments/DeploymentPermissions';
-import RPAWorkers from './pages/Workers/RemoteWorkers/RemoteWorkers';
+// import RPAWorkers from './pages/Workers/RemoteWorkers/RemoteWorkers';
 import RPAManage from './pages/Workers/RemoteWorkers/RemoteWorkerDetails';
 import RemoteProcessGroupManage from './pages/Workers/RemoteWorkers/ProcessGroupDetails';
 import RemoteProcessGroups from './pages/Workers/RemoteWorkers/RemoteProcessGroups';
