@@ -2,13 +2,12 @@ package permissions
 
 import (
 	"errors"
-	"log"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"gorm.io/gorm"
 )
 
-func DirectPermissionsSQLConstruct(db *gorm.DB, subject string, subject_id string, input []models.Permissions, c chan CheckResult) (string, error) {
+func DirectPermissionsSQLConstruct(db *gorm.DB, subject string, subject_id string, input []models.Permissions) (string, []Checkstruct, error) {
 
 	/* Direct permission to user */
 	// singleBase := `
@@ -20,7 +19,7 @@ func DirectPermissionsSQLConstruct(db *gorm.DB, subject string, subject_id strin
 	// 	`
 
 	// log.Println(singleBase)
-	rid := Checkstruct{}
+	rid := []Checkstruct{}
 	permresult := "denied"
 
 	// Session(&gorm.Session{DryRun: true}).
@@ -35,7 +34,7 @@ func DirectPermissionsSQLConstruct(db *gorm.DB, subject string, subject_id strin
 	// // ----- Is this an admin
 	// log.Println("Permission len:", len(input))
 	if !(len(input) > 0) {
-		return "denied", errors.New("Error no permissions requested.")
+		return "denied", []Checkstruct{}, errors.New("Error no permissions requested.")
 	}
 	for c, i := range input {
 
@@ -62,36 +61,20 @@ func DirectPermissionsSQLConstruct(db *gorm.DB, subject string, subject_id strin
 
 	result := stmt.Scan(&rid)
 
+	if result.Error != nil {
+		return "denied", []Checkstruct{}, result.Error
+	}
+
 	// {Resource: "admin_platform", ResourceID: "TestplatformID", Access: "write", EnvironmentID: "d_platform"},
 	// {Resource: "admin_environment", ResourceID: permissiontests.TestEnvironment, Access: "write", EnvironmentID: permissiontests.TestEnvironment},
 
-	log.Println("SQL Permissions:", stmt.Statement.SQL.String())
+	// log.Println("SQL Permissions:", stmt.Statement.SQL.String())
 
-	sql := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
-		return stmt
-	})
+	// sql := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+	// 	return stmt
+	// })
 
-	log.Println("SQL Permissions:", sql)
-
-	if result.Error != nil {
-		c <- CheckResult{
-			Subject:    "user",
-			Count:      0,
-			Perm_error: result.Error,
-			Result:     "denied",
-		}
-		return "denied", result.Error
-	}
-
-	if result.RowsAffected > 0 {
-		permresult = "grant"
-	}
-	c <- CheckResult{
-		Subject: "user",
-		Count:   result.RowsAffected,
-		Perm:    rid,
-		Result:  permresult,
-	}
+	// log.Println("SQL Permissions:", sql)
 
 	/*
 		permissions p, permissions_accessg_users agu
@@ -109,5 +92,5 @@ func DirectPermissionsSQLConstruct(db *gorm.DB, subject string, subject_id strin
 	*/
 
 	// and (p.resource = ? and p.resource_id = ? and p.access= ?)
-	return permresult, nil
+	return permresult, rid, nil
 }
