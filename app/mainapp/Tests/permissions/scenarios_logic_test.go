@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/Tests/permissions/sections"
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	"github.com/dataplane-app/dataplane/app/mainapp/Tests/testutils"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"gorm.io/gorm/clause"
@@ -49,6 +49,25 @@ func PermConstruct(input map[string][]models.Permissions) []models.Permissions {
 
 }
 
+// ---- Scenario Tester -----
+func RunScenarios(input testutils.TestStruct) {
+
+	// Granted Users
+	for _, user := range input.GrantUsersToTest {
+
+		log.Println("Granted", user)
+
+	}
+
+	// Denied Users
+	for _, user := range input.DenyUsersToTest {
+
+		log.Println("Denied", user)
+
+	}
+
+}
+
 func TestPermissionsScenarios(t *testing.T) {
 
 	// var t *testing.T
@@ -71,7 +90,7 @@ func TestPermissionsScenarios(t *testing.T) {
 		{ID: "TEST2", Subject: "user", SubjectID: "EA1", Resource: "admin_environment", ResourceID: "TestDev", Access: "write", EnvironmentID: "TestDev", Active: true, Test: "T"},
 		{ID: "TEST3", Subject: "user", SubjectID: "EA1", Resource: "admin_environment", ResourceID: "TestProd", Access: "write", EnvironmentID: "TestProd", Active: true, Test: "T"},
 		{ID: "TEST4", Subject: "user", SubjectID: "EA2", Resource: "admin_environment", ResourceID: "TestDev", Access: "write", EnvironmentID: "TestDev", Active: true, Test: "T"},
-		{ID: "TEST3", Subject: "user", SubjectID: "EA3", Resource: "admin_environment", ResourceID: "TestProd", Access: "write", EnvironmentID: "TestProd", Active: true, Test: "T"},
+		{ID: "TEST5", Subject: "user", SubjectID: "EA3", Resource: "admin_environment", ResourceID: "TestProd", Access: "write", EnvironmentID: "TestProd", Active: true, Test: "T"},
 	}
 
 	// Map to environments
@@ -85,16 +104,21 @@ func TestPermissionsScenarios(t *testing.T) {
 	// Run all tests where active == true
 
 	/* ------  Deployment test ------- */
-	sections.CheckDeployPermissions()
+	errdeploy, structdeploy := sections.CheckDeployPermissions(database.DBConn)
+	if errdeploy != nil {
+		t.Error(errdeploy)
+	}
+
+	RunScenarios(structdeploy)
 
 	// Is Admin allowed access to deployment?
-	permissions.PermissionsSQLConstruct(database.DBConn, "user", "A1", sections.DeploymentFromPerms)
+	// permissions.PermissionsSQLConstruct(database.DBConn, "user", "A1", sections.DeploymentFromPerms)
 
 	// Is Env Admin to Dev allowed access to deployment?
-	permissions.PermissionsSQLConstruct(database.DBConn, "user", "EA1", sections.DeploymentFromPerms)
+	// permissions.PermissionsSQLConstruct(database.DBConn, "user", "EA1", sections.DeploymentFromPerms)
 
 	// Is Env Admin to Prod allowed access to deployment?
-	permissions.PermissionsSQLConstruct(database.DBConn, "user", "EA3", sections.DeploymentFromPerms)
+	// permissions.PermissionsSQLConstruct(database.DBConn, "user", "EA3", sections.DeploymentFromPerms)
 
 	// ----------------------------- Run all tests where active = false -------------------------
 	// err = database.DBConn.Model(&models.Permissions{}).Where("test=?", "T").Update("active", false).Error
