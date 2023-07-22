@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dfscache "github.com/dataplane-app/dataplane/app/mainapp/code_editor/dfs_cache"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -1633,9 +1633,13 @@ func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) 
 
 	_, outcomes, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
 
+	// log.Println("View all pipelines outcomes:", outcomes, admin, adminEnv)
+
 	envPipelines := "no"
 	for _, outcome := range outcomes {
+		// log.Println("View all pipeline permissions:", outcome.Perm.Resource, outcome.Result)
 		if outcome.Perm.Resource == "environment_all_pipelines" && outcome.Result == "grant" {
+
 			envPipelines = "yes"
 		}
 		if outcome.Perm.Resource == "environment_edit_all_pipelines" && outcome.Result == "grant" {

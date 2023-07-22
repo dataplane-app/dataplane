@@ -35,7 +35,7 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 
 	switch runType {
 	case "pipeline":
-		perms = append(perms, models.Permissions{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID})
+		perms = append(perms, models.Permissions{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID})
 		perms = append(perms, models.Permissions{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID})
 		perms = append(perms, models.Permissions{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID})
 	case "deployment":

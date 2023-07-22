@@ -55,11 +55,59 @@ func MultiplePermissionChecks(multiPermissions []models.Permissions) (permOuctom
 			if p.Resource == "admin_environment" {
 				EnvAdmin = "yes"
 			}
+
+			outcomes = append(outcomes, CheckResult{
+				Subject:    "user",
+				Count:      1,
+				Perm:       p,
+				Perm_error: nil,
+				Result:     "grant",
+			})
 		}
 		return permOuctome, outcomes, Admin, EnvAdmin
 	}
 
+	/* ----- Access Groups Check ------ */
 	// If there are no direct grants, looks for access group grants
+	_, responseAG, errAG := AccessGroupPermissionsSQLConstruct(database.DBConn, multiPermissions[0].Subject, multiPermissions[0].SubjectID, multiPermissions)
+
+	if errAG != nil {
+		return "denied", []CheckResult{
+			{Subject: "user",
+				Count:      0,
+				Perm_error: errAG,
+				Result:     "denied",
+			},
+		}, "no", "no"
+
+	}
+
+	/* If records come back then allowed, test if admin */
+	if len(responseAG) > 0 {
+		permOuctome = "grant"
+
+		// Determin Admins
+		for _, p := range responseAG {
+			// If platform admin
+			if p.Resource == "admin_platform" {
+				Admin = "yes"
+			}
+
+			// if Environment admin
+			if p.Resource == "admin_environment" {
+				EnvAdmin = "yes"
+			}
+
+			outcomes = append(outcomes, CheckResult{
+				Subject:    "access_group",
+				Count:      1,
+				Perm:       p,
+				Perm_error: nil,
+				Result:     "grant",
+			})
+		}
+		return permOuctome, outcomes, Admin, EnvAdmin
+	}
 
 	return permOuctome, outcomes, Admin, EnvAdmin
 }
