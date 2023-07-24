@@ -28,6 +28,8 @@ func ListenTasks() {
 				log.Println("response", response, message)
 			}
 
+			// log.Println("Run ID:", msg.RunID)
+
 			TaskFinal := modelmain.WorkerTasks{
 				TaskID:        msg.TaskID,
 				EnvironmentID: wrkerconfig.EnvID,

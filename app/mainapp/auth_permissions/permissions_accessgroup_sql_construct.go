@@ -24,7 +24,7 @@ func AccessGroupPermissionsSQLConstruct(db *gorm.DB, subject string, subject_id 
 
 	// Session(&gorm.Session{DryRun: true}).
 
-	stmt := db.Debug().Table(models.Permissions{}.TableName()+" AS p").Select("p.access", "p.subject", "p.subject_id", "p.resource", "p.resource_id", "p.environment_id")
+	stmt := db.Table(models.Permissions{}.TableName()+" AS p").Select("p.access", "p.subject", "p.subject_id", "p.resource", "p.resource_id", "p.environment_id")
 
 	// For all permissions needs the subject
 	stmt = stmt.Where("agu.user_id = ? and p.subject = ? and p.active = ? and agu.active = ?", subject_id, "access_group", true, true)
