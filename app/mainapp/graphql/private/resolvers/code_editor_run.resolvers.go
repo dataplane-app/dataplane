@@ -6,6 +6,7 @@ package privateresolvers
 import (
 	"context"
 	"errors"
+	"log"
 
 	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/runcode"
@@ -19,6 +20,8 @@ import (
 func (r *mutationResolver) RunCEFile(ctx context.Context, pipelineID string, nodeID string, fileID string, environmentID string, nodeTypeDesc string, workerGroup string, runID string, replayType string, replayRunID string) (*privategraphql.CERun, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
+
+	log.Println("Replay run id:", replayRunID)
 
 	// log.Println(workerGroup, nodeTypeDesc)
 	switch nodeTypeDesc {

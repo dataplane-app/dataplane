@@ -10,3 +10,6 @@ Usually as a result of: ResourceID: platformID
 
 1. View all pipelines in Access Group [FIXED]
 2. Edit all pipelines in Access Group - could edit pipeline, could run pipelne, not edit code
+    - 
+    * getNode
+    * getSingleRemoteProcessGroup
