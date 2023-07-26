@@ -161,6 +161,7 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -250,6 +251,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -1207,13 +1209,14 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return "", errors.New("Requires permission")
 	}
 
 	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
@@ -1340,13 +1343,14 @@ func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID 
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return "", errors.New("Requires permission")
 	}
 
 	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
@@ -1794,7 +1798,7 @@ func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, 
 	}
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	// ----- Get pipeline nodes
@@ -1846,7 +1850,7 @@ func (r *queryResolver) GetNode(ctx context.Context, nodeID string, environmentI
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	// ----- Get pipeline nodes

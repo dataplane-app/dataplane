@@ -39,6 +39,7 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 		perms = append(perms, models.Permissions{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID})
 		perms = append(perms, models.Permissions{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID})
 	case "deployment":
+		perms = append(perms, models.Permissions{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID})
 		perms = append(perms, models.Permissions{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID})
 
 	}
@@ -52,7 +53,7 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 	}
 
 	if permOutcome == "denied" {
-		return &models.PipelineRuns{}, errors.New("requires permissions")
+		return &models.PipelineRuns{}, errors.New("Requires permission")
 	}
 
 	var err error
@@ -94,6 +95,7 @@ func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string,
 		perms = append(perms, models.Permissions{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID})
 		perms = append(perms, models.Permissions{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID})
 	case "deployment":
+		perms = append(perms, models.Permissions{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID})
 		perms = append(perms, models.Permissions{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID})
 
 	}
@@ -101,7 +103,7 @@ func (r *mutationResolver) StopPipelines(ctx context.Context, pipelineID string,
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return &models.PipelineRuns{}, errors.New("requires permissions")
+		return &models.PipelineRuns{}, errors.New("Requires permission")
 	}
 
 	// Get the run
@@ -183,14 +185,12 @@ func (r *mutationResolver) GeneratePipelineTrigger(ctx context.Context, pipeline
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return "", errors.New("Requires permission")
 	}
 
 	trigger := models.PipelineApiTriggers{
@@ -227,14 +227,12 @@ func (r *mutationResolver) GenerateDeploymentTrigger(ctx context.Context, deploy
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: deploymentID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return "", errors.New("Requires permission")
 	}
 
 	trigger := models.DeploymentApiTriggers{
@@ -271,14 +269,12 @@ func (r *mutationResolver) AddPipelineAPIKey(ctx context.Context, triggerID stri
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return "", errors.New("Requires permission")
 	}
 
 	//  Hash API key
@@ -319,14 +315,12 @@ func (r *mutationResolver) AddDeploymentAPIKey(ctx context.Context, triggerID st
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: deploymentID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return "", errors.New("Requires permission")
 	}
 
 	//  Hash API key
@@ -367,14 +361,12 @@ func (r *mutationResolver) DeletePipelineAPIKey(ctx context.Context, apiKey stri
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return "", errors.New("Requires permission")
 	}
 
 	k := models.PipelineApiKeys{}
@@ -403,14 +395,12 @@ func (r *mutationResolver) DeleteDeploymentAPIKey(ctx context.Context, apiKey st
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: deploymentID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return "", errors.New("Requires permission")
 	}
 
 	k := models.DeploymentApiKeys{}
@@ -470,7 +460,7 @@ func (r *queryResolver) PipelineTasksRun(ctx context.Context, pipelineID string,
 	}
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	// Get the run
@@ -517,7 +507,7 @@ func (r *queryResolver) GetSinglepipelineRun(ctx context.Context, pipelineID str
 	}
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	// Get pipeline runs
@@ -565,7 +555,7 @@ func (r *queryResolver) GetPipelineRuns(ctx context.Context, pipelineID string, 
 	}
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	// Get pipeline runs
@@ -587,14 +577,12 @@ func (r *queryResolver) GetPipelineTrigger(ctx context.Context, pipelineID strin
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	e := models.PipelineApiTriggers{}
@@ -624,12 +612,13 @@ func (r *queryResolver) GetDeploymentTrigger(ctx context.Context, deploymentID s
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: deploymentID, Access: "run", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: deploymentID, Access: "deploy", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	e := models.DeploymentApiTriggers{}
@@ -657,14 +646,12 @@ func (r *queryResolver) GetPipelineAPIKeys(ctx context.Context, pipelineID strin
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	e := []*models.PipelineApiKeys{}
@@ -688,14 +675,12 @@ func (r *queryResolver) GetDeploymentAPIKeys(ctx context.Context, deploymentID s
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: deploymentID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	e := []*models.DeploymentApiKeys{}

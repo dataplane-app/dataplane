@@ -6,6 +6,7 @@ package privateresolvers
 import (
 	"context"
 	"errors"
+	"log"
 	"strings"
 	"time"
 
@@ -553,29 +554,21 @@ func (r *mutationResolver) DeleteRemoteWorkerActivationKey(ctx context.Context, 
 // GetSingleRemoteProcessGroup is the resolver for the getSingleRemoteProcessGroup field.
 func (r *queryResolver) GetSingleRemoteProcessGroup(ctx context.Context, environmentID string, remoteProcessGroupID string) (*privategraphql.RemoteProcessGroups, error) {
 	currentUser := ctx.Value("currentUser").(string)
-	platformID := ctx.Value("platformID").(string)
 
-	// ----- Permissions
-	perms := []models.Permissions{
-		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
-		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
-		{Resource: "environment_view_remote_process_groups", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_pipelines", ResourceID: environmentID, Access: "read", EnvironmentID: environmentID},
-		// {Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
-		// {Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
-	}
-
-	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
-
-	if permOutcome == "denied" {
-		return nil, errors.New("Requires permissions.")
-	}
+	/* Saul: The permissions of this allows all users that belong to an environment to see the worker
+	If detailed permissions are provided then specific access to a pipeline doesnt work.
+	*/
 
 	var remoteProcessGroup *privategraphql.RemoteProcessGroups
 
-	err := database.DBConn.Where("remote_process_group_id = ?", remoteProcessGroupID).Find(&remoteProcessGroup).Error
+	err := database.DBConn.
+		Select("remote_process_groups.remote_process_group_id", "name", "description", "packages", "language", "lb", "worker_type", "remote_process_groups.active").
+		Where("remote_process_groups.remote_process_group_id = ? and rwe.environment_id = ? and eu.user_id =?", remoteProcessGroupID, environmentID, currentUser).
+		Joins("JOIN remote_worker_environments as rwe on rwe.remote_process_group_id = remote_process_groups.remote_process_group_id").
+		Joins("JOIN environment_user as eu on eu.environment_id = rwe.environment_id").
+		Find(&remoteProcessGroup).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Println("GetSingleRemoteProcessGroup db error:", err.Error())
 		return nil, errors.New("Remote process groups database error.")
 	}
 

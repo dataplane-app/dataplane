@@ -535,7 +535,7 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return "", errors.New("Requires permission")
 	}
 
 	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
@@ -734,7 +734,7 @@ func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentI
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return "", errors.New("Requires permission")
 	}
 
 	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
@@ -1135,15 +1135,21 @@ func (r *queryResolver) GetDeployments(ctx context.Context, environmentID string
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_deployments", ResourceID: environmentID, Access: "read", EnvironmentID: environmentID},
 	}
 
-	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
+	_, outcomes, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
 
 	// if permOutcome == "denied" {
 	// 	return []*privategraphql.Pipelines{}, nil
 	// }
+	var viewall bool = false
+	for _, i := range outcomes {
+		if i.Perm.Resource == "environment_all_deployments" && i.Perm.Access == "read" {
+			viewall = true
+		}
+	}
 
 	p := []*privategraphql.Deployments{}
 	var query string
-	if admin == "yes" || adminEnv == "yes" {
+	if admin == "yes" || adminEnv == "yes" || viewall {
 		query = `
 select
 a.pipeline_id, 
@@ -1277,7 +1283,7 @@ func (r *queryResolver) GetDeploymentFlow(ctx context.Context, pipelineID string
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	// ----- Get pipeline nodes
@@ -1389,7 +1395,7 @@ func (r *queryResolver) GetDeploymentRuns(ctx context.Context, deploymentID stri
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	// Get pipeline runs

@@ -13,3 +13,5 @@ Usually as a result of: ResourceID: platformID
     - 
     * getNode
     * getSingleRemoteProcessGroup
+3. Run should not be able to edit or save code changes
+4. Edit a pipeline name needs access to list of process groups.

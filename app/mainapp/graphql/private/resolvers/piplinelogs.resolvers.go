@@ -34,7 +34,7 @@ func (r *queryResolver) GetNodeLogs(ctx context.Context, runID string, pipelineI
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return []*models.LogsWorkers{}, errors.New("requires permissions")
+		return []*models.LogsWorkers{}, errors.New("Requires permission")
 	}
 
 	p := []*models.LogsWorkers{}
@@ -70,7 +70,7 @@ func (r *queryResolver) GetCodeFileRunLogs(ctx context.Context, runID string, pi
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return []*models.LogsCodeRun{}, errors.New("requires permissions")
+		return []*models.LogsCodeRun{}, errors.New("Requires permission")
 	}
 
 	p := []*models.LogsCodeRun{}
