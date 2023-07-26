@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -160,29 +160,38 @@ func (r *queryResolver) GetWorkerGroups(ctx context.Context, environmentID strin
 	var resp []*privategraphql.WorkerGroup
 
 	currentUser := ctx.Value("currentUser").(string)
-	platformID := ctx.Value("platformID").(string)
 
-	// ----- Permissions
-	perms := []models.Permissions{
-		{Resource: "admin_platform", ResourceID: platformID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: "d_platform"},
-		{Resource: "admin_environment", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
-		{Resource: "environment_view_workers", ResourceID: environmentID, Access: "read", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
-		{Resource: "environment_create_pipelines", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
-		{Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", Subject: "user", SubjectID: currentUser, EnvironmentID: environmentID},
-	}
-
-	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
-
-	if permOutcome == "denied" {
-		return nil, errors.New("Requires permissions.")
-	}
+	/* Saul: The permissions of this allows all users that belong to an environment to see the worker
+	If detailed permissions are provided then specific access to a pipeline doesnt work.
+	*/
 
 	var workerGroups []models.WorkerGroups
 
-	err := database.DBConn.Where("environment_id =?", environmentID).Find(&workerGroups).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
+	err := database.DBConn.Raw(
+		`
+		SELECT 
+		worker_groups.worker_group,
+		worker_groups.environment_id,
+		worker_groups.lb,
+		worker_groups.updated_at,
+		worker_groups.worker_type         
+		FROM worker_groups
+		JOIN environment_user eu
+		ON worker_groups.environment_id = eu.environment_id
+		WHERE eu.user_id = ? and worker_groups.environment_id = ?
+		`, currentUser, environmentID).Scan(&workerGroups).Error
+
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+		}
 		return nil, errors.New("Worker groups database error.")
 	}
+
+	// err := database.DBConn.Where("environment_id =?", environmentID).Find(&workerGroups).Error
+	// if err != nil && err != gorm.ErrRecordNotFound {
+	// 	return nil, errors.New("Worker groups database error.")
+	// }
 
 	for _, v := range workerGroups {
 		resp = append(resp, &privategraphql.WorkerGroup{
@@ -269,7 +278,7 @@ func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentID
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return nil, errors.New("Retrive users database error.")
+		return nil, errors.New("Retrive secrets database error.")
 	}
 
 	return s, nil

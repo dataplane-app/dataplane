@@ -89,6 +89,8 @@ func ServerWorker(envID string, workerGroup string, runid string, taskid string,
 				log.Println("Selected worker:", onlineWorkers[0].LB, loadbalanceNext)
 			}
 
+			// log.Println("Pipeline ID:", runid)
+
 			tasksend := models.WorkerTaskSend{
 				TaskID:        taskid,
 				CreatedAt:     time.Now().UTC(),
