@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dfscache "github.com/dataplane-app/dataplane/app/mainapp/code_editor/dfs_cache"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -160,7 +160,8 @@ func (r *mutationResolver) UpdatePipeline(ctx context.Context, pipelineID string
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -249,7 +250,8 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -1207,13 +1209,14 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return "", errors.New("Requires permission")
 	}
 
 	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
@@ -1340,13 +1343,14 @@ func (r *mutationResolver) TurnOnOffPipeline(ctx context.Context, environmentID 
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return "", errors.New("requires permissions")
+		return "", errors.New("Requires permission")
 	}
 
 	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
@@ -1434,7 +1438,7 @@ func (r *mutationResolver) ClearFileCachePipeline(ctx context.Context, environme
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
@@ -1633,9 +1637,13 @@ func (r *queryResolver) GetPipelines(ctx context.Context, environmentID string) 
 
 	_, outcomes, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
 
+	// log.Println("View all pipelines outcomes:", outcomes, admin, adminEnv)
+
 	envPipelines := "no"
 	for _, outcome := range outcomes {
+		// log.Println("View all pipeline permissions:", outcome.Perm.Resource, outcome.Result)
 		if outcome.Perm.Resource == "environment_all_pipelines" && outcome.Result == "grant" {
+
 			envPipelines = "yes"
 		}
 		if outcome.Perm.Resource == "environment_edit_all_pipelines" && outcome.Result == "grant" {
@@ -1790,7 +1798,7 @@ func (r *queryResolver) GetPipelineFlow(ctx context.Context, pipelineID string, 
 	}
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	// ----- Get pipeline nodes
@@ -1834,7 +1842,7 @@ func (r *queryResolver) GetNode(ctx context.Context, nodeID string, environmentI
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: platformID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
 	}
@@ -1842,7 +1850,7 @@ func (r *queryResolver) GetNode(ctx context.Context, nodeID string, environmentI
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
 
 	if permOutcome == "denied" {
-		return nil, errors.New("requires permissions")
+		return nil, errors.New("Requires permission")
 	}
 
 	// ----- Get pipeline nodes

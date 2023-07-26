@@ -292,6 +292,8 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 
 		// log.Println("Commands:", commandsend)
 
+		// log.Println("Pipeline run id:", runID, RunID)
+
 		// log.Println("First:", s)
 		// if x == 2 {
 		// 	ex = "exit 1;"
