@@ -1,15 +1,15 @@
 import { gql, GraphQLClient } from 'graphql-request';
-import { useGlobalAuthState } from '../Auth/UserAuth';
+import { useGlobalAuthState } from '../../Auth/UserAuth';
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation turnOnOffDeployment($pipelineID: String!, $environmentID: String!, $online: Boolean!) {
-        turnOnOffDeployment(environmentID: $environmentID, pipelineID: $pipelineID, online: $online)
+    mutation deleteDeploymentApiKey($deploymentID: String!, $environmentID: String!, $apiKey: String!) {
+        deleteDeploymentApiKey(deploymentID: $deploymentID, environmentID: $environmentID, apiKey: $apiKey)
     }
 `;
 
-export const useTurnOnOffDeployment = () => {
+export const useDeleteDeploymentApiKey = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -24,7 +24,7 @@ export const useTurnOnOffDeployment = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.turnOnOffDeployment;
+            return res?.deleteDeploymentApiKey;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

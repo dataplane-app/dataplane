@@ -7,7 +7,7 @@ import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../../components/CustomChip';
 import AddDeploymentPermissionsDrawer from '../../components/DrawerContent/AddDeploymentPermissionsDrawer';
 import Search from '../../components/Search';
-import { useDeploymentPermissions } from '../../graphql/getDeploymentPermissions';
+import { useDeploymentPermissions } from '../../graphql/deployments/getDeploymentPermissions';
 import { useSnackbar } from 'notistack';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import { useGlobalMeState } from '../../components/Navbar';

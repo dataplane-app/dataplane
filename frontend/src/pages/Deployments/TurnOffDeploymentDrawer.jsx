@@ -3,8 +3,8 @@ import { Box, Typography, Button, Grid } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
-import { useTurnOnOffDeployment } from '../../graphql/turnOnOffDeployment';
-import { useGetDeployments } from '../../graphql/getDeployments';
+import { useTurnOnOffDeployment } from '../../graphql/deployments/turnOnOffDeployment';
+import { useGetDeployments } from '../../graphql/deployments/getDeployments';
 
 const TurnOffDeploymentDrawer = ({ handleClose, name, pipelineID, environmentID, setDeployments }) => {
     const { closeSnackbar } = useSnackbar();

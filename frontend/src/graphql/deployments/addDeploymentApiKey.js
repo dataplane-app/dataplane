@@ -1,15 +1,15 @@
 import { gql, GraphQLClient } from 'graphql-request';
-import { useGlobalAuthState } from '../Auth/UserAuth';
+import { useGlobalAuthState } from '../../Auth/UserAuth';
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation deleteDeploymentApiKey($deploymentID: String!, $environmentID: String!, $apiKey: String!) {
-        deleteDeploymentApiKey(deploymentID: $deploymentID, environmentID: $environmentID, apiKey: $apiKey)
+    mutation addDeploymentApiKey($deploymentID: String!, $environmentID: String!, $triggerID: String!, $apiKey: String!, $expiresAt: Time) {
+        addDeploymentApiKey(deploymentID: $deploymentID, environmentID: $environmentID, triggerID: $triggerID, apiKey: $apiKey, expiresAt: $expiresAt)
     }
 `;
 
-export const useDeleteDeploymentApiKey = () => {
+export const useAddDeploymentApiKey = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -24,7 +24,7 @@ export const useDeleteDeploymentApiKey = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.deleteDeploymentApiKey;
+            return res?.addDeploymentApiKey;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

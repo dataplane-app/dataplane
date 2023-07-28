@@ -9,8 +9,8 @@ import { IOSSwitch } from '../SchedulerDrawer/IOSSwitch';
 
 import ApiKey from '../DeployAPITriggerDrawer/ApiKey';
 import ApiTriggerExampleDrawer from '../ApiTriggerExampleDrawer';
-import { useGenerateDeploymentTrigger } from '../../../graphql/generateDeploymentTrigger';
-import { useGetDeploymentTrigger } from '../../../graphql/getDeploymentTrigger';
+import { useGenerateDeploymentTrigger } from '../../../graphql/deployments/generateDeploymentTrigger';
+import { useGetDeploymentTrigger } from '../../../graphql/deployments/getDeploymentTrigger';
 
 let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
 if (host === '') {

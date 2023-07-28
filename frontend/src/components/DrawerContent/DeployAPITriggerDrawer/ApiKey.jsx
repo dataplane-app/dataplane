@@ -8,9 +8,9 @@ import { useSnackbar } from 'notistack';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import AlertDialog from './AlertDialog';
-import { useAddDeploymentApiKey } from '../../../graphql/addDeploymentApiKey';
-import { useGetDeploymentApiKeys } from '../../../graphql/getDeploymentApiKeys';
-import { useDeleteDeploymentApiKey } from '../../../graphql/deleteDeploymentApiKey';
+import { useAddDeploymentApiKey } from '../../../graphql/deployments/addDeploymentApiKey';
+import { useGetDeploymentApiKeys } from '../../../graphql/deployments/getDeploymentApiKeys';
+import { useDeleteDeploymentApiKey } from '../../../graphql/deployments/deleteDeploymentApiKey';
 
 const initialState = {
     storedKeys: [],

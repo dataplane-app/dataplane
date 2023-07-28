@@ -1,5 +1,5 @@
 import { gql, GraphQLClient } from 'graphql-request';
-import { useGlobalAuthState } from '../Auth/UserAuth';
+import { useGlobalAuthState } from '../../Auth/UserAuth';
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 

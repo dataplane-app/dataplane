@@ -4,7 +4,7 @@ import CustomChip from '../../components/CustomChip';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
-import { useGetDeployments } from '../../graphql/getDeployments';
+import { useGetDeployments } from '../../graphql/deployments/getDeployments';
 import DeploymentsTable from './DeploymentsTable';
 import { useGlobalPipelineRun } from '../PipelineRuns/GlobalPipelineRunUIState';
 import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';

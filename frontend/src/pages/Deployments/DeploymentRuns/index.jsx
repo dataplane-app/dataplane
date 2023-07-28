@@ -22,7 +22,7 @@ import LogsDrawer from './LogsDrawer';
 import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
 import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 import { edgeTypes, nodeTypes } from '../../PipelineRuns/NodeTypes';
-import { useGetDeploymentSingle } from '../../../graphql/getDeploymentSingle';
+import { useGetDeploymentSingle } from '../../../graphql/deployments/getDeploymentSingle';
 
 const DeploymentView = () => {
     const Environment = useGlobalEnvironmentState();

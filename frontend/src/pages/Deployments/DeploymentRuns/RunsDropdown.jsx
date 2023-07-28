@@ -7,7 +7,7 @@ import { GetDeploymentFlow } from './DeploymentFlowStructure';
 import { GetDeploymentRun } from './DeploymentRunStructure';
 import { useDeploymentTasksColoursRun } from './UpdateDeploymentColours';
 import EventRunOpen from './EventRunOpen';
-import { useGetDeploymentRuns } from '../../../graphql/getDeploymentRuns';
+import { useGetDeploymentRuns } from '../../../graphql/deployments/getDeploymentRuns';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';

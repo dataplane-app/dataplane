@@ -1,15 +1,22 @@
 import { gql, GraphQLClient } from 'graphql-request';
-import { useGlobalAuthState } from '../Auth/UserAuth';
+import { useGlobalAuthState } from '../../Auth/UserAuth';
 
 const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation clearFileCacheDeployment($environmentID: String!, $deploymentID: String!, $version: String!) {
-        clearFileCacheDeployment(environmentID: $environmentID, deploymentID: $deploymentID, version: $version)
+    query getDeploymentApiKeys($deploymentID: String!, $environmentID: String!) {
+        getDeploymentApiKeys(deploymentID: $deploymentID, environmentID: $environmentID) {
+            triggerID
+            apiKey
+            apiKeyTail
+            deploymentID
+            environmentID
+            expiresAt
+        }
     }
 `;
 
-export const useClearFileCacheDeployment = () => {
+export const useGetDeploymentApiKeys = () => {
     const authState = useGlobalAuthState();
     const jwt = authState.authToken.get();
 
@@ -24,7 +31,7 @@ export const useClearFileCacheDeployment = () => {
     return async (input) => {
         try {
             const res = await client.request(query, input);
-            return res?.clearFileCacheDeployment;
+            return res?.getDeploymentApiKeys;
         } catch (error) {
             return JSON.parse(JSON.stringify(error, undefined, 2)).response;
         }

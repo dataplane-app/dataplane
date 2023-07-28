@@ -1531,12 +1531,12 @@ from pipelines a left join (
 	select node_type, node_type_desc, pipeline_id, trigger_online as online from pipeline_nodes where node_type='trigger'
 ) b on a.pipeline_id=b.pipeline_id
 left join scheduler on scheduler.pipeline_id = a.pipeline_id
-where a.pipeline_id = ?
+where a.pipeline_id = ? and a.environment_id = ?
 order by a.created_at desc
 `
 
 		err := database.DBConn.Raw(
-			query, pipelineID).Scan(&p).Error
+			query, pipelineID, environmentID).Scan(&p).Error
 
 		if err != nil {
 			if dpconfig.Debug == "true" {
@@ -1599,11 +1599,11 @@ inner join (
 ) p on p.resource_id = a.pipeline_id and p.environment_id = a.environment_id
 left join scheduler on scheduler.pipeline_id = a.pipeline_id
 where 
-a.pipeline_id = ?
+a.pipeline_id = ? and a.environment_id = ?
 order by a.created_at desc`
 
 		err := database.DBConn.Raw(
-			query, currentUser, currentUser, pipelineID).Scan(&p).Error
+			query, currentUser, currentUser, pipelineID, environmentID).Scan(&p).Error
 
 		if err != nil {
 			if dpconfig.Debug == "true" {

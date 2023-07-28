@@ -11,15 +11,15 @@ import { useForm } from 'react-hook-form';
 import { useGetNonDefaultWGNodes } from '../graphql/getNonDefaultWGNodes';
 import { useGetPipeline } from '../graphql/getPipeline';
 import { useHistory, useParams } from 'react-router-dom';
-import { useAddDeployment } from '../graphql/addDeployment';
+import { useAddDeployment } from '../graphql/deployments/addDeployment';
 import { useState as useHookState } from '@hookstate/core';
 // import { useGetPipelineHook } from './PipelineRuns';
-import { useGetActiveDeployment } from '../graphql/getActiveDeployment';
+import { useGetActiveDeployment } from '../graphql/deployments/getActiveDeployment';
 import { useGetWorkerGroups } from '../graphql/getWorkerGroups';
 import DeployAPITRiggerDrawer from '../components/DrawerContent/DeployAPITriggerDrawer';
 import { v4 as uuidv4 } from 'uuid';
-import { useGetDeploymentTrigger } from '../graphql/getDeploymentTrigger';
-import { useGenerateDeploymentTrigger } from '../graphql/generateDeploymentTrigger';
+import { useGetDeploymentTrigger } from '../graphql/deployments/getDeploymentTrigger';
+import { useGenerateDeploymentTrigger } from '../graphql/deployments/generateDeploymentTrigger';
 import { useGetRemoteProcessGroupsForAnEnvironment } from '../graphql/getRemoteProcessGroupsForAnEnvironment';
 
 let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
@@ -69,7 +69,7 @@ const Deploy = () => {
     const theme = useTheme();
 
     // React hook form
-    const { register, handleSubmit, reset } = useForm();
+    const { register, handleSubmit, reset, formState: { formerrors } } = useForm();
 
     // React router
     const { pipelineId } = useParams();
@@ -102,6 +102,12 @@ const Deploy = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id?.get()]);
 
+    useEffect(() => {
+        if (!pipeline) return;
+    // ------ SET PAGE TITLE ON PIPELINE CHANGE ---------
+    document.title = 'Deploy pipeline: ' + pipeline?.name + ' | DataPlane';
+    }, [pipeline]);
+
     // ------ ON ENVIRONMENT DROP DOWN CHANGE ---------
     /* The drop down menu that selects an environment will set selectedEnvironment and trigger this section */
     useEffect(() => {
@@ -126,23 +132,24 @@ const Deploy = () => {
     }, [selectedEnvironment]);
 
     // Check for worker groups after nonDefaultWGNodes is fetched
-    useEffect(() => {
+    // useEffect(() => {
 
         // console.log('nonDefaultWGNodes', nonDefaultWGNodes.get())
-        if (nonDefaultWGNodes.length === 0) return;
+        // if (nonDefaultWGNodes.length === 0) return;
        
 
         // console.log("Deployment:", deployment, workerGroup, availableWorkerGroups);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [nonDefaultWGNodes.length]);
+    // }, [nonDefaultWGNodes.length]);
 
     // Populate values on load
     useEffect(() => {
         if (!deployment) return;
         if (!pipeline) return;
 
-        console.log("active deployments:", deployment, pipeline)
+        // console.log("active deployments:", deployment, pipeline)
+        
 
         if (deployment.environmentID !== "") {
             setWorkerGroup(deployment.workerGroup);
@@ -173,11 +180,29 @@ const Deploy = () => {
     };
 
     const onSubmit = (data) => {
-        if (!selectedEnvironment) return;
+
+        // console.log("Submit nbutton clicked", data, formerrors)
+
+
+        if (!selectedEnvironment) {
+            console.log("No environment selected")
+            return;
+        }
+
+        if (!pipeline){
+            console.log("Pipeline not found on submit")
+         return;
+        }
+
+        // Where a specific worker group is set against a pipeline step, this is added to the deployment
         const nodeWorkerGroup = nonDefaultWGNodes.get().map((a) => ({
             NodeID: a.nodeID,
             WorkerGroup: a.workerGroup,
         }));
+
+        console.log("nodeWorkerGroup on submit", nodeWorkerGroup);
+
+
         let input = {
             pipelineID: pipelineId,
             fromEnvironmentID: Environment.id?.get(),
@@ -189,7 +214,12 @@ const Deploy = () => {
         };
 
         addDeployment(input);
+
+        // Retrieve data about the API trigger for an existing deployment
+        // Should be added to addDeployment to keep it in one transaction
+        if(pipeline?.node_type_desc === 'api') {
         generateDeploymentTrigger();
+        }
     };
 
     return (
@@ -299,18 +329,28 @@ const Deploy = () => {
                                 ) : null}
 
                                 {availableWorkerGroups.length !== 0 ? (
+                                    // console.log("availableWorkerGroups", availableWorkerGroups),
                                     <Autocomplete
+                                    id="default_worker_group"
                                         options={availableWorkerGroups}
-                                        value={workerGroup}
-                                        getOptionLabel={(option) => option.WorkerGroup || option.name || option}
-                                        onChange={(event, newValue) => {
-                                            setWorkerGroup(newValue);
-                                        }}
+
+               
+                                        defaultValue={deployment.workerGroup || null}
+                
+                                        // getOptionLabel={(option) => option.title}
+                                        // defaultValue={workerGroup}
+                                        // getOptionSelected={(option, value) => option.id === value.id}
+                                        // getOptionLabel={(option) => option.WorkerGroup || option.name || option}
+                                        // onChange={(event, newValue) => {
+                                        //     setWorkerGroup(newValue);
+                                        // }}
+
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}
                                                 label="Default worker group"
                                                 size="small"
+                                                required={true}
                                                 sx={{ fontSize: '.75rem', display: 'flex' }}
                                                 {...register('workerGroupDefault', { required: true })}
                                             />
@@ -329,8 +369,10 @@ const Deploy = () => {
                     {/* Right side */}
                     {selectedEnvironment ? (
                         <Grid mb={5}>
-                            {pipeline.node_type_desc === 'api' ? (
+                            
                                 <>
+                                {pipeline.node_type_desc === 'api' ? (
+                                    <>
                                     <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
                                         API Trigger
                                     </Typography>
@@ -357,40 +399,47 @@ const Deploy = () => {
                                     <Typography fontSize="0.875rem" mb={6}>
                                         {PRIVATE + triggerID}
                                     </Typography>
-
-                                    <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
-                                        Node specific worker groups
-                                    </Typography>
-                                    <Typography mt={0.5} mb={3} variant="body1" color="text.primary" fontWeight="400" fontSize="0.875rem" maxWidth={480}>
-                                        Node specific worker groups are any nodes in the pipeline that do not use the default worker group.
-                                    </Typography>
-                                </>
+                                    </>
                             ) : null}
 
+                            </>
+
+{ nonDefaultWGNodes.length > 0 ? (
+    <div>
+                            <b>Assign specific process groups to pipeline steps</b><br />
+                            Only required, if the default process group is not used for all pipeline steps.<br /><br />
+                            </div>
+
+                            ) : null}
+
+                            <>{pipeline.workerGroup}</>
                             {nonDefaultWGNodes.get().map((a) => (
+                                a.workerGroup !== pipeline.workerGroup ? (
                                 <Box key={a.name}>
                                     <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
                                         {a.name}
                                     </Typography>
                                     <Typography mb={1} variant="body1" color="text.primary" fontWeight="400" fontSize="0.875rem" maxWidth={480}>
                                         {a.description}
+                                        
                                     </Typography>
                                     <Autocomplete
                                         options={availableWorkerGroups}
-                                        getOptionLabel={(option) => option.WorkerGroup || option.name}
-                                        onInputChange={(event, newValue) => {
-                                            let idx = nonDefaultWGNodes.get().findIndex((b) => b.name === a.name);
-                                            if (a.nodeTypeDesc === 'rpa-python') {
-                                                let workerGroup = availableWorkerGroups.find((a) => a.name === newValue).remoteProcessGroupID;
-                                                nonDefaultWGNodes[idx].merge({ workerGroup });
-                                            } else {
-                                                nonDefaultWGNodes[idx].merge({ workerGroup: newValue });
-                                            }
-                                        }}
+                                        // value={a.workerGroup}
+                                        // getOptionLabel={(option) => option.WorkerGroup || option.name}
+                                        // onInputChange={(event, newValue) => {
+                                        //     let idx = nonDefaultWGNodes.get().findIndex((b) => b.name === a.name);
+                                        //     if (a.nodeTypeDesc === 'rpa-python') {
+                                        //         let workerGroup = availableWorkerGroups.find((a) => a.name === newValue).remoteProcessGroupID;
+                                        //         nonDefaultWGNodes[idx].merge({ workerGroup });
+                                        //     } else {
+                                        //         nonDefaultWGNodes[idx].merge({ workerGroup: newValue });
+                                        //     }
+                                        // }}
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}
-                                                {...register('workerGroup', { required: true })}
+                                                {...register('workerGroup', { required: false })}
                                                 label="Worker group"
                                                 size="small"
                                                 sx={{ fontSize: '.75rem', display: 'flex', width: '212px' }}
@@ -398,7 +447,10 @@ const Deploy = () => {
                                         )}
                                     />
                                 </Box>
+                                ) : null
                             ))}
+
+
                         </Grid>
                     ) : null}
                 </Grid>
@@ -554,7 +606,10 @@ const useGetWorkerGroupsHook = (setWorkerGroups) => {
             } else if (response.errors) {
                 response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
             } else {
-                setWorkerGroups(response);
+                // Only select the name of the worker. 
+                let result = response.map(a => ({ label: a.WorkerGroup }));
+                // console.log("result", result)
+                setWorkerGroups(result);
             }
         };
     // }
@@ -648,6 +703,7 @@ export const useGetPipelineHook = (environmentID, setPipeline) => {
         } else {
             // Set local pipeline state
             setPipeline(response);
+            
 
             // Set global pipeline state
             // FlowState.pipelineInfo.set(response);
