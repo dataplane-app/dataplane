@@ -45,6 +45,7 @@ var ResourceType = []*ResourceTypeStruct{
 	{Code: "environment_all_pipelines", Level: "environment", Label: "View all pipelines", Access: "read"},
 	{Code: "environment_edit_all_pipelines", Level: "environment", Label: "Edit all pipelines", Access: "write"},
 	{Code: "environment_run_all_pipelines", Level: "environment", Label: "Run all pipelines", Access: "write"},
+	{Code: "environment_run_all_deployments", Level: "environment", Label: "Run all deployments", Access: "write"},
 	{Code: "environment_create_pipelines", Level: "environment", Label: "Create pipelines", Access: "write"},
 	{Code: "environment_permissions_pipelines", Level: "environment", Label: "Manage pipeline permissions", Access: "write"},
 

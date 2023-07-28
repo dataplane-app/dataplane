@@ -194,6 +194,11 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			cmd = exec.Command(v.Command)
 		}
 
+		log.Println("RUN ID:", msg.ReplayRunID, msg.RunID, msg)
+		if msg.ReplayRunID == "" {
+			msg.ReplayRunID = msg.RunID
+		}
+
 		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, "DP_NODEID="+msg.NodeID)
 		cmd.Env = append(cmd.Env, "DP_RUNID="+msg.ReplayRunID)

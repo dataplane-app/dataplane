@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func RunCodeServerWorker(envID string, nodeID string, workerGroup string, runid string, commands []string, filesdata models.CodeFiles, folderMap string, folderIDMap string) (models.CodeRun, error) {
+func RunCodeServerWorker(envID string, nodeID string, workerGroup string, runid string, commands []string, filesdata models.CodeFiles, folderMap string, folderIDMap string, replayRunID string) (models.CodeRun, error) {
 
 	/* Look up chosen workers -
 	if none, keep trying for 10 x 2 seconds
@@ -102,6 +102,7 @@ func RunCodeServerWorker(envID string, nodeID string, workerGroup string, runid 
 				RunID:         runid,
 				NodeID:        nodeID,
 				FileID:        filesdata.FileID,
+				ReplayRunID:   replayRunID,
 				CreatedAt:     time.Now().UTC(),
 				EnvironmentID: envID,
 				WorkerGroup:   workerGroup,

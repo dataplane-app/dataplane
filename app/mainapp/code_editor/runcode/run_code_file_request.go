@@ -61,7 +61,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 		}
 
 		commands = append(commands, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
-		runSend, err = RunCodeServerWorker(envID, nodeID, workerGroup, runid, commands, filesdata, parentfolderdata, filesdata.FolderID)
+		runSend, err = RunCodeServerWorker(envID, nodeID, workerGroup, runid, commands, filesdata, parentfolderdata, filesdata.FolderID, replayRunID)
 		if err != nil {
 			/* Send back any local errors not happening on the remote worker */
 			WSLogError(envID, runid, err.Error(), models.CodeRun{})

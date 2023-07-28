@@ -148,7 +148,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             })
                 .then(async (response) => {
                     if (response.status !== 200) {
-                        const error = (response && response.statusText) || response.status;
+                        const showval = await response.text();
+                        const error = (response && showval) || response.status;
                         return Promise.reject(error);
                     }
                     let fileContent = await response.text();
@@ -518,7 +519,10 @@ export const useUploadFileNodeHook = (pipeline) => {
             );
 
             if (response.status !== 200) {
-                const error = (response && response.statusText) || response.status;
+
+                const showval = await response.text();
+                const error = (response && showval) || response.status;
+                // console.log("save response:", showval)
                 enqueueSnackbar(error, { variant: 'error' });
                 return Promise.reject(error);
             }
