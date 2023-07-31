@@ -1,16 +1,11 @@
 import { Box, Typography } from '@mui/material';
-import Lottie from 'react-lottie';
 import NotDesktopAnimation from '../../assets/animations/not_desktop.json';
+require("@lottiefiles/lottie-player");
 
 const NotDesktop = () => {
-    const defaultOptions = {
-        loop: true,
-        autoplay: true,
-        animationData: NotDesktopAnimation,
-        rendererSettings: {
-            preserveAspectRatio: 'xMidYMid slice',
-        },
-    };
+
+    // console.log("NotDesktop", NotDesktopAnimation, JSON.stringify(NotDesktopAnimation));
+    NotDesktopAnimation = JSON.stringify(NotDesktopAnimation);
 
     return (
         <Box className="get-started" height="100vh" sx={{ overflowX: 'hidden' }}>
@@ -31,7 +26,17 @@ const NotDesktop = () => {
             </Box>
 
             <Box position="absolute" bottom="0" left="0" right="0" zIndex={1}>
-                <Lottie options={defaultOptions} height={323} width="100%" />
+                {/* configure player : https://lottiefiles.com/web-player - To remove controls: remove controls variable. not controls={{false}}
+                Same for autopay and loop, keep in to set true but not ={{true}}
+                See performance - Chrome Dev Tools cmd shift P or three dots on dev tools -> Run command -> Performance monitor
+                */}
+                <lottie-player
+                autoplay
+                loop
+                mode="normal"
+                src={NotDesktopAnimation}
+                style={{Width: "100%"}}
+                ></lottie-player>
             </Box>
         </Box>
     );

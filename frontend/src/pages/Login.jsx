@@ -3,17 +3,11 @@ import { useState } from 'react';
 import LoginForm from '../components/LoginForm';
 import SetupLoader from '../components/SetupLoader';
 import Detail from '../assets/animations/detail.json';
-import Lottie from 'react-lottie';
+require("@lottiefiles/lottie-player");
 
 const Login = () => {
-    const defaultOptions = {
-        loop: true,
-        autoplay: true,
-        animationData: Detail,
-        rendererSettings: {
-            preserveAspectRatio: 'xMidYMid slice',
-        },
-    };
+
+    Detail = JSON.stringify(Detail);
 
     const [isNext, setIsNext] = useState(false);
 
@@ -38,7 +32,13 @@ const Login = () => {
                     <Grid item flex={0.5}></Grid>
 
                     <Grid item flex={2}>
-                        <Lottie options={defaultOptions} height={350} width={500} />
+                    <lottie-player
+                autoplay
+                mode="normal"
+                src={Detail}
+                style={{Width: 500, Height: 350}}
+                ></lottie-player>
+     
                     </Grid>
                 </Grid>
             </Container>
