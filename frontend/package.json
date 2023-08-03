@@ -69,8 +69,8 @@
         "demodev": "vite --mode demo",
         "demobuild": "vite build --mode demo --outDir ../frontend-build-test/build",
         "build": "vite build --sourcemap --emptyOutDir --mode build --outDir ../app/mainapp/frontbuild",
-        "builddocker": "CI=false BUILD_PATH=/node/app/mainapp/frontbuild env-cmd -f ./src/enviroment/env.build craco --max_old_space_size=4096 build",
-        "dockerbuild": "env-cmd -f ./src/enviroment/env.build craco build",
+        "builddocker": "vite build --mode build --outDir /node/app/mainapp/frontbuild",
+        "dockerbuild": "vite build --mode build",
         "analyze": "source-map-explorer '../app/mainapp/frontbuild/assets/*.js' --no-border-checks",
         "test": "test"   
     },
