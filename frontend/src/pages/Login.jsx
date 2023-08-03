@@ -2,12 +2,12 @@ import { Box, Container, Grid, Typography } from '@mui/material';
 import { useState } from 'react';
 import LoginForm from '../components/LoginForm';
 import SetupLoader from '../components/SetupLoader';
-import Detail from '../assets/animations/detail.json';
-require("@lottiefiles/lottie-player");
+import DetailData from '../assets/animations/detail.json';
+import "@lottiefiles/lottie-player";
 
 const Login = () => {
 
-    Detail = JSON.stringify(Detail);
+    const Detail = JSON.stringify(DetailData);
 
     const [isNext, setIsNext] = useState(false);
 

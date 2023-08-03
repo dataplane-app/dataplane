@@ -22,7 +22,7 @@ import { useGetDeploymentTrigger } from '../graphql/deployments/getDeploymentTri
 import { useGenerateDeploymentTrigger } from '../graphql/deployments/generateDeploymentTrigger';
 // import { useGetRemoteProcessGroupsForAnEnvironment } from '../graphql/getRemoteProcessGroupsForAnEnvironment';
 
-let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
+let host = import.meta.env.VITE_DATAPLANE_ENDPOINT;
 if (host === '') {
     host = window.location.origin;
 }

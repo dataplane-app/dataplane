@@ -7,7 +7,7 @@ import { IOSSwitch } from '../SchedulerDrawer/IOSSwitch';
 import ApiKey from './ApiKey';
 import ApiTriggerExampleDrawer from '../ApiTriggerExampleDrawer';
 
-let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
+let host = import.meta.env.VITE_DATAPLANE_ENDPOINT;
 if (host === '') {
     host = window.location.origin;
 }

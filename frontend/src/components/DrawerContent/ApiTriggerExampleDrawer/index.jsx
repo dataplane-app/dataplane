@@ -1,8 +1,9 @@
 import { Box, Typography, Button, useTheme } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import MonacoEditor, { monaco } from 'react-monaco-editor';
-import { useEffect, useState } from 'react';
+// import MonacoEditor, { monaco } from 'react-monaco-editor';
+import Editor, { useMonaco } from '@monaco-editor/react';
+import { useState, useEffect } from 'react';
 
 const ApiTriggerExampleDrawer = ({ handleClose, host, triggerID }) => {
     // Theme hook
@@ -11,9 +12,15 @@ const ApiTriggerExampleDrawer = ({ handleClose, host, triggerID }) => {
     // Local state
     const [isCurl, setIsCurl] = useState(true);
 
+    // Monaco editor
+    const monaco = useMonaco();
+
+
     // Editor configs
     useEffect(() => {
-        monaco.editor.defineTheme('dp-dark', {
+
+
+        monaco?.editor.defineTheme('dp-dark', {
             base: 'vs-dark',
             inherit: true,
             rules: [],
@@ -23,19 +30,34 @@ const ApiTriggerExampleDrawer = ({ handleClose, host, triggerID }) => {
                 'editorLineNumber.activeForeground': '#0E236B',
             },
         });
-        if (theme.palette.mode === 'dark') {
-            monaco.editor.setTheme('dp-dark', {
-                base: 'vs-dark',
-                inherit: true,
-                rules: [],
-                colors: {
-                    'editor.background': '#0e1928',
-                    'editorLineNumber.foreground': '#3C7790',
-                    'editorLineNumber.activeForeground': '#0E236B',
-                },
-            });
-        }
-    }, [theme.palette.mode]);
+
+    }, [monaco]);
+
+    // // Editor configs
+    // useEffect(() => {
+    //     monaco.editor.defineTheme('dp-dark', {
+    //         base: 'vs-dark',
+    //         inherit: true,
+    //         rules: [],
+    //         colors: {
+    //             'editor.background': '#0e1928',
+    //             'editorLineNumber.foreground': '#3C7790',
+    //             'editorLineNumber.activeForeground': '#0E236B',
+    //         },
+    //     });
+    //     if (theme.palette.mode === 'dark') {
+    //         monaco.editor.setTheme('dp-dark', {
+    //             base: 'vs-dark',
+    //             inherit: true,
+    //             rules: [],
+    //             colors: {
+    //                 'editor.background': '#0e1928',
+    //                 'editorLineNumber.foreground': '#3C7790',
+    //                 'editorLineNumber.activeForeground': '#0E236B',
+    //             },
+    //         });
+    //     }
+    // }, [theme.palette.mode]);
 
     return (
         <Box position="relative">
@@ -71,7 +93,7 @@ const ApiTriggerExampleDrawer = ({ handleClose, host, triggerID }) => {
                 </Box>
 
                 <Box height="600px">
-                    <MonacoEditor
+                    <Editor
                         value={isCurl ? curlExample(host, triggerID) : pythonExample(host, triggerID)}
                         language="python"
                         theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}

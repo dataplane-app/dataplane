@@ -23,8 +23,9 @@ WORKDIR /node
 
 ADD frontend/public /node/public
 ADD frontend/src /node/src
-ADD frontend/craco.config.js /node/craco.config.js
+ADD frontend/vite.config.js /node/vite.config.js
 ADD frontend/package.json /node/package.json
+ADD frontend/index.html /node/index.html
 
 RUN yarn add global env-cmd
 RUN yarn

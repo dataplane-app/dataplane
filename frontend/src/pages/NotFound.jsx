@@ -1,17 +1,17 @@
 import { Grid, useTheme } from '@mui/material';
-import NotFoundAnimation from '../assets/animations/not_found.json';
-import NotFoundDarkAnimation from '../assets/animations/not_found_dark.json';
+import NotFoundAnimationData from '../assets/animations/not_found.json';
+import NotFoundDarkAnimationData from '../assets/animations/not_found_dark.json';
 import useWindowSize from '../hooks/useWindowsSize';
-require("@lottiefiles/lottie-player");
+import "@lottiefiles/lottie-player";
 
 const NotFound = (props) => {
     const theme = useTheme();
     const { width } = useWindowSize();
 
-    let AnimationData = JSON.stringify(NotFoundAnimation);
+    let AnimationData = JSON.stringify(NotFoundAnimationData);
 
     if (theme.palette.mode === 'dark') {
-        AnimationData = JSON.stringify(NotFoundDarkAnimation);
+        AnimationData = JSON.stringify(NotFoundDarkAnimationData);
     }
 
     let animationwidth = '100%';

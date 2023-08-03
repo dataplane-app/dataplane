@@ -1,11 +1,11 @@
 import { Box, Typography } from '@mui/material';
-import NotDesktopAnimation from '../../assets/animations/not_desktop.json';
-require("@lottiefiles/lottie-player");
+import NotDesktopAnimationData from '../../assets/animations/not_desktop.json';
+import "@lottiefiles/lottie-player";
 
 const NotDesktop = () => {
 
     // console.log("NotDesktop", NotDesktopAnimation, JSON.stringify(NotDesktopAnimation));
-    NotDesktopAnimation = JSON.stringify(NotDesktopAnimation);
+    const NotDesktopAnimation = JSON.stringify(NotDesktopAnimationData);
 
     return (
         <Box className="get-started" height="100vh" sx={{ overflowX: 'hidden' }}>
