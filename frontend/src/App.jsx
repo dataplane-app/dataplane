@@ -84,7 +84,8 @@ function App() {
             </ThemeProvider>
         );
     }
-
+    console.log(import.meta.env)
+    console.log(import.meta.env.VITE_DATAPLANE_ENDPOINT)
     return (
         <ColorModeContext.Provider value={colorModeToggle}>
             <EnvironmentContext.Provider value={environmentProvider}>
