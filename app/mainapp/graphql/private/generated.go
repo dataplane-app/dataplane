@@ -321,17 +321,18 @@ type ComplexityRoot struct {
 	}
 
 	NonDefaultNodes struct {
-		Active        func(childComplexity int) int
-		Description   func(childComplexity int) int
-		EnvironmentID func(childComplexity int) int
-		Name          func(childComplexity int) int
-		NodeID        func(childComplexity int) int
-		NodeType      func(childComplexity int) int
-		NodeTypeDesc  func(childComplexity int) int
-		PipelineID    func(childComplexity int) int
-		TriggerOnline func(childComplexity int) int
-		Version       func(childComplexity int) int
-		WorkerGroup   func(childComplexity int) int
+		Active            func(childComplexity int) int
+		DeployWorkerGroup func(childComplexity int) int
+		Description       func(childComplexity int) int
+		EnvironmentID     func(childComplexity int) int
+		Name              func(childComplexity int) int
+		NodeID            func(childComplexity int) int
+		NodeType          func(childComplexity int) int
+		NodeTypeDesc      func(childComplexity int) int
+		PipelineID        func(childComplexity int) int
+		TriggerOnline     func(childComplexity int) int
+		Version           func(childComplexity int) int
+		WorkerGroup       func(childComplexity int) int
 	}
 
 	Permissions struct {
@@ -2687,6 +2688,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.NonDefaultNodes.Active(childComplexity), true
+
+	case "NonDefaultNodes.deployWorkerGroup":
+		if e.complexity.NonDefaultNodes.DeployWorkerGroup == nil {
+			break
+		}
+
+		return e.complexity.NonDefaultNodes.DeployWorkerGroup(childComplexity), true
 
 	case "NonDefaultNodes.description":
 		if e.complexity.NonDefaultNodes.Description == nil {
@@ -19529,6 +19537,47 @@ func (ec *executionContext) fieldContext_NonDefaultNodes_active(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _NonDefaultNodes_deployWorkerGroup(ctx context.Context, field graphql.CollectedField, obj *NonDefaultNodes) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NonDefaultNodes_deployWorkerGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeployWorkerGroup, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NonDefaultNodes_deployWorkerGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NonDefaultNodes",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Permissions_ID(ctx context.Context, field graphql.CollectedField, obj *models.Permissions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Permissions_ID(ctx, field)
 	if err != nil {
@@ -24965,6 +25014,8 @@ func (ec *executionContext) fieldContext_Query_getNonDefaultWGNodes(ctx context.
 				return ec.fieldContext_NonDefaultNodes_workerGroup(ctx, field)
 			case "active":
 				return ec.fieldContext_NonDefaultNodes_active(ctx, field)
+			case "deployWorkerGroup":
+				return ec.fieldContext_NonDefaultNodes_deployWorkerGroup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type NonDefaultNodes", field.Name)
 		},
@@ -36625,6 +36676,10 @@ func (ec *executionContext) _NonDefaultNodes(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "deployWorkerGroup":
+
+			out.Values[i] = ec._NonDefaultNodes_deployWorkerGroup(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

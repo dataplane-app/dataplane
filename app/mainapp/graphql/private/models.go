@@ -139,17 +139,18 @@ type FolderNodeInput struct {
 }
 
 type NonDefaultNodes struct {
-	NodeID        string `json:"nodeID"`
-	PipelineID    string `json:"pipelineID"`
-	Version       string `json:"version"`
-	Name          string `json:"name"`
-	EnvironmentID string `json:"environmentID"`
-	NodeType      string `json:"nodeType"`
-	NodeTypeDesc  string `json:"nodeTypeDesc"`
-	TriggerOnline bool   `json:"triggerOnline"`
-	Description   string `json:"description"`
-	WorkerGroup   string `json:"workerGroup"`
-	Active        bool   `json:"active"`
+	NodeID            string  `json:"nodeID"`
+	PipelineID        string  `json:"pipelineID"`
+	Version           string  `json:"version"`
+	Name              string  `json:"name"`
+	EnvironmentID     string  `json:"environmentID"`
+	NodeType          string  `json:"nodeType"`
+	NodeTypeDesc      string  `json:"nodeTypeDesc"`
+	TriggerOnline     bool    `json:"triggerOnline"`
+	Description       string  `json:"description"`
+	WorkerGroup       string  `json:"workerGroup"`
+	Active            bool    `json:"active"`
+	DeployWorkerGroup *string `json:"deployWorkerGroup"`
 }
 
 type PipelineEdgesInput struct {

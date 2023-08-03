@@ -6,7 +6,7 @@ import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
 import { faClock } from '@fortawesome/free-regular-svg-icons';
 import DeploymentsTableItem from './DeploymentsTableItem';
 import { useHistory } from 'react-router-dom';
-import MoreInfoMenu from '../../components/MoreInfoMenuPipeline';
+import MoreInfoMenu from '../../components/pipeline/MoreInfoMenuPipeline';
 import CustomChip from '../../components/CustomChip';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../components/EnviromentDropdown';

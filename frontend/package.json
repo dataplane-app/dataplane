@@ -15,7 +15,7 @@
         "@hookstate/core": "3.0.13",
         "@lottiefiles/lottie-player": "^2.0.2",
         "@mui/lab": "^5.0.0-alpha.71",
-        "@mui/material": "^5.2.3",
+        "@mui/material": "^5.14.2",
         "axios": "^0.24.0",
         "chart.js": "^3.7.0",
         "chartjs-adapter-luxon": "^1.1.0",

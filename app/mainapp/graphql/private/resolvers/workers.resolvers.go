@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 
-	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -270,7 +270,7 @@ func (r *queryResolver) GetWorkerGroupSecrets(ctx context.Context, environmentID
         secrets.environment_id    
 		FROM secrets
 		JOIN worker_secrets
-		ON secrets.secret = worker_secrets.secret_id
+		ON secrets.secret = worker_secrets.secret_id and secret.environment_id = worker_secrets.environment_id
 		WHERE worker_secrets.worker_group_id = ? and secrets.environment_id = ?
 		`, workerGroup, environmentID).Scan(&s).Error
 

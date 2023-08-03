@@ -40,6 +40,11 @@ const NotFound = (props) => {
                 style={{ marginTop: '25px', position: 'absolute', bottom: '-32px', left: 0, right: 0 }}
             /> */}
 
+                        {/* configure player : https://lottiefiles.com/web-player - To remove controls: remove controls variable. not controls={{false}}
+                Same for autopay and loop, keep in to set true but not ={{true}}
+                See performance - Chrome Dev Tools cmd shift P or three dots on dev tools -> Run command -> Performance monitor
+                */}
+
 <lottie-player
                 autoplay
                 loop

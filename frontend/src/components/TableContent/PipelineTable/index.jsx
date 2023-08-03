@@ -4,9 +4,9 @@ import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlayCircle, faClock } from '@fortawesome/free-regular-svg-icons';
 import { faPlug } from '@fortawesome/free-solid-svg-icons';
-import PipelineItemTable from '../../MoreInfoContent/PipelineTableItem';
+import PipelineItemTable from '../../pipeline/MoreInfoContent/PipelineTableItem';
 import { useHistory } from 'react-router-dom';
-import MoreInfoMenuPipeline from '../../MoreInfoMenuPipeline';
+import MoreInfoMenuPipeline from '../../pipeline/MoreInfoMenuPipeline';
 import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import DeletePipelineDrawer from '../../DrawerContent/DeletePipelineDrawer';
 import CustomChip from '../../CustomChip';
@@ -121,7 +121,7 @@ const PipelineTable = ({ data, filter, setPipelineCount, environmentID, setPipel
     const {
         getTableProps,
         getTableBodyProps,
-        headerGroups,
+        // headerGroups,
         page,
         prepareRow,
         setGlobalFilter,

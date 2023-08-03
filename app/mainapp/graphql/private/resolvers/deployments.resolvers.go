@@ -1361,18 +1361,22 @@ func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID str
 		}
 	}
 
+	// map the latest worker group depoyment node ID mapping based on the to environment
+	// This helps remember the last setup when deploying a new deployment.
+
 	for _, n := range pipelineNodes {
 		resp = append(resp, &privategraphql.NonDefaultNodes{
-			NodeID:        n.NodeID,
-			PipelineID:    n.PipelineID,
-			Name:          n.Name,
-			EnvironmentID: n.EnvironmentID,
-			NodeType:      n.NodeType,
-			NodeTypeDesc:  n.NodeTypeDesc,
-			TriggerOnline: n.TriggerOnline,
-			Description:   n.Description,
-			WorkerGroup:   n.WorkerGroup,
-			Active:        n.Active,
+			NodeID:            n.NodeID,
+			PipelineID:        n.PipelineID,
+			Name:              n.Name,
+			EnvironmentID:     n.EnvironmentID,
+			NodeType:          n.NodeType,
+			NodeTypeDesc:      n.NodeTypeDesc,
+			TriggerOnline:     n.TriggerOnline,
+			Description:       n.Description,
+			WorkerGroup:       n.WorkerGroup,
+			Active:            n.Active,
+			DeployWorkerGroup: &n.WorkerGroup,
 		})
 	}
 	return resp, nil
