@@ -71,7 +71,7 @@
         "build": "vite build --sourcemap --emptyOutDir --mode build --outDir ../app/mainapp/frontbuild",
         "builddocker": "CI=false BUILD_PATH=/node/app/mainapp/frontbuild env-cmd -f ./src/enviroment/env.build craco --max_old_space_size=4096 build",
         "dockerbuild": "env-cmd -f ./src/enviroment/env.build craco build",
-        "analyze": "source-map-explorer '../app/mainapp/frontbuild/assets/*.js'",
+        "analyze": "source-map-explorer '../app/mainapp/frontbuild/assets/*.js' --no-border-checks",
         "test": "craco test"   
     },
     "eslintConfig": {
