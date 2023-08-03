@@ -72,7 +72,7 @@
         "builddocker": "vite build --mode build --outDir /node/app/mainapp/frontbuild",
         "dockerbuild": "vite build --mode build",
         "analyze": "source-map-explorer '../app/mainapp/frontbuild/assets/*.js' --no-border-checks",
-        "test": "test"   
+        "test": "vitest"
     },
     "eslintConfig": {
         "extends": [
@@ -94,8 +94,10 @@
     },
     "devDependencies": {
         "@vitejs/plugin-react": "^4.0.3",
+        "jsdom": "^22.1.0",
         "prettier": "2.8.1",
-        "vite": "^4.4.5"
+        "vite": "^4.4.5",
+        "vitest": "^0.34.1"
     },
     "resolutions": {
         "react-virtualized": "git+https://git@github.com/remorses/react-virtualized-fixed-import.git#9.22.3"
