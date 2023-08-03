@@ -1,6 +1,6 @@
 import { gql, GraphQLClient } from 'graphql-request';
 
-const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PUBLIC;
+const graphlqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT_PUBLIC;
 
 const query = gql`
     query loginUser($username: String!, $password: String!) {

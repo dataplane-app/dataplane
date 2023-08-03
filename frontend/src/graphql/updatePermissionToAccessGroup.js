@@ -1,7 +1,7 @@
 import { gql, GraphQLClient } from 'graphql-request';
 import { useGlobalAuthState } from '../Auth/UserAuth';
 
-const graphlqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT_PRIVATE;
+const graphlqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
     mutation updatePermissionToAccessGroup($environmentID: String!, $resource: String!, $resourceID: String!, $access_group_id: String!, $access: String!) {

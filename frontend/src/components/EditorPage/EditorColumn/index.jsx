@@ -16,7 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { MarkdownContent } from '../Markdown';
 import isMarkdown from '../../../utils/isMarkdown';
 
-const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
+const codeFilesEndpoint = import.meta.env.VITE_CODE_ENDPOINT_PRIVATE;
 
 const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Editor state

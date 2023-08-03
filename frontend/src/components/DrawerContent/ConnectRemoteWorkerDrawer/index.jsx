@@ -12,7 +12,7 @@ import AlertDialog from './AlertDialog';
 import { useSnackbar } from 'notistack';
 import { customAlphabet } from 'nanoid';
 
-let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
+let host = import.meta.env.VITE_DATAPLANE_ENDPOINT;
 if (host === '') {
     host = window.location.origin;
 }
