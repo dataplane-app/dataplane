@@ -50,6 +50,10 @@ const Deploy = () => {
     const [live, setLive] = useState(true);
     // const [workerGroup, setWorkerGroup] = useState(null);
     const nonDefaultWGNodes = useHookState([]);
+
+    // This will prevent the useEffect for getting the pipeline when submitting to a different environment
+    // The environment changes and that triggers the useEffect
+    const [loadOnce, setLoadOnce] = useState(true);
     
     // ------ clear values in drop down ----------
     // const [values, setValues] = useState("");
@@ -99,9 +103,12 @@ const Deploy = () => {
     useEffect(() => {
         if (!Environment.id?.get()) return;
 
-        // We need a list of environments to deploy the pipeline to. 
-        getEnvironments();
-        getPipeline();
+        // We need a list of environments to deploy the pipeline to.
+        // Prevent this call when submitting deployment to a different environment
+        if(loadOnce===true) {
+            getEnvironments();
+            getPipeline();
+        }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [Environment.id?.get()]);
@@ -223,7 +230,7 @@ const Deploy = () => {
 
         // console.log("input", input);
 
-        addDeployment(input);
+        addDeployment(input, setLoadOnce);
 
         // Retrieve data about the API trigger for an existing deployment
         // Should be added to addDeployment to keep it in one transaction
@@ -557,7 +564,7 @@ const useAddDeploymentHook = () => {
     const { enqueueSnackbar } = useSnackbar();
 
     // Add deployment
-    return async (input) => {
+    return async (input, setLoadOnce) => {
         const response = await addDeployment(input);
 
         if (response.r || response.error) {
@@ -565,6 +572,7 @@ const useAddDeploymentHook = () => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
+            setLoadOnce(false);
             enqueueSnackbar('Success', { variant: 'success' });
             const toEnvironmentName = Environments.get().filter((a) => a.id === input.toEnvironmentID)[0].name;
             Environment.set({ id: input.toEnvironmentID, name: toEnvironmentName });

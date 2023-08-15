@@ -87,13 +87,13 @@ export default Deployments;
 
 function useGetDeploymentsHook(setDeployments, environmentID) {
     // GraphQL hook
-    const getPipelines = useGetDeployments();
+    const getDeployments = useGetDeployments();
 
     const { enqueueSnackbar } = useSnackbar();
 
     // Get deployments
     return async () => {
-        const response = await getPipelines({ environmentID });
+        const response = await getDeployments({ environmentID });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get deployments: " + (response.msg || response.r || response.error), { variant: 'error' });

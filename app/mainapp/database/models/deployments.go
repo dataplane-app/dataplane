@@ -15,9 +15,9 @@ func (DeployPipelines) TableName() string {
 type DeployPipelines struct {
 	PipelineID        string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"pipeline_id"`
 	Version           string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"version"`
+	EnvironmentID     string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"environment_id"`
 	DeployActive      bool           `json:"deploy_active"`
 	Name              string         `gorm:"type:varchar(255);" json:"name"`
-	EnvironmentID     string         `gorm:"PRIMARY_KEY;" json:"environment_id"`
 	FromEnvironmentID string         `json:"from_environment_id"`
 	FromPipelineID    string         `json:"from_pipeline_id"`
 	Description       string         `json:"description"`
@@ -41,8 +41,8 @@ type DeployPipelineNodes struct {
 	NodeID        string         `gorm:"PRIMARY_KEY;type:varchar(128);" json:"node_id"`
 	Version       string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"version"`
 	PipelineID    string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"pipeline_id"`
+	EnvironmentID string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"environment_id"`
 	Name          string         `gorm:"type:varchar(255);" json:"name"`
-	EnvironmentID string         `gorm:"PRIMARY_KEY;" json:"environment_id"`
 	NodeType      string         `json:"node_type"`      //trigger, process, checkpoint
 	NodeTypeDesc  string         `json:"node_type_desc"` //python, bash, play, scheduler, checkpoint, api
 	TriggerOnline bool           `gorm:"default:false;" json:"trigger_online"`
@@ -68,11 +68,11 @@ func (DeployPipelineEdges) TableName() string {
 
 type DeployPipelineEdges struct {
 	EdgeID        string         `gorm:"PRIMARY_KEY;type:varchar(128);" json:"edge_id"`
-	Version       string         `gorm:"PRIMARY_KEY;index:idx_deployid_nodes_edges;" json:"version"`
+	Version       string         `gorm:"PRIMARY_KEY;type:varchar(64);index:idx_deployid_nodes_edges;" json:"version"`
+	EnvironmentID string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"environment_id"`
 	PipelineID    string         `gorm:"index:idx_deployid_nodes_edges;" json:"pipeline_id"`
 	From          string         `gorm:"index:idx_deployid_edge;" json:"from"`
 	To            string         `gorm:"index:idx_deployid_edge;" json:"to"`
-	EnvironmentID string         `gorm:"PRIMARY_KEY;" json:"environment_id"`
 	Meta          datatypes.JSON `json:"meta"`
 	Active        bool           `json:"active"`
 	CreatedAt     time.Time      `json:"created_at"`
@@ -89,8 +89,8 @@ func (DeployCodeFolders) TableName() string {
 type DeployCodeFolders struct {
 	FolderID      string     `gorm:"PRIMARY_KEY;size:55;" json:"folder_id"`
 	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64); index:idx_deployfolderunique,unique;" json:"version"`
+	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(64); index:idx_deployfolderunique,unique;" json:"environment_id"`
 	ParentID      string     `gorm:"size:55;" json:"parent_id"`
-	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(55); index:idx_deployfolderunique,unique;" json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55); index:idx_deployfolderunique,unique;" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); index:idx_deployfolderunique,unique;" json:"node_id"`
 	FolderName    string     `gorm:"type:varchar(255);" json:"folder_name"`
@@ -111,8 +111,8 @@ func (DeployCodeFiles) TableName() string {
 type DeployCodeFiles struct {
 	FileID        string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
 	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64); index:idx_deployfileunique,unique;" json:"version"`
-	FolderID      string     `gorm:"size:55; index:idx_deployfileunique,unique;" json:"folder_id"`
 	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(55); index:idx_deployfileunique,unique;" json:"environment_id"`
+	FolderID      string     `gorm:"size:55; index:idx_deployfileunique,unique;" json:"folder_id"`
 	PipelineID    string     `gorm:"type:varchar(55); index:idx_deployfileunique,unique;" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); index:idx_deployfileunique,unique;" json:"node_id"`
 	FileName      string     `gorm:"type:varchar(255); index:idx_deployfileunique,unique;" json:"file_name"`
@@ -131,8 +131,8 @@ func (DeployFilesStore) TableName() string {
 type DeployFilesStore struct {
 	FileID        string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"file_id"`
 	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64); json:"version"`
+	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(64); json:"environment_id"`
 	FileStore     []byte     `gorm:"type:bytea; json:"file_store"`
-	EnvironmentID string     `gorm:"type:varchar(55); json:"environment_id"`
 	ChecksumMD5   string     `gorm:"type:varchar(55); json:"checksum_md5"`
 	External      bool       `gorm:"default:False" json:"external"`
 	RunInclude    bool       `gorm:"default:True" json:"run_include"`
@@ -150,9 +150,9 @@ func (DeployFolderDeleted) TableName() string {
 type DeployFolderDeleted struct {
 	ID            string     `gorm:"PRIMARY_KEY;type:varchar(48);" json:"id"`
 	Version       string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"version"`
+	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(55); " json:"environment_id"`
 	FileID        string     `gorm:"type:varchar(48);" json:"file_id"`
 	FolderID      string     `gorm:"size:55;" json:"folder_id"`
-	EnvironmentID string     `gorm:"PRIMARY_KEY;type:varchar(55); " json:"environment_id"`
 	PipelineID    string     `gorm:"type:varchar(55);" json:"pipeline_id"`
 	NodeID        string     `gorm:"type:varchar(55); " json:"node_id"`
 	FileName      string     `gorm:"type:varchar(255); " json:"file_name"`
