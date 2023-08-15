@@ -4,7 +4,7 @@ import CustomChip from '../components/CustomChip';
 import PipelineTable from '../components/TableContent/PipelineTable';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import AddPipelineDrawer from '../components/DrawerContent/AddPipelineDrawer';
-import { useGetPipelines } from '../graphql/getPipelines';
+import { useGetPipelines } from '../graphql/pipelines/getPipelines.js';
 import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
 import { useGlobalFlowState } from './PipelineEdit';

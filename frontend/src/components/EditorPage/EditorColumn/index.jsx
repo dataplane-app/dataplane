@@ -8,7 +8,7 @@ import { useState } from 'react';
 import CustomDragHandle from '../../CustomDragHandle';
 import { useSnackbar } from 'notistack';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
-import { useStopCERun } from '../../../graphql/stopCERun';
+import { useStopCERun } from '../../../graphql/codeEditor/stopCERun.js';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 // import MonacoEditor, { monaco } from 'react-monaco-editor';

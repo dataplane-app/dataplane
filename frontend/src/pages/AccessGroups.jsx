@@ -5,7 +5,7 @@ import { useTable, useGlobalFilter } from 'react-table';
 import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import CustomChip from '../components/CustomChip';
-import { useGetAccessGroups } from '../graphql/getAccessGroups';
+import { useGetAccessGroups } from '../graphql/permissions/getAccessGroups.js';
 import { useSnackbar } from 'notistack';
 import AddAccessGroupDrawer from '../components/DrawerContent/AddAccessGroupDrawer';
 import { useGlobalMeState } from '../components/Navbar';

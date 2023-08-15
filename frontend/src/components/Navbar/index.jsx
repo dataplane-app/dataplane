@@ -3,7 +3,7 @@ import Grid from '@mui/material/Grid';
 import EnviromentDropdown from '../EnviromentDropdown';
 import Typography from '@mui/material/Typography';
 import UserDropdown from '../UserDropdown';
-import { useMe } from '../../graphql/me';
+import { useMe } from '../../graphql/users/me.js';
 import { useEffect, useState } from 'react';
 import timeInTimezone from '../../utils/timeInTimezone';
 import { createState, useState as useHookState } from '@hookstate/core';

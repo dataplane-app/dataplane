@@ -7,8 +7,8 @@ import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { Downgraded } from '@hookstate/core';
 import { findNodeById, isFolder, removeById } from '../../EditorPage/FileManager/functions';
 import { useGlobalEditorState } from '../../../pages/Editor';
-import { useDeleteFolderNode } from '../../../graphql/deleteFolderNode';
-import { useDeleteFileNode } from '../../../graphql/deleteFileNode';
+import { useDeleteFolderNode } from '../../../graphql/codeEditor/deleteFolderNode.js';
+import { useDeleteFileNode } from '../../../graphql/codeEditor/deleteFileNode.js';
 
 const DeleteFileFolderDrawer = ({ handleClose, data, selected, nodeID, pipelineID }) => {
     const Editor = useGlobalEditorState();

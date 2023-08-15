@@ -12,13 +12,13 @@ import { useParams } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { useSnackbar } from 'notistack';
-import { useGetPipeline } from '../graphql/getPipeline';
-import { useGetNode } from '../graphql/getNode';
+import { useGetPipeline } from '../graphql/pipelines/getPipeline.js';
+import { useGetNode } from '../graphql/pipelines/getNode.js';
 import InstallationLogsColumn from '../components/EditorPage/InstallationLogsColumn';
 import Markdown from '../components/EditorPage/Markdown';
 import isMarkdown from '../utils/isMarkdown';
 import useWindowSize from '../hooks/useWindowsSize';
-import { useGetPipelineRuns } from '../graphql/getPipelineRuns';
+import { useGetPipelineRuns } from '../graphql/pipelines/getPipelineRuns.js';
 import { formatDateNoZone } from '../utils/formatDate';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);

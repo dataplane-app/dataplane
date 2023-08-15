@@ -3,9 +3,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
-import { useAddRemoteWorker } from '../../../graphql/addRemoteWorker';
+import { useAddRemoteWorker } from '../../../graphql/remoteworkers/addRemoteWorker.js';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
-import { useGetRemoteProcessGroupsForAnEnvironment } from '../../../graphql/getRemoteProcessGroupsForAnEnvironment';
+import { useGetRemoteProcessGroupsForAnEnvironment } from '../../../graphql/remoteworkers/getRemoteProcessGroupsForAnEnvironment.js';
 import { useEffect, useState } from 'react';
 
 const AddRPAWorkerDrawer = ({ handleClose, getRemoteWorkers }) => {

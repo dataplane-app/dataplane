@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useForm } from 'react-hook-form';
-import { useUpdateRemoteWorker } from '../../../graphql/updateRemoteWorker';
+import { useUpdateRemoteWorker } from '../../../graphql/remoteworkers/updateRemoteWorker.js';
 
 const EditRPAWorkerDrawer = ({ handleClose, remoteWorker, getRemoteWorkers, environmentID }) => {
     // React hook form

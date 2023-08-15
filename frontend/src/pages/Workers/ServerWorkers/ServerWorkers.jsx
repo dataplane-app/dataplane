@@ -6,7 +6,7 @@ import { useHistory } from 'react-router-dom';
 import CustomChip from '../../../components/CustomChip';
 import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
 import SecretsDrawer from '../../../components/DrawerContent/SecretsDrawer';
-import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
+import { useGetWorkerGroups } from '../../../graphql/workers/getWorkerGroups.js';
 import { useSnackbar } from 'notistack';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import decode from 'jwt-decode';

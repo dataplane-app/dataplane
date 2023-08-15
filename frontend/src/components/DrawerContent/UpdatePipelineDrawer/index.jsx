@@ -5,9 +5,9 @@ import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
-import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
+import { useGetWorkerGroups } from '../../../graphql/workers/getWorkerGroups.js';
 import { useParams } from 'react-router-dom';
-import { useUpdatePipeline } from '../../../graphql/updatePipeline';
+import { useUpdatePipeline } from '../../../graphql/pipelines/updatePipeline.js';
 
 const UpdatePipelineDrawer = ({ handleClose, pipeline, getPipeline }) => {
     // React hook form

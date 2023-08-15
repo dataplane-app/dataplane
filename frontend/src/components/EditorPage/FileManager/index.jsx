@@ -14,13 +14,13 @@ import { useSnackbar } from 'notistack';
 import { checkNameExist, findNodeById, getParentId, getPath, isFolder } from './functions';
 import CustomDragHandle from '../../CustomDragHandle';
 import { Downgraded } from '@hookstate/core';
-import { useGetFilesNode } from '../../../graphql/getFilesNode';
-import { useCreateFolderNode } from '../../../graphql/createFolderNode';
+import { useGetFilesNode } from '../../../graphql/codeEditor/getFilesNode.js';
+import { useCreateFolderNode } from '../../../graphql/codeEditor/createFolderNode.js';
 import { useUploadFileNodeHook } from '../EditorColumn';
 import DeleteFileFolderDrawer from '../../DrawerContent/DeleteFileFolderDrawer';
-import { useRenameFile } from '../../../graphql/renameFile';
-import { useRenameFolder } from '../../../graphql/renameFolder';
-import { useGetSingleRemoteProcessGroup } from '../../../graphql/getSingleRemoteProcessGroup';
+import { useRenameFile } from '../../../graphql/codeEditor/renameFile.js';
+import { useRenameFolder } from '../../../graphql/codeEditor/renameFolder.js';
+import { useGetSingleRemoteProcessGroup } from '../../../graphql/remoteworkers/getSingleRemoteProcessGroup.js';
 
 const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Global environment state with hookstate

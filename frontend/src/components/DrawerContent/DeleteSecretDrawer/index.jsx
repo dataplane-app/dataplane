@@ -4,7 +4,7 @@ import { Box, Button, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
 import { useEffect } from 'react';
-import { useUpdateDeleteSecret } from '../../../graphql/updateDeleteSecret';
+import { useUpdateDeleteSecret } from '../../../graphql/secrets/updateDeleteSecret.js';
 
 const DeleteSecretDrawer = ({ secretName, handleClose, environmentId }) => {
     const { closeSnackbar } = useSnackbar();

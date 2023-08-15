@@ -14,7 +14,7 @@ import MoreInfoMenu from '../../components/pipeline/MoreInfoMenu';
 import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
 import LogsDrawer from '../../components/DrawerContent/LogsDrawer';
 import CustomChip from '../../components/CustomChip';
-import { useGetPipeline } from '../../graphql/getPipeline';
+import { useGetPipeline } from '../../graphql/pipelines/getPipeline.js';
 import { Analytics } from './Analytics';
 import { Downgraded } from '@hookstate/core';
 import RunNavBar from './RunNavBar';

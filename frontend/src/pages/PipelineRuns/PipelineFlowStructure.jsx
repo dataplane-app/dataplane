@@ -1,6 +1,6 @@
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
-import { useGetPipelineFlow } from '../../graphql/getPipelineFlow';
+import { useGetPipelineFlow } from '../../graphql/pipelines/getPipelineFlow.js';
 import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
 import { prepareInputForFrontend } from '../../utils/PipelinePrepareGraphInput';
 

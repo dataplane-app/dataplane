@@ -3,7 +3,7 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
 import { useParams } from 'react-router-dom';
-import { useGetNodeLogs } from '../../../graphql/getNodeLogs';
+import { useGetNodeLogs } from '../../../graphql/pipelines/getNodeLogs.js';
 import { faRunning, faTimes, faCheckCircle, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { RunningSpinner } from './RunningSpinner';

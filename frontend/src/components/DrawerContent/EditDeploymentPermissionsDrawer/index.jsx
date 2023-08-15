@@ -4,9 +4,9 @@ import { Box, Button, Checkbox, FormControlLabel, FormGroup, Typography } from '
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useDeploymentPermissionsToUser } from '../../../graphql/deploymentPermissionsToUser';
-import { useDeploymentPermissionsToAccessGroup } from '../../../graphql/deploymentPermissionsToAccessGroup';
-import { useGetUserSingleDeploymentPermissions } from '../../../graphql/getUserSingleDeploymentPermissions';
+import { useDeploymentPermissionsToUser } from '../../../graphql/permissions/deploymentPermissionsToUser.js';
+import { useDeploymentPermissionsToAccessGroup } from '../../../graphql/permissions/deploymentPermissionsToAccessGroup.js';
+import { useGetUserSingleDeploymentPermissions } from '../../../graphql/permissions/getUserSingleDeploymentPermissions.js';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 
 export const DEFAULT_OPTIONS = {

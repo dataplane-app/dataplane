@@ -7,7 +7,7 @@ import Search from '../../../components/Search';
 import { useHistory } from 'react-router-dom';
 import pythonLogo from '../../../assets/images/pythonLogo.png';
 import AddProcessGroupDrawer from '../../../components/DrawerContent/AddProcessGroup';
-import { useGetRemoteProcessGroups } from '../../../graphql/getRemoteProcessGroups';
+import { useGetRemoteProcessGroups } from '../../../graphql/remoteworkers/getRemoteProcessGroups.js';
 import { useSnackbar } from 'notistack';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import decode from 'jwt-decode';

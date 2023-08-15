@@ -6,8 +6,8 @@ import { useForm } from 'react-hook-form';
 import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { Downgraded } from '@hookstate/core';
 import { useSnackbar } from 'notistack';
-import { useGetRemoteProcessGroupsForAnEnvironment } from '../../../graphql/getRemoteProcessGroupsForAnEnvironment';
-import { useGetRemoteWorkers } from '../../../graphql/getRemoteWorkers';
+import { useGetRemoteProcessGroupsForAnEnvironment } from '../../../graphql/remoteworkers/getRemoteProcessGroupsForAnEnvironment.js';
+import { useGetRemoteWorkers } from '../../../graphql/remoteworkers/getRemoteWorkers.js';
 
 const RpaDrawer = ({ handleClose, setElements, environmentID }) => {
     // React hook form

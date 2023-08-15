@@ -3,9 +3,9 @@ import { Box, Typography, Button, Grid } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
-import { useDeletePipeline } from '../../../graphql/deletePipeline';
+import { useDeletePipeline } from '../../../graphql/pipelines/deletePipeline.js';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
-import { useGetPipelines } from '../../../graphql/getPipelines';
+import { useGetPipelines } from '../../../graphql/pipelines/getPipelines.js';
 
 const DeletePipelineDrawer = ({ pipelineName, handleClose, setPipelines, pipelineID, environmentID }) => {
     const { closeSnackbar } = useSnackbar();

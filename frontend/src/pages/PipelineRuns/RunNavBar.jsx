@@ -1,7 +1,7 @@
 import { Box, Button, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
-import { useStopPipelines } from '../../graphql/stopPipelines';
+import { useStopPipelines } from '../../graphql/pipelines/stopPipelines.js';
 import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
 import StatusChips from './StatusChips';
 import RunsDropdown from './RunsDropdown';

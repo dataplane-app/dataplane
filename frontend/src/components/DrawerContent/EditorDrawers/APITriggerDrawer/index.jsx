@@ -4,11 +4,11 @@ import { Box, Button, Drawer, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useReducer, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGeneratePipelineTrigger } from '../../../../graphql/generatePipelineTrigger';
+import { useGeneratePipelineTrigger } from '../../../../graphql/pipelines/generatePipelineTrigger.js';
 import { useGlobalEnvironmentState } from '../../../EnviromentDropdown';
 import { IOSSwitch } from '../../SchedulerDrawer/IOSSwitch';
 import { v4 as uuidv4 } from 'uuid';
-import { useGetPipelineTrigger } from '../../../../graphql/getPipelineTrigger';
+import { useGetPipelineTrigger } from '../../../../graphql/pipelines/getPipelineTrigger.js';
 import ApiKey from './ApiKey';
 import ApiTriggerExampleDrawer from '../../ApiTriggerExampleDrawer';
 

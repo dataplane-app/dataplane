@@ -5,9 +5,9 @@ import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
-import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
-import { useDuplicatePipeline } from '../../../graphql/duplicatePipeline';
-import { useGetPipelines } from '../../../graphql/getPipelines';
+import { useGetWorkerGroups } from '../../../graphql/workers/getWorkerGroups.js';
+import { useDuplicatePipeline } from '../../../graphql/pipelines/duplicatePipeline.js';
+import { useGetPipelines } from '../../../graphql/pipelines/getPipelines.js';
 
 const DuplicatePipelineDrawer = ({ handleClose, environmentID, pipelineID, name, setPipelines, description, workerGroup }) => {
     // React hook form

@@ -9,7 +9,7 @@ import { CronSecondsTab } from './CronSecondsTab';
 import { useSnackbar } from 'notistack';
 import { useAddUpdatePipelineFlow } from '../../../graphql/pipelines/addUpdatePipelineFlow.js';
 import { useParams } from 'react-router-dom';
-import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
+import { useGetPipelineFlow } from '../../../graphql/pipelines/getPipelineFlow.js';
 import { prepareInputForFrontend } from '../../../utils/PipelinePrepareGraphInput';
 import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
 

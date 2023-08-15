@@ -8,10 +8,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown';
 import { useSnackbar } from 'notistack';
-import { useGetSingleRemoteWorker } from '../../../../graphql/getSingleRemoteWorker';
+import { useGetSingleRemoteWorker } from '../../../../graphql/remoteworkers/getSingleRemoteWorker.js';
 import ProcessGroupEnvironments from './Environments';
-import { useGetRemoteProcessGroups } from '../../../../graphql/getRemoteProcessGroups';
-import { useGetRemoteWorkersProcessGroups } from '../../../../graphql/getRemoteWorkersProcessGroups';
+import { useGetRemoteProcessGroups } from '../../../../graphql/remoteworkers/getRemoteProcessGroups.js';
+import { useGetRemoteWorkersProcessGroups } from '../../../../graphql/remoteworkers/getRemoteWorkersProcessGroups.js';
 
 export default function RPAManage() {
     // Global environment state with hookstate

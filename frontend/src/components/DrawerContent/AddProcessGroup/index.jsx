@@ -4,8 +4,8 @@ import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/mat
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
-import { useGetEnvironments } from '../../../graphql/getEnvironments';
-import { useAddRemoteProcessGroup } from '../../../graphql/addRemoteProcessGroup';
+import { useGetEnvironments } from '../../../graphql/environments/getEnvironments.js';
+import { useAddRemoteProcessGroup } from '../../../graphql/remoteworkers/addRemoteProcessGroup.js';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 
 const AddProcessGroupDrawer = ({ handleClose, getRemoteProcessGroups }) => {

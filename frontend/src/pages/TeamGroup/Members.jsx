@@ -5,10 +5,10 @@ import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import { useHistory } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { useParams } from 'react-router-dom';
-import { useGetUsers } from '../../graphql/getUsers';
-import { useUpdateUserToAccessGroup } from '../../graphql/updateUserToAccessGroup';
-import { useGetAccessGroupUsers } from '../../graphql/getAccessGroupUsers';
-import { useRemoveUserFromAccessGroup } from '../../graphql/removeUserFromAccessGroup';
+import { useGetUsers } from '../../graphql/users/getUsers.js';
+import { useUpdateUserToAccessGroup } from '../../graphql/permissions/updateUserToAccessGroup.js';
+import { useGetAccessGroupUsers } from '../../graphql/permissions/getAccessGroupUsers.js';
+import { useRemoveUserFromAccessGroup } from '../../graphql/permissions/removeUserFromAccessGroup.js';
 
 export default function Members({ environmentId }) {
     // User states

@@ -1,6 +1,6 @@
 import { Autocomplete, Grid, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { useGetSinglepipelineRun } from '../../../graphql/getSinglepipelineRun';
+import { useGetSinglepipelineRun } from '../../../graphql/pipelines/getSinglepipelineRun.js';
 import { useSnackbar } from 'notistack';
 import { formatDateNoZone } from '../../../utils/formatDate';
 import { GetDeploymentFlow } from './DeploymentFlowStructure';

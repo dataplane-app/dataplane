@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useSnackbar } from 'notistack';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useDeleteAccessGroup } from '../../../graphql/updateDeleteAccessGroup';
+import { useDeleteAccessGroup } from '../../../graphql/permissions/updateDeleteAccessGroup.js';
 import { useHistory } from 'react-router-dom';
 
 export default function DeleteAccessGroupDrawer({ handleClose, accessGroup, environmentID }) {

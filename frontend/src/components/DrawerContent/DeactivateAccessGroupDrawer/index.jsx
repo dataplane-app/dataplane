@@ -3,8 +3,8 @@ import { useEffect } from 'react';
 import { useSnackbar } from 'notistack';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useDeactivateAccessGroup } from '../../../graphql/updateDeactivateAccessGroup';
-import { useActivateAccessGroup } from '../../../graphql/updateActivateAccessGroup';
+import { useDeactivateAccessGroup } from '../../../graphql/permissions/updateDeactivateAccessGroup.js';
+import { useActivateAccessGroup } from '../../../graphql/permissions/updateActivateAccessGroup.js';
 
 export default function DeactivateAccessGroupDrawer({ handleClose, accessGroup, environmentID, getAccessGroup }) {
     // GraphQL hooks

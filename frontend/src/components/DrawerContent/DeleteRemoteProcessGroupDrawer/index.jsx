@@ -4,7 +4,7 @@ import { useSnackbar } from 'notistack';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useHistory } from 'react-router-dom';
-import { useDeleteRemoteProcessGroup } from '../../../graphql/deleteRemoteProcessGroup';
+import { useDeleteRemoteProcessGroup } from '../../../graphql/remoteworkers/deleteRemoteProcessGroup.js';
 
 export default function DeleteRemoteProcessGroupDrawer({ handleClose, remoteProcessGroup, environmentID }) {
     // GraphQL hook

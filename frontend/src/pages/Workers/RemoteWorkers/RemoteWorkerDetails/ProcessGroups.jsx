@@ -3,8 +3,8 @@ import { Typography, Button, Grid, Autocomplete, TextField } from '@mui/material
 import { useSnackbar } from 'notistack';
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useAddRemoteWorkerToProcessGroup } from '../../../../graphql/addRemoteWorkerToProcessGroup';
-import { useGetUserEnvironments } from '../../../../graphql/getUserEnvironments';
+import { useAddRemoteWorkerToProcessGroup } from '../../../../graphql/remoteworkers/addRemoteWorkerToProcessGroup.js';
+import { useGetUserEnvironments } from '../../../../graphql/environments/getUserEnvironments.js';
 import { useGlobalMeState } from '../../../../components/Navbar';
 import { useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown';
 

@@ -4,10 +4,10 @@ import { Autocomplete, Box, Button, Checkbox, FormControlLabel, FormGroup, TextF
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGetAccessGroups } from '../../../graphql/getAccessGroups';
-import { useGetUsers } from '../../../graphql/getUsers';
-import { useDeploymentPermissionsToUser } from '../../../graphql/deploymentPermissionsToUser';
-import { useDeploymentPermissionsToAccessGroup } from '../../../graphql/deploymentPermissionsToAccessGroup';
+import { useGetAccessGroups } from '../../../graphql/permissions/getAccessGroups.js';
+import { useGetUsers } from '../../../graphql/users/getUsers.js';
+import { useDeploymentPermissionsToUser } from '../../../graphql/permissions/deploymentPermissionsToUser.js';
+import { useDeploymentPermissionsToAccessGroup } from '../../../graphql/permissions/deploymentPermissionsToAccessGroup.js';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGlobalMeState } from '../../Navbar';
 

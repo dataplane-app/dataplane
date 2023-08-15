@@ -1,6 +1,6 @@
 import { TextField, Box, Button } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { useLoginUser } from '../../graphql/loginUser';
+import { useLoginUser } from '../../graphql/users/loginUser.js';
 import { useHistory } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 

@@ -5,7 +5,7 @@ import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../components/CustomChip';
 import Search from '../components/Search';
 import { useSnackbar } from 'notistack';
-import { useGetSecrets } from '../graphql/getSecrets';
+import { useGetSecrets } from '../graphql/secrets/getSecrets.js';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { formatDate } from '../utils/formatDate';
 import { useGlobalAuthState } from '../Auth/UserAuth';

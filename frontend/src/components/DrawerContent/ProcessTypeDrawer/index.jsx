@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useGlobalFlowState } from '../../../pages/PipelineEdit';
 import { Downgraded } from '@hookstate/core';
-import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
+import { useGetWorkerGroups } from '../../../graphql/workers/getWorkerGroups.js';
 import { useSnackbar } from 'notistack';
 
 const ProcessTypeDrawer = ({ handleClose, elements, setElements, environmentID, workerGroup }) => {

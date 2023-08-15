@@ -1,8 +1,8 @@
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
-import { useGetCodePackages } from '../../../graphql/getCodePackages';
-import { useUpdateCodePackages } from '../../../graphql/updateCodePackages';
+import { useGetCodePackages } from '../../../graphql/codeEditor/getCodePackages.js';
+import { useUpdateCodePackages } from '../../../graphql/codeEditor/updateCodePackages.js';
 import ConsoleLogHelper from '../../../Helper/logger';
 import { useGlobalEditorState } from '../../../pages/Editor';
 

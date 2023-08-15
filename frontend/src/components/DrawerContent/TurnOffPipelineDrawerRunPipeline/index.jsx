@@ -3,7 +3,7 @@ import { Box, Typography, Button, Grid } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
-import { useTurnOnOffPipeline } from '../../../graphql/turnOnOffPipeline';
+import { useTurnOnOffPipeline } from '../../../graphql/pipelines/turnOnOffPipeline.js';
 
 const TurnOffPipelineDrawerRunPipeline = ({ handleClose, name, pipelineID, environmentID, setPipelines, getPipelines }) => {
     const { closeSnackbar } = useSnackbar();

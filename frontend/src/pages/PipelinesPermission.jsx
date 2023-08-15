@@ -7,7 +7,7 @@ import { useGlobalFilter, useTable } from 'react-table';
 import CustomChip from '../components/CustomChip';
 import AddPipelinesPermissionDrawer from '../components/DrawerContent/AddPipelinesPermissionDrawer';
 import Search from '../components/Search';
-import { usePipelinePermissions } from '../graphql/getPipelinePermissions';
+import { usePipelinePermissions } from '../graphql/permissions/getPipelinePermissions.js';
 import { useSnackbar } from 'notistack';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { useGlobalMeState } from '../components/Navbar';

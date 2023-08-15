@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAddPipeline } from '../../../graphql/pipelines/addPipeline.js';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
-import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
+import { useGetWorkerGroups } from '../../../graphql/workers/getWorkerGroups.js';
 import { useHistory } from 'react-router-dom';
 
 const AddPipelineDrawer = ({ handleClose, environmentID }) => {

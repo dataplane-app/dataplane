@@ -1,8 +1,8 @@
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
-import { useGetCodeFileRunLogs } from '../../../graphql/getCodeFileRunLogs';
-import { useRunCEFile } from '../../../graphql/runCEFile';
+import { useGetCodeFileRunLogs } from '../../../graphql/codeEditor/getCodeFileRunLogs.js';
+import { useRunCEFile } from '../../../graphql/codeEditor/runCEFile.js';
 import ConsoleLogHelper from '../../../Helper/logger';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import { DateTime } from 'luxon';

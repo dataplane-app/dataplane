@@ -4,7 +4,7 @@ import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/mat
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Downgraded } from '@hookstate/core';
-import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
+import { useGetWorkerGroups } from '../../../graphql/workers/getWorkerGroups.js';
 import { useSnackbar } from 'notistack';
 import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
 import { useAddUpdatePipelineFlow } from '../../../graphql/pipelines/addUpdatePipelineFlow.js';

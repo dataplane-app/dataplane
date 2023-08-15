@@ -25,9 +25,9 @@ import { faExpandArrowsAlt, faPen, faProjectDiagram } from '@fortawesome/free-so
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createState, useState as useHookState } from '@hookstate/core';
 import { useGlobalAuthState } from '../Auth/UserAuth';
-import { useGetPipelineFlow } from '../graphql/getPipelineFlow';
+import { useGetPipelineFlow } from '../graphql/pipelines/getPipelineFlow.js';
 import UpdatePipelineDrawer from '../components/DrawerContent/UpdatePipelineDrawer';
-import { useGetPipeline } from '../graphql/getPipeline';
+import { useGetPipeline } from '../graphql/pipelines/getPipeline.js';
 import { useGlobalRunState } from './PipelineRuns/GlobalRunState';
 import { prepareInputForFrontend } from '../utils/PipelinePrepareGraphInput';
 import dagre from 'dagre';

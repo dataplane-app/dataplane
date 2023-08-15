@@ -1,9 +1,9 @@
 import { MenuItem } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
-import { useClearFileCachePipeline } from '../../../../graphql/clearFileCachePipeline';
-import { useGetPipelines } from '../../../../graphql/getPipelines';
-import { useTurnOnOffPipeline } from '../../../../graphql/turnOnOffPipeline';
+import { useClearFileCachePipeline } from '../../../../graphql/pipelines/clearFileCachePipeline.js';
+import { useGetPipelines } from '../../../../graphql/pipelines/getPipelines.js';
+import { useTurnOnOffPipeline } from '../../../../graphql/pipelines/turnOnOffPipeline.js';
 import { useGlobalFlowState } from '../../../../pages/PipelineEdit';
 
 const PipelineItemTable = (props) => {

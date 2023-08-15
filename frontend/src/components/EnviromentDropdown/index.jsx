@@ -3,9 +3,9 @@ import './styles.css';
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Menu, MenuItem, Typography } from '@mui/material';
-import { useGetEnvironments } from '../../graphql/getEnvironments';
-import { useUpdatePreferences } from '../../graphql/updatePreferences';
-import { useGetOnePreference } from '../../graphql/getOnePreference';
+import { useGetEnvironments } from '../../graphql/environments/getEnvironments.js';
+import { useUpdatePreferences } from '../../graphql/users/updatePreferences.js';
+import { useGetOnePreference } from '../../graphql/users/getOnePreference.js';
 import { EnvironmentContext } from '../../App';
 import { createState, useState as useHookState } from '@hookstate/core';
 

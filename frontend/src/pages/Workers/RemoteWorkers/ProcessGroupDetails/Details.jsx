@@ -2,7 +2,7 @@ import { Box, Button, TextField } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
-import { useUpdateRemoteProcessGroup } from '../../../../graphql/updateRemoteProcessGroup';
+import { useUpdateRemoteProcessGroup } from '../../../../graphql/remoteworkers/updateRemoteProcessGroup.js';
 
 export default function Details({ environmentId, remoteProcessGroup, getSingleRemoteProcessGroup }) {
     // React hook form

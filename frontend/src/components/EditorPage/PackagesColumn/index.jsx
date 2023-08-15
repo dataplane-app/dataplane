@@ -3,7 +3,7 @@ import { forwardRef, useEffect } from 'react';
 import { useGlobalEditorState } from '../../../pages/Editor';
 import CustomDragHandle from '../../CustomDragHandle';
 import { useSnackbar } from 'notistack';
-import { useGetCodePackages } from '../../../graphql/getCodePackages';
+import { useGetCodePackages } from '../../../graphql/codeEditor/getCodePackages.js';
 
 const PackageColumn = forwardRef(({ children, pipeline, packages, setPackages, ...rest }, ref) => {
     const EditorGlobal = useGlobalEditorState();

@@ -9,7 +9,7 @@ import AddRPAWorkerDrawer from '../../../components/DrawerContent/AddRPAWorker';
 import EditRPAWorkerDrawer from '../../../components/DrawerContent/EditRPAWorker';
 import { useHistory } from 'react-router-dom';
 import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
-import { useGetRemoteWorkers } from '../../../graphql/getRemoteWorkers';
+import { useGetRemoteWorkers } from '../../../graphql/remoteworkers/getRemoteWorkers.js';
 import { useSnackbar } from 'notistack';
 import ConnectRemoteWorkerDrawer from '../../../components/DrawerContent/ConnectRemoteWorkerDrawer';
 import { formatDateNoZone } from '../../../utils/formatDate';

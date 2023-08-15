@@ -3,14 +3,14 @@ import { useForm } from 'react-hook-form';
 import ct from 'countries-and-timezones';
 import Search from '../components/Search';
 import CustomChip from '../components/CustomChip';
-import { useGetEnvironments } from '../graphql/getEnvironments';
+import { useGetEnvironments } from '../graphql/environments/getEnvironments.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTable, useGlobalFilter } from 'react-table';
 import { useHistory } from 'react-router-dom';
 import AddEnvironmentDrawer from '../components/DrawerContent/AddEnvironmentDrawer';
-import { useGetPlatform } from '../graphql/getPlatform';
+import { useGetPlatform } from '../graphql/platform/getPlatform.js';
 import { useSnackbar } from 'notistack';
-import { useUpdatePlatform } from '../graphql/updatePlatform';
+import { useUpdatePlatform } from '../graphql/platform/updatePlatform.js';
 import { useGlobalAuthState } from '../Auth/UserAuth';
 
 const Settings = () => {

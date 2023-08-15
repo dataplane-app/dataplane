@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import DeactivateEnvironmentDrawer from '../components/DrawerContent/DeactivateEnvironmentDrawer';
 import DeleteEnvironmentDrawer from '../components/DrawerContent/DeleteEnvironmentDrawer';
-import { useGetEnvironment } from '../graphql/getEnvironment';
-import { useUpdateEnvironment } from '../graphql/updateEnvironment';
+import { useGetEnvironment } from '../graphql/environments/getEnvironment.js';
+import { useUpdateEnvironment } from '../graphql/environments/updateEnvironment.js';
 
 const EnvironmentDetail = () => {
     // Drawer States

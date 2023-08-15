@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useSnackbar } from 'notistack';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useUpdateRemoteProcessGroup } from '../../../graphql/updateRemoteProcessGroup';
+import { useUpdateRemoteProcessGroup } from '../../../graphql/remoteworkers/updateRemoteProcessGroup.js';
 
 export default function DeactivateRemoteProcessGroup({ handleClose, remoteProcessGroup, environmentID, getSingleRemoteProcessGroup }) {
     const { active, name } = remoteProcessGroup;

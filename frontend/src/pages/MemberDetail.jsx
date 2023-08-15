@@ -4,17 +4,17 @@ import CustomChip from '../components/CustomChip';
 import ChangeMyPasswordDrawer from '../components/DrawerContent/ChangeMyPasswordDrawer';
 import DeleteUserDrawer from '../components/DrawerContent/DeleteUserDrawer';
 import { useHistory } from 'react-router-dom';
-import { useMe } from '../graphql/me';
-import { useUpdateMe } from '../graphql/updateMe';
-import { useGetMyPipelinePermissions } from '../graphql/getMyPipelinePermissions';
-import { useGetMyDeploymentPermissions } from '../graphql/getMyDeploymentPermissions';
+import { useMe } from '../graphql/users/me.js';
+import { useUpdateMe } from '../graphql/users/updateMe.js';
+import { useGetMyPipelinePermissions } from '../graphql/permissions/getMyPipelinePermissions.js';
+import { useGetMyDeploymentPermissions } from '../graphql/permissions/getMyDeploymentPermissions.js';
 import { EnvironmentContext } from '../App';
 import ct from 'countries-and-timezones';
 import { useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
-import { useMyPermissions } from '../graphql/getMyPermissions';
+import { useMyPermissions } from '../graphql/permissions/getMyPermissions.js';
 import { useGlobalEnvironmentsState } from '../components/EnviromentDropdown';
-import { useGetMyAccessGroups } from '../graphql/getMyAccessGroups';
+import { useGetMyAccessGroups } from '../graphql/permissions/getMyAccessGroups.js';
 import { formatSpecialPermission } from '../utils/formatString';
 
 const MemberDetail = () => {
