@@ -7,7 +7,7 @@ import { IOSSwitch } from './IOSSwitch';
 import { CronTab } from './CronTab';
 import { CronSecondsTab } from './CronSecondsTab';
 import { useSnackbar } from 'notistack';
-import { useAddUpdatePipelineFlow } from '../../../graphql/addUpdatePipelineFlow';
+import { useAddUpdatePipelineFlow } from '../../../graphql/pipelines/addUpdatePipelineFlow.js';
 import { useParams } from 'react-router-dom';
 import { useGetPipelineFlow } from '../../../graphql/getPipelineFlow';
 import { prepareInputForFrontend } from '../../../utils/PipelinePrepareGraphInput';

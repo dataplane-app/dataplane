@@ -169,7 +169,8 @@ const Deploy = () => {
             setLive(deployment.online);
         } else {
             // setWorkerGroup(pipeline.workerGroup);
-            reset({ major: '0', minor: '0', patch: '0', workerGroup: null });
+            // , workerGroup: null
+            reset({ major: '0', minor: '0', patch: '0' });
             setLive(true);
         }
 
@@ -188,7 +189,7 @@ const Deploy = () => {
 
     const onSubmit = (data) => {
 
-        // console.log("Submit nbutton clicked", data, formerrors)
+        // console.log("Submit button clicked", data)
 
 
         if (!selectedEnvironment) {
@@ -204,10 +205,10 @@ const Deploy = () => {
         // Where a specific worker group is set against a pipeline step, this is added to the deployment
         const nodeWorkerGroup = nonDefaultWGNodes.get().map((a) => ({
             NodeID: a.nodeID,
-            WorkerGroup: a.workerGroup,
+            WorkerGroup: data['nodeID-'+a.nodeID]? data['nodeID-'+a.nodeID] : "",
         }));
 
-        console.log("nodeWorkerGroup on submit", nodeWorkerGroup);
+        // console.log("nodeWorkerGroup on submit", nodeWorkerGroup);
 
 
         let input = {
@@ -219,6 +220,8 @@ const Deploy = () => {
             liveactive: live,
             nodeWorkerGroup,
         };
+
+        // console.log("input", input);
 
         addDeployment(input);
 
@@ -336,7 +339,7 @@ const Deploy = () => {
                                 ) : null}
 
                                 {availableWorkerGroups.length !== 0 ? (
-                                    console.log("availableWorkerGroups", availableWorkerGroups),
+                                    // console.log("availableWorkerGroups", availableWorkerGroups),
                                     <Autocomplete
                                     id="default_worker_group"
                                         options={availableWorkerGroups}
@@ -415,7 +418,7 @@ const Deploy = () => {
                             {nonDefaultWGNodes.get().map((a, index) => (
 
 
-                            index === 1 && a.workerGroup !== pipeline.workerGroup ? (
+                            index === 1 ? (
                                 <div>
                                 <b>Assign specific process groups to pipeline steps</b><br />
                                 Only required, if the default process group is not used for all pipeline steps.<br />
@@ -432,44 +435,38 @@ const Deploy = () => {
 
                             {availableWorkerGroups.length !== 0 && nonDefaultWGNodes.get().map(a => (
 
-                                a.workerGroup !== pipeline.workerGroup ? (
+                                // a.workerGroup !== pipeline.workerGroup ? (
 
                                     // 
                                 <Box key={a.nodeID}>
+                                    <br />
                                     <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
                                         Name: {a.name} 
                                     </Typography>
                                     <Typography mb={1} variant="body1" color="text.primary" fontWeight="400" fontSize="0.875rem" maxWidth={480}>
+                                        {/* NodeID: {a.nodeID} <br /> */}
                                         Description: {a.description} <br />
-                                        Process group: {a.workerGroup}
+                                        Current process group: {a.workerGroup} - {a.deployWorkerGroup}
                                     </Typography>
+
                                     <Autocomplete
+                                        id={'nodeID-'+a.nodeID}
                                         options={availableWorkerGroups}
-                                        defaultValue={null}
-                                        getOptionLabel={(option) => option.label}
-                                        // value={a.workerGroup}
-                                        // getOptionLabel={(option) => option.WorkerGroup || option.name}
-                                        // onInputChange={(event, newValue) => {
-                                        //     let idx = nonDefaultWGNodes.get().findIndex((b) => b.name === a.name);
-                                        //     if (a.nodeTypeDesc === 'rpa-python') {
-                                        //         let workerGroup = availableWorkerGroups.find((a) => a.name === newValue).remoteProcessGroupID;
-                                        //         nonDefaultWGNodes[idx].merge({ workerGroup });
-                                        //     } else {
-                                        //         nonDefaultWGNodes[idx].merge({ workerGroup: newValue });
-                                        //     }
-                                        // }}
+                                        defaultValue={a.deployWorkerGroup || null}
+                         
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}
-                                                {...register('workerGroup', { required: false })}
                                                 label="Worker group"
                                                 size="small"
+                                                required={false}
                                                 sx={{ fontSize: '.75rem', display: 'flex', width: '212px' }}
+                                                {...register('nodeID-'+a.nodeID, { required: false })} 
                                             />
                                         )}
                                     />
                                 </Box>
-                                ) : null
+                                // ) : null
                             ))}
 
 
@@ -591,7 +588,7 @@ const useGetDeploymentHook = (environmentID, pipelineID, setDeployment) => {
         } else if (response.errors) {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
-            console.log("response deployment:", response)
+            // console.log("response deployment:", response)
             setDeployment(response);
         }
     };

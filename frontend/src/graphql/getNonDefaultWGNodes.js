@@ -16,6 +16,7 @@ const query = gql`
             triggerOnline
             description
             workerGroup
+            deployWorkerGroup
             active
         }
     }

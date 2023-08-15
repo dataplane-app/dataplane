@@ -146,3 +146,6 @@ dmypy.json
 # Cypress
 /cypress/cypress/screenshots
 /cypress/cypress/videos
+
+# Webstorm
+.idea/

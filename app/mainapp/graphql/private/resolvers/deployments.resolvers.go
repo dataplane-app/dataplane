@@ -1361,10 +1361,42 @@ func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID str
 		}
 	}
 
+	/* Must be selected against the environment that is being deployed to */
+	var deployNodes []models.DeployPipelineNodes
+	err2 := database.DBConn.Table("deploy_pipeline_nodes").Select("deploy_pipeline_nodes.node_id", "deploy_pipeline_nodes.worker_group", "deploy_pipeline_nodes.version").
+		Where("deploy_pipeline_nodes.pipeline_id =? and deploy_pipeline_nodes.environment_id =? and deploy_pipelines.deploy_active = ?", "d-"+pipelineID, toEnvironmentID, true).
+		Joins("join deploy_pipelines on deploy_pipeline_nodes.pipeline_id =deploy_pipelines.pipeline_id and deploy_pipeline_nodes.environment_id = deploy_pipelines.environment_id and deploy_pipeline_nodes.version = deploy_pipelines.version").
+		Scan(&deployNodes).Error
+	if err2 != nil && err2 != gorm.ErrRecordNotFound {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
+			return []*privategraphql.NonDefaultNodes{}, errors.New("Error retrieving node specific worker groups, try again.")
+		}
+	}
+
+	var deploymap = make(map[string]string)
+	var deployversion = make(map[string]string)
+
+	for _, v := range deployNodes {
+
+		// log.Println("Loop worker", v.WorkerGroup, v.NodeID)
+
+		deploymap[v.NodeID] = v.WorkerGroup
+		deployversion[v.NodeID] = v.Version
+	}
+
 	// map the latest worker group depoyment node ID mapping based on the to environment
 	// This helps remember the last setup when deploying a new deployment.
 
+	// var selectedWorkerGroup string
 	for _, n := range pipelineNodes {
+
+		selectedWorkerGroup := ""
+
+		selectedWorkerGroup = deploymap["d-"+n.NodeID]
+
+		// log.Println("Selected worker", selectedWorkerGroup, n.NodeID)
+
 		resp = append(resp, &privategraphql.NonDefaultNodes{
 			NodeID:            n.NodeID,
 			PipelineID:        n.PipelineID,
@@ -1376,7 +1408,8 @@ func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID str
 			Description:       n.Description,
 			WorkerGroup:       n.WorkerGroup,
 			Active:            n.Active,
-			DeployWorkerGroup: &n.WorkerGroup,
+			DeployWorkerGroup: &selectedWorkerGroup,
+			Version:           deployversion["d-"+n.NodeID],
 		})
 	}
 	return resp, nil

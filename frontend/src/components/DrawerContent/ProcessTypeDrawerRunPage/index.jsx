@@ -7,7 +7,7 @@ import { Downgraded } from '@hookstate/core';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useSnackbar } from 'notistack';
 import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
-import { useAddUpdatePipelineFlow } from '../../../graphql/addUpdatePipelineFlow';
+import { useAddUpdatePipelineFlow } from '../../../graphql/pipelines/addUpdatePipelineFlow.js';
 import { useParams } from 'react-router-dom';
 import { prepareInputForBackend } from '../../../pages/PipelineEdit';
 import { useGetPipelineFlowHook } from '../SchedulerDrawerRunPage';

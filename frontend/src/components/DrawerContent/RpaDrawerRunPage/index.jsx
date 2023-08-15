@@ -10,7 +10,7 @@ import { useGetRemoteWorkers } from '../../../graphql/getRemoteWorkers';
 import { useGlobalPipelineRun } from '../../../pages/PipelineRuns/GlobalPipelineRunUIState';
 import { useGetPipelineFlowHook } from '../SchedulerDrawerRunPage';
 import { prepareInputForBackend } from '../../../pages/PipelineEdit';
-import { useAddUpdatePipelineFlow } from '../../../graphql/addUpdatePipelineFlow';
+import { useAddUpdatePipelineFlow } from '../../../graphql/pipelines/addUpdatePipelineFlow.js';
 import { useParams } from 'react-router-dom/cjs/react-router-dom.min';
 
 const RpaDrawer = ({ handleClose, environmentID }) => {

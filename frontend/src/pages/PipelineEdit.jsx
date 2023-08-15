@@ -19,7 +19,7 @@ import ScheduleDrawer from '../components/DrawerContent/SchedulerDrawer';
 import CheckpointNode from '../components/pipeline/CustomNodesContent/CheckpointNode';
 import { useSnackbar } from 'notistack';
 import APITRiggerDrawer from '../components/DrawerContent/EditorDrawers/APITriggerDrawer';
-import { useAddUpdatePipelineFlow } from '../graphql/addUpdatePipelineFlow';
+import { useAddUpdatePipelineFlow } from '../graphql/pipelines/addUpdatePipelineFlow.js';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 import { faExpandArrowsAlt, faPen, faProjectDiagram } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

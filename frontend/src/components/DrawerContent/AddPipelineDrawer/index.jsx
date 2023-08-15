@@ -4,7 +4,7 @@ import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/mat
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useAddPipeline } from '../../../graphql/addPipeline';
+import { useAddPipeline } from '../../../graphql/pipelines/addPipeline.js';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGetWorkerGroups } from '../../../graphql/getWorkerGroups';
 import { useHistory } from 'react-router-dom';
