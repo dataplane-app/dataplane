@@ -65,6 +65,8 @@ services:
       DP_REDIS_PORT: "6379"
       DP_REDIS_PASSWORD: ""
       DP_REDIS_DB: "0"
+      DP_PIPELINE_DATA_TTL_SECONDS: "3600"
+      DP_PIPELINE_DATA_LIMIT_MB: "5"
 
   dataplane-worker:
     image: dataplane/dataplane-worker-python:latest

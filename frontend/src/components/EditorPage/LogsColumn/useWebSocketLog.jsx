@@ -4,7 +4,7 @@ import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import { useGetCodeFileRunLogs } from '../../../graphql/codeEditor/getCodeFileRunLogs.js';
 import { useRunCEFile } from '../../../graphql/codeEditor/runCEFile.js';
 import ConsoleLogHelper from '../../../Helper/logger';
-import { useGlobalEditorState } from '../../../pages/Editor';
+import { useGlobalEditorState } from '../../../pages/Pipelines/Editor.jsx';
 import { DateTime } from 'luxon';
 import { useGlobalMeState } from '../../Navbar';
 

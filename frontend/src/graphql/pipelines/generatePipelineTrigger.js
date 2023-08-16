@@ -4,7 +4,14 @@ import { useGlobalAuthState } from '../../Auth/UserAuth.jsx';
 const graphlqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT_PRIVATE;
 
 const query = gql`
-    mutation generatePipelineTrigger($pipelineID: String!, $environmentID: String!, $triggerID: String!, $apiKeyActive: Boolean!, $publicLive: Boolean!, $privateLive: Boolean!) {
+    mutation generatePipelineTrigger($pipelineID: String!, 
+    $environmentID: String!, 
+    $triggerID: String!, 
+    $apiKeyActive: Boolean!, 
+    $publicLive: Boolean!, 
+    $privateLive: Boolean!,
+    $dataSizeLimit: Float!,
+    $dataTTL: Float!) {
         generatePipelineTrigger(
             pipelineID: $pipelineID
             environmentID: $environmentID
@@ -12,6 +19,8 @@ const query = gql`
             apiKeyActive: $apiKeyActive
             publicLive: $publicLive
             privateLive: $privateLive
+            dataSizeLimit: $dataSizeLimit
+            dataTTL: $dataTTL
         )
     }
 `;

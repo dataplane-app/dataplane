@@ -1,6 +1,6 @@
 import { Box, Button, Grid, Typography } from '@mui/material';
 import { forwardRef, useEffect } from 'react';
-import { useGlobalEditorState } from '../../../pages/Editor';
+import { useGlobalEditorState } from '../../../pages/Pipelines/Editor.jsx';
 import CustomDragHandle from '../../CustomDragHandle';
 import { useSnackbar } from 'notistack';
 import { useGetCodePackages } from '../../../graphql/codeEditor/getCodePackages.js';

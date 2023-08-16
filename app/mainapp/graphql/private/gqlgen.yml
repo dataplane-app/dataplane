@@ -39,14 +39,17 @@ models:
    model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PipelineNodes
  PipelineRuns:
    model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PipelineRuns
+
  PipelineApiTriggers:
    model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PipelineApiTriggers
  DeploymentApiTriggers:
    model: github.com/dataplane-app/dataplane/app/mainapp/database/models.DeploymentApiTriggers
+
  PipelineApiKeys:
    model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PipelineApiKeys
  DeploymentApiKeys:
    model: github.com/dataplane-app/dataplane/app/mainapp/database/models.DeploymentApiKeys
+
  DeploymentRuns:
    model: github.com/dataplane-app/dataplane/app/mainapp/database/models.PipelineRuns
  DeploymentEdges:

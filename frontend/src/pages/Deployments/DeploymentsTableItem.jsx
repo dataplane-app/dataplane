@@ -3,7 +3,7 @@ import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
 import { useClearFileCacheDeployment } from '../../graphql/deployments/clearFileCacheDeployment';
 import { useGetDeployments } from '../../graphql/deployments/getDeployments';
-import { useGlobalFlowState } from '../PipelineEdit';
+import { useGlobalFlowState } from '../Pipelines/PipelineEdit.jsx';
 import { useTurnOnOffDeploymentHook } from './TurnOffDeploymentDrawer';
 
 const DeploymentTableItem = (props) => {

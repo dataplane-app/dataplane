@@ -170,6 +170,8 @@ spec:
           value: ""
         - name: DP_REDIS_DB
           value: "0"
+        - name: DP_PIPELINE_DATA_TTL_SECONDS
+          value: "3600"
         image: dataplane/dataplane:latest
         imagePullPolicy: Always
         name: container

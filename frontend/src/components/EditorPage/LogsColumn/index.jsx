@@ -6,7 +6,7 @@ import { LazyLog, ScrollFollow } from 'react-lazylog';
 import CustomDragHandle from '../../CustomDragHandle';
 import { RunningSpinner } from './RunningSpinner';
 import useWebSocketLog, { formatDate } from './useWebSocketLog';
-import { useGlobalEditorState } from '../../../pages/Editor';
+import { useGlobalEditorState } from '../../../pages/Pipelines/Editor.jsx';
 import { useTheme } from '@mui/system';
 import { useGlobalMeState } from '../../Navbar';
 

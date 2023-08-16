@@ -2,7 +2,7 @@ import { Box, Button, Grid, Typography, useTheme } from '@mui/material';
 import { forwardRef, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useGlobalEditorState } from '../../../pages/Editor';
+import { useGlobalEditorState } from '../../../pages/Pipelines/Editor.jsx';
 import { Downgraded } from '@hookstate/core';
 import { useState } from 'react';
 import CustomDragHandle from '../../CustomDragHandle';

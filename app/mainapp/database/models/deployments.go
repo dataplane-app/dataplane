@@ -171,11 +171,13 @@ func (DeploymentApiTriggers) TableName() string {
 
 type DeploymentApiTriggers struct {
 	TriggerID     string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"trigger_id"`
-	DeploymentID  string     `gorm:"index:idx_deploymentid_api_trigger;unique;" json:"deployment_id"`
+	DeploymentID  string     `gorm:"index:idx_deploymentid_api_trigger,unique;" json:"deployment_id"`
 	EnvironmentID string     `json:"environment_id"`
 	APIKeyActive  bool       `json:"api_key_active"`
 	PublicLive    bool       `json:"public_live"`
 	PrivateLive   bool       `json:"private_live"`
+	DataSizeLimit float64    `json:"data_size_limit"`
+	DataTTL       float64    `json:"data_ttl"`
 	CreatedAt     time.Time  `json:"created_at"`
 	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
 }

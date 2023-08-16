@@ -826,7 +826,7 @@ func (r *mutationResolver) DuplicatePipeline(ctx context.Context, pipelineID str
 			apiKeyActive := true
 			publicLive := existing.PublicLive
 			privateLive := existing.PrivateLive
-			r.GeneratePipelineTrigger(ctx, e.PipelineID, e.EnvironmentID, triggerID, apiKeyActive, publicLive, privateLive)
+			r.GeneratePipelineTrigger(ctx, e.PipelineID, e.EnvironmentID, triggerID, apiKeyActive, publicLive, privateLive, float64(existing.DataSizeLimit), float64(existing.DataTTL))
 		}
 
 		return nil

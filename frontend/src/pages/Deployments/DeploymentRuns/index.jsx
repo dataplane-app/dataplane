@@ -6,13 +6,13 @@ import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
 import { useParams } from 'react-router-dom';
-import CustomLine from '../../../components/pipeline/CustomNodesContent/CustomLine';
+import CustomLine from '../../Pipelines/Components/NodeTypes/CustomLine';
 import PublishPipelineDrawer from '../../../components/DrawerContent/PublishPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
 import MenuItem from './MenuItem';
-import MoreInfoMenu from '../../../components/pipeline/MoreInfoMenu';
+import MoreInfoMenu from '../../Pipelines/Components/MoreInfoMenu';
 
-import TurnOffPipelineDrawer from '../../../components/DrawerContent/TurnOffPipelineDrawer';
+import TurnOffPipelineDrawer from '../../Pipelines/Components/Drawers/TurnOffPipelineDrawer';
 import CustomChip from '../../../components/CustomChip';
 import { Analytics } from './Analytics';
 import { Downgraded } from '@hookstate/core';

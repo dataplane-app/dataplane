@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 import { forwardRef, useState } from 'react';
 import CustomDragHandle from '../../CustomDragHandle';
-import { useGlobalEditorState } from '../../../pages/Editor';
+import { useGlobalEditorState } from '../../../pages/Pipelines/Editor.jsx';
 import styled from '@emotion/styled';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -141,7 +141,7 @@ export function MarkdownContent({ bottomPadding = false, sx }) {
     );
 }
 
-// ** Styled components
+// ** Styled Components
 const ButtonSVGs = styled.span({
     height: '1.125rem',
     position: 'relative',

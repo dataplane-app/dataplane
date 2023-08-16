@@ -53,6 +53,10 @@ var DPDBMaxOpenConns int
 var DPDBMaxIdleConns int
 var ConnMaxLifetime int
 
+// Pipeline API input data
+var DPDataInputTTLSeconds int
+var DPDataInputLimitMegabyte int
+
 // Available storage methods: Database, LocalFile, S3
 
 func LoadConfig() {
@@ -138,4 +142,17 @@ func LoadConfig() {
 		FSCodeDirectory = "/appdev/dfs-code-files/"
 	}
 
+	// Pipeline API input data
+
+	// Default timeout is 24 hours = 24 x 60 x 60
+	DPDataInputTTLSeconds, _ = strconv.Atoi(os.Getenv("DP_PIPELINE_DATA_TTL_SECONDS"))
+	if DPDataInputTTLSeconds == 0 {
+		DPDataInputTTLSeconds = 86400
+	}
+
+	// Default input data is 5 MB
+	DPDataInputLimitMegabyte, _ = strconv.Atoi(os.Getenv("DP_PIPELINE_DATA_TTL_SECONDS"))
+	if DPDataInputLimitMegabyte == 0 {
+		DPDataInputLimitMegabyte = 5
+	}
 }

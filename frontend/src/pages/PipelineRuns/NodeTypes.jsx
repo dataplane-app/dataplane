@@ -1,12 +1,12 @@
 // Node types
-import ApiNode from '../../components/pipeline/CustomNodesContent/ApiNode';
-import PythonNode from '../../components/pipeline/CustomNodesContent/PythonNode';
-import BashNode from '../../components/pipeline/CustomNodesContent/BashNode';
-import RpaNode from '../../components/pipeline/CustomNodesContent/RpaNode';
-import CustomEdge from '../../components/pipeline/CustomNodesContent/CustomEdge';
-import PlayNode from '../../components/pipeline/CustomNodesContent/PlayNode';
-import ScheduleNode from '../../components/pipeline/CustomNodesContent/ScheduleNode';
-import CheckpointNode from '../../components/pipeline/CustomNodesContent/CheckpointNode';
+import ApiNode from '../Pipelines/Components/NodeTypes/ApiNode';
+import PythonNode from '../Pipelines/Components/NodeTypes/PythonNode';
+import BashNode from '../Pipelines/Components/NodeTypes/BashNode';
+import RpaNode from '../Pipelines/Components/NodeTypes/RpaNode';
+import CustomEdge from '../Pipelines/Components/NodeTypes/CustomEdge';
+import PlayNode from '../Pipelines/Components/NodeTypes/PlayNode';
+import ScheduleNode from '../Pipelines/Components/NodeTypes/ScheduleNode';
+import CheckpointNode from '../Pipelines/Components/NodeTypes/CheckpointNode';
 
 export const nodeTypes = {
     scheduleNode: ScheduleNode,

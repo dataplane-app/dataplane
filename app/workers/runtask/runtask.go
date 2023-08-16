@@ -77,7 +77,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 	// --- Check if this task is already running
 	var lockCheck modelmain.WorkerTasks
-	err2 := database.DBConn.Select("task_id", "status").Where("task_id = ?", msg.TaskID).First(&lockCheck).Error
+	err2 := database.DBConn.Select("task_id", "status").Where("task_id = ? and environment_id= ?", msg.TaskID, msg.EnvironmentID).First(&lockCheck).Error
 	if err2 != nil {
 		log.Println(err2.Error())
 		WSLogError("Task already running:"+err2.Error(), msg)

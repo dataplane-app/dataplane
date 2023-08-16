@@ -42,10 +42,13 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 		return models.PipelineRuns{}, err
 	}
 
-	// Retrieve folders
+	// Input data from trigger
+	var inputData bool = false
 
 	// Check if a runJson is submitted
 	if runJson != nil && len(runJson[0]) != 0 {
+
+		inputData = true
 		run := models.PipelineApiTriggerRuns{
 			RunID:         runID,
 			PipelineID:    pipelineID,
@@ -74,6 +77,7 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 		CreatedAt:     time.Now().UTC(),
 		RunJSON:       pipelinedata.Json,
 		RunType:       "pipeline",
+		InputData:     inputData,
 	}
 
 	err = database.DBConn.Create(&run).Error
@@ -301,7 +305,7 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
 		// log.Println("Worker type:", triggerData[s].WorkerType)
 		/* Start the first task */
-		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], "", "pipeline", triggerData[s].WorkerType)
+		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], "", "pipeline", triggerData[s].WorkerType, inputData)
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)

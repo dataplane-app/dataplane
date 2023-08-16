@@ -7,6 +7,7 @@ services:
 
   redis-service:
     image: redis:7.0.5-bullseye
+    command: redis-server --save "" --appendonly no
     ports:
       - 6380:6379
     healthcheck:
@@ -108,6 +109,8 @@ services:
       DP_REDIS_PORT: "6379"
       DP_REDIS_PASSWORD: ""
       DP_REDIS_DB: "0"
+      DP_PIPELINE_DATA_TTL_SECONDS: "86400"
+      DP_PIPELINE_DATA_LIMIT_MB: "5"
   
   dataplane-worker:
     image: dataplane/dataplane-worker-python:latest

@@ -91,6 +91,7 @@ type PipelineRuns struct {
 	RunType       string         `json:"run_type"` //deploy or pipeline
 	DeployVersion string         `json:"deploy_version"`
 	RunJSON       datatypes.JSON `json:"run_json"`
+	InputData     bool           `json:"input_data"`
 	CreatedAt     time.Time      `json:"created_at"`
 	EndedAt       time.Time      `json:"ended_at"`
 	UpdatedAt     *time.Time     `json:"updated_at"`
@@ -104,11 +105,13 @@ func (PipelineApiTriggers) TableName() string {
 
 type PipelineApiTriggers struct {
 	TriggerID     string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"trigger_id"`
-	PipelineID    string     `gorm:"index:idx_pipelineid_api_trigger;unique;" json:"pipeline_id"`
+	PipelineID    string     `gorm:"index:idx_pipelineid_api_trigger,unique;" json:"pipeline_id"`
 	EnvironmentID string     `json:"environment_id"`
 	APIKeyActive  bool       `json:"api_key_active"`
 	PublicLive    bool       `json:"public_live"`
 	PrivateLive   bool       `json:"private_live"`
+	DataSizeLimit float64    `json:"data_size_limit"`
+	DataTTL       float64    `json:"data_ttl"`
 	CreatedAt     time.Time  `json:"created_at"`
 	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
 }

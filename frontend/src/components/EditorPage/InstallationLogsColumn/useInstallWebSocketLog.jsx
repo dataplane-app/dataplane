@@ -4,7 +4,7 @@ import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import { useGetCodePackages } from '../../../graphql/codeEditor/getCodePackages.js';
 import { useUpdateCodePackages } from '../../../graphql/codeEditor/updateCodePackages.js';
 import ConsoleLogHelper from '../../../Helper/logger';
-import { useGlobalEditorState } from '../../../pages/Editor';
+import { useGlobalEditorState } from '../../../pages/Pipelines/Editor.jsx';
 
 var loc = window.location,
     new_uri;

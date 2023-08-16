@@ -128,6 +128,8 @@ type ComplexityRoot struct {
 
 	DeploymentApiTriggers struct {
 		APIKeyActive  func(childComplexity int) int
+		DataSizeLimit func(childComplexity int) int
+		DataTTL       func(childComplexity int) int
 		DeploymentID  func(childComplexity int) int
 		EnvironmentID func(childComplexity int) int
 		PrivateLive   func(childComplexity int) int
@@ -276,8 +278,8 @@ type ComplexityRoot struct {
 		DeploymentPermissionsToAccessGroup      func(childComplexity int, environmentID string, resourceID string, access []string, accessGroupID string) int
 		DeploymentPermissionsToUser             func(childComplexity int, environmentID string, resourceID string, access []string, userID string) int
 		DuplicatePipeline                       func(childComplexity int, pipelineID string, name string, environmentID string, description string, workerGroup string) int
-		GenerateDeploymentTrigger               func(childComplexity int, deploymentID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool) int
-		GeneratePipelineTrigger                 func(childComplexity int, pipelineID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool) int
+		GenerateDeploymentTrigger               func(childComplexity int, deploymentID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool, dataSizeLimit float64, dataTTL float64) int
+		GeneratePipelineTrigger                 func(childComplexity int, pipelineID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool, dataSizeLimit float64, dataTTL float64) int
 		MoveFileNode                            func(childComplexity int, fileID string, toFolderID string, environmentID string, pipelineID string) int
 		MoveFolderNode                          func(childComplexity int, folderID string, toFolderID string, environmentID string, pipelineID string) int
 		PipelinePermissionsToAccessGroup        func(childComplexity int, environmentID string, resourceID string, access []string, accessGroupID string) int
@@ -378,6 +380,8 @@ type ComplexityRoot struct {
 
 	PipelineApiTriggers struct {
 		APIKeyActive  func(childComplexity int) int
+		DataSizeLimit func(childComplexity int) int
+		DataTTL       func(childComplexity int) int
 		EnvironmentID func(childComplexity int) int
 		PipelineID    func(childComplexity int) int
 		PrivateLive   func(childComplexity int) int
@@ -700,6 +704,12 @@ type MutationResolver interface {
 	UpdatePermissionToUser(ctx context.Context, environmentID string, resource string, resourceID string, access string, userID string) (string, error)
 	DeletePermissionToUser(ctx context.Context, userID string, permissionID string, environmentID string) (string, error)
 	DeleteSpecificPermission(ctx context.Context, subject string, subjectID string, resourceID string, environmentID string) (string, error)
+	GeneratePipelineTrigger(ctx context.Context, pipelineID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool, dataSizeLimit float64, dataTTL float64) (string, error)
+	GenerateDeploymentTrigger(ctx context.Context, deploymentID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool, dataSizeLimit float64, dataTTL float64) (string, error)
+	AddPipelineAPIKey(ctx context.Context, triggerID string, apiKey string, pipelineID string, environmentID string, expiresAt *time.Time) (string, error)
+	AddDeploymentAPIKey(ctx context.Context, triggerID string, apiKey string, deploymentID string, environmentID string, expiresAt *time.Time) (string, error)
+	DeletePipelineAPIKey(ctx context.Context, apiKey string, pipelineID string, environmentID string) (string, error)
+	DeleteDeploymentAPIKey(ctx context.Context, apiKey string, deploymentID string, environmentID string) (string, error)
 	AddPipeline(ctx context.Context, name string, environmentID string, description string, workerGroup string) (string, error)
 	UpdatePipeline(ctx context.Context, pipelineID string, name string, environmentID string, description string, workerGroup string) (string, error)
 	DuplicatePipeline(ctx context.Context, pipelineID string, name string, environmentID string, description string, workerGroup string) (string, error)
@@ -710,12 +720,6 @@ type MutationResolver interface {
 	UpdatePreferences(ctx context.Context, input *AddPreferencesInput) (*string, error)
 	RunPipelines(ctx context.Context, pipelineID string, environmentID string, runType string, runID string) (*models.PipelineRuns, error)
 	StopPipelines(ctx context.Context, pipelineID string, runID string, environmentID string, runType string) (*models.PipelineRuns, error)
-	GeneratePipelineTrigger(ctx context.Context, pipelineID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool) (string, error)
-	GenerateDeploymentTrigger(ctx context.Context, deploymentID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool) (string, error)
-	AddPipelineAPIKey(ctx context.Context, triggerID string, apiKey string, pipelineID string, environmentID string, expiresAt *time.Time) (string, error)
-	AddDeploymentAPIKey(ctx context.Context, triggerID string, apiKey string, deploymentID string, environmentID string, expiresAt *time.Time) (string, error)
-	DeletePipelineAPIKey(ctx context.Context, apiKey string, pipelineID string, environmentID string) (string, error)
-	DeleteDeploymentAPIKey(ctx context.Context, apiKey string, deploymentID string, environmentID string) (string, error)
 	CreateSecret(ctx context.Context, input *AddSecretsInput) (*models.Secrets, error)
 	UpdateSecret(ctx context.Context, input *UpdateSecretsInput) (*models.Secrets, error)
 	UpdateSecretValue(ctx context.Context, secret string, value string, environmentID string) (*string, error)
@@ -781,6 +785,10 @@ type QueryResolver interface {
 	AvailablePermissions(ctx context.Context, environmentID string) ([]*models.ResourceTypeStruct, error)
 	MyPermissions(ctx context.Context) ([]*models.PermissionsOutput, error)
 	UserPermissions(ctx context.Context, userID string, environmentID string) ([]*models.PermissionsOutput, error)
+	GetPipelineTrigger(ctx context.Context, pipelineID string, environmentID string) (*models.PipelineApiTriggers, error)
+	GetDeploymentTrigger(ctx context.Context, deploymentID string, environmentID string) (*models.DeploymentApiTriggers, error)
+	GetPipelineAPIKeys(ctx context.Context, pipelineID string, environmentID string) ([]*models.PipelineApiKeys, error)
+	GetDeploymentAPIKeys(ctx context.Context, deploymentID string, environmentID string) ([]*models.DeploymentApiKeys, error)
 	GetPipeline(ctx context.Context, pipelineID string, environmentID string) (*Pipelines, error)
 	GetPipelines(ctx context.Context, environmentID string) ([]*Pipelines, error)
 	GetPipelineFlow(ctx context.Context, pipelineID string, environmentID string) (*PipelineFlow, error)
@@ -792,10 +800,6 @@ type QueryResolver interface {
 	PipelineTasksRun(ctx context.Context, pipelineID string, runID string, environmentID string) ([]*WorkerTasks, error)
 	GetSinglepipelineRun(ctx context.Context, pipelineID string, runID string, environmentID string) (*models.PipelineRuns, error)
 	GetPipelineRuns(ctx context.Context, pipelineID string, environmentID string) ([]*models.PipelineRuns, error)
-	GetPipelineTrigger(ctx context.Context, pipelineID string, environmentID string) (*models.PipelineApiTriggers, error)
-	GetDeploymentTrigger(ctx context.Context, deploymentID string, environmentID string) (*models.DeploymentApiTriggers, error)
-	GetPipelineAPIKeys(ctx context.Context, pipelineID string, environmentID string) ([]*models.PipelineApiKeys, error)
-	GetDeploymentAPIKeys(ctx context.Context, deploymentID string, environmentID string) ([]*models.DeploymentApiKeys, error)
 	GetSecret(ctx context.Context, secret string, environmentID string) (*models.Secrets, error)
 	GetSecrets(ctx context.Context, environmentID string) ([]*models.Secrets, error)
 	LogoutUser(ctx context.Context) (*string, error)
@@ -1166,6 +1170,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DeploymentApiTriggers.APIKeyActive(childComplexity), true
+
+	case "DeploymentApiTriggers.dataSizeLimit":
+		if e.complexity.DeploymentApiTriggers.DataSizeLimit == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiTriggers.DataSizeLimit(childComplexity), true
+
+	case "DeploymentApiTriggers.dataTTL":
+		if e.complexity.DeploymentApiTriggers.DataTTL == nil {
+			break
+		}
+
+		return e.complexity.DeploymentApiTriggers.DataTTL(childComplexity), true
 
 	case "DeploymentApiTriggers.deploymentID":
 		if e.complexity.DeploymentApiTriggers.DeploymentID == nil {
@@ -2188,7 +2206,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.GenerateDeploymentTrigger(childComplexity, args["deploymentID"].(string), args["environmentID"].(string), args["triggerID"].(string), args["apiKeyActive"].(bool), args["publicLive"].(bool), args["privateLive"].(bool)), true
+		return e.complexity.Mutation.GenerateDeploymentTrigger(childComplexity, args["deploymentID"].(string), args["environmentID"].(string), args["triggerID"].(string), args["apiKeyActive"].(bool), args["publicLive"].(bool), args["privateLive"].(bool), args["dataSizeLimit"].(float64), args["dataTTL"].(float64)), true
 
 	case "Mutation.generatePipelineTrigger":
 		if e.complexity.Mutation.GeneratePipelineTrigger == nil {
@@ -2200,7 +2218,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.GeneratePipelineTrigger(childComplexity, args["pipelineID"].(string), args["environmentID"].(string), args["triggerID"].(string), args["apiKeyActive"].(bool), args["publicLive"].(bool), args["privateLive"].(bool)), true
+		return e.complexity.Mutation.GeneratePipelineTrigger(childComplexity, args["pipelineID"].(string), args["environmentID"].(string), args["triggerID"].(string), args["apiKeyActive"].(bool), args["publicLive"].(bool), args["privateLive"].(bool), args["dataSizeLimit"].(float64), args["dataTTL"].(float64)), true
 
 	case "Mutation.moveFileNode":
 		if e.complexity.Mutation.MoveFileNode == nil {
@@ -2975,6 +2993,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PipelineApiTriggers.APIKeyActive(childComplexity), true
+
+	case "PipelineApiTriggers.dataSizeLimit":
+		if e.complexity.PipelineApiTriggers.DataSizeLimit == nil {
+			break
+		}
+
+		return e.complexity.PipelineApiTriggers.DataSizeLimit(childComplexity), true
+
+	case "PipelineApiTriggers.dataTTL":
+		if e.complexity.PipelineApiTriggers.DataTTL == nil {
+			break
+		}
+
+		return e.complexity.PipelineApiTriggers.DataTTL(childComplexity), true
 
 	case "PipelineApiTriggers.environmentID":
 		if e.complexity.PipelineApiTriggers.EnvironmentID == nil {
@@ -4786,7 +4818,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(parsedSchema, parsedSchema.Types[name]), nil
 }
 
-//go:embed "resolvers/aa_platform.graphqls" "resolvers/accessgroups.graphqls" "resolvers/code_editor.graphqls" "resolvers/code_editor_run.graphqls" "resolvers/deployments.graphqls" "resolvers/me.graphqls" "resolvers/permissions-deployments.graphqls" "resolvers/permissions-pipelines.graphqls" "resolvers/permissions.graphqls" "resolvers/pipelines.graphqls" "resolvers/piplinelogs.graphqls" "resolvers/preferences.graphqls" "resolvers/runpipelines.graphqls" "resolvers/secrets.graphqls" "resolvers/users.graphqls" "resolvers/workers-remote.graphqls" "resolvers/workers.graphqls"
+//go:embed "resolvers/aa_platform.graphqls" "resolvers/accessgroups.graphqls" "resolvers/code_editor.graphqls" "resolvers/code_editor_run.graphqls" "resolvers/deployments.graphqls" "resolvers/me.graphqls" "resolvers/permissions-deployments.graphqls" "resolvers/permissions-pipelines.graphqls" "resolvers/permissions.graphqls" "resolvers/pipelines-api-trigger.graphqls" "resolvers/pipelines.graphqls" "resolvers/piplinelogs.graphqls" "resolvers/preferences.graphqls" "resolvers/runpipelines.graphqls" "resolvers/secrets.graphqls" "resolvers/users.graphqls" "resolvers/workers-remote.graphqls" "resolvers/workers.graphqls"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -4807,6 +4839,7 @@ var sources = []*ast.Source{
 	{Name: "resolvers/permissions-deployments.graphqls", Input: sourceData("resolvers/permissions-deployments.graphqls"), BuiltIn: false},
 	{Name: "resolvers/permissions-pipelines.graphqls", Input: sourceData("resolvers/permissions-pipelines.graphqls"), BuiltIn: false},
 	{Name: "resolvers/permissions.graphqls", Input: sourceData("resolvers/permissions.graphqls"), BuiltIn: false},
+	{Name: "resolvers/pipelines-api-trigger.graphqls", Input: sourceData("resolvers/pipelines-api-trigger.graphqls"), BuiltIn: false},
 	{Name: "resolvers/pipelines.graphqls", Input: sourceData("resolvers/pipelines.graphqls"), BuiltIn: false},
 	{Name: "resolvers/piplinelogs.graphqls", Input: sourceData("resolvers/piplinelogs.graphqls"), BuiltIn: false},
 	{Name: "resolvers/preferences.graphqls", Input: sourceData("resolvers/preferences.graphqls"), BuiltIn: false},
@@ -6109,6 +6142,24 @@ func (ec *executionContext) field_Mutation_generateDeploymentTrigger_args(ctx co
 		}
 	}
 	args["privateLive"] = arg5
+	var arg6 float64
+	if tmp, ok := rawArgs["dataSizeLimit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dataSizeLimit"))
+		arg6, err = ec.unmarshalNFloat2float64(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["dataSizeLimit"] = arg6
+	var arg7 float64
+	if tmp, ok := rawArgs["dataTTL"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dataTTL"))
+		arg7, err = ec.unmarshalNFloat2float64(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["dataTTL"] = arg7
 	return args, nil
 }
 
@@ -6169,6 +6220,24 @@ func (ec *executionContext) field_Mutation_generatePipelineTrigger_args(ctx cont
 		}
 	}
 	args["privateLive"] = arg5
+	var arg6 float64
+	if tmp, ok := rawArgs["dataSizeLimit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dataSizeLimit"))
+		arg6, err = ec.unmarshalNFloat2float64(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["dataSizeLimit"] = arg6
+	var arg7 float64
+	if tmp, ok := rawArgs["dataTTL"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dataTTL"))
+		arg7, err = ec.unmarshalNFloat2float64(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["dataTTL"] = arg7
 	return args, nil
 }
 
@@ -11232,6 +11301,94 @@ func (ec *executionContext) fieldContext_DeploymentApiTriggers_privateLive(ctx c
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiTriggers_dataSizeLimit(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiTriggers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiTriggers_dataSizeLimit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DataSizeLimit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiTriggers_dataSizeLimit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiTriggers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeploymentApiTriggers_dataTTL(ctx context.Context, field graphql.CollectedField, obj *models.DeploymentApiTriggers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeploymentApiTriggers_dataTTL(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DataTTL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeploymentApiTriggers_dataTTL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeploymentApiTriggers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -16802,6 +16959,336 @@ func (ec *executionContext) fieldContext_Mutation_deleteSpecificPermission(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_generatePipelineTrigger(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_generatePipelineTrigger(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().GeneratePipelineTrigger(rctx, fc.Args["pipelineID"].(string), fc.Args["environmentID"].(string), fc.Args["triggerID"].(string), fc.Args["apiKeyActive"].(bool), fc.Args["publicLive"].(bool), fc.Args["privateLive"].(bool), fc.Args["dataSizeLimit"].(float64), fc.Args["dataTTL"].(float64))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_generatePipelineTrigger(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_generatePipelineTrigger_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_generateDeploymentTrigger(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_generateDeploymentTrigger(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().GenerateDeploymentTrigger(rctx, fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string), fc.Args["triggerID"].(string), fc.Args["apiKeyActive"].(bool), fc.Args["publicLive"].(bool), fc.Args["privateLive"].(bool), fc.Args["dataSizeLimit"].(float64), fc.Args["dataTTL"].(float64))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_generateDeploymentTrigger(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_generateDeploymentTrigger_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_addPipelineApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addPipelineApiKey(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddPipelineAPIKey(rctx, fc.Args["triggerID"].(string), fc.Args["apiKey"].(string), fc.Args["pipelineID"].(string), fc.Args["environmentID"].(string), fc.Args["expiresAt"].(*time.Time))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_addPipelineApiKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addPipelineApiKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_addDeploymentApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addDeploymentApiKey(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddDeploymentAPIKey(rctx, fc.Args["triggerID"].(string), fc.Args["apiKey"].(string), fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string), fc.Args["expiresAt"].(*time.Time))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_addDeploymentApiKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addDeploymentApiKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deletePipelineApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deletePipelineApiKey(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeletePipelineAPIKey(rctx, fc.Args["apiKey"].(string), fc.Args["pipelineID"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deletePipelineApiKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deletePipelineApiKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteDeploymentApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteDeploymentApiKey(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteDeploymentAPIKey(rctx, fc.Args["apiKey"].(string), fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteDeploymentApiKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteDeploymentApiKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_addPipeline(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_addPipeline(ctx, field)
 	if err != nil {
@@ -17383,336 +17870,6 @@ func (ec *executionContext) fieldContext_Mutation_stopPipelines(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_stopPipelines_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_generatePipelineTrigger(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_generatePipelineTrigger(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().GeneratePipelineTrigger(rctx, fc.Args["pipelineID"].(string), fc.Args["environmentID"].(string), fc.Args["triggerID"].(string), fc.Args["apiKeyActive"].(bool), fc.Args["publicLive"].(bool), fc.Args["privateLive"].(bool))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_generatePipelineTrigger(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_generatePipelineTrigger_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_generateDeploymentTrigger(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_generateDeploymentTrigger(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().GenerateDeploymentTrigger(rctx, fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string), fc.Args["triggerID"].(string), fc.Args["apiKeyActive"].(bool), fc.Args["publicLive"].(bool), fc.Args["privateLive"].(bool))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_generateDeploymentTrigger(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_generateDeploymentTrigger_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_addPipelineApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_addPipelineApiKey(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddPipelineAPIKey(rctx, fc.Args["triggerID"].(string), fc.Args["apiKey"].(string), fc.Args["pipelineID"].(string), fc.Args["environmentID"].(string), fc.Args["expiresAt"].(*time.Time))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_addPipelineApiKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_addPipelineApiKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_addDeploymentApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_addDeploymentApiKey(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddDeploymentAPIKey(rctx, fc.Args["triggerID"].(string), fc.Args["apiKey"].(string), fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string), fc.Args["expiresAt"].(*time.Time))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_addDeploymentApiKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_addDeploymentApiKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_deletePipelineApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deletePipelineApiKey(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeletePipelineAPIKey(rctx, fc.Args["apiKey"].(string), fc.Args["pipelineID"].(string), fc.Args["environmentID"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_deletePipelineApiKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deletePipelineApiKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_deleteDeploymentApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteDeploymentApiKey(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteDeploymentAPIKey(rctx, fc.Args["apiKey"].(string), fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_deleteDeploymentApiKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteDeploymentApiKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -21110,6 +21267,94 @@ func (ec *executionContext) fieldContext_PipelineApiTriggers_privateLive(ctx con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PipelineApiTriggers_dataSizeLimit(ctx context.Context, field graphql.CollectedField, obj *models.PipelineApiTriggers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PipelineApiTriggers_dataSizeLimit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DataSizeLimit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PipelineApiTriggers_dataSizeLimit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PipelineApiTriggers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PipelineApiTriggers_dataTTL(ctx context.Context, field graphql.CollectedField, obj *models.PipelineApiTriggers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PipelineApiTriggers_dataTTL(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DataTTL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PipelineApiTriggers_dataTTL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PipelineApiTriggers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -25989,6 +26234,290 @@ func (ec *executionContext) fieldContext_Query_userPermissions(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getPipelineTrigger(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getPipelineTrigger(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetPipelineTrigger(rctx, fc.Args["pipelineID"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.PipelineApiTriggers)
+	fc.Result = res
+	return ec.marshalNPipelineApiTriggers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiTriggers(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getPipelineTrigger(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "triggerID":
+				return ec.fieldContext_PipelineApiTriggers_triggerID(ctx, field)
+			case "pipelineID":
+				return ec.fieldContext_PipelineApiTriggers_pipelineID(ctx, field)
+			case "environmentID":
+				return ec.fieldContext_PipelineApiTriggers_environmentID(ctx, field)
+			case "apiKeyActive":
+				return ec.fieldContext_PipelineApiTriggers_apiKeyActive(ctx, field)
+			case "publicLive":
+				return ec.fieldContext_PipelineApiTriggers_publicLive(ctx, field)
+			case "privateLive":
+				return ec.fieldContext_PipelineApiTriggers_privateLive(ctx, field)
+			case "dataSizeLimit":
+				return ec.fieldContext_PipelineApiTriggers_dataSizeLimit(ctx, field)
+			case "dataTTL":
+				return ec.fieldContext_PipelineApiTriggers_dataTTL(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PipelineApiTriggers", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getPipelineTrigger_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getDeploymentTrigger(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getDeploymentTrigger(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetDeploymentTrigger(rctx, fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.DeploymentApiTriggers)
+	fc.Result = res
+	return ec.marshalNDeploymentApiTriggers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeploymentApiTriggers(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getDeploymentTrigger(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "triggerID":
+				return ec.fieldContext_DeploymentApiTriggers_triggerID(ctx, field)
+			case "deploymentID":
+				return ec.fieldContext_DeploymentApiTriggers_deploymentID(ctx, field)
+			case "environmentID":
+				return ec.fieldContext_DeploymentApiTriggers_environmentID(ctx, field)
+			case "apiKeyActive":
+				return ec.fieldContext_DeploymentApiTriggers_apiKeyActive(ctx, field)
+			case "publicLive":
+				return ec.fieldContext_DeploymentApiTriggers_publicLive(ctx, field)
+			case "privateLive":
+				return ec.fieldContext_DeploymentApiTriggers_privateLive(ctx, field)
+			case "dataSizeLimit":
+				return ec.fieldContext_DeploymentApiTriggers_dataSizeLimit(ctx, field)
+			case "dataTTL":
+				return ec.fieldContext_DeploymentApiTriggers_dataTTL(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DeploymentApiTriggers", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getDeploymentTrigger_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getPipelineApiKeys(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getPipelineApiKeys(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetPipelineAPIKeys(rctx, fc.Args["pipelineID"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.PipelineApiKeys)
+	fc.Result = res
+	return ec.marshalNPipelineApiKeys2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiKeysᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getPipelineApiKeys(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "triggerID":
+				return ec.fieldContext_PipelineApiKeys_triggerID(ctx, field)
+			case "apiKey":
+				return ec.fieldContext_PipelineApiKeys_apiKey(ctx, field)
+			case "apiKeyTail":
+				return ec.fieldContext_PipelineApiKeys_apiKeyTail(ctx, field)
+			case "pipelineID":
+				return ec.fieldContext_PipelineApiKeys_pipelineID(ctx, field)
+			case "environmentID":
+				return ec.fieldContext_PipelineApiKeys_environmentID(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_PipelineApiKeys_expiresAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PipelineApiKeys", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getPipelineApiKeys_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getDeploymentApiKeys(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getDeploymentApiKeys(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetDeploymentAPIKeys(rctx, fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.DeploymentApiKeys)
+	fc.Result = res
+	return ec.marshalNDeploymentApiKeys2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeploymentApiKeysᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getDeploymentApiKeys(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "triggerID":
+				return ec.fieldContext_DeploymentApiKeys_triggerID(ctx, field)
+			case "apiKey":
+				return ec.fieldContext_DeploymentApiKeys_apiKey(ctx, field)
+			case "apiKeyTail":
+				return ec.fieldContext_DeploymentApiKeys_apiKeyTail(ctx, field)
+			case "deploymentID":
+				return ec.fieldContext_DeploymentApiKeys_deploymentID(ctx, field)
+			case "environmentID":
+				return ec.fieldContext_DeploymentApiKeys_environmentID(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_DeploymentApiKeys_expiresAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DeploymentApiKeys", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getDeploymentApiKeys_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getPipeline(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getPipeline(ctx, field)
 	if err != nil {
@@ -26742,282 +27271,6 @@ func (ec *executionContext) fieldContext_Query_getPipelineRuns(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_getPipelineRuns_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_getPipelineTrigger(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getPipelineTrigger(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetPipelineTrigger(rctx, fc.Args["pipelineID"].(string), fc.Args["environmentID"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.PipelineApiTriggers)
-	fc.Result = res
-	return ec.marshalNPipelineApiTriggers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiTriggers(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_getPipelineTrigger(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "triggerID":
-				return ec.fieldContext_PipelineApiTriggers_triggerID(ctx, field)
-			case "pipelineID":
-				return ec.fieldContext_PipelineApiTriggers_pipelineID(ctx, field)
-			case "environmentID":
-				return ec.fieldContext_PipelineApiTriggers_environmentID(ctx, field)
-			case "apiKeyActive":
-				return ec.fieldContext_PipelineApiTriggers_apiKeyActive(ctx, field)
-			case "publicLive":
-				return ec.fieldContext_PipelineApiTriggers_publicLive(ctx, field)
-			case "privateLive":
-				return ec.fieldContext_PipelineApiTriggers_privateLive(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PipelineApiTriggers", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getPipelineTrigger_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_getDeploymentTrigger(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getDeploymentTrigger(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetDeploymentTrigger(rctx, fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.DeploymentApiTriggers)
-	fc.Result = res
-	return ec.marshalNDeploymentApiTriggers2ᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeploymentApiTriggers(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_getDeploymentTrigger(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "triggerID":
-				return ec.fieldContext_DeploymentApiTriggers_triggerID(ctx, field)
-			case "deploymentID":
-				return ec.fieldContext_DeploymentApiTriggers_deploymentID(ctx, field)
-			case "environmentID":
-				return ec.fieldContext_DeploymentApiTriggers_environmentID(ctx, field)
-			case "apiKeyActive":
-				return ec.fieldContext_DeploymentApiTriggers_apiKeyActive(ctx, field)
-			case "publicLive":
-				return ec.fieldContext_DeploymentApiTriggers_publicLive(ctx, field)
-			case "privateLive":
-				return ec.fieldContext_DeploymentApiTriggers_privateLive(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type DeploymentApiTriggers", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getDeploymentTrigger_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_getPipelineApiKeys(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getPipelineApiKeys(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetPipelineAPIKeys(rctx, fc.Args["pipelineID"].(string), fc.Args["environmentID"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*models.PipelineApiKeys)
-	fc.Result = res
-	return ec.marshalNPipelineApiKeys2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐPipelineApiKeysᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_getPipelineApiKeys(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "triggerID":
-				return ec.fieldContext_PipelineApiKeys_triggerID(ctx, field)
-			case "apiKey":
-				return ec.fieldContext_PipelineApiKeys_apiKey(ctx, field)
-			case "apiKeyTail":
-				return ec.fieldContext_PipelineApiKeys_apiKeyTail(ctx, field)
-			case "pipelineID":
-				return ec.fieldContext_PipelineApiKeys_pipelineID(ctx, field)
-			case "environmentID":
-				return ec.fieldContext_PipelineApiKeys_environmentID(ctx, field)
-			case "expiresAt":
-				return ec.fieldContext_PipelineApiKeys_expiresAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PipelineApiKeys", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getPipelineApiKeys_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_getDeploymentApiKeys(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getDeploymentApiKeys(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetDeploymentAPIKeys(rctx, fc.Args["deploymentID"].(string), fc.Args["environmentID"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*models.DeploymentApiKeys)
-	fc.Result = res
-	return ec.marshalNDeploymentApiKeys2ᚕᚖgithubᚗcomᚋdataplaneᚑappᚋdataplaneᚋappᚋmainappᚋdatabaseᚋmodelsᚐDeploymentApiKeysᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_getDeploymentApiKeys(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "triggerID":
-				return ec.fieldContext_DeploymentApiKeys_triggerID(ctx, field)
-			case "apiKey":
-				return ec.fieldContext_DeploymentApiKeys_apiKey(ctx, field)
-			case "apiKeyTail":
-				return ec.fieldContext_DeploymentApiKeys_apiKeyTail(ctx, field)
-			case "deploymentID":
-				return ec.fieldContext_DeploymentApiKeys_deploymentID(ctx, field)
-			case "environmentID":
-				return ec.fieldContext_DeploymentApiKeys_environmentID(ctx, field)
-			case "expiresAt":
-				return ec.fieldContext_DeploymentApiKeys_expiresAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type DeploymentApiKeys", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getDeploymentApiKeys_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -35145,6 +35398,20 @@ func (ec *executionContext) _DeploymentApiTriggers(ctx context.Context, sel ast.
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "dataSizeLimit":
+
+			out.Values[i] = ec._DeploymentApiTriggers_dataSizeLimit(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "dataTTL":
+
+			out.Values[i] = ec._DeploymentApiTriggers_dataTTL(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -36257,6 +36524,60 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "generatePipelineTrigger":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_generatePipelineTrigger(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "generateDeploymentTrigger":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_generateDeploymentTrigger(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "addPipelineApiKey":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addPipelineApiKey(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "addDeploymentApiKey":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addDeploymentApiKey(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deletePipelineApiKey":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deletePipelineApiKey(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteDeploymentApiKey":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteDeploymentApiKey(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "addPipeline":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -36339,60 +36660,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_stopPipelines(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "generatePipelineTrigger":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_generatePipelineTrigger(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "generateDeploymentTrigger":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_generateDeploymentTrigger(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "addPipelineApiKey":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_addPipelineApiKey(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "addDeploymentApiKey":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_addDeploymentApiKey(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "deletePipelineApiKey":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deletePipelineApiKey(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "deleteDeploymentApiKey":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteDeploymentApiKey(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -37023,6 +37290,20 @@ func (ec *executionContext) _PipelineApiTriggers(ctx context.Context, sel ast.Se
 		case "privateLive":
 
 			out.Values[i] = ec._PipelineApiTriggers_privateLive(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "dataSizeLimit":
+
+			out.Values[i] = ec._PipelineApiTriggers_dataSizeLimit(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "dataTTL":
+
+			out.Values[i] = ec._PipelineApiTriggers_dataTTL(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -38302,6 +38583,98 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "getPipelineTrigger":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getPipelineTrigger(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getDeploymentTrigger":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getDeploymentTrigger(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getPipelineApiKeys":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getPipelineApiKeys(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getDeploymentApiKeys":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getDeploymentApiKeys(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "getPipeline":
 			field := field
 
@@ -38515,98 +38888,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getPipelineRuns(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "getPipelineTrigger":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getPipelineTrigger(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "getDeploymentTrigger":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getDeploymentTrigger(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "getPipelineApiKeys":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getPipelineApiKeys(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "getDeploymentApiKeys":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getDeploymentApiKeys(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

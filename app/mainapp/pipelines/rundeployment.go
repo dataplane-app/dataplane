@@ -56,8 +56,17 @@ func RunDeployment(pipelineID string, environmentID string, runID string, runJso
 
 	}
 
+	log.Println("runJson", runJson)
+	log.Println("runJson", string(runJson[0]))
+	log.Println("runJson", string(runJson[1]))
+
+	// Input data from trigger
+	var inputData bool = false
+
 	// Check if a runJson is submitted
 	if runJson != nil && len(runJson[0]) != 0 {
+
+		inputData = true
 		run := models.DeploymentApiTriggerRuns{
 			RunID:         runID,
 			Version:       pipelinedata.Version,
@@ -88,6 +97,7 @@ func RunDeployment(pipelineID string, environmentID string, runID string, runJso
 		RunJSON:       pipelinedata.Json,
 		RunType:       "deployment",
 		DeployVersion: pipelinedata.Version,
+		InputData:     inputData,
 	}
 
 	err = database.DBConn.Create(&run).Error
@@ -315,7 +325,7 @@ func RunDeployment(pipelineID string, environmentID string, runID string, runJso
 		// }
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
 
-		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], triggerData[s].Version, "deployment", triggerData[s].WorkerType)
+		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], triggerData[s].Version, "deployment", triggerData[s].WorkerType, inputData)
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
