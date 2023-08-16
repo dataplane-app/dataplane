@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/99designs/gqlgen v0.17.20
 	github.com/bxcodec/faker/v3 v3.8.0
-	github.com/bxcodec/faker/v4 v4.0.0-beta.2
+	github.com/bxcodec/faker/v4 v4.0.0-beta.3
 	github.com/go-co-op/gocron v1.18.0
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
