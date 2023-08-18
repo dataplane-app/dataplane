@@ -1,12 +1,14 @@
-package messageq
+package mqworker
 
 import (
 	"time"
+
+	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 )
 
 func MsgReply(channel string, msg interface{}, response interface{}) (interface{}, error) {
 
-	err := NATSencoded.Request(channel, msg, &response, time.Second)
+	err := messageq.NATSencoded.Request(channel, msg, &response, time.Second)
 	if err != nil {
 
 	}

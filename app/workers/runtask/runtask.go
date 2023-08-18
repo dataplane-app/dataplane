@@ -13,11 +13,12 @@ import (
 
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
 	"github.com/dataplane-app/dataplane/app/workers/distfilesystem"
-	"github.com/dataplane-app/dataplane/app/workers/messageq"
+	"github.com/dataplane-app/dataplane/app/workers/mqworker"
 
 	"github.com/google/uuid"
 	cmap "github.com/orcaman/concurrent-map"
@@ -322,7 +323,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 					LogType:   "info",
 				}
 
-				messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
+				mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
 				database.DBConn.Create(&logmsg)
 				if wrkerconfig.Debug == "true" {
 					clog.Info(line)
@@ -375,7 +376,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 					LogType:   "error",
 				}
 
-				messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
+				mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
 				database.DBConn.Create(&logmsg)
 				if wrkerconfig.Debug == "true" {
 					clog.Error(line)
@@ -438,7 +439,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 				LogType:   "error",
 			}
 
-			messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
+			mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
 			database.DBConn.Create(&logmsg)
 			if wrkerconfig.Debug == "true" {
 				clog.Error(line)
@@ -539,7 +540,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		LogType:   "info",
 	}
 
-	messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
+	mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
 	database.DBConn.Create(&logmsg)
 
 	// Queue the next set of tasks
@@ -553,7 +554,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		Status:        statusUpdate,
 	}
 
-	errnat := messageq.MsgSend("pipeline-run-next", RunNext)
+	errnat := mqworker.MsgSend("pipeline-run-next", RunNext)
 	if errnat != nil {
 		WSLogError("Failed nats to send to next run runid: "+msg.RunID+" - node:"+msg.NodeID, msg)
 		if wrkerconfig.Debug == "true" {

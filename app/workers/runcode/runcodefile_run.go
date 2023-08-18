@@ -15,9 +15,9 @@ import (
 	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
 	"github.com/dataplane-app/dataplane/app/workers/distfilesystem"
-	"github.com/dataplane-app/dataplane/app/workers/messageq"
 
 	"github.com/google/uuid"
 	cmap "github.com/orcaman/concurrent-map"

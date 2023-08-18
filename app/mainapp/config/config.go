@@ -12,6 +12,7 @@ import (
 var PlatformID string
 var MainAppID string = ""
 var Leader string = ""
+var AllowOrigins string = "*"
 
 /* Routine removal of stale data */
 var CleanTasks int = 30
@@ -60,6 +61,9 @@ var DPDataInputLimitMegabyte int
 // Available storage methods: Database, LocalFile, S3
 
 func LoadConfig() {
+
+	// Platform
+	AllowOrigins = os.Getenv("DP_ALLOW_ORIGINS")
 
 	// Database connection and defaults
 	DPDBMaxOpenConns, _ = strconv.Atoi(os.Getenv("DP_DB_MAXOPENCONNS"))

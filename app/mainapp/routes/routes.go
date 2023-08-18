@@ -272,7 +272,7 @@ func Setup(port string) *fiber.App {
 
 	// CORS
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*",
+		AllowOrigins:     dpconfig.AllowOrigins,
 		AllowCredentials: true,
 		// AllowHeaders: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization, workerID",

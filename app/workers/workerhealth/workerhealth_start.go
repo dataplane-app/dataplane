@@ -12,7 +12,7 @@ import (
 	"github.com/dataplane-app/dataplane/app/workers/cmetric"
 	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
 	"github.com/dataplane-app/dataplane/app/workers/logging"
-	"github.com/dataplane-app/dataplane/app/workers/messageq"
+	"github.com/dataplane-app/dataplane/app/workers/mqworker"
 
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/load"
@@ -133,7 +133,7 @@ func WorkerHealthStart() {
 				}
 
 				// Go type Publisher
-				err := messageq.MsgSend("workergroupstats."+wrkerconfig.EnvID+"."+wrkerconfig.WorkerGroup, workerdata)
+				err := mqworker.MsgSend("workergroupstats."+wrkerconfig.EnvID+"."+wrkerconfig.WorkerGroup, workerdata)
 				if err != nil {
 					logging.PrintSecretsRedact("NATS error:", err)
 				}

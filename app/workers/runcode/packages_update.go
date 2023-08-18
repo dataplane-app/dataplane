@@ -15,7 +15,7 @@ import (
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
-	"github.com/dataplane-app/dataplane/app/workers/messageq"
+	"github.com/dataplane-app/dataplane/app/workers/mqworker"
 
 	"github.com/google/uuid"
 	clog "github.com/pieterclaerhout/go-log"
@@ -40,7 +40,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 			LogType:   "error",
 		}
 
-		messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
+		mqworker.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
 		if wrkerconfig.Debug == "true" {
 			clog.Error(line)
 		}
@@ -52,7 +52,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 			LogType:   "action",
 		}
 
-		messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
+		mqworker.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
 
 		return errors.New(line)
 	}
@@ -102,7 +102,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 					LogType:   "info",
 				}
 
-				messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
+				mqworker.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
 				if wrkerconfig.Debug == "true" {
 					clog.Info(line)
 				}
@@ -138,7 +138,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 					LogType:   "error",
 				}
 
-				messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
+				mqworker.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
 				if wrkerconfig.Debug == "true" {
 					clog.Error(line)
 				}
@@ -162,7 +162,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 				LogType:   "error",
 			}
 
-			messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
+			mqworker.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
 			if wrkerconfig.Debug == "true" {
 				clog.Error(line)
 			}
@@ -183,7 +183,7 @@ func CodeUpdatePackage(language string, envfolder string, environmentID string, 
 			LogType:   "action",
 		}
 
-		messageq.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
+		mqworker.MsgSend("codepackage."+environmentID+"."+workerGroup, sendmsg)
 
 		log.Println("📦 Loaded "+language+" packages in", packagesfile)
 	}

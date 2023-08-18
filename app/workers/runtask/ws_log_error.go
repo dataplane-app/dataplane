@@ -5,7 +5,7 @@ import (
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
-	"github.com/dataplane-app/dataplane/app/workers/messageq"
+	"github.com/dataplane-app/dataplane/app/workers/mqworker"
 	"github.com/google/uuid"
 )
 
@@ -22,7 +22,7 @@ func WSLogError(logline string, msg models.WorkerTaskSend) {
 		RunID:         msg.RunID,
 	}
 
-	messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
+	mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
 	database.DBConn.Create(&sendmsg)
 
 }

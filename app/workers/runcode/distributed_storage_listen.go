@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
-	"github.com/dataplane-app/dataplane/app/workers/messageq"
 )
 
 /*
