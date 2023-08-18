@@ -37,6 +37,8 @@ type Config struct {
 	DisableAutomaticPing bool
 	// DisableForeignKeyConstraintWhenMigrating
 	DisableForeignKeyConstraintWhenMigrating bool
+	// IgnoreRelationshipsWhenMigrating
+	IgnoreRelationshipsWhenMigrating bool
 	// DisableNestedTransaction disable nested transaction
 	DisableNestedTransaction bool
 	// AllowGlobalUpdate allow global update
@@ -45,6 +47,8 @@ type Config struct {
 	QueryFields bool
 	// CreateBatchSize default create batch size
 	CreateBatchSize int
+	// TranslateError enabling error translation
+	TranslateError bool
 
 	// ClauseBuilders clause builder
 	ClauseBuilders map[string]clause.ClauseBuilder
@@ -142,7 +146,7 @@ func Open(dialector Dialector, opts ...Option) (db *DB, err error) {
 	}
 
 	if config.NamingStrategy == nil {
-		config.NamingStrategy = schema.NamingStrategy{}
+		config.NamingStrategy = schema.NamingStrategy{IdentifierMaxLength: 64} // Default Identifier length is 64
 	}
 
 	if config.Logger == nil {
@@ -175,17 +179,17 @@ func Open(dialector Dialector, opts ...Option) (db *DB, err error) {
 
 	if config.Dialector != nil {
 		err = config.Dialector.Initialize(db)
-	}
 
-	preparedStmt := &PreparedStmtDB{
-		ConnPool:    db.ConnPool,
-		Stmts:       make(map[string]*Stmt),
-		Mux:         &sync.RWMutex{},
-		PreparedSQL: make([]string, 0, 100),
+		if err != nil {
+			if db, err := db.DB(); err == nil {
+				_ = db.Close()
+			}
+		}
 	}
-	db.cacheStore.Store(preparedStmtDBKey, preparedStmt)
 
 	if config.PrepareStmt {
+		preparedStmt := NewPreparedStmtDB(db.ConnPool)
+		db.cacheStore.Store(preparedStmtDBKey, preparedStmt)
 		db.ConnPool = preparedStmt
 	}
 
@@ -246,24 +250,30 @@ func (db *DB) Session(config *Session) *DB {
 	}
 
 	if config.PrepareStmt {
+		var preparedStmt *PreparedStmtDB
+
 		if v, ok := db.cacheStore.Load(preparedStmtDBKey); ok {
-			preparedStmt := v.(*PreparedStmtDB)
-			switch t := tx.Statement.ConnPool.(type) {
-			case Tx:
-				tx.Statement.ConnPool = &PreparedStmtTX{
-					Tx:             t,
-					PreparedStmtDB: preparedStmt,
-				}
-			default:
-				tx.Statement.ConnPool = &PreparedStmtDB{
-					ConnPool: db.Config.ConnPool,
-					Mux:      preparedStmt.Mux,
-					Stmts:    preparedStmt.Stmts,
-				}
-			}
-			txConfig.ConnPool = tx.Statement.ConnPool
-			txConfig.PrepareStmt = true
+			preparedStmt = v.(*PreparedStmtDB)
+		} else {
+			preparedStmt = NewPreparedStmtDB(db.ConnPool)
+			db.cacheStore.Store(preparedStmtDBKey, preparedStmt)
 		}
+
+		switch t := tx.Statement.ConnPool.(type) {
+		case Tx:
+			tx.Statement.ConnPool = &PreparedStmtTX{
+				Tx:             t,
+				PreparedStmtDB: preparedStmt,
+			}
+		default:
+			tx.Statement.ConnPool = &PreparedStmtDB{
+				ConnPool: db.Config.ConnPool,
+				Mux:      preparedStmt.Mux,
+				Stmts:    preparedStmt.Stmts,
+			}
+		}
+		txConfig.ConnPool = tx.Statement.ConnPool
+		txConfig.PrepareStmt = true
 	}
 
 	if config.SkipHooks {
@@ -345,10 +355,18 @@ func (db *DB) Callback() *callbacks {
 
 // AddError add error to db
 func (db *DB) AddError(err error) error {
-	if db.Error == nil {
-		db.Error = err
-	} else if err != nil {
-		db.Error = fmt.Errorf("%v; %w", db.Error, err)
+	if err != nil {
+		if db.Config.TranslateError {
+			if errTranslator, ok := db.Dialector.(ErrorTranslator); ok {
+				err = errTranslator.Translate(err)
+			}
+		}
+
+		if db.Error == nil {
+			db.Error = err
+		} else {
+			db.Error = fmt.Errorf("%v; %w", db.Error, err)
+		}
 	}
 	return db.Error
 }
@@ -357,11 +375,17 @@ func (db *DB) AddError(err error) error {
 func (db *DB) DB() (*sql.DB, error) {
 	connPool := db.ConnPool
 
-	if dbConnector, ok := connPool.(GetDBConnector); ok && dbConnector != nil {
-		return dbConnector.GetDBConn()
+	if connector, ok := connPool.(GetDBConnectorWithContext); ok && connector != nil {
+		return connector.GetDBConnWithContext(db)
 	}
 
-	if sqldb, ok := connPool.(*sql.DB); ok {
+	if dbConnector, ok := connPool.(GetDBConnector); ok && dbConnector != nil {
+		if sqldb, err := dbConnector.GetDBConn(); sqldb != nil || err != nil {
+			return sqldb, err
+		}
+	}
+
+	if sqldb, ok := connPool.(*sql.DB); ok && sqldb != nil {
 		return sqldb, nil
 	}
 
@@ -375,11 +399,12 @@ func (db *DB) getInstance() *DB {
 		if db.clone == 1 {
 			// clone with new statement
 			tx.Statement = &Statement{
-				DB:       tx,
-				ConnPool: db.Statement.ConnPool,
-				Context:  db.Statement.Context,
-				Clauses:  map[string]clause.Clause{},
-				Vars:     make([]interface{}, 0, 8),
+				DB:        tx,
+				ConnPool:  db.Statement.ConnPool,
+				Context:   db.Statement.Context,
+				Clauses:   map[string]clause.Clause{},
+				Vars:      make([]interface{}, 0, 8),
+				SkipHooks: db.Statement.SkipHooks,
 			}
 		} else {
 			// with clone statement
@@ -464,12 +489,12 @@ func (db *DB) Use(plugin Plugin) error {
 
 // ToSQL for generate SQL string.
 //
-// db.ToSQL(func(tx *gorm.DB) *gorm.DB {
-// 		return tx.Model(&User{}).Where(&User{Name: "foo", Age: 20})
-// 			.Limit(10).Offset(5)
-//			.Order("name ASC")
-//			.First(&User{})
-// })
+//	db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+//			return tx.Model(&User{}).Where(&User{Name: "foo", Age: 20})
+//				.Limit(10).Offset(5)
+//				.Order("name ASC")
+//				.First(&User{})
+//	})
 func (db *DB) ToSQL(queryFn func(tx *DB) *DB) string {
 	tx := queryFn(db.Session(&Session{DryRun: true, SkipDefaultTransaction: true}))
 	stmt := tx.Statement

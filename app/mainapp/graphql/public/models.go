@@ -7,8 +7,8 @@ import (
 )
 
 type AddAdminsInput struct {
-	PlatformInput *PlatformInput `json:"PlatformInput"`
-	AddUsersInput *AddUsersInput `json:"AddUsersInput"`
+	PlatformInput *PlatformInput `json:"PlatformInput,omitempty"`
+	AddUsersInput *AddUsersInput `json:"AddUsersInput,omitempty"`
 }
 
 type AddUsersInput struct {
@@ -21,9 +21,9 @@ type AddUsersInput struct {
 }
 
 type Admin struct {
-	Platform *models.Platform `json:"Platform"`
-	User     *models.Users    `json:"User"`
-	Auth     *Authtoken       `json:"Auth"`
+	Platform *models.Platform `json:"Platform,omitempty"`
+	User     *models.Users    `json:"User,omitempty"`
+	Auth     *Authtoken       `json:"Auth,omitempty"`
 }
 
 type Authtoken struct {

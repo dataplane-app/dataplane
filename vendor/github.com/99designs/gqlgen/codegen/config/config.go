@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -25,10 +26,18 @@ type Config struct {
 	Models                        TypeMap                    `yaml:"models,omitempty"`
 	StructTag                     string                     `yaml:"struct_tag,omitempty"`
 	Directives                    map[string]DirectiveConfig `yaml:"directives,omitempty"`
+	GoInitialisms                 GoInitialismsConfig        `yaml:"go_initialisms,omitempty"`
 	OmitSliceElementPointers      bool                       `yaml:"omit_slice_element_pointers,omitempty"`
 	OmitGetters                   bool                       `yaml:"omit_getters,omitempty"`
+	OmitInterfaceChecks           bool                       `yaml:"omit_interface_checks,omitempty"`
+	OmitComplexity                bool                       `yaml:"omit_complexity,omitempty"`
+	OmitGQLGenFileNotice          bool                       `yaml:"omit_gqlgen_file_notice,omitempty"`
+	OmitGQLGenVersionInFileNotice bool                       `yaml:"omit_gqlgen_version_in_file_notice,omitempty"`
 	StructFieldsAlwaysPointers    bool                       `yaml:"struct_fields_always_pointers,omitempty"`
+	ReturnPointersInUmarshalInput bool                       `yaml:"return_pointers_in_unmarshalinput,omitempty"`
 	ResolversAlwaysReturnPointers bool                       `yaml:"resolvers_always_return_pointers,omitempty"`
+	NullableInputOmittable        bool                       `yaml:"nullable_input_omittable,omitempty"`
+	EnableModelJsonOmitemptyTag   *bool                      `yaml:"enable_model_json_omitempty_tag,omitempty"`
 	SkipValidation                bool                       `yaml:"skip_validation,omitempty"`
 	SkipModTidy                   bool                       `yaml:"skip_mod_tidy,omitempty"`
 	Sources                       []*ast.Source              `yaml:"-"`
@@ -50,7 +59,9 @@ func DefaultConfig() *Config {
 		Directives:                    map[string]DirectiveConfig{},
 		Models:                        TypeMap{},
 		StructFieldsAlwaysPointers:    true,
+		ReturnPointersInUmarshalInput: false,
 		ResolversAlwaysReturnPointers: true,
+		NullableInputOmittable:        false,
 	}
 }
 
@@ -97,14 +108,18 @@ var path2regex = strings.NewReplacer(
 
 // LoadConfig reads the gqlgen.yml config file
 func LoadConfig(filename string) (*Config, error) {
-	config := DefaultConfig()
-
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read config: %w", err)
 	}
 
-	dec := yaml.NewDecoder(bytes.NewReader(b))
+	return ReadConfig(bytes.NewReader(b))
+}
+
+func ReadConfig(cfgFile io.Reader) (*Config, error) {
+	config := DefaultConfig()
+
+	dec := yaml.NewDecoder(cfgFile)
 	dec.KnownFields(true)
 
 	if err := dec.Decode(config); err != nil {
@@ -188,6 +203,9 @@ func CompleteConfig(config *Config) error {
 
 		config.Sources = append(config.Sources, &ast.Source{Name: filename, Input: string(schemaRaw)})
 	}
+
+	config.GoInitialisms.setInitialisms()
+
 	return nil
 }
 
@@ -292,8 +310,9 @@ func (c *Config) injectTypesFromSchema() error {
 
 					if c.Models[schemaType.Name].Fields == nil {
 						c.Models[schemaType.Name] = TypeMapEntry{
-							Model:  c.Models[schemaType.Name].Model,
-							Fields: map[string]TypeMapField{},
+							Model:       c.Models[schemaType.Name].Model,
+							ExtraFields: c.Models[schemaType.Name].ExtraFields,
+							Fields:      map[string]TypeMapField{},
 						}
 					}
 
@@ -312,12 +331,41 @@ func (c *Config) injectTypesFromSchema() error {
 type TypeMapEntry struct {
 	Model  StringList              `yaml:"model"`
 	Fields map[string]TypeMapField `yaml:"fields,omitempty"`
+
+	// Key is the Go name of the field.
+	ExtraFields map[string]ModelExtraField `yaml:"extraFields,omitempty"`
 }
 
 type TypeMapField struct {
 	Resolver        bool   `yaml:"resolver"`
 	FieldName       string `yaml:"fieldName"`
 	GeneratedMethod string `yaml:"-"`
+}
+
+type ModelExtraField struct {
+	// Type is the Go type of the field.
+	//
+	// It supports the builtin basic types (like string or int64), named types
+	// (qualified by the full package path), pointers to those types (prefixed
+	// with `*`), and slices of those types (prefixed with `[]`).
+	//
+	// For example, the following are valid types:
+	//  string
+	//  *github.com/author/package.Type
+	//  []string
+	//  []*github.com/author/package.Type
+	//
+	// Note that the type will be referenced from the generated/graphql, which
+	// means the package it lives in must not reference the generated/graphql
+	// package to avoid circular imports.
+	// restrictions.
+	Type string `yaml:"type"`
+
+	// OverrideTags is an optional override of the Go field tag.
+	OverrideTags string `yaml:"overrideTags"`
+
+	// Description is an optional the Go field doc-comment.
+	Description string `yaml:"description"`
 }
 
 type StringList []string

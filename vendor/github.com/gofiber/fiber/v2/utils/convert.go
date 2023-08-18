@@ -10,29 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unsafe"
 )
-
-const MaxStringLen = 0x7fff0000 // Maximum string length for UnsafeBytes. (decimal: 2147418112)
-
-// #nosec G103
-// UnsafeString returns a string pointer without allocation
-func UnsafeString(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
-}
-
-// #nosec G103
-// UnsafeBytes returns a byte pointer without allocation.
-// String length shouldn't be more than 2147418112.
-func UnsafeBytes(s string) []byte {
-	if s == "" {
-		return nil
-	}
-
-	return (*[MaxStringLen]byte)(unsafe.Pointer(
-		(*reflect.StringHeader)(unsafe.Pointer(&s)).Data),
-	)[:len(s):len(s)]
-}
 
 // CopyString copies a string to make it immutable
 func CopyString(s string) string {
@@ -47,7 +25,7 @@ func CopyBytes(b []byte) []byte {
 }
 
 const (
-	uByte = 1 << (10 * iota)
+	uByte = 1 << (10 * iota) // 1 << 10 == 1024
 	uKilobyte
 	uMegabyte
 	uGigabyte
@@ -92,7 +70,7 @@ func ByteSize(bytes uint64) string {
 
 // ToString Change arg to string
 func ToString(arg interface{}, timeFormat ...string) string {
-	var tmp = reflect.Indirect(reflect.ValueOf(arg)).Interface()
+	tmp := reflect.Indirect(reflect.ValueOf(arg)).Interface()
 	switch v := tmp.(type) {
 	case int:
 		return strconv.Itoa(v)

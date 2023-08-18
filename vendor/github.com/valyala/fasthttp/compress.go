@@ -66,6 +66,7 @@ func releaseFlateReader(zr io.ReadCloser) {
 func resetFlateReader(zr io.ReadCloser, r io.Reader) error {
 	zrr, ok := zr.(zlib.Resetter)
 	if !ok {
+		// sanity check. should only be called with a zlib.Reader
 		panic("BUG: zlib.Reader doesn't implement zlib.Resetter???")
 	}
 	return zrr.Reset(r, nil)
@@ -101,7 +102,14 @@ func acquireRealGzipWriter(w io.Writer, level int) *gzip.Writer {
 	if v == nil {
 		zw, err := gzip.NewWriterLevel(w, level)
 		if err != nil {
-			panic(fmt.Sprintf("BUG: unexpected error from gzip.NewWriterLevel(%d): %v", level, err))
+			// gzip.NewWriterLevel only errors for invalid
+			// compression levels. Clamp it to be min or max.
+			if level < gzip.HuffmanOnly {
+				level = gzip.HuffmanOnly
+			} else {
+				level = gzip.BestCompression
+			}
+			zw, _ = gzip.NewWriterLevel(w, level)
 		}
 		return zw
 	}
@@ -175,10 +183,7 @@ func nonblockingWriteGzip(ctxv interface{}) {
 	ctx := ctxv.(*compressCtx)
 	zw := acquireRealGzipWriter(ctx.w, ctx.level)
 
-	_, err := zw.Write(ctx.p)
-	if err != nil {
-		panic(fmt.Sprintf("BUG: gzip.Writer.Write for len(p)=%d returned unexpected error: %v", len(ctx.p), err))
-	}
+	zw.Write(ctx.p) //nolint:errcheck // no way to handle this error anyway
 
 	releaseRealGzipWriter(zw, ctx.level)
 }
@@ -271,10 +276,7 @@ func nonblockingWriteDeflate(ctxv interface{}) {
 	ctx := ctxv.(*compressCtx)
 	zw := acquireRealDeflateWriter(ctx.w, ctx.level)
 
-	_, err := zw.Write(ctx.p)
-	if err != nil {
-		panic(fmt.Sprintf("BUG: zlib.Writer.Write for len(p)=%d returned unexpected error: %v", len(ctx.p), err))
-	}
+	zw.Write(ctx.p) //nolint:errcheck // no way to handle this error anyway
 
 	releaseRealDeflateWriter(zw, ctx.level)
 }
@@ -379,7 +381,14 @@ func acquireRealDeflateWriter(w io.Writer, level int) *zlib.Writer {
 	if v == nil {
 		zw, err := zlib.NewWriterLevel(w, level)
 		if err != nil {
-			panic(fmt.Sprintf("BUG: unexpected error from zlib.NewWriterLevel(%d): %v", level, err))
+			// zlib.NewWriterLevel only errors for invalid
+			// compression levels. Clamp it to be min or max.
+			if level < zlib.HuffmanOnly {
+				level = zlib.HuffmanOnly
+			} else {
+				level = zlib.BestCompression
+			}
+			zw, _ = zlib.NewWriterLevel(w, level)
 		}
 		return zw
 	}
@@ -402,7 +411,7 @@ var (
 
 func newCompressWriterPoolMap() []*sync.Pool {
 	// Initialize pools for all the compression levels defined
-	// in https://golang.org/pkg/compress/flate/#pkg-constants .
+	// in https://pkg.go.dev/compress/flate#pkg-constants .
 	// Compression levels are normalized with normalizeCompressLevel,
 	// so the fit [0..11].
 	var m []*sync.Pool
@@ -413,7 +422,7 @@ func newCompressWriterPoolMap() []*sync.Pool {
 }
 
 func isFileCompressible(f *os.File, minCompressRatio float64) bool {
-	// Try compressing the first 4kb of of the file
+	// Try compressing the first 4kb of the file
 	// and see if it can be compressed by more than
 	// the given minCompressRatio.
 	b := bytebufferpool.Get()

@@ -13,8 +13,8 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/gofiber/fiber/v2/internal/uuid"
 	"github.com/gofiber/fiber/v2/utils"
+	"github.com/google/uuid"
 )
 
 // routeParser holds the path segments and param names
@@ -46,7 +46,7 @@ type routeSegment struct {
 
 // different special routing signs
 const (
-	wildcardParam                byte = '*'  // indicates a optional greedy parameter
+	wildcardParam                byte = '*'  // indicates an optional greedy parameter
 	plusParam                    byte = '+'  // indicates a required greedy parameter
 	optionalParam                byte = '?'  // concludes a parameter by name and makes it optional
 	paramStarterChar             byte = ':'  // start character for a parameter with name
@@ -93,7 +93,7 @@ var (
 	routeDelimiter = []byte{slashDelimiter, '-', '.'}
 	// list of greedy parameters
 	greedyParameters = []byte{wildcardParam, plusParam}
-	// list of chars for the parameter recognising
+	// list of chars for the parameter recognizing
 	parameterStartChars = []byte{wildcardParam, plusParam, paramStarterChar}
 	// list of chars of delimiters and the starting parameter name char
 	parameterDelimiterChars = append([]byte{paramStarterChar, escapeChar}, routeDelimiter...)
@@ -138,7 +138,7 @@ func RoutePatternMatch(path, pattern string, cfg ...Config) bool {
 
 	patternPretty := pattern
 
-	// Case sensitive routing, all to lowercase
+	// Case-sensitive routing, all to lowercase
 	if !config.CaseSensitive {
 		patternPretty = utils.ToLower(patternPretty)
 		path = utils.ToLower(path)
@@ -228,7 +228,7 @@ func addParameterMetaInfo(segs []*routeSegment) []*routeSegment {
 		// check how often the compare part is in the following const parts
 		if segs[i].IsParam {
 			// check if parameter segments are directly after each other and if one of them is greedy
-			// in case the next parameter or the current parameter is not a wildcard its not greedy, we only want one character
+			// in case the next parameter or the current parameter is not a wildcard it's not greedy, we only want one character
 			if segLen > i+1 && !segs[i].IsGreedy && segs[i+1].IsParam && !segs[i+1].IsGreedy {
 				segs[i].Length = 1
 			}
@@ -268,7 +268,7 @@ func findNextParamPosition(pattern string) int {
 }
 
 // analyseConstantPart find the end of the constant part and create the route segment
-func (routeParser *routeParser) analyseConstantPart(pattern string, nextParamPosition int) (string, *routeSegment) {
+func (*routeParser) analyseConstantPart(pattern string, nextParamPosition int) (string, *routeSegment) {
 	// handle the constant part
 	processedPart := pattern
 	if nextParamPosition != -1 {
@@ -297,11 +297,12 @@ func (routeParser *routeParser) analyseParameterPart(pattern string) (string, *r
 	parameterConstraintStart := -1
 	parameterConstraintEnd := -1
 	// handle wildcard end
-	if isWildCard || isPlusParam {
+	switch {
+	case isWildCard, isPlusParam:
 		parameterEndPosition = 0
-	} else if parameterEndPosition == -1 {
+	case parameterEndPosition == -1:
 		parameterEndPosition = len(pattern) - 1
-	} else if !isInCharset(pattern[parameterEndPosition+1], parameterDelimiterChars) {
+	case !isInCharset(pattern[parameterEndPosition+1], parameterDelimiterChars):
 		parameterEndPosition++
 	}
 
@@ -338,7 +339,7 @@ func (routeParser *routeParser) analyseParameterPart(pattern string) (string, *r
 					constraint.Data = splitNonEscaped(c[start+1:end], string(parameterConstraintDataSeparatorChars))
 					if len(constraint.Data) == 1 {
 						constraint.Data[0] = RemoveEscapeChar(constraint.Data[0])
-					} else if len(constraint.Data) == 2 {
+					} else if len(constraint.Data) == 2 { // This is fine, we simply expect two parts
 						constraint.Data[0] = RemoveEscapeChar(constraint.Data[0])
 						constraint.Data[1] = RemoveEscapeChar(constraint.Data[1])
 					}
@@ -474,7 +475,7 @@ func splitNonEscaped(s, sep string) []string {
 }
 
 // getMatch parses the passed url and tries to match it against the route segments and determine the parameter positions
-func (routeParser *routeParser) getMatch(detectionPath, path string, params *[maxParams]string, partialCheck bool) bool {
+func (routeParser *routeParser) getMatch(detectionPath, path string, params *[maxParams]string, partialCheck bool) bool { //nolint: revive // Accepting a bool param is fine here
 	var i, paramsIterator, partLen int
 	for _, segment := range routeParser.segs {
 		partLen = len(detectionPath)
@@ -482,7 +483,7 @@ func (routeParser *routeParser) getMatch(detectionPath, path string, params *[ma
 		if !segment.IsParam {
 			i = segment.Length
 			// is optional part or the const part must match with the given string
-			// check if the end of the segment is a optional slash
+			// check if the end of the segment is an optional slash
 			if segment.HasOptionalSlash && partLen == i-1 && detectionPath == segment.Const[:i-1] {
 				i--
 			} else if !(i <= partLen && detectionPath[:i] == segment.Const) {
@@ -638,9 +639,9 @@ func getParamConstraintType(constraintPart string) TypeConstraint {
 	default:
 		return noConstraint
 	}
-
 }
 
+//nolint:errcheck // TODO: Properly check _all_ errors in here, log them & immediately return
 func (c *Constraint) CheckConstraint(param string) bool {
 	var err error
 	var num int
@@ -663,6 +664,8 @@ func (c *Constraint) CheckConstraint(param string) bool {
 
 	// check constraints
 	switch c.ID {
+	case noConstraint:
+		// Nothing to check
 	case intConstraint:
 		_, err = strconv.Atoi(param)
 	case boolConstraint:

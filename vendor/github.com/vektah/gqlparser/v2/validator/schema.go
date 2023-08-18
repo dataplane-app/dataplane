@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	//nolint:revive
 	. "github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
@@ -85,7 +86,7 @@ func ValidateSchemaDocument(ast *SchemaDocument) (*Schema, error) {
 			// scalars, it may (§3.13) define builtin directives. Here we check for
 			// that, and reject doubly-defined directives otherwise.
 			switch dir.Name {
-			case "include", "skip", "deprecated", "specifiedBy": // the builtins
+			case "include", "skip", "deprecated", "specifiedBy", "defer": // the builtins
 				// In principle here we might want to validate that the
 				// directives are the same. But they might not be, if the
 				// server has an older spec than we do. (Plus, validating this
@@ -283,6 +284,9 @@ func validateDefinition(schema *Schema, def *Definition) *gqlerror.Error {
 					return gqlerror.ErrorPosf(def.Position, "%s %s: non-enum value %s.", def.Kind, def.Name, value.Name)
 				}
 			}
+			if err := validateDirectives(schema, value.Directives, LocationEnumValue, nil); err != nil {
+				return err
+			}
 		}
 	case InputObject:
 		if len(def.Fields) == 0 {
@@ -358,11 +362,12 @@ func validateDirectives(schema *Schema, dirs DirectiveList, location DirectiveLo
 		if currentDirective != nil && dir.Name == currentDirective.Name {
 			return gqlerror.ErrorPosf(dir.Position, "Directive %s cannot refer to itself.", currentDirective.Name)
 		}
-		if schema.Directives[dir.Name] == nil {
+		dirDefinition := schema.Directives[dir.Name]
+		if dirDefinition == nil {
 			return gqlerror.ErrorPosf(dir.Position, "Undefined directive %s.", dir.Name)
 		}
 		validKind := false
-		for _, dirLocation := range schema.Directives[dir.Name].Locations {
+		for _, dirLocation := range dirDefinition.Locations {
 			if dirLocation == location {
 				validKind = true
 				break
@@ -371,6 +376,18 @@ func validateDirectives(schema *Schema, dirs DirectiveList, location DirectiveLo
 		if !validKind {
 			return gqlerror.ErrorPosf(dir.Position, "Directive %s is not applicable on %s.", dir.Name, location)
 		}
+		for _, arg := range dir.Arguments {
+			if dirDefinition.Arguments.ForName(arg.Name) == nil {
+				return gqlerror.ErrorPosf(arg.Position, "Undefined argument %s for directive %s.", arg.Name, dir.Name)
+			}
+		}
+		for _, schemaArg := range dirDefinition.Arguments {
+			if schemaArg.Type.NonNull && schemaArg.DefaultValue == nil {
+				if arg := dir.Arguments.ForName(schemaArg.Name); arg == nil || arg.Value.Kind == NullValue {
+					return gqlerror.ErrorPosf(dir.Position, "Argument %s for directive %s cannot be null.", schemaArg.Name, dir.Name)
+				}
+			}
+		}
 		dir.Definition = schema.Directives[dir.Name]
 	}
 	return nil
@@ -378,7 +395,7 @@ func validateDirectives(schema *Schema, dirs DirectiveList, location DirectiveLo
 
 func validateImplements(schema *Schema, def *Definition, intfName string) *gqlerror.Error {
 	// see validation rules at the bottom of
-	// https://facebook.github.io/graphql/October2021/#sec-Objects
+	// https://spec.graphql.org/October2021/#sec-Objects
 	intf := schema.Types[intfName]
 	if intf == nil {
 		return gqlerror.ErrorPosf(def.Position, "Undefined type %s.", strconv.Quote(intfName))

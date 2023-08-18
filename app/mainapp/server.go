@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/routes"
+	_ "go.uber.org/automaxprocs"
 )
 
 func main() {

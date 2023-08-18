@@ -18,7 +18,7 @@ type AccessGroupsInput struct {
 
 type AddEnvironmentInput struct {
 	Name        string  `json:"name"`
-	Description *string `json:"description"`
+	Description *string `json:"description,omitempty"`
 }
 
 type AddPreferencesInput struct {
@@ -28,7 +28,7 @@ type AddPreferencesInput struct {
 
 type AddSecretsInput struct {
 	Secret        string  `json:"Secret"`
-	Description   *string `json:"Description"`
+	Description   *string `json:"Description,omitempty"`
 	Value         string  `json:"Value"`
 	EnvironmentID string  `json:"EnvironmentId"`
 	Active        bool    `json:"Active"`
@@ -59,8 +59,8 @@ type CERun struct {
 	EnvironmentID string      `json:"environment_id"`
 	RunJSON       interface{} `json:"run_json"`
 	CreatedAt     time.Time   `json:"created_at"`
-	EndedAt       *time.Time  `json:"ended_at"`
-	UpdatedAt     *time.Time  `json:"updated_at"`
+	EndedAt       *time.Time  `json:"ended_at,omitempty"`
+	UpdatedAt     *time.Time  `json:"updated_at,omitempty"`
 }
 
 type ChangePasswordInput struct {
@@ -82,7 +82,7 @@ type CodeTree struct {
 
 type DataInput struct {
 	Language    string      `json:"language"`
-	Genericdata interface{} `json:"genericdata"`
+	Genericdata interface{} `json:"genericdata,omitempty"`
 }
 
 type DeploymentFlow struct {
@@ -150,7 +150,7 @@ type NonDefaultNodes struct {
 	Description       string  `json:"description"`
 	WorkerGroup       string  `json:"workerGroup"`
 	Active            bool    `json:"active"`
-	DeployWorkerGroup *string `json:"deployWorkerGroup"`
+	DeployWorkerGroup *string `json:"deployWorkerGroup,omitempty"`
 }
 
 type PipelineEdgesInput struct {
@@ -194,7 +194,7 @@ type PipelineNodesInput struct {
 
 type PipelineNodesMetaInput struct {
 	Position *PositionInput `json:"position"`
-	Data     *DataInput     `json:"data"`
+	Data     *DataInput     `json:"data,omitempty"`
 }
 
 type PipelinePermissionsOutput struct {
@@ -277,7 +277,7 @@ type RemoteWorkers struct {
 	Description string     `json:"description"`
 	Status      string     `json:"status"`
 	Active      bool       `json:"active"`
-	LastPing    *time.Time `json:"lastPing"`
+	LastPing    *time.Time `json:"lastPing,omitempty"`
 }
 
 type RemoteWorkersProcessGroups struct {
@@ -295,12 +295,12 @@ type RemoteWorkersProcessGroups struct {
 type UpdateEnvironment struct {
 	ID          string  `json:"id"`
 	Name        string  `json:"name"`
-	Description *string `json:"description"`
+	Description *string `json:"description,omitempty"`
 }
 
 type UpdateSecretsInput struct {
 	Secret        string  `json:"Secret"`
-	Description   *string `json:"Description"`
+	Description   *string `json:"Description,omitempty"`
 	EnvironmentID string  `json:"EnvironmentId"`
 	Active        bool    `json:"Active"`
 }
@@ -337,8 +337,8 @@ type WorkerTasks struct {
 	WorkerID      string     `json:"worker_id"`
 	PipelineID    string     `json:"pipeline_id"`
 	NodeID        string     `json:"node_id"`
-	StartDt       *time.Time `json:"start_dt"`
-	EndDt         *time.Time `json:"end_dt"`
+	StartDt       *time.Time `json:"start_dt,omitempty"`
+	EndDt         *time.Time `json:"end_dt,omitempty"`
 	Status        string     `json:"status"`
 	Reason        string     `json:"reason"`
 }

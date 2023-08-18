@@ -93,6 +93,10 @@ func New(handler func(*Conn), config ...Config) fiber.Handler {
         },
     }
     return func(c *fiber.Ctx) error {
+        if cfg.Filter != nil && !cfg.Filter(c) {
+            return c.Next()
+        }
+
         conn := acquireConn()
         // locals
         c.Context().VisitUserValues(func(key []byte, value interface{}) {
@@ -114,6 +118,11 @@ func New(handler func(*Conn), config ...Config) fiber.Handler {
         c.Context().Request.Header.VisitAllCookie(func(key, value []byte) {
             conn.cookies[string(key)] = string(value)
         })
+        
+        // headers
+	c.Context().Request.Header.VisitAll(func(key, value []byte) {
+	    conn.headers[string(key)] = string(value)
+	})
 
         if err := upgrader.Upgrade(c.Context(), func(fconn *websocket.Conn) {
             conn.Conn = fconn
@@ -133,6 +142,7 @@ type Conn struct {
     locals  map[string]interface{}
     params  map[string]string
     cookies map[string]string
+    headers map[string]string
     queries map[string]string
 }
 
@@ -150,6 +160,7 @@ func acquireConn() *Conn {
     conn.params = make(map[string]string)
     conn.queries = make(map[string]string)
     conn.cookies = make(map[string]string)
+    conn.headers = make(map[string]string)
     return conn
 }
 
@@ -196,6 +207,17 @@ func (conn *Conn) Cookies(key string, defaultValue ...string) string {
         return defaultValue[0]
     }
     return v
+}
+
+// Headers is used for getting a header value by key
+// Defaults to empty string "" if the header doesn't exist.
+// If a default value is given, it will return that value if the header doesn't exist.
+func (conn *Conn) Headers(key string, defaultValue ...string) string {
+	v, ok := conn.headers[key]
+	if !ok && len(defaultValue) > 0 {
+		return defaultValue[0]
+	}
+	return v
 }
 
 // Constants are taken from https://github.com/fasthttp/websocket/blob/master/conn.go#L43

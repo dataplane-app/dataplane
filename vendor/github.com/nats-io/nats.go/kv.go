@@ -23,6 +23,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/nats-io/nats.go/internal/parser"
 )
 
 // KeyValueManager is used to manage KeyValue stores.
@@ -438,11 +440,15 @@ func (js *js) CreateKeyValue(cfg *KeyValueConfig) (KeyValue, error) {
 		// and we are now moving to a v2.7.2+. If that is the case
 		// and the only difference is the discard policy, then update
 		// the stream.
+		// The same logic applies for KVs created pre 2.9.x and
+		// the AllowDirect setting.
 		if err == ErrStreamNameAlreadyInUse {
 			if si, _ = js.StreamInfo(scfg.Name); si != nil {
 				// To compare, make the server's stream info discard
 				// policy same than ours.
 				si.Config.Discard = scfg.Discard
+				// Also need to set allow direct for v2.9.x+
+				si.Config.AllowDirect = scfg.AllowDirect
 				if reflect.DeepEqual(&si.Config, scfg) {
 					si, err = js.UpdateStream(scfg)
 				}
@@ -885,7 +891,7 @@ func (kv *kvs) Watch(keys string, opts ...WatchOpt) (KeyWatcher, error) {
 	w := &watcher{updates: make(chan KeyValueEntry, 256), ctx: o.ctx}
 
 	update := func(m *Msg) {
-		tokens, err := getMetadataFields(m.Reply)
+		tokens, err := parser.GetMetadataFields(m.Reply)
 		if err != nil {
 			return
 		}
@@ -903,7 +909,7 @@ func (kv *kvs) Watch(keys string, opts ...WatchOpt) (KeyWatcher, error) {
 				op = KeyValuePurge
 			}
 		}
-		delta := uint64(parseNum(tokens[ackNumPendingTokenPos]))
+		delta := parser.ParseNum(tokens[ackNumPendingTokenPos])
 		w.mu.Lock()
 		defer w.mu.Unlock()
 		if !o.ignoreDeletes || (op != KeyValueDelete && op != KeyValuePurge) {
@@ -911,8 +917,8 @@ func (kv *kvs) Watch(keys string, opts ...WatchOpt) (KeyWatcher, error) {
 				bucket:   kv.name,
 				key:      subj,
 				value:    m.Data,
-				revision: uint64(parseNum(tokens[ackStreamSeqTokenPos])),
-				created:  time.Unix(0, parseNum(tokens[ackTimestampSeqTokenPos])),
+				revision: parser.ParseNum(tokens[ackStreamSeqTokenPos]),
+				created:  time.Unix(0, int64(parser.ParseNum(tokens[ackTimestampSeqTokenPos]))),
 				delta:    delta,
 				op:       op,
 			}

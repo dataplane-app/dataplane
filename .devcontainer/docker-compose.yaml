@@ -72,6 +72,11 @@ services:
     volumes:
       - node_modules:/appdev/frontend/node_modules
       - ../:/appdev:cached
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
     environment:
       DP_CODE_FOLDER: "/appdev/code-files/"
       DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"

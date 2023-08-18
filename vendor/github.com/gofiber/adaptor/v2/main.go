@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"reflect"
+	"unsafe"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
@@ -29,6 +31,34 @@ func HTTPHandler(h http.Handler) fiber.Handler {
 	}
 }
 
+// CopyContextToFiberContext copies the values of context.Context to a fasthttp.RequestCtx
+func CopyContextToFiberContext(context interface{}, requestContext *fasthttp.RequestCtx) {
+	contextValues := reflect.ValueOf(context).Elem()
+	contextKeys := reflect.TypeOf(context).Elem()
+	if contextKeys.Kind() == reflect.Struct {
+		var lastKey interface{}
+		for i := 0; i < contextValues.NumField(); i++ {
+			reflectValue := contextValues.Field(i)
+			/* #nosec */
+			reflectValue = reflect.NewAt(reflectValue.Type(), unsafe.Pointer(reflectValue.UnsafeAddr())).Elem()
+
+			reflectField := contextKeys.Field(i)
+
+			if reflectField.Name == "noCopy" {
+				break
+			} else if reflectField.Name == "Context" {
+				CopyContextToFiberContext(reflectValue.Interface(), requestContext)
+			} else if reflectField.Name == "key" {
+				lastKey = reflectValue.Interface()
+			} else if lastKey != nil && reflectField.Name == "val" {
+				requestContext.SetUserValue(lastKey, reflectValue.Interface())
+			} else {
+				lastKey = nil
+			}
+		}
+	}
+}
+
 // HTTPMiddleware wraps net/http middleware to fiber middleware
 func HTTPMiddleware(mw func(http.Handler) http.Handler) fiber.Handler {
 	return func(c *fiber.Ctx) error {
@@ -44,6 +74,7 @@ func HTTPMiddleware(mw func(http.Handler) http.Handler) fiber.Handler {
 					c.Request().Header.Set(key, v)
 				}
 			}
+			CopyContextToFiberContext(r.Context(), c.Context())
 		})
 		_ = HTTPHandler(mw(nextHandler))(c)
 		if next {

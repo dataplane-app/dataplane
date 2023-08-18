@@ -149,3 +149,5 @@ dmypy.json
 
 # Webstorm
 .idea/
+
+gotest/

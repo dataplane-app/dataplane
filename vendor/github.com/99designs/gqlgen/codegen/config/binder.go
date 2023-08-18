@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"go/token"
 	"go/types"
+	"strings"
 
 	"golang.org/x/tools/go/packages"
 
-	"github.com/99designs/gqlgen/codegen/templates"
 	"github.com/99designs/gqlgen/internal/code"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -20,6 +20,7 @@ type Binder struct {
 	pkgs        *code.Packages
 	schema      *ast.Schema
 	cfg         *Config
+	tctx        *types.Context
 	References  []*TypeReference
 	SawInvalid  bool
 	objectCache map[string]map[string]types.Object
@@ -79,6 +80,14 @@ func (b *Binder) FindType(pkgName string, typeName string) (types.Type, error) {
 		return fun.Type().(*types.Signature).Params().At(0).Type(), nil
 	}
 	return obj.Type(), nil
+}
+
+func (b *Binder) InstantiateType(orig types.Type, targs []types.Type) (types.Type, error) {
+	if b.tctx == nil {
+		b.tctx = types.NewContext()
+	}
+
+	return types.Instantiate(b.tctx, orig, targs, false)
 }
 
 var (
@@ -183,15 +192,17 @@ func (b *Binder) PointerTo(ref *TypeReference) *TypeReference {
 
 // TypeReference is used by args and field types. The Definition can refer to both input and output types.
 type TypeReference struct {
-	Definition  *ast.Definition
-	GQL         *ast.Type
-	GO          types.Type  // Type of the field being bound. Could be a pointer or a value type of Target.
-	Target      types.Type  // The actual type that we know how to bind to. May require pointer juggling when traversing to fields.
-	CastType    types.Type  // Before calling marshalling functions cast from/to this base type
-	Marshaler   *types.Func // When using external marshalling functions this will point to the Marshal function
-	Unmarshaler *types.Func // When using external marshalling functions this will point to the Unmarshal function
-	IsMarshaler bool        // Does the type implement graphql.Marshaler and graphql.Unmarshaler
-	IsContext   bool        // Is the Marshaler/Unmarshaller the context version; applies to either the method or interface variety.
+	Definition              *ast.Definition
+	GQL                     *ast.Type
+	GO                      types.Type  // Type of the field being bound. Could be a pointer or a value type of Target.
+	Target                  types.Type  // The actual type that we know how to bind to. May require pointer juggling when traversing to fields.
+	CastType                types.Type  // Before calling marshalling functions cast from/to this base type
+	Marshaler               *types.Func // When using external marshalling functions this will point to the Marshal function
+	Unmarshaler             *types.Func // When using external marshalling functions this will point to the Unmarshal function
+	IsMarshaler             bool        // Does the type implement graphql.Marshaler and graphql.Unmarshaler
+	IsOmittable             bool        // Is the type wrapped with Omittable
+	IsContext               bool        // Is the Marshaler/Unmarshaller the context version; applies to either the method or interface variety.
+	PointersInUmarshalInput bool        // Inverse values and pointers in return.
 }
 
 func (ref *TypeReference) Elem() *TypeReference {
@@ -210,91 +221,99 @@ func (ref *TypeReference) Elem() *TypeReference {
 	return nil
 }
 
-func (t *TypeReference) IsPtr() bool {
-	_, isPtr := t.GO.(*types.Pointer)
+func (ref *TypeReference) IsPtr() bool {
+	_, isPtr := ref.GO.(*types.Pointer)
 	return isPtr
 }
 
 // fix for https://github.com/golang/go/issues/31103 may make it possible to remove this (may still be useful)
-func (t *TypeReference) IsPtrToPtr() bool {
-	if p, isPtr := t.GO.(*types.Pointer); isPtr {
+func (ref *TypeReference) IsPtrToPtr() bool {
+	if p, isPtr := ref.GO.(*types.Pointer); isPtr {
 		_, isPtr := p.Elem().(*types.Pointer)
 		return isPtr
 	}
 	return false
 }
 
-func (t *TypeReference) IsNilable() bool {
-	return IsNilable(t.GO)
+func (ref *TypeReference) IsNilable() bool {
+	return IsNilable(ref.GO)
 }
 
-func (t *TypeReference) IsSlice() bool {
-	_, isSlice := t.GO.(*types.Slice)
-	return t.GQL.Elem != nil && isSlice
+func (ref *TypeReference) IsSlice() bool {
+	_, isSlice := ref.GO.(*types.Slice)
+	return ref.GQL.Elem != nil && isSlice
 }
 
-func (t *TypeReference) IsPtrToSlice() bool {
-	if t.IsPtr() {
-		_, isPointerToSlice := t.GO.(*types.Pointer).Elem().(*types.Slice)
+func (ref *TypeReference) IsPtrToSlice() bool {
+	if ref.IsPtr() {
+		_, isPointerToSlice := ref.GO.(*types.Pointer).Elem().(*types.Slice)
 		return isPointerToSlice
 	}
 	return false
 }
 
-func (t *TypeReference) IsNamed() bool {
-	_, isSlice := t.GO.(*types.Named)
+func (ref *TypeReference) IsPtrToIntf() bool {
+	if ref.IsPtr() {
+		_, isPointerToInterface := ref.GO.(*types.Pointer).Elem().(*types.Interface)
+		return isPointerToInterface
+	}
+	return false
+}
+
+func (ref *TypeReference) IsNamed() bool {
+	_, isSlice := ref.GO.(*types.Named)
 	return isSlice
 }
 
-func (t *TypeReference) IsStruct() bool {
-	_, isStruct := t.GO.Underlying().(*types.Struct)
+func (ref *TypeReference) IsStruct() bool {
+	_, isStruct := ref.GO.Underlying().(*types.Struct)
 	return isStruct
 }
 
-func (t *TypeReference) IsScalar() bool {
-	return t.Definition.Kind == ast.Scalar
+func (ref *TypeReference) IsScalar() bool {
+	return ref.Definition.Kind == ast.Scalar
 }
 
-func (t *TypeReference) UniquenessKey() string {
+func (ref *TypeReference) UniquenessKey() string {
 	nullability := "O"
-	if t.GQL.NonNull {
+	if ref.GQL.NonNull {
 		nullability = "N"
 	}
 
 	elemNullability := ""
-	if t.GQL.Elem != nil && t.GQL.Elem.NonNull {
+	if ref.GQL.Elem != nil && ref.GQL.Elem.NonNull {
 		// Fix for #896
 		elemNullability = "ᚄ"
 	}
-	return nullability + t.Definition.Name + "2" + templates.TypeIdentifier(t.GO) + elemNullability
+	return nullability + ref.Definition.Name + "2" + TypeIdentifier(ref.GO) + elemNullability
 }
 
-func (t *TypeReference) MarshalFunc() string {
-	if t.Definition == nil {
-		panic(errors.New("Definition missing for " + t.GQL.Name()))
+func (ref *TypeReference) MarshalFunc() string {
+	if ref.Definition == nil {
+		panic(errors.New("Definition missing for " + ref.GQL.Name()))
 	}
 
-	if t.Definition.Kind == ast.InputObject {
+	if ref.Definition.Kind == ast.InputObject {
 		return ""
 	}
 
-	return "marshal" + t.UniquenessKey()
+	return "marshal" + ref.UniquenessKey()
 }
 
-func (t *TypeReference) UnmarshalFunc() string {
-	if t.Definition == nil {
-		panic(errors.New("Definition missing for " + t.GQL.Name()))
+func (ref *TypeReference) UnmarshalFunc() string {
+	if ref.Definition == nil {
+		panic(errors.New("Definition missing for " + ref.GQL.Name()))
 	}
 
-	if !t.Definition.IsInputType() {
+	if !ref.Definition.IsInputType() {
 		return ""
 	}
 
-	return "unmarshal" + t.UniquenessKey()
+	return "unmarshal" + ref.UniquenessKey()
 }
 
-func (t *TypeReference) IsTargetNilable() bool {
-	return IsNilable(t.Target)
+func (ref *TypeReference) IsTargetNilable() bool {
+	return IsNilable(ref.Target)
 }
 
 func (b *Binder) PushRef(ret *TypeReference) {
@@ -317,7 +336,35 @@ func isIntf(t types.Type) bool {
 	return ok
 }
 
+func unwrapOmittable(t types.Type) (types.Type, bool) {
+	if t == nil {
+		return t, false
+	}
+	named, ok := t.(*types.Named)
+	if !ok {
+		return t, false
+	}
+	if named.Origin().String() != "github.com/99designs/gqlgen/graphql.Omittable[T any]" {
+		return t, false
+	}
+	return named.TypeArgs().At(0), true
+}
+
 func (b *Binder) TypeReference(schemaType *ast.Type, bindTarget types.Type) (ret *TypeReference, err error) {
+	if innerType, ok := unwrapOmittable(bindTarget); ok {
+		if schemaType.NonNull {
+			return nil, fmt.Errorf("%s is wrapped with Omittable but non-null", schemaType.Name())
+		}
+
+		ref, err := b.TypeReference(schemaType, innerType)
+		if err != nil {
+			return nil, err
+		}
+
+		ref.IsOmittable = true
+		return ref, err
+	}
+
 	if !isValid(bindTarget) {
 		b.SawInvalid = true
 		return nil, fmt.Errorf("%s has an invalid type", schemaType.Name())
@@ -412,6 +459,8 @@ func (b *Binder) TypeReference(schemaType *ast.Type, bindTarget types.Type) (ret
 			ref.GO = bindTarget
 		}
 
+		ref.PointersInUmarshalInput = b.cfg.ReturnPointersInUmarshalInput
+
 		return ref, nil
 	}
 
@@ -490,4 +539,42 @@ func basicUnderlying(it types.Type) *types.Basic {
 	}
 
 	return nil
+}
+
+var pkgReplacer = strings.NewReplacer(
+	"/", "ᚋ",
+	".", "ᚗ",
+	"-", "ᚑ",
+	"~", "א",
+)
+
+func TypeIdentifier(t types.Type) string {
+	res := ""
+	for {
+		switch it := t.(type) {
+		case *types.Pointer:
+			t.Underlying()
+			res += "ᚖ"
+			t = it.Elem()
+		case *types.Slice:
+			res += "ᚕ"
+			t = it.Elem()
+		case *types.Named:
+			res += pkgReplacer.Replace(it.Obj().Pkg().Path())
+			res += "ᚐ"
+			res += it.Obj().Name()
+			return res
+		case *types.Basic:
+			res += it.Name()
+			return res
+		case *types.Map:
+			res += "map"
+			return res
+		case *types.Interface:
+			res += "interface"
+			return res
+		default:
+			panic(fmt.Errorf("unexpected type %T", it))
+		}
+	}
 }
