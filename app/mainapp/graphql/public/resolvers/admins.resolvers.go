@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/auth"
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -35,6 +35,7 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 
 	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
+		// Platform data is created on first startup, this is to register the first admin user. See routes for first setup
 		if res := tx.First(&platform); res.Error == gorm.ErrRecordNotFound {
 			return errors.New("Platform ID not found, restart the server.")
 		}

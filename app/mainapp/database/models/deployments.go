@@ -190,6 +190,7 @@ func (DeploymentApiKeys) TableName() string {
 
 type DeploymentApiKeys struct {
 	APIKey        string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"api_key"`
+	APISecret     string     `gorm:"type:varchar(64);" json:"api_secret"`
 	APIKeyTail    string     `json:"api_key_tail"`
 	TriggerID     string     `json:"trigger_id"`
 	DeploymentID  string     `gorm:"index:idx_deploymentid_api_keys;" json:"deployment_id"`

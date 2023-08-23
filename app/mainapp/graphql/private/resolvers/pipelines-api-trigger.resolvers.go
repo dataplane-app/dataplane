@@ -11,11 +11,12 @@ import (
 	"time"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/auth"
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
+	"github.com/google/uuid"
 	"gorm.io/gorm/clause"
 )
 
@@ -141,7 +142,8 @@ func (r *mutationResolver) AddPipelineAPIKey(ctx context.Context, triggerID stri
 
 	keys := models.PipelineApiKeys{
 		TriggerID:     triggerID,
-		APIKey:        hashedApiKey,
+		APIKey:        uuid.NewString(),
+		APISecret:     hashedApiKey,
 		APIKeyTail:    strings.Split(apiKey, "-")[3],
 		PipelineID:    pipelineID,
 		EnvironmentID: environmentID,
@@ -187,7 +189,8 @@ func (r *mutationResolver) AddDeploymentAPIKey(ctx context.Context, triggerID st
 
 	keys := models.DeploymentApiKeys{
 		TriggerID:     triggerID,
-		APIKey:        hashedApiKey,
+		APIKey:        uuid.NewString(),
+		APISecret:     hashedApiKey,
 		APIKeyTail:    strings.Split(apiKey, "-")[3],
 		DeploymentID:  deploymentID,
 		EnvironmentID: environmentID,
@@ -355,6 +358,8 @@ func (r *queryResolver) GetPipelineAPIKeys(ctx context.Context, pipelineID strin
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -365,7 +370,7 @@ func (r *queryResolver) GetPipelineAPIKeys(ctx context.Context, pipelineID strin
 
 	e := []*models.PipelineApiKeys{}
 
-	err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&e).Error
+	err := database.DBConn.Select("api_key", "api_key_trail", "trigger_id", "pipeline_id", "environment_id", "expires_at", "created_at", "updated_at", "deleted_at").Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&e).Error
 	if err != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
@@ -394,12 +399,13 @@ func (r *queryResolver) GetDeploymentAPIKeys(ctx context.Context, deploymentID s
 
 	e := []*models.DeploymentApiKeys{}
 
-	err := database.DBConn.Where("deployment_id = ? and environment_id = ?", deploymentID, environmentID).Find(&e).Error
+	err := database.DBConn.Select("api_key", "api_key_trail", "trigger_id", "pipeline_id", "environment_id", "expires_at", "created_at", "updated_at", "deleted_at").Where("deployment_id = ? and environment_id = ?", deploymentID, environmentID).Find(&e).Error
 	if err != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
 		return nil, errors.New("Retrive deployment trigger database error.")
 	}
+
 	return e, nil
 }
