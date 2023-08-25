@@ -370,7 +370,7 @@ func (r *queryResolver) GetPipelineAPIKeys(ctx context.Context, pipelineID strin
 
 	e := []*models.PipelineApiKeys{}
 
-	err := database.DBConn.Select("api_key", "api_key_trail", "trigger_id", "pipeline_id", "environment_id", "expires_at", "created_at", "updated_at", "deleted_at").Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&e).Error
+	err := database.DBConn.Select("api_key", "api_key_tail", "trigger_id", "pipeline_id", "environment_id", "expires_at", "created_at", "deleted_at").Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&e).Error
 	if err != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
@@ -399,7 +399,7 @@ func (r *queryResolver) GetDeploymentAPIKeys(ctx context.Context, deploymentID s
 
 	e := []*models.DeploymentApiKeys{}
 
-	err := database.DBConn.Select("api_key", "api_key_trail", "trigger_id", "pipeline_id", "environment_id", "expires_at", "created_at", "updated_at", "deleted_at").Where("deployment_id = ? and environment_id = ?", deploymentID, environmentID).Find(&e).Error
+	err := database.DBConn.Select("api_key", "api_key_tail", "trigger_id", "pipeline_id", "environment_id", "expires_at", "created_at", "deleted_at").Where("deployment_id = ? and environment_id = ?", deploymentID, environmentID).Find(&e).Error
 	if err != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
