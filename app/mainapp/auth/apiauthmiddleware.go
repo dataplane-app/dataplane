@@ -18,6 +18,8 @@ func ApiAuthMiddle(publicOrPrivate string) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
 		key := string(c.Request().Header.Peek("apikey"))
+		bodyLength := len(c.Body())
+		// log.Println("body length:", bodyLength)
 		triggerID := string(c.Params("id"))
 
 		// Get trigger info
@@ -25,7 +27,7 @@ func ApiAuthMiddle(publicOrPrivate string) func(*fiber.Ctx) error {
 
 		errauth := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
-			err := tx.Where("trigger_id = ?", triggerID).First(&trigger).Error
+			err := tx.Select("api_key_active", "public_live", "private_live", "data_size_limit", "environment_id", "pipeline_id").Where("trigger_id = ?", triggerID).First(&trigger).Error
 			if err != nil {
 				if dpconfig.Debug == "true" {
 					logging.PrintSecretsRedact(err)
@@ -44,6 +46,12 @@ func ApiAuthMiddle(publicOrPrivate string) func(*fiber.Ctx) error {
 				if trigger.PrivateLive == false {
 					return errors.New("Endpoint offline")
 				}
+			}
+
+			sizeLimit := trigger.DataSizeLimit * 1024 * 1024
+
+			if bodyLength > int(sizeLimit) {
+				return errors.New("Exceeds API body data limit")
 			}
 
 			if trigger.APIKeyActive == true {
