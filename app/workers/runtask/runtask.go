@@ -2,6 +2,7 @@ package runtask
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -336,59 +337,10 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		}()
 
 		// ------ Error logging -----------
-		rErr, _ := cmd.StderrPipe()
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
 
-		// Make a new channel which will be used to ensure we get all output
-		doneErr := make(chan struct{})
-
-		// Create a scanner which scans r in a line-by-line fashion
-		scannerErr := bufio.NewScanner(rErr)
-
-		// Use the scanner to scan the output line by line and log it
-		// It's running in a goroutine so that it doesn't block
-		go func() {
-
-			// Read line by line and process it
-			for scannerErr.Scan() {
-				uid := uuid.NewString()
-				line := wrkerconfig.Secrets.Replace(scannerErr.Text())
-
-				logmsg := modelmain.LogsWorkers{
-					CreatedAt:     time.Now().UTC(),
-					UID:           uid,
-					EnvironmentID: msg.EnvironmentID,
-					RunID:         msg.RunID,
-					NodeID:        msg.NodeID,
-					TaskID:        msg.TaskID,
-					Category:      "task",
-					Log:           line,
-					LogType:       "error",
-				}
-
-				// jsonmsg, err := json.Marshal(&logmsg)
-				// if err != nil {
-				// 	logging.PrintSecretsRedact(err)
-				// }
-				sendmsg := modelmain.LogsSend{
-					CreatedAt: logmsg.CreatedAt,
-					UID:       uid,
-					Log:       line,
-					LogType:   "error",
-				}
-
-				mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
-				database.DBConn.Create(&logmsg)
-				if wrkerconfig.Debug == "true" {
-					clog.Error(line)
-				}
-			}
-
-			// We're all done, unblock the channel
-			doneErr <- struct{}{}
-
-		}()
-
-		// Start the command and check for errors
+		// ----------- Start the command and check for errors -------
 
 		if tmp, ok := Tasks.Get(msg.TaskID); ok {
 			TasksRun = tmp.(Task)
@@ -460,7 +412,6 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 		// Wait for all output to be processed
 		<-done
-		<-doneErr
 
 		// Wait for the command to finish
 		err = cmd.Wait()
@@ -470,6 +421,40 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		}
 
 		if err != nil {
+
+			uid := uuid.NewString()
+			line := wrkerconfig.Secrets.Replace(stderr.String())
+
+			logmsg := modelmain.LogsWorkers{
+				CreatedAt:     time.Now().UTC(),
+				UID:           uid,
+				EnvironmentID: msg.EnvironmentID,
+				RunID:         msg.RunID,
+				NodeID:        msg.NodeID,
+				TaskID:        msg.TaskID,
+				Category:      "task",
+				Log:           line,
+				LogType:       "error",
+			}
+
+			// jsonmsg, err := json.Marshal(&logmsg)
+			// if err != nil {
+			// 	logging.PrintSecretsRedact(err)
+			// }
+			sendmsg := modelmain.LogsSend{
+				CreatedAt: logmsg.CreatedAt,
+				UID:       uid,
+				Log:       line,
+				LogType:   "error",
+			}
+
+			mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
+			database.DBConn.Create(&logmsg)
+			if wrkerconfig.Debug == "true" {
+				// clog.Error("cmd.wait error")
+				clog.Error(line)
+			}
+
 			statusUpdate = "Fail"
 			if TasksStatusWG != "cancel" {
 				TasksStatus.Set(msg.TaskID, "error")
