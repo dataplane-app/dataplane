@@ -70,12 +70,12 @@ services:
       - 9000:9000
       # - 3000:3000
     volumes:
-      - node_modules:/appdev/frontend/node_modules
+      # - node_modules:/appdev/frontend/node_modules
       - ../:/appdev:cached
     deploy:
       resources:
         limits:
-          cpus: "2.0"
+          # cpus: "2.0"
           memory: 4G
     environment:
       DP_CODE_FOLDER: "/appdev/code-files/"
