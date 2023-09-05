@@ -160,6 +160,7 @@ func Migrate() {
 		}
 
 		// Migration of API keys to avoid the secret to be exposed and use an ID instead
+		// Used as an example, too few users to justify risk of using this migration, released as a breaking change instead.
 		migrationKey = "apikeys"
 		_, ok := migrationsMap[migrationKey]
 
@@ -169,19 +170,20 @@ func Migrate() {
 			// Wrap the migration into a transaction
 
 			errmigrate := dbConn.Transaction(func(tx *gorm.DB) error {
-				// Run the migration for piplines
-				if err := tx.Model(&models.PipelineApiKeys{}).Where("api_secret IS NULL").
-					UpdateColumn("api_secret", gorm.Expr("api_key")).Error; err != nil {
-					log.Println("Could not register migration for key: "+migrationKey, err)
-					return err
-				}
 
-				// Run the migration for deployments
-				if err := tx.Model(&models.DeploymentApiKeys{}).Where("api_secret IS NULL").
-					UpdateColumn("api_secret", gorm.Expr("api_key")).Error; err != nil {
-					log.Println("Could not register migration for key: "+migrationKey, err)
-					return err
-				}
+				// // Run the migration for piplines
+				// if err := tx.Model(&models.PipelineApiKeys{}).Where("api_secret IS NULL").
+				// 	UpdateColumn("api_secret", gorm.Expr("api_key")).Error; err != nil {
+				// 	log.Println("Could not register migration for key: "+migrationKey, err)
+				// 	return err
+				// }
+
+				// // Run the migration for deployments
+				// if err := tx.Model(&models.DeploymentApiKeys{}).Where("api_secret IS NULL").
+				// 	UpdateColumn("api_secret", gorm.Expr("api_key")).Error; err != nil {
+				// 	log.Println("Could not register migration for key: "+migrationKey, err)
+				// 	return err
+				// }
 
 				if err := tx.Create(&models.DatabaseMigrations{
 					MigrationKey:     migrationKey,

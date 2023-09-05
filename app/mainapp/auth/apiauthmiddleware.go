@@ -27,7 +27,7 @@ func ApiAuthMiddle(publicOrPrivate string) func(*fiber.Ctx) error {
 
 		errauth := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
-			err := tx.Select("api_key_active", "public_live", "private_live", "data_size_limit", "environment_id", "pipeline_id").Where("trigger_id = ?", triggerID).First(&trigger).Error
+			err := tx.Select("api_key_active", "public_live", "private_live", "data_size_limit", "environment_id", "pipeline_id", "data_ttl").Where("trigger_id = ?", triggerID).First(&trigger).Error
 			if err != nil {
 				if dpconfig.Debug == "true" {
 					logging.PrintSecretsRedact(err)
@@ -48,6 +48,7 @@ func ApiAuthMiddle(publicOrPrivate string) func(*fiber.Ctx) error {
 				}
 			}
 
+			// ----- test the size of data sent against limits -----
 			sizeLimit := trigger.DataSizeLimit * 1024 * 1024
 
 			if bodyLength > int(sizeLimit) {
@@ -103,6 +104,8 @@ func ApiAuthMiddle(publicOrPrivate string) func(*fiber.Ctx) error {
 		// --- Pass through context
 		c.Locals("environmentID", trigger.EnvironmentID)
 		c.Locals("pipelineID", trigger.PipelineID)
+		c.Locals("bodyLength", bodyLength)
+		c.Locals("dataTTL", trigger.DataTTL)
 
 		return c.Next()
 	}

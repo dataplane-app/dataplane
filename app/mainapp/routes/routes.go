@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -29,6 +30,7 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
 	wsockets "github.com/dataplane-app/dataplane/app/mainapp/websockets"
 	"github.com/dataplane-app/dataplane/app/mainapp/worker"
+	"github.com/go-redis/redis/v8"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -538,27 +540,100 @@ func Setup(port string) *fiber.App {
 		c.Accepts("application/json")
 		pipelineID := c.Locals("pipelineID").(string)
 		environmentID := c.Locals("environmentID").(string)
+		bodyLength := c.Locals("bodyLength").(int)
+		dataTTL := c.Locals("dataTTL").(float64)
 
-		var jsonPayload datatypes.JSON = c.Body()
+		// var jsonPayload datatypes.JSON = c.Body()
+
+		// Generate run ID
+		runID := uuid.NewString()
+
+		//  ----- if data is provided then store in Redis with TTL ----
+		if bodyLength > 0 {
+
+			ctx := context.Background()
+
+			if _, err := database.RedisConn.Pipelined(ctx, func(rdb redis.Pipeliner) error {
+				// rdb.HSet(ctx, "leader", "nodeid", mainAppID)
+				rdb.HSet(ctx, "api-trigger-"+environmentID+"-"+runID, "timestamp", time.Now().UTC().Unix())
+				rdb.HSet(ctx, "api-trigger-"+environmentID+"-"+runID, "data", c.Body())
+				rdb.Expire(ctx, "api-trigger-"+environmentID+"-"+runID, time.Duration(dataTTL)*time.Second)
+
+				return nil
+			}); err != nil {
+				log.Println("Failed to set API data: ", err, "Run ID:", runID, "PipelineID:", pipelineID)
+
+				return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+					"Data Platform": "Dataplane",
+					"Error":         err.Error(),
+				})
+			}
+		}
 
 		// Run pipeline
-		runID := uuid.NewString()
-		pipelines.RunPipeline(pipelineID, environmentID, runID, jsonPayload)
+		_, errRun := pipelines.RunPipeline(pipelineID, environmentID, runID)
+		if errRun != nil {
+
+			log.Println("Failed to run API trigger: ", errRun, "Run ID:", runID, "PipelineID:", pipelineID)
+
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+				"Data Platform": "Dataplane",
+				"Error":         errRun.Error(),
+			})
+
+		}
 
 		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
 	})
 
 	// Pipeline API Trigger private
 	app.Post("/privateapi/api-trigger/:id", auth.ApiAuthMiddle("private"), func(c *fiber.Ctx) error {
+
 		c.Accepts("application/json")
 		pipelineID := c.Locals("pipelineID").(string)
 		environmentID := c.Locals("environmentID").(string)
+		bodyLength := c.Locals("bodyLength").(int)
+		dataTTL := c.Locals("dataTTL").(float64)
 
-		var jsonPayload datatypes.JSON = c.Body()
+		// var jsonPayload datatypes.JSON = c.Body()
+
+		// Generate run ID
+		runID := uuid.NewString()
+
+		//  ----- if data is provided then store in Redis with TTL ----
+		if bodyLength > 0 {
+
+			ctx := context.Background()
+
+			if _, err := database.RedisConn.Pipelined(ctx, func(rdb redis.Pipeliner) error {
+				// rdb.HSet(ctx, "leader", "nodeid", mainAppID)
+				rdb.HSet(ctx, "api-trigger-"+environmentID+"-"+runID, "timestamp", time.Now().UTC().Unix())
+				rdb.HSet(ctx, "api-trigger-"+environmentID+"-"+runID, "data", c.Body())
+				rdb.Expire(ctx, "api-trigger-"+environmentID+"-"+runID, time.Duration(dataTTL)*time.Second)
+
+				return nil
+			}); err != nil {
+				log.Println("Failed to set API data: ", err, "Run ID:", runID, "PipelineID:", pipelineID)
+
+				return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+					"Data Platform": "Dataplane",
+					"Error":         err.Error(),
+				})
+			}
+		}
 
 		// Run pipeline
-		runID := uuid.NewString()
-		pipelines.RunPipeline(pipelineID, environmentID, runID, jsonPayload)
+		_, errRun := pipelines.RunPipeline(pipelineID, environmentID, runID)
+		if errRun != nil {
+
+			log.Println("Failed to run API trigger: ", errRun, "Run ID:", runID, "PipelineID:", pipelineID)
+
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+				"Data Platform": "Dataplane",
+				"Error":         errRun.Error(),
+			})
+
+		}
 
 		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
 	})
