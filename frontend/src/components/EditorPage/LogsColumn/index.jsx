@@ -29,23 +29,26 @@ const LogsColumn = forwardRef(({ children, ...rest }, ref) => {
     const webSocket = useWebSocketLog(pipeline.environmentID, EditorGlobal.runID.get(), setKeys, setGraphQlResp, keys, pipeline);
 
     useEffect(() => {
+
+        // const [incomingMessage, incomingTimestamp] = webSocket;
+        // setWebsocketResp((t) => t + webSocket + '\n\n');
         if (!webSocket) return;
 
         const [incomingMessage, incomingTimestamp] = webSocket;
 
         // Update the websocketResp for timestamp comparison
-        websocketRespPair.current.push(webSocket);
+        // websocketRespPair.current.push(webSocket);
 
-        const mostRecentTimestamp = websocketRespPair?.current?.slice(-2)[0][1];
-        let isOlder = incomingTimestamp < mostRecentTimestamp;
-        if (isOlder) {
-            // Rearrange the order of logs by timestamp
-            let updatedLogs = websocketRespPair.current
-                .sort((a, b) => a[1].localeCompare(b[1]))
-                .map((a) => a[0])
-                .join('\n');
-            return setWebsocketResp(updatedLogs + '\n');
-        }
+        // const mostRecentTimestamp = websocketRespPair?.current?.slice(-2)[0][1];
+        // let isOlder = incomingTimestamp < mostRecentTimestamp;
+        // if (isOlder) {
+        //     // Rearrange the order of logs by timestamp
+        //     let updatedLogs = websocketRespPair.current
+        //         .sort((a, b) => a[1].localeCompare(b[1]))
+        //         .map((a) => a[0])
+        //         .join('\n');
+        //     return setWebsocketResp(updatedLogs + '\n');
+        // }
 
         setWebsocketResp((t) => t + incomingMessage + '\n');
 

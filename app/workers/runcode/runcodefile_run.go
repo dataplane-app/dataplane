@@ -2,6 +2,7 @@ package runcodeworker
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"log"
@@ -265,55 +266,9 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		}()
 
 		// ------ Error logging -----------
-		rErr, _ := cmd.StderrPipe()
 
-		// Make a new channel which will be used to ensure we get all output
-		doneErr := make(chan struct{})
-
-		// Create a scanner which scans r in a line-by-line fashion
-		scannerErr := bufio.NewScanner(rErr)
-
-		// Use the scanner to scan the output line by line and log it
-		// It's running in a goroutine so that it doesn't block
-		go func() {
-
-			// Read line by line and process it
-			for scannerErr.Scan() {
-				uid := uuid.NewString()
-				line := wrkerconfig.Secrets.Replace(scannerErr.Text())
-
-				logmsg := modelmain.LogsCodeRun{
-					CreatedAt:     time.Now().UTC(),
-					UID:           uid,
-					EnvironmentID: msg.EnvironmentID,
-					RunID:         msg.RunID,
-					NodeID:        msg.NodeID,
-					Log:           line,
-					LogType:       "error",
-				}
-
-				// jsonmsg, err := json.Marshal(&logmsg)
-				// if err != nil {
-				// 	logging.PrintSecretsRedact(err)
-				// }
-				sendmsg := modelmain.LogsSend{
-					CreatedAt: logmsg.CreatedAt,
-					UID:       uid,
-					Log:       line,
-					LogType:   "error",
-				}
-
-				messageq.MsgSend("coderunfilelogs."+msg.EnvironmentID+"."+msg.RunID, sendmsg)
-				database.DBConn.Create(&logmsg)
-				if wrkerconfig.Debug == "true" {
-					clog.Error(line)
-				}
-			}
-
-			// We're all done, unblock the channel
-			doneErr <- struct{}{}
-
-		}()
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
 
 		// Start the command and check for errors
 
@@ -385,9 +340,8 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 
 		// Wait for all output to be processed
 		<-done
-		<-doneErr
 
-		// Wait for the command to finish
+		// Wait for the command to finish - send error logs on exit
 		err = cmd.Wait()
 
 		if tmp, ok := TasksStatus.Get(msg.RunID); ok {
@@ -395,6 +349,37 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		}
 
 		if err != nil {
+
+			uid := uuid.NewString()
+			line := wrkerconfig.Secrets.Replace(stderr.String())
+
+			logmsg := modelmain.LogsCodeRun{
+				CreatedAt:     time.Now().UTC(),
+				UID:           uid,
+				EnvironmentID: msg.EnvironmentID,
+				RunID:         msg.RunID,
+				NodeID:        msg.NodeID,
+				Log:           line,
+				LogType:       "error",
+			}
+
+			// jsonmsg, err := json.Marshal(&logmsg)
+			// if err != nil {
+			// 	logging.PrintSecretsRedact(err)
+			// }
+			sendmsg := modelmain.LogsSend{
+				CreatedAt: logmsg.CreatedAt,
+				UID:       uid,
+				Log:       line,
+				LogType:   "error",
+			}
+
+			messageq.MsgSend("coderunfilelogs."+msg.EnvironmentID+"."+msg.RunID, sendmsg)
+			database.DBConn.Create(&logmsg)
+			if wrkerconfig.Debug == "true" {
+				clog.Error(line)
+			}
+
 			statusUpdate = "Fail"
 			if TasksStatusWG != "cancel" {
 				TasksStatus.Set(msg.RunID, "error")
