@@ -99,6 +99,13 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 
 	UpdateRunCodeFile(TaskUpdate)
 
+	// ----- get data inputs -------
+	ctxRedis := context.Background()
+	redisData := modelmain.RedisAPIData{}
+	if err := database.RedisConn.HGetAll(ctxRedis, "api-trigger-"+wrkerconfig.EnvID+"-"+msg.ReplayRunID).Scan(&redisData); err != nil {
+		log.Println("Redis get leader error:", err)
+	}
+
 	json.Unmarshal(msg.Commands, &CommandsList)
 
 	for _, v := range CommandsList {
@@ -205,6 +212,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		cmd.Env = append(cmd.Env, "DP_RUNID="+msg.ReplayRunID)
 		cmd.Env = append(cmd.Env, "DP_CODE_RUNID="+msg.RunID)
 		cmd.Env = append(cmd.Env, "DP_ENVID="+msg.EnvironmentID)
+		cmd.Env = append(cmd.Env, "DP_API_DATA="+redisData.Data)
 
 		// Request the OS to assign process group to the new process, to which all its children will belong
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}

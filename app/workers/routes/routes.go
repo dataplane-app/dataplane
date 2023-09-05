@@ -32,7 +32,7 @@ func Setup(port string) *fiber.App {
 	wrkerconfig.LoadConfig()
 
 	// ------- DATABASE CONNECT ------
-
+	database.RedisConnect()
 	database.DBConnect()
 	log.Println("🏃 ======== DATAPLANE WORKER ========")
 

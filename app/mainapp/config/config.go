@@ -40,12 +40,6 @@ var FSCodeFileStorage string
 var FSCodeFileBatches int
 var FSCodeDirectory string
 
-// Redis
-var DPRedisHost string
-var DPRedisPort string
-var DPRedisDB int
-var DPRedisPassword string
-
 // Remote workers
 var RemoteWorkerDebug string
 
@@ -81,15 +75,6 @@ func LoadConfig() {
 	if ConnMaxLifetime == 0 {
 		ConnMaxLifetime = 5
 	}
-
-	// Redis connection
-	DPRedisHost = os.Getenv("DP_REDIS_HOST")
-	DPRedisPort = os.Getenv("DP_REDIS_PORT")
-	DPRedisDB, _ = strconv.Atoi(os.Getenv("DP_REDIS_DB"))
-	if DPRedisDB == 0 {
-		DPRedisDB = 1
-	}
-	DPRedisPassword = os.Getenv("DP_REDIS_PASSWORD")
 
 	// Clean tasks set
 
