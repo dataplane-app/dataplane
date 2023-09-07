@@ -27,7 +27,7 @@ func ApiAuthMiddleDeployment(publicOrPrivate string) func(*fiber.Ctx) error {
 
 		errauth := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
-			err := tx.Select("api_key_active", "public_live", "private_live", "data_size_limit", "environment_id", "pipeline_id").Where("trigger_id = ?", triggerID).First(&trigger).Error
+			err := tx.Select("api_key_active", "public_live", "private_live", "data_size_limit", "environment_id", "deployment_id", "data_ttl").Where("trigger_id = ?", triggerID).First(&trigger).Error
 			if err != nil {
 				if dpconfig.Debug == "true" {
 					logging.PrintSecretsRedact(err)
@@ -103,6 +103,8 @@ func ApiAuthMiddleDeployment(publicOrPrivate string) func(*fiber.Ctx) error {
 		// --- Pass through context
 		c.Locals("environmentID", trigger.EnvironmentID)
 		c.Locals("deploymentID", trigger.DeploymentID)
+		c.Locals("bodyLength", bodyLength)
+		c.Locals("dataTTL", trigger.DataTTL)
 
 		return c.Next()
 	}

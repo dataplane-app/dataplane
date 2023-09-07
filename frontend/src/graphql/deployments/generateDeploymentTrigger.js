@@ -11,6 +11,8 @@ const query = gql`
         $apiKeyActive: Boolean!
         $publicLive: Boolean!
         $privateLive: Boolean!
+        $dataSizeLimit: Float!
+        $dataTTL: Float!
     ) {
         generateDeploymentTrigger(
             deploymentID: $deploymentID
@@ -19,6 +21,8 @@ const query = gql`
             apiKeyActive: $apiKeyActive
             publicLive: $publicLive
             privateLive: $privateLive
+            dataSizeLimit: $dataSizeLimit
+            dataTTL: $dataTTL
         )
     }
 `;

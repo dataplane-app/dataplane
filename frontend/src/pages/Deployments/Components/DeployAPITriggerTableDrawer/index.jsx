@@ -92,7 +92,7 @@ const DeployAPITRiggerTableDrawer = ({ handleClose, deploymentId }) => {
                         </Typography>
                     </Box>
                     <Typography variant="subtitle2" fontSize="0.75rem" fontWeight={400}>
-                        Anyone with this link can trigger this workflow. To use a specific version, change “latest” with this format “v1.2.4”
+                        Anyone with this link can trigger this workflow. To use a specific version, change “latest” with this format “1.2.4”
                     </Typography>
                     <Box display="flex" alignItems="center" mt={3}>
                         <IOSSwitch

@@ -10,7 +10,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -61,7 +61,7 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 	case "pipeline":
 		resp, err = pipelines.RunPipeline(pipelineID, environmentID, runID)
 	case "deployment":
-		resp, err = pipelines.RunDeployment(pipelineID, environmentID, runID)
+		resp, err = pipelines.RunDeployment(pipelineID, environmentID, runID, "latest")
 	default:
 		return &resp, errors.New("Run type not provided.")
 	}

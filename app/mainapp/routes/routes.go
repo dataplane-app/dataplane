@@ -42,7 +42,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/websocket/v2"
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -644,13 +643,46 @@ func Setup(port string) *fiber.App {
 		pipelineID := c.Locals("deploymentID").(string)
 		environmentID := c.Locals("environmentID").(string)
 		version := string(c.Params("version"))
-
-		var jsonPayload datatypes.JSON = c.Body()
-		var jsonVersion datatypes.JSON = []byte(fmt.Sprintf(`{"version":"%s"}`, strings.Trim(version, "v")))
+		bodyLength := c.Locals("bodyLength").(int)
+		dataTTL := c.Locals("dataTTL").(float64)
 
 		// Run deployment
 		runID := uuid.NewString()
-		pipelines.RunDeployment(pipelineID, environmentID, runID, jsonPayload, jsonVersion)
+
+		//  ----- if data is provided then store in Redis with TTL ----
+		if bodyLength > 0 {
+
+			ctx := context.Background()
+
+			if _, err := database.RedisConn.Pipelined(ctx, func(rdb redis.Pipeliner) error {
+				// rdb.HSet(ctx, "leader", "nodeid", mainAppID)
+				rdb.HSet(ctx, "api-trigger-"+environmentID+"-"+runID, "timestamp", time.Now().UTC().Unix())
+				rdb.HSet(ctx, "api-trigger-"+environmentID+"-"+runID, "data", c.Body())
+				rdb.Expire(ctx, "api-trigger-"+environmentID+"-"+runID, time.Duration(dataTTL)*time.Second)
+
+				return nil
+			}); err != nil {
+				log.Println("Failed to set API data: ", err, "Run ID:", runID, "PipelineID:", pipelineID)
+
+				return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+					"Data Platform": "Dataplane",
+					"Error":         err.Error(),
+				})
+			}
+		}
+
+		// Run deployment
+		_, errRun := pipelines.RunDeployment(pipelineID, environmentID, runID, version)
+		if errRun != nil {
+
+			log.Println("Failed to run API trigger: ", errRun, "Run ID:", runID, "PipelineID:", pipelineID)
+
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+				"Data Platform": "Dataplane",
+				"Error":         errRun.Error(),
+			})
+
+		}
 
 		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
 	})
@@ -661,13 +693,46 @@ func Setup(port string) *fiber.App {
 		pipelineID := c.Locals("deploymentID").(string)
 		environmentID := c.Locals("environmentID").(string)
 		version := string(c.Params("version"))
-
-		var jsonPayload datatypes.JSON = c.Body()
-		var jsonVersion datatypes.JSON = []byte(fmt.Sprintf(`{"version":"%s"}`, strings.Trim(version, "v")))
+		bodyLength := c.Locals("bodyLength").(int)
+		dataTTL := c.Locals("dataTTL").(float64)
 
 		// Run deployment
 		runID := uuid.NewString()
-		pipelines.RunDeployment(pipelineID, environmentID, runID, jsonPayload, jsonVersion)
+
+		//  ----- if data is provided then store in Redis with TTL ----
+		if bodyLength > 0 {
+
+			ctx := context.Background()
+
+			if _, err := database.RedisConn.Pipelined(ctx, func(rdb redis.Pipeliner) error {
+				// rdb.HSet(ctx, "leader", "nodeid", mainAppID)
+				rdb.HSet(ctx, "api-trigger-"+environmentID+"-"+runID, "timestamp", time.Now().UTC().Unix())
+				rdb.HSet(ctx, "api-trigger-"+environmentID+"-"+runID, "data", c.Body())
+				rdb.Expire(ctx, "api-trigger-"+environmentID+"-"+runID, time.Duration(dataTTL)*time.Second)
+
+				return nil
+			}); err != nil {
+				log.Println("Failed to set API data: ", err, "Run ID:", runID, "PipelineID:", pipelineID)
+
+				return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+					"Data Platform": "Dataplane",
+					"Error":         err.Error(),
+				})
+			}
+		}
+
+		// Run deployment
+		_, errRun := pipelines.RunDeployment(pipelineID, environmentID, runID, version)
+		if errRun != nil {
+
+			log.Println("Failed to run API trigger: ", errRun, "Run ID:", runID, "PipelineID:", pipelineID)
+
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+				"Data Platform": "Dataplane",
+				"Error":         errRun.Error(),
+			})
+
+		}
 
 		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
 	})

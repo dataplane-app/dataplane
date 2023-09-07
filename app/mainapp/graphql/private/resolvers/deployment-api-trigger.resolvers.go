@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/auth"
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -20,19 +20,15 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// GeneratePipelineTrigger is the resolver for the generatePipelineTrigger field.
-func (r *mutationResolver) GeneratePipelineTrigger(ctx context.Context, pipelineID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool, dataSizeLimit float64, dataTTL float64) (string, error) {
+// GenerateDeploymentTrigger is the resolver for the generateDeploymentTrigger field.
+func (r *mutationResolver) GenerateDeploymentTrigger(ctx context.Context, deploymentID string, environmentID string, triggerID string, apiKeyActive bool, publicLive bool, privateLive bool, dataSizeLimit float64, dataTTL float64) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
-
-	// log.Println("data ttl", dataSizeLimit, dataTTL)
 
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -41,9 +37,9 @@ func (r *mutationResolver) GeneratePipelineTrigger(ctx context.Context, pipeline
 		return "", errors.New("Requires permission")
 	}
 
-	trigger := models.PipelineApiTriggers{
+	trigger := models.DeploymentApiTriggers{
 		TriggerID:     triggerID,
-		PipelineID:    pipelineID,
+		DeploymentID:  deploymentID,
 		EnvironmentID: environmentID,
 		APIKeyActive:  apiKeyActive,
 		PublicLive:    publicLive,
@@ -68,8 +64,8 @@ func (r *mutationResolver) GeneratePipelineTrigger(ctx context.Context, pipeline
 	return "Success", nil
 }
 
-// AddPipelineAPIKey is the resolver for the addPipelineApiKey field.
-func (r *mutationResolver) AddPipelineAPIKey(ctx context.Context, triggerID string, apiKey string, pipelineID string, environmentID string, expiresAt *time.Time) (string, error) {
+// AddDeploymentAPIKey is the resolver for the addDeploymentApiKey field.
+func (r *mutationResolver) AddDeploymentAPIKey(ctx context.Context, triggerID string, apiKey string, deploymentID string, environmentID string, expiresAt *time.Time) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -77,8 +73,6 @@ func (r *mutationResolver) AddPipelineAPIKey(ctx context.Context, triggerID stri
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -96,12 +90,12 @@ func (r *mutationResolver) AddPipelineAPIKey(ctx context.Context, triggerID stri
 		return "", errors.New("unable to hash api key")
 	}
 
-	keys := models.PipelineApiKeys{
+	keys := models.DeploymentApiKeys{
 		TriggerID:     triggerID,
 		APIKey:        uuid.NewString(),
 		APISecret:     hashedApiKey,
 		APIKeyTail:    strings.Split(apiKey, "-")[3],
-		PipelineID:    pipelineID,
+		DeploymentID:  deploymentID,
 		EnvironmentID: environmentID,
 		ExpiresAt:     expiresAt,
 	}
@@ -117,8 +111,8 @@ func (r *mutationResolver) AddPipelineAPIKey(ctx context.Context, triggerID stri
 	return "Success", nil
 }
 
-// DeletePipelineAPIKey is the resolver for the deletePipelineApiKey field.
-func (r *mutationResolver) DeletePipelineAPIKey(ctx context.Context, apiKey string, pipelineID string, environmentID string) (string, error) {
+// DeleteDeploymentAPIKey is the resolver for the deleteDeploymentApiKey field.
+func (r *mutationResolver) DeleteDeploymentAPIKey(ctx context.Context, apiKey string, deploymentID string, environmentID string) (string, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -126,8 +120,6 @@ func (r *mutationResolver) DeletePipelineAPIKey(ctx context.Context, apiKey stri
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -136,25 +128,25 @@ func (r *mutationResolver) DeletePipelineAPIKey(ctx context.Context, apiKey stri
 		return "", errors.New("Requires permission")
 	}
 
-	k := models.PipelineApiKeys{}
+	k := models.DeploymentApiKeys{}
 
-	query := database.DBConn.Where("pipeline_id = ? and environment_id = ? and api_key = ?",
-		pipelineID, environmentID, apiKey).Delete(&k)
+	query := database.DBConn.Where("deployment_id = ? and environment_id = ? and api_key = ?",
+		deploymentID, environmentID, apiKey).Delete(&k)
 	if query.Error != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(query.Error)
 		}
-		return "", errors.New("Delete pipeline key database error.")
+		return "", errors.New("Delete deployment key database error.")
 	}
 	if query.RowsAffected == 0 {
-		return "", errors.New("Delete pipeline key database error.")
+		return "", errors.New("Delete deployment key database error.")
 	}
 
 	return "Success", nil
 }
 
-// GetPipelineTrigger is the resolver for the getPipelineTrigger field.
-func (r *queryResolver) GetPipelineTrigger(ctx context.Context, pipelineID string, environmentID string) (*models.PipelineApiTriggers, error) {
+// GetDeploymentTrigger is the resolver for the getDeploymentTrigger field.
+func (r *queryResolver) GetDeploymentTrigger(ctx context.Context, deploymentID string, environmentID string) (*models.DeploymentApiTriggers, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -162,8 +154,9 @@ func (r *queryResolver) GetPipelineTrigger(ctx context.Context, pipelineID strin
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: deploymentID, Access: "run", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: deploymentID, Access: "deploy", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -172,9 +165,9 @@ func (r *queryResolver) GetPipelineTrigger(ctx context.Context, pipelineID strin
 		return nil, errors.New("Requires permission")
 	}
 
-	e := models.PipelineApiTriggers{}
+	e := models.DeploymentApiTriggers{}
 
-	err := database.DBConn.Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).First(&e).Error
+	err := database.DBConn.Where("deployment_id = ? and environment_id = ?", deploymentID, environmentID).First(&e).Error
 	if err != nil {
 		if err.Error() == "record not found" {
 			return nil, errors.New("record not found")
@@ -182,14 +175,14 @@ func (r *queryResolver) GetPipelineTrigger(ctx context.Context, pipelineID strin
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return nil, errors.New("Retrive pipeline trigger database error.")
+		return nil, errors.New("Retrive deployment trigger database error.")
 	}
 
 	return &e, nil
 }
 
-// GetPipelineAPIKeys is the resolver for the getPipelineApiKeys field.
-func (r *queryResolver) GetPipelineAPIKeys(ctx context.Context, pipelineID string, environmentID string) ([]*models.PipelineApiKeys, error) {
+// GetDeploymentAPIKeys is the resolver for the getDeploymentApiKeys field.
+func (r *queryResolver) GetDeploymentAPIKeys(ctx context.Context, deploymentID string, environmentID string) ([]*models.DeploymentApiKeys, error) {
 	currentUser := ctx.Value("currentUser").(string)
 	platformID := ctx.Value("platformID").(string)
 
@@ -197,8 +190,6 @@ func (r *queryResolver) GetPipelineAPIKeys(ctx context.Context, pipelineID strin
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -207,14 +198,15 @@ func (r *queryResolver) GetPipelineAPIKeys(ctx context.Context, pipelineID strin
 		return nil, errors.New("Requires permission")
 	}
 
-	e := []*models.PipelineApiKeys{}
+	e := []*models.DeploymentApiKeys{}
 
-	err := database.DBConn.Select("api_key", "api_key_tail", "trigger_id", "pipeline_id", "environment_id", "expires_at", "created_at", "deleted_at").Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Find(&e).Error
+	err := database.DBConn.Select("api_key", "api_key_tail", "trigger_id", "deployment_id", "environment_id", "expires_at", "created_at", "deleted_at").Where("deployment_id = ? and environment_id = ?", deploymentID, environmentID).Find(&e).Error
 	if err != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(err)
 		}
-		return nil, errors.New("Retrive pipeline trigger database error.")
+		return nil, errors.New("Retrive deployment trigger database error.")
 	}
+
 	return e, nil
 }

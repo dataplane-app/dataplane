@@ -70,6 +70,8 @@ const Deploy = () => {
     // Local state for trigger
     const [apiDrawerOpen, setApiDrawerOpen] = useState(false);
     const [triggerID, setTriggerID] = useState(() => uuidv4());
+    const [dataSizeLimit, setDataSizeLimit] = useState(5);
+    const [dataTTL, setDataTTL] = useState(86400);
     const [switches, dispatch] = useReducer((switches, newState) => ({ ...switches, ...newState }), initialState);
 
     // Theme hook
@@ -96,7 +98,7 @@ const Deploy = () => {
     
     // Graphql API Trigger Hooks
     const getDeploymentTriggerHook = useGetDeploymentTriggerHook(Environment.id.get(), setTriggerID, dispatch);
-    const generateDeploymentTrigger = useGenerateDeploymentTriggerHook(Environment.id.get(), triggerID, switches, dispatch);
+    const generateDeploymentTrigger = useGenerateDeploymentTriggerHook(Environment.id.get(), triggerID, switches, dataSizeLimit, dataTTL, dispatch);
 
     // ------ ON PAGE LOAD ---------
     // ------ Get data for environments, pipeline and deployment on load ---------
@@ -490,6 +492,7 @@ const Deploy = () => {
                         handleClose={() => setApiDrawerOpen(false)}
                         triggerID={triggerID}
                         switches={switches}
+                        setDataSizeLimit={setDataSizeLimit}
                         generateDeploymentTrigger={generateDeploymentTrigger}
                     />
                 </Drawer>
@@ -674,7 +677,7 @@ const useGetDeploymentTriggerHook = (environmentID, setTriggerID, dispatch) => {
 
 // ---------- Custom Hooks
 
-const useGenerateDeploymentTriggerHook = (environmentID, triggerID, switches, dispatch) => {
+const useGenerateDeploymentTriggerHook = (environmentID, triggerID, switches, dataSizeLimit, dataTTL, dispatch) => {
     // GraphQL hook
     const generateDeploymentTrigger = useGenerateDeploymentTrigger();
 
@@ -694,6 +697,8 @@ const useGenerateDeploymentTriggerHook = (environmentID, triggerID, switches, di
             apiKeyActive,
             publicLive,
             privateLive,
+            dataSizeLimit,
+            dataTTL,
             ...update,
         });
 
