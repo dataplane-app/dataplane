@@ -23,6 +23,7 @@ go get -u github.com/gofiber/adaptor/v2
 | FiberHandler | `FiberHandler(h fiber.Handler) http.Handler` | fiber.Handler -> http.Handler
 | FiberHandlerFunc | `FiberHandlerFunc(h fiber.Handler) http.HandlerFunc` | fiber.Handler -> http.HandlerFunc
 | FiberApp | `FiberApp(app *fiber.App) http.HandlerFunc` | Fiber app -> http.HandlerFunc
+| CopyContextToFiberContex | `CopyContextToFiberContext(context interface{}, requestContext *fasthttp.RequestCtx)` | context.Context -> fasthttp.RequestCtx
 
 ### net/http to Fiber
 ```go

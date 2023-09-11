@@ -2,7 +2,7 @@ import { Box, Grid, Typography } from '@mui/material';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
-import { useRemoveRemoteWorkerFromProcessGroup } from '../../../../graphql/removeRemoteWorkerFromProcessGroup';
+import { useRemoveRemoteWorkerFromProcessGroup } from '../../../../graphql/remoteworkers/removeRemoteWorkerFromProcessGroup.js';
 import { useSnackbar } from 'notistack';
 import { useParams, useHistory } from 'react-router-dom';
 

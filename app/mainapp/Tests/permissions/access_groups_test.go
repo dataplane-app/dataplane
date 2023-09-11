@@ -17,7 +17,7 @@ import (
 
 /*
 For individual tests - in separate window run: go run server.go
-go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/permissions
+go test -p 1 -v -count=1 -run TestAccessGroups github.com/dataplane-app/dataplane/app/mainapp/Tests/permissions
 * Login
 * Create access group
 * Update access group

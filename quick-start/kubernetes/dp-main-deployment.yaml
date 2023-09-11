@@ -90,3 +90,7 @@ spec:
               value: ""
             - name: DP_REDIS_DB
               value: "0"
+            - name: DP_PIPELINE_DATA_TTL_SECONDS
+              value: "86400"
+            - name: DP_PIPELINE_DATA_LIMIT_MB
+              value: "5"

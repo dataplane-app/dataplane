@@ -63,7 +63,8 @@ type NonDefaultNodes {
   triggerOnline: Boolean!
 	description:   String!
   workerGroup:   String!
-	active:        Boolean!           
+	active:        Boolean! 
+  deployWorkerGroup: String          
 }
 
 type DeploymentEdges {

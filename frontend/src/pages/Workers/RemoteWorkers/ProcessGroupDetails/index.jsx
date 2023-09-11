@@ -7,7 +7,7 @@ import Details from './Details';
 import Environments from './Environments';
 import Packages from './Packages';
 import { useSnackbar } from 'notistack';
-import { useGetSingleRemoteProcessGroup } from '../../../../graphql/getSingleRemoteProcessGroup';
+import { useGetSingleRemoteProcessGroup } from '../../../../graphql/remoteworkers/getSingleRemoteProcessGroup.js';
 import { useHistory, useParams } from 'react-router-dom';
 import { useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown';
 

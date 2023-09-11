@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { Box, Typography, Button, Grid } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useUpdateDeactivateEnvironment } from '../../../graphql/updateDeactivateEnvironment';
-import { useUpdateActivateEnvironment } from '../../../graphql/updateActivateEnvironment';
+import { useUpdateDeactivateEnvironment } from '../../../graphql/environments/updateDeactivateEnvironment.js';
+import { useUpdateActivateEnvironment } from '../../../graphql/environments/updateActivateEnvironment.js';
 import { useSnackbar } from 'notistack';
 
 const DeactivateEnvironmentDrawer = ({ environment, handleClose, refreshData }) => {

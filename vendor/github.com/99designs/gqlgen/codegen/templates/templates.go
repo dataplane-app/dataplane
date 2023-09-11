@@ -17,8 +17,8 @@ import (
 	"text/template"
 	"unicode"
 
+	"github.com/99designs/gqlgen/codegen/config"
 	"github.com/99designs/gqlgen/internal/code"
-
 	"github.com/99designs/gqlgen/internal/imports"
 )
 
@@ -172,7 +172,7 @@ func parseTemplates(cfg Options, t *template.Template) (*template.Template, erro
 		fileSystem = cfg.TemplateFS
 	} else {
 		// load path relative to calling source file
-		_, callerFile, _, _ := runtime.Caller(1)
+		_, callerFile, _, _ := runtime.Caller(2)
 		rootDir := filepath.Dir(callerFile)
 		fileSystem = os.DirFS(rootDir)
 	}
@@ -202,7 +202,7 @@ func Funcs() template.FuncMap {
 		"rawQuote":           rawQuote,
 		"dump":               Dump,
 		"ref":                ref,
-		"ts":                 TypeIdentifier,
+		"ts":                 config.TypeIdentifier,
 		"call":               Call,
 		"prefixLines":        prefixLines,
 		"notNil":             notNil,
@@ -246,44 +246,6 @@ func isDelimiter(c rune) bool {
 
 func ref(p types.Type) string {
 	return CurrentImports.LookupType(p)
-}
-
-var pkgReplacer = strings.NewReplacer(
-	"/", "ᚋ",
-	".", "ᚗ",
-	"-", "ᚑ",
-	"~", "א",
-)
-
-func TypeIdentifier(t types.Type) string {
-	res := ""
-	for {
-		switch it := t.(type) {
-		case *types.Pointer:
-			t.Underlying()
-			res += "ᚖ"
-			t = it.Elem()
-		case *types.Slice:
-			res += "ᚕ"
-			t = it.Elem()
-		case *types.Named:
-			res += pkgReplacer.Replace(it.Obj().Pkg().Path())
-			res += "ᚐ"
-			res += it.Obj().Name()
-			return res
-		case *types.Basic:
-			res += it.Name()
-			return res
-		case *types.Map:
-			res += "map"
-			return res
-		case *types.Interface:
-			res += "interface"
-			return res
-		default:
-			panic(fmt.Errorf("unexpected type %T", it))
-		}
-	}
 }
 
 func Call(p *types.Func) string {
@@ -503,21 +465,40 @@ func wordWalker(str string, f func(*wordInfo)) {
 		}
 		i++
 
+		initialisms := config.GetInitialisms()
 		// [w,i) is a word.
 		word := string(runes[w:i])
-		if !eow && commonInitialisms[word] && !unicode.IsLower(runes[i]) {
+		if !eow && initialisms[word] && !unicode.IsLower(runes[i]) {
 			// through
 			// split IDFoo → ID, Foo
 			// but URLs → URLs
 		} else if !eow {
-			if commonInitialisms[word] {
+			if initialisms[word] {
 				hasCommonInitial = true
 			}
 			continue
 		}
 
 		matchCommonInitial := false
-		if commonInitialisms[strings.ToUpper(word)] {
+		upperWord := strings.ToUpper(word)
+		if initialisms[upperWord] {
+			// If the uppercase word (string(runes[w:i]) is "ID" or "IP"
+			// AND
+			// the word is the first two characters of the str
+			// AND
+			// that is not the end of the word
+			// AND
+			// the length of the string is greater than 3
+			// AND
+			// the third rune is an uppercase one
+			// THEN
+			// do NOT count this as an initialism.
+			switch upperWord {
+			case "ID", "IP":
+				if word == str[:2] && !eow && len(str) > 3 && unicode.IsUpper(runes[3]) {
+					continue
+				}
+			}
 			hasCommonInitial = true
 			matchCommonInitial = true
 		}
@@ -571,57 +552,6 @@ func sanitizeKeywords(name string) string {
 		}
 	}
 	return name
-}
-
-// commonInitialisms is a set of common initialisms.
-// Only add entries that are highly unlikely to be non-initialisms.
-// For instance, "ID" is fine (Freudian code is rare), but "AND" is not.
-var commonInitialisms = map[string]bool{
-	"ACL":   true,
-	"API":   true,
-	"ASCII": true,
-	"CPU":   true,
-	"CSS":   true,
-	"CSV":   true,
-	"DNS":   true,
-	"EOF":   true,
-	"GUID":  true,
-	"HTML":  true,
-	"HTTP":  true,
-	"HTTPS": true,
-	"ICMP":  true,
-	"ID":    true,
-	"IP":    true,
-	"JSON":  true,
-	"KVK":   true,
-	"LHS":   true,
-	"PDF":   true,
-	"PGP":   true,
-	"QPS":   true,
-	"QR":    true,
-	"RAM":   true,
-	"RHS":   true,
-	"RPC":   true,
-	"SLA":   true,
-	"SMTP":  true,
-	"SQL":   true,
-	"SSH":   true,
-	"SVG":   true,
-	"TCP":   true,
-	"TLS":   true,
-	"TTL":   true,
-	"UDP":   true,
-	"UI":    true,
-	"UID":   true,
-	"URI":   true,
-	"URL":   true,
-	"UTF8":  true,
-	"UUID":  true,
-	"VM":    true,
-	"XML":   true,
-	"XMPP":  true,
-	"XSRF":  true,
-	"XSS":   true,
 }
 
 func rawQuote(s string) string {

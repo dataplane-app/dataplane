@@ -5,8 +5,8 @@ package desktopgraphql
 type Environments struct {
 	ID          string  `json:"id"`
 	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	Active      *bool   `json:"active"`
+	Description *string `json:"description,omitempty"`
+	Active      *bool   `json:"active,omitempty"`
 }
 
 type RemoteWorkersProcessGroups struct {

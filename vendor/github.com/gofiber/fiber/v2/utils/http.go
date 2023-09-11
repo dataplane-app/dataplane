@@ -4,24 +4,37 @@
 
 package utils
 
-import "strings"
+import (
+	"mime"
+	"strings"
+)
 
 const MIMEOctetStream = "application/octet-stream"
 
 // GetMIME returns the content-type of a file extension
-func GetMIME(extension string) (mime string) {
+func GetMIME(extension string) string {
 	if len(extension) == 0 {
-		return mime
+		return ""
 	}
+	var foundMime string
 	if extension[0] == '.' {
-		mime = mimeExtensions[extension[1:]]
+		foundMime = mimeExtensions[extension[1:]]
 	} else {
-		mime = mimeExtensions[extension]
+		foundMime = mimeExtensions[extension]
 	}
-	if len(mime) == 0 {
-		return MIMEOctetStream
+
+	if len(foundMime) == 0 {
+		if extension[0] != '.' {
+			foundMime = mime.TypeByExtension("." + extension)
+		} else {
+			foundMime = mime.TypeByExtension(extension)
+		}
+
+		if foundMime == "" {
+			return MIMEOctetStream
+		}
 	}
-	return mime
+	return foundMime
 }
 
 // ParseVendorSpecificContentType check if content type is vendor specific and

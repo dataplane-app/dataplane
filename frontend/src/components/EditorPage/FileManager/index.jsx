@@ -5,8 +5,8 @@ import TreeView from '@mui/lab/TreeView';
 import { Autocomplete, Box, Drawer, Grid, IconButton, TextField, Tooltip, Typography, useTheme } from '@mui/material';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useState as useHookState } from '@hookstate/core';
-import { useGlobalEditorState } from '../../../pages/Editor';
-import { useGetWorkerGroupsHook } from '../../DrawerContent/AddPipelineDrawer';
+import { useGlobalEditorState } from '../../../pages/Pipelines/Editor.jsx';
+import { useGetWorkerGroupsHook } from '../../../pages/Pipelines/Components/Drawers/AddPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { faFileAlt } from '@fortawesome/free-regular-svg-icons';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,13 +14,13 @@ import { useSnackbar } from 'notistack';
 import { checkNameExist, findNodeById, getParentId, getPath, isFolder } from './functions';
 import CustomDragHandle from '../../CustomDragHandle';
 import { Downgraded } from '@hookstate/core';
-import { useGetFilesNode } from '../../../graphql/getFilesNode';
-import { useCreateFolderNode } from '../../../graphql/createFolderNode';
+import { useGetFilesNode } from '../../../graphql/codeEditor/getFilesNode.js';
+import { useCreateFolderNode } from '../../../graphql/codeEditor/createFolderNode.js';
 import { useUploadFileNodeHook } from '../EditorColumn';
 import DeleteFileFolderDrawer from '../../DrawerContent/DeleteFileFolderDrawer';
-import { useRenameFile } from '../../../graphql/renameFile';
-import { useRenameFolder } from '../../../graphql/renameFolder';
-import { useGetSingleRemoteProcessGroup } from '../../../graphql/getSingleRemoteProcessGroup';
+import { useRenameFile } from '../../../graphql/codeEditor/renameFile.js';
+import { useRenameFolder } from '../../../graphql/codeEditor/renameFolder.js';
+import { useGetSingleRemoteProcessGroup } from '../../../graphql/remoteworkers/getSingleRemoteProcessGroup.js';
 
 const FileManagerColumn = forwardRef(({ children, ...rest }, ref) => {
     // Global environment state with hookstate

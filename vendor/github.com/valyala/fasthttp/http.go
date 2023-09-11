@@ -37,7 +37,7 @@ func SetBodySizePoolLimit(reqBodyLimit, respBodyLimit int) {
 //
 // Request instance MUST NOT be used from concurrently running goroutines.
 type Request struct {
-	noCopy noCopy //nolint:unused,structcheck
+	noCopy noCopy
 
 	// Request header
 	//
@@ -81,7 +81,7 @@ type Request struct {
 //
 // Response instance MUST NOT be used from concurrently running goroutines.
 type Response struct {
-	noCopy noCopy //nolint:unused,structcheck
+	noCopy noCopy
 
 	// Response header
 	//
@@ -91,6 +91,10 @@ type Response struct {
 	// Flush headers as soon as possible without waiting for first body bytes.
 	// Relevant for bodyStream only.
 	ImmediateHeaderFlush bool
+
+	// StreamBody enables response body streaming.
+	// Use SetBodyStream to set the body stream.
+	StreamBody bool
 
 	bodyStream io.Reader
 	w          responseBodyWriter
@@ -291,6 +295,47 @@ func (resp *Response) SetBodyStreamWriter(sw StreamWriter) {
 func (resp *Response) BodyWriter() io.Writer {
 	resp.w.r = resp
 	return &resp.w
+}
+
+// BodyStream returns io.Reader
+//
+// You must CloseBodyStream or ReleaseRequest after you use it.
+func (req *Request) BodyStream() io.Reader {
+	return req.bodyStream
+}
+
+func (req *Request) CloseBodyStream() error {
+	return req.closeBodyStream()
+}
+
+// BodyStream returns io.Reader
+//
+// You must CloseBodyStream or ReleaseResponse after you use it.
+func (resp *Response) BodyStream() io.Reader {
+	return resp.bodyStream
+}
+
+func (resp *Response) CloseBodyStream() error {
+	return resp.closeBodyStream()
+}
+
+type closeReader struct {
+	io.Reader
+	closeFunc func() error
+}
+
+func newCloseReader(r io.Reader, closeFunc func() error) io.ReadCloser {
+	if r == nil {
+		panic(`BUG: reader is nil`)
+	}
+	return &closeReader{Reader: r, closeFunc: closeFunc}
+}
+
+func (c *closeReader) Close() error {
+	if c.closeFunc == nil {
+		return nil
+	}
+	return c.closeFunc()
 }
 
 // BodyWriter returns writer for populating request body.
@@ -771,7 +816,7 @@ func (req *Request) ResetBody() {
 func (req *Request) CopyTo(dst *Request) {
 	req.copyToSkipBody(dst)
 	if req.bodyRaw != nil {
-		dst.bodyRaw = req.bodyRaw
+		dst.bodyRaw = append(dst.bodyRaw[:0], req.bodyRaw...)
 		if dst.body != nil {
 			dst.body.Reset()
 		}
@@ -803,7 +848,7 @@ func (req *Request) copyToSkipBody(dst *Request) {
 func (resp *Response) CopyTo(dst *Response) {
 	resp.copyToSkipBody(dst)
 	if resp.bodyRaw != nil {
-		dst.bodyRaw = resp.bodyRaw
+		dst.bodyRaw = append(dst.bodyRaw, resp.bodyRaw...)
 		if dst.body != nil {
 			dst.body.Reset()
 		}
@@ -852,9 +897,9 @@ func (req *Request) URI() *URI {
 // Use this method if a single URI may be reused across multiple requests.
 // Otherwise, you can just use SetRequestURI() and it will be parsed as new URI.
 // The URI is copied and can be safely modified later.
-func (req *Request) SetURI(newUri *URI) {
-	if newUri != nil {
-		newUri.CopyTo(&req.uri)
+func (req *Request) SetURI(newURI *URI) {
+	if newURI != nil {
+		newURI.CopyTo(&req.uri)
 		req.parsedURI = true
 		return
 	}
@@ -893,7 +938,7 @@ func (req *Request) parsePostArgs() {
 // isn't 'multipart/form-data'.
 var ErrNoMultipartForm = errors.New("request has no multipart/form-data Content-Type")
 
-// MultipartForm returns requests's multipart form.
+// MultipartForm returns request's multipart form.
 //
 // Returns ErrNoMultipartForm if request's Content-Type
 // isn't 'multipart/form-data'.
@@ -963,7 +1008,7 @@ func WriteMultipartForm(w io.Writer, f *multipart.Form, boundary string) error {
 	// Do not care about memory allocations here, since multipart
 	// form processing is slow.
 	if len(boundary) == 0 {
-		panic("BUG: form boundary cannot be empty")
+		return errors.New("form boundary cannot be empty")
 	}
 
 	mw := multipart.NewWriter(w)
@@ -992,6 +1037,7 @@ func WriteMultipartForm(w io.Writer, f *multipart.Form, boundary string) error {
 				return fmt.Errorf("cannot open form file %q (%q): %w", k, fv.Filename, err)
 			}
 			if _, err = copyZeroAlloc(vw, fh); err != nil {
+				_ = fh.Close()
 				return fmt.Errorf("error when copying form file %q (%q): %w", k, fv.Filename, err)
 			}
 			if err = fh.Close(); err != nil {
@@ -1067,6 +1113,7 @@ func (resp *Response) Reset() {
 	resp.raddr = nil
 	resp.laddr = nil
 	resp.ImmediateHeaderFlush = false
+	resp.StreamBody = false
 }
 
 func (resp *Response) resetSkipHeader() {
@@ -1221,7 +1268,7 @@ func (req *Request) ContinueReadBody(r *bufio.Reader, maxBodySize int, preParseM
 		return err
 	}
 
-	if req.Header.ContentLength() == -1 {
+	if contentLength == -1 {
 		err = req.Header.ReadTrailer(r)
 		if err != nil && err != io.EOF {
 			return err
@@ -1240,10 +1287,11 @@ func (req *Request) ReadBody(r *bufio.Reader, contentLength int, maxBodySize int
 
 	if contentLength >= 0 {
 		bodyBuf.B, err = readBody(r, contentLength, maxBodySize, bodyBuf.B)
-
 	} else if contentLength == -1 {
 		bodyBuf.B, err = readBodyChunked(r, maxBodySize, bodyBuf.B)
-
+		if err == nil && len(bodyBuf.B) == 0 {
+			req.Header.SetContentLength(0)
+		}
 	} else {
 		bodyBuf.B, err = readBodyIdentity(r, maxBodySize, bodyBuf.B)
 		req.Header.SetContentLength(len(bodyBuf.B))
@@ -1359,7 +1407,7 @@ func (resp *Response) ReadLimitBody(r *bufio.Reader, maxBodySize int) error {
 		}
 	}
 
-	if resp.Header.ContentLength() == -1 {
+	if resp.Header.ContentLength() == -1 && !resp.StreamBody {
 		err = resp.Header.ReadTrailer(r)
 		if err != nil && err != io.EOF {
 			if isConnectionReset(err) {
@@ -1382,13 +1430,22 @@ func (resp *Response) ReadBody(r *bufio.Reader, maxBodySize int) (err error) {
 	contentLength := resp.Header.ContentLength()
 	if contentLength >= 0 {
 		bodyBuf.B, err = readBody(r, contentLength, maxBodySize, bodyBuf.B)
-
+		if err == ErrBodyTooLarge && resp.StreamBody {
+			resp.bodyStream = acquireRequestStream(bodyBuf, r, &resp.Header)
+			err = nil
+		}
 	} else if contentLength == -1 {
-		bodyBuf.B, err = readBodyChunked(r, maxBodySize, bodyBuf.B)
-
+		if resp.StreamBody {
+			resp.bodyStream = acquireRequestStream(bodyBuf, r, &resp.Header)
+		} else {
+			bodyBuf.B, err = readBodyChunked(r, maxBodySize, bodyBuf.B)
+		}
 	} else {
 		bodyBuf.B, err = readBodyIdentity(r, maxBodySize, bodyBuf.B)
 		resp.Header.SetContentLength(len(bodyBuf.B))
+	}
+	if err == nil && resp.StreamBody && resp.bodyStream == nil {
+		resp.bodyStream = bytes.NewReader(bodyBuf.B)
 	}
 	return err
 }
@@ -1951,6 +2008,9 @@ func (resp *Response) closeBodyStream() error {
 	if bsc, ok := resp.bodyStream.(io.Closer); ok {
 		err = bsc.Close()
 	}
+	if bsr, ok := resp.bodyStream.(*requestStream); ok {
+		releaseRequestStream(bsr)
+	}
 	resp.bodyStream = nil
 	return err
 }
@@ -2133,13 +2193,14 @@ func readBodyIdentity(r *bufio.Reader, maxBodySize int, dst []byte) ([]byte, err
 	for {
 		nn, err := r.Read(dst[offset:])
 		if nn <= 0 {
-			if err != nil {
-				if err == io.EOF {
-					return dst[:offset], nil
-				}
+			switch {
+			case errors.Is(err, io.EOF):
+				return dst[:offset], nil
+			case err != nil:
 				return dst[:offset], err
+			default:
+				return dst[:offset], fmt.Errorf("bufio.Read() returned (%d, nil)", nn)
 			}
-			panic(fmt.Sprintf("BUG: bufio.Read() returned (%d, nil)", nn))
 		}
 		offset += nn
 		if maxBodySize > 0 && offset > maxBodySize {
@@ -2174,13 +2235,14 @@ func appendBodyFixedSize(r *bufio.Reader, dst []byte, n int) ([]byte, error) {
 	for {
 		nn, err := r.Read(dst[offset:])
 		if nn <= 0 {
-			if err != nil {
-				if err == io.EOF {
-					err = io.ErrUnexpectedEOF
-				}
+			switch {
+			case errors.Is(err, io.EOF):
+				return dst[:offset], io.ErrUnexpectedEOF
+			case err != nil:
 				return dst[:offset], err
+			default:
+				return dst[:offset], fmt.Errorf("bufio.Read() returned (%d, nil)", nn)
 			}
-			panic(fmt.Sprintf("BUG: bufio.Read() returned (%d, nil)", nn))
 		}
 		offset += nn
 		if offset == dstLen {
@@ -2196,6 +2258,8 @@ type ErrBrokenChunk struct {
 
 func readBodyChunked(r *bufio.Reader, maxBodySize int, dst []byte) ([]byte, error) {
 	if len(dst) > 0 {
+		// data integrity might be in danger. No idea what we received,
+		// but nothing we should write to.
 		panic("BUG: expected zero-length buffer")
 	}
 

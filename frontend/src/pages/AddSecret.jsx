@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { useHistory } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { useCreateSecret } from '../graphql/createSecret';
+import { useCreateSecret } from '../graphql/secrets/createSecret.js';
 import { useGlobalEnvironmentState } from '../components/EnviromentDropdown';
 
 const AddSecret = () => {

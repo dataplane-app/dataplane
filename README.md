@@ -28,8 +28,6 @@ If you like Dataplane, give it a star ⭐
 
 [GitHub Issues](https://github.com/dataplane-app/dataplane/issues) is reserved only for actual issues. 
 
-[Roadmap](https://github.com/orgs/dataplane-app/projects/1/views/1) to view work prioritisation, work in progress and back log.
-
 
 ## About the project
 The idea behind Dataplane is to make it quicker and easier to build robust data pipelines and automated workflows for businesses and teams of all sizes. In addition to being more user friendly, there has been an emphasis on scaling, resilience, performance and security. It is early days for Dataplane with the first release. We would love to hear your thoughts and for you to get involved.

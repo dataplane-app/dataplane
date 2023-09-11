@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2/utils"
+
 	"github.com/valyala/fasthttp"
 )
 
@@ -77,50 +78,50 @@ type Client struct {
 	JSONDecoder utils.JSONUnmarshal
 }
 
-// Get returns a agent with http method GET.
+// Get returns an agent with http method GET.
 func Get(url string) *Agent { return defaultClient.Get(url) }
 
-// Get returns a agent with http method GET.
+// Get returns an agent with http method GET.
 func (c *Client) Get(url string) *Agent {
 	return c.createAgent(MethodGet, url)
 }
 
-// Head returns a agent with http method HEAD.
+// Head returns an agent with http method HEAD.
 func Head(url string) *Agent { return defaultClient.Head(url) }
 
-// Head returns a agent with http method GET.
+// Head returns an agent with http method GET.
 func (c *Client) Head(url string) *Agent {
 	return c.createAgent(MethodHead, url)
 }
 
-// Post sends POST request to the given url.
+// Post sends POST request to the given URL.
 func Post(url string) *Agent { return defaultClient.Post(url) }
 
-// Post sends POST request to the given url.
+// Post sends POST request to the given URL.
 func (c *Client) Post(url string) *Agent {
 	return c.createAgent(MethodPost, url)
 }
 
-// Put sends PUT request to the given url.
+// Put sends PUT request to the given URL.
 func Put(url string) *Agent { return defaultClient.Put(url) }
 
-// Put sends PUT request to the given url.
+// Put sends PUT request to the given URL.
 func (c *Client) Put(url string) *Agent {
 	return c.createAgent(MethodPut, url)
 }
 
-// Patch sends PATCH request to the given url.
+// Patch sends PATCH request to the given URL.
 func Patch(url string) *Agent { return defaultClient.Patch(url) }
 
-// Patch sends PATCH request to the given url.
+// Patch sends PATCH request to the given URL.
 func (c *Client) Patch(url string) *Agent {
 	return c.createAgent(MethodPatch, url)
 }
 
-// Delete sends DELETE request to the given url.
+// Delete sends DELETE request to the given URL.
 func Delete(url string) *Agent { return defaultClient.Delete(url) }
 
-// Delete sends DELETE request to the given url.
+// Delete sends DELETE request to the given URL.
 func (c *Client) Delete(url string) *Agent {
 	return c.createAgent(MethodDelete, url)
 }
@@ -186,11 +187,11 @@ func (a *Agent) Parse() error {
 
 	uri := a.req.URI()
 
-	isTLS := false
+	var isTLS bool
 	scheme := uri.Scheme()
-	if bytes.Equal(scheme, strHTTPS) {
+	if bytes.Equal(scheme, []byte(schemeHTTPS)) {
 		isTLS = true
-	} else if !bytes.Equal(scheme, strHTTP) {
+	} else if !bytes.Equal(scheme, []byte(schemeHTTP)) {
 		return fmt.Errorf("unsupported protocol %q. http and https are supported", scheme)
 	}
 
@@ -241,7 +242,7 @@ func (a *Agent) SetBytesV(k string, v []byte) *Agent {
 // SetBytesKV sets the given 'key: value' header.
 //
 // Use AddBytesKV for setting multiple header values under the same key.
-func (a *Agent) SetBytesKV(k []byte, v []byte) *Agent {
+func (a *Agent) SetBytesKV(k, v []byte) *Agent {
 	a.req.Header.SetBytesKV(k, v)
 
 	return a
@@ -281,7 +282,7 @@ func (a *Agent) AddBytesV(k string, v []byte) *Agent {
 //
 // Multiple headers with the same key may be added with this function.
 // Use SetBytesKV for setting a single header for the given key.
-func (a *Agent) AddBytesKV(k []byte, v []byte) *Agent {
+func (a *Agent) AddBytesKV(k, v []byte) *Agent {
 	a.req.Header.AddBytesKV(k, v)
 
 	return a
@@ -379,7 +380,7 @@ func (a *Agent) ContentTypeBytes(contentType []byte) *Agent {
 
 /************************** URI Setting **************************/
 
-// Host sets host for the uri.
+// Host sets host for the URI.
 func (a *Agent) Host(host string) *Agent {
 	a.req.URI().SetHost(host)
 
@@ -652,10 +653,8 @@ func (a *Agent) Reuse() *Agent {
 // certificate chain and host name.
 func (a *Agent) InsecureSkipVerify() *Agent {
 	if a.HostClient.TLSConfig == nil {
-		/* #nosec G402 */
-		a.HostClient.TLSConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
+		a.HostClient.TLSConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec // We explicitly let the user set insecure mode here
 	} else {
-		/* #nosec G402 */
 		a.HostClient.TLSConfig.InsecureSkipVerify = true
 	}
 
@@ -728,14 +727,14 @@ func (a *Agent) RetryIf(retryIf RetryIfFunc) *Agent {
 // Bytes returns the status code, bytes body and errors of url.
 //
 // it's not safe to use Agent after calling [Agent.Bytes]
-func (a *Agent) Bytes() (code int, body []byte, errs []error) {
+func (a *Agent) Bytes() (int, []byte, []error) {
 	defer a.release()
 	return a.bytes()
 }
 
-func (a *Agent) bytes() (code int, body []byte, errs []error) {
+func (a *Agent) bytes() (code int, body []byte, errs []error) { //nolint:nonamedreturns,revive // We want to overwrite the body in a deferred func. TODO: Check if we really need to do this. We eventually want to get rid of all named returns.
 	if errs = append(errs, a.errs...); len(errs) > 0 {
-		return
+		return code, body, errs
 	}
 
 	var (
@@ -760,7 +759,7 @@ func (a *Agent) bytes() (code int, body []byte, errs []error) {
 			code = resp.StatusCode()
 		}
 
-		body = append(a.dest, resp.Body()...)
+		body = append(a.dest, resp.Body()...) //nolint:gocritic // We want to append to the returned slice here
 
 		if nilResp {
 			ReleaseResponse(resp)
@@ -770,25 +769,25 @@ func (a *Agent) bytes() (code int, body []byte, errs []error) {
 	if a.timeout > 0 {
 		if err := a.HostClient.DoTimeout(req, resp, a.timeout); err != nil {
 			errs = append(errs, err)
-			return
+			return code, body, errs
 		}
 	} else if a.maxRedirectsCount > 0 && (string(req.Header.Method()) == MethodGet || string(req.Header.Method()) == MethodHead) {
 		if err := a.HostClient.DoRedirects(req, resp, a.maxRedirectsCount); err != nil {
 			errs = append(errs, err)
-			return
+			return code, body, errs
 		}
 	} else if err := a.HostClient.Do(req, resp); err != nil {
 		errs = append(errs, err)
 	}
 
-	return
+	return code, body, errs
 }
 
 func printDebugInfo(req *Request, resp *Response, w io.Writer) {
 	msg := fmt.Sprintf("Connected to %s(%s)\r\n\r\n", req.URI().Host(), resp.RemoteAddr())
-	_, _ = w.Write(utils.UnsafeBytes(msg))
-	_, _ = req.WriteTo(w)
-	_, _ = resp.WriteTo(w)
+	_, _ = w.Write(utils.UnsafeBytes(msg)) //nolint:errcheck // This will never fail
+	_, _ = req.WriteTo(w)                  //nolint:errcheck // This will never fail
+	_, _ = resp.WriteTo(w)                 //nolint:errcheck // This will never fail
 }
 
 // String returns the status code, string body and errors of url.
@@ -797,20 +796,24 @@ func printDebugInfo(req *Request, resp *Response, w io.Writer) {
 func (a *Agent) String() (int, string, []error) {
 	defer a.release()
 	code, body, errs := a.bytes()
+	// TODO: There might be a data race here on body. Maybe use utils.CopyBytes on it?
 
 	return code, utils.UnsafeString(body), errs
 }
 
-// Struct returns the status code, bytes body and errors of url.
+// Struct returns the status code, bytes body and errors of URL.
 // And bytes body will be unmarshalled to given v.
 //
 // it's not safe to use Agent after calling [Agent.Struct]
-func (a *Agent) Struct(v interface{}) (code int, body []byte, errs []error) {
+func (a *Agent) Struct(v interface{}) (int, []byte, []error) {
 	defer a.release()
-	if code, body, errs = a.bytes(); len(errs) > 0 {
-		return
+
+	code, body, errs := a.bytes()
+	if len(errs) > 0 {
+		return code, body, errs
 	}
 
+	// TODO: This should only be done once
 	if a.jsonDecoder == nil {
 		a.jsonDecoder = json.Unmarshal
 	}
@@ -819,7 +822,7 @@ func (a *Agent) Struct(v interface{}) (code int, body []byte, errs []error) {
 		errs = append(errs, err)
 	}
 
-	return
+	return code, body, errs
 }
 
 func (a *Agent) release() {
@@ -877,12 +880,16 @@ func AcquireClient() *Client {
 	if v == nil {
 		return &Client{}
 	}
-	return v.(*Client)
+	c, ok := v.(*Client)
+	if !ok {
+		panic(fmt.Errorf("failed to type-assert to *Client"))
+	}
+	return c
 }
 
 // ReleaseClient returns c acquired via AcquireClient to client pool.
 //
-// It is forbidden accessing req and/or its' members after returning
+// It is forbidden accessing req and/or it's members after returning
 // it to client pool.
 func ReleaseClient(c *Client) {
 	c.UserAgent = ""
@@ -899,12 +906,16 @@ func ReleaseClient(c *Client) {
 // no longer needed. This allows Agent recycling, reduces GC pressure
 // and usually improves performance.
 func AcquireAgent() *Agent {
-	return agentPool.Get().(*Agent)
+	a, ok := agentPool.Get().(*Agent)
+	if !ok {
+		panic(fmt.Errorf("failed to type-assert to *Agent"))
+	}
+	return a
 }
 
-// ReleaseAgent returns a acquired via AcquireAgent to Agent pool.
+// ReleaseAgent returns an acquired via AcquireAgent to Agent pool.
 //
-// It is forbidden accessing req and/or its' members after returning
+// It is forbidden accessing req and/or it's members after returning
 // it to Agent pool.
 func ReleaseAgent(a *Agent) {
 	a.reset()
@@ -922,12 +933,16 @@ func AcquireResponse() *Response {
 	if v == nil {
 		return &Response{}
 	}
-	return v.(*Response)
+	r, ok := v.(*Response)
+	if !ok {
+		panic(fmt.Errorf("failed to type-assert to *Response"))
+	}
+	return r
 }
 
 // ReleaseResponse return resp acquired via AcquireResponse to response pool.
 //
-// It is forbidden accessing resp and/or its' members after returning
+// It is forbidden accessing resp and/or it's members after returning
 // it to response pool.
 // Copy from fasthttp
 func ReleaseResponse(resp *Response) {
@@ -945,7 +960,11 @@ func AcquireArgs() *Args {
 	if v == nil {
 		return &Args{}
 	}
-	return v.(*Args)
+	a, ok := v.(*Args)
+	if !ok {
+		panic(fmt.Errorf("failed to type-assert to *Args"))
+	}
+	return a
 }
 
 // ReleaseArgs returns the object acquired via AcquireArgs to the pool.
@@ -966,7 +985,11 @@ func AcquireFormFile() *FormFile {
 	if v == nil {
 		return &FormFile{}
 	}
-	return v.(*FormFile)
+	ff, ok := v.(*FormFile)
+	if !ok {
+		panic(fmt.Errorf("failed to type-assert to *FormFile"))
+	}
+	return ff
 }
 
 // ReleaseFormFile returns the object acquired via AcquireFormFile to the pool.
@@ -981,9 +1004,7 @@ func ReleaseFormFile(ff *FormFile) {
 	formFilePool.Put(ff)
 }
 
-var (
-	strHTTP          = []byte("http")
-	strHTTPS         = []byte("https")
+const (
 	defaultUserAgent = "fiber"
 )
 

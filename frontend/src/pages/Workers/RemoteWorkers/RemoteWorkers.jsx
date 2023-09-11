@@ -6,10 +6,10 @@ import Search from '../../../components/Search';
 import { faEdit, faFilter } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AddRPAWorkerDrawer from '../../../components/DrawerContent/AddRPAWorker';
-import EditRPAWorkerDrawer from '../../../components/DrawerContent/EditRPAWorker';
+import EditRPAWorkerDrawer from '../../Pipelines/Components/Drawers/EditRPAWorker';
 import { useHistory } from 'react-router-dom';
 import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
-import { useGetRemoteWorkers } from '../../../graphql/getRemoteWorkers';
+import { useGetRemoteWorkers } from '../../../graphql/remoteworkers/getRemoteWorkers.js';
 import { useSnackbar } from 'notistack';
 import ConnectRemoteWorkerDrawer from '../../../components/DrawerContent/ConnectRemoteWorkerDrawer';
 import { formatDateNoZone } from '../../../utils/formatDate';
@@ -371,7 +371,7 @@ const useGetRemoteWorkersHook = (environmentID, setRemoteWorkers) => {
     };
 };
 
-// This components hides 'Offline' text for 10 seconds on page load
+// This Components hides 'Offline' text for 10 seconds on page load
 function Offline({ isInitialLoad }) {
     const [isGracePeriod, setIsGracePeriod] = useState(true);
     const timeOnLoad = useRef(new Date().getTime());

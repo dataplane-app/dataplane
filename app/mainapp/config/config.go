@@ -12,6 +12,7 @@ import (
 var PlatformID string
 var MainAppID string = ""
 var Leader string = ""
+var AllowOrigins string = "*"
 
 /* Routine removal of stale data */
 var CleanTasks int = 30
@@ -39,12 +40,6 @@ var FSCodeFileStorage string
 var FSCodeFileBatches int
 var FSCodeDirectory string
 
-// Redis
-var DPRedisHost string
-var DPRedisPort string
-var DPRedisDB int
-var DPRedisPassword string
-
 // Remote workers
 var RemoteWorkerDebug string
 
@@ -53,9 +48,16 @@ var DPDBMaxOpenConns int
 var DPDBMaxIdleConns int
 var ConnMaxLifetime int
 
+// Pipeline API input data
+var DPDataInputTTLSeconds int
+var DPDataInputLimitMegabyte int
+
 // Available storage methods: Database, LocalFile, S3
 
 func LoadConfig() {
+
+	// Platform
+	AllowOrigins = os.Getenv("DP_ALLOW_ORIGINS")
 
 	// Database connection and defaults
 	DPDBMaxOpenConns, _ = strconv.Atoi(os.Getenv("DP_DB_MAXOPENCONNS"))
@@ -73,15 +75,6 @@ func LoadConfig() {
 	if ConnMaxLifetime == 0 {
 		ConnMaxLifetime = 5
 	}
-
-	// Redis connection
-	DPRedisHost = os.Getenv("DP_REDIS_HOST")
-	DPRedisPort = os.Getenv("DP_REDIS_PORT")
-	DPRedisDB, _ = strconv.Atoi(os.Getenv("DP_REDIS_DB"))
-	if DPRedisDB == 0 {
-		DPRedisDB = 1
-	}
-	DPRedisPassword = os.Getenv("DP_REDIS_PASSWORD")
 
 	// Clean tasks set
 
@@ -138,4 +131,17 @@ func LoadConfig() {
 		FSCodeDirectory = "/appdev/dfs-code-files/"
 	}
 
+	// Pipeline API input data
+
+	// Default timeout is 24 hours = 24 x 60 x 60
+	DPDataInputTTLSeconds, _ = strconv.Atoi(os.Getenv("DP_PIPELINE_DATA_TTL_SECONDS"))
+	if DPDataInputTTLSeconds == 0 {
+		DPDataInputTTLSeconds = 86400
+	}
+
+	// Default input data is 5 MB
+	DPDataInputLimitMegabyte, _ = strconv.Atoi(os.Getenv("DP_PIPELINE_DATA_TTL_SECONDS"))
+	if DPDataInputLimitMegabyte == 0 {
+		DPDataInputLimitMegabyte = 5
+	}
 }

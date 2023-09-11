@@ -3,8 +3,8 @@ import ConsoleLogHelper from '../../Helper/logger';
 import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
 import { useGlobalRunState } from './GlobalRunState';
 import { useSnackbar } from 'notistack';
-import { useRunPipelines } from '../../graphql/runPipelines';
-import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
+import { useRunPipelines } from '../../graphql/pipelines/runPipelines.js';
+import { useGetPipelineRuns } from '../../graphql/pipelines/getPipelineRuns.js';
 import { Downgraded } from '@hookstate/core';
 
 export default function EventRunButton(environmentId, pipelineId, runId, setRuns, setSelectedRun, Running, setRunning, wsconnect, ReconnectWS) {

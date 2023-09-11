@@ -22,6 +22,7 @@ type Field struct {
 	Directives   DirectiveList
 	SelectionSet SelectionSet
 	Position     *Position `dump:"-"`
+	Comment      *CommentGroup
 
 	// Require validation
 	Definition       *FieldDefinition
@@ -32,8 +33,9 @@ type Argument struct {
 	Name     string
 	Value    *Value
 	Position *Position `dump:"-"`
+	Comment  *CommentGroup
 }
 
-func (f *Field) ArgumentMap(vars map[string]interface{}) map[string]interface{} {
-	return arg2map(f.Definition.Arguments, f.Arguments, vars)
+func (s *Field) ArgumentMap(vars map[string]interface{}) map[string]interface{} {
+	return arg2map(s.Definition.Arguments, s.Arguments, vars)
 }

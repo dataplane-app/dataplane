@@ -26,6 +26,10 @@ type Plugin interface {
 	Initialize(*DB) error
 }
 
+type ParamsFilter interface {
+	ParamsFilter(ctx context.Context, sql string, params ...interface{}) (string, []interface{})
+}
+
 // ConnPool db conns pool interface
 type ConnPool interface {
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
@@ -73,6 +77,12 @@ type GetDBConnector interface {
 	GetDBConn() (*sql.DB, error)
 }
 
+// GetDBConnectorWithContext represents SQL db connector which takes into
+// account the current database context
+type GetDBConnectorWithContext interface {
+	GetDBConnWithContext(db *DB) (*sql.DB, error)
+}
+
 // Rows rows interface
 type Rows interface {
 	Columns() ([]string, error)
@@ -81,4 +91,8 @@ type Rows interface {
 	Scan(dest ...interface{}) error
 	Err() error
 	Close() error
+}
+
+type ErrorTranslator interface {
+	Translate(err error) error
 }

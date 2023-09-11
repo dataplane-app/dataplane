@@ -2,6 +2,7 @@ package runtask
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -13,11 +14,12 @@ import (
 
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
 	"github.com/dataplane-app/dataplane/app/workers/distfilesystem"
-	"github.com/dataplane-app/dataplane/app/workers/messageq"
+	"github.com/dataplane-app/dataplane/app/workers/mqworker"
 
 	"github.com/google/uuid"
 	cmap "github.com/orcaman/concurrent-map"
@@ -77,7 +79,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 	// --- Check if this task is already running
 	var lockCheck modelmain.WorkerTasks
-	err2 := database.DBConn.Select("task_id", "status").Where("task_id = ?", msg.TaskID).First(&lockCheck).Error
+	err2 := database.DBConn.Select("task_id", "status").Where("task_id = ? and environment_id= ?", msg.TaskID, msg.EnvironmentID).First(&lockCheck).Error
 	if err2 != nil {
 		log.Println(err2.Error())
 		WSLogError("Task already running:"+err2.Error(), msg)
@@ -137,6 +139,13 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		UpdateWorkerTasks(TaskFinal)
 
 		return
+	}
+
+	// ----- get data inputs -------
+	ctxRedis := context.Background()
+	redisData := modelmain.RedisAPIData{}
+	if err := database.RedisConn.HGetAll(ctxRedis, "api-trigger-"+wrkerconfig.EnvID+"-"+msg.RunID).Scan(&redisData); err != nil {
+		log.Println("Redis get leader error:", err)
 	}
 
 	for _, v := range msg.Commands {
@@ -273,6 +282,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		cmd.Env = append(cmd.Env, "DP_RUNID="+msg.RunID)
 		cmd.Env = append(cmd.Env, "DP_TASKID="+msg.TaskID)
 		cmd.Env = append(cmd.Env, "DP_ENVID="+msg.EnvironmentID)
+		cmd.Env = append(cmd.Env, "DP_API_DATA="+redisData.Data)
 
 		// Request the OS to assign process group to the new process, to which all its children will belong
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
@@ -322,7 +332,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 					LogType:   "info",
 				}
 
-				messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
+				mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
 				database.DBConn.Create(&logmsg)
 				if wrkerconfig.Debug == "true" {
 					clog.Info(line)
@@ -335,59 +345,10 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		}()
 
 		// ------ Error logging -----------
-		rErr, _ := cmd.StderrPipe()
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
 
-		// Make a new channel which will be used to ensure we get all output
-		doneErr := make(chan struct{})
-
-		// Create a scanner which scans r in a line-by-line fashion
-		scannerErr := bufio.NewScanner(rErr)
-
-		// Use the scanner to scan the output line by line and log it
-		// It's running in a goroutine so that it doesn't block
-		go func() {
-
-			// Read line by line and process it
-			for scannerErr.Scan() {
-				uid := uuid.NewString()
-				line := wrkerconfig.Secrets.Replace(scannerErr.Text())
-
-				logmsg := modelmain.LogsWorkers{
-					CreatedAt:     time.Now().UTC(),
-					UID:           uid,
-					EnvironmentID: msg.EnvironmentID,
-					RunID:         msg.RunID,
-					NodeID:        msg.NodeID,
-					TaskID:        msg.TaskID,
-					Category:      "task",
-					Log:           line,
-					LogType:       "error",
-				}
-
-				// jsonmsg, err := json.Marshal(&logmsg)
-				// if err != nil {
-				// 	logging.PrintSecretsRedact(err)
-				// }
-				sendmsg := modelmain.LogsSend{
-					CreatedAt: logmsg.CreatedAt,
-					UID:       uid,
-					Log:       line,
-					LogType:   "error",
-				}
-
-				messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
-				database.DBConn.Create(&logmsg)
-				if wrkerconfig.Debug == "true" {
-					clog.Error(line)
-				}
-			}
-
-			// We're all done, unblock the channel
-			doneErr <- struct{}{}
-
-		}()
-
-		// Start the command and check for errors
+		// ----------- Start the command and check for errors -------
 
 		if tmp, ok := Tasks.Get(msg.TaskID); ok {
 			TasksRun = tmp.(Task)
@@ -438,7 +399,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 				LogType:   "error",
 			}
 
-			messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
+			mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
 			database.DBConn.Create(&logmsg)
 			if wrkerconfig.Debug == "true" {
 				clog.Error(line)
@@ -459,7 +420,6 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 		// Wait for all output to be processed
 		<-done
-		<-doneErr
 
 		// Wait for the command to finish
 		err = cmd.Wait()
@@ -469,6 +429,40 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		}
 
 		if err != nil {
+
+			uid := uuid.NewString()
+			line := wrkerconfig.Secrets.Replace(stderr.String())
+
+			logmsg := modelmain.LogsWorkers{
+				CreatedAt:     time.Now().UTC(),
+				UID:           uid,
+				EnvironmentID: msg.EnvironmentID,
+				RunID:         msg.RunID,
+				NodeID:        msg.NodeID,
+				TaskID:        msg.TaskID,
+				Category:      "task",
+				Log:           line,
+				LogType:       "error",
+			}
+
+			// jsonmsg, err := json.Marshal(&logmsg)
+			// if err != nil {
+			// 	logging.PrintSecretsRedact(err)
+			// }
+			sendmsg := modelmain.LogsSend{
+				CreatedAt: logmsg.CreatedAt,
+				UID:       uid,
+				Log:       line,
+				LogType:   "error",
+			}
+
+			mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
+			database.DBConn.Create(&logmsg)
+			if wrkerconfig.Debug == "true" {
+				// clog.Error("cmd.wait error")
+				clog.Error(line)
+			}
+
 			statusUpdate = "Fail"
 			if TasksStatusWG != "cancel" {
 				TasksStatus.Set(msg.TaskID, "error")
@@ -539,7 +533,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		LogType:   "info",
 	}
 
-	messageq.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
+	mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
 	database.DBConn.Create(&logmsg)
 
 	// Queue the next set of tasks
@@ -553,7 +547,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		Status:        statusUpdate,
 	}
 
-	errnat := messageq.MsgSend("pipeline-run-next", RunNext)
+	errnat := mqworker.MsgSend("pipeline-run-next", RunNext)
 	if errnat != nil {
 		WSLogError("Failed nats to send to next run runid: "+msg.RunID+" - node:"+msg.NodeID, msg)
 		if wrkerconfig.Debug == "true" {

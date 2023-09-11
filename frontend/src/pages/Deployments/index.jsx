@@ -4,7 +4,7 @@ import CustomChip from '../../components/CustomChip';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import { useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
-import { useGetDeployments } from '../../graphql/getDeployments';
+import { useGetDeployments } from '../../graphql/deployments/getDeployments';
 import DeploymentsTable from './DeploymentsTable';
 import { useGlobalPipelineRun } from '../PipelineRuns/GlobalPipelineRunUIState';
 import { useGlobalRunState } from '../PipelineRuns/GlobalRunState';
@@ -87,13 +87,13 @@ export default Deployments;
 
 function useGetDeploymentsHook(setDeployments, environmentID) {
     // GraphQL hook
-    const getPipelines = useGetDeployments();
+    const getDeployments = useGetDeployments();
 
     const { enqueueSnackbar } = useSnackbar();
 
     // Get deployments
     return async () => {
-        const response = await getPipelines({ environmentID });
+        const response = await getDeployments({ environmentID });
 
         if (response.r || response.error) {
             enqueueSnackbar("Can't get deployments: " + (response.msg || response.r || response.error), { variant: 'error' });

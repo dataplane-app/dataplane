@@ -4,10 +4,10 @@ import { Autocomplete, Box, Button, Checkbox, FormControlLabel, FormGroup, TextF
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGetAccessGroups } from '../../../graphql/getAccessGroups';
-import { useGetUsersFromEnvironment } from '../../../graphql/getUsersFromEnvironment';
-import { usePipelinePermissionsToUser } from '../../../graphql/pipelinePermissionsToUser';
-import { usePipelinePermissionsToAccessGroup } from '../../../graphql/pipelinePermissionsToAccessGroup';
+import { useGetAccessGroups } from '../../../graphql/permissions/getAccessGroups.js';
+import { useGetUsersFromEnvironment } from '../../../graphql/environments/getUsersFromEnvironment.js';
+import { usePipelinePermissionsToUser } from '../../../graphql/permissions/pipelinePermissionsToUser.js';
+import { usePipelinePermissionsToAccessGroup } from '../../../graphql/permissions/pipelinePermissionsToAccessGroup.js';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { useGlobalMeState } from '../../Navbar';
 
@@ -221,6 +221,7 @@ const useGetUsersHook = (setUsers, subjectsWithPermissions, environment_id) => {
         } else {
             // Don't add users that are already on the table
             setUsers(response.filter((a) => !subjectsWithPermissions.includes(a.user_id)));
+            // setUsers(response);
         }
     };
 };

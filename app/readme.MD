@@ -31,6 +31,9 @@ cd app/mainapp/graphql/public
 # Private routes
 cd app/mainapp/graphql/private
 
+# Desktop routes
+cd app/mainapp/graphql/desktop
+
 go run github.com/99designs/gqlgen generate
 ```
 

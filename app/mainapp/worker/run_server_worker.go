@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func ServerWorker(envID string, workerGroup string, runid string, taskid string, pipelineID string, nodeID string, commands []string, Folder string, FolderID string, Version string, RunType string) error {
+func ServerWorker(envID string, workerGroup string, runid string, taskid string, pipelineID string, nodeID string, commands []string, Folder string, FolderID string, Version string, RunType string, InputData bool) error {
 
 	/* Look up chosen workers -
 	if none, keep trying for 10 x 2 seconds
@@ -89,6 +89,8 @@ func ServerWorker(envID string, workerGroup string, runid string, taskid string,
 				log.Println("Selected worker:", onlineWorkers[0].LB, loadbalanceNext)
 			}
 
+			// log.Println("Pipeline ID:", runid)
+
 			tasksend := models.WorkerTaskSend{
 				TaskID:        taskid,
 				CreatedAt:     time.Now().UTC(),
@@ -103,6 +105,7 @@ func ServerWorker(envID string, workerGroup string, runid string, taskid string,
 				FolderID:      FolderID,
 				Version:       Version,
 				RunType:       RunType,
+				InputData:     InputData,
 			}
 
 			var response models.TaskResponse

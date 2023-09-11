@@ -1,6 +1,6 @@
 import { Box, Button, TextField } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { useUpdateRemoteWorker } from '../../../../graphql/updateRemoteWorker';
+import { useUpdateRemoteWorker } from '../../../../graphql/remoteworkers/updateRemoteWorker.js';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 

@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
-import { useUpdateSecretValue } from '../../../graphql/updateSecretValue';
+import { useUpdateSecretValue } from '../../../graphql/secrets/updateSecretValue.js';
 
 const ChangeSecretDrawer = ({ secretName, handleClose, environmentId }) => {
     // State

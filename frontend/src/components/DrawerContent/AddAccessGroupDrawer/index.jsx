@@ -1,7 +1,7 @@
 import { Box, Typography, Button, Grid, TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useCreateAccessGroup } from '../../../graphql/createAccessGroup';
+import { useCreateAccessGroup } from '../../../graphql/permissions/createAccessGroup.js';
 import { useSnackbar } from 'notistack';
 import { useForm } from 'react-hook-form';
 

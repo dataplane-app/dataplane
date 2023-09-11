@@ -1,5 +1,5 @@
 import { useSnackbar } from 'notistack';
-import { usePipelineTasksRun } from '../../graphql/getPipelineTasksRun';
+import { usePipelineTasksRun } from '../../graphql/pipelines/getPipelineTasksRun.js';
 import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
 import { useGlobalRunState } from './GlobalRunState';
 

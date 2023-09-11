@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
 import CustomChip from '../../../components/CustomChip';
-import { useGetWorkerGroupSecrets } from '../../../graphql/getWorkerGroupSecrets';
+import { useGetWorkerGroupSecrets } from '../../../graphql/workers/getWorkerGroupSecrets.js';
 import { useHistory } from 'react-router-dom';
 
 const SecretsDrawer = ({ handleClose, secretDrawerWorkGroup, environmentID }) => {

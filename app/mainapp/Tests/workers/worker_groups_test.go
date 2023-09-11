@@ -16,7 +16,7 @@ import (
 
 /*
 For individual tests - in separate window run: go run server.go
-go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/workers
+go test -p 1 -v -count=1 -run TestWorkerGroups github.com/dataplane-app/dataplane/app/mainapp/Tests/workers
 * Login
 * Get worker groups
 * Get workers
@@ -25,7 +25,7 @@ go test -p 1 -v -count=1 -run TestAccessGroups dataplane/Tests/workers
 * Get worker group's secrets
 * Delete secret from worker group
 */
-func TestAccessGroups(t *testing.T) {
+func TestWorkerGroups(t *testing.T) {
 
 	database.DBConnect()
 

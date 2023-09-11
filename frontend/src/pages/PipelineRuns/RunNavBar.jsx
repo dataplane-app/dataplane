@@ -1,7 +1,7 @@
 import { Box, Button, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
-import { useStopPipelines } from '../../graphql/stopPipelines';
+import { useStopPipelines } from '../../graphql/pipelines/stopPipelines.js';
 import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
 import StatusChips from './StatusChips';
 import RunsDropdown from './RunsDropdown';
@@ -21,10 +21,10 @@ if (loc.protocol === 'https:') {
 }
 new_uri += '//' + loc.host;
 
-if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
-    new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+if (import.meta.env.VITE_DATAPLANE_ENV === 'build') {
+    new_uri += import.meta.env.VITE_WEBSOCKET_ROOMS_ENDPOINT;
 } else {
-    new_uri = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+    new_uri = import.meta.env.VITE_WEBSOCKET_ROOMS_ENDPOINT;
 }
 
 const websocketEndpoint = new_uri;

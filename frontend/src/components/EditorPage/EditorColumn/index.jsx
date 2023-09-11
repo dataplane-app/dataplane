@@ -2,21 +2,50 @@ import { Box, Button, Grid, Typography, useTheme } from '@mui/material';
 import { forwardRef, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useGlobalEditorState } from '../../../pages/Editor';
+import { useGlobalEditorState } from '../../../pages/Pipelines/Editor.jsx';
 import { Downgraded } from '@hookstate/core';
 import { useState } from 'react';
 import CustomDragHandle from '../../CustomDragHandle';
 import { useSnackbar } from 'notistack';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
-import { useStopCERun } from '../../../graphql/stopCERun';
+import { useStopCERun } from '../../../graphql/codeEditor/stopCERun.js';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import MonacoEditor, { monaco } from 'react-monaco-editor';
+// import MonacoEditor, { monaco } from 'react-monaco-editor';
+import Editor, { useMonaco, loader } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
 import { v4 as uuidv4 } from 'uuid';
 import { MarkdownContent } from '../Markdown';
 import isMarkdown from '../../../utils/isMarkdown';
 
-const codeFilesEndpoint = process.env.REACT_APP_CODE_ENDPOINT_PRIVATE;
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
+import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+
+const codeFilesEndpoint = import.meta.env.VITE_CODE_ENDPOINT_PRIVATE;
+
+loader.config({ monaco });
+
+
+self.MonacoEnvironment = {
+    getWorker(_, label) {
+      if (label === 'json') {
+        return new jsonWorker();
+      }
+      if (label === 'css' || label === 'scss' || label === 'less') {
+        return new cssWorker();
+      }
+      if (label === 'html' || label === 'handlebars' || label === 'razor') {
+        return new htmlWorker();
+      }
+      if (label === 'typescript' || label === 'javascript') {
+        return new tsWorker();
+      }
+      return new editorWorker();
+    },
+  };
 
 const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     // Editor state
@@ -28,6 +57,9 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Theme hook
     const theme = useTheme();
+
+    // Monaco editor
+    const monaco = useMonaco();
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -148,7 +180,8 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
             })
                 .then(async (response) => {
                     if (response.status !== 200) {
-                        const error = (response && response.statusText) || response.status;
+                        const showval = await response.text();
+                        const error = (response && showval) || response.status;
                         return Promise.reject(error);
                     }
                     let fileContent = await response.text();
@@ -207,7 +240,14 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
 
     // Editor configs
     useEffect(() => {
-        monaco.editor.defineTheme('dp-dark', {
+
+
+        // if (monaco) {
+        //     console.log('here is the monaco instance:', monaco);
+        //     console.log("theme", theme.palette.mode)
+        //   }
+
+        monaco?.editor.defineTheme('dp-dark', {
             base: 'vs-dark',
             inherit: true,
             rules: [],
@@ -217,19 +257,23 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 'editorLineNumber.activeForeground': '#0E236B',
             },
         });
-        if (theme.palette.mode === 'dark') {
-            monaco.editor.setTheme('dp-dark', {
-                base: 'vs-dark',
-                inherit: true,
-                rules: [],
-                colors: {
-                    'editor.background': '#0e1928',
-                    'editorLineNumber.foreground': '#3C7790',
-                    'editorLineNumber.activeForeground': '#0E236B',
-                },
-            });
-        }
-    }, [theme.palette.mode]);
+
+        // monaco?.editor.setTheme('dp-dark', {
+        //     base: 'vs-dark',
+        //     inherit: true,
+        //     rules: [],
+        //     colors: {
+        //         'editor.background': '#0e1928',
+        //         'editorLineNumber.foreground': '#3C7790',
+        //         'editorLineNumber.activeForeground': '#0E236B',
+        //     },
+        // });
+
+        // if (theme.palette.mode === 'dark') {
+
+        // }
+        // theme.palette.mode
+    }, [monaco]);
 
     const getLanguage = (filename) => {
         if (!filename) {
@@ -436,19 +480,33 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
                 {EditorGlobal.markdown.get() !== 'view' || !isMarkdown(EditorGlobal?.selectedFile?.name?.get()) ? (
                     <Box zIndex={10} height="100%">
                         {getEditorValue() !== undefined ? (
-                            <MonacoEditor
-                                editorDidMount={handleEditorOnMount}
-                                language={getLanguage(EditorGlobal.selectedFile.get()?.name)}
-                                value={getEditorValue()}
-                                theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}
-                                height="100%"
-                                onChange={handleEditorChange}
-                                options={{
+                            <Editor
+                                  height="100%"
+                                  defaultLanguage={getLanguage(EditorGlobal.selectedFile.get()?.name)}
+                                  value={getEditorValue()}
+                                  onMount={handleEditorOnMount}
+                                  theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}
+                                //   theme={"dp-dark"}
+                                  onChange={handleEditorChange}
+                                  options={{
                                     minimap: { enabled: false },
                                     hideCursorInOverviewRuler: { enabled: true },
                                     automaticLayout: { enabled: true },
                                 }}
-                            />
+                                />
+                            // <MonacoEditor
+                            //     editorDidMount={handleEditorOnMount}
+                            //     language={getLanguage(EditorGlobal.selectedFile.get()?.name)}
+                            //     value={getEditorValue()}
+                            //     theme={theme.palette.mode === 'light' ? 'vs' : 'dp-dark'}
+                            //     height="100%"
+                            //     onChange={handleEditorChange}
+                            //     options={{
+                            //         minimap: { enabled: false },
+                            //         hideCursorInOverviewRuler: { enabled: true },
+                            //         automaticLayout: { enabled: true },
+                            //     }}
+                            // />
                         ) : null}
                     </Box>
                 ) : null}
@@ -518,7 +576,10 @@ export const useUploadFileNodeHook = (pipeline) => {
             );
 
             if (response.status !== 200) {
-                const error = (response && response.statusText) || response.status;
+
+                const showval = await response.text();
+                const error = (response && showval) || response.status;
+                // console.log("save response:", showval)
                 enqueueSnackbar(error, { variant: 'error' });
                 return Promise.reject(error);
             }

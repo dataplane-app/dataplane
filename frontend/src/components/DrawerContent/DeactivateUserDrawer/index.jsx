@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { Box, Typography, Button, Grid } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useUpdateDeactivateUser } from '../../../graphql/updateDeactivateUser';
-import { useUpdateActivateUser } from '../../../graphql/updateActivateUser';
+import { useUpdateDeactivateUser } from '../../../graphql/users/updateDeactivateUser.js';
+import { useUpdateActivateUser } from '../../../graphql/users/updateActivateUser.js';
 import { useSnackbar } from 'notistack';
 
 const DeactivateUserDrawer = ({ user, handleClose, refreshData }) => {

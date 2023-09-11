@@ -223,7 +223,7 @@ func NewPathPrefixStripper(prefixSize int) PathRewriteFunc {
 //
 // It is prohibited copying FS values. Create new values instead.
 type FS struct {
-	noCopy noCopy //nolint:unused,structcheck
+	noCopy noCopy
 
 	// Path to the root directory to serve files from.
 	Root string
@@ -427,7 +427,11 @@ func (fs *FS) initRequestHandler() {
 	compressedFileSuffixes := fs.CompressedFileSuffixes
 	if len(compressedFileSuffixes["br"]) == 0 || len(compressedFileSuffixes["gzip"]) == 0 ||
 		compressedFileSuffixes["br"] == compressedFileSuffixes["gzip"] {
-		compressedFileSuffixes = FSCompressedFileSuffixes
+		// Copy global map
+		compressedFileSuffixes = make(map[string]string, len(FSCompressedFileSuffixes))
+		for k, v := range FSCompressedFileSuffixes {
+			compressedFileSuffixes[k] = v
+		}
 	}
 
 	if len(fs.CompressedFileSuffix) > 0 {
@@ -602,7 +606,7 @@ func (ff *fsFile) decReadersCount() {
 	ff.h.cacheLock.Lock()
 	ff.readersCount--
 	if ff.readersCount < 0 {
-		panic("BUG: negative fsFile.readersCount!")
+		ff.readersCount = 0
 	}
 	ff.h.cacheLock.Unlock()
 }
@@ -1304,7 +1308,7 @@ func (h *fsHandler) openFSFile(filePath string, mustCompress bool, fileEncoding 
 		}
 
 		// Only re-create the compressed file if there was more than a second between the mod times.
-		// On MacOS the gzip seems to truncate the nanoseconds in the mod time causing the original file
+		// On macOS the gzip seems to truncate the nanoseconds in the mod time causing the original file
 		// to look newer than the gzipped file.
 		if fileInfoOriginal.ModTime().Sub(fileInfo.ModTime()) >= time.Second {
 			// The compressed file became stale. Re-create it.
@@ -1395,6 +1399,7 @@ func readFileHeader(f *os.File, compressed bool, fileEncoding string) ([]byte, e
 func stripLeadingSlashes(path []byte, stripSlashes int) []byte {
 	for stripSlashes > 0 && len(path) > 0 {
 		if path[0] != '/' {
+			// developer sanity-check
 			panic("BUG: path must start with slash")
 		}
 		n := bytes.IndexByte(path[1:], '/')

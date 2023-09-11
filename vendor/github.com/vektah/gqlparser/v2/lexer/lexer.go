@@ -121,8 +121,7 @@ func (s *Lexer) ReadToken() (token Token, err error) {
 	case '|':
 		return s.makeValueToken(Pipe, "")
 	case '#':
-		s.readComment()
-		return s.ReadToken()
+		return s.readComment()
 
 	case '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z':
 		return s.readName()
@@ -254,9 +253,9 @@ func (s *Lexer) readNumber() (Token, error) {
 
 	if float {
 		return s.makeToken(Float)
-	} else {
-		return s.makeToken(Int)
 	}
+	return s.makeToken(Int)
+
 }
 
 // acceptByte if it matches any of given bytes, returning true if it found anything
@@ -393,8 +392,8 @@ func (s *Lexer) readString() (Token, error) {
 				case 't':
 					buf.WriteByte('\t')
 				default:
-					s.end += 1
-					s.endRunes += 1
+					s.end++
+					s.endRunes++
 					return s.makeError("Invalid character escape sequence: \\%s.", string(escape))
 				}
 				s.end += 2

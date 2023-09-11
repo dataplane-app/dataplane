@@ -1,7 +1,7 @@
 import { useSnackbar } from 'notistack';
 import { prepareInputForFrontend } from '../../../utils/PipelinePrepareGraphInput';
 import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
-import { useGetDeploymentFlow } from '../../../graphql/getDeploymentFlow';
+import { useGetDeploymentFlow } from '../../../graphql/deployments/getDeploymentFlow';
 
 /* 
 Get the structure for given pipeline ID and environment ID

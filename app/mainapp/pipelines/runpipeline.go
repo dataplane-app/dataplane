@@ -15,14 +15,13 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/worker"
 
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 )
 
 type Command struct {
 	Command string `json:command`
 }
 
-func RunPipeline(pipelineID string, environmentID string, runID string, runJson ...datatypes.JSON) (models.PipelineRuns, error) {
+func RunPipeline(pipelineID string, environmentID string, runID string) (models.PipelineRuns, error) {
 
 	// start := time.Now().UTC()
 
@@ -42,28 +41,31 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 		return models.PipelineRuns{}, err
 	}
 
-	// Retrieve folders
+	// Input data from trigger
+	var inputData bool = false
 
 	// Check if a runJson is submitted
-	if runJson != nil && len(runJson[0]) != 0 {
-		run := models.PipelineApiTriggerRuns{
-			RunID:         runID,
-			PipelineID:    pipelineID,
-			EnvironmentID: environmentID,
-			RunType:       "pipeline",
-			RunJSON:       runJson[0],
-			CreatedAt:     time.Now().UTC(),
-		}
+	// if runJson != nil && len(runJson[0]) != 0 {
 
-		err = database.DBConn.Create(&run).Error
-		if err != nil {
+	// 	inputData = true
+	// 	run := models.PipelineApiTriggerRuns{
+	// 		RunID:         runID,
+	// 		PipelineID:    pipelineID,
+	// 		EnvironmentID: environmentID,
+	// 		RunType:       "pipeline",
+	// 		RunJSON:       runJson[0],
+	// 		CreatedAt:     time.Now().UTC(),
+	// 	}
 
-			if dpconfig.Debug == "true" {
-				logging.PrintSecretsRedact(err)
-			}
-			return models.PipelineRuns{}, err
-		}
-	}
+	// 	err = database.DBConn.Create(&run).Error
+	// 	if err != nil {
+
+	// 		if dpconfig.Debug == "true" {
+	// 			logging.PrintSecretsRedact(err)
+	// 		}
+	// 		return models.PipelineRuns{}, err
+	// 	}
+	// }
 
 	// Create a run
 	run := models.PipelineRuns{
@@ -74,6 +76,7 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 		CreatedAt:     time.Now().UTC(),
 		RunJSON:       pipelinedata.Json,
 		RunType:       "pipeline",
+		InputData:     inputData,
 	}
 
 	err = database.DBConn.Create(&run).Error
@@ -292,6 +295,8 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 
 		// log.Println("Commands:", commandsend)
 
+		// log.Println("Pipeline run id:", runID, RunID)
+
 		// log.Println("First:", s)
 		// if x == 2 {
 		// 	ex = "exit 1;"
@@ -299,7 +304,7 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
 		// log.Println("Worker type:", triggerData[s].WorkerType)
 		/* Start the first task */
-		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], "", "pipeline", triggerData[s].WorkerType)
+		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], "", "pipeline", triggerData[s].WorkerType, inputData)
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)

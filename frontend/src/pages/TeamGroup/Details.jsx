@@ -1,6 +1,6 @@
 import { Box, Typography, Button, TextField } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { useUpdateAccessGroup } from '../../graphql/updateAccessGroup';
+import { useUpdateAccessGroup } from '../../graphql/permissions/updateAccessGroup.js';
 import { useForm } from 'react-hook-form';
 
 export default function Details({ environmentId, accessGroup, getAccessGroup }) {

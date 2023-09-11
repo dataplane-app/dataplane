@@ -5,7 +5,7 @@ import { forwardRef, useEffect, useState } from 'react';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
 import CustomDragHandle from '../../CustomDragHandle';
 import { RunningSpinner } from './RunningSpinner';
-import { useGlobalEditorState } from '../../../pages/Editor';
+import { useGlobalEditorState } from '../../../pages/Pipelines/Editor.jsx';
 import { useTheme } from '@mui/system';
 import useInstallWebSocketLog from './useInstallWebSocketLog';
 

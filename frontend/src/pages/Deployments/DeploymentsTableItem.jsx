@@ -1,9 +1,9 @@
 import { MenuItem } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
-import { useClearFileCacheDeployment } from '../../graphql/clearFileCacheDeployment';
-import { useGetDeployments } from '../../graphql/getDeployments';
-import { useGlobalFlowState } from '../PipelineEdit';
+import { useClearFileCacheDeployment } from '../../graphql/deployments/clearFileCacheDeployment';
+import { useGetDeployments } from '../../graphql/deployments/getDeployments';
+import { useGlobalFlowState } from '../Pipelines/PipelineEdit.jsx';
 import { useTurnOnOffDeploymentHook } from './TurnOffDeploymentDrawer';
 
 const DeploymentTableItem = (props) => {

@@ -6,7 +6,7 @@ import CustomChip from '../../../components/CustomChip';
 import { formatDate } from '../../../utils/formatDate';
 import { useSnackbar } from 'notistack';
 import { useGlobalEnvironmentState } from '../../../components/EnviromentDropdown';
-import { useGetWorkers } from '../../../graphql/getWorkers';
+import { useGetWorkers } from '../../../graphql/workers/getWorkers.js';
 import WorkerDetailCPU from './WorkerDetailCPU';
 import WorkerDetailMemory from './WorkerDetailMemory';
 import useWebSocket from './useWebSocket';

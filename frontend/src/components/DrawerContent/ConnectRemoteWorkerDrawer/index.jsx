@@ -5,14 +5,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useTheme } from '@emotion/react';
 import { DateTime } from 'luxon';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
-import { useGetRemoteWorkerActivationKeys } from '../../../graphql/getRemoteWorkerActivationKeys';
-import { useAddRemoteWorkerActivationKey } from '../../../graphql/addRemoteWorkerActivationKey';
-import { useDeleteRemoteWorkerActivationKey } from '../../../graphql/deleteRemoteWorkerActivationKey';
+import { useGetRemoteWorkerActivationKeys } from '../../../graphql/remoteworkers/getRemoteWorkerActivationKeys.js';
+import { useAddRemoteWorkerActivationKey } from '../../../graphql/remoteworkers/addRemoteWorkerActivationKey.js';
+import { useDeleteRemoteWorkerActivationKey } from '../../../graphql/remoteworkers/deleteRemoteWorkerActivationKey.js';
 import AlertDialog from './AlertDialog';
 import { useSnackbar } from 'notistack';
 import { customAlphabet } from 'nanoid';
 
-let host = process.env.REACT_APP_DATAPLANE_ENDPOINT;
+let host = import.meta.env.VITE_DATAPLANE_ENDPOINT;
 if (host === '') {
     host = window.location.origin;
 }

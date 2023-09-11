@@ -1,6 +1,7 @@
 package pgtype
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
@@ -23,6 +24,19 @@ func (c JSONCodec) PlanEncode(m *Map, oid uint32, format int16, value any) Encod
 		return encodePlanJSONCodecEitherFormatString{}
 	case []byte:
 		return encodePlanJSONCodecEitherFormatByteSlice{}
+
+	// Must come before trying wrap encode plans because a pointer to a struct may be unwrapped to a struct that can be
+	// marshalled.
+	//
+	// https://github.com/jackc/pgx/issues/1681
+	case json.Marshaler:
+		return encodePlanJSONCodecEitherFormatMarshal{}
+
+	// Cannot rely on driver.Valuer being handled later because anything can be marshalled.
+	//
+	// https://github.com/jackc/pgx/issues/1430
+	case driver.Valuer:
+		return &encodePlanDriverValuer{m: m, oid: oid, formatCode: format}
 	}
 
 	// Because anything can be marshalled the normal wrapping in Map.PlanScan doesn't get a chance to run. So try the
@@ -78,14 +92,36 @@ func (JSONCodec) PlanScan(m *Map, oid uint32, format int16, target any) ScanPlan
 	switch target.(type) {
 	case *string:
 		return scanPlanAnyToString{}
+
+	case **string:
+		// This is to fix **string scanning. It seems wrong to special case **string, but it's not clear what a better
+		// solution would be.
+		//
+		// https://github.com/jackc/pgx/issues/1470 -- **string
+		// https://github.com/jackc/pgx/issues/1691 -- ** anything else
+
+		if wrapperPlan, nextDst, ok := TryPointerPointerScanPlan(target); ok {
+			if nextPlan := m.planScan(oid, format, nextDst); nextPlan != nil {
+				if _, failed := nextPlan.(*scanPlanFail); !failed {
+					wrapperPlan.SetNext(nextPlan)
+					return wrapperPlan
+				}
+			}
+		}
+
 	case *[]byte:
 		return scanPlanJSONToByteSlice{}
 	case BytesScanner:
 		return scanPlanBinaryBytesToBytesScanner{}
-	default:
-		return scanPlanJSONToJSONUnmarshal{}
+
+	// Cannot rely on sql.Scanner being handled later because scanPlanJSONToJSONUnmarshal will take precedence.
+	//
+	// https://github.com/jackc/pgx/issues/1418
+	case sql.Scanner:
+		return &scanPlanSQLScanner{formatCode: format}
 	}
 
+	return scanPlanJSONToJSONUnmarshal{}
 }
 
 type scanPlanAnyToString struct{}
@@ -125,7 +161,7 @@ func (scanPlanJSONToJSONUnmarshal) Scan(src []byte, dst any) error {
 		if dstValue.Kind() == reflect.Ptr {
 			el := dstValue.Elem()
 			switch el.Kind() {
-			case reflect.Ptr, reflect.Slice, reflect.Map:
+			case reflect.Ptr, reflect.Slice, reflect.Map, reflect.Interface:
 				el.Set(reflect.Zero(el.Type()))
 				return nil
 			}

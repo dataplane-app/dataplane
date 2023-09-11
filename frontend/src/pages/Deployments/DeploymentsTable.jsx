@@ -6,17 +6,17 @@ import { faPlayCircle } from '@fortawesome/free-regular-svg-icons';
 import { faClock } from '@fortawesome/free-regular-svg-icons';
 import DeploymentsTableItem from './DeploymentsTableItem';
 import { useHistory } from 'react-router-dom';
-import MoreInfoMenu from '../../components/MoreInfoMenuPipeline';
+import MoreInfoMenu from '../Pipelines/Components/MoreInfoMenuPipeline';
 import CustomChip from '../../components/CustomChip';
 import { useGlobalAuthState } from '../../Auth/UserAuth';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
 import TurnOffDeploymentDrawer from './TurnOffDeploymentDrawer';
 import DeleteDeploymentDrawer from './DeleteDeploymentDrawer';
-import { useGlobalFlowState } from '../PipelineEdit';
+import { useGlobalFlowState } from '../Pipelines/PipelineEdit.jsx';
 import { useGlobalMeState } from '../../components/Navbar';
 import cronZone from '../../utils/cronZone';
 import { getTimeZone } from '../../utils/formatDate';
-import DeployAPITRiggerTableDrawer from '../../components/DrawerContent/DeployAPITriggerTableDrawer';
+import DeployAPITRiggerTableDrawer from './Components/DeployAPITriggerTableDrawer';
 
 const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDeployments }) => {
     // React router

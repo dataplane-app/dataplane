@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useForm } from 'react-hook-form';
-import { useAddEnvironment } from '../../../graphql/addEnvironment';
+import { useAddEnvironment } from '../../../graphql/environments/addEnvironment.js';
 import { useGlobalEnvironmentsState } from '../../EnviromentDropdown';
 
 const AddEnvironmentDrawer = ({ handleClose, refreshData }) => {

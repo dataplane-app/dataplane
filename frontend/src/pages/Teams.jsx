@@ -4,7 +4,7 @@ import Search from '../components/Search';
 import { useTable, useGlobalFilter } from 'react-table';
 import { useHistory } from 'react-router-dom';
 import CustomChip from '../components/CustomChip';
-import { useGetUsers } from '../graphql/getUsers';
+import { useGetUsers } from '../graphql/users/getUsers.js';
 import { useSnackbar } from 'notistack';
 import AddUserDrawer from '../components/DrawerContent/AddUserDrawer';
 import { useGlobalAuthState } from '../Auth/UserAuth';

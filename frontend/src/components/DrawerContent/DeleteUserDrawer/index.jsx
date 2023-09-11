@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Box, Typography, Button, Grid } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useUpdateDeleteUser } from '../../../graphql/updateDeleteUser';
+import { useUpdateDeleteUser } from '../../../graphql/users/updateDeleteUser.js';
 import { useSnackbar } from 'notistack';
 import { useHistory } from 'react-router-dom';
 

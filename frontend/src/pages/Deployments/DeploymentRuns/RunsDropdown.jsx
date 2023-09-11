@@ -1,13 +1,13 @@
 import { Autocomplete, Grid, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { useGetSinglepipelineRun } from '../../../graphql/getSinglepipelineRun';
+import { useGetSinglepipelineRun } from '../../../graphql/pipelines/getSinglepipelineRun.js';
 import { useSnackbar } from 'notistack';
 import { formatDateNoZone } from '../../../utils/formatDate';
 import { GetDeploymentFlow } from './DeploymentFlowStructure';
 import { GetDeploymentRun } from './DeploymentRunStructure';
 import { useDeploymentTasksColoursRun } from './UpdateDeploymentColours';
 import EventRunOpen from './EventRunOpen';
-import { useGetDeploymentRuns } from '../../../graphql/getDeploymentRuns';
+import { useGetDeploymentRuns } from '../../../graphql/deployments/getDeploymentRuns';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
 import { useGlobalRunState } from '../../PipelineRuns/GlobalRunState';
 import { useGlobalPipelineRun } from '../../PipelineRuns/GlobalPipelineRunUIState';
@@ -23,10 +23,10 @@ if (loc.protocol === 'https:') {
 }
 new_uri += '//' + loc.host;
 
-if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
-    new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+if (import.meta.env.VITE_DATAPLANE_ENV === 'build') {
+    new_uri += import.meta.env.VITE_WEBSOCKET_ROOMS_ENDPOINT;
 } else {
-    new_uri = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+    new_uri = import.meta.env.VITE_WEBSOCKET_ROOMS_ENDPOINT;
 }
 
 const websocketEndpoint = new_uri;

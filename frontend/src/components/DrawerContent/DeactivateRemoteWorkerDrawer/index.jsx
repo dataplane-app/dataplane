@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useSnackbar } from 'notistack';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useUpdateRemoteWorker } from '../../../graphql/updateRemoteWorker';
+import { useUpdateRemoteWorker } from '../../../graphql/remoteworkers/updateRemoteWorker.js';
 
 export default function DeactivateRemoteWorkerDrawer({ handleClose, remoteWorker, environmentID, getSingleRemoteWorker }) {
     const { active, workerName } = remoteWorker;

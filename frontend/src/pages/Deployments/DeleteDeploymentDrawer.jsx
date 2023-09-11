@@ -3,9 +3,9 @@ import { Box, Typography, Button, Grid } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
-import { useDeleteDeployment } from '../../graphql/deleteDeployment';
+import { useDeleteDeployment } from '../../graphql/deployments/deleteDeployment';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
-import { useGetDeployments } from '../../graphql/getDeployments';
+import { useGetDeployments } from '../../graphql/deployments/getDeployments';
 
 const DeleteDeploymentDrawer = ({ pipelineName, handleClose, setDeployments, pipelineID, version, environmentID }) => {
     const { closeSnackbar } = useSnackbar();

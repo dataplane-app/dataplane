@@ -9,9 +9,9 @@ import (
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
+	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
 	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
-	"github.com/dataplane-app/dataplane/app/workers/messageq"
 	runcodeworker "github.com/dataplane-app/dataplane/app/workers/runcode"
 	"github.com/dataplane-app/dataplane/app/workers/runtask"
 	"github.com/dataplane-app/dataplane/app/workers/secrets"
@@ -32,7 +32,7 @@ func Setup(port string) *fiber.App {
 	wrkerconfig.LoadConfig()
 
 	// ------- DATABASE CONNECT ------
-
+	database.RedisConnect()
 	database.DBConnect()
 	log.Println("🏃 ======== DATAPLANE WORKER ========")
 

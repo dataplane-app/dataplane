@@ -82,8 +82,9 @@
 //     log.Warn().Msg("")
 //     // Output: {"level":"warn","severity":"warn"}
 //
+// # Caveats
 //
-// Caveats
+// Field duplication:
 //
 // There is no fields deduplication out-of-the-box.
 // Using the same key multiple times creates new key in final JSON each time.
@@ -96,14 +97,31 @@
 //
 // In this case, many consumers will take the last value,
 // but this is not guaranteed; check yours if in doubt.
+//
+// Concurrency safety:
+//
+// Be careful when calling UpdateContext. It is not concurrency safe. Use the With method to create a child logger:
+//
+//     func handler(w http.ResponseWriter, r *http.Request) {
+//         // Create a child logger for concurrency safety
+//         logger := log.Logger.With().Logger()
+//
+//         // Add context fields, for example User-Agent from HTTP headers
+//         logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
+//             ...
+//         })
+//     }
 package zerolog
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // Level defines log levels.
@@ -159,24 +177,24 @@ func (l Level) String() string {
 // ParseLevel converts a level string into a zerolog Level value.
 // returns an error if the input string does not match known values.
 func ParseLevel(levelStr string) (Level, error) {
-	switch levelStr {
-	case LevelFieldMarshalFunc(TraceLevel):
+	switch {
+	case strings.EqualFold(levelStr, LevelFieldMarshalFunc(TraceLevel)):
 		return TraceLevel, nil
-	case LevelFieldMarshalFunc(DebugLevel):
+	case strings.EqualFold(levelStr, LevelFieldMarshalFunc(DebugLevel)):
 		return DebugLevel, nil
-	case LevelFieldMarshalFunc(InfoLevel):
+	case strings.EqualFold(levelStr, LevelFieldMarshalFunc(InfoLevel)):
 		return InfoLevel, nil
-	case LevelFieldMarshalFunc(WarnLevel):
+	case strings.EqualFold(levelStr, LevelFieldMarshalFunc(WarnLevel)):
 		return WarnLevel, nil
-	case LevelFieldMarshalFunc(ErrorLevel):
+	case strings.EqualFold(levelStr, LevelFieldMarshalFunc(ErrorLevel)):
 		return ErrorLevel, nil
-	case LevelFieldMarshalFunc(FatalLevel):
+	case strings.EqualFold(levelStr, LevelFieldMarshalFunc(FatalLevel)):
 		return FatalLevel, nil
-	case LevelFieldMarshalFunc(PanicLevel):
+	case strings.EqualFold(levelStr, LevelFieldMarshalFunc(PanicLevel)):
 		return PanicLevel, nil
-	case LevelFieldMarshalFunc(Disabled):
+	case strings.EqualFold(levelStr, LevelFieldMarshalFunc(Disabled)):
 		return Disabled, nil
-	case LevelFieldMarshalFunc(NoLevel):
+	case strings.EqualFold(levelStr, LevelFieldMarshalFunc(NoLevel)):
 		return NoLevel, nil
 	}
 	i, err := strconv.Atoi(levelStr)
@@ -187,6 +205,21 @@ func ParseLevel(levelStr string) (Level, error) {
 		return NoLevel, fmt.Errorf("Out-Of-Bounds Level: '%d', defaulting to NoLevel", i)
 	}
 	return Level(i), nil
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler to allow for easy reading from toml/yaml/json formats
+func (l *Level) UnmarshalText(text []byte) error {
+	if l == nil {
+		return errors.New("can't unmarshal a nil *Level")
+	}
+	var err error
+	*l, err = ParseLevel(string(text))
+	return err
+}
+
+// MarshalText implements encoding.TextMarshaler to allow for easy writing into toml/yaml/json formats
+func (l Level) MarshalText() ([]byte, error) {
+	return []byte(LevelFieldMarshalFunc(l)), nil
 }
 
 // A Logger represents an active logging object that generates lines
@@ -201,6 +234,7 @@ type Logger struct {
 	context []byte
 	hooks   []Hook
 	stack   bool
+	ctx     context.Context
 }
 
 // New creates a root logger with given output writer. If the output writer implements
@@ -258,7 +292,8 @@ func (l Logger) With() Context {
 
 // UpdateContext updates the internal logger's context.
 //
-// Use this method with caution. If unsure, prefer the With method.
+// Caution: This method is not concurrency safe.
+// Use the With method to create a child logger before modifying the context from concurrent goroutines.
 func (l *Logger) UpdateContext(update func(c Context) Context) {
 	if l == disabledLogger {
 		return
@@ -292,7 +327,9 @@ func (l Logger) Sample(s Sampler) Logger {
 
 // Hook returns a logger with the h Hook.
 func (l Logger) Hook(h Hook) Logger {
-	l.hooks = append(l.hooks, h)
+	newHooks := make([]Hook, len(l.hooks), len(l.hooks)+1)
+	copy(newHooks, l.hooks)
+	l.hooks = append(newHooks, h)
 	return l
 }
 
@@ -361,7 +398,7 @@ func (l *Logger) Panic() *Event {
 
 // WithLevel starts a new message with level. Unlike Fatal and Panic
 // methods, WithLevel does not terminate the program or stop the ordinary
-// flow of a gourotine when used with their respective levels.
+// flow of a goroutine when used with their respective levels.
 //
 // You must call Msg on the returned event in order to send the event.
 func (l *Logger) WithLevel(level Level) *Event {
@@ -428,11 +465,15 @@ func (l Logger) Write(p []byte) (n int, err error) {
 func (l *Logger) newEvent(level Level, done func(string)) *Event {
 	enabled := l.should(level)
 	if !enabled {
+		if done != nil {
+			done("")
+		}
 		return nil
 	}
 	e := newEvent(l.w, level)
 	e.done = done
 	e.ch = l.hooks
+	e.ctx = l.ctx
 	if level != NoLevel && LevelFieldName != "" {
 		e.Str(LevelFieldName, LevelFieldMarshalFunc(level))
 	}

@@ -26,7 +26,6 @@ func init() {
 
 	TimeZone, _ = time.LoadLocation("Europe/Brussels")
 	DebugMode = os.Getenv("DEBUG") == "1"
-	DebugSQLMode = os.Getenv("DEBUG_SQL") == "1"
 	PrintTimestamp = os.Getenv("PRINT_TIMESTAMP") == "1"
 
 	color.NoColor = false
@@ -61,7 +60,10 @@ func printMessage(level string, message string) {
 	}
 
 	if PrintColors && runtime.GOOS != "windows" {
-		printColoredMessage(level, message)
+		lines := splitInLines(message)
+		for _, line := range lines {
+			printColoredMessage(level, line)
+		}
 	} else {
 		printNonColoredMessage(level, message)
 	}
@@ -103,4 +105,11 @@ func writerForLevel(level string) io.Writer {
 		return Stderr
 	}
 	return Stdout
+}
+
+func splitInLines(text string) []string {
+	text = strings.Replace(text, "\r\n", "\n", -1)
+	text = strings.Replace(text, "\r", "\n", -1)
+	lines := strings.Split(text, "\n")
+	return lines
 }

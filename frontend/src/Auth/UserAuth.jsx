@@ -124,7 +124,7 @@ export const UserAuth = ({ children, Env, loginUrl, refreshTokenUrl, logoutUrl, 
 
             axios
                 .post(
-                    `${process.env.REACT_APP_DATAPLANE_ENDPOINT}${refreshTokenUrl}`,
+                    `${import.meta.env.VITE_DATAPLANE_ENDPOINT}${refreshTokenUrl}`,
                     {},
                     { headers: { Authorization: `Bearer ${refreshToken}` }, withCredentials: true }
                     // {withCredentials: true}

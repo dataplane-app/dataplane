@@ -4,7 +4,7 @@ import { Box, Button, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import { useUpdateDeleteEnvironment } from '../../../graphql/updateDeleteEnvironment';
+import { useUpdateDeleteEnvironment } from '../../../graphql/environments/updateDeleteEnvironment.js';
 import { useGlobalEnvironmentsState, useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { Downgraded } from '@hookstate/core';
 

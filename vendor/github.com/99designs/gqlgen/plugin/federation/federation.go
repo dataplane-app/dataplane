@@ -86,28 +86,55 @@ func (f *federation) MutateConfig(cfg *config.Config) error {
 }
 
 func (f *federation) InjectSourceEarly() *ast.Source {
-	input := `
-	scalar _Any
-	scalar _FieldSet
+	input := ``
 
-	directive @external on FIELD_DEFINITION
-	directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
-	directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
-	directive @extends on OBJECT | INTERFACE
-`
 	// add version-specific changes on key directive, as well as adding the new directives for federation 2
 	if f.Version == 1 {
 		input += `
 	directive @key(fields: _FieldSet!) repeatable on OBJECT | INTERFACE
+	directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
+	directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
+	directive @extends on OBJECT | INTERFACE
+	directive @external on FIELD_DEFINITION
+	scalar _Any
+	scalar _FieldSet
 `
 	} else if f.Version == 2 {
 		input += `
-	directive @key(fields: _FieldSet!, resolvable: Boolean = true) repeatable on OBJECT | INTERFACE
+	directive @composeDirective(name: String!) repeatable on SCHEMA
+	directive @extends on OBJECT | INTERFACE
+	directive @external on OBJECT | FIELD_DEFINITION
+	directive @key(fields: FieldSet!, resolvable: Boolean = true) repeatable on OBJECT | INTERFACE
+	directive @inaccessible on
+	  | ARGUMENT_DEFINITION
+	  | ENUM
+	  | ENUM_VALUE
+	  | FIELD_DEFINITION
+	  | INPUT_FIELD_DEFINITION
+	  | INPUT_OBJECT
+	  | INTERFACE
+	  | OBJECT
+	  | SCALAR
+	  | UNION
+	directive @interfaceObject on OBJECT
 	directive @link(import: [String!], url: String!) repeatable on SCHEMA
-	directive @shareable on OBJECT | FIELD_DEFINITION
-	directive @tag(name: String!) repeatable on FIELD_DEFINITION | INTERFACE | OBJECT | UNION | ARGUMENT_DEFINITION | SCALAR | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
 	directive @override(from: String!) on FIELD_DEFINITION
-	directive @inaccessible on SCALAR | OBJECT | FIELD_DEFINITION | ARGUMENT_DEFINITION | INTERFACE | UNION | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
+	directive @provides(fields: FieldSet!) on FIELD_DEFINITION
+	directive @requires(fields: FieldSet!) on FIELD_DEFINITION
+	directive @shareable repeatable on FIELD_DEFINITION | OBJECT
+	directive @tag(name: String!) repeatable on
+	  | ARGUMENT_DEFINITION
+	  | ENUM
+	  | ENUM_VALUE
+	  | FIELD_DEFINITION
+	  | INPUT_FIELD_DEFINITION
+	  | INPUT_OBJECT
+	  | INTERFACE
+	  | OBJECT
+	  | SCALAR
+	  | UNION
+	scalar _Any
+	scalar FieldSet
 `
 	}
 	return &ast.Source{
@@ -117,29 +144,36 @@ func (f *federation) InjectSourceEarly() *ast.Source {
 	}
 }
 
-// InjectSources creates a GraphQL Entity type with all
+// InjectSourceLate creates a GraphQL Entity type with all
 // the fields that had the @key directive
 func (f *federation) InjectSourceLate(schema *ast.Schema) *ast.Source {
 	f.setEntities(schema)
 
 	var entities, resolvers, entityResolverInputDefinitions string
-	for i, e := range f.Entities {
-		if i != 0 {
-			entities += " | "
+	for _, e := range f.Entities {
+
+		if e.Def.Kind != ast.Interface {
+			if entities != "" {
+				entities += " | "
+			}
+			entities += e.Name
+		} else if len(schema.GetPossibleTypes(e.Def)) == 0 {
+			fmt.Println(
+				"skipping @key field on interface " + e.Def.Name + " as no types implement it",
+			)
 		}
-		entities += e.Name
 
 		for _, r := range e.Resolvers {
 			if e.Multi {
 				if entityResolverInputDefinitions != "" {
 					entityResolverInputDefinitions += "\n\n"
 				}
-				entityResolverInputDefinitions += "input " + r.InputType + " {\n"
+				entityResolverInputDefinitions += "input " + r.InputTypeName + " {\n"
 				for _, keyField := range r.KeyFields {
 					entityResolverInputDefinitions += fmt.Sprintf("\t%s: %s\n", keyField.Field.ToGo(), keyField.Definition.Type.String())
 				}
 				entityResolverInputDefinitions += "}"
-				resolvers += fmt.Sprintf("\t%s(reps: [%s!]!): [%s]\n", r.ResolverName, r.InputType, e.Name)
+				resolvers += fmt.Sprintf("\t%s(reps: [%s!]!): [%s]\n", r.ResolverName, r.InputTypeName, e.Name)
 			} else {
 				resolverArgs := ""
 				for _, keyField := range r.KeyFields {
@@ -198,44 +232,6 @@ type Entity {
 	}
 }
 
-// Entity represents a federated type
-// that was declared in the GQL schema.
-type Entity struct {
-	Name      string // The same name as the type declaration
-	Def       *ast.Definition
-	Resolvers []*EntityResolver
-	Requires  []*Requires
-	Multi     bool
-}
-
-type EntityResolver struct {
-	ResolverName string      // The resolver name, such as FindUserByID
-	KeyFields    []*KeyField // The fields declared in @key.
-	InputType    string      // The Go generated input type for multi entity resolvers
-}
-
-type KeyField struct {
-	Definition *ast.FieldDefinition
-	Field      fieldset.Field        // len > 1 for nested fields
-	Type       *config.TypeReference // The Go representation of that field type
-}
-
-// Requires represents an @requires clause
-type Requires struct {
-	Name  string                // the name of the field
-	Field fieldset.Field        // source Field, len > 1 for nested fields
-	Type  *config.TypeReference // The Go representation of that field type
-}
-
-func (e *Entity) allFieldsAreExternal() bool {
-	for _, field := range e.Def.Fields {
-		if field.Directives.ForName("external") == nil {
-			return false
-		}
-	}
-	return true
-}
-
 func (f *federation) GenerateCode(data *codegen.Data) error {
 	if len(f.Entities) > 0 {
 		if data.Objects.ByName("Entity") != nil {
@@ -243,6 +239,16 @@ func (f *federation) GenerateCode(data *codegen.Data) error {
 		}
 		for _, e := range f.Entities {
 			obj := data.Objects.ByName(e.Def.Name)
+
+			if e.Def.Kind == ast.Interface {
+				if len(data.Interfaces[e.Def.Name].Implementors) == 0 {
+					fmt.Println(
+						"skipping @key field on interface " + e.Def.Name + " as no types implement it",
+					)
+					continue
+				}
+				obj = data.Objects.ByName(data.Interfaces[e.Def.Name].Implementors[0].Name)
+			}
 
 			for _, r := range e.Resolvers {
 				// fill in types for key fields
@@ -272,6 +278,23 @@ func (f *federation) GenerateCode(data *codegen.Data) error {
 		}
 	}
 
+	// fill in types for resolver inputs
+	//
+	for _, entity := range f.Entities {
+		if !entity.Multi {
+			continue
+		}
+
+		for _, resolver := range entity.Resolvers {
+			obj := data.Inputs.ByName(resolver.InputTypeName)
+			if obj == nil {
+				return fmt.Errorf("input object %s not found", resolver.InputTypeName)
+			}
+
+			resolver.InputType = obj.Type
+		}
+	}
+
 	return templates.Render(templates.Options{
 		PackageName:     data.Config.Federation.Package,
 		Filename:        data.Config.Federation.Filename,
@@ -288,6 +311,12 @@ func (f *federation) setEntities(schema *ast.Schema) {
 		if !ok {
 			continue
 		}
+
+		if (schemaType.Kind == ast.Interface) && (len(schema.GetPossibleTypes(schemaType)) == 0) {
+			fmt.Printf("@key directive found on unused \"interface %s\". Will be ignored.\n", schemaType.Name)
+			continue
+		}
+
 		e := &Entity{
 			Name:      schemaType.Name,
 			Def:       schemaType,
@@ -323,7 +352,7 @@ func (f *federation) setEntities(schema *ast.Schema) {
 		//    extend TypeDefinedInOtherService @key(fields: "id") {
 		//       id: ID @external
 		//    }
-		if !e.allFieldsAreExternal() {
+		if !e.allFieldsAreExternal(f.Version) {
 			for _, dir := range keys {
 				if len(dir.Arguments) > 2 {
 					panic("More than two arguments provided for @key declaration.")
@@ -365,9 +394,9 @@ func (f *federation) setEntities(schema *ast.Schema) {
 				}
 
 				e.Resolvers = append(e.Resolvers, &EntityResolver{
-					ResolverName: resolverName,
-					KeyFields:    keyFields,
-					InputType:    resolverFieldsToGo + "Input",
+					ResolverName:  resolverName,
+					KeyFields:     keyFields,
+					InputTypeName: resolverFieldsToGo + "Input",
 				})
 			}
 
@@ -406,10 +435,12 @@ func isFederatedEntity(schemaType *ast.Definition) ([]*ast.Directive, bool) {
 			return keys, true
 		}
 	case ast.Interface:
-		// TODO: support @key and @extends for interfaces
-		if dir := schemaType.Directives.ForName("key"); dir != nil {
-			fmt.Printf("@key directive found on \"interface %s\". Will be ignored.\n", schemaType.Name)
+		keys := schemaType.Directives.ForNames("key")
+		if len(keys) > 0 {
+			return keys, true
 		}
+
+		// TODO: support @extends for interfaces
 		if dir := schemaType.Directives.ForName("extends"); dir != nil {
 			panic(
 				fmt.Sprintf(

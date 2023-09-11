@@ -9,7 +9,7 @@ import (
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
-	"github.com/dataplane-app/dataplane/app/workers/messageq"
+	"github.com/dataplane-app/dataplane/app/workers/mqworker"
 
 	"gorm.io/gorm/clause"
 )
@@ -54,7 +54,7 @@ func UpdateWorkerTasks(msg modelmain.WorkerTasks) {
 
 	}
 
-	errnat := messageq.MsgSend("taskupdate."+msg.EnvironmentID+"."+msg.RunID, msg)
+	errnat := mqworker.MsgSend("taskupdate."+msg.EnvironmentID+"."+msg.RunID, msg)
 	if errnat != nil {
 		if wrkerconfig.Debug == "true" {
 			log.Println(errnat)

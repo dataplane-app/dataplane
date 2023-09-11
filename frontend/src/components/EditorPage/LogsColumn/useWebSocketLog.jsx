@@ -1,10 +1,10 @@
 import { useSnackbar } from 'notistack';
 import { useEffect, useRef, useState } from 'react';
 import { useGlobalAuthState } from '../../../Auth/UserAuth';
-import { useGetCodeFileRunLogs } from '../../../graphql/getCodeFileRunLogs';
-import { useRunCEFile } from '../../../graphql/runCEFile';
+import { useGetCodeFileRunLogs } from '../../../graphql/codeEditor/getCodeFileRunLogs.js';
+import { useRunCEFile } from '../../../graphql/codeEditor/runCEFile.js';
 import ConsoleLogHelper from '../../../Helper/logger';
-import { useGlobalEditorState } from '../../../pages/Editor';
+import { useGlobalEditorState } from '../../../pages/Pipelines/Editor.jsx';
 import { DateTime } from 'luxon';
 import { useGlobalMeState } from '../../Navbar';
 
@@ -18,10 +18,10 @@ if (loc.protocol === 'https:') {
 new_uri += '//' + loc.host;
 
 // console.log("websockets loc:", new_uri)
-if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
-    new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+if (import.meta.env.VITE_DATAPLANE_ENV === 'build') {
+    new_uri += import.meta.env.VITE_WEBSOCKET_ROOMS_ENDPOINT;
 } else {
-    new_uri = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+    new_uri = import.meta.env.VITE_WEBSOCKET_ROOMS_ENDPOINT;
 }
 
 const websocketEndpoint = new_uri;

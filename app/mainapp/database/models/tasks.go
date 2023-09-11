@@ -66,6 +66,7 @@ type WorkerTaskSend struct {
 	Commands      []string  `json:"commands"`
 	Version       string    `json:"version"`
 	RunType       string    `json:"run_type"`
+	InputData     bool      `json:"input_data"`
 }
 
 type WorkerPipelineNext struct {

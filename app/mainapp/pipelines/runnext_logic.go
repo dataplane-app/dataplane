@@ -169,7 +169,7 @@ func RunNext(msg models.WorkerTaskSend) {
 			}
 
 			// ------ run the destination -------
-			err = worker.WorkerRunTask(s.WorkerGroup, s.TaskID, s.RunID, s.EnvironmentID, s.PipelineID, s.NodeID, commandsend, s.Folder, s.FolderID, s.Version, s.RunType, s.WorkerType)
+			err = worker.WorkerRunTask(s.WorkerGroup, s.TaskID, s.RunID, s.EnvironmentID, s.PipelineID, s.NodeID, commandsend, s.Folder, s.FolderID, s.Version, s.RunType, s.WorkerType, msg.InputData)
 			// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"echo " + s})
 			if err != nil {
 				if dpconfig.Debug == "true" {

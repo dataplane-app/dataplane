@@ -5,9 +5,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useAddRemoteProcessGroupToEnvironment } from '../../../../graphql/addRemoteProcessGroupToEnvironment';
-import { useGetRemoteProcessGroupsEnvironments } from '../../../../graphql/getRemoteProcessGroupsEnvironments';
-import { useRemoveRemoteProcessGroupFromEnvironment } from '../../../../graphql/removeRemoteProcessGroupFromEnvironment';
+import { useAddRemoteProcessGroupToEnvironment } from '../../../../graphql/remoteworkers/addRemoteProcessGroupToEnvironment.js';
+import { useGetRemoteProcessGroupsEnvironments } from '../../../../graphql/remoteworkers/getRemoteProcessGroupsEnvironments.js';
+import { useRemoveRemoteProcessGroupFromEnvironment } from '../../../../graphql/remoteworkers/removeRemoteProcessGroupFromEnvironment.js';
 import { useGlobalEnvironmentsState } from '../../../../components/EnviromentDropdown';
 
 export default function Environments({ environmentId, remoteEnvironments, setRemoteEnvironments }) {

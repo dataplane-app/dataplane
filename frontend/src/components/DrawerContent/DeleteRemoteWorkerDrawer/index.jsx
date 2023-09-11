@@ -4,7 +4,7 @@ import { useSnackbar } from 'notistack';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useHistory } from 'react-router-dom';
-import { useDeleteRemoteWorker } from '../../../graphql/deleteRemoteWorker';
+import { useDeleteRemoteWorker } from '../../../graphql/remoteworkers/deleteRemoteWorker.js';
 
 export default function DeleteRemoteWorkerDrawer({ handleClose, remoteWorker, environmentID }) {
     // GraphQL hook

@@ -5,13 +5,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import { useParams } from 'react-router-dom';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
-import { useUpdatePermissionToAccessGroup } from '../../graphql/updatePermissionToAccessGroup';
-import { useAvailablePermissions } from '../../graphql/availablePermissions';
-import { useGetUserPermissions } from '../../graphql/getUserPermissions';
-import { useDeletePermissionToUser } from '../../graphql/deletePermissionToUser';
-import { useGetUserPipelinePermissions } from '../../graphql/getUserPipelinePermissions';
-import { useDeleteSpecificPermission } from '../../graphql/deleteSpecificPermission';
-import { useGetUserDeploymentPermissions } from '../../graphql/getUserDeploymentPermissions';
+import { useUpdatePermissionToAccessGroup } from '../../graphql/permissions/updatePermissionToAccessGroup.js';
+import { useAvailablePermissions } from '../../graphql/permissions/availablePermissions.js';
+import { useGetUserPermissions } from '../../graphql/permissions/getUserPermissions.js';
+import { useDeletePermissionToUser } from '../../graphql/permissions/deletePermissionToUser.js';
+import { useGetUserPipelinePermissions } from '../../graphql/permissions/getUserPipelinePermissions.js';
+import { useDeleteSpecificPermission } from '../../graphql/permissions/deleteSpecificPermission.js';
+import { useGetUserDeploymentPermissions } from '../../graphql/permissions/getUserDeploymentPermissions.js';
 import { formatSpecialPermission } from '../../utils/formatString';
 
 export default function Permissions({ environmentId }) {

@@ -7,6 +7,7 @@ services:
 
   redis-service:
     image: redis:7.0.5-bullseye
+    command: redis-server --save "" --appendonly no
     ports:
       - 6380:6379
     healthcheck:
@@ -59,21 +60,6 @@ services:
     ports:
       - "14222:4222"
       - "18222:8222"
-
-  nats-r:
-    image: nats:2.7.4-scratch
-    command:
-      - "--debug"
-      - "--cluster"
-      - "nats://0.0.0.0:6222"
-      - "--http_port"
-      - "8222"
-      - "--port"
-      - "4222"
-      - "--routes"
-      - "nats://nats:6222"
-    deploy:
-      replicas: 2
       
   mainapp:
     build:
@@ -84,8 +70,13 @@ services:
       - 9000:9000
       # - 3000:3000
     volumes:
-      - node_modules:/appdev/frontend/node_modules
+      # - node_modules:/appdev/frontend/node_modules
       - ../:/appdev:cached
+    deploy:
+      resources:
+        limits:
+          # cpus: "2.0"
+          memory: 4G
     environment:
       DP_CODE_FOLDER: "/appdev/code-files/"
       DP_DFS_CODE_FOLDER: "/appdev/dfs-code-files/"
@@ -98,7 +89,7 @@ services:
       secret_encryption_key: "%WKrsNJTT*gM&9iX*iXXXiXrURdK2QTB"
       DP_DATABASE: "timescaledb"
       DP_PORT: "9000"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
@@ -118,6 +109,83 @@ services:
       DP_WORKER_LANGUAGES: "Python"
       DP_WORKER_LOAD_PACKAGES: "Python"
       DP_CODE_FILE_STORAGE: "Database" #Database, LocalFile, S3
+      DP_DISTRIBUTED_MODE: "NO"
+      DP_REDIS_HOST: "redis-service"
+      DP_REDIS_PORT: "6379"
+      DP_REDIS_PASSWORD: ""
+      DP_REDIS_DB: "0"
+      DP_PIPELINE_DATA_TTL_SECONDS: "86400"
+      DP_PIPELINE_DATA_LIMIT_MB: "5"
+      DP_ALLOW_ORIGINS: "http://localhost:3000, http://localhost:9000"
+  
+  dataplane-worker:
+    image: dataplane/dataplane-worker-python:latest
+    deploy:
+      replicas: 1
+    environment:
+      DP_CODE_FOLDER: "/dataplane/code-files/"
+      DP_DB_HOST: postgres
+      DP_DB_USER: postgres
+      DP_DB_SSL: "disable"
+      DP_DB_PORT: "5432"
+      DP_DB_DATABASE: "dataplane"
+      secret_db_pwd: "Hello123!"
+      DP_DATABASE: "timescaledb"
+      DP_NATS: "nats://nats:4222"
+      DP_MODE: "development"
+      DP_DEBUG: "true"
+      DP_DB_DEBUG: "false"
+      DP_MQ_DEBUG: "false"
+      DP_METRIC_DEBUG: "false"
+      DP_SCHEDULER_DEBUG: "false"
+      DP_WORKER_HEARTBEAT_SECONDS: "1"
+      DP_WORKER_GROUP: "python_dev2"
+      DP_WORKER_CMD: "/bin/sh"
+      DP_WORKER_TYPE: "vm"
+      DP_WORKER_LB: "roundrobin"
+      DP_WORKER_ENV: "Development"
+      DP_WORKER_PORT: "9005"
+      DP_WORKER_LANGUAGES: "Python"
+      DP_WORKER_LOAD_PACKAGES: "Python"
+      DP_CODE_FILE_STORAGE: "Database"
+      DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
+      DP_DISTRIBUTED_MODE: "NO"
+      DP_REDIS_HOST: "redis-service"
+      DP_REDIS_PORT: "6379"
+      DP_REDIS_PASSWORD: ""
+      DP_REDIS_DB: "0"
+
+  dataplane-worker-prod:
+    image: dataplane/dataplane-worker-python:latest
+    deploy:
+      replicas: 1
+    environment:
+      DP_CODE_FOLDER: "/dataplane/code-files/"
+      DP_DB_HOST: postgres
+      DP_DB_USER: postgres
+      DP_DB_SSL: "disable"
+      DP_DB_PORT: "5432"
+      DP_DB_DATABASE: "dataplane"
+      secret_db_pwd: "Hello123!"
+      DP_DATABASE: "timescaledb"
+      DP_NATS: "nats://nats:4222"
+      DP_MODE: "development"
+      DP_DEBUG: "true"
+      DP_DB_DEBUG: "false"
+      DP_MQ_DEBUG: "false"
+      DP_METRIC_DEBUG: "false"
+      DP_SCHEDULER_DEBUG: "false"
+      DP_WORKER_HEARTBEAT_SECONDS: "1"
+      DP_WORKER_GROUP: "python_prod"
+      DP_WORKER_CMD: "/bin/sh"
+      DP_WORKER_TYPE: "vm"
+      DP_WORKER_LB: "roundrobin"
+      DP_WORKER_ENV: "Production"
+      DP_WORKER_PORT: "9005"
+      DP_WORKER_LANGUAGES: "Python"
+      DP_WORKER_LOAD_PACKAGES: "Python"
+      DP_CODE_FILE_STORAGE: "Database"
+      DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
       DP_DISTRIBUTED_MODE: "NO"
       DP_REDIS_HOST: "redis-service"
       DP_REDIS_PORT: "6379"

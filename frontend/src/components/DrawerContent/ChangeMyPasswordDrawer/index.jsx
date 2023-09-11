@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Box, Typography, Button, TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useUpdateChangeMyPassword } from '../../../graphql/updateChangeMyPassword';
+import { useUpdateChangeMyPassword } from '../../../graphql/users/updateChangeMyPassword.js';
 import { useSnackbar } from 'notistack';
 
 const ChangeMyPasswordDrawer = ({ handleClose }) => {

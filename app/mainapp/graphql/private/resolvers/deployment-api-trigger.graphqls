@@ -1,0 +1,61 @@
+type DeploymentApiTriggers {
+    triggerID: String!
+    deploymentID: String!
+    environmentID: String!
+    apiKeyActive: Boolean!
+    publicLive: Boolean!
+    privateLive: Boolean!
+    dataSizeLimit: Float!
+    dataTTL: Float!
+}
+
+type DeploymentApiKeys {
+    triggerID: String!
+    apiKey: String!
+    apiKeyTail: String!
+    deploymentID: String!
+    environmentID: String!
+    expiresAt: Time
+}
+
+extend type Query {
+
+    """
+    Get deployment api trigger.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    getDeploymentTrigger(deploymentID: String!, environmentID: String!): DeploymentApiTriggers!
+
+    """
+    Get api keys for a specific deployment.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    getDeploymentApiKeys(deploymentID: String!, environmentID: String!): [DeploymentApiKeys!]!
+}
+
+extend type Mutation {
+
+    """
+    Generate deployment api trigger.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    generateDeploymentTrigger(deploymentID: String!, environmentID: String!, triggerID: String!, apiKeyActive: Boolean!, publicLive: Boolean!, privateLive: Boolean!, dataSizeLimit: Float!, dataTTL: Float!): String!
+
+
+    """
+    Add deployment api key.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    addDeploymentApiKey(triggerID: String!, apiKey: String!, deploymentID: String!, environmentID: String!, expiresAt: Time): String!
+
+    """
+    Delete deployment api key.
+    + **Route**: Private
+    + **Permissions**: admin_platform, admin_environment, environment_run_all_pipelines, specific_pipeline[run]
+    """
+    deleteDeploymentApiKey(apiKey: String!, deploymentID: String!, environmentID: String!): String!
+}

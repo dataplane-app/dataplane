@@ -6,26 +6,26 @@ import { useSnackbar } from 'notistack';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactFlow, { ControlButton, Controls, ReactFlowProvider } from 'react-flow-renderer';
 import { useParams } from 'react-router-dom';
-import CustomLine from '../../components/CustomNodesContent/CustomLine';
+import CustomLine from '../Pipelines/Components/NodeTypes/CustomLine';
 import PublishPipelineDrawer from '../../components/DrawerContent/PublishPipelineDrawer';
 import { useGlobalEnvironmentState } from '../../components/EnviromentDropdown';
-import ViewPageItem from '../../components/MoreInfoContent/ViewPageItem';
-import MoreInfoMenu from '../../components/MoreInfoMenu';
+import ViewPageItem from '../Pipelines/Components/configureNodes/ViewPageItem';
+import MoreInfoMenu from '../Pipelines/Components/MoreInfoMenu';
 import { useGlobalPipelineRun } from './GlobalPipelineRunUIState';
-import LogsDrawer from '../../components/DrawerContent/LogsDrawer';
+import LogsDrawer from '../Pipelines/Components/Drawers/LogsDrawer';
 import CustomChip from '../../components/CustomChip';
-import { useGetPipeline } from '../../graphql/getPipeline';
+import { useGetPipeline } from '../../graphql/pipelines/getPipeline.js';
 import { Analytics } from './Analytics';
 import { Downgraded } from '@hookstate/core';
 import RunNavBar from './RunNavBar';
 import { useGlobalRunState } from './GlobalRunState';
 
 import { edgeTypes, nodeTypes } from './NodeTypes';
-import TurnOffPipelineDrawerRunPipeline from '../../components/DrawerContent/TurnOffPipelineDrawerRunPipeline';
-import ScheduleDrawer from '../../components/DrawerContent/SchedulerDrawerRunPage';
-import { useGlobalFlowState } from '../PipelineEdit';
-import ProcessTypeDrawer from '../../components/DrawerContent/ProcessTypeDrawerRunPage';
-import RpaDrawer from '../../components/DrawerContent/RpaDrawerRunPage';
+import TurnOffPipelineDrawerRunPipeline from '../Pipelines/Components/Drawers/TurnOffPipelineDrawerRunPipeline';
+import ScheduleDrawer from '../Pipelines/Components/Drawers/SchedulerDrawerRunPage';
+import { useGlobalFlowState } from '../Pipelines/PipelineEdit.jsx';
+import ProcessTypeDrawer from '../Pipelines/Components/Drawers/ProcessTypeDrawerRunPage';
+import RpaDrawer from '../Pipelines/Components/Drawers/RpaDrawerRunPage';
 
 const View = () => {
     // Retrieve global environments from drop down - selected environment ID

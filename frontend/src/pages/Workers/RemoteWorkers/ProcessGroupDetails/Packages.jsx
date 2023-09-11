@@ -8,7 +8,7 @@ import { useTheme } from '@emotion/react';
 import { useSnackbar } from 'notistack';
 import { useParams } from 'react-router-dom';
 import { useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown';
-import { useUpdateRemoteProcessGroup } from '../../../../graphql/updateRemoteProcessGroup';
+import { useUpdateRemoteProcessGroup } from '../../../../graphql/remoteworkers/updateRemoteProcessGroup.js';
 
 export default function Packages({ remoteProcessGroup, getSingleRemoteProcessGroup }) {
     const [isEditMode, setIsEditMode] = React.useState(false);

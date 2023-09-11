@@ -1,7 +1,7 @@
 import { Autocomplete, Grid, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { useGetPipelineRuns } from '../../graphql/getPipelineRuns';
-import { useGetSinglepipelineRun } from '../../graphql/getSinglepipelineRun';
+import { useGetPipelineRuns } from '../../graphql/pipelines/getPipelineRuns.js';
+import { useGetSinglepipelineRun } from '../../graphql/pipelines/getSinglepipelineRun.js';
 import { useSnackbar } from 'notistack';
 import { formatDateNoZone } from '../../utils/formatDate';
 import { useGlobalMeState } from '../../components/Navbar';
@@ -23,10 +23,10 @@ if (loc.protocol === 'https:') {
 }
 new_uri += '//' + loc.host;
 
-if (process.env.REACT_APP_DATAPLANE_ENV === 'build') {
-    new_uri += process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+if (import.meta.env.VITE_DATAPLANE_ENV === 'build') {
+    new_uri += import.meta.env.VITE_WEBSOCKET_ROOMS_ENDPOINT;
 } else {
-    new_uri = process.env.REACT_APP_WEBSOCKET_ROOMS_ENDPOINT;
+    new_uri = import.meta.env.VITE_WEBSOCKET_ROOMS_ENDPOINT;
 }
 
 const websocketEndpoint = new_uri;

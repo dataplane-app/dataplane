@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLogoutUser } from '../graphql/logoutUser';
+import { useLogoutUser } from '../graphql/users/logoutUser.js';
 import { useHistory } from 'react-router-dom';
 
 const Logout = () => {

@@ -1,6 +1,6 @@
 import { Autocomplete, Box, Button, TextField, Typography, useTheme } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { useCreateAdmin } from '../../graphql/createAdmin';
+import { useCreateAdmin } from '../../graphql/platform/createAdmin.js';
 import { useSnackbar } from 'notistack';
 import ct from 'countries-and-timezones';
 import ThemeToggle from '../ThemeToggle';
