@@ -171,8 +171,8 @@ func (DeploymentApiTriggers) TableName() string {
 
 type DeploymentApiTriggers struct {
 	TriggerID     string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"trigger_id"`
-	DeploymentID  string     `gorm:"index:idx_deploymentid_api_trigger,unique;" json:"deployment_id"`
-	EnvironmentID string     `json:"environment_id"`
+	DeploymentID  string     `gorm:"index:idx2_deploymentid_api_trigger,unique;" json:"deployment_id"`
+	EnvironmentID string     `gorm:"index:idx2_deploymentid_api_trigger,unique;" json:"environment_id"`
 	APIKeyActive  bool       `json:"api_key_active"`
 	PublicLive    bool       `json:"public_live"`
 	PrivateLive   bool       `json:"private_live"`
@@ -200,19 +200,19 @@ type DeploymentApiKeys struct {
 	DeletedAt     *time.Time `json:"deleted_at,omitempty"`
 }
 
-func (DeploymentApiTriggerRuns) IsEntity() {}
+// func (DeploymentApiTriggerRuns) IsEntity() {}
 
-func (DeploymentApiTriggerRuns) TableName() string {
-	return "deployment_api_trigger_runs"
-}
+// func (DeploymentApiTriggerRuns) TableName() string {
+// 	return "deployment_api_trigger_runs"
+// }
 
-type DeploymentApiTriggerRuns struct {
-	RunID         string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"run_id"`
-	Version       string         `gorm:"index:idx_deploy_version_api_trigger_runs;" json:"version"`
-	DeploymentID  string         `gorm:"index:idx_deploymentid_api_trigger_runs;" json:"deployment_id"`
-	EnvironmentID string         `json:"environment_id"`
-	RunType       string         `json:"run_type"` //deploy or pipeline
-	RunJSON       datatypes.JSON `json:"run_json"`
-	CreatedAt     time.Time      `json:"created_at"`
-	UpdatedAt     *time.Time     `json:"updated_at"`
-}
+// type DeploymentApiTriggerRuns struct {
+// 	RunID         string         `gorm:"PRIMARY_KEY;type:varchar(64);" json:"run_id"`
+// 	Version       string         `gorm:"index:idx_deploy_version_api_trigger_runs;" json:"version"`
+// 	DeploymentID  string         `gorm:"index:idx_deploymentid_api_trigger_runs;" json:"deployment_id"`
+// 	EnvironmentID string         `json:"environment_id"`
+// 	RunType       string         `json:"run_type"` //deploy or pipeline
+// 	RunJSON       datatypes.JSON `json:"run_json"`
+// 	CreatedAt     time.Time      `json:"created_at"`
+// 	UpdatedAt     *time.Time     `json:"updated_at"`
+// }

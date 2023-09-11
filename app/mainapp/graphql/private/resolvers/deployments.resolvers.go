@@ -12,7 +12,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dfscache "github.com/dataplane-app/dataplane/app/mainapp/code_editor/dfs_cache"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -55,7 +55,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: toEnvironmentID, Access: "write", EnvironmentID: toEnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_here", ResourceID: toEnvironmentID, Access: "write", EnvironmentID: toEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_to_here", ResourceID: toEnvironmentID, Access: "write", EnvironmentID: toEnvironmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -68,7 +68,7 @@ func (r *mutationResolver) AddDeployment(ctx context.Context, pipelineID string,
 	perms = []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: fromEnvironmentID, Access: "write", EnvironmentID: fromEnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_all_pipelines", ResourceID: fromEnvironmentID, Access: "write", EnvironmentID: fromEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_from_here", ResourceID: fromEnvironmentID, Access: "write", EnvironmentID: fromEnvironmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "deploy", EnvironmentID: fromEnvironmentID},
 	}
 
@@ -530,6 +530,8 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_to_here", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
@@ -729,6 +731,8 @@ func (r *mutationResolver) TurnOnOffDeployment(ctx context.Context, environmentI
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_to_here", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 	}
 
@@ -829,7 +833,11 @@ func (r *mutationResolver) ClearFileCacheDeployment(ctx context.Context, environ
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_to_here", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: deploymentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: deploymentID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -864,16 +872,19 @@ func (r *queryResolver) GetActiveDeployment(ctx context.Context, pipelineID stri
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_deployments", ResourceID: environmentID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_to_here", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
 	}
 
 	// Permissions baked into the SQL query below
-	_, _, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
+	permissions.MultiplePermissionChecks(perms)
 
 	p := privategraphql.Deployments{}
 	var query string
-	if admin == "yes" || adminEnv == "yes" {
-		query = `
+
+	query = `
 select
 a.pipeline_id, 
 a.name,
@@ -899,89 +910,14 @@ where a.pipeline_id = ? and a.deploy_active=true and a.environment_id=?
 order by a.created_at desc
 `
 
-		err := database.DBConn.Raw(
-			query, pipelineID, environmentID).Scan(&p).Error
+	err := database.DBConn.Raw(
+		query, pipelineID, environmentID).Scan(&p).Error
 
-		if err != nil {
-			if dpconfig.Debug == "true" {
-				logging.PrintSecretsRedact(err)
-			}
-			return nil, errors.New("Retrive pipelines database error.")
+	if err != nil {
+		if dpconfig.Debug == "true" {
+			logging.PrintSecretsRedact(err)
 		}
-
-	} else {
-
-		query = `select
-a.pipeline_id, 
-a.name,
-a.environment_id,
-a.from_environment_id,
-a.description,
-a.active,
-a.worker_group,
-a.created_at,
-a.updated_at,
-b.node_type,
-b.node_type_desc,
-a.version,
-a.deploy_active,
-b.online,
-scheduler.schedule,
-scheduler.schedule_type
-from deploy_pipelines a 
-left join (
-	select node_type, node_type_desc, pipeline_id, trigger_online as online, environment_id, version from deploy_pipeline_nodes where node_type='trigger'
-) b on a.pipeline_id=b.pipeline_id and a.environment_id = b.environment_id and a.version = b.version
-inner join (
-  select distinct resource_id, environment_id from (
-	(select 
-		p.resource_id,
-        p.environment_id
-		from 
-		permissions p
-		where 
-		p.subject = 'user' and 
-		p.subject_id = ? and
-		p.resource = 'specific_deployment' and
-		p.active = true
-		)
-		union
-		(
-		select
-		p.resource_id,
-        p.environment_id
-		from 
-		permissions p, permissions_accessg_users agu
-		where 
-		p.subject = 'access_group' and 
-		p.subject_id = agu.access_group_id and
-		agu.user_id = ? and
-		p.resource = 'specific_deployment' and
-		p.environment_id = agu.environment_id and 
-		p.active = true and
-		agu.active = true
-		)
-	) x
-
-) p on p.resource_id = a.pipeline_id and p.environment_id = a.environment_id
-left join scheduler on scheduler.pipeline_id = a.pipeline_id and scheduler.environment_id = a.environment_id
-where 
-a.pipeline_id = ? and a.deploy_active=true and a.environment_id=?
-order by a.created_at desc`
-
-		err := database.DBConn.Raw(
-			query, currentUser, currentUser, pipelineID, environmentID).Scan(&p).Error
-
-		if err != nil {
-			if dpconfig.Debug == "true" {
-				logging.PrintSecretsRedact(err)
-			}
-
-			if err != gorm.ErrRecordNotFound {
-				return nil, errors.New("Retrive pipelines database error.")
-			}
-		}
-
+		return nil, errors.New("Retrive pipelines database error.")
 	}
 
 	// err := database.DBConn.Select("pipeline_id", "name", "environment_id", "description", "active", "online", "worker_group", "created_at").Order("created_at desc").Where("environment_id = ?", environmentID).Find(&p).Error
@@ -999,6 +935,9 @@ func (r *queryResolver) GetDeployment(ctx context.Context, pipelineID string, en
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_deployments", ResourceID: environmentID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_to_here", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
 	}
 
@@ -1134,6 +1073,9 @@ func (r *queryResolver) GetDeployments(ctx context.Context, environmentID string
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_deployments", ResourceID: environmentID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_to_here", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 	}
 
 	_, outcomes, admin, adminEnv := permissions.MultiplePermissionChecks(perms)
@@ -1276,7 +1218,11 @@ func (r *queryResolver) GetDeploymentFlow(ctx context.Context, pipelineID string
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_deployments", ResourceID: environmentID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_to_here", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "run", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: pipelineID, Access: "read", EnvironmentID: environmentID},
 	}
@@ -1330,7 +1276,7 @@ func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID str
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: toEnvironmentID, Access: "write", EnvironmentID: toEnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_here", ResourceID: toEnvironmentID, Access: "write", EnvironmentID: toEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_to_here", ResourceID: toEnvironmentID, Access: "write", EnvironmentID: toEnvironmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)
@@ -1343,11 +1289,15 @@ func (r *queryResolver) GetNonDefaultWGNodes(ctx context.Context, pipelineID str
 	perms = []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: fromEnvironmentID, Access: "write", EnvironmentID: fromEnvironmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_all_pipelines", ResourceID: fromEnvironmentID, Access: "write", EnvironmentID: fromEnvironmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_from_here", ResourceID: fromEnvironmentID, Access: "write", EnvironmentID: fromEnvironmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_pipeline", ResourceID: pipelineID, Access: "deploy", EnvironmentID: fromEnvironmentID},
 	}
 
 	permOutcome, _, _, _ = permissions.MultiplePermissionChecks(perms)
+
+	if permOutcome == "denied" {
+		return []*privategraphql.NonDefaultNodes{}, errors.New("Requires permissions: environment_edit_all_pipelines")
+	}
 
 	if permOutcome == "denied" {
 		return []*privategraphql.NonDefaultNodes{}, errors.New("Requires permissions: environment_deploy_all_pipelines")
@@ -1425,9 +1375,13 @@ func (r *queryResolver) GetDeploymentRuns(ctx context.Context, deploymentID stri
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_environment", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_pipelines", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
-		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: deploymentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_all_deployments", ResourceID: environmentID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_deploy_to_here", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_edit_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "environment_run_all_deployments", ResourceID: environmentID, Access: "write", EnvironmentID: environmentID},
 		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: deploymentID, Access: "read", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: deploymentID, Access: "write", EnvironmentID: environmentID},
+		{Subject: "user", SubjectID: currentUser, Resource: "specific_deployment", ResourceID: deploymentID, Access: "run", EnvironmentID: environmentID},
 	}
 
 	permOutcome, _, _, _ := permissions.MultiplePermissionChecks(perms)

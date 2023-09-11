@@ -2,7 +2,7 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Button, Drawer, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
-import { useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown/index.jsx';
+// import { useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown/index.jsx';
 import { IOSSwitch } from '../../../Pipelines/Components/Drawers/SchedulerDrawer/IOSSwitch.jsx';
 import ApiKey from './ApiKey.jsx';
 import ApiTriggerExampleDrawer from '../../../Pipelines/Components/configureNodes/APITriggerNodeItem/ApiTriggerExampleDrawer/index.jsx';
@@ -15,9 +15,9 @@ if (host === '') {
 const PUBLIC = `${host}/publicapi/deployment/api-trigger/latest/`;
 const PRIVATE = `https://{{ HOST }}/privateapi/deployment/api-trigger/latest/`;
 
-const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, generateDeploymentTrigger, setDataSizeLimit }) => {
+const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, generateDeploymentTrigger, selectedEnvironment, setDataSizeLimit }) => {
     // Global state
-    const Environment = useGlobalEnvironmentState();
+    // const Environment = useGlobalEnvironmentState();
 
     // Local state
     const [isOpenExampleDrawer, setIsOpenExampleDrawer] = useState(false);
@@ -186,7 +186,7 @@ const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, generateDepl
                 <Box mb={10} />
 
                 {/* API Key */}
-                <ApiKey apiKeyActive={switches.apiKeyActive} generateDeploymentTrigger={generateDeploymentTrigger} environmentID={Environment.id.get()} triggerID={triggerID} />
+                <ApiKey apiKeyActive={switches.apiKeyActive} generateDeploymentTrigger={generateDeploymentTrigger} environmentID={selectedEnvironment} triggerID={triggerID} />
             </Box>
             <Drawer
                 anchor="right"

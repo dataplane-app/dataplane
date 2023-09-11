@@ -221,6 +221,7 @@ const useGetUsersHook = (setUsers, subjectsWithPermissions, environment_id) => {
         } else {
             // Don't add users that are already on the table
             setUsers(response.filter((a) => !subjectsWithPermissions.includes(a.user_id)));
+            // setUsers(response);
         }
     };
 };

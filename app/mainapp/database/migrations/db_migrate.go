@@ -27,7 +27,7 @@ import (
 
 func Migrate() {
 
-	migrateVersion := "0.0.78"
+	migrateVersion := "0.0.80"
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -92,7 +92,6 @@ func Migrate() {
 			&models.PipelineNodes{},
 			&models.PipelineEdges{},
 			&models.PipelineRuns{},
-			&models.PipelineApiTriggerRuns{},
 			&models.PipelineApiTriggers{},
 			&models.PipelineApiKeys{},
 			&models.ResourceTypeStruct{},
@@ -136,70 +135,12 @@ func Migrate() {
 			&models.DeployCodeFilesCache{},
 			&models.DeployCodeNodeCache{},
 			&models.DeploymentApiTriggers{},
-			&models.DeploymentApiTriggerRuns{},
 			&models.DeploymentApiKeys{},
 
 			// &models.Test{},
 		)
 		if err1 != nil {
 			panic(err1)
-		}
-
-		// ----- Specific migrations -----
-
-		// ---- NEW specific migration model ----
-
-		var migrationsMap = make(map[string]bool)
-		var migrationKey string = ""
-
-		var dbMigration []models.DatabaseMigrations
-		dbConn.Where("completed = ?", true).Find(&dbMigration)
-
-		for _, m := range dbMigration {
-			migrationsMap[m.MigrationKey] = m.Completed
-		}
-
-		// Migration of API keys to avoid the secret to be exposed and use an ID instead
-		// Used as an example, too few users to justify risk of using this migration, released as a breaking change instead.
-		migrationKey = "apikeys"
-		_, ok := migrationsMap[migrationKey]
-
-		// If the key does not exist then perform the migration
-		if ok == false {
-
-			// Wrap the migration into a transaction
-
-			errmigrate := dbConn.Transaction(func(tx *gorm.DB) error {
-
-				// // Run the migration for piplines
-				// if err := tx.Model(&models.PipelineApiKeys{}).Where("api_secret IS NULL").
-				// 	UpdateColumn("api_secret", gorm.Expr("api_key")).Error; err != nil {
-				// 	log.Println("Could not register migration for key: "+migrationKey, err)
-				// 	return err
-				// }
-
-				// // Run the migration for deployments
-				// if err := tx.Model(&models.DeploymentApiKeys{}).Where("api_secret IS NULL").
-				// 	UpdateColumn("api_secret", gorm.Expr("api_key")).Error; err != nil {
-				// 	log.Println("Could not register migration for key: "+migrationKey, err)
-				// 	return err
-				// }
-
-				if err := tx.Create(&models.DatabaseMigrations{
-					MigrationKey:     migrationKey,
-					Completed:        true,
-					MigrationVersion: migrateVersion,
-				}).Error; err != nil {
-					log.Println("Could not register migration for key: "+migrationKey, err)
-					return err
-				}
-				// return nil will commit the whole transaction
-				return nil
-			})
-
-			if errmigrate != nil {
-				panic("Could register specific migration for key: " + migrationKey)
-			}
 		}
 
 		// ------ Update the migration veriosn in platform table --------
@@ -267,6 +208,9 @@ func Migrate() {
 		}
 
 	}
+
+	// -------------- SPECIFIC MIGRATIONS --------------
+	SpecificMigrations(dbConn, migrateVersion)
 
 	// ---- load permissions data
 	dbConn.Clauses(clause.OnConflict{

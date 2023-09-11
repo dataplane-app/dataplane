@@ -25,7 +25,7 @@ const initialState = {
     apiKeyActive: false,
 };
 
-const DeployAPITRiggerTableDrawer = ({ handleClose, deploymentId }) => {
+const DeployAPITRiggerTableDrawer = ({ handleClose, deploymentId, selectedEnvironment }) => {
     // Global state
     const Environment = useGlobalEnvironmentState();
 
@@ -36,14 +36,14 @@ const DeployAPITRiggerTableDrawer = ({ handleClose, deploymentId }) => {
     const [switches, dispatch] = useReducer((switches, newState) => ({ ...switches, ...newState }), initialState);
 
     // Custom GraphQL hooks
-    const generateDeploymentTrigger = useGenerateDeploymentTriggerHook(Environment.id.get(), triggerID, switches, dispatch);
-    const getPipelineTriggerHook = useGetDeploymentTriggerHook(Environment.id.get(), setTriggerID, deploymentId, dispatch);
+    const generateDeploymentTrigger = useGenerateDeploymentTriggerHook(selectedEnvironment, triggerID, switches, dispatch);
+    const getPipelineTriggerHook = useGetDeploymentTriggerHook(selectedEnvironment, setTriggerID, deploymentId, dispatch);
 
     useEffect(() => {
         getPipelineTriggerHook();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [Environment.id.get()]);
+    }, [selectedEnvironment]);
 
     return (
         <Box position="relative" width="100%" mb={10}>
@@ -177,6 +177,8 @@ const DeployAPITRiggerTableDrawer = ({ handleClose, deploymentId }) => {
                     setIsOpenExampleDrawer(false);
                     setIsExamplePrivate(false);
                 }}>
+
+                    {/* This shows the examples of using curl or python as a client to API */}
                 <ApiTriggerExampleDrawer
                     handleClose={() => {
                         setIsOpenExampleDrawer(false);
