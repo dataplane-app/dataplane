@@ -27,7 +27,7 @@ import (
 
 func Migrate() {
 
-	migrateVersion := "0.0.76"
+	migrateVersion := "0.0.80"
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -78,6 +78,7 @@ func Migrate() {
 	if currentVersion.MigrationVersion != migrateVersion {
 
 		err1 := dbConn.AutoMigrate(
+			&models.DatabaseMigrations{},
 			&models.Users{},
 			&models.LogsPlatform{},
 			&models.AuthRefreshTokens{},
@@ -91,7 +92,6 @@ func Migrate() {
 			&models.PipelineNodes{},
 			&models.PipelineEdges{},
 			&models.PipelineRuns{},
-			&models.PipelineApiTriggerRuns{},
 			&models.PipelineApiTriggers{},
 			&models.PipelineApiKeys{},
 			&models.ResourceTypeStruct{},
@@ -135,7 +135,6 @@ func Migrate() {
 			&models.DeployCodeFilesCache{},
 			&models.DeployCodeNodeCache{},
 			&models.DeploymentApiTriggers{},
-			&models.DeploymentApiTriggerRuns{},
 			&models.DeploymentApiKeys{},
 
 			// &models.Test{},
@@ -144,26 +143,7 @@ func Migrate() {
 			panic(err1)
 		}
 
-		// constraint := ">= 0.0.1, <= 0.0.75"
-		// c, cerr := semver.NewConstraint(constraint)
-		// if cerr != nil {
-		// 	log.Println("Semver constaint check DB migration failed")
-		// }
-
-		// v, cerr2 := semver.NewVersion(migrateVersion)
-		// if cerr2 != nil {
-		// 	log.Println("Semver check DB migration failed")
-		// }
-
-		// a := c.Check(v)
-
-		// // --- specific version upgrade in semver range---
-		// if a {
-
-		// 	log.Println("Specific DB migration based on: ", constraint)
-
-		// }
-
+		// ------ Update the migration veriosn in platform table --------
 		if err := dbConn.Model(&models.Platform{}).Select("migration_version").Where("1 = 1").Update("migration_version", migrateVersion).Error; err != nil {
 			panic("Could not retrieve migration version")
 		}
@@ -203,7 +183,7 @@ func Migrate() {
 
 	}
 
-	// ----- Specific migrations -----
+	// ---- OLD specific migration model ----
 	checkval := gjson.Get(currentVersion.SpecificMigrations.String(), "code_folders.complete")
 
 	// If specific migration does not exist, run below.
@@ -228,6 +208,9 @@ func Migrate() {
 		}
 
 	}
+
+	// -------------- SPECIFIC MIGRATIONS --------------
+	SpecificMigrations(dbConn, migrateVersion)
 
 	// ---- load permissions data
 	dbConn.Clauses(clause.OnConflict{

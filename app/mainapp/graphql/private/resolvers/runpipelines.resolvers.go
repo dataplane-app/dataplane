@@ -61,7 +61,7 @@ func (r *mutationResolver) RunPipelines(ctx context.Context, pipelineID string, 
 	case "pipeline":
 		resp, err = pipelines.RunPipeline(pipelineID, environmentID, runID)
 	case "deployment":
-		resp, err = pipelines.RunDeployment(pipelineID, environmentID, runID)
+		resp, err = pipelines.RunDeployment(pipelineID, environmentID, runID, "latest")
 	default:
 		return &resp, errors.New("Run type not provided.")
 	}

@@ -5,7 +5,7 @@ import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetAccessGroups } from '../../../graphql/permissions/getAccessGroups.js';
-import { useGetUsers } from '../../../graphql/users/getUsers.js';
+import { useGetUsersFromEnvironment } from '../../../graphql/environments/getUsersFromEnvironment.js';
 import { useDeploymentPermissionsToUser } from '../../../graphql/permissions/deploymentPermissionsToUser.js';
 import { useDeploymentPermissionsToAccessGroup } from '../../../graphql/permissions/deploymentPermissionsToAccessGroup.js';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
@@ -37,7 +37,7 @@ const AddDeploymentPermissionsDrawer = ({ handleClose, subjectsWithPermissions, 
     const [permissionsState, setPermissionsState] = useState({ ...DEFAULT_OPTIONS });
 
     // Custom GraphQL hooks
-    const getUsers = useGetUsersHook(setUsers, subjectsWithPermissions);
+    const getUsers = useGetUsersHook(Environment.id.get(), setUsers, subjectsWithPermissions);
     const getAccessGroups = useGetAccessGroupsHook(setAccessGroups, Environment.id.get(), MeData.user_id.get(), subjectsWithPermissions);
     const deploymentPermissionsToUser = useDeploymentPermissionsToUserHook(permissionsState, refreshPermissions, handleClose);
     const deploymentPermissionsToAccessGroup = useDeploymentPermissionsToAccessGroupHook(permissionsState, refreshPermissions, handleClose);
@@ -190,15 +190,15 @@ const AddDeploymentPermissionsDrawer = ({ handleClose, subjectsWithPermissions, 
 export default AddDeploymentPermissionsDrawer;
 
 // ----------- Custom Hooks --------------------------------
-const useGetUsersHook = (setUsers, subjectsWithPermissions) => {
+const useGetUsersHook = (environmentID, setUsers, subjectsWithPermissions) => {
     // GraphQL hook
-    const getUsers = useGetUsers();
+    const getUsers = useGetUsersFromEnvironment();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     // Get members
     return async () => {
-        const response = await getUsers();
+        const response = await getUsers({environment_id: environmentID});
 
         if (response === null) {
             setUsers([]);
@@ -209,7 +209,8 @@ const useGetUsersHook = (setUsers, subjectsWithPermissions) => {
             response.errors.map((err) => enqueueSnackbar(err.message, { variant: 'error' }));
         } else {
             // Don't add users that are already on the table
-            setUsers(response.filter((a) => !subjectsWithPermissions.includes(a.user_id)));
+            // setUsers(response.filter((a) => !subjectsWithPermissions.includes(a.user_id)));
+            setUsers(response);
         }
     };
 };

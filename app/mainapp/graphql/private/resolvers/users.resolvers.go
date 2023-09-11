@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/auth"
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
@@ -426,14 +426,7 @@ func (r *queryResolver) GetUsersFromEnvironment(ctx context.Context, environment
 	err := database.DBConn.Raw(
 		`
 	select
-		users.user_id,
-        users.user_type,
-        users.first_name,
-        users.last_name,
-        users.email,
-        users.job_title,
-        users.timezone,
-        users.status
+		users.*
     from
         users,
         environment_user eu

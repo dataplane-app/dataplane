@@ -141,6 +141,13 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		return
 	}
 
+	// ----- get data inputs -------
+	ctxRedis := context.Background()
+	redisData := modelmain.RedisAPIData{}
+	if err := database.RedisConn.HGetAll(ctxRedis, "api-trigger-"+wrkerconfig.EnvID+"-"+msg.RunID).Scan(&redisData); err != nil {
+		log.Println("Redis get leader error:", err)
+	}
+
 	for _, v := range msg.Commands {
 		// Print the log timestamps
 		clog.PrintTimestamp = true
@@ -275,6 +282,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		cmd.Env = append(cmd.Env, "DP_RUNID="+msg.RunID)
 		cmd.Env = append(cmd.Env, "DP_TASKID="+msg.TaskID)
 		cmd.Env = append(cmd.Env, "DP_ENVID="+msg.EnvironmentID)
+		cmd.Env = append(cmd.Env, "DP_API_DATA="+redisData.Data)
 
 		// Request the OS to assign process group to the new process, to which all its children will belong
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}

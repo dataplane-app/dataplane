@@ -70,6 +70,8 @@ const Deploy = () => {
     // Local state for trigger
     const [apiDrawerOpen, setApiDrawerOpen] = useState(false);
     const [triggerID, setTriggerID] = useState(() => uuidv4());
+    const [dataSizeLimit, setDataSizeLimit] = useState(5);
+    const [dataTTL, setDataTTL] = useState(86400);
     const [switches, dispatch] = useReducer((switches, newState) => ({ ...switches, ...newState }), initialState);
 
     // Theme hook
@@ -95,8 +97,8 @@ const Deploy = () => {
     
     
     // Graphql API Trigger Hooks
-    const getDeploymentTriggerHook = useGetDeploymentTriggerHook(Environment.id.get(), setTriggerID, dispatch);
-    const generateDeploymentTrigger = useGenerateDeploymentTriggerHook(Environment.id.get(), triggerID, switches, dispatch);
+    const getDeploymentTriggerHook = useGetDeploymentTriggerHook(selectedEnvironment?.id, setTriggerID, dispatch);
+    const generateDeploymentTrigger = useGenerateDeploymentTriggerHook(selectedEnvironment?.id, triggerID, switches, dataSizeLimit, dataTTL, dispatch);
 
     // ------ ON PAGE LOAD ---------
     // ------ Get data for environments, pipeline and deployment on load ---------
@@ -399,8 +401,7 @@ const Deploy = () => {
 
                                     <Typography component="h3" variant="h3" color="text.primary" fontWeight="700" fontSize="0.875rem">
                                         Public -
-                                        <span style={{ color: switches.publicLive ? theme.palette.success.main : '#F80000' }}>{switches.publicLive ? ' Live ' : ' Offline '}</span>-
-                                        Key Protected
+                                        <span style={{ color: switches.publicLive ? theme.palette.success.main : '#F80000' }}>{switches.publicLive ? ' Live ' : ' Offline '}</span>
                                     </Typography>
                                     <Typography fontSize="0.875rem" mb={4}>
                                         {PUBLIC + triggerID}
@@ -411,7 +412,6 @@ const Deploy = () => {
                                         <span style={{ color: switches.privateLive ? theme.palette.success.main : '#F80000' }}>
                                             {switches.privateLive ? ' Live ' : ' Offline '}
                                         </span>
-                                        - No key
                                     </Typography>
                                     <Typography fontSize="0.875rem" mb={6}>
                                         {PRIVATE + triggerID}
@@ -453,7 +453,7 @@ const Deploy = () => {
                                     <Typography mb={1} variant="body1" color="text.primary" fontWeight="400" fontSize="0.875rem" maxWidth={480}>
                                         {/* NodeID: {a.nodeID} <br /> */}
                                         Description: {a.description} <br />
-                                        Current process group: {a.workerGroup} - {a.deployWorkerGroup}
+                                        Current process group: {a.workerGroup} | {a.deployWorkerGroup}
                                     </Typography>
 
                                     <Autocomplete
@@ -490,6 +490,8 @@ const Deploy = () => {
                         handleClose={() => setApiDrawerOpen(false)}
                         triggerID={triggerID}
                         switches={switches}
+                        setDataSizeLimit={setDataSizeLimit}
+                        selectedEnvironment={selectedEnvironment?.id}
                         generateDeploymentTrigger={generateDeploymentTrigger}
                     />
                 </Drawer>
@@ -674,7 +676,7 @@ const useGetDeploymentTriggerHook = (environmentID, setTriggerID, dispatch) => {
 
 // ---------- Custom Hooks
 
-const useGenerateDeploymentTriggerHook = (environmentID, triggerID, switches, dispatch) => {
+const useGenerateDeploymentTriggerHook = (environmentID, triggerID, switches, dataSizeLimit, dataTTL, dispatch) => {
     // GraphQL hook
     const generateDeploymentTrigger = useGenerateDeploymentTrigger();
 
@@ -694,6 +696,8 @@ const useGenerateDeploymentTriggerHook = (environmentID, triggerID, switches, di
             apiKeyActive,
             publicLive,
             privateLive,
+            dataSizeLimit,
+            dataTTL,
             ...update,
         });
 

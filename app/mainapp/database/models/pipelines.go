@@ -124,6 +124,7 @@ func (PipelineApiKeys) TableName() string {
 
 type PipelineApiKeys struct {
 	APIKey        string     `gorm:"PRIMARY_KEY;type:varchar(64);" json:"api_key"`
+	APISecret     string     `gorm:"type:varchar(64);" json:"api_secret"`
 	APIKeyTail    string     `json:"api_key_tail"`
 	TriggerID     string     `json:"trigger_id"`
 	PipelineID    string     `gorm:"index:idx_pipelineid_api_keys;" json:"pipeline_id"`

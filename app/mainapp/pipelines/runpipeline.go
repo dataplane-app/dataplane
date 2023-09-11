@@ -15,14 +15,13 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/worker"
 
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 )
 
 type Command struct {
 	Command string `json:command`
 }
 
-func RunPipeline(pipelineID string, environmentID string, runID string, runJson ...datatypes.JSON) (models.PipelineRuns, error) {
+func RunPipeline(pipelineID string, environmentID string, runID string) (models.PipelineRuns, error) {
 
 	// start := time.Now().UTC()
 
@@ -46,27 +45,27 @@ func RunPipeline(pipelineID string, environmentID string, runID string, runJson 
 	var inputData bool = false
 
 	// Check if a runJson is submitted
-	if runJson != nil && len(runJson[0]) != 0 {
+	// if runJson != nil && len(runJson[0]) != 0 {
 
-		inputData = true
-		run := models.PipelineApiTriggerRuns{
-			RunID:         runID,
-			PipelineID:    pipelineID,
-			EnvironmentID: environmentID,
-			RunType:       "pipeline",
-			RunJSON:       runJson[0],
-			CreatedAt:     time.Now().UTC(),
-		}
+	// 	inputData = true
+	// 	run := models.PipelineApiTriggerRuns{
+	// 		RunID:         runID,
+	// 		PipelineID:    pipelineID,
+	// 		EnvironmentID: environmentID,
+	// 		RunType:       "pipeline",
+	// 		RunJSON:       runJson[0],
+	// 		CreatedAt:     time.Now().UTC(),
+	// 	}
 
-		err = database.DBConn.Create(&run).Error
-		if err != nil {
+	// 	err = database.DBConn.Create(&run).Error
+	// 	if err != nil {
 
-			if dpconfig.Debug == "true" {
-				logging.PrintSecretsRedact(err)
-			}
-			return models.PipelineRuns{}, err
-		}
-	}
+	// 		if dpconfig.Debug == "true" {
+	// 			logging.PrintSecretsRedact(err)
+	// 		}
+	// 		return models.PipelineRuns{}, err
+	// 	}
+	// }
 
 	// Create a run
 	run := models.PipelineRuns{

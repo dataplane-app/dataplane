@@ -45,7 +45,6 @@ var ResourceType = []*ResourceTypeStruct{
 	{Code: "environment_all_pipelines", Level: "environment", Label: "View all pipelines", Access: "read"},
 	{Code: "environment_edit_all_pipelines", Level: "environment", Label: "Edit all pipelines", Access: "write"},
 	{Code: "environment_run_all_pipelines", Level: "environment", Label: "Run all pipelines", Access: "write"},
-	{Code: "environment_run_all_deployments", Level: "environment", Label: "Run all deployments", Access: "write"},
 	{Code: "environment_create_pipelines", Level: "environment", Label: "Create pipelines", Access: "write"},
 	{Code: "environment_permissions_pipelines", Level: "environment", Label: "Manage pipeline permissions", Access: "write"},
 
@@ -63,11 +62,14 @@ var ResourceType = []*ResourceTypeStruct{
 	{Code: "environment_add_process_group", Level: "environment", Label: "Add process groups to environment", Access: "write"},
 
 	// To Deployments
-	{Code: "environment_deploy_here", Level: "environment", Label: "Deploy pipelines to this environment", Access: "write"},
+	{Code: "environment_all_deployments", Level: "environment", Label: "View all deployments", Access: "read"},
+	{Code: "environment_deploy_to_here", Level: "environment", Label: "Deploy pipelines to this environment", Access: "write"},
+	{Code: "environment_run_all_deployments", Level: "environment", Label: "Run all deployments", Access: "write"},
+	{Code: "environment_edit_all_deployments", Level: "environment", Label: "Edit all deployments", Access: "write"},
+	{Code: "environment_assign_permissions_all_deployments", Level: "environment", Label: "Assign permissions to all deployments", Access: "write"},
 
 	// From deployments
-	{Code: "environment_deploy_all_pipelines", Level: "environment", Label: "Deploy pipelines from this environment", Access: "write"},
-	{Code: "environment_all_deployments", Level: "environment", Label: "View all deployments", Access: "read"},
+	{Code: "environment_deploy_from_here", Level: "environment", Label: "Deploy pipelines from this environment", Access: "write"},
 
 	// Specific level
 	// {Code: "specific_worker", Level: "specific", Label: "Worker - ${{worker_name}}",},

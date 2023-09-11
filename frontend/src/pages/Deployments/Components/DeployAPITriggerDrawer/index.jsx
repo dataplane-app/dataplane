@@ -1,11 +1,12 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Drawer, Typography } from '@mui/material';
+import { Box, Button, Drawer, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
-import { useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown/index.jsx';
+// import { useGlobalEnvironmentState } from '../../../../components/EnviromentDropdown/index.jsx';
 import { IOSSwitch } from '../../../Pipelines/Components/Drawers/SchedulerDrawer/IOSSwitch.jsx';
 import ApiKey from './ApiKey.jsx';
 import ApiTriggerExampleDrawer from '../../../Pipelines/Components/configureNodes/APITriggerNodeItem/ApiTriggerExampleDrawer/index.jsx';
+import { useForm } from 'react-hook-form';
 
 let host = import.meta.env.VITE_DATAPLANE_ENDPOINT;
 if (host === '') {
@@ -14,13 +15,22 @@ if (host === '') {
 const PUBLIC = `${host}/publicapi/deployment/api-trigger/latest/`;
 const PRIVATE = `https://{{ HOST }}/privateapi/deployment/api-trigger/latest/`;
 
-const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, generateDeploymentTrigger }) => {
+const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, generateDeploymentTrigger, selectedEnvironment, setDataSizeLimit }) => {
     // Global state
-    const Environment = useGlobalEnvironmentState();
+    // const Environment = useGlobalEnvironmentState();
 
     // Local state
     const [isOpenExampleDrawer, setIsOpenExampleDrawer] = useState(false);
     const [isExamplePrivate, setIsExamplePrivate] = useState(false);
+
+        // React hook form
+        const {
+            register,
+            handleSubmit,
+            getValues,
+            formState: { errors },
+            reset,
+        } = useForm();
 
     return (
         <Box position="relative" width="100%" mb={10}>
@@ -69,7 +79,7 @@ const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, generateDepl
                         </Typography>
                     </Box>
                     <Typography variant="subtitle2" fontSize="0.75rem" fontWeight={400}>
-                        Anyone with this link can trigger this workflow. To use a specific version, change “latest” with this format “v1.2.4”
+                        To use a specific version, change “latest” with this format “1.2.4”
                     </Typography>
                     <Box display="flex" alignItems="center" mt={3}>
                         <IOSSwitch
@@ -143,8 +153,40 @@ const DeployAPITRiggerDrawer = ({ handleClose, triggerID, switches, generateDepl
 
                 <Box mb={10} />
 
+                <Box>
+                    <Typography variant="body1" fontSize="1.0625rem" lineHeight={2}>
+                        API input data limits
+                    </Typography>
+                    <Typography fontSize="0.75rem">
+                        Using the API trigger, data can be submitted as json. This data can be used across your pipeline. These settings provide limits on how much data can be submitted. The data size limit restricts the size of data in megabytes. The TTL limit is the amount of time in seconds data is retained for use across the pipeline until deleted. The default provided is 24 hours or 86400 seconds.
+                        <br /><br />There is global limit set at the platform level for both these values, speak to your administrator if these need to be lifted.
+                    </Typography>
+
+                    <TextField
+                        label="Data size (Megabytes)"
+                        id="dataSize"
+                        size="small"
+                        defaultValue={5}
+                        required
+                        type="number"
+                        sx={{ mt: 2, fontSize: '.75rem' }}
+                        {...register('dataSize', { required: true })}
+                    />&nbsp;&nbsp;
+
+                    <TextField label="Data TTL (Seconds)" id="dataTTL" size="small"
+                               type="number"
+                               defaultValue={86400}
+                               required
+                               sx={{ mt: 2, mb: 2, fontSize: '.75rem' }}
+                               {...register('dataTTL', { required: true, min: 1 })}
+                    />
+
+                </Box>
+
+                <Box mb={10} />
+
                 {/* API Key */}
-                <ApiKey apiKeyActive={switches.apiKeyActive} generateDeploymentTrigger={generateDeploymentTrigger} environmentID={Environment.id.get()} triggerID={triggerID} />
+                <ApiKey apiKeyActive={switches.apiKeyActive} generateDeploymentTrigger={generateDeploymentTrigger} environmentID={selectedEnvironment} triggerID={triggerID} />
             </Box>
             <Drawer
                 anchor="right"
