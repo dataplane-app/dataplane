@@ -76,6 +76,11 @@ func TestApiTriggerDeployments(t *testing.T) {
 	database.DBConn.Where("environment_id =?", envID).Delete(&models.PipelineNodes{})
 	database.DBConn.Where("environment_id =?", envID).Delete(&models.PipelineEdges{})
 	database.DBConn.Where("environment_id =?", envID).Delete(&models.Pipelines{})
+
+	database.DBConn.Where("environment_id =?", envID).Delete(&models.DeployPipelineNodes{})
+	database.DBConn.Where("environment_id =?", envID).Delete(&models.DeployPipelineEdges{})
+	database.DBConn.Where("environment_id =?", envID).Delete(&models.DeployPipelines{})
+	database.DBConn.Where("environment_id =?", envID).Delete(&models.DeploymentApiTriggers{})
 	// -------- Create pipeline -------------
 
 	mutation := `mutation {
@@ -99,6 +104,8 @@ func TestApiTriggerDeployments(t *testing.T) {
 
 	// -------- Update pipeline -------------
 	pipelineId := jsoniter.Get(response, "data", "addPipeline").ToString()
+
+	log.Println("PIPELINE ID: ", pipelineId, "ENV ID:", envID)
 
 	mutation = `mutation {
 		updatePipeline(
@@ -286,7 +293,9 @@ func TestApiTriggerDeployments(t *testing.T) {
 		  triggerID: "triggerID", 
 		  apiKeyActive: true, 
 		  publicLive: true,
-		  privateLive: true)
+		  privateLive: true, 
+		  dataSizeLimit: 5,
+		  dataTTL: 86400)
 	}`
 
 	response, httpResponse = testutils.GraphQLRequestPrivate(mutation, accessToken, "{}", graphQLUrlPrivate, t)
@@ -370,7 +379,7 @@ func TestApiTriggerDeployments(t *testing.T) {
 	// -------- Run deployment API trigger -------------
 	client := &http.Client{}
 	data := `{}`
-	url := testutils.APITriggerPPublic + "/latest/triggerID"
+	url := testutils.APIDeploymentTriggerPPublic + "/latest/triggerID"
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(data)))
 	if err != nil {
@@ -395,7 +404,7 @@ func TestApiTriggerDeployments(t *testing.T) {
 	log.Println(string(responseBody))
 
 	if strings.Contains(string(response), `"errors":`) {
-		t.Errorf("Error in graphql response")
+		t.Errorf("Error in API response")
 	}
 
 	assert.Equalf(t, http.StatusOK, httpResponse.StatusCode, "Run deployment API trigger 200 status code")

@@ -14,5 +14,6 @@ var App *fiber.App
 var GraphQLUrlPublic string = "http://localhost:9000/app/public/graphql"
 var GraphQLUrlPrivate string = "http://localhost:9000/app/private/graphql"
 var RefreshTokenUrl string = "http://localhost:9000/app/refreshtoken"
-var APITriggerPPublic string = "http://localhost:9000/publicapi/api-trigger"
+var APIPipelineTriggerPPublic string = "http://localhost:9000/publicapi/api-trigger"
+var APIDeploymentTriggerPPublic string = "http://localhost:9000/publicapi/deployment/api-trigger"
 var JWTToken []byte
