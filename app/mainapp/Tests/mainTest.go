@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"syscall"
 	"testing"
 
 	workerroutes "github.com/dataplane-app/dataplane/app/workers/routes"
@@ -268,10 +267,6 @@ func runTests() {
 	var stdoutBuf, stderrBuf bytes.Buffer
 	cmd.Stdout = io.MultiWriter(os.Stdout, &stdoutBuf)
 	cmd.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
-
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Pdeathsig: syscall.SIGTERM,
-	}
 
 	err := cmd.Run()
 	if err != nil {
