@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine as builder
+FROM golang:1.21-alpine as builder
 
 RUN mkdir -p /go/src/build
 
@@ -14,7 +14,7 @@ ARG SKAFFOLD_GO_GCFLAGS
 RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane app/mainapp/server.go
 
 
-FROM node:16.10.0-bullseye-slim as builder2
+FROM node:18.17 as builder2
 
 RUN mkdir -p /node
 RUN mkdir -p /node/app/mainapp/frontbuild
@@ -32,7 +32,7 @@ RUN yarn
 RUN yarn builddocker
 
 
-FROM alpine:3.15
+FROM alpine:3.18
 
 ENV TZ=UTC
 
