@@ -1,7 +1,7 @@
 import { Grid, useTheme } from '@mui/material';
 import NotFoundAnimationData from '../assets/animations/not_found.json';
 import NotFoundDarkAnimationData from '../assets/animations/not_found_dark.json';
-import useWindowSize from '../hooks/useWindowsSize';
+import useWindowSize from './CodeEditor/useWindowsSize.jsx';
 import "@lottiefiles/lottie-player";
 
 const NotFound = (props) => {

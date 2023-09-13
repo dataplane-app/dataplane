@@ -1,3 +1,17 @@
+### Test Docker images 
+
+```shell
+# From root folder of this repo
+
+# Remove all volumes
+docker-compose -f docker-compose-test-dockerimage.yaml down -v
+
+# Build and run
+docker-compose -D -f docker-compose-test-dockerimage.yaml up --build &> logsdocker.txt
+```
+
+Go to: http://localhost:9002/webapp/
+
 ### Python setup 
 ```
 # Specify the location to pip.conf

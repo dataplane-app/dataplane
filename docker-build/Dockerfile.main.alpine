@@ -16,6 +16,26 @@ RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane app/mainapp/server.g
 
 FROM node:18.17 as builder2
 
+# FROM ubuntu:22.04 as builder2
+
+# RUN apt update
+# RUN apt upgrade -y
+# RUN apt install -y ca-certificates curl gnupg
+
+# RUN mkdir -p /etc/apt/keyrings
+# RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+
+# ENV NODE_MAJOR=18
+# RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+
+# RUN apt update
+# RUN apt install -y nodejs
+
+# RUN node -v
+# RUN npm -v
+
+# RUN npm install -g yarn
+
 RUN mkdir -p /node
 RUN mkdir -p /node/app/mainapp/frontbuild
 

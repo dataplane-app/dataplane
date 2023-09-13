@@ -3,7 +3,7 @@ version: '2.4'
 services:
 
   redis-service:
-    image: redis:7.0.5-bullseye
+    image: redis:7.2-alpine
     ports:
       - 6379
     healthcheck:
@@ -27,12 +27,8 @@ services:
     # restart: always
 
   nats:
-    image: nats:2.7.4-scratch
+    image: nats:2.9-scratch
     command:
-      - "--cluster"
-      - "nats://0.0.0.0:6222"
-      - "--http_port"
-      - "8222"
       - "--port"
       - "4222"
 

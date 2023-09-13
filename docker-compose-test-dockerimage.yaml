@@ -2,7 +2,7 @@ version: '2.4'
 
 services:
 
-  redis-service:
+  redis-service-test:
     image: redis:7.2-alpine
     command: redis-server --save "" --appendonly no
     ports:
@@ -13,40 +13,42 @@ services:
       timeout: 3s
       retries: 5
 
-  postgres:
+  postgres-test:
     image: timescale/timescaledb:latest-pg15
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "Hello123!"
       POSTGRES_DB: "dataplane"
     volumes:
-      - dataplane-postgres:/var/lib/postgresql/data
+      - dataplane-postgres-test:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 30s
       retries: 5
 
-  nats:
+  nats-test:
     image: nats:2.9-scratch
     command:
       - "--port"
       - "4222"
 
-  mainapp:
-    image: dataplane/dataplane:latest
+  mainapp-test:
+    build:
+      context: .
+      dockerfile: docker-build/Dockerfile.main.alpine
     ports:
-      - 9001:9001
+      - 9002:9002
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
-      DP_DB_HOST: postgres
+      DP_DB_HOST: postgres-test
       DP_DB_USER: postgres
       DP_DB_SSL: "disable"
       DP_DB_PORT: "5432"
       DP_DB_DATABASE: "dataplane"
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
-      DP_PORT: "9001"
-      DP_NATS: "nats://nats:4222"
+      DP_PORT: "9002"
+      DP_NATS: "nats://nats-test:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
@@ -58,7 +60,7 @@ services:
       DP_CODE_FILE_STORAGE: "Database"
       DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
       DP_DISTRIBUTED_MODE: "NO"
-      DP_REDIS_HOST: "redis-service"
+      DP_REDIS_HOST: "redis-service-test"
       DP_REDIS_PORT: "6379"
       DP_REDIS_PASSWORD: ""
       DP_REDIS_DB: "0"
@@ -67,19 +69,25 @@ services:
       DP_ALLOW_ORIGINS: "http://localhost:3000, http://localhost:9000"
 
   dataplane-worker:
-    image: dataplane/dataplane-worker-python:latest
+    build:
+      context: .
+      dockerfile: docker-build/Dockerfile.workerpython.debian
     deploy:
-      replicas: 1
+      replicas: 2
+      resources:
+          limits:
+            cpus: "0.5"
+            memory: 1G
     environment:
       DP_CODE_FOLDER: "/dataplane/code-files/"
-      DP_DB_HOST: postgres
+      DP_DB_HOST: postgres-test
       DP_DB_USER: postgres
       DP_DB_SSL: "disable"
       DP_DB_PORT: "5432"
       DP_DB_DATABASE: "dataplane"
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
-      DP_NATS: "nats://nats:4222"
+      DP_NATS: "nats://nats-test:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
@@ -98,47 +106,10 @@ services:
       DP_CODE_FILE_STORAGE: "Database"
       DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
       DP_DISTRIBUTED_MODE: "NO"
-      DP_REDIS_HOST: "redis-service"
-      DP_REDIS_PORT: "6379"
-      DP_REDIS_PASSWORD: ""
-      DP_REDIS_DB: "0"
-
-  dataplane-worker-prod:
-    image: dataplane/dataplane-worker-python:latest
-    deploy:
-      replicas: 1
-    environment:
-      DP_CODE_FOLDER: "/dataplane/code-files/"
-      DP_DB_HOST: postgres
-      DP_DB_USER: postgres
-      DP_DB_SSL: "disable"
-      DP_DB_PORT: "5432"
-      DP_DB_DATABASE: "dataplane"
-      secret_db_pwd: "Hello123!"
-      DP_DATABASE: "timescaledb"
-      DP_NATS: "nats://nats:4222"
-      DP_MODE: "development"
-      DP_DEBUG: "true"
-      DP_DB_DEBUG: "false"
-      DP_MQ_DEBUG: "false"
-      DP_METRIC_DEBUG: "false"
-      DP_SCHEDULER_DEBUG: "false"
-      DP_WORKER_HEARTBEAT_SECONDS: "1"
-      DP_WORKER_GROUP: "python_prod"
-      DP_WORKER_CMD: "/bin/sh"
-      DP_WORKER_TYPE: "vm"
-      DP_WORKER_LB: "roundrobin"
-      DP_WORKER_ENV: "Production"
-      DP_WORKER_PORT: "9005"
-      DP_WORKER_LANGUAGES: "Python"
-      DP_WORKER_LOAD_PACKAGES: "Python"
-      DP_CODE_FILE_STORAGE: "Database"
-      DP_DFS_CODE_FOLDER: "/dataplane/dfs-code-files/"
-      DP_DISTRIBUTED_MODE: "NO"
-      DP_REDIS_HOST: "redis-service"
+      DP_REDIS_HOST: "redis-service-test"
       DP_REDIS_PORT: "6379"
       DP_REDIS_PASSWORD: ""
       DP_REDIS_DB: "0"
 
 volumes:
-  dataplane-postgres:
+  dataplane-postgres-test:
