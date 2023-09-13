@@ -3,7 +3,8 @@ version: '2.4'
 services:
 
   redis-service:
-    image: redis:7.0.5-bullseye
+    image: redis:7.2-alpine
+    command: redis-server --save "" --appendonly no
     ports:
       - 6379
     healthcheck:
@@ -13,7 +14,7 @@ services:
       retries: 5
 
   postgres-test:
-    image: timescale/timescaledb:2.5.1-pg14
+    image: timescale/timescaledb:latest-pg15
     ports:
       - 54321:5432
     environment:
@@ -29,34 +30,16 @@ services:
     # restart: always
 
   nats:
-    image: nats:2.7.4-scratch
+    image: nats:2.9-scratch
     command:
-      - "--cluster"
-      - "nats://0.0.0.0:6222"
-      - "--http_port"
-      - "8222"
       - "--port"
       - "4222"
-
-  nats-r:
-    image: nats:2.7.4-scratch
-    command:
-      - "--cluster"
-      - "nats://0.0.0.0:6222"
-      - "--http_port"
-      - "8222"
-      - "--port"
-      - "4222"
-      - "--routes"
-      - "nats://nats:6222"
-    deploy:
-      replicas: 2
 
   mainapp-cypresstest:
     container_name: mainapp-cypresstest
     build:
       context: ./
-      dockerfile: cypress/Dockerfile.main.alpine
+      dockerfile: docker-build/Dockerfile.main.alpine
     ports:
       - 9002:9001
     environment:
@@ -69,7 +52,7 @@ services:
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
       DP_PORT: "9001"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
@@ -99,7 +82,7 @@ services:
   mainapp2-cypresstest:
     build:
       context: ./
-      dockerfile: cypress/Dockerfile.main.alpine
+      dockerfile: docker-build/Dockerfile.main.alpine
     deploy:
       replicas: 1
     environment:
@@ -112,7 +95,7 @@ services:
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
       DP_PORT: "9001"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
@@ -141,7 +124,7 @@ services:
   dataplane-worker-cypresstest:
     build:
       context: ./
-      dockerfile: cypress/Dockerfile.workerpython.debian
+      dockerfile: docker-build/Dockerfile.workerpython.debian
     # mem_limit: 512MB
     # cpus: 1.5
     deploy:
@@ -155,7 +138,7 @@ services:
       DP_DB_DATABASE: "testcypress"
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
@@ -187,7 +170,7 @@ services:
   dataplane-worker-cypresstest-prod:
     build:
       context: ./
-      dockerfile: cypress/Dockerfile.workerpython.debian
+      dockerfile: docker-build/Dockerfile.workerpython.debian
     # mem_limit: 512MB
     # cpus: 1.5
     deploy:
@@ -201,7 +184,7 @@ services:
       DP_DB_DATABASE: "testcypress"
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"

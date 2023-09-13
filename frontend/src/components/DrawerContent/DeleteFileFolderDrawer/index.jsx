@@ -5,8 +5,8 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useSnackbar } from 'notistack';
 import { useGlobalEnvironmentState } from '../../EnviromentDropdown';
 import { Downgraded } from '@hookstate/core';
-import { findNodeById, isFolder, removeById } from '../../EditorPage/FileManager/functions';
-import { useGlobalEditorState } from '../../../pages/Pipelines/Editor.jsx';
+import { findNodeById, isFolder, removeById } from '../../../pages/CodeEditor/components/FileManager/functions';
+import { useGlobalEditorState } from '../../../pages/CodeEditor/Editor.jsx';
 import { useDeleteFolderNode } from '../../../graphql/codeEditor/deleteFolderNode.js';
 import { useDeleteFileNode } from '../../../graphql/codeEditor/deleteFileNode.js';
 

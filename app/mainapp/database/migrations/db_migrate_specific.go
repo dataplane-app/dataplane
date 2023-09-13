@@ -27,10 +27,9 @@ func SpecificMigrations(dbConn *gorm.DB, migrateVersion string) {
 	// Migration of API keys to avoid the secret to be exposed and use an ID instead
 	// Used as an example, too few users to justify risk of using this migration, released as a breaking change instead.
 	migrationKey = "apikeys"
-	_, ok := migrationsMap[migrationKey]
 
 	// If the key does not exist then perform the migration
-	if ok == false {
+	if migrationsMap[migrationKey] == false {
 
 		// Wrap the migration into a transaction
 
@@ -55,9 +54,8 @@ func SpecificMigrations(dbConn *gorm.DB, migrateVersion string) {
 
 	/* To remove old permission values for deployments - caused an issue with checking and available permissions in drop down */
 	migrationKey = "old_deploy_permission"
-	_, ok = migrationsMap[migrationKey]
 	// If the key does not exist then perform the migration
-	if ok == false {
+	if migrationsMap[migrationKey] == false {
 
 		errmigrate := dbConn.Transaction(func(tx *gorm.DB) error {
 
@@ -77,9 +75,9 @@ func SpecificMigrations(dbConn *gorm.DB, migrateVersion string) {
 
 	/* To remove unique constraints on api triggers which causes an issue where the same deployments to different environments canr be added */
 	migrationKey = "remove_deploy_uniqueconstraint_api"
-	_, ok = migrationsMap[migrationKey]
+
 	// If the key does not exist then perform the migration
-	if ok == false {
+	if migrationsMap[migrationKey] == false {
 
 		errmigrate := dbConn.Transaction(func(tx *gorm.DB) error {
 

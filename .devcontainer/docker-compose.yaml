@@ -48,7 +48,7 @@ services:
     # restart: always
 
   nats:
-    image: nats:2.7.4-scratch
+    image: nats:2.9-scratch
     command:
       - "--debug"
       - "--cluster"
