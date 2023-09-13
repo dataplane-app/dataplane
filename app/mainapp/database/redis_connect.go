@@ -51,7 +51,7 @@ func RedisConnect() {
 	}
 
 	if errfinal != nil {
-		log.Panic("😩 Redis: connection failure: %v", err.Error())
+		log.Panic("😩 Redis: connection failure: ", err.Error())
 	}
 
 }

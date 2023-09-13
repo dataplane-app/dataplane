@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"strings"
+	"syscall"
 	"testing"
 
 	workerroutes "github.com/dataplane-app/dataplane/app/workers/routes"
@@ -261,13 +265,44 @@ func runTests() {
 	cmd := exec.Command("go", "test", "-v", "./...")
 	cmd.Env = os.Environ()
 
-	cmd.Stdout = os.Stdout
+	var stdoutBuf, stderrBuf bytes.Buffer
+	cmd.Stdout = io.MultiWriter(os.Stdout, &stdoutBuf)
+	cmd.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
 
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Pdeathsig: syscall.SIGTERM,
 	}
 
-	if err := cmd.Wait(); err != nil {
-		log.Fatal(err)
+	err := cmd.Run()
+	if err != nil {
+		log.Fatalf("cmd.Run() failed with %s\n", err)
 	}
+	outStr, errStr := string(stdoutBuf.Bytes()), string(stderrBuf.Bytes())
+	fmt.Printf("\nout:\n%s\nerr:\n%s\n", outStr, errStr)
+
+	// cmd.Stdout = os.Stdout
+	// cmd.Stderr = os.Stderr
+
+	// stderr, errpipe := cmd.StderrPipe()
+	// if errpipe != nil {
+	// 	log.Printf("Pipe err:", errpipe)
+	// }
+
+	// // read command's stdout line by line
+	// in := bufio.NewScanner(stderr)
+
+	// for in.Scan() {
+	// 	log.Printf(in.Text()) // write each line to your log, or anything you need
+	// }
+	// if err := in.Err(); err != nil {
+	// 	log.Printf("error exeec: %s", err)
+	// }
+
+	// if err := cmd.Run(); err != nil {
+	// 	log.Fatal("Run tests exec command error:", err)
+	// }
+
+	// if err := cmd.Wait(); err != nil {
+	// 	log.Fatal("Run tests exec command error:", err)
+	// }
 }
