@@ -16,7 +16,7 @@ jobs:
       # Label used to access the service container
       postgres:
         # Docker Hub image
-        image: timescale/timescaledb:2.5.1-pg14
+        image: timescale/timescaledb:latest-pg15
         # Provide the password for postgres
         env:
           POSTGRES_USER: postgres
@@ -32,12 +32,12 @@ jobs:
           - 5432:5432
       
       redis-service:
-        image: redis:7.0.5-bullseye
+        image: redis:7.2-alpine
         ports: 
           - 6379:6379
 
       nats:
-        image: nats:2.7.0-scratch
+        image: nats:2.9-scratch
         ports:
           - 4222:4222
 

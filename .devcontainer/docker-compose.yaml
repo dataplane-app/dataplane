@@ -6,7 +6,7 @@ volumes:
 services:
 
   redis-service:
-    image: redis:7.0.5-bullseye
+    image: redis:7.2-alpine
     command: redis-server --save "" --appendonly no
     ports:
       - 6380:6379
@@ -17,7 +17,7 @@ services:
       retries: 5
 
   postgres:
-    image: timescale/timescaledb:2.5.1-pg14
+    image: timescale/timescaledb:latest-pg15
     ports:
       - 5435:5432
     environment:
@@ -32,7 +32,7 @@ services:
       retries: 5
 
   postgres-logs:
-    image: timescale/timescaledb:2.5.1-pg14
+    image: timescale/timescaledb:latest-pg15
     ports:
       - 5436:5432
     environment:
@@ -48,7 +48,7 @@ services:
     # restart: always
 
   nats:
-    image: nats:2.7.4-scratch
+    image: nats:2.9-scratch
     command:
       - "--debug"
       - "--cluster"
