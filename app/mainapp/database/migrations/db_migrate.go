@@ -27,7 +27,7 @@ import (
 
 func Migrate() {
 
-	migrateVersion := "0.0.80"
+	migrateVersion := "0.0.81"
 
 	connectURL := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -181,36 +181,36 @@ func Migrate() {
 			filesystem.CreateFolderSubs(dbConn, env.ID)
 		}
 
+		// ---- OLD specific migration model ----
+		checkval := gjson.Get(currentVersion.SpecificMigrations.String(), "code_folders.complete")
+
+		// If specific migration does not exist, run below.
+		if !checkval.Exists() {
+			log.Println("Running specific migration for code folders.")
+
+			e1 := dbConn.Model(&models.CodeFolders{}).Exec("ALTER TABLE code_folders ALTER COLUMN folder_id TYPE varchar(55);").Error
+			if e1 != nil {
+				panic("Failed to migrate code folders" + migrateVersion + e1.Error())
+			}
+			e2 := dbConn.Model(&models.DeployCodeFolders{}).Exec("ALTER TABLE deploy_code_folders ALTER COLUMN folder_id TYPE varchar(55);").Error
+			if e2 != nil {
+				panic("Failed to migrate code folders" + migrateVersion + e2.Error())
+			}
+
+			value, _ := sjson.Set(currentVersion.SpecificMigrations.String(), "code_folders.datetime", time.Now().UTC())
+			value, _ = sjson.Set(value, "code_folders.complete", true)
+			log.Println("Specific migrations:", value)
+
+			if err := dbConn.Model(&models.Platform{}).Select("specific_migrations").Where("1 = 1").Update("specific_migrations", value).Error; err != nil {
+				panic("Could register specific migration for code folders.")
+			}
+
+		}
+
+		// -------------- SPECIFIC MIGRATIONS --------------
+		SpecificMigrations(dbConn, migrateVersion)
+
 	}
-
-	// ---- OLD specific migration model ----
-	checkval := gjson.Get(currentVersion.SpecificMigrations.String(), "code_folders.complete")
-
-	// If specific migration does not exist, run below.
-	if !checkval.Exists() {
-		log.Println("Running specific migration for code folders.")
-
-		e1 := dbConn.Model(&models.CodeFolders{}).Exec("ALTER TABLE code_folders ALTER COLUMN folder_id TYPE varchar(55);").Error
-		if e1 != nil {
-			panic("Failed to migrate code folders" + migrateVersion + e1.Error())
-		}
-		e2 := dbConn.Model(&models.DeployCodeFolders{}).Exec("ALTER TABLE deploy_code_folders ALTER COLUMN folder_id TYPE varchar(55);").Error
-		if e2 != nil {
-			panic("Failed to migrate code folders" + migrateVersion + e2.Error())
-		}
-
-		value, _ := sjson.Set(currentVersion.SpecificMigrations.String(), "code_folders.datetime", time.Now().UTC())
-		value, _ = sjson.Set(value, "code_folders.complete", true)
-		log.Println("Specific migrations:", value)
-
-		if err := dbConn.Model(&models.Platform{}).Select("specific_migrations").Where("1 = 1").Update("specific_migrations", value).Error; err != nil {
-			panic("Could register specific migration for code folders.")
-		}
-
-	}
-
-	// -------------- SPECIFIC MIGRATIONS --------------
-	SpecificMigrations(dbConn, migrateVersion)
 
 	// ---- load permissions data
 	dbConn.Clauses(clause.OnConflict{

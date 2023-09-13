@@ -39,7 +39,7 @@ services:
     container_name: mainapp-cypresstest
     build:
       context: ./
-      dockerfile: cypress/Dockerfile.main.alpine
+      dockerfile: docker-build/Dockerfile.main.alpine
     ports:
       - 9002:9001
     environment:
@@ -52,7 +52,7 @@ services:
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
       DP_PORT: "9001"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
@@ -82,7 +82,7 @@ services:
   mainapp2-cypresstest:
     build:
       context: ./
-      dockerfile: cypress/Dockerfile.main.alpine
+      dockerfile: docker-build/Dockerfile.main.alpine
     deploy:
       replicas: 1
     environment:
@@ -95,7 +95,7 @@ services:
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
       DP_PORT: "9001"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
@@ -124,7 +124,7 @@ services:
   dataplane-worker-cypresstest:
     build:
       context: ./
-      dockerfile: cypress/Dockerfile.workerpython.debian
+      dockerfile: docker-build/Dockerfile.workerpython.debian
     # mem_limit: 512MB
     # cpus: 1.5
     deploy:
@@ -138,7 +138,7 @@ services:
       DP_DB_DATABASE: "testcypress"
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
@@ -170,7 +170,7 @@ services:
   dataplane-worker-cypresstest-prod:
     build:
       context: ./
-      dockerfile: cypress/Dockerfile.workerpython.debian
+      dockerfile: docker-build/Dockerfile.workerpython.debian
     # mem_limit: 512MB
     # cpus: 1.5
     deploy:
@@ -184,7 +184,7 @@ services:
       DP_DB_DATABASE: "testcypress"
       secret_db_pwd: "Hello123!"
       DP_DATABASE: "timescaledb"
-      DP_NATS: "nats://nats:4222, nats://nats-r_1:4222, nats://nats-r_2:4222"
+      DP_NATS: "nats://nats:4222"
       DP_MODE: "development"
       DP_DEBUG: "true"
       DP_DB_DEBUG: "false"
