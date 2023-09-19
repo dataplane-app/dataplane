@@ -132,8 +132,8 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
                 Header: 'Edit',
                 accessor: (row) => [row.fromEnvironmentID, row.pipelineID],
                 Cell: (row) => {
-                    const fromEnvironmentName = Environments.get().filter((a) => a.id === row.value[0])[0].name;
-                    return (
+                    const fromEnvironmentName = Environments.get().filter((a) => a.id === row.value[0])[0]?.name;
+                    return fromEnvironmentName ? (
                         <Button
                             onClick={() => {
                                 Environment.set({ id: row.value[0], name: fromEnvironmentName });
@@ -141,7 +141,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
                             }}>
                             Edit: {fromEnvironmentName}
                         </Button>
-                    );
+                    ) : null;
                 },
             },
             {
@@ -255,6 +255,7 @@ const DeploymentsTable = ({ data, filter, setPipelineCount, environmentID, setDe
                     <DeployAPITRiggerTableDrawer //
                         handleClose={() => setIsOpenAPI(false)}
                         deploymentId={pipelineId}
+                        selectedEnvironment={environmentID}
                     />
                 </Drawer>
             </Box>

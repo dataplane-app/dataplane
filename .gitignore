@@ -153,3 +153,7 @@ dmypy.json
 gotest/
 
 logsdocker.txt
+
+yarn.lock
+package-lock.json
+frontend/package-lock.json

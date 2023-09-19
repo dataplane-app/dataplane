@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dfscache "github.com/dataplane-app/dataplane/app/mainapp/code_editor/dfs_cache"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -850,6 +850,8 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 	var triggerType string = ""
 	var pipelineSchedules = models.Scheduler{}
 
+	startTime := time.Now()
+
 	// ----- Permissions
 	perms := []models.Permissions{
 		{Subject: "user", SubjectID: currentUser, Resource: "admin_platform", ResourceID: platformID, Access: "write", EnvironmentID: "d_platform"},
@@ -888,58 +890,69 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 	}
 
+	// ---- test for cycle -----
+	edges := []*models.PipelineEdges{}
+
+	for _, p := range input.EdgesInput {
+		edgeMeta, err := jsoniter.Marshal(p.Meta)
+		if err != nil {
+			logging.PrintSecretsRedact(err)
+			return "", err
+		}
+
+		edges = append(edges, &models.PipelineEdges{
+			EdgeID:        p.EdgeID,
+			PipelineID:    pipelineID,
+			From:          p.From,
+			To:            p.To,
+			EnvironmentID: environmentID,
+			Meta:          edgeMeta,
+			Active:        true,
+		})
+
+		// map out dependencies and destinations
+		destinations[p.From] = append(destinations[p.From], p.To)
+		dependencies[p.To] = append(dependencies[p.To], p.From)
+
+		// if dependencies[p.To] == []{
+
+		// }
+
+	}
+	// Obtain the first node in the graph
+	// var startNode string
+	if len(edges) > 0 {
+		// for _, p := range input.NodesInput {
+
+		// 	if _, ok := dependencies[p.NodeID]; ok {
+		// 		//do something here
+		// 	} else {
+		// 		startNode = p.NodeID
+		// 		break
+		// 	}
+		// }
+
+		g := utilities.NewGraphV3()
+
+		for _, edge := range edges {
+			g.AddEdge(edge.From, edge.To)
+		}
+
+		acycle := g.IsAcyclic()
+		if acycle == false {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact("Cycle detected. Only acyclical pipelines allowed.")
+			}
+			return "", errors.New("Cycle detected. Only acyclical pipelines allowed.")
+		}
+	}
+
+	elapsedTime := time.Since(startTime)
+	if dpconfig.Debug == "true" {
+		log.Printf("Cycle and permissions Elapsed time: %d ms\n", elapsedTime.Milliseconds())
+	}
+
 	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
-
-		// ---- test for cycle -----
-		edges := []*models.PipelineEdges{}
-
-		for _, p := range input.EdgesInput {
-			edgeMeta, err := json.Marshal(p.Meta)
-			if err != nil {
-				logging.PrintSecretsRedact(err)
-				return err
-			}
-
-			edges = append(edges, &models.PipelineEdges{
-				EdgeID:        p.EdgeID,
-				PipelineID:    pipelineID,
-				From:          p.From,
-				To:            p.To,
-				EnvironmentID: environmentID,
-				Meta:          edgeMeta,
-				Active:        true,
-			})
-
-			// map out dependencies and destinations
-			destinations[p.From] = append(destinations[p.From], p.To)
-			dependencies[p.To] = append(dependencies[p.To], p.From)
-
-			// if dependencies[p.To] == []{
-
-			// }
-
-		}
-		// Obtain the first node in the graph
-		var startNode string
-		if len(edges) > 0 {
-			for _, p := range input.NodesInput {
-
-				if _, ok := dependencies[p.NodeID]; ok {
-					//do something here
-				} else {
-					startNode = p.NodeID
-					break
-				}
-			}
-
-			cycle := utilities.GraphCycleCheck(edges, startNode)
-			if cycle == true {
-				if dpconfig.Debug == "true" {
-					logging.PrintSecretsRedact("Cycle detected. Only acyclical pipelines allowed.")
-				}
-				return errors.New("Cycle detected. Only acyclical pipelines allowed.")
-			}
-		}
 
 		// ----- lock the pipeline
 		err := tx.Model(&models.Pipelines{}).Where("pipeline_id = ? and environment_id = ?", pipelineID, environmentID).Update("update_lock", true).Error
@@ -982,7 +995,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 					triggerType = "schedule"
 
-					schedulejson, _ := json.Marshal(p.Meta.Data.Genericdata)
+					schedulejson, _ := jsoniter.Marshal(p.Meta.Data.Genericdata)
 
 					// log.Println("Meta sch:", string(schedulejson))
 
@@ -1022,25 +1035,27 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 
 			}
 
-			nodeMeta, err := json.Marshal(p.Meta)
+			startTime = time.Now()
+
+			nodeMeta, err := jsoniter.Marshal(p.Meta)
 			if err != nil {
 				logging.PrintSecretsRedact(err)
 				return err
 			}
 
-			commandJSON, err := json.Marshal(p.Commands)
+			commandJSON, err := jsoniter.Marshal(p.Commands)
 			if err != nil {
 				logging.PrintSecretsRedact(err)
 				return err
 			}
 
-			dependJSON, err := json.Marshal(dependencies[p.NodeID])
+			dependJSON, err := jsoniter.Marshal(dependencies[p.NodeID])
 			if err != nil {
 				logging.PrintSecretsRedact(err)
 				return err
 			}
 
-			destinationJSON, err := json.Marshal(destinations[p.NodeID])
+			destinationJSON, err := jsoniter.Marshal(destinations[p.NodeID])
 			if err != nil {
 				logging.PrintSecretsRedact(err)
 				return err
@@ -1063,6 +1078,12 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 				TriggerOnline: online,
 			})
 
+		}
+
+		elapsedTime = time.Since(startTime)
+
+		if dpconfig.Debug == "true" {
+			log.Printf("Marshal time Elapsed time: %d ms\n", elapsedTime.Milliseconds())
 		}
 
 		// ========== Remove the previous graph ==================:
@@ -1122,7 +1143,7 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 		}
 
 		// Records original JSON information in database
-		JSON, err := json.Marshal(input.JSON)
+		JSON, err := jsoniter.Marshal(input.JSON)
 		if err != nil {
 			logging.PrintSecretsRedact(err)
 			return err
@@ -1159,6 +1180,8 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 		// pfolder, _ := utilities.FolderConstructByID(parentfolder.FolderID)
 
 		/* ----- This adds the default entrypoint files for python ------- */
+		startTime = time.Now()
+
 		errfoldernode := filesystem.FolderNodeAddUpdate(tx, pipelineID, environmentID, "pipelines")
 		if errfoldernode != nil {
 			return errors.New("Folder node error: " + errfoldernode.Error())
@@ -1179,6 +1202,12 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(errcache)
 			}
+		}
+
+		elapsedTime = time.Since(startTime)
+
+		if dpconfig.Debug == "true" {
+			log.Printf("Folder update time: %d ms\n", elapsedTime.Milliseconds())
 		}
 
 		// ----- unlock the pipeline
