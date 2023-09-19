@@ -11,7 +11,7 @@ RUN go mod download
 ADD app /go/src/build/app
 
 ARG SKAFFOLD_GO_GCFLAGS
-RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane app/mainapp/server.go
+RUN CGO_ENABLED=0 go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane app/mainapp/server.go
 
 
 FROM node:18.17 as builder2
