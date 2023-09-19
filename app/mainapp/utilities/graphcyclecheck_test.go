@@ -45,6 +45,17 @@ var TestEdgesCycle = []*models.PipelineEdges{
 	{From: "node6", To: "node6"},
 }
 
+var TestEdgesCycle2 = []*models.PipelineEdges{
+	{From: "node1", To: "node2"},
+	{From: "node1", To: "node3"},
+	{From: "node1", To: "node4"},
+	{From: "node2", To: "node5"},
+	{From: "node3", To: "node5"},
+	{From: "node4", To: "node5"},
+	{From: "node5", To: "node6"},
+	{From: "node6", To: "node1"},
+}
+
 func TestGraphCycleCheckFunction(t *testing.T) {
 
 	// Positive Test
