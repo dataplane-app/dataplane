@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"mime/multipart"
 	"net"
 	"os"
@@ -936,7 +935,7 @@ func (req *Request) parsePostArgs() {
 
 // ErrNoMultipartForm means that the request's Content-Type
 // isn't 'multipart/form-data'.
-var ErrNoMultipartForm = errors.New("request has no multipart/form-data Content-Type")
+var ErrNoMultipartForm = errors.New("request Content-Type has bad boundary or is not multipart/form-data")
 
 // MultipartForm returns request's multipart form.
 //
@@ -1723,6 +1722,7 @@ func (resp *Response) brotliBody(level int) error {
 		resp.bodyRaw = nil
 	}
 	resp.Header.SetContentEncodingBytes(strBr)
+	resp.Header.addVaryBytes(strAcceptEncoding)
 	return nil
 }
 
@@ -1778,6 +1778,7 @@ func (resp *Response) gzipBody(level int) error {
 		resp.bodyRaw = nil
 	}
 	resp.Header.SetContentEncodingBytes(strGzip)
+	resp.Header.addVaryBytes(strAcceptEncoding)
 	return nil
 }
 
@@ -1833,6 +1834,7 @@ func (resp *Response) deflateBody(level int) error {
 		resp.bodyRaw = nil
 	}
 	resp.Header.SetContentEncodingBytes(strDeflate)
+	resp.Header.addVaryBytes(strAcceptEncoding)
 	return nil
 }
 
@@ -2207,7 +2209,7 @@ func readBodyIdentity(r *bufio.Reader, maxBodySize int, dst []byte) ([]byte, err
 			return dst[:offset], ErrBodyTooLarge
 		}
 		if len(dst) == offset {
-			n := round2(2 * offset)
+			n := roundUpForSliceCap(2 * offset)
 			if maxBodySize > 0 && n > maxBodySize {
 				n = maxBodySize + 1
 			}
@@ -2226,7 +2228,7 @@ func appendBodyFixedSize(r *bufio.Reader, dst []byte, n int) ([]byte, error) {
 	offset := len(dst)
 	dstLen := offset + n
 	if cap(dst) < dstLen {
-		b := make([]byte, round2(dstLen))
+		b := make([]byte, roundUpForSliceCap(dstLen))
 		copy(b, dst)
 		dst = b
 	}
@@ -2334,26 +2336,6 @@ func readCrLf(r *bufio.Reader) error {
 		}
 	}
 	return nil
-}
-
-func round2(n int) int {
-	if n <= 0 {
-		return 0
-	}
-
-	x := uint32(n - 1)
-	x |= x >> 1
-	x |= x >> 2
-	x |= x >> 4
-	x |= x >> 8
-	x |= x >> 16
-
-	// Make sure we don't return 0 due to overflow, even on 32 bit systems
-	if x >= uint32(math.MaxInt32) {
-		return math.MaxInt32
-	}
-
-	return int(x + 1)
 }
 
 // SetTimeout sets timeout for the request.

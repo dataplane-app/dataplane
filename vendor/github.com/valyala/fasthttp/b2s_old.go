@@ -11,6 +11,5 @@ import "unsafe"
 // Note it may break if string and/or slice header will change
 // in the future go versions.
 func b2s(b []byte) string {
-	/* #nosec G103 */
 	return *(*string)(unsafe.Pointer(&b))
 }

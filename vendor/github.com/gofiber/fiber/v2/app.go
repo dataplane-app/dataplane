@@ -30,7 +30,7 @@ import (
 )
 
 // Version of current fiber package
-const Version = "2.48.0"
+const Version = "2.49.2"
 
 // Handler defines a function to serve HTTP requests.
 type Handler = func(*Ctx) error
@@ -390,6 +390,13 @@ type Config struct {
 	//
 	// Optional. Default: DefaultMethods
 	RequestMethods []string
+
+	// EnableSplittingOnParsers splits the query/body/header parameters by comma when it's true.
+	// For example, you can use it to parse multiple values from a query parameter like this:
+	//   /api?foo=bar,baz == foo[]=bar&foo[]=baz
+	//
+	// Optional. Default: false
+	EnableSplittingOnParsers bool `json:"enable_splitting_on_parsers"`
 }
 
 // Static defines configuration options when defining static assets.
