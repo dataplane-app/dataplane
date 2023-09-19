@@ -7,6 +7,7 @@ package publicresolvers
 import (
 	"context"
 	"errors"
+	"log"
 	"os"
 	"strings"
 
@@ -21,6 +22,7 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // SetupPlatform is the resolver for the setupPlatform field.
@@ -121,6 +123,30 @@ func (r *mutationResolver) SetupPlatform(ctx context.Context, input *publicgraph
 		if err != nil {
 			logging.PrintSecretsRedact(err)
 			return errors.New("Failed to create admin permissions.")
+		}
+
+		// Get added to existing environments
+
+		var platformEnvs []models.Environment
+		err = tx.Find(&platformEnvs).Error
+
+		for _, env := range platformEnvs {
+
+			e := models.EnvironmentUser{
+				EnvironmentID: env.ID,
+				UserID:        userData.UserID,
+				Active:        true,
+			}
+
+			err := database.DBConn.Clauses(clause.OnConflict{DoNothing: true}).Create(&e).Error
+
+			if err != nil {
+				if dpconfig.Debug == "true" {
+					log.Println("Add user to environment error.", err)
+				}
+
+			}
+
 		}
 
 		// Preferences get added

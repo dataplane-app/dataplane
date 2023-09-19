@@ -2,8 +2,6 @@ import { faChevronDown, faChevronRight, faFile, faFolder, faPencilAlt, faTimes }
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { TreeItem } from '@mui/x-tree-view'
 import { TreeView } from '@mui/x-tree-view'
-// import TreeItem from '@mui/lab/TreeItem';
-// import TreeView from '@mui/lab/TreeView';
 import { Autocomplete, Box, Drawer, Grid, IconButton, TextField, Tooltip, Typography, useTheme } from '@mui/material';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { useState as useHookState } from '@hookstate/core';
