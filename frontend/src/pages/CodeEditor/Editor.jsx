@@ -17,7 +17,6 @@ import { useGetNode } from '../../graphql/pipelines/getNode.js';
 import InstallationLogsColumn from './components/InstallationLogsColumn/index.jsx';
 import Markdown from './components/Markdown/index.jsx';
 import isMarkdown from './isMarkdown.js';
-import useWindowSize from './useWindowsSize.jsx';
 import { useGetPipelineRuns } from '../../graphql/pipelines/getPipelineRuns.js';
 import { formatDateNoZone } from '../../utils/formatDate.js';
 
@@ -40,11 +39,39 @@ export const globalEditorState = createState({
 
 export const useGlobalEditorState = () => useHookState(globalEditorState);
 
+
+function getWindowDimensions() {
+    const { innerWidth: width, innerHeight: height } = window;
+    return {
+      width,
+      height
+    };
+  }
+  
+function useWindowDimensions() {
+    const [windowDimensions, setWindowDimensions] = useState(
+      getWindowDimensions()
+    );
+  
+    useEffect(() => {
+      function handleResize() {
+        setWindowDimensions(getWindowDimensions());
+      }
+  
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
+  
+    return windowDimensions;
+  }
+
 const PipelineEditor = () => {
     const Environment = useGlobalEnvironmentState();
     const MeData = useGlobalMeState();
 
-    const { height } = useWindowSize();
+    const { height } = useWindowDimensions();
+
+    // console.log('windowHeight', height)
 
     // Hooks
     const history = useHistory();
@@ -209,7 +236,9 @@ const PipelineEditor = () => {
                             // measureBeforeMount={true}
                             // onResizeStop={(e, _) => console.log('Resize', e, _)}
                             // compactType="vertical"
-                            // rowHeight={(height - 200) * 0.25}
+
+                            // This sets the height of the code editor to maximise the height 210 is the header
+                            rowHeight={Math.max((height - 210),0) * 0.25}
                             layouts={getGridLayouts(pipeline.nodeTypeDesc, EditorGlobal.markdown.value, isMarkdown(EditorGlobal.selectedFile?.name?.value), showLogs)}
                             // breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                             // cols={{ lg: 12, md: 6, sm: 3, xs: 2, xxs: 2 }}
