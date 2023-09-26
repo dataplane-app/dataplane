@@ -118,7 +118,7 @@ func RunDeployment(pipelineID string, environmentID string, runID string, versio
 	foldersdata = <-folders
 	parentfolderdata := <-parentfolder
 
-	// log.Println("parent folder", parentfolderdata)
+	log.Println("parent folder", parentfolderdata)
 
 	// Map children
 	for _, s := range edgesdata {

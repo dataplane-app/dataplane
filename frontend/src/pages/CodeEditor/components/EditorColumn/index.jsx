@@ -59,7 +59,7 @@ const EditorColumn = forwardRef(({ children, ...rest }, ref) => {
     const theme = useTheme();
 
     // Monaco editor
-    const monaco = useMonaco();
+    const monaco = useMonaco({options: {autoIndent: "none"}});
 
     const { enqueueSnackbar } = useSnackbar();
 

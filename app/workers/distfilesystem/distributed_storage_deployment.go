@@ -19,11 +19,11 @@ import (
 )
 
 /*
-1. Check the cache that files are up to date.
-	1a. Cache at node level
-	1b. Cache at file level
-2. Find all the files for this node.
-3. Batch download files
+ 1. Check the cache that files are up to date.
+    1a. Cache at node level
+    1b. Cache at file level
+ 2. Find all the files for this node.
+ 3. Batch download files
 
 NOTE: Node ID is the node in the graph and not the worker ID.
 */
@@ -72,6 +72,7 @@ func DistributedStorageDeploymentDownload(environmentID string, folder string, f
 		and cf.environment_id = cs.environment_id 
 		and cf.node_id = ? and cs.run_include = true
 		and cf.version = cs.version
+		and cf.environment_id =?
 		and NOT EXISTS
         (
         SELECT  file_id
@@ -82,6 +83,7 @@ func DistributedStorageDeploymentDownload(environmentID string, folder string, f
 		cf.node_id = cfc.node_id and 
 		cf.environment_id = cfc.environment_id and
 		version = ?
+		and cf.environment_id =?
         )
 		`
 

@@ -182,6 +182,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			case "deployment":
 				errfs = distfilesystem.DistributedStorageDeploymentDownload(msg.EnvironmentID, msg.Folder+"/", msg.FolderID, msg.NodeID, msg.RunType, msg.Version)
 			default:
+				log.Println("Folder structure:", msg.Folder)
 				errfs = distfilesystem.DistributedStoragePipelineDownload(msg.EnvironmentID, msg.Folder+"/", msg.FolderID, msg.NodeID)
 			}
 

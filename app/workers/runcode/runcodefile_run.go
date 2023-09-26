@@ -12,7 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
@@ -70,6 +69,8 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			log.Println(errl.Error())
 		}
 
+		WSLogError("Error: lock for run and node exists: "+msg.RunID+" "+msg.NodeID, msg)
+
 		return
 	}
 
@@ -78,11 +79,13 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 	err2 := database.DBConn.Select("run_id", "status").Where("run_id = ?", msg.RunID).First(&lockCheck).Error
 	if err2 != nil {
 		log.Println(err2.Error())
+		WSLogError("Error: already running: "+err2.Error(), msg)
 		return
 	}
 
 	if lockCheck.Status != "Queue" {
 		log.Println("Skipping not in queue", msg.RunID, msg.NodeID)
+		WSLogError("Skipping not in queue: "+msg.RunID, msg)
 		return
 	}
 
@@ -139,7 +142,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			// Database download
 			codeDirectory = wrkerconfig.FSCodeDirectory
 			directoryRun = codeDirectory + msg.Folder
-			err := distfilesystem.DistributedStoragePipelineDownload(msg.EnvironmentID, msg.Folder, msg.FolderID, msg.NodeID)
+			err := distfilesystem.DistributedStorageCodeRunDownload(msg.EnvironmentID, msg.Folder, msg.FolderID, msg.NodeID)
 			if err != nil {
 				statusUpdate = "Fail"
 				if TasksStatusWG != "cancel" {
@@ -171,13 +174,13 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 
 			// construct the directory if the directory cant be found
 			if _, err := os.Stat(directoryRun); os.IsNotExist(err) {
+
 				if wrkerconfig.Debug == "true" {
-					log.Println("Directory not found - reconstructing:", directoryRun)
+					log.Println("Directory not found:", directoryRun)
 				}
-				newdir, err := filesystem.FolderConstructByID(database.DBConn, msg.FolderID, msg.EnvironmentID, "pipelines")
-				if err == nil {
-					directoryRun = codeDirectory + newdir
-				}
+
+				WSLogError("Directory not found:"+directoryRun, msg)
+				return
 			}
 
 			// Overwrite command with injected directory

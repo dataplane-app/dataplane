@@ -2,7 +2,6 @@ package distfilesystem
 
 import (
 	"errors"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -19,26 +18,26 @@ import (
 )
 
 /*
-1. Check the cache that files are up to date.
-	1a. Cache at node level
-	1b. Cache at file level
-2. Find all the files for this node.
-3. Batch download files
+ 1. Check the cache that files are up to date.
+    1a. Cache at node level
+    1b. Cache at file level
+ 2. Find all the files for this node.
+ 3. Batch download files
 
 NOTE: Node ID is the node in the graph and not the worker ID.
 */
 func DistributedStoragePipelineDownload(environmentID string, folder string, folderID string, nodeID string) error {
 
 	// log.Println("folder", folder)
-	if strings.Contains(folder, "/pipelines/") == false {
+	if strings.Contains(folder, "/pipelines/") == false || strings.Contains(folder, "/coderun/") == false {
 		log.Println("Folder incorrect format - doesn't contain /pipelines/")
 		return errors.New("Folder incorrect format - doesn't contain /pipelines/")
 	}
 
-	if strings.Contains(folder, "_Platform") == false {
-		log.Println("Folder incorrect format - doesn't contain _Platform")
-		return errors.New("Folder incorrect format - doesn't contain _Platform")
-	}
+	// if strings.Contains(folder, "_Platform") == false {
+	// 	log.Println("Folder incorrect format - doesn't contain _Platform")
+	// 	return errors.New("Folder incorrect format - doesn't contain _Platform")
+	// }
 	/* node cache is a higher level cache for the node */
 	nodeCache := models.CodeNodeCache{}
 	err := database.DBConn.Select("cache_valid").Where("node_id = ? and environment_id = ? and worker_id = ?", nodeID, environmentID, wrkerconfig.WorkerID).First(&nodeCache).Error
@@ -68,7 +67,11 @@ func DistributedStoragePipelineDownload(environmentID string, folder string, fol
 		cs.file_store
 		from code_files cf, code_files_store cs
 		where 
-		cf.file_id = cs.file_id and cf.environment_id = cs.environment_id and cf.node_id = ? and cs.run_include = true
+		cf.file_id = cs.file_id and 
+		cf.environment_id = cs.environment_id and 
+		cf.node_id = ? and 
+		cs.run_include = true
+		and cf.environment_id =?
 		and NOT EXISTS
         (
         SELECT  file_id
@@ -78,6 +81,7 @@ func DistributedStoragePipelineDownload(environmentID string, folder string, fol
 		cfc.worker_id = ? and 
 		cf.node_id = cfc.node_id and 
 		cf.environment_id = cfc.environment_id
+		and cf.environment_id =?
         )
 		`
 
@@ -99,16 +103,22 @@ func DistributedStoragePipelineDownload(environmentID string, folder string, fol
 			if file.FolderID != folderID {
 
 				// Look up folder structure
-				newdir, err := filesystem.FolderConstructByID(database.DBConn, file.FolderID, environmentID, "pipelines")
+				// newdir :=
 
-				// log.Println("Worker new dir:", newdir)
+				// , err := filesystem.FolderConstructByID(database.DBConn, file.FolderID, environmentID, "pipelines")
+				newdir, err := filesystem.NodeLevelFolderConstructByID(database.DBConn, file.FolderID, environmentID)
+
+				log.Println("Worker new dir:", newdir)
 
 				if err != nil {
 					log.Println(err)
 					return err
 				}
-				directoryRun = wrkerconfig.FSCodeDirectory + newdir
-				filecreate = directoryRun + file.FileName
+				directoryRun = wrkerconfig.FSCodeDirectory + folder + newdir
+
+				log.Println("Directory to run:", directoryRun)
+
+				filecreate = directoryRun + folder + file.FileName
 
 				/* Create folder if folder doesn't exist */
 				if _, err := os.Stat(directoryRun); os.IsNotExist(err) {
@@ -125,7 +135,7 @@ func DistributedStoragePipelineDownload(environmentID string, folder string, fol
 				}
 
 				/* Write file contents */
-				errfile := ioutil.WriteFile(filecreate, file.FileStore, 0644)
+				errfile := os.WriteFile(filecreate, file.FileStore, 0644)
 				if errfile != nil {
 					log.Println(errfile)
 					return errfile
@@ -168,7 +178,7 @@ func DistributedStoragePipelineDownload(environmentID string, folder string, fol
 				}
 
 				/* Write file contents */
-				errfile := ioutil.WriteFile(filecreate, file.FileStore, 0644)
+				errfile := os.WriteFile(filecreate, file.FileStore, 0644)
 				if errfile != nil {
 					log.Println(errfile)
 					return errfile
