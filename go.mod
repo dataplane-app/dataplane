@@ -27,7 +27,7 @@ require (
 	github.com/pieterclaerhout/go-log v1.15.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/stretchr/testify v1.8.4
-	github.com/tidwall/gjson v1.16.0
+	github.com/tidwall/gjson v1.17.0
 	github.com/tidwall/sjson v1.2.5
 	github.com/valyala/fasthttp v1.49.0
 	github.com/vektah/gqlparser/v2 v2.5.8
