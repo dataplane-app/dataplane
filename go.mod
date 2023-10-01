@@ -6,7 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.17.36
 	github.com/bxcodec/faker/v3 v3.8.1
 	github.com/bxcodec/faker/v4 v4.0.0-beta.3
-	github.com/go-co-op/gocron v1.31.2
+	github.com/go-co-op/gocron v1.35.0
 	github.com/go-git/go-billy/v5 v5.4.1
 	github.com/go-git/go-git/v5 v5.8.1
 	github.com/go-playground/validator/v10 v10.15.0
