@@ -49,16 +49,22 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 			return models.CodeRun{}, errors.New(rerror)
 		}
 
-		parentfolderdata := ""
+		parentfolderdata := envID + "/coderun/" + pipelineID + "/" + nodeID
 		var err error
-		if filesdata.FolderID != "" {
-			parentfolderdata, err = filesystem.FolderConstructByID(database.DBConn, filesdata.FolderID, envID, "pipelines")
-			if err != nil {
-				return models.CodeRun{}, errors.New("File record not found")
-			}
-		} else {
-			return models.CodeRun{}, errors.New("File record not found")
-		}
+		// if filesdata.FolderID != "" {
+
+		// 	// The folder structure will look like <environment ID>/coderun/<pipeline ID>/<node ID>
+		// 	parentfolderdata, err = filesystem.NodeLevelFolderConstructByID(database.DBConn, filesdata.FolderID, envID)
+		// 	// parentfolderdata, err = filesystem.FolderConstructByID(database.DBConn, filesdata.FolderID, envID, "pipelines")
+
+		// 	log.Println("parent folder code run:", parentfolderdata)
+
+		// 	if err != nil {
+		// 		return models.CodeRun{}, errors.New("File record not found")
+		// 	}
+		// } else {
+		// 	return models.CodeRun{}, errors.New("File record not found")
+		// }
 
 		commands = append(commands, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
 		runSend, err = RunCodeServerWorker(envID, nodeID, workerGroup, runid, commands, filesdata, parentfolderdata, filesdata.FolderID, replayRunID)
