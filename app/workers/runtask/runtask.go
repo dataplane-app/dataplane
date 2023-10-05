@@ -87,7 +87,10 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			log.Println(errl.Error())
 		}
 
-		WSLogError("Lock for run and node exists:"+errl.Error(), msg, TaskUpdate)
+		log.Println("Lock for run and node exists:", msg.RunID, msg.NodeID)
+
+		// == NB: this should be a silent fail and continue, the below will fail the entire graph
+		SilentWSLogError("Lock for run and node exists:"+errl.Error(), msg)
 
 		return
 	}
@@ -96,14 +99,14 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	var lockCheck modelmain.WorkerTasks
 	err2 := database.DBConn.Select("task_id", "status").Where("task_id = ? and environment_id= ?", msg.TaskID, msg.EnvironmentID).First(&lockCheck).Error
 	if err2 != nil {
-		log.Println(err2.Error())
-		WSLogError("Task already running:"+err2.Error(), msg, TaskUpdate)
+		log.Println("Task already running", err2.Error())
+		SilentWSLogError("Task already running:"+err2.Error(), msg)
 		return
 	}
 
 	if lockCheck.Status != "Queue" {
 		log.Println("Skipping not in queue", msg.RunID, msg.NodeID)
-		WSLogError("Skipping not in queue - runid:"+msg.RunID+" - node:"+msg.NodeID, msg, TaskUpdate)
+		SilentWSLogError("Skipping not in queue - runid:"+msg.RunID+" - node:"+msg.NodeID, msg)
 		return
 	}
 
@@ -114,7 +117,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	err2 = database.DBConn.Select("run_id", "status").Where("run_id = ?", msg.RunID).First(&pipelineCheck).Error
 	if err2 != nil {
 		log.Println(err2.Error())
-		WSLogError("Skipping not in queue - runid:"+msg.RunID+" - node:"+msg.NodeID, msg, TaskUpdate)
+		WSLogError("Pipeline marked as failed - runid:"+msg.RunID+" - node:"+msg.NodeID, msg, TaskUpdate)
 		return
 	}
 
