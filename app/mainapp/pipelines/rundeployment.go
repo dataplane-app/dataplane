@@ -218,8 +218,6 @@ func RunDeployment(pipelineID string, environmentID string, runID string, versio
 			Dependency:    dependJSON,
 			Commands:      s.Commands,
 			Destination:   destinationJSON,
-			Folder:        folderMap[s.NodeID],
-			FolderID:      folderNodeMap[s.NodeID],
 			RunType:       "deployment",
 			Version:       s.Version,
 		}
@@ -289,7 +287,7 @@ func RunDeployment(pipelineID string, environmentID string, runID string, versio
 		// }
 		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
 
-		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], triggerData[s].Version, "deployment", triggerData[s].WorkerType, inputData)
+		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, triggerData[s].Version, "deployment", triggerData[s].WorkerType, inputData)
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)

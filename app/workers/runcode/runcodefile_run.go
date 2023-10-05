@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -134,15 +135,15 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			log.Println("Code run file storage:", wrkerconfig.FSCodeFileStorage)
 		}
 
-		codeDirectory := wrkerconfig.CodeDirectory
-		directoryRun := codeDirectory + msg.Folder
+		codeDirectory := wrkerconfig.FSCodeDirectory
+
+		// Needs to use pipeline folder for caching between a pipeline run and a code editor run
+		directoryRun := filepath.Join(codeDirectory+msg.EnvironmentID, "pipeline", msg.PipelineID, msg.NodeID)
 
 		switch wrkerconfig.FSCodeFileStorage {
 		case "Database":
 			// Database download
-			codeDirectory = wrkerconfig.FSCodeDirectory
-			directoryRun = codeDirectory + msg.Folder
-			err := distfilesystem.DistributedStorageCodeRunDownload(msg.EnvironmentID, msg.Folder, msg.FolderID, msg.NodeID)
+			err := distfilesystem.DistributedStorageCodeRunDownload(msg.EnvironmentID, directoryRun, msg.NodeID)
 			if err != nil {
 				statusUpdate = "Fail"
 				if TasksStatusWG != "cancel" {
@@ -154,12 +155,9 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 
 			// Nothing to do, the files will use a shared volume
 			codeDirectory = wrkerconfig.CodeDirectory
-			directoryRun = codeDirectory + msg.Folder
+			directoryRun = codeDirectory + directoryRun
 
 		default:
-			// Database download
-			codeDirectory = wrkerconfig.FSCodeDirectory
-			directoryRun = codeDirectory + msg.Folder
 
 		}
 
@@ -184,7 +182,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			}
 
 			// Overwrite command with injected directory
-			v.Command = strings.ReplaceAll(v.Command, "${{nodedirectory}}", directoryRun)
+			v.Command = strings.ReplaceAll(v.Command, "${{nodedirectory}}", directoryRun+"/")
 
 			if wrkerconfig.Debug == "true" {
 				log.Println("Run command: ", v.Command)

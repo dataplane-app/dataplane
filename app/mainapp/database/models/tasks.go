@@ -18,26 +18,26 @@ func (WorkerTasks) TableName() string {
 }
 
 type WorkerTasks struct {
-	TaskID        string         `gorm:"PRIMARY_KEY;type:varchar(48);" json:"task_id"`
-	CreatedAt     time.Time      `json:"created_at"`
-	EnvironmentID string         `json:"environment_id"`
-	RunID         string         `gorm:"index:idx_task_runid;index:idx_task_nodeid;" json:"run_id"`
-	RunType       string         `json:"run_type"`
-	WorkerGroup   string         `json:"worker_group"`
-	WorkerID      string         `json:"worker_id"`
-	WorkerType    string         `json:"worker_type"`
-	PipelineID    string         `json:"pipeline_id"`
-	NodeID        string         `gorm:"index:idx_task_nodeid;" json:"node_id"`
-	Folder        string         `json:"folder"`
-	FolderID      string         `json:"folder_id"`
-	Dependency    datatypes.JSON `json:"dependency"`
-	Destination   datatypes.JSON `json:"destination"`
-	StartDT       time.Time      `json:"start_dt"`
-	EndDT         time.Time      `json:"end_dt"`
-	Status        string         `json:"status"`
-	Reason        string         `json:"reason"`
-	Commands      datatypes.JSON `json:"commands"`
-	Version       string         `json:"version"`
+	TaskID        string    `gorm:"PRIMARY_KEY;type:varchar(48);" json:"task_id"`
+	CreatedAt     time.Time `json:"created_at"`
+	EnvironmentID string    `json:"environment_id"`
+	RunID         string    `gorm:"index:idx_task_runid;index:idx_task_nodeid;" json:"run_id"`
+	RunType       string    `json:"run_type"`
+	WorkerGroup   string    `json:"worker_group"`
+	WorkerID      string    `json:"worker_id"`
+	WorkerType    string    `json:"worker_type"`
+	PipelineID    string    `json:"pipeline_id"`
+	NodeID        string    `gorm:"index:idx_task_nodeid;" json:"node_id"`
+	// Folder        string         `json:"folder"`
+	// FolderID      string         `json:"folder_id"`
+	Dependency  datatypes.JSON `json:"dependency"`
+	Destination datatypes.JSON `json:"destination"`
+	StartDT     time.Time      `json:"start_dt"`
+	EndDT       time.Time      `json:"end_dt"`
+	Status      string         `json:"status"`
+	Reason      string         `json:"reason"`
+	Commands    datatypes.JSON `json:"commands"`
+	Version     string         `json:"version"`
 }
 
 func (WorkerTaskLock) IsEntity() {}
@@ -61,12 +61,12 @@ type WorkerTaskSend struct {
 	RunID         string    `json:"run_id"`
 	WorkerGroup   string    `json:"worker_group"`
 	WorkerID      string    `json:"worker_id"`
-	Folder        string    `json:"folder"`
-	FolderID      string    `json:"folder_id"`
-	Commands      []string  `json:"commands"`
-	Version       string    `json:"version"`
-	RunType       string    `json:"run_type"`
-	InputData     bool      `json:"input_data"`
+	// Folder        string    `json:"folder"`
+	// FolderID      string    `json:"folder_id"`
+	Commands  []string `json:"commands"`
+	Version   string   `json:"version"`
+	RunType   string   `json:"run_type"`
+	InputData bool     `json:"input_data"`
 }
 
 type WorkerPipelineNext struct {

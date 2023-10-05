@@ -49,7 +49,7 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 			return models.CodeRun{}, errors.New(rerror)
 		}
 
-		parentfolderdata := envID + "/coderun/" + pipelineID + "/" + nodeID + "/"
+		parentfolderdata := envID + "/coderun/" + pipelineID + "/" + nodeID
 		var err error
 		// if filesdata.FolderID != "" {
 

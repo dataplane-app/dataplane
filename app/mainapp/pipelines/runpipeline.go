@@ -3,7 +3,6 @@ package pipelines
 import (
 	"encoding/json"
 	"log"
-	"os"
 	"time"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -25,8 +24,8 @@ func RunPipeline(pipelineID string, environmentID string, runID string) (models.
 	// start := time.Now().UTC()
 
 	// Doesnt require concurrency safety, should be written / read in sequence.
-	var destinations = make(map[string][]string)
-	var dependencies = make(map[string][]string)
+	// var destinations = make(map[string][]string)
+	// var dependencies = make(map[string][]string)
 	var triggerData = make(map[string]*models.WorkerTasks)
 
 	// Retrieve pipeline details
@@ -42,29 +41,6 @@ func RunPipeline(pipelineID string, environmentID string, runID string) (models.
 
 	// Input data from trigger
 	var inputData bool = false
-
-	// Check if a runJson is submitted
-	// if runJson != nil && len(runJson[0]) != 0 {
-
-	// 	inputData = true
-	// 	run := models.PipelineApiTriggerRuns{
-	// 		RunID:         runID,
-	// 		PipelineID:    pipelineID,
-	// 		EnvironmentID: environmentID,
-	// 		RunType:       "pipeline",
-	// 		RunJSON:       runJson[0],
-	// 		CreatedAt:     time.Now().UTC(),
-	// 	}
-
-	// 	err = database.DBConn.Create(&run).Error
-	// 	if err != nil {
-
-	// 		if dpconfig.Debug == "true" {
-	// 			logging.PrintSecretsRedact(err)
-	// 		}
-	// 		return models.PipelineRuns{}, err
-	// 	}
-	// }
 
 	// Create a run
 	run := models.PipelineRuns{
@@ -88,21 +64,21 @@ func RunPipeline(pipelineID string, environmentID string, runID string) (models.
 	}
 
 	// ------ Obtain folders
-	folders := make(chan []models.CodeFolders)
-	// parentfolder := make(chan string)
-	foldersdata := []models.CodeFolders{}
+	// folders := make(chan []models.CodeFolders)
+	// // parentfolder := make(chan string)
+	// foldersdata := []models.CodeFolders{}
 
-	go func() {
-		database.DBConn.Where("pipeline_id = ? and environment_id =? and level = ?", pipelineID, environmentID, "node").Find(&foldersdata)
-		folders <- foldersdata
+	// go func() {
+	// 	database.DBConn.Where("pipeline_id = ? and environment_id =? and level = ?", pipelineID, environmentID, "node").Find(&foldersdata)
+	// 	folders <- foldersdata
 
-		// pf := ""
+	// 	// pf := ""
 
-		// if len(foldersdata) > 0 {
-		// 	pf, _ = filesystem.FolderConstructByID(database.DBConn, foldersdata[0].ParentID, environmentID, "pipelines")
-		// }
-		// parentfolder <- pf
-	}()
+	// 	// if len(foldersdata) > 0 {
+	// 	// 	pf, _ = filesystem.FolderConstructByID(database.DBConn, foldersdata[0].ParentID, environmentID, "pipelines")
+	// 	// }
+	// 	// parentfolder <- pf
+	// }()
 
 	// Chart a course
 	nodes := make(chan []*models.PipelineNodes)
@@ -114,12 +90,12 @@ func RunPipeline(pipelineID string, environmentID string, runID string) (models.
 		nodes <- nodesdata
 	}()
 
-	edges := make(chan []*models.PipelineEdges)
-	edgesdata := []*models.PipelineEdges{}
-	go func() {
-		database.DBConn.Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Find(&edgesdata)
-		edges <- edgesdata
-	}()
+	// edges := make(chan []*models.PipelineEdges)
+	// edgesdata := []*models.PipelineEdges{}
+	// go func() {
+	// 	database.DBConn.Select("from", "to").Where("pipeline_id = ? and environment_id =?", pipelineID, environmentID).Find(&edgesdata)
+	// 	edges <- edgesdata
+	// }()
 
 	// Start at trigger
 	RunID := run.RunID
@@ -128,46 +104,48 @@ func RunPipeline(pipelineID string, environmentID string, runID string) (models.
 
 	// Return go routines
 	nodesdata = <-nodes
-	edgesdata = <-edges
-	foldersdata = <-folders
-	parentfolderdata := environmentID + "/pipelines/" + pipelineID + "/"
+	// edgesdata = <-edges
+	// foldersdata = <-folders
+	// parentfolderdata := environmentID + "/pipelines/" + pipelineID
 	// <-parentfolder
 
-	// The folder structure will look like <environment ID>/pipelines/<pipeline ID>/
+	// The folder structure will look like <environment ID>/pipelines/<pipeline ID>
 	// log.Println("parent folder", parentfolderdata)
 
 	// Map children
-	for _, s := range edgesdata {
+	// for _, s := range edgesdata {
 
-		destinations[s.From] = append(destinations[s.From], s.To)
-		dependencies[s.To] = append(dependencies[s.To], s.From)
+	// 	destinations[s.From] = append(destinations[s.From], s.To)
+	// 	dependencies[s.To] = append(dependencies[s.To], s.From)
 
-	}
+	// }
 
 	// Map folder structure:
-	var folderMap = make(map[string]string)
-	var folderNodeMap = make(map[string]string)
-	for _, f := range foldersdata {
+	// var folderMap = make(map[string]string)
+	// var folderNodeMap = make(map[string]string)
+	// for _, f := range foldersdata {
 
-		if f.Level == "node" {
+	// 	if f.Level == "node" {
 
-			dir := parentfolderdata + f.NodeID
-			// + "/" + f.FolderID
-			// + "_" + f.FolderName
-			log.Println("Dir:", dir)
+	// 		dir := parentfolderdata + f.NodeID
+	// 		// + "/" + f.FolderID
+	// 		// + "_" + f.FolderName
+	// 		// log.Println("Dir:", dir)
 
-			folderMap[f.NodeID] = dir
-			// folderNodeMap[f.NodeID] = f.FolderID
-			if dpconfig.Debug == "true" {
-				if _, err := os.Stat(dpconfig.CodeDirectory + dir); os.IsExist(err) {
-					log.Println("Dir exists:", dpconfig.CodeDirectory+dir)
+	// 		folderMap[f.NodeID] = dir
 
-				}
-			}
+	// 		// ---- The Folder ID is needed to see the root of the folder structure, otherwise it must recursively go through the folder leves that are not root.
+	// 		folderNodeMap[f.NodeID] = f.FolderID
+	// 		if dpconfig.Debug == "true" {
+	// 			if _, err := os.Stat(dpconfig.CodeDirectory + dir); os.IsExist(err) {
+	// 				log.Println("Dir exists:", dpconfig.CodeDirectory+dir)
 
-		}
+	// 			}
+	// 		}
 
-	}
+	// 	}
+
+	// }
 
 	var course []*models.WorkerTasks
 	var trigger []string
@@ -209,15 +187,15 @@ func RunPipeline(pipelineID string, environmentID string, runID string) (models.
 			triggerID = s.NodeID
 		}
 
-		dependJSON, err := json.Marshal(dependencies[s.NodeID])
-		if err != nil {
-			logging.PrintSecretsRedact(err)
-		}
+		// dependJSON, err := json.Marshal(dependencies[s.NodeID])
+		// if err != nil {
+		// 	logging.PrintSecretsRedact(err)
+		// }
 
-		destinationJSON, err := json.Marshal(destinations[s.NodeID])
-		if err != nil {
-			logging.PrintSecretsRedact(err)
-		}
+		// destinationJSON, err := json.Marshal(destinations[s.NodeID])
+		// if err != nil {
+		// 	logging.PrintSecretsRedact(err)
+		// }
 
 		addTask := &models.WorkerTasks{
 			TaskID:        uuid.NewString(),
@@ -229,10 +207,10 @@ func RunPipeline(pipelineID string, environmentID string, runID string) (models.
 			PipelineID:    s.PipelineID,
 			NodeID:        s.NodeID,
 			Status:        status,
-			Dependency:    dependJSON,
+			Dependency:    s.Dependency,
 			Commands:      s.Commands,
-			Destination:   destinationJSON,
-			Folder:        folderMap[s.NodeID],
+			Destination:   s.Destination,
+			// Folder:        folderMap[s.NodeID],
 			// FolderID:      folderNodeMap[s.NodeID],
 			RunType: "pipeline",
 		}
@@ -245,6 +223,7 @@ func RunPipeline(pipelineID string, environmentID string, runID string) (models.
 
 		}
 
+		// This is to queue the tasks for run - sends Queue status to frontend
 		errnat := messageq.MsgSend("taskupdate."+environmentID+"."+RunID, addTask)
 		if errnat != nil {
 			if dpconfig.Debug == "true" {
@@ -296,18 +275,8 @@ func RunPipeline(pipelineID string, environmentID string, runID string) (models.
 			commandsend = append(commandsend, c.Command)
 		}
 
-		// log.Println("Commands:", commandsend)
-
-		// log.Println("Pipeline run id:", runID, RunID)
-
-		// log.Println("First:", s)
-		// if x == 2 {
-		// 	ex = "exit 1;"
-		// }
-		// err = worker.WorkerRunTask("python_1", triggerData[s].TaskID, RunID, environmentID, pipelineID, s, []string{"sleep " + strconv.Itoa(x) + "; echo " + s})
-		// log.Println("Worker type:", triggerData[s].WorkerType)
 		/* Start the first task */
-		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, folderMap[triggerData[s].NodeID], folderNodeMap[triggerData[s].NodeID], "", "pipeline", triggerData[s].WorkerType, inputData)
+		err = worker.WorkerRunTask(triggerData[s].WorkerGroup, triggerData[s].TaskID, RunID, environmentID, pipelineID, s, commandsend, "", "pipeline", triggerData[s].WorkerType, inputData)
 		if err != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(err)
