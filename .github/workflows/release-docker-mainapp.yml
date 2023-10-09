@@ -22,10 +22,10 @@ jobs:
         run: echo "DP_VERSION=${GITHUB_REF/refs\/tags\//}" >> "$GITHUB_ENV"
 
       # - name: Release check out ${{ steps.get_version.outputs.VERSION }}
-      - name: Release check out $DP_VERSION
+      - name: Release check out ${{ env.DP_VERSION }}
         uses: actions/checkout@v3
         with:
-          ref: $DP_VERSION
+          ref: ${{ env.DP_VERSION }}
           # ref: ${{ steps.get_version.outputs.VERSION }}
 
       # Login against a Docker registry except on PR
@@ -43,10 +43,10 @@ jobs:
       #   with:
       #     cosign-release: 'v1.9.0'
 
-      - name: Tag reference ${{ github.ref }} - version=$DP_VERSION
+      - name: Tag reference ${{ github.ref }} - version=${{ env.DP_VERSION }}
         run: |
-          echo release: $DP_VERSION
-          export dpversion=$DP_VERSION
+          echo release: ${{ env.DP_VERSION }}
+          export dpversion=${{ env.DP_VERSION }}
           echo docker version: $dpversion
 
       
@@ -73,7 +73,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            DATAPLANE_VERSION=$DP_VERSION
+            DATAPLANE_VERSION=${{ env.DP_VERSION }}
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker

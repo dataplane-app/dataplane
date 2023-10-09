@@ -49,6 +49,7 @@ jobs:
 
       # Get values for cache paths to be used in later steps
       - id: go-cache-paths
+        name: Github Actions Environment Variables
         run: |
           echo "go-build=$(go env GOCACHE)" >> "$GITHUB_ENV"
           echo "go-mod=$(go env GOMODCACHE)" >> "$GITHUB_ENV"
