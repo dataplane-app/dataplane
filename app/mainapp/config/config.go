@@ -13,6 +13,7 @@ var PlatformID string
 var MainAppID string = ""
 var Leader string = ""
 var AllowOrigins string = "*"
+var Version string = "Development"
 
 /* Routine removal of stale data */
 var CleanTasks int = 30

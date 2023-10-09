@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"time"
@@ -35,6 +36,7 @@ func Setup(port string) *fiber.App {
 	database.RedisConnect()
 	database.DBConnect()
 	log.Println("🏃 ======== DATAPLANE WORKER ========")
+	log.Println("🔢 Dataplane version:", wrkerconfig.Version)
 
 	// -------- NATS Connect -------
 	messageq.NATSConnect()
@@ -152,6 +154,11 @@ func Setup(port string) *fiber.App {
 
 	// Cancel running job
 	app.Post("/runnercancel/:id", runtask.Canceltask())
+
+	// ----- APP Version ----
+	app.Get("/version", func(c *fiber.Ctx) error {
+		return c.Status(http.StatusOK).JSON(fiber.Map{"Version": wrkerconfig.Version})
+	})
 
 	// Check healthz
 	app.Get("/healthz", func(c *fiber.Ctx) error {

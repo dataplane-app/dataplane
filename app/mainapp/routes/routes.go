@@ -65,6 +65,7 @@ func Setup(port string) *fiber.App {
 	MainAppID = uuid.NewString()
 	dpconfig.MainAppID = MainAppID
 	log.Println("🍦 Server ID: ", MainAppID)
+	log.Println("🔢 Dataplane version:", dpconfig.Version)
 
 	// ------- LOAD secrets ------
 	logging.MapSecrets()
@@ -282,6 +283,11 @@ func Setup(port string) *fiber.App {
 	// --------FRONTEND ----
 	app.Static("/webapp", "./frontbuild")
 	app.Static("/webapp/*", "./frontbuild/index.html")
+
+	// ----- APP Version ----
+	app.Get("/app/version", func(c *fiber.Ctx) error {
+		return c.Status(http.StatusOK).JSON(fiber.Map{"Version": dpconfig.Version})
+	})
 
 	// ------- GRAPHQL------
 	app.Post("/app/public/graphql", PublicGraphqlHandler())
@@ -687,8 +693,8 @@ func Setup(port string) *fiber.App {
 		return c.Status(http.StatusOK).JSON(fiber.Map{"runID": runID, "Data Platform": "Dataplane"})
 	})
 
-	// Deployment API Trigger private
-	app.Post("/publicapi/deployment/api-trigger/:version/:id", auth.ApiAuthMiddleDeployment("private"), func(c *fiber.Ctx) error {
+	// Deployment API Trigger private :: privateapi/deployment/api-trigger/latest/<id>
+	app.Post("/privateapi/deployment/api-trigger/:version/:id", auth.ApiAuthMiddleDeployment("private"), func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
 		pipelineID := c.Locals("deploymentID").(string)
 		environmentID := c.Locals("environmentID").(string)
@@ -738,11 +744,11 @@ func Setup(port string) *fiber.App {
 	})
 
 	// Sync folders to Database
-	app.Post("/sync-folder-database", func(c *fiber.Ctx) error {
-		distributefilesystem.MoveCodeFilesToDB(database.DBConn)
-		distributefilesystem.DeployFilesToDB(database.DBConn)
-		return c.SendString("Finished syncing code files to database.")
-	})
+	// app.Post("/sync-folder-database", func(c *fiber.Ctx) error {
+	// 	distributefilesystem.MoveCodeFilesToDB(database.DBConn)
+	// 	distributefilesystem.DeployFilesToDB(database.DBConn)
+	// 	return c.SendString("Finished syncing code files to database.")
+	// })
 
 	/* Worker Load Subscriptions activate */
 	// worker.LoadWorkers(MainAppID)

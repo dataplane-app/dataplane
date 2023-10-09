@@ -19,6 +19,7 @@ var DPworkerCMD string
 var CodeDirectory string
 var CodeLanguages string
 var CodeLoadPackages string
+var Version string = "Development"
 
 // var Scheduler *gocron.Scheduler
 

@@ -148,6 +148,7 @@ type CodeFilesCacheOutput struct {
 	FolderID    string `json:"folder_id"`
 	FileName    string `json:"file_name"`
 	ChecksumMD5 string `json:"checksum_md5"`
+	Level       string `json:"level"`
 	FileStore   []byte `gorm:"type:bytea;" json:"file_store"`
 }
 

@@ -19,7 +19,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func RPAWorker(envID string, workerGroup string, runid string, taskid string, pipelineID string, nodeID string, commands []string, Folder string, FolderID string, Version string, RunType string, InputData bool) error {
+func RPAWorker(envID string, workerGroup string, runid string, taskid string, pipelineID string, nodeID string, commands []string, Version string, RunType string, InputData bool) error {
 
 	// runSend := models.CodeRun{}
 	markFail := true
@@ -178,8 +178,6 @@ func RPAWorker(envID string, workerGroup string, runid string, taskid string, pi
 			WorkerGroup:   workerGroup,
 			WorkerID:      remoteWorkerID,
 			Commands:      commands,
-			Folder:        Folder,
-			FolderID:      FolderID,
 			Version:       Version,
 			RunType:       RunType,
 			InputData:     InputData,

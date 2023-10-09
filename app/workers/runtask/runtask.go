@@ -8,11 +8,11 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 
@@ -53,6 +53,21 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	var TasksStatusWG string
 	var TasksRun Task
 
+	statusUpdate = "Run"
+
+	TaskUpdate := modelmain.WorkerTasks{
+		TaskID:        msg.TaskID,
+		CreatedAt:     time.Now().UTC(),
+		EnvironmentID: msg.EnvironmentID,
+		RunID:         msg.RunID,
+		NodeID:        msg.NodeID,
+		PipelineID:    msg.PipelineID,
+		WorkerGroup:   wrkerconfig.WorkerGroup,
+		WorkerID:      wrkerconfig.WorkerID,
+		StartDT:       time.Now().UTC(),
+		Status:        statusUpdate,
+	}
+
 	if wrkerconfig.Debug == "true" {
 		log.Printf("starting task with id %s - node: %s run: %s type: %s version: %s \n", msg.TaskID, msg.NodeID, msg.RunID, msg.RunType, msg.Version)
 	}
@@ -72,7 +87,10 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			log.Println(errl.Error())
 		}
 
-		WSLogError("Lock for run and node exists:"+errl.Error(), msg)
+		log.Println("Lock for run and node exists:", msg.RunID, msg.NodeID)
+
+		// == NB: this should be a silent fail and continue, the below will fail the entire graph
+		SilentWSLogError("Lock for run and node exists:"+errl.Error(), msg)
 
 		return
 	}
@@ -81,30 +99,15 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	var lockCheck modelmain.WorkerTasks
 	err2 := database.DBConn.Select("task_id", "status").Where("task_id = ? and environment_id= ?", msg.TaskID, msg.EnvironmentID).First(&lockCheck).Error
 	if err2 != nil {
-		log.Println(err2.Error())
-		WSLogError("Task already running:"+err2.Error(), msg)
+		log.Println("Task already running", err2.Error())
+		SilentWSLogError("Task already running:"+err2.Error(), msg)
 		return
 	}
 
 	if lockCheck.Status != "Queue" {
 		log.Println("Skipping not in queue", msg.RunID, msg.NodeID)
-		WSLogError("Skipping not in queue - runid:"+msg.RunID+" - node:"+msg.NodeID, msg)
+		SilentWSLogError("Skipping not in queue - runid:"+msg.RunID+" - node:"+msg.NodeID, msg)
 		return
-	}
-
-	statusUpdate = "Run"
-
-	TaskUpdate := modelmain.WorkerTasks{
-		TaskID:        msg.TaskID,
-		CreatedAt:     time.Now().UTC(),
-		EnvironmentID: msg.EnvironmentID,
-		RunID:         msg.RunID,
-		NodeID:        msg.NodeID,
-		PipelineID:    msg.PipelineID,
-		WorkerGroup:   wrkerconfig.WorkerGroup,
-		WorkerID:      wrkerconfig.WorkerID,
-		StartDT:       time.Now().UTC(),
-		Status:        statusUpdate,
 	}
 
 	UpdateWorkerTasks(TaskUpdate)
@@ -114,7 +117,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	err2 = database.DBConn.Select("run_id", "status").Where("run_id = ?", msg.RunID).First(&pipelineCheck).Error
 	if err2 != nil {
 		log.Println(err2.Error())
-		WSLogError("Skipping not in queue - runid:"+msg.RunID+" - node:"+msg.NodeID, msg)
+		WSLogError("Pipeline marked as failed - runid:"+msg.RunID+" - node:"+msg.NodeID, msg, TaskUpdate)
 		return
 	}
 
@@ -122,7 +125,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 		log.Println("Skipping pipeline not in running state", msg.RunID, msg.NodeID)
 
-		WSLogError("Skipping pipeline not in running state - runid:"+msg.RunID+" - node:"+msg.NodeID, msg)
+		WSLogError("Skipping pipeline not in running state - runid:"+msg.RunID+" - node:"+msg.NodeID, msg, TaskUpdate)
 
 		TaskFinal := modelmain.WorkerTasks{
 			TaskID:        msg.TaskID,
@@ -167,34 +170,40 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			break
 		}
 
-		codeDirectory := wrkerconfig.CodeDirectory
-		directoryRun := codeDirectory + msg.Folder + "/"
+		// parentfolderdata := environmentID + "/pipelines/" + pipelineID
+		// <-parentfolder
+
+		// The folder structure will look like <environment ID>/pipelines/<pipeline ID>
+		// log.Println("parent folder", parentfolderdata)
+		codeDirectory := wrkerconfig.FSCodeDirectory
+		directoryRun := ""
+		if msg.RunType == "deployment" {
+			directoryRun = filepath.Join(codeDirectory+msg.EnvironmentID, msg.RunType, msg.PipelineID, msg.Version, msg.NodeID)
+		} else {
+			directoryRun = filepath.Join(codeDirectory+msg.EnvironmentID, msg.RunType, msg.PipelineID, msg.NodeID)
+		}
 
 		var errfs error
 		switch wrkerconfig.FSCodeFileStorage {
 		case "Database":
 			// Database download
-			codeDirectory = wrkerconfig.FSCodeDirectory
-			directoryRun = codeDirectory + msg.Folder + "/"
 
 			// msg.RunType, msg.Version
 			switch msg.RunType {
 			case "deployment":
-				errfs = distfilesystem.DistributedStorageDeploymentDownload(msg.EnvironmentID, msg.Folder+"/", msg.FolderID, msg.NodeID, msg.RunType, msg.Version)
+				errfs = distfilesystem.DistributedStorageDeploymentDownload(msg.EnvironmentID, directoryRun, msg.NodeID, msg.RunType, msg.Version)
 			default:
-				errfs = distfilesystem.DistributedStoragePipelineDownload(msg.EnvironmentID, msg.Folder+"/", msg.FolderID, msg.NodeID)
+				errfs = distfilesystem.DistributedStoragePipelineDownload(msg.EnvironmentID, directoryRun, msg.NodeID)
 			}
 
 		case "LocalFile":
 
 			// Nothing to do, the files will use a shared volume
 			codeDirectory = wrkerconfig.CodeDirectory
-			directoryRun = codeDirectory + msg.Folder + "/"
+			directoryRun = codeDirectory + directoryRun
 
 		default:
 			// Database download
-			codeDirectory = wrkerconfig.FSCodeDirectory
-			directoryRun = codeDirectory + msg.Folder + "/"
 
 		}
 
@@ -238,30 +247,19 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			// log.Println("==== Directory:", directoryRun)
 
 			// construct the directory if the directory cant be found
-			var newdir string
+			// var newdir string
 			if _, err := os.Stat(directoryRun); os.IsNotExist(err) {
-				// if wrkerconfig.Debug == "true" {
-				// 	log.Println("Directory not found:", directoryRun)
-				// }
-				switch msg.RunType {
-				case "deployment":
-					newdir, err = filesystem.DeployFolderConstructByID(database.DBConn, msg.FolderID, msg.EnvironmentID, "deployments", msg.Version)
-				default:
-					newdir, err = filesystem.FolderConstructByID(database.DBConn, msg.FolderID, msg.EnvironmentID, "pipelines")
-				}
 
 				if wrkerconfig.Debug == "true" {
-					log.Println("Reconstructed:", codeDirectory+newdir)
+					log.Println("Directory not found:", directoryRun)
 				}
 
-				if err == nil {
-					directoryRun = codeDirectory + newdir
-				}
-
+				WSLogError("Directory not found:"+directoryRun, msg, TaskUpdate)
+				return
 			}
 
 			// Overwrite command with injected directory
-			v = strings.ReplaceAll(v, "${{nodedirectory}}", directoryRun)
+			v = strings.ReplaceAll(v, "${{nodedirectory}}", directoryRun+"/")
 
 		}
 
@@ -549,7 +547,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 	errnat := mqworker.MsgSend("pipeline-run-next", RunNext)
 	if errnat != nil {
-		WSLogError("Failed nats to send to next run runid: "+msg.RunID+" - node:"+msg.NodeID, msg)
+		WSLogError("Failed nats to send to next run runid: "+msg.RunID+" - node:"+msg.NodeID, msg, TaskUpdate)
 		if wrkerconfig.Debug == "true" {
 			log.Println(errnat)
 		}
