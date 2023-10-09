@@ -10,8 +10,8 @@ RUN go mod download
 
 ADD app /go/src/build/app
 
-ARG SKAFFOLD_GO_GCFLAGS
-RUN CGO_ENABLED=0 go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o dataplane app/mainapp/server.go
+ARG DATAPLANE_VERSION=latest
+RUN CGO_ENABLED=0 go build -ldflags "-X github.com/dataplane-app/dataplane/app/mainapp/config.Version=$DATAPLANE_VERSION" -o dataplane app/mainapp/server.go
 
 
 FROM node:18.17 as builder2

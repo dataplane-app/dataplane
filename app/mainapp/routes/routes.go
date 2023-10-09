@@ -65,6 +65,7 @@ func Setup(port string) *fiber.App {
 	MainAppID = uuid.NewString()
 	dpconfig.MainAppID = MainAppID
 	log.Println("🍦 Server ID: ", MainAppID)
+	log.Println("🔢 Dataplane version:", dpconfig.Version)
 
 	// ------- LOAD secrets ------
 	logging.MapSecrets()
@@ -282,6 +283,11 @@ func Setup(port string) *fiber.App {
 	// --------FRONTEND ----
 	app.Static("/webapp", "./frontbuild")
 	app.Static("/webapp/*", "./frontbuild/index.html")
+
+	// ----- APP Version ----
+	app.Get("/app/version", func(c *fiber.Ctx) error {
+		return c.Status(http.StatusOK).JSON(fiber.Map{"Version": dpconfig.Version})
+	})
 
 	// ------- GRAPHQL------
 	app.Post("/app/public/graphql", PublicGraphqlHandler())

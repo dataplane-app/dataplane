@@ -2,6 +2,13 @@
 
 Logout uses access token derived from the refresh token. This removes all refresh tokens belonging to that user on logout.
 
+
+### Run with given version
+```shell
+cd app/mainapp
+go run -ldflags "-X github.com/dataplane-app/dataplane/app/mainapp/config.Version=v0.0.1" server.go
+```
+
 ### Run tests
 ```
 go run mainapp/Tests/mainTest.go
