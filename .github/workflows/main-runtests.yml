@@ -52,6 +52,11 @@ jobs:
         run: |
           echo "::set-output name=go-build::$(go env GOCACHE)"
           echo "::set-output name=go-mod::$(go env GOMODCACHE)"
+          echo "DP_VERSION=v0.0.0" >> "$GITHUB_ENV"
+
+      - name: ENV Version Test - version=$DP_VERSION
+        run: |
+          echo release: $DP_VERSION
 
       - name: Checkout code
         uses: actions/checkout@v2
