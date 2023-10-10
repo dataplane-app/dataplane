@@ -7,21 +7,39 @@ import (
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
+	"gorm.io/gorm"
 )
 
 /*
 New or edited file - add to database, invalidate node and file level cache and this will automatically added by reference to cache on run time.
 */
 func InvalidateCacheSingle(nodeID string, environmentID string, fileID string) error {
-	// Write to node level cache
-	err := database.DBConn.Model(&models.CodeNodeCache{}).Where("node_id = ? and environment_id = ?", nodeID, environmentID).Update("cache_valid", false).Error
 
-	if err != nil {
-		return err
-	}
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
+		// Write to node level cache
+		errdb := tx.Model(&models.CodeNodeCache{}).Where("node_id = ? and environment_id = ?", nodeID, environmentID).Update("cache_valid", false).Error
 
-	// Write to file level cache (file gets overwritten)
-	err = database.DBConn.Where("node_id = ? and environment_id = ? and file_id = ?", nodeID, environmentID, fileID).Delete(&models.CodeFilesCache{}).Error
+		if errdb != nil {
+			return errdb
+		}
+
+		// Pipeline: Write to file level cache (file gets overwritten)
+		errdb = tx.Where("node_id = ? and environment_id = ? and file_id = ?", nodeID, environmentID, fileID).Delete(&models.CodeFilesCache{}).Error
+
+		if errdb != nil {
+			return errdb
+		}
+
+		// Code editor: Write to file level cache (file gets overwritten)
+		errdb = tx.Where("node_id = ? and environment_id = ? and file_id = ?", nodeID, environmentID, fileID).Delete(&models.CodeRunFilesCache{}).Error
+
+		if errdb != nil {
+			return errdb
+		}
+
+		return nil
+
+	})
 
 	if err != nil {
 		return err
@@ -33,7 +51,7 @@ func InvalidateCacheSingle(nodeID string, environmentID string, fileID string) e
 /*
 Delete a file, move file or folder name change - invalidate the node cache, remove all file level cache and remove the entire folder in each worker.
 */
-func InvalidateCacheNode(nodeID string, environmentID string, folderpath string) error {
+func InvalidateCacheNode(nodeID string, pipelineID string, environmentID string) error {
 	// Write to node level cache
 	err := database.DBConn.Model(&models.CodeNodeCache{}).Where("node_id = ? and environment_id = ?", nodeID, environmentID).Update("cache_valid", false).Error
 
@@ -48,6 +66,13 @@ func InvalidateCacheNode(nodeID string, environmentID string, folderpath string)
 		return err
 	}
 
+	// Write to file level cache (file gets overwritten)
+	err = database.DBConn.Where("node_id = ? and environment_id = ?", nodeID, environmentID).Delete(&models.CodeRunFilesCache{}).Error
+
+	if err != nil {
+		return err
+	}
+
 	var response models.TaskResponse
 
 	getWorkerGroup := models.PipelineNodes{}
@@ -56,11 +81,7 @@ func InvalidateCacheNode(nodeID string, environmentID string, folderpath string)
 		log.Println("Error getting worker groups for cache delete", err)
 		return err
 	}
-	channel := "DisributedStorageRemoval." + getWorkerGroup.WorkerGroup
-
-	if dpconfig.Debug == "true" {
-		log.Println("folder to delete:", folderpath)
-	}
+	channel := "DisributedStorageRemoval." + environmentID + "." + getWorkerGroup.WorkerGroup
 
 	_, errnats := messageq.MsgReply(channel, folderpath, &response)
 
@@ -75,7 +96,7 @@ func InvalidateCacheNode(nodeID string, environmentID string, folderpath string)
 /*
 Delete or change pipeline.
 */
-func InvalidateCachePipeline(environmentID string, folderpath string, pipelineID string) error {
+func InvalidateCachePipeline(environmentID string, pipelineID string) error {
 	// Write to node level cache
 
 	updateQuery := `
@@ -111,15 +132,11 @@ func InvalidateCachePipeline(environmentID string, folderpath string, pipelineID
 		return err
 	}
 
-	if dpconfig.Debug == "true" {
-		log.Println("folder to delete:", folderpath)
-	}
-
 	var response models.TaskResponse
 	for _, x := range getWorkerGroups {
 		channel := "DisributedStorageRemoval." + x.WorkerGroup
 		// log.Println(channel)
-		_, errnats := messageq.MsgReply(channel, folderpath, &response)
+		_, errnats := messageq.MsgReply(channel, pipelineID, &response)
 
 		if errnats != nil {
 			log.Println("Send to worker error nats:", errnats)

@@ -138,7 +138,8 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		codeDirectory := wrkerconfig.FSCodeDirectory
 
 		// Needs to use pipeline folder for caching between a pipeline run and a code editor run
-		directoryRun := filepath.Join(codeDirectory+msg.EnvironmentID, "pipeline", msg.PipelineID, msg.NodeID)
+		// log.Println("dir components: ", codeDirectory, "-", msg.EnvironmentID, "coderun", "-", msg.PipelineID, "-", msg.NodeID)
+		directoryRun := filepath.Join(codeDirectory, msg.EnvironmentID, "coderun", msg.PipelineID, msg.NodeID)
 
 		switch wrkerconfig.FSCodeFileStorage {
 		case "Database":
@@ -168,16 +169,33 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		// log.Println(directoryRun)
 
 		// Detect if folder is being requested
+
+		errmsg := ""
 		if strings.Contains(v.Command, "${{nodedirectory}}") {
 
 			// construct the directory if the directory cant be found
 			if _, err := os.Stat(directoryRun); os.IsNotExist(err) {
 
-				if wrkerconfig.Debug == "true" {
-					log.Println("Directory not found:", directoryRun)
+				log.Println("Directory not found:", directoryRun)
+
+				// Self healing: Write to file level cache (file gets overwritten)
+				deleteQuery := `
+					DELETE FROM code_run_files_cache
+					USING pipeline_nodes
+					WHERE code_run_files_cache.environment_id = ? and pipeline_nodes.pipeline_id =? and 
+					pipeline_nodes.node_id = code_run_files_cache.node_id and pipeline_nodes.environment_id = code_run_files_cache.environment_id;
+					`
+				errdbrem := database.DBConn.Exec(deleteQuery, msg.EnvironmentID, msg.PipelineID).Error
+
+				if errdbrem != nil {
+					errmsg = "Directory not found:" + directoryRun + " - directory cache failed to clear, speak to Dataplanbe admin to clear the cache. DB error: " + errdbrem.Error()
+					WSLogError(errmsg, msg)
+					return
 				}
 
-				WSLogError("Directory not found:"+directoryRun, msg)
+				errmsg = "Directory not found:" + directoryRun + " - directory cache cleared, try running code again."
+				WSLogError(errmsg, msg)
+
 				return
 			}
 
@@ -360,7 +378,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		if err != nil {
 
 			uid := uuid.NewString()
-			line := wrkerconfig.Secrets.Replace(stderr.String())
+			line := wrkerconfig.Secrets.Replace(err.Error())
 
 			logmsg := modelmain.LogsCodeRun{
 				CreatedAt:     time.Now().UTC(),

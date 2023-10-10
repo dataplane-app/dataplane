@@ -20,6 +20,7 @@ func DistributedStorageFileSave(FilesOutput []*models.CodeFilesCacheOutput, dire
 
 	writePipelineCache := []*models.CodeFilesCache{}
 	writeDeployCache := []*models.DeployCodeFilesCache{}
+	writeCodeRunCache := []*models.CodeRunFilesCache{}
 
 	for i, file := range FilesOutput {
 
@@ -83,7 +84,9 @@ func DistributedStorageFileSave(FilesOutput []*models.CodeFilesCacheOutput, dire
 		}
 
 		/* Cache to correct model */
-		if runType == "deployment" {
+		switch runType {
+		case "deployment":
+
 			writeDeployCache = append(writeDeployCache, &models.DeployCodeFilesCache{
 				FileID:           file.FileID,
 				NodeID:           nodeID,
@@ -93,8 +96,20 @@ func DistributedStorageFileSave(FilesOutput []*models.CodeFilesCacheOutput, dire
 				Version:          version,
 				ChecksumMD5Check: true,
 			})
-		} else {
+
+		case "pipeline":
 			writePipelineCache = append(writePipelineCache, &models.CodeFilesCache{
+				FileID:           file.FileID,
+				NodeID:           nodeID,
+				WorkerGroup:      wrkerconfig.WorkerGroup,
+				WorkerID:         wrkerconfig.WorkerID,
+				EnvironmentID:    environmentID,
+				ChecksumMD5Check: true,
+			})
+
+		case "coderun":
+
+			writeCodeRunCache = append(writeCodeRunCache, &models.CodeRunFilesCache{
 				FileID:           file.FileID,
 				NodeID:           nodeID,
 				WorkerGroup:      wrkerconfig.WorkerGroup,
@@ -108,7 +123,8 @@ func DistributedStorageFileSave(FilesOutput []*models.CodeFilesCacheOutput, dire
 
 	// Write to low level cache - separated if deployment or not
 
-	if runType == "deployment" {
+	switch runType {
+	case "deployment":
 
 		if len(writeDeployCache) > 0 {
 			err = database.DBConn.Clauses(clause.OnConflict{
@@ -119,7 +135,8 @@ func DistributedStorageFileSave(FilesOutput []*models.CodeFilesCacheOutput, dire
 			}
 		}
 
-	} else {
+	case "pipeline":
+
 		if len(writePipelineCache) > 0 {
 			err = database.DBConn.Clauses(clause.OnConflict{
 				UpdateAll: true,
@@ -129,6 +146,16 @@ func DistributedStorageFileSave(FilesOutput []*models.CodeFilesCacheOutput, dire
 			}
 		}
 
+	case "coderun":
+
+		if len(writeCodeRunCache) > 0 {
+			err = database.DBConn.Clauses(clause.OnConflict{
+				UpdateAll: true,
+			}).Create(&writeCodeRunCache).Error
+			if err != nil {
+				log.Println("Write cached files: ", err)
+			}
+		}
 	}
 
 	return nil

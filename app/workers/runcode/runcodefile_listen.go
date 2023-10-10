@@ -20,7 +20,7 @@ type TaskResponse struct {
 func ListenRunCode() {
 
 	// Responding to a task request
-	channel := "runcodefile." + wrkerconfig.WorkerGroup + "." + wrkerconfig.WorkerID
+	channel := "runcodefile." + wrkerconfig.EnvID + "." + wrkerconfig.WorkerGroup + "." + wrkerconfig.WorkerID
 	// log.Println("channel:", channel)
 	messageq.NATSencoded.Subscribe(channel, func(subj, reply string, msg modelmain.CodeRun) {
 		// log.Println("message:", msg)
@@ -65,7 +65,7 @@ func ListenRunCode() {
 		log.Println("🎧 Listening for code runs on subject:", channel)
 	}
 
-	messageq.NATSencoded.Subscribe("runcodefilecancel."+wrkerconfig.WorkerGroup+"."+wrkerconfig.WorkerID, func(subj, reply string, msg modelmain.CodeRun) {
+	messageq.NATSencoded.Subscribe("runcodefilecancel."+wrkerconfig.EnvID+"."+wrkerconfig.WorkerGroup+"."+wrkerconfig.WorkerID, func(subj, reply string, msg modelmain.CodeRun) {
 		// Respond to cancelling a task
 		id := msg.RunID
 

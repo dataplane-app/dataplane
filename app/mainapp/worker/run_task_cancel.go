@@ -32,7 +32,7 @@ func WorkerCancelTask(taskid string, envID string, workerType string) error {
 		return errors.New("Task completed with fail or success")
 	}
 
-	log.Println("Cancel worker")
+	// log.Println("Cancel worker")
 
 	// log.Println(task, taskid)
 	complete := false
@@ -54,7 +54,7 @@ func WorkerCancelTask(taskid string, envID string, workerType string) error {
 			}
 
 			var response models.TaskResponse
-			_, errnats := messageq.MsgReply("taskcancel."+task.WorkerGroup+"."+task.WorkerID, tasksend, &response)
+			_, errnats := messageq.MsgReply("taskcancel."+task.EnvironmentID+"."+task.WorkerGroup+"."+task.WorkerID, tasksend, &response)
 
 			if errnats != nil {
 				log.Println("Send to worker for cancel error nats:", errnats)

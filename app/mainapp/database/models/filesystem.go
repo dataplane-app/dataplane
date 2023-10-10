@@ -179,6 +179,24 @@ type DeployCodeFilesCache struct {
 	UpdatedAt        *time.Time `json:"updated_at"`
 }
 
+func (CodeRunFilesCache) IsEntity() {}
+
+func (CodeRunFilesCache) TableName() string {
+	return "code_run_files_cache"
+}
+
+type CodeRunFilesCache struct {
+	FileID           string     `gorm:"primaryKey;type:varchar(48);" json:"file_id"`
+	NodeID           string     `gorm:"primaryKey;type:varchar(48);" json:"node_id"`
+	Version          string     `gorm:"primaryKey;type:varchar(48);" json:"version"`
+	WorkerID         string     `gorm:"primaryKey;type:varchar(48);" json:"worker_id"`
+	WorkerGroup      string     `json:"worker_group"`
+	EnvironmentID    string     `json:"environment_id"`
+	ChecksumMD5Check bool       `gorm:"default:false;" json:"checksum_md5_check"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        *time.Time `json:"updated_at"`
+}
+
 func (DeployCodeNodeCache) IsEntity() {}
 
 func (DeployCodeNodeCache) TableName() string {

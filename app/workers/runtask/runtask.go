@@ -429,7 +429,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		if err != nil {
 
 			uid := uuid.NewString()
-			line := wrkerconfig.Secrets.Replace(stderr.String())
+			line := wrkerconfig.Secrets.Replace(err.Error())
 
 			logmsg := modelmain.LogsWorkers{
 				CreatedAt:     time.Now().UTC(),
