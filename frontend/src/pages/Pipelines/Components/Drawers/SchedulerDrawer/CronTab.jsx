@@ -14,11 +14,14 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
     const MeData = useGlobalMeState();
     const userTimezone = MeData.timezone.get();
 
+
     // Set schedule for upcoming runs on cron expression change
     useEffect(() => {
         // Prepare schedule table
         const sched = later.parse.cron(scheduleStatement);
+        sched.useLocalTime = false;
         setSchedule(later.schedule(sched).next(20));
+
 
         // Validation check on save
         isValidCron(scheduleStatement) ? setValidationError(false) : setValidationError(true);
@@ -37,12 +40,12 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
                     <Timezone timezone={timezone} setTimezone={setTimezone} />
                 </Box>
 
-                <Typography fontSize={13} mt={1.5}>
-                    {cronString.replace(/AM|PM/, (x) => x + ' UTC')}
-                </Typography>
+                {/* <Typography fontSize={13} mt={1.5}>
+                    {cronZone(cronString, schedule[0], timezone)}
+                </Typography> */}
 
                 <Typography fontSize={13} mt={1.5}>
-                    {cronZone(cronString, schedule[0], timezone)}
+                    {cronString.replace(/AM|PM/, (x) => x + " "+timezone)}    
                 </Typography>
 
                 <Typography fontSize={15} fontWeight={700} mt={3}>
@@ -89,23 +92,23 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
                                             </TableCell>
 
                                             <TableCell component="th" scope="row">
-                                                {DateTime.fromJSDate(row, { zone: timezone }).toFormat('yyyy')}
+                                               HO {DateTime.fromJSDate(row, { zone: timezone }).toFormat('yyyy')}
                                             </TableCell>
 
                                             {userTimezone ? (
-                                                <Tooltip title={DateTime.fromJSDate(row, { zone: timezone }).toFormat('HH:mm:ss z (ZZZZ)')} placement="top-start">
+                                              
                                                     <TableCell component="th" scope="row">
-                                                        {DateTime.fromJSDate(row, { zone: timezone }).toFormat('HH:mm:ss')}
+                                                        {DateTime.fromJSDate(row, { zone: "UTC" }).toFormat('HH:mm:ss')}
                                                     </TableCell>
-                                                </Tooltip>
+                                     
                                             ) : null}
 
                                             {userTimezone ? (
-                                                <Tooltip title={DateTime.fromJSDate(row, { zone: timezone }).toFormat('HH:mm:ss z (ZZZZ)')} placement="top-start">
+
                                                     <TableCell component="th" scope="row">
-                                                        {DateTime.fromJSDate(row, { zone: timezone }).toFormat('z (ZZZZ)')}
+                                                       {DateTime.fromJSDate(row, { zone: timezone }).toFormat('z (ZZZZ)')}
                                                     </TableCell>
-                                                </Tooltip>
+
                                             ) : null}
                                         </TableRow>
                                     );
@@ -141,16 +144,16 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
                     Every 6 hours
                 </Typography>
                 <Typography sx={{ cursor: 'pointer' }} mt={0.5} color="primary.main" fontSize={13} onClick={() => setScheduleStatement('0 8 * * *')}>
-                    Every day at 8am (UTC)
+                    Every day at 8am ({timezone})
                 </Typography>
                 <Typography sx={{ cursor: 'pointer' }} mt={0.5} color="primary.main" fontSize={13} onClick={() => setScheduleStatement('0 11 * * 5')}>
-                    Every Friday at 11am (UTC)
+                    Every Friday at 11am ({timezone})
                 </Typography>
                 <Typography sx={{ cursor: 'pointer' }} mt={0.5} color="primary.main" fontSize={13} onClick={() => setScheduleStatement('0 22 * * 1-5')}>
-                    At 10pm, Monday through Friday (UTC)
+                    At 10pm, Monday through Friday ({timezone})
                 </Typography>
                 <Typography sx={{ cursor: 'pointer' }} mt={0.5} color="primary.main" fontSize={13} onClick={() => setScheduleStatement('0 14 5 * *')}>
-                    Every month on day 5 at 2pm (UTC)
+                    Every month on day 5 at 2pm ({timezone})
                 </Typography>
             </Box>
         </Box>
@@ -158,11 +161,15 @@ export function CronTab({ setValidationError, scheduleStatement, setScheduleStat
 }
 
 // Utility functions
-function cronZone(statement, next, zone) {
-    // Return if there is no time
-    if (/\d\d:\d\d (AM|PM)/.test(statement) === false) return;
+// function cronZone(statement, next, zone) {
+//     // Return if there is no time
+//     if (/\d\d:\d\d (AM|PM)/.test(statement) === false) return;
 
-    const time = DateTime.fromJSDate(next, { zone }).toFormat('hh:mm a z');
-    statement = statement.replace(/\d\d:\d\d (AM|PM)/, time);
-    return statement;
-}
+//     // Convert to timezone given, next is the parsed cron statement.
+//     // {zone}
+//     const time = DateTime.fromJSDate(next, "UTC" ).toFormat('hh:mm a z');
+//     statement = statement.replace(/\d\d:\d\d (AM|PM)/, time);
+
+//     console.log("Converted cron statement to user's timezone", next, statement, zone, time)
+//     return statement;
+// }

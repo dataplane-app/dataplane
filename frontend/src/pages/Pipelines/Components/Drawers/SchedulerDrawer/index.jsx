@@ -23,10 +23,12 @@ const ScheduleDrawer = ({ handleClose, setElements }) => {
         setTabValue(newValue);
     };
 
-    // Schedule state
+    // Schedule state 
+    // scheduleStatement is the cron input. 
     const [scheduleStatement, setScheduleStatement] = useState('');
     const [timezone, setTimezone] = useState(null);
     const [seconds, setSeconds] = useState(null);
+
 
     // Set triggerOnline switch on load
     useEffect(() => {
