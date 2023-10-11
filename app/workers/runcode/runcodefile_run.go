@@ -8,11 +8,11 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
@@ -139,7 +139,7 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 
 		// Needs to use pipeline folder for caching between a pipeline run and a code editor run
 		// log.Println("dir components: ", codeDirectory, "-", msg.EnvironmentID, "coderun", "-", msg.PipelineID, "-", msg.NodeID)
-		directoryRun := filepath.Join(codeDirectory, msg.EnvironmentID, "coderun", msg.PipelineID, msg.NodeID)
+		directoryRun := filesystem.CodeRunFolderNode(codeDirectory, msg.EnvironmentID, msg.PipelineID, msg.NodeID)
 
 		switch wrkerconfig.FSCodeFileStorage {
 		case "Database":

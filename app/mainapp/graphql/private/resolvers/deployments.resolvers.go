@@ -546,12 +546,18 @@ func (r *mutationResolver) DeleteDeployment(ctx context.Context, environmentID s
 		var parentfolder models.DeployCodeFolders
 		tx.Where("environment_id = ? and pipeline_id = ? and level = ? and version =?", environmentID, pipelineID, "pipeline", version).First(&parentfolder)
 
-		folderpath2, errfsc := filesystem.DeployFolderConstructByID(tx, parentfolder.FolderID, environmentID, "deployments", version)
-		if errfsc != nil {
-			return errfsc
-		}
+		// folderpath2, errfsc := filesystem.DeployFolderConstructByID(tx, parentfolder.FolderID, environmentID, "deployments", version)
+		// if errfsc != nil {
+		// 	return errfsc
+		// }
 
-		errcache := dfscache.InvalidateCacheDeployment(environmentID, folderpath2, pipelineID, version)
+		msg := models.WorkerTasks{
+			EnvironmentID: environmentID,
+			PipelineID:    pipelineID,
+			RunType:       "deployment",
+			Version:       version,
+		}
+		errcache := dfscache.InvalidateCacheDeployment(msg)
 		if errcache != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(errcache)
@@ -850,8 +856,16 @@ func (r *mutationResolver) ClearFileCacheDeployment(ctx context.Context, environ
 	var parentfolder models.DeployCodeFolders
 	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ? and version =?", environmentID, deploymentID, "pipeline", version).First(&parentfolder)
 
-	folderpath2, _ := filesystem.DeployFolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "deployments", version)
-	errcache := dfscache.InvalidateCacheDeployment(environmentID, folderpath2, deploymentID, version)
+	// folderpath2, _ := filesystem.DeployFolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "deployments", version)
+
+	msg := models.WorkerTasks{
+		EnvironmentID: environmentID,
+		PipelineID:    deploymentID,
+		RunType:       "deployment",
+		Version:       version,
+	}
+	errcache := dfscache.InvalidateCacheDeployment(msg)
+
 	if errcache != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(errcache)

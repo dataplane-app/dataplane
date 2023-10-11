@@ -1,6 +1,7 @@
 package runtask
 
 import (
+	"log"
 	"time"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
@@ -24,7 +25,22 @@ func WSLogError(logline string, msg models.WorkerTaskSend, TaskUpdate modelmain.
 	}
 
 	mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
-	database.DBConn.Create(&sendmsg)
+
+	logmsg := modelmain.LogsWorkers{
+		CreatedAt:     time.Now().UTC(),
+		UID:           uidstring,
+		EnvironmentID: msg.EnvironmentID,
+		RunID:         msg.RunID,
+		NodeID:        msg.NodeID,
+		TaskID:        msg.TaskID,
+		Category:      "task",
+		Log:           logline,
+		LogType:       "error",
+	}
+	errdb := database.DBConn.Create(&logmsg).Error
+	if errdb != nil {
+		log.Println("Failed to write error log: ", errdb.Error())
+	}
 
 	// "start_dt", "end_dt", "status", "reason", "worker_id", "worker_group"
 	TaskUpdate.EndDT = time.Now().UTC()
