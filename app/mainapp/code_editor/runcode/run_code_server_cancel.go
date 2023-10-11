@@ -54,7 +54,7 @@ func RunCodeServerCancel(runid string, environmentID string) error {
 		}
 
 		var response models.TaskResponse
-		_, errnats := messageq.MsgReply("runcodefilecancel."+task.WorkerGroup+"."+task.WorkerID, tasksend, &response)
+		_, errnats := messageq.MsgReply("runcodefilecancel."+environmentID+"."+task.WorkerGroup+"."+task.WorkerID, tasksend, &response)
 
 		if errnats != nil {
 			log.Println("Send to worker error nats:", errnats)

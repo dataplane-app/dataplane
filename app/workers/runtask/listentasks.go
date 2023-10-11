@@ -15,7 +15,7 @@ import (
 func ListenTasks() {
 
 	// Responding to a task request
-	messageq.NATSencoded.Subscribe("task."+wrkerconfig.WorkerGroup+"."+wrkerconfig.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
+	messageq.NATSencoded.Subscribe("task."+wrkerconfig.EnvID+"."+wrkerconfig.WorkerGroup+"."+wrkerconfig.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
 		// log.Println("message:", msg)
 
 		response := "ok"
@@ -64,10 +64,10 @@ func ListenTasks() {
 		}
 	})
 	if wrkerconfig.Debug == "true" {
-		log.Println("🎧 Listening for tasks on subject:", "task."+wrkerconfig.WorkerGroup+"."+wrkerconfig.WorkerID)
+		log.Println("🎧 Listening for tasks on subject:", "task."+wrkerconfig.EnvID+"."+wrkerconfig.WorkerGroup+"."+wrkerconfig.WorkerID)
 	}
 
-	messageq.NATSencoded.Subscribe("taskcancel."+wrkerconfig.WorkerGroup+"."+wrkerconfig.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
+	messageq.NATSencoded.Subscribe("taskcancel."+wrkerconfig.EnvID+"."+wrkerconfig.WorkerGroup+"."+wrkerconfig.WorkerID, func(subj, reply string, msg modelmain.WorkerTaskSend) {
 		// Respond to cancelling a task
 		id := msg.TaskID
 

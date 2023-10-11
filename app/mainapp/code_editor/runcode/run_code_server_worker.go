@@ -16,7 +16,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func RunCodeServerWorker(envID string, nodeID string, workerGroup string, runid string, commands []string, filesdata models.CodeFiles, folderMap string, folderIDMap string, replayRunID string) (models.CodeRun, error) {
+// filesdata models.CodeFiles,
+// folderMap string, folderIDMap string,
+
+func RunCodeServerWorker(envID string, pipelineID string, nodeID string, workerGroup string, runid string, commands []string, replayRunID string) (models.CodeRun, error) {
 
 	/* Look up chosen workers -
 	if none, keep trying for 10 x 2 seconds
@@ -99,9 +102,10 @@ func RunCodeServerWorker(envID string, nodeID string, workerGroup string, runid 
 			}
 
 			runSend = models.CodeRun{
-				RunID:         runid,
-				NodeID:        nodeID,
-				FileID:        filesdata.FileID,
+				RunID:      runid,
+				NodeID:     nodeID,
+				PipelineID: pipelineID,
+				// FileID:        filesdata.FileID,
 				ReplayRunID:   replayRunID,
 				CreatedAt:     time.Now().UTC(),
 				EnvironmentID: envID,
@@ -109,8 +113,8 @@ func RunCodeServerWorker(envID string, nodeID string, workerGroup string, runid 
 				WorkerID:      loadbalanceNext,
 				Commands:      commandJSON,
 				Status:        "Queue",
-				Folder:        folderMap,
-				FolderID:      folderIDMap,
+				// Folder:        folderMap,
+				// FolderID:      folderIDMap,
 			}
 
 			err2 := database.DBConn.Create(&runSend)
@@ -129,7 +133,7 @@ func RunCodeServerWorker(envID string, nodeID string, workerGroup string, runid 
 			*/
 
 			// log.Println("Task channel: ", "task."+workerGroup+"."+loadbalanceNext)
-			channel := "runcodefile." + workerGroup + "." + loadbalanceNext
+			channel := "runcodefile." + envID + "." + workerGroup + "." + loadbalanceNext
 			// log.Println(channel)
 			_, errnats := messageq.MsgReply(channel, runSend, &response)
 

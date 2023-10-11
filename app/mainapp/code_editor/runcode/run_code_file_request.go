@@ -40,34 +40,39 @@ func RunCodeFile(workerGroup string, fileID string, envID string, pipelineID str
 	/* ------------------------ Python node -------------------------- */
 	case "python":
 
-		// ------ Obtain folder structure from file id
+		// ------ Obtain the file name
 		filesdata := models.CodeFiles{}
-		dberror := database.DBConn.Where("file_id = ? and environment_id =? and level = ?", fileID, envID, "node_file").Find(&filesdata).Error
+		dberror := database.DBConn.Select("file_name", "level", "folder_id").Where("file_id = ? and environment_id =? and level = ?", fileID, envID, "node_file").Find(&filesdata).Error
 		if dberror != nil {
 			rerror := "Code run obtain folder structure error:" + dberror.Error()
 			WSLogError(envID, runid, rerror, models.CodeRun{})
 			return models.CodeRun{}, errors.New(rerror)
 		}
 
-		parentfolderdata := envID + "/coderun/" + pipelineID + "/" + nodeID
+		// parentfolderdata := envID + "/coderun/" + pipelineID + "/" + nodeID
 		var err error
-		// if filesdata.FolderID != "" {
 
-		// 	// The folder structure will look like <environment ID>/coderun/<pipeline ID>/<node ID>
-		// 	parentfolderdata, err = filesystem.NodeLevelFolderConstructByID(database.DBConn, filesdata.FolderID, envID)
-		// 	// parentfolderdata, err = filesystem.FolderConstructByID(database.DBConn, filesdata.FolderID, envID, "pipelines")
+		/* The folder structure will look like <environment ID>/coderun/<pipeline ID>/<node ID>
+		We also need to look for sub folders if the the fileID is a subfolder */
+		if filesdata.Level != "node" {
 
-		// 	log.Println("parent folder code run:", parentfolderdata)
+			// Look up folder structure
+			newdir, err := filesystem.NodeLevelFolderConstructByID(database.DBConn, filesdata.FolderID, envID)
+			// log.Println("sub folder", newdir[1:])
 
-		// 	if err != nil {
-		// 		return models.CodeRun{}, errors.New("File record not found")
-		// 	}
-		// } else {
-		// 	return models.CodeRun{}, errors.New("File record not found")
-		// }
+			if err != nil {
+				log.Println(err)
+				return runSend, err
+			}
 
-		commands = append(commands, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
-		runSend, err = RunCodeServerWorker(envID, nodeID, workerGroup, runid, commands, filesdata, parentfolderdata, filesdata.FolderID, replayRunID)
+			// Remove the first slash on newdir so there are not two slashes.
+			commands = append(commands, "python3 -u ${{nodedirectory}}"+newdir[1:]+filesdata.FileName)
+
+		} else {
+			commands = append(commands, "python3 -u ${{nodedirectory}}"+filesdata.FileName)
+		}
+
+		runSend, err = RunCodeServerWorker(envID, pipelineID, nodeID, workerGroup, runid, commands, replayRunID)
 		if err != nil {
 			/* Send back any local errors not happening on the remote worker */
 			WSLogError(envID, runid, err.Error(), models.CodeRun{})

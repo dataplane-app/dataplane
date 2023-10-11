@@ -25,8 +25,11 @@ export default function cronZone(cronStatement, zone, type) {
     // Return if there is no time
     if (/\d\d:\d\d (AM|PM)/.test(dateString) === false) return dateString;
 
-    const next = later.schedule(later.parse.cron(cronStatement)).next(1);
-    const time = DateTime.fromJSDate(next, { zone }).toFormat('HH:mm a');
-    dateString = dateString.replace(/\d\d:\d\d (AM|PM)/, time);
+    const sched = later.parse.cron(cronStatement)
+
+    const next = later.schedule(sched).next(1);
+    // const time = DateTime.fromJSDate(next, { zone }).toFormat('HH:mm a');
+    dateString.replace(/AM|PM/, (x) => x + ' ' + zone)
+    // dateString = dateString.replace(/\d\d:\d\d (AM|PM)/, time);
     return dateString;
 }

@@ -20,9 +20,9 @@ NOTE: Node ID is the node in the graph and not the worker ID.
 func DistributedStorageCodeRunDownload(environmentID string, directoryRun string, nodeID string) error {
 
 	// log.Println("folder", folder)
-	if strings.Contains(directoryRun, "/pipeline/") == false {
-		log.Println("Folder incorrect format - doesn't contain /pipeline/")
-		return errors.New("Folder incorrect format - doesn't contain /pipeline/")
+	if strings.Contains(directoryRun, "/coderun/") == false {
+		log.Println("Folder incorrect format - doesn't contain /coderun/")
+		return errors.New("Folder incorrect format - doesn't contain /coderun/")
 	}
 
 	FilesOutput := []*models.CodeFilesCacheOutput{}
@@ -49,7 +49,7 @@ func DistributedStorageCodeRunDownload(environmentID string, directoryRun string
 		and NOT EXISTS
         (
         SELECT  file_id
-        FROM code_files_cache cfc
+        FROM code_run_files_cache cfc
         WHERE   
 		cf.file_id = cfc.file_id and 
 		cfc.worker_id = ? and 

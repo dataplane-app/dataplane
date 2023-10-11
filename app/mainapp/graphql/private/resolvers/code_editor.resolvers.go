@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
 	dfscache "github.com/dataplane-app/dataplane/app/mainapp/code_editor/dfs_cache"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -265,7 +265,12 @@ func (r *mutationResolver) DeleteFolderNode(ctx context.Context, environmentID s
 		Instruct workers to delete the node folder in cache
 		Remove from cache
 	*/
-	err = dfscache.InvalidateCacheNode(nodeID, environmentID, folderpath)
+	msg := models.WorkerTasks{
+		EnvironmentID: environmentID,
+		PipelineID:    pipelineID,
+		RunType:       "pipeline",
+	}
+	err = dfscache.InvalidateCachePipeline(msg)
 	if err != nil {
 		log.Println("Remove file invalidate file cache", err)
 		return "", errors.New("Remove file invalidate file cache.")
@@ -303,21 +308,23 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 		return "", errors.New("Failed to get folder.")
 	}
 
-	parentFolderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.ParentID, environmentID, "pipelines")
-	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID, "pipelines")
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		parentFolderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.ParentID, environmentID, "pipelines")
+		folderpath, _ := filesystem.FolderConstructByID(database.DBConn, folderID, environmentID, "pipelines")
 
-	// Make sure there is a path
-	if strings.TrimSpace(folderpath) == "" || strings.TrimSpace(parentFolderpath) == "" {
-		return "", errors.New("Missing folder path.")
-	}
-
-	// 1. ----- Rename folder in the directory
-	err = os.Rename(dpconfig.CodeDirectory+folderpath, dpconfig.CodeDirectory+parentFolderpath+folderID+"_"+newName)
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+		// Make sure there is a path
+		if strings.TrimSpace(folderpath) == "" || strings.TrimSpace(parentFolderpath) == "" {
+			return "", errors.New("Missing folder path.")
 		}
-		return "", errors.New("Failed to rename folder in directory.")
+
+		// 1. ----- Rename folder in the directory
+		err = os.Rename(dpconfig.CodeDirectory+folderpath, dpconfig.CodeDirectory+parentFolderpath+folderID+"_"+newName)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Failed to rename folder in directory.")
+		}
 	}
 
 	// 2. ----- Rename folder in the database
@@ -329,15 +336,20 @@ func (r *mutationResolver) RenameFolder(ctx context.Context, environmentID strin
 		return "", errors.New("Failed to update folder in database.")
 	}
 
-	if dpconfig.Debug == "true" {
-		logging.PrintSecretsRedact("Rename: ", dpconfig.CodeDirectory+folderpath, " -> ", dpconfig.CodeDirectory+parentFolderpath+folderID+"_"+newName)
-	}
+	// if dpconfig.Debug == "true" {
+	// 	logging.PrintSecretsRedact("Rename: ", dpconfig.CodeDirectory+folderpath, " -> ", dpconfig.CodeDirectory+parentFolderpath+folderID+"_"+newName)
+	// }
 
 	/*
 		Instruct workers to delete the node folder in cache
 		Remove from cache
 	*/
-	err = dfscache.InvalidateCacheNode(nodeID, environmentID, folderpath)
+	msg := models.WorkerTasks{
+		EnvironmentID: environmentID,
+		PipelineID:    pipelineID,
+		RunType:       "pipeline",
+	}
+	err = dfscache.InvalidateCachePipeline(msg)
 	if err != nil {
 		log.Println("Rename folder invalidate file cache", err)
 		return "", errors.New("Rename folder invalidate file cache.")
@@ -478,7 +490,12 @@ func (r *mutationResolver) DeleteFileNode(ctx context.Context, environmentID str
 		Instruct workers to delete the node folder in cache
 		Remove from cache
 	*/
-	err = dfscache.InvalidateCacheNode(nodeID, environmentID, filepath)
+	msg := models.WorkerTasks{
+		EnvironmentID: environmentID,
+		PipelineID:    pipelineID,
+		RunType:       "pipeline",
+	}
+	err = dfscache.InvalidateCachePipeline(msg)
 	if err != nil {
 		log.Println("Remove file invalidate file cache", err)
 		return "", errors.New("Remove file invalidate file cache.")
@@ -516,21 +533,23 @@ func (r *mutationResolver) RenameFile(ctx context.Context, environmentID string,
 		return "", errors.New("Failed to file's folder.")
 	}
 
-	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.FolderID, environmentID, "pipelines")
-	filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
+	if dpconfig.FSCodeFileStorage == "LocalFile" {
+		folderpath, _ := filesystem.FolderConstructByID(database.DBConn, f.FolderID, environmentID, "pipelines")
+		filepath, _ := filesystem.FileConstructByID(database.DBConn, fileID, environmentID, "pipelines")
 
-	// Make sure there is a path
-	if strings.TrimSpace(filepath) == "" || strings.TrimSpace(folderpath) == "" {
-		return "", errors.New("Missing folder path.")
-	}
-
-	// // 1. ----- Rename file in the directory
-	err = os.Rename(dpconfig.CodeDirectory+filepath, dpconfig.CodeDirectory+folderpath+newName)
-	if err != nil {
-		if dpconfig.Debug == "true" {
-			logging.PrintSecretsRedact(err)
+		// Make sure there is a path
+		if strings.TrimSpace(filepath) == "" || strings.TrimSpace(folderpath) == "" {
+			return "", errors.New("Missing folder path.")
 		}
-		return "", errors.New("Rename file in directory failed.")
+
+		// // 1. ----- Rename file in the directory
+		err = os.Rename(dpconfig.CodeDirectory+filepath, dpconfig.CodeDirectory+folderpath+newName)
+		if err != nil {
+			if dpconfig.Debug == "true" {
+				logging.PrintSecretsRedact(err)
+			}
+			return "", errors.New("Rename file in directory failed.")
+		}
 	}
 
 	// // 2. ----- Rename file in the database
@@ -542,9 +561,21 @@ func (r *mutationResolver) RenameFile(ctx context.Context, environmentID string,
 		return "", errors.New("Rename file in database failed.")
 	}
 
-	if dpconfig.Debug == "true" {
-		logging.PrintSecretsRedact("Rename: ", dpconfig.CodeDirectory+filepath, " -> ", dpconfig.CodeDirectory+folderpath+newName)
+	/* Invalid cache */
+	msg := models.WorkerTasks{
+		EnvironmentID: environmentID,
+		PipelineID:    pipelineID,
+		RunType:       "pipeline",
 	}
+	err = dfscache.InvalidateCachePipeline(msg)
+	if err != nil {
+		log.Println("Rename folder invalidate file cache", err)
+		return "", errors.New("Rename folder invalidate file cache.")
+	}
+
+	// if dpconfig.Debug == "true" {
+	// 	logging.PrintSecretsRedact("Rename: ", dpconfig.CodeDirectory+filepath, " -> ", dpconfig.CodeDirectory+folderpath+newName)
+	// }
 
 	return "Success", nil
 }

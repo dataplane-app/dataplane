@@ -53,25 +53,4 @@ func WSTaskLogError(envID string, runID string, logline string, nodeID string, t
 		logging.PrintSecretsRedact(err2.Error.Error())
 	}
 
-	// msg.Status = "Fail"
-	// msg.RunID = runID
-	// msg.EnvironmentID = envID
-	// msg.EndedAt = time.Now().UTC()
-	// msg.Reason = "Code run failed."
-	// /* Send the closing message to say the run failed */
-	// sendmsg = models.LogsSend{
-	// 	CreatedAt:     time.Now().UTC(),
-	// 	UID:           uuid.NewString(),
-	// 	Log:           msg.Status,
-	// 	LogType:       "action",
-	// 	EnvironmentID: envID,
-	// 	RunID:         runID,
-	// }
-
-	// jsonSend, errjson = json.Marshal(sendmsg)
-	// if errjson != nil {
-	// 	log.Println("Json marshal error: ", errjson)
-	// }
-	// wsockets.Broadcast <- wsockets.Message{Room: room, Data: jsonSend}
-
 }

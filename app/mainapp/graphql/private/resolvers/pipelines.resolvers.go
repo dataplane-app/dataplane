@@ -1193,11 +1193,12 @@ func (r *mutationResolver) AddUpdatePipelineFlow(ctx context.Context, input *pri
 			return errdb
 		}
 
-		folderpath, errfsfp := filesystem.FolderConstructByID(tx, parentfolder.FolderID, environmentID, "pipelines")
-		if errfsfp != nil {
-			return errors.New("folderpath error: " + errfsfp.Error())
+		msg := models.WorkerTasks{
+			EnvironmentID: environmentID,
+			PipelineID:    pipelineID,
+			RunType:       "pipeline",
 		}
-		errcache := dfscache.InvalidateCachePipeline(environmentID, folderpath, pipelineID)
+		errcache := dfscache.InvalidateCachePipeline(msg)
 		if errcache != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(errcache)
@@ -1255,11 +1256,12 @@ func (r *mutationResolver) DeletePipeline(ctx context.Context, environmentID str
 		var parentfolder models.CodeFolders
 		tx.Where("environment_id = ? and pipeline_id = ? and level = ?", environmentID, pipelineID, "pipeline").First(&parentfolder)
 
-		folderpath, errfs := filesystem.FolderConstructByID(tx, parentfolder.FolderID, environmentID, "pipelines")
-		if errfs != nil {
-			return errfs
+		msg := models.WorkerTasks{
+			EnvironmentID: environmentID,
+			PipelineID:    pipelineID,
+			RunType:       "pipeline",
 		}
-		errcache := dfscache.InvalidateCachePipeline(environmentID, folderpath, pipelineID)
+		errcache := dfscache.InvalidateCachePipeline(msg)
 		if errcache != nil {
 			if dpconfig.Debug == "true" {
 				logging.PrintSecretsRedact(errcache)
@@ -1482,8 +1484,12 @@ func (r *mutationResolver) ClearFileCachePipeline(ctx context.Context, environme
 	var parentfolder models.CodeFolders
 	database.DBConn.Where("environment_id = ? and pipeline_id = ? and level = ?", environmentID, pipelineID, "pipeline").First(&parentfolder)
 
-	folderpath, _ := filesystem.FolderConstructByID(database.DBConn, parentfolder.FolderID, environmentID, "pipelines")
-	errcache := dfscache.InvalidateCachePipeline(environmentID, folderpath, pipelineID)
+	msg := models.WorkerTasks{
+		EnvironmentID: environmentID,
+		PipelineID:    pipelineID,
+		RunType:       "pipeline",
+	}
+	errcache := dfscache.InvalidateCachePipeline(msg)
 	if errcache != nil {
 		if dpconfig.Debug == "true" {
 			logging.PrintSecretsRedact(errcache)

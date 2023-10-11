@@ -8,11 +8,11 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	modelmain "github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 
@@ -178,9 +178,9 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		codeDirectory := wrkerconfig.FSCodeDirectory
 		directoryRun := ""
 		if msg.RunType == "deployment" {
-			directoryRun = filepath.Join(codeDirectory+msg.EnvironmentID, msg.RunType, msg.PipelineID, msg.Version, msg.NodeID)
+			directoryRun = filesystem.DeployRunFolderNode(codeDirectory, msg.EnvironmentID, msg.PipelineID, msg.Version, msg.NodeID)
 		} else {
-			directoryRun = filepath.Join(codeDirectory+msg.EnvironmentID, msg.RunType, msg.PipelineID, msg.NodeID)
+			directoryRun = filesystem.PipelineRunFolderNode(codeDirectory, msg.EnvironmentID, msg.PipelineID, msg.NodeID)
 		}
 
 		var errfs error
@@ -255,6 +255,49 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 				}
 
 				WSLogError("Directory not found:"+directoryRun, msg, TaskUpdate)
+
+				// Self-healing the directory
+				log.Println("Directory not found, removing cache for pipeline:", msg.PipelineID, msg.EnvironmentID)
+
+				switch msg.RunType {
+				// Write to file level cache (file gets overwritten)
+
+				case "pipeline":
+
+					deleteQuery := `
+					DELETE FROM code_files_cache
+					USING pipeline_nodes
+					WHERE code_files_cache.environment_id = ? and pipeline_nodes.pipeline_id =? and 
+					pipeline_nodes.node_id = code_files_cache.node_id and pipeline_nodes.environment_id = code_files_cache.environment_id;
+					`
+					err = database.DBConn.Exec(deleteQuery, msg.EnvironmentID, msg.PipelineID).Error
+
+					if err != nil {
+						log.Println("Directory not found invalidate cache error:", err)
+					}
+
+				case "deployment":
+					// Write to file level cache (file gets overwritten)
+					deleteQuery := `
+						DELETE FROM deploy_code_files_cache
+						USING deploy_pipeline_nodes
+						WHERE 
+						deploy_code_files_cache.environment_id = ? and 
+						deploy_pipeline_nodes.pipeline_id =? and 
+						deploy_code_files_cache.version = ? and
+					
+						deploy_pipeline_nodes.node_id = deploy_code_files_cache.node_id and 
+						deploy_pipeline_nodes.environment_id = deploy_code_files_cache.environment_id and
+						deploy_pipeline_nodes.version = deploy_code_files_cache.version;
+		`
+					err = database.DBConn.Exec(deleteQuery, msg.EnvironmentID, msg.PipelineID, msg.Version).Error
+
+					if err != nil {
+						log.Println("Directory not found invalidate cache error:", err)
+					}
+
+				}
+
 				return
 			}
 
@@ -429,7 +472,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		if err != nil {
 
 			uid := uuid.NewString()
-			line := wrkerconfig.Secrets.Replace(stderr.String())
+			line := wrkerconfig.Secrets.Replace(err.Error())
 
 			logmsg := modelmain.LogsWorkers{
 				CreatedAt:     time.Now().UTC(),
@@ -455,7 +498,10 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			}
 
 			mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
-			database.DBConn.Create(&logmsg)
+			errdb := database.DBConn.Create(&logmsg).Error
+			if errdb != nil {
+				log.Println("Run task 1 write db error logs", errdb.Error())
+			}
 			if wrkerconfig.Debug == "true" {
 				// clog.Error("cmd.wait error")
 				clog.Error(line)
@@ -532,7 +578,10 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	}
 
 	mqworker.MsgSend("workerlogs."+msg.EnvironmentID+"."+msg.RunID+"."+msg.NodeID, sendmsg)
-	database.DBConn.Create(&logmsg)
+	errdb := database.DBConn.Create(&logmsg).Error
+	if errdb != nil {
+		log.Println("Run task error log db write error:", errdb.Error())
+	}
 
 	// Queue the next set of tasks
 	RunNext := modelmain.WorkerPipelineNext{

@@ -1,10 +1,12 @@
 package runcodeworker
 
 import (
+	"errors"
 	"log"
 	"os"
-	"strings"
 
+	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/messageq"
 	wrkerconfig "github.com/dataplane-app/dataplane/app/workers/config"
 )
@@ -17,36 +19,46 @@ Listens for
 func ListenDisributedStorageDownload() {
 
 	/* -------------- FOLDER REMOVAL FOR CACHE --------- */
-	channelremoval := "DisributedStorageRemoval." + wrkerconfig.WorkerGroup
+	channelremoval := "DisributedStorageRemoval." + wrkerconfig.EnvID + "." + wrkerconfig.WorkerGroup
 
-	messageq.NATSencoded.Subscribe(channelremoval, func(subj, reply string, parentFolder string) {
-
-		if wrkerconfig.Debug == "true" {
-			log.Println("Received folder for deletion:", parentFolder)
-		}
+	messageq.NATSencoded.Subscribe(channelremoval, func(subj, reply string, msg models.WorkerTasks) {
 
 		response := "ok"
 		message := "ok"
 
 		x := TaskResponse{R: response, M: message}
 
-		if strings.Contains(parentFolder, "_Platform") == false {
-			log.Println("Folder incorrect format - doesn't contain _Platform")
+		codeDirectory := wrkerconfig.FSCodeDirectory
+		var directoryDelete = []string{}
+
+		switch msg.RunType {
+		case "pipeline":
+			directoryDelete = append(directoryDelete, filesystem.PipelineRunFolderPipeline(codeDirectory, msg.EnvironmentID, msg.PipelineID))
+			directoryDelete = append(directoryDelete, filesystem.CodeRunFolderPipeline(codeDirectory, msg.EnvironmentID, msg.PipelineID))
+		case "deployment":
+			directoryDelete = append(directoryDelete, filesystem.DeployRunFolderPipeline(codeDirectory, msg.EnvironmentID, msg.PipelineID, msg.Version))
+		default:
+			errdir := errors.New("level not provided")
 			x.R = "fail"
-			x.M = "Folder incorrect format - doesn't contain _Platform"
+			x.M = errdir.Error()
+		}
 
-		} else {
+		if wrkerconfig.Debug == "true" {
+			log.Println("Received folder for deletion:", directoryDelete)
+		}
 
-			//Remove folder for this worker
-			if wrkerconfig.Debug == "true" {
-				log.Println("Remove cached folders: ", wrkerconfig.FSCodeDirectory+parentFolder)
-			}
-
-			errfs := os.RemoveAll(wrkerconfig.FSCodeDirectory + parentFolder)
-			if errfs != nil {
-				log.Println(errfs)
+		for _, d := range directoryDelete {
+			if d != "" {
+				errfs := os.RemoveAll(d)
+				if errfs != nil {
+					log.Println(errfs)
+					x.R = "fail"
+					x.M = errfs.Error()
+				}
+			} else {
+				errdir := errors.New("Directory delete - empty folder")
 				x.R = "fail"
-				x.M = errfs.Error()
+				x.M = errdir.Error()
 			}
 		}
 
@@ -56,9 +68,6 @@ func ListenDisributedStorageDownload() {
 			log.Println(err.Error())
 		}
 
-		if x.R == "ok" {
-
-		}
 	})
 
 	if wrkerconfig.Debug == "true" {
