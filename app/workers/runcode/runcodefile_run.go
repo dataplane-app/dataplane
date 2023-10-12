@@ -323,7 +323,8 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 			}
 
 			uid := uuid.NewString()
-			line := wrkerconfig.Secrets.Replace(err.Error())
+			// err is the error of the command, stderr is the error from the Python script
+			line := wrkerconfig.Secrets.Replace(err.Error() + ":\n" + stderr.String())
 
 			logmsg := modelmain.LogsCodeRun{
 				CreatedAt:     time.Now().UTC(),
@@ -378,7 +379,9 @@ func coderunworker(ctx context.Context, msg modelmain.CodeRun) {
 		if err != nil {
 
 			uid := uuid.NewString()
-			line := wrkerconfig.Secrets.Replace(err.Error())
+
+			// err is the error of the command, stderr is the error from the Python script
+			line := wrkerconfig.Secrets.Replace(err.Error() + ": \n" + stderr.String())
 
 			logmsg := modelmain.LogsCodeRun{
 				CreatedAt:     time.Now().UTC(),

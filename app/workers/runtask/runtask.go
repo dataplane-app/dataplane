@@ -117,7 +117,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 	err2 = database.DBConn.Select("run_id", "status").Where("run_id = ?", msg.RunID).First(&pipelineCheck).Error
 	if err2 != nil {
 		log.Println(err2.Error())
-		WSLogError("Pipeline marked as failed - runid:"+msg.RunID+" - node:"+msg.NodeID, msg, TaskUpdate)
+		SilentWSLogError("Pipeline marked as failed - runid:"+msg.RunID+" - node:"+msg.NodeID, msg)
 		return
 	}
 
@@ -125,7 +125,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 
 		log.Println("Skipping pipeline not in running state", msg.RunID, msg.NodeID)
 
-		WSLogError("Skipping pipeline not in running state - runid:"+msg.RunID+" - node:"+msg.NodeID, msg, TaskUpdate)
+		SilentWSLogError("Skipping pipeline not in running state - runid:"+msg.RunID+" - node:"+msg.NodeID, msg)
 
 		TaskFinal := modelmain.WorkerTasks{
 			TaskID:        msg.TaskID,
@@ -254,7 +254,7 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 					log.Println("Directory not found:", directoryRun)
 				}
 
-				WSLogError("Directory not found:"+directoryRun, msg, TaskUpdate)
+				SilentWSLogError("Directory not found:"+directoryRun, msg)
 
 				// Self-healing the directory
 				log.Println("Directory not found, removing cache for pipeline:", msg.PipelineID, msg.EnvironmentID)
@@ -415,7 +415,9 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 			}
 
 			uid := uuid.NewString()
-			line := wrkerconfig.Secrets.Replace(err.Error())
+
+			// err is the error of the command, stderr is the error from the Python script
+			line := wrkerconfig.Secrets.Replace(err.Error() + ":\n" + stderr.String())
 
 			logmsg := modelmain.LogsWorkers{
 				CreatedAt:     time.Now().UTC(),
@@ -472,7 +474,9 @@ func worker(ctx context.Context, msg modelmain.WorkerTaskSend) {
 		if err != nil {
 
 			uid := uuid.NewString()
-			line := wrkerconfig.Secrets.Replace(err.Error())
+
+			// err is the error of the command, stderr is the error from the Python script
+			line := wrkerconfig.Secrets.Replace(err.Error() + ":\n" + stderr.String())
 
 			logmsg := modelmain.LogsWorkers{
 				CreatedAt:     time.Now().UTC(),
