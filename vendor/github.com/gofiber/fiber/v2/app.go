@@ -30,7 +30,7 @@ import (
 )
 
 // Version of current fiber package
-const Version = "2.49.2"
+const Version = "2.50.0"
 
 // Handler defines a function to serve HTTP requests.
 type Handler = func(*Ctx) error
@@ -620,7 +620,7 @@ func (app *App) Name(name string) Router {
 
 	for _, routes := range app.stack {
 		for _, route := range routes {
-			if route.Path == app.latestRoute.path {
+			if route.Path == app.latestRoute.Path {
 				route.Name = name
 
 				if route.group != nil {
