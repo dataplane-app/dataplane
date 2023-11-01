@@ -14,7 +14,7 @@ ARG DATAPLANE_VERSION=latest
 RUN CGO_ENABLED=0 go build -ldflags "-X github.com/dataplane-app/dataplane/app/workers/config.Version=$DATAPLANE_VERSION" -o dataplane-worker app/workers/worker.go
 
 
-FROM python:3.9.18-bookworm
+FROM python:3.12.0-bookworm
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
