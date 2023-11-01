@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/atomic"
 )
@@ -27,7 +28,7 @@ type Job struct {
 
 	scheduledWeekdays []time.Weekday // Specific days of the week to start on
 	daysOfTheMonth    []int          // Specific days of the month to run the job
-	tags              []string       // allow the user to tag Jobs with certain labels
+	tags              []string       // allow the user to tag jobs with certain labels
 	timer             *time.Timer    // handles running tasks at specific time
 	cronSchedule      cron.Schedule  // stores the schedule when a task uses cron
 	runWithDetails    bool           // when true the job is passed as the last arg of the jobFunc
@@ -47,6 +48,7 @@ type random struct {
 }
 
 type jobFunction struct {
+	id                uuid.UUID          // unique identifier for the job
 	*jobRunTimes                         // tracking all the markers for job run times
 	eventListeners                       // additional functions to allow run 'em during job performing
 	function          interface{}        // task's function
@@ -84,6 +86,7 @@ type jobMutex struct {
 
 func (jf *jobFunction) copy() jobFunction {
 	cp := jobFunction{
+		id:                jf.id,
 		jobRunTimes:       jf.jobRunTimes,
 		eventListeners:    jf.eventListeners,
 		function:          jf.function,
@@ -141,6 +144,7 @@ func newJob(interval int, startImmediately bool, singletonMode bool) *Job {
 		interval: interval,
 		unit:     seconds,
 		jobFunction: jobFunction{
+			id: uuid.New(),
 			jobRunTimes: &jobRunTimes{
 				jobRunTimesMu: &sync.Mutex{},
 				lastRun:       time.Time{},
@@ -171,6 +175,15 @@ func (j *Job) Name(name string) {
 	j.mu.Lock()
 	defer j.mu.Unlock()
 	j.jobName = name
+}
+
+// GetName returns the name of the current job.
+// The name is either the name set using Job.Name() / Scheduler.Name() or
+// the name of the funcion as Go sees it, for example `main.func1`
+func (j *Job) GetName() string {
+	j.mu.Lock()
+	defer j.mu.Unlock()
+	return j.jobFunction.getName()
 }
 
 func (j *Job) setRandomInterval(a, b int) {
@@ -227,24 +240,21 @@ func (j *Job) getFirstAtTime() time.Duration {
 }
 
 func (j *Job) getAtTime(lastRun time.Time) time.Duration {
-	var r time.Duration
 	if len(j.atTimes) == 0 {
+		return 0
+	}
+
+	r := j.atTimes[0]
+
+	if len(j.atTimes) == 1 || lastRun.IsZero() {
 		return r
 	}
 
-	if len(j.atTimes) == 1 {
-		return j.atTimes[0]
-	}
-
-	if lastRun.IsZero() {
-		r = j.atTimes[0]
-	} else {
-		for _, d := range j.atTimes {
-			nt := time.Date(lastRun.Year(), lastRun.Month(), lastRun.Day(), 0, 0, 0, 0, lastRun.Location()).Add(d)
-			if nt.After(lastRun) {
-				r = d
-				break
-			}
+	for _, d := range j.atTimes {
+		nt := time.Date(lastRun.Year(), lastRun.Month(), lastRun.Day(), 0, 0, 0, 0, lastRun.Location()).Add(d)
+		if nt.After(lastRun) {
+			r = d
+			break
 		}
 	}
 
@@ -472,6 +482,9 @@ func (j *Job) Weekdays() []time.Weekday {
 	if len(j.scheduledWeekdays) == 0 {
 		return []time.Weekday{time.Sunday}
 	}
+	sort.Slice(j.scheduledWeekdays, func(i, k int) bool {
+		return j.scheduledWeekdays[i] < j.scheduledWeekdays[k]
+	})
 
 	return j.scheduledWeekdays
 }
