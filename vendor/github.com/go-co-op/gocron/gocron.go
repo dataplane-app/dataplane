@@ -40,6 +40,7 @@ var (
 	ErrNotAFunction                  = errors.New("gocron: only functions can be scheduled into the job queue")
 	ErrNotScheduledWeekday           = errors.New("gocron: job not scheduled weekly on a weekday")
 	ErrJobNotFoundWithTag            = errors.New("gocron: no jobs found with given tag")
+	ErrJobNotFound                   = errors.New("gocron: no job found")
 	ErrUnsupportedTimeFormat         = errors.New("gocron: the given time format is not supported")
 	ErrInvalidInterval               = errors.New("gocron: .Every() interval must be greater than 0")
 	ErrInvalidIntervalType           = errors.New("gocron: .Every() interval must be int, time.Duration, or string")
@@ -48,7 +49,8 @@ var (
 
 	ErrAtTimeNotSupported               = errors.New("gocron: the At() method is not supported for this time unit")
 	ErrWeekdayNotSupported              = errors.New("gocron: weekday is not supported for time unit")
-	ErrInvalidDayOfMonthEntry           = errors.New("gocron: only days 1 through 28 are allowed for monthly schedules")
+	ErrInvalidDayOfMonthEntry           = errors.New("gocron: only days 1 through 28 and -1 through -28 are allowed for monthly schedules")
+	ErrInvalidMonthLastDayEntry         = errors.New("gocron: only a single negative integer is permitted for MonthLastDay")
 	ErrTagsUnique                       = func(tag string) error { return fmt.Errorf("gocron: a non-unique tag was set on the job: %s", tag) }
 	ErrWrongParams                      = errors.New("gocron: wrong list of params")
 	ErrDoWithJobDetails                 = errors.New("gocron: DoWithJobDetails expects a function whose last parameter is a gocron.Job")
@@ -87,6 +89,10 @@ const (
 	duration
 	crontab
 )
+
+func (s schedulingUnit) String() string {
+	return [...]string{"milliseconds", "seconds", "minutes", "hours", "days", "weeks", "months", "duration", "crontab"}[s]
+}
 
 func callJobFunc(jobFunc interface{}) {
 	if jobFunc == nil {
@@ -134,9 +140,9 @@ func getFunctionNameOfPointer(fn interface{}) string {
 func parseTime(t string) (hour, min, sec int, err error) {
 	var timeLayout string
 	switch {
-	case timeWithSeconds.Match([]byte(t)):
+	case timeWithSeconds.MatchString(t):
 		timeLayout = "15:04:05"
-	case timeWithoutSeconds.Match([]byte(t)):
+	case timeWithoutSeconds.MatchString(t):
 		timeLayout = "15:04"
 	default:
 		return 0, 0, 0, ErrUnsupportedTimeFormat
