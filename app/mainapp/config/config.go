@@ -15,6 +15,9 @@ var Leader string = ""
 var AllowOrigins string = "*"
 var Version string = "Development"
 
+// Authentication
+var AuthStrategy string = "login"
+
 /* Routine removal of stale data */
 var CleanTasks int = 30
 var CleanLogs int = 30
@@ -59,6 +62,12 @@ func LoadConfig() {
 
 	// Platform
 	AllowOrigins = os.Getenv("DP_ALLOW_ORIGINS")
+
+	// Authentication
+	AuthStrategy = os.Getenv("DP_AUTH_STRATEGY")
+	if AuthStrategy == "" {
+		AuthStrategy = "login"
+	}
 
 	// Database connection and defaults
 	DPDBMaxOpenConns, _ = strconv.Atoi(os.Getenv("DP_DB_MAXOPENCONNS"))

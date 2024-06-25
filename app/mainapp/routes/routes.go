@@ -289,6 +289,10 @@ func Setup(port string) *fiber.App {
 		return c.Status(http.StatusOK).JSON(fiber.Map{"Version": dpconfig.Version})
 	})
 
+
+	// ------- API ROUTES ------
+	APIRoutes(app)
+
 	// ------- GRAPHQL------
 	app.Post("/app/public/graphql", PublicGraphqlHandler())
 	app.Post("/app/private/graphql", auth.TokenAuthMiddle(), PrivateGraphqlHandler())
