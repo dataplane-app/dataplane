@@ -116,7 +116,7 @@ services:
       DP_REDIS_DB: "0"
       DP_PIPELINE_DATA_TTL_SECONDS: "86400"
       DP_PIPELINE_DATA_LIMIT_MB: "5"
-      DP_ALLOW_ORIGINS: "http://localhost:3000, http://localhost:9000"
+      DP_ALLOW_ORIGINS: "http://localhost:3000, http://localhost:9000, http://localhost:34115, http://wails.localhost"
   
   dataplane-worker:
     image: dataplane/dataplane-worker-python:latest
