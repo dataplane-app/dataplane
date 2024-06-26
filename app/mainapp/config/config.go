@@ -17,6 +17,16 @@ var Version string = "Development"
 
 // Authentication
 var AuthStrategy string = "login"
+var OIDCIssuerEndpoint string = ""
+var OIDCAuthURL string = ""
+var OIDCClientID string = ""
+var OIDCClientSecret string = ""
+var OIDCScope string = ""
+var OIDCRedirectURI string = ""
+var OIDCClaimRole string = ""
+var OIDCClaimEmail string = ""
+var OIDCAutoRegister string = ""
+
 
 /* Routine removal of stale data */
 var CleanTasks int = 30
@@ -68,6 +78,15 @@ func LoadConfig() {
 	if AuthStrategy == "" {
 		AuthStrategy = "login"
 	}
+
+	OIDCIssuerEndpoint = os.Getenv("DP_AUTH_OPENID_ISSUER_ENDPOINT")
+	OIDCClientID = os.Getenv("DP_AUTH_OPENID_CLIENTID")
+	OIDCClientSecret = os.Getenv("DP_AUTH_OPENID_CLIENT_SECRET")
+	OIDCScope = os.Getenv("DP_AUTH_OPENID_SCOPES")
+	OIDCRedirectURI = os.Getenv("DP_AUTH_OPENID_REDIRECT_URI")
+	OIDCClaimRole = os.Getenv("DP_AUTH_OPENID_CLAIM_ROLE")
+	OIDCClaimEmail = os.Getenv("DP_AUTH_OPENID_CLAIM_EMAIL")
+	OIDCAutoRegister = os.Getenv("DP_AUTH_OPENID_AUTO_REGISTER")
 
 	// Database connection and defaults
 	DPDBMaxOpenConns, _ = strconv.Atoi(os.Getenv("DP_DB_MAXOPENCONNS"))

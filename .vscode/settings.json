@@ -1,4 +1,5 @@
 {"[go]": {
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "golang.go"
 }
 }
