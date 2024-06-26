@@ -50,13 +50,42 @@ func APIRoutes(app *fiber.App) {
 			})
 		}
 
-		log.Println("🔒 Verify Token: ", idToken.Subject)
+		// Map the user to given claim name
+		var jsonclaims map[string]interface{}
+		claimerror := idToken.Claims(&jsonclaims); if claimerror != nil {
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+				"Data Platform": "Dataplane",
+				"Error":         "Auth token claim error: " + claimerror.Error(),
+			})
+		}
+
+		// Extract the email from the claims
+		userEmail, emailExist := jsonclaims[dpconfig.OIDCClaimEmail]; 
+		if !emailExist {
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+				"Data Platform": "Dataplane",
+				"Error":         "User email not found in OIDC claims.",
+			})
+		}
+
+		// Extract the role from the claims
+		userRole, roleExist := jsonclaims[dpconfig.OIDCClaimRole];
+		if roleExist {
+		}
+
+		log.Println("Extracted values", userEmail, userRole)
+
+		// log.Println("🔒 Verify Token: ", idToken.Subject, idToken.Nonce)
+
+		// log.Println("🔒 Claim Email: ", jsonclaims[dpconfig.OIDCClaimEmail])
+
+		// log.Println("🔒 Claims: ", jsonclaims)
 
 		// Check state and nonce
 
 		// Check that any permissions are attached for access
 
-		// Map the user to user in the database - if does not exist then return an error
+		// Map the user to user in the database - if user doesn't exist then check if auto register is enabled
 
 		// If the token is verified then we can log the user in. 
 
