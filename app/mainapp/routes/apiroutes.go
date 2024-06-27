@@ -4,10 +4,15 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"time"
 
+	"github.com/dataplane-app/dataplane/app/mainapp/auth"
 	"github.com/dataplane-app/dataplane/app/mainapp/authoidc"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
+	"github.com/dataplane-app/dataplane/app/mainapp/database"
+	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/utilities"
+	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -52,7 +57,8 @@ func APIRoutes(app *fiber.App) {
 
 		// Map the user to given claim name
 		var jsonclaims map[string]interface{}
-		claimerror := idToken.Claims(&jsonclaims); if claimerror != nil {
+		claimerror := idToken.Claims(&jsonclaims)
+		if claimerror != nil {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 				"Data Platform": "Dataplane",
 				"Error":         "Auth token claim error: " + claimerror.Error(),
@@ -60,7 +66,7 @@ func APIRoutes(app *fiber.App) {
 		}
 
 		// Extract the email from the claims
-		userEmail, emailExist := jsonclaims[dpconfig.OIDCClaimEmail]; 
+		userEmail, emailExist := jsonclaims[dpconfig.OIDCClaimEmail]
 		if !emailExist {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 				"Data Platform": "Dataplane",
@@ -69,7 +75,7 @@ func APIRoutes(app *fiber.App) {
 		}
 
 		// Extract the role from the claims
-		userRole, roleExist := jsonclaims[dpconfig.OIDCClaimRole];
+		userRole, roleExist := jsonclaims[dpconfig.OIDCClaimRole]
 		if roleExist {
 		}
 
@@ -82,14 +88,63 @@ func APIRoutes(app *fiber.App) {
 		// log.Println("🔒 Claims: ", jsonclaims)
 
 		// Check state and nonce
+		type nCheck struct {
+			Nonce string `redis:"nonce"`
+			State string `redis:"state"`
+		}
+		var nonceCheck = nCheck{}
+		if err := database.RedisConn.HGetAll(ctx, "nonce-"+idToken.Nonce).Scan(&nonceCheck); err != nil {
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+				"Data Platform": "Dataplane",
+				"Error":         "Request expired. SSO nonce or state not found, please login again.",
+			})
+		}
+
+		if nonceCheck.State != c.Query("state") {
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+				"Data Platform": "Dataplane",
+				"Error":         "Request expired. SSO state not found, please login again.",
+			})
+		}
+
+		// Delete redis key once used:
+		database.RedisConn.Del(ctx, "nonce-"+idToken.Nonce)
 
 		// Check that any permissions are attached for access
 
 		// Map the user to user in the database - if user doesn't exist then check if auto register is enabled
+		u := models.Users{}
+		if res := database.DBConn.Where(
+			&models.Users{Username: userEmail.(string), Active: true},
+		).First(&u); res.RowsAffected <= 0 {
 
-		// If the token is verified then we can log the user in. 
+			// If auto register is not enabled then return unauthorized
+			if dpconfig.OIDCAutoRegister != "true" {
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+				"Data Platform": "Dataplane",
+				"Error":         "User: " + userEmail.(string) +" not found.",
+			})
+		}else{
+			// Else create the user - they will need to update their name in settings
+			u.Email = userEmail.(string)
+			u.FirstName = " "
+			u.LastName = " "
+			u.Username = userEmail.(string)
+			userData, userError := authoidc.OIDCCreateUser(u)
+			if userError != nil {
+				return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+					"Data Platform": "Dataplane",
+					"Error":         "User: " + userEmail.(string) +" not created.",
+				})
+			}
+			u.UserID = userData.UserID
+		}
+		}
 
-		return c.JSON(&fiber.Map{"authstrategy": dpconfig.AuthStrategy})
+		// If the token is verified then we can log the user in.
+		accessToken, refreshToken := auth.GenerateTokens(u.UserID, u.Username, u.UserType)
+
+		return c.JSON(&fiber.Map{"access_token": accessToken, "refresh_token": refreshToken})
 	})
 
 	// ------- OPEN ROUTES ------
@@ -97,6 +152,8 @@ func APIRoutes(app *fiber.App) {
 
 	// Auth strategy for OPenID Connect and Login
 	public.Post("/authstrategy", func(c *fiber.Ctx) error {
+
+		ctx := c.Context()
 		// authAurl :=
 		if dpconfig.AuthStrategy == "openid" {
 
@@ -132,6 +189,19 @@ func APIRoutes(app *fiber.App) {
 				})
 			}
 
+			// Add state and nonce to Redis - keep for 24 hours
+			if _, errredis := database.RedisConn.Pipelined(ctx, func(rdb redis.Pipeliner) error {
+				rdb.Expire(ctx, "nonce-"+nonce, 24*time.Hour)
+				rdb.HSet(ctx, "nonce-"+nonce, "nonce", nonce)
+				rdb.HSet(ctx, "nonce-"+nonce, "state", state)
+				return nil
+			}); errredis != nil {
+				return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+					"Data Platform": "Dataplane",
+					"Error":         "Failed to store nonce and state: " + errredis.Error(),
+				})
+			}
+
 			paramValues.Add("state", state)
 			paramValues.Add("nonce", nonce)
 
@@ -139,7 +209,7 @@ func APIRoutes(app *fiber.App) {
 
 			encodedUrl := authUrl.String()
 
-			log.Println("🔒 Auth URL: ", encodedUrl)
+			// log.Println("🔒 Auth URL: ", encodedUrl)
 
 			return c.JSON(&fiber.Map{"authstrategy": dpconfig.AuthStrategy, "authurl": encodedUrl})
 

@@ -26,6 +26,8 @@ var OIDCRedirectURI string = ""
 var OIDCClaimRole string = ""
 var OIDCClaimEmail string = ""
 var OIDCAutoRegister string = ""
+// var OIDCFirstNameMap string = ""
+// var OIDCLastNameMap string = ""
 
 
 /* Routine removal of stale data */
@@ -87,6 +89,8 @@ func LoadConfig() {
 	OIDCClaimRole = os.Getenv("DP_AUTH_OPENID_CLAIM_ROLE")
 	OIDCClaimEmail = os.Getenv("DP_AUTH_OPENID_CLAIM_EMAIL")
 	OIDCAutoRegister = os.Getenv("DP_AUTH_OPENID_AUTO_REGISTER")
+	// OIDCFirstNameMap = os.Getenv("DP_AUTH_OPENID_FIRSTNAME_TOKEN_CLAIM")
+	// OIDCLastNameMap = os.Getenv("DP_AUTH_OPENID_LASTNAME_TOKEN_CLAIM")
 
 	// Database connection and defaults
 	DPDBMaxOpenConns, _ = strconv.Atoi(os.Getenv("DP_DB_MAXOPENCONNS"))
