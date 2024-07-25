@@ -1,9 +1,11 @@
 package routes
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/dataplane-app/dataplane/app/mainapp/auth"
@@ -74,12 +76,38 @@ func APIRoutes(app *fiber.App) {
 			})
 		}
 
-		// Extract the role from the claims
-		userRole, roleExist := jsonclaims[dpconfig.OIDCClaimRole]
-		if roleExist {
+		// Extract the role from the claims and check if role is allowed
+		if dpconfig.OIDCClaimRoleKey != "" {
+
+			// log.Println("5: ", dpconfig.OIDCClaimRoleKey)
+			userRole, roleExist := jsonclaims[dpconfig.OIDCClaimRoleKey]
+			// log.Println("Role Exist", roleExist, userRole.([]interface{}))
+			if roleExist == false {
+				return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+					"Data Platform": "Dataplane",
+					"Error":         "Expected Role in OIDC claims.",
+				})
+			}
+
+			// Convert interface to list of strings
+			stringRoles := make([]string, len(userRole.([]interface{})))
+			for i, v := range userRole.([]interface{}) {
+				stringRoles[i] = fmt.Sprint(v)
+			}
+
+			// Check if the role is in the allowed list
+			roleValues := strings.Split(dpconfig.OIDCClaimRoleValues, ",")
+			for _, vRole := range stringRoles {
+				if utilities.InArray(vRole, roleValues) == false {
+					return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+						"Data Platform": "Dataplane",
+						"Error":         "Role not allowed.",
+					})
+				}
+			}
 		}
 
-		log.Println("Extracted values", userEmail, userRole)
+		// log.Println("Extracted values", userEmail, userRole)
 
 		// log.Println("🔒 Verify Token: ", idToken.Subject, idToken.Nonce)
 
@@ -120,25 +148,25 @@ func APIRoutes(app *fiber.App) {
 
 			// If auto register is not enabled then return unauthorized
 			if dpconfig.OIDCAutoRegister != "true" {
-			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
-				"Data Platform": "Dataplane",
-				"Error":         "User: " + userEmail.(string) +" not found.",
-			})
-		}else{
-			// Else create the user - they will need to update their name in settings
-			u.Email = userEmail.(string)
-			u.FirstName = " "
-			u.LastName = " "
-			u.Username = userEmail.(string)
-			userData, userError := authoidc.OIDCCreateUser(u)
-			if userError != nil {
 				return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 					"Data Platform": "Dataplane",
-					"Error":         "User: " + userEmail.(string) +" not created.",
+					"Error":         "User: " + userEmail.(string) + " not found.",
 				})
+			} else {
+				// Else create the user - they will need to update their name in settings
+				u.Email = userEmail.(string)
+				u.FirstName = " "
+				u.LastName = " "
+				u.Username = userEmail.(string)
+				userData, userError := authoidc.OIDCCreateUser(u)
+				if userError != nil {
+					return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+						"Data Platform": "Dataplane",
+						"Error":         "User: " + userEmail.(string) + " not created.",
+					})
+				}
+				u.UserID = userData.UserID
 			}
-			u.UserID = userData.UserID
-		}
 		}
 
 		// If the token is verified then we can log the user in.

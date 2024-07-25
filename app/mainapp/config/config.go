@@ -23,12 +23,13 @@ var OIDCClientID string = ""
 var OIDCClientSecret string = ""
 var OIDCScope string = ""
 var OIDCRedirectURI string = ""
-var OIDCClaimRole string = ""
+var OIDCClaimRoleKey string = ""
+var OIDCClaimRoleValues string = ""
 var OIDCClaimEmail string = ""
 var OIDCAutoRegister string = ""
+
 // var OIDCFirstNameMap string = ""
 // var OIDCLastNameMap string = ""
-
 
 /* Routine removal of stale data */
 var CleanTasks int = 30
@@ -86,7 +87,8 @@ func LoadConfig() {
 	OIDCClientSecret = os.Getenv("DP_AUTH_OPENID_CLIENT_SECRET")
 	OIDCScope = os.Getenv("DP_AUTH_OPENID_SCOPES")
 	OIDCRedirectURI = os.Getenv("DP_AUTH_OPENID_REDIRECT_URI")
-	OIDCClaimRole = os.Getenv("DP_AUTH_OPENID_CLAIM_ROLE")
+	OIDCClaimRoleKey = os.Getenv("DP_AUTH_OPENID_CLAIM_ROLE_KEY")
+	OIDCClaimRoleValues = os.Getenv("DP_AUTH_OPENID_CLAIM_ROLE_VALUES")
 	OIDCClaimEmail = os.Getenv("DP_AUTH_OPENID_CLAIM_EMAIL")
 	OIDCAutoRegister = os.Getenv("DP_AUTH_OPENID_AUTO_REGISTER")
 	// OIDCFirstNameMap = os.Getenv("DP_AUTH_OPENID_FIRSTNAME_TOKEN_CLAIM")
