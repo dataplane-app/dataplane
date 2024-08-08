@@ -5,11 +5,20 @@ const PublicAPI = async (endpoint, body, method = 'POST') => {
 
         myHeaders.append('Content-Type', 'application/json');
 
-        var requestOptions = {
-            method: method,
-            headers: myHeaders,
-            body: body,
-        };
+        var requestOptions = {};
+
+        if (method === 'GET') {
+            requestOptions = {
+                method: method,
+                headers: myHeaders,
+            };
+        } else {
+            requestOptions = {
+                method: method,
+                headers: myHeaders,
+                body: body,
+            };
+        }
 
         let res = await fetch(import.meta.env.VITE_API_ENDPOINT_PUBLIC + endpoint, requestOptions);
         return { status: await res.status, body: await res.json() };

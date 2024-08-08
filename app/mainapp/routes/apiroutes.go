@@ -20,9 +20,9 @@ import (
 
 func APIRoutes(app *fiber.App) {
 
-	// ------- OIDC Callback ------
-	oidcCallback := app.Group("/app/public/oidc")
-	oidcCallback.Get("/callback", func(c *fiber.Ctx) error {
+	// ------- OPEN ROUTES ------
+	public := app.Group("/app/public/api")
+	public.Get("/oidc/callback", func(c *fiber.Ctx) error {
 
 		ctx := c.Context()
 
@@ -155,8 +155,8 @@ func APIRoutes(app *fiber.App) {
 			} else {
 				// Else create the user - they will need to update their name in settings
 				u.Email = userEmail.(string)
-				u.FirstName = " "
-				u.LastName = " "
+				u.FirstName = "New User"
+				u.LastName = "Update name"
 				u.Username = userEmail.(string)
 				userData, userError := authoidc.OIDCCreateUser(u)
 				if userError != nil {
@@ -174,9 +174,6 @@ func APIRoutes(app *fiber.App) {
 
 		return c.JSON(&fiber.Map{"access_token": accessToken, "refresh_token": refreshToken})
 	})
-
-	// ------- OPEN ROUTES ------
-	public := app.Group("/app/public/api")
 
 	// Auth strategy for OPenID Connect and Login
 	public.Post("/authstrategy", func(c *fiber.Ctx) error {

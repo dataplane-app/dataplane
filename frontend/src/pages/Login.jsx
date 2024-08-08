@@ -12,6 +12,7 @@ const Login = () => {
     const [isNext, setIsNext] = useState(false);
 
     const [AuthStrategy, setAuthStrategy] = useState('login');
+    const [AuthUrl, setAuthUrl] = useState('empty');
 
     // Retrieve what login strategy is being used
     useEffect(() => {
@@ -20,6 +21,7 @@ const Login = () => {
                 if (response.status === 200) {
                     // console.log('Auth Strategy:', response.body.authstrategy);
                     setAuthStrategy(response.body.authstrategy);
+                    setAuthUrl(response.body.authurl);
                 } else {
                     setAuthStrategy('login');
                 }
@@ -49,7 +51,8 @@ const Login = () => {
                             <>
                                 <br />
                                 <br />
-                                <Button variant="contained" size="large">
+                                {/* On click redirect to sso login url */}
+                                <Button variant="contained" size="large" onClick={() => (window.location.href = AuthUrl)}>
                                     SSO Login
                                 </Button>
                             </>
