@@ -22,7 +22,7 @@ const SSORedirect = () => {
                 if (response.status === 200) {
                     setAuthStrategy('success');
                     localStorage.setItem('refresh_token', response.body.refresh_token);
-                    history.push(`loginCallback?accesstoken=${response.body.access_token}&refreshtoken=${response.body.refresh_token}`);
+                    history.push(`/loginCallback?accesstoken=${response.body.access_token}&refreshtoken=${response.body.refresh_token}`);
                     // console.log('Auth Response:', response.body);
                     // setAuthStrategy(response.body.authstrategy);
                 } else {
