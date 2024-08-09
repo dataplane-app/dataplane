@@ -1497,7 +1497,6 @@ func (r *mutationResolver) ClearFileCachePipeline(ctx context.Context, environme
 	}
 
 	return "Success", nil
-	// panic(fmt.Errorf("not implemented"))
 }
 
 // Meta is the resolver for the meta field.

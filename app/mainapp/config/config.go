@@ -15,6 +15,22 @@ var Leader string = ""
 var AllowOrigins string = "*"
 var Version string = "Development"
 
+// Authentication
+var AuthStrategy string = "login"
+var OIDCIssuerEndpoint string = ""
+var OIDCAuthURL string = ""
+var OIDCClientID string = ""
+var OIDCClientSecret string = ""
+var OIDCScope string = ""
+var OIDCRedirectURI string = ""
+var OIDCClaimRoleKey string = ""
+var OIDCClaimRoleValues string = ""
+var OIDCClaimEmail string = ""
+var OIDCAutoRegister string = ""
+
+// var OIDCFirstNameMap string = ""
+// var OIDCLastNameMap string = ""
+
 /* Routine removal of stale data */
 var CleanTasks int = 30
 var CleanLogs int = 30
@@ -59,6 +75,24 @@ func LoadConfig() {
 
 	// Platform
 	AllowOrigins = os.Getenv("DP_ALLOW_ORIGINS")
+
+	// Authentication
+	AuthStrategy = os.Getenv("DP_AUTH_STRATEGY")
+	if AuthStrategy == "" {
+		AuthStrategy = "login"
+	}
+
+	OIDCIssuerEndpoint = os.Getenv("DP_AUTH_OPENID_ISSUER_ENDPOINT")
+	OIDCClientID = os.Getenv("DP_AUTH_OPENID_CLIENTID")
+	OIDCClientSecret = os.Getenv("DP_AUTH_OPENID_CLIENT_SECRET")
+	OIDCScope = os.Getenv("DP_AUTH_OPENID_SCOPES")
+	OIDCRedirectURI = os.Getenv("DP_AUTH_OPENID_REDIRECT_URI")
+	OIDCClaimRoleKey = os.Getenv("DP_AUTH_OPENID_CLAIM_ROLE_KEY")
+	OIDCClaimRoleValues = os.Getenv("DP_AUTH_OPENID_CLAIM_ROLE_VALUES")
+	OIDCClaimEmail = os.Getenv("DP_AUTH_OPENID_CLAIM_EMAIL")
+	OIDCAutoRegister = os.Getenv("DP_AUTH_OPENID_AUTO_REGISTER")
+	// OIDCFirstNameMap = os.Getenv("DP_AUTH_OPENID_FIRSTNAME_TOKEN_CLAIM")
+	// OIDCLastNameMap = os.Getenv("DP_AUTH_OPENID_LASTNAME_TOKEN_CLAIM")
 
 	// Database connection and defaults
 	DPDBMaxOpenConns, _ = strconv.Atoi(os.Getenv("DP_DB_MAXOPENCONNS"))

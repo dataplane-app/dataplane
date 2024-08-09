@@ -13,50 +13,55 @@
 	// 		"NODE_VERSION": "lts/*"
 	// 	}
 	// },
-
-    "dockerComposeFile":[
-        "docker-compose.yaml"
-    ],
-    "service": "mainapp",
+	"dockerComposeFile": [
+		"docker-compose.yaml"
+	],
+	"service": "mainapp",
 	// "runArgs": [
 	// 	"--mount", "type=volume,target=/appdev/frontend/node_modules"
 	// 	],
-    "workspaceFolder": "/appdev",
+	"workspaceFolder": "/appdev",
 	// "mounts": [
 	// 	"type=volume,target=/appdev/frontend/node_modules"
 	//   ],
-	  "mounts": [
-        "source=node_modules,target=/appdev/frontend/node_modules,type=volume"
-    ],
+	"mounts": [
+		"source=node_modules,target=/appdev/frontend/node_modules,type=volume"
+	],
 	// "runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined" ],
-	"runArgs": [ "--network=dataplane_network" ],
-
-// rather use docker-compose for environment variables - easier to find/read
-    "containerEnv":{
-        "env": "local",
+	"runArgs": [
+		"--network=dataplane_network"
+	],
+	// rather use docker-compose for environment variables - easier to find/read
+	"containerEnv": {
+		"env": "local",
 		// This is insecure - do not enable in production
 		"graphqldocs": "true"
-    },
-
-	// Set *default* container specific settings.json values on container create.
-	"settings": { 
-		"go.toolsManagement.checkForUpdates": "local",
-		"go.useLanguageServer": true,
-		"go.gopath": "/go",
-		"go.goroot": "/usr/local/go"
 	},
-	
-	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [
-		"golang.Go",
-		"graphql.vscode-graphql",
-		"ms-azuretools.vscode-docker",
-		"bierner.markdown-preview-github-styles"
-	],
-
+	"customizations": {
+		"vscode": {
+			// Set *default* container specific settings.json values on container create.
+			"settings": {
+				"go.toolsManagement.checkForUpdates": "local",
+				"go.useLanguageServer": true,
+				"go.gopath": "/go",
+				"go.goroot": "/usr/local/go",
+				"editor.formatOnSave": true,
+				"[go]": {
+					"editor.formatOnSave": true,
+					"editor.defaultFormatter": "golang.go"
+				}
+			},
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"golang.Go",
+				"graphql.vscode-graphql",
+				"ms-azuretools.vscode-docker",
+				"bierner.markdown-preview-github-styles"
+			],
+		}
+	},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [9000],
-
 	// Use 'portsAttributes' to set default properties for specific forwarded ports. More info: https://code.visualstudio.com/docs/remote/devcontainerjson-reference.
 	"portsAttributes": {
 		"9000": {
@@ -64,18 +69,14 @@
 			"onAutoForward": "notify"
 		}
 	},
-
 	// Use 'otherPortsAttributes' to configure any ports that aren't configured using 'portsAttributes'.
 	// "otherPortsAttributes": {
 	// 		"onAutoForward": "silent"
 	// },
-
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "cd app && go mod download",
 	// && go mod download
-
 	"initializeCommand": "docker network create --driver bridge dataplane_network || true"
-
 	// Uncomment to connect as a non-root user. More info: https://aka.ms/vscode-remote/containers/non-root.
 	// "remoteUser": "vscode"
 }

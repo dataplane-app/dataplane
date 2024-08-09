@@ -1,6 +1,7 @@
 package utilities
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,7 +13,8 @@ func GetYAMLPaths(path string) (paths []string, err error) {
 		err error) error {
 
 		if err != nil {
-			panic("File error:" + err.Error())
+			log.Println("File error:" + err.Error())
+			return err
 		}
 
 		// If YAML perform checks, then apply

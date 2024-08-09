@@ -26,7 +26,7 @@ const LoginForm = ({ handleNext }) => {
         if (response && response?.access_token) {
             localStorage.setItem('refresh_token', response.refresh_token);
             closeSnackbar();
-            history.push(`loginCallback?accesstoken=${response.access_token}&refreshtoken=${response.refresh_token}`);
+            history.push(`/loginCallback?accesstoken=${response.access_token}&refreshtoken=${response.refresh_token}`);
         } else {
             response.errors.map((err) => {
                 return enqueueSnackbar(err.message, { variant: 'error' });

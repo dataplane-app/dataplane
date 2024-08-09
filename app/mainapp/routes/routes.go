@@ -13,6 +13,7 @@ import (
 
 	"github.com/dataplane-app/dataplane/app/mainapp/auth"
 	permissions "github.com/dataplane-app/dataplane/app/mainapp/auth_permissions"
+	"github.com/dataplane-app/dataplane/app/mainapp/authoidc"
 	distributefilesystem "github.com/dataplane-app/dataplane/app/mainapp/code_editor/distribute_filesystem"
 	"github.com/dataplane-app/dataplane/app/mainapp/code_editor/filesystem"
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -289,6 +290,10 @@ func Setup(port string) *fiber.App {
 		return c.Status(http.StatusOK).JSON(fiber.Map{"Version": dpconfig.Version})
 	})
 
+
+	// ------- API ROUTES ------
+	APIRoutes(app)
+
 	// ------- GRAPHQL------
 	app.Post("/app/public/graphql", PublicGraphqlHandler())
 	app.Post("/app/private/graphql", auth.TokenAuthMiddle(), PrivateGraphqlHandler())
@@ -300,6 +305,14 @@ func Setup(port string) *fiber.App {
 		app.Use("/graphqldocs", adaptor.HTTPHandlerFunc(playgroundHandler()))
 	}
 	// ------ Auth ------
+
+	// OIDCConnect()
+	if dpconfig.AuthStrategy == "openid" {
+		log.Println("🔐 OpenID Connecting...")
+		authoidc.OIDCConnect()
+	}
+
+
 	/* Exchange a refresh token for a new access token */
 	app.Post("/app/refreshtoken", func(c *fiber.Ctx) error {
 		c.Accepts("application/json")

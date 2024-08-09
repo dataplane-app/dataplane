@@ -53,7 +53,6 @@ func PlatformLeaderElectionScheduler(mainAppID string) {
 						return nil
 					}); err != nil {
 						log.Println("Failed to elect leader for scheduler: ", err)
-						// panic("")
 					}
 
 					/*
@@ -78,7 +77,6 @@ func PlatformLeaderElectionScheduler(mainAppID string) {
 							return nil
 						}); err != nil {
 							log.Println("Failed to extend lease on leader election: ", err)
-							// panic("")
 						}
 					}
 				}

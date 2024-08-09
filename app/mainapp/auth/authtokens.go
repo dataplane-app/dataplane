@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	dpconfig "github.com/dataplane-app/dataplane/app/mainapp/config"
@@ -43,7 +44,7 @@ func GenerateAccessClaims(userID string, username string, usertype string) strin
 
 	claim := &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(t.Add(60 * time.Second)), // access token valid for 5 minutes
+			ExpiresAt: jwt.NewNumericDate(t.Add(1 * time.Hour)), // access token valid for 1 hour
 			IssuedAt:  jwt.NewNumericDate(t),
 			NotBefore: jwt.NewNumericDate(t),
 			Issuer:    "dataplane.app",
@@ -66,7 +67,7 @@ func GenerateAccessClaims(userID string, username string, usertype string) strin
 			LogType:       "error", //can be error, info or debug
 			Log:           err.Error(),
 		})
-		panic(err)
+		log.Println("GenerateAccessClaims error: ", err)
 	}
 
 	return tokenString
@@ -79,7 +80,8 @@ func GenerateRefreshToken(userID string) string {
 	go database.DBConn.Delete(&models.AuthRefreshTokens{}, "expires < ? and user_id =?", time.Now(), userID)
 
 	t := time.Now()
-	expires := t.Add(14 * 24 * time.Hour)
+	// Valid for 48 hours
+	expires := t.Add(2 * 24 * time.Hour)
 
 	refreshclaims := &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -103,7 +105,7 @@ func GenerateRefreshToken(userID string) string {
 			LogType:       "error", //can be error, info or debug
 			Log:           err.Error(),
 		})
-		panic(err)
+		log.Println("GenerateRefreshToken error: ", err)
 	}
 
 	// 	// create a claim on DB
@@ -120,7 +122,7 @@ func GenerateRefreshToken(userID string) string {
 			LogType:       "error", //can be error, info or debug
 			Log:           err.Error(),
 		})
-		panic(err)
+		log.Println("GenerateRefreshToken error: ", err)
 	}
 
 	return refreshTokenString

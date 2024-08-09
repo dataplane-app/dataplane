@@ -43,6 +43,7 @@ import DeploymentPermissions from './pages/Deployments/DeploymentPermissions';
 import RPAManage from './pages/Workers/RemoteWorkers/RemoteWorkerDetails';
 import RemoteProcessGroupManage from './pages/Workers/RemoteWorkers/ProcessGroupDetails';
 import RemoteProcessGroups from './pages/Workers/RemoteWorkers/RemoteProcessGroups';
+import SSORedirect from './pages/SSORedirect.jsx';
 
 export const ColorModeContext = React.createContext({
     toggleColorMode: () => {},
@@ -117,6 +118,10 @@ function App() {
 
                                     <Route exact path="/login">
                                         <LoginUser />
+                                    </Route>
+
+                                    <Route exact path="/oidc/callback">
+                                        <SSORedirect />
                                     </Route>
 
                                     <PrivateRoute exact path="/logout">

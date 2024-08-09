@@ -1,6 +1,8 @@
 package logme
 
 import (
+	"log"
+
 	"github.com/dataplane-app/dataplane/app/mainapp/database"
 	"github.com/dataplane-app/dataplane/app/mainapp/database/models"
 	"github.com/dataplane-app/dataplane/app/mainapp/logging"
@@ -15,7 +17,8 @@ func PlatformLogger(input models.LogsPlatform) bool {
 
 	/* Validate log type */
 	if !(utilities.InArray(input.LogType, []string{"error", "info", "debug"})) {
-		panic("log error type")
+		log.Println("PlatformLogger: log error type")
+		return false
 	}
 
 	/* Remove secrets */

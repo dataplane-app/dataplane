@@ -12,6 +12,8 @@ export const LoginCallback = ({ Authstate }) => {
     const location = useLocation();
     const history = useHistory();
 
+    // console.log('Hello');
+
     useEffect(() => {
         // what happens if not authorised on callback?
         const queryString = qs.parse(location.search, {
@@ -34,6 +36,8 @@ export const LoginCallback = ({ Authstate }) => {
             return;
         }
         ConsoleLogHelper('Callback redirection', `Redirecting to ${redirectLocation}`);
+
+        // console.log('Callback redirection', `Redirecting to ${redirectLocation}`);
 
         // remove redirection in local storage and then redirect
         localStorage.setItem('redirectLocation', '');
