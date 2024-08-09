@@ -15,10 +15,15 @@ const SSORedirect = () => {
         try {
             // loop through each query parameter and add all of them to api endpoint
             const queryParams = new URLSearchParams(window.location.search);
-            const apiEndpoint = '/oidc/callback?' + queryParams.toString();
+            // + queryParams.toString()
+            const apiEndpoint = '/oidc/callback';
+            const body = {
+                code: queryParams.get('code'),
+                state: queryParams.get('state'),
+            };
             // console.log(apiEndpoint);
 
-            PublicAPI(apiEndpoint, {}, 'GET').then((response) => {
+            PublicAPI(apiEndpoint, JSON.stringify(body), 'POST').then((response) => {
                 if (response.status === 200) {
                     setAuthStrategy('success');
                     localStorage.setItem('refresh_token', response.body.refresh_token);
