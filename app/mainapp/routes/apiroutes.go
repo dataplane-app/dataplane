@@ -18,15 +18,29 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type OIDCBody struct {
+	Code  string `json:"code"`
+	State string `json:"state"`
+}
+
 func APIRoutes(app *fiber.App) {
 
 	// ------- OPEN ROUTES ------
 	public := app.Group("/app/public/api")
-	public.Get("/oidc/callback", func(c *fiber.Ctx) error {
+	public.Post("/oidc/callback", func(c *fiber.Ctx) error {
 
 		ctx := c.Context()
 
-		oauth2Token, erra := authoidc.OIDCConfig.Exchange(ctx, c.Query("code"))
+		oidcbody := new(OIDCBody)
+
+		if errb := c.BodyParser(oidcbody); errb != nil {
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+				"Data Platform": "Dataplane",
+				"Error":         "Auth token body parse: " + errb.Error(),
+			})
+		}
+
+		oauth2Token, erra := authoidc.OIDCConfig.Exchange(ctx, oidcbody.Code)
 		if erra != nil {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 				"Data Platform": "Dataplane",
@@ -128,7 +142,7 @@ func APIRoutes(app *fiber.App) {
 			})
 		}
 
-		if nonceCheck.State != c.Query("state") {
+		if nonceCheck.State != oidcbody.State {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 				"Data Platform": "Dataplane",
 				"Error":         "Request expired. SSO state not found, please login again.",
