@@ -16,7 +16,7 @@
         "@monaco-editor/react": "^4.5.2",
         "@mui/x-tree-view":"6.0.0-alpha.2",
         "@mui/material": "^5.14.2",
-        "axios": "^0.24.0",
+        "axios": "^1.6.3",
         "chart.js": "^3.7.0",
         "chartjs-adapter-luxon": "^1.1.0",
         "check-password-strength": "^2.0.3",
