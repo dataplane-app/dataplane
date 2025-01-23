@@ -14,7 +14,7 @@ ARG DATAPLANE_VERSION=latest
 RUN CGO_ENABLED=0 go build -ldflags "-X github.com/dataplane-app/dataplane/app/mainapp/config.Version=$DATAPLANE_VERSION" -o dataplane app/mainapp/server.go
 
 
-FROM node:18.17 as builder2
+FROM node:18.18 as builder2
 
 # FROM ubuntu:22.04 as builder2
 
