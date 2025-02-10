@@ -14,7 +14,7 @@ ARG DATAPLANE_VERSION=latest
 RUN CGO_ENABLED=0 go build -ldflags "-X github.com/dataplane-app/dataplane/app/workers/config.Version=$DATAPLANE_VERSION" -o dataplane-worker app/workers/worker.go
 
 
-FROM ubuntu:22.04
+FROM ubuntu:22.10
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
