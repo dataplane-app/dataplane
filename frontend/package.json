@@ -41,11 +41,11 @@
         "react-hook-form": "^7.21.2",
         "react-lazylog": "^4.5.3",
         "react-lottie": "^1.2.3",
-        "react-markdown": "^8.0.3",
+        "react-markdown": "^9.0.0",
         "react-router-dom": "5.2.0",
         "react-syntax-highlighter": "^15.5.0",
         "react-table": "^7.7.0",
-        "remark-gfm": "^3.0.1",
+        "remark-gfm": "^4.0.0",
         "source-map-explorer": "^2.5.3",
         "uuid": "^8.3.2"
     },
